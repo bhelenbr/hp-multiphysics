@@ -259,6 +259,8 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 	return;
 }
 
+
+/* partition requires this routine */
 void tet_mesh::setinfo() {
 	
 	/* SET UP VRTX BC INFORMATION FOR OUTPUT */

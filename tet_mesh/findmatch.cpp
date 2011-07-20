@@ -605,8 +605,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	Array<int,2> ecntr(xin.nfbd+xin.nebd +40,4);
 	int number_problem_edges = 0;
 	Array<int,2> problem_edges(number_problem_edges,2);
-	
-
 
 	//TinyVector<int,2> a,b;//don't need?
 	int bnum,match;
@@ -793,7 +791,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	
 	
 	/* find and create edge boundaries */
-
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)
 		seg(i).info= -1;
@@ -837,9 +834,10 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 								for (int k=0; k<xin.nebd; ++k) {
 									if (xin.ebdry(k)->idnum == xin.seg(egindx).info) {
 										problem_edges(number_problem_edges-1,1) = k; /* boundary index number */
+										//cout << "#problem edge " << gindx << " idnum " << xin.ebdry(k)->idnum << endl;
 										break;
 									} 
-								}
+								} 
 								goto next_seg;
 							}
 						}
@@ -893,8 +891,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		ebdry(nebd+i)->alloc(static_cast<int>(10)); // fix me temp could make this smaller than 5 maybe 1?
 		ebdry(nebd+i)->nseg = 0;
 	}
-	
-	
+		
 	/* create global index pointer for edge boundaries */
 	for(i = 0; i < nfbd; ++i){
 		for(int sind = 0; sind < fbdry(i)->nseg;++sind){
@@ -908,8 +905,8 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 						if (problem_edges(j,1) == -1) goto next_seg2;
 						
 						problem_edges(j,1) = -1; /* so it doesn't find it more than once */
-
 						ebdry(j+nebd)->seg(ebdry(j+nebd)->nseg++).gindx = gindx;
+
 						goto next_seg2;
 					}
 				}
@@ -939,8 +936,9 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		assert(n<6);
 
 	}
-
 	
+	nebd += number_problem_edges;
+
 	/* reorder edge boundaries to make it easy to find vertex boundaries */
 	for(i=0;i<nebd;++i) {
 		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
@@ -954,7 +952,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		if (xin.pnt(xin.vbdry(i)->pnt).info > -1)
 			++nvbd;
 	
-	vbdry.resize(nvbd+2*(nebd+number_problem_edges));
+	vbdry.resize(nvbd+2*nebd);
 	
 	nvbd = 0;
 	for(i=0;i<xin.nvbd;++i) {
@@ -983,7 +981,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		}
 	}
 	
-	/* CREATE COMMUNICATION EDGE AND VERTEX BOUNDARIES */
+	/* CREATE COMMUNICATION EDGE BOUNDARIES */
 	for(i=0;i<nebd;++i) {
 		if (ebdry(i)->mytype == "partition") {
 			/* Now that all independent ebdry sides are determined give new numbers to partitions */
@@ -997,88 +995,50 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			ebdry(i)->idnum = newid;
 			nstr.clear();
 			std::cout << ebdry(i)->idprefix << "_type: comm\n";
-
-			sind = ebdry(i)->seg(0).gindx;			
-			p0 = seg(sind).pnt(0);
-
-			for(j=0;j<nvbd;++j)
-				if (vbdry(j)->pnt == p0) goto nextv0;
-			
-			/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
-			tind = tet(seg(sind).tet).info;
-			for(n=0;n<4;++n)
-				if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n) +maxvnum,*this);
-			vbdry(nvbd)->alloc(4);
-			vbdry(nvbd)->pnt = p0;
-			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-			++nvbd;
-			
-		nextv0:
-
-			sind = ebdry(i)->seg(ebdry(i)->nseg-1).gindx;
-			p0 = seg(sind).pnt(1);
-
-			for(j=0;j<nvbd;++j)
-				if (vbdry(j)->pnt == p0) goto nextv1;
-			
-			/* NEW ENDPOINT */
-			tind = tet(seg(sind).tet).info;
-			for(n=0;n<4;++n)
-				if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n)+maxvnum,*this);
-			vbdry(nvbd)->alloc(4);
-			vbdry(nvbd)->pnt = p0;
-			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-			++nvbd;
-			
-		nextv1:
-			continue;
 		}
 	}
 	
-	/* add vertex boundaries for problem edges */
-	for(i=0;i<number_problem_edges;++i) {
-
-			sind = ebdry(nebd+i)->seg(0).gindx;			
-			p0 = seg(sind).pnt(0);
-			
-			for(j=0;j<nvbd;++j)
-				if (vbdry(j)->pnt == p0) goto nextp0;
-			
-			/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
-			tind = tet(seg(sind).tet).info;
-			for(n=0;n<4;++n)
-				if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n) +maxvnum,*this);
-			vbdry(nvbd)->alloc(4);
-			vbdry(nvbd)->pnt = p0;
-			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-			++nvbd;
-			
-		nextp0:
-			
-			p0 = seg(sind).pnt(1);
-			
-			for(j=0;j<nvbd;++j)
-				if (vbdry(j)->pnt == p0) goto nextp1;
-			
-			/* NEW ENDPOINT */
-			tind = tet(seg(sind).tet).info;
-			for(n=0;n<4;++n)
-				if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n)+maxvnum,*this);
-			vbdry(nvbd)->alloc(4);
-			vbdry(nvbd)->pnt = p0;
-			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-			++nvbd;
+	
+	/* CREATE COMMUNICATION VERTEX BOUNDARIES */
+	for(i=0;i<nebd;++i) {
+		sind = ebdry(i)->seg(0).gindx;			
+		p0 = seg(sind).pnt(0);
 		
-		nextp1:
-			continue;
+		for(j=0;j<nvbd;++j)
+			if (vbdry(j)->pnt == p0) goto nextv0;
+		
+		/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
+		tind = tet(seg(sind).tet).info;
+		for(n=0;n<4;++n)
+			if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
+		vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n) +maxvnum,*this);
+		vbdry(nvbd)->alloc(4);
+		vbdry(nvbd)->pnt = p0;
+		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+		++nvbd;
+		
+	nextv0:
+		
+		sind = ebdry(i)->seg(ebdry(i)->nseg-1).gindx;
+		p0 = seg(sind).pnt(1);
+		
+		for(j=0;j<nvbd;++j)
+			if (vbdry(j)->pnt == p0) goto nextv1;
+		
+		/* NEW ENDPOINT */
+		tind = tet(seg(sind).tet).info;
+		for(n=0;n<4;++n)
+			if (xin.pnt(xin.tet(tind).pnt(n)).info == p0) break;
+		vbdry(nvbd) = new vcomm(xin.tet(tind).pnt(n)+maxvnum,*this);
+		vbdry(nvbd)->alloc(4);
+		vbdry(nvbd)->pnt = p0;
+		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+		++nvbd;
+		
+	nextv1:
+		continue;
 		
 	}
-	
-	nebd += number_problem_edges;
 
 	/* call match_all because reorder doesnt account for sign change */
 	match_all();

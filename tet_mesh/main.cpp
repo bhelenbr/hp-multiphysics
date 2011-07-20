@@ -204,12 +204,14 @@ int main(int argc, char *argv[]) {
 #ifdef METIS
         class tet_mesh zx;
         int p;
+		sscanf(argv[2],"%d",&p);
         std::string fname;
         ostringstream nstr;
-        std::cout << "input # of partitions" << std::endl;
-        std::cin >> p;
-
         zx.input(argv[1],in,1.0,bdrymap);
+		
+		/* input calls setinfo but to make sure call it again because partition needs it to work */
+		zx.tet_mesh::setinfo();
+		
         zx.setpartition(p);
         Array<tet_mesh,1> zpart(p);
         
