@@ -12,14 +12,31 @@
 #include "myblas.h"
 
 namespace bdry_cd {
-	class dirichlet : public hp_face_bdry {
+	
+	class generic : public hp_face_bdry {
+		tet_hp_cd &x;
+		bool report_flag;
+		
+	public:
+		generic(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
+		generic(const generic& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
+		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void init(input_map& input,void* gbl_in) {
+			hp_face_bdry::init(input,gbl_in);
+			std::string keyword = base.idprefix +"_report";
+			input.getwdefault(keyword,report_flag,false);       
+		}
+		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+	};
+	
+	class dirichlet : public generic {
 		tet_hp_cd &x;
 		
 		public:
-			dirichlet(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "dirichlet";}
-			dirichlet(const dirichlet& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
-			dirichlet* create(tet_hp& xin, face_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-			void vdirichlet() { 
+		dirichlet(tet_hp_cd &xin, face_bdry &bin) : generic(xin,bin), x(xin) {mytype = "dirichlet";}
+		dirichlet(const dirichlet& inbdry, tet_hp_cd &xin, face_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
+		dirichlet* create(tet_hp& xin, face_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void vdirichlet() { 
 				int v0; 											
 				for(int j=0;j<base.npnt;++j) {
 					v0 = base.pnt(j).gindx;
@@ -71,17 +88,16 @@ namespace bdry_cd {
 			void tadvance(); 
 	};
 
-	class neumann : public hp_face_bdry {
+	class neumann : public generic {
 		protected:
 			tet_hp_cd &x;
 			virtual FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> x, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {return(0.0);}
 		
 		public:
-			neumann(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "neumann";}
-			neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
-			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-            void rsdl(int stage);
-			void element_rsdl(int find,int stage);
+		neumann(tet_hp_cd &xin, face_bdry &bin) : generic(xin,bin), x(xin) {mytype = "neumann";}
+		neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
+		neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void element_rsdl(int find,int stage);
 	};
 
 

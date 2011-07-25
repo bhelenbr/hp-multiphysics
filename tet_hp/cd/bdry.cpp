@@ -31,8 +31,9 @@ void dirichlet::tadvance() {
 	/* UPDATE BOUNDARY CONDITION VALUES */
 	for(j=0;j<base.npnt;++j) {
 		v0 = base.pnt(j).gindx;
-		x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
+		x.ug.v(v0,0) = ibc->f(0,x.pnts(v0),x.gbl->time);
 	}
+
 //
 //    /*******************/    
 //    /* SET SIDE VALUES */
@@ -82,48 +83,6 @@ void dirichlet::tadvance() {
 }
 
 
-void neumann::rsdl(int stage){
-	int sind;
-	FLT sgn,msgn;
-	
-	for(int i=0;i<base.ntri;++i){
-		
-		int find = base.tri(i).gindx;
-		x.ugtouht2d(find);
-		
-		element_rsdl(find,stage);
-
-		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
-		
-		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
-		
-		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
-		
-		int indx = 3;
-		for(int j=0;j<3;++j) {
-			sind=x.tri(find).seg(j);
-			sgn = x.tri(find).sgn(j);
-			msgn = 1.0;
-			for(int k=0;k<basis::tet(x.log2p).em;++k) {
-				for(int n=0;n<x.NV;++n)
-					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
-				msgn *= sgn;
-				++indx;
-			}
-		}
-		
-	    for(int k=0;k<basis::tet(x.log2p).fm;++k) {
-		    for(int n=0;n<x.NV;++n)
-				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
-			++indx;
-		}		
-	}
-	
-	return;
-}
 
 void neumann::element_rsdl(int find,int stage) {
 	int j,k,n;

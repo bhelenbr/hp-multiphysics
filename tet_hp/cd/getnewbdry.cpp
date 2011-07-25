@@ -4,6 +4,52 @@
 
 using namespace bdry_cd;
 
+
+class tet_hp_cd_vtype {
+public:
+	static const int ntypes = 3;
+	enum ids {unknown=-1,plain,dirichlet,adiabatic};
+	const static char names[ntypes][40];
+	static int getid(const char *nin) {
+		for(int i=0;i<ntypes;++i) 
+			if (!strcmp(nin,names[i])) return(i);
+		return(unknown);
+	}
+};
+
+const char tet_hp_cd_vtype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
+	
+hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, input_map &bdrydata) {
+    std::string keyword,val;
+    std::istringstream data;
+    int type;          
+    hp_vrtx_bdry *temp;  
+    
+    keyword = vbdry(bnum)->idprefix + "_cd_type";
+    if (bdrydata.get(keyword,val)) {
+        type = tet_hp_cd_vtype::getid(val.c_str());
+        if (type == tet_hp_cd_vtype::unknown)  {
+            *gbl->log << "unknown vertex type:" << val << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        type = tet_hp_cd_vtype::unknown;
+    }
+    
+    
+    switch(type) {
+
+        default: {
+            temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
+            break;
+        }
+    } 
+    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+    return(temp);
+}
+
+
 /** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
@@ -11,7 +57,54 @@ using namespace bdry_cd;
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tet_hp_cd_stype {
+class tet_hp_cd_etype {
+public:
+	static const int ntypes = 3;
+	enum ids {unknown=-1,plain,dirichlet,adiabatic};
+	static const char names[ntypes][40];
+	static int getid(const char *nin) {
+		for(int i=0;i<ntypes;++i)
+			if (!strcmp(nin,names[i])) return(i);
+		return(-1);
+	}
+};
+
+const char tet_hp_cd_etype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
+
+/* FUNCTION TO CREATE BOUNDARY OBJECTS */
+hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, input_map &bdrydata) {
+    std::string keyword,val;
+    std::istringstream data;
+    int type;          
+    hp_edge_bdry *temp;  
+    
+	
+    keyword =  ebdry(bnum)->idprefix + "_cd_type";
+    if (bdrydata.get(keyword,val)) {
+        type = tet_hp_cd_etype::getid(val.c_str());
+        if (type == tet_hp_cd_etype::unknown)  {
+            *gbl->log << "unknown edge type:" << val << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        type = tet_hp_cd_etype::unknown;
+    }
+	
+    switch(type) {
+
+        default: {
+            temp = tet_hp::getnewedgeobject(bnum,bdrydata);
+            break;
+        }
+    }    
+    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+	
+    return(temp);
+}
+
+
+class tet_hp_cd_ftype {
 	public:
 		static const int ntypes = 3;
 		enum ids {unknown=-1,plain,dirichlet,adiabatic};
@@ -23,7 +116,7 @@ class tet_hp_cd_stype {
 		}
 };
 
-const char tet_hp_cd_stype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
+const char tet_hp_cd_ftype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
 
 hp_face_bdry* tet_hp_cd::getnewfaceobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -34,26 +127,26 @@ hp_face_bdry* tet_hp_cd::getnewfaceobject(int bnum, input_map &bdrydata) {
 
 	keyword =  fbdry(bnum)->idprefix + "_cd_type";
 	if (bdrydata.get(keyword,val)) {
-		type = tet_hp_cd_stype::getid(val.c_str());
-		if (type == tet_hp_cd_stype::unknown)  {
+		type = tet_hp_cd_ftype::getid(val.c_str());
+		if (type == tet_hp_cd_ftype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
 			exit(1);
 		}
 	}
 	else {
-		type = tet_hp_cd_stype::unknown;
+		type = tet_hp_cd_ftype::unknown;
 	}
 
 	switch(type) {
-		case tet_hp_cd_stype::plain: {
+		case tet_hp_cd_ftype::plain: {
 			temp = new hp_face_bdry(*this,*fbdry(bnum));
 			break;
 		}
-		case tet_hp_cd_stype::dirichlet: {
+		case tet_hp_cd_ftype::dirichlet: {
 			temp = new dirichlet(*this,*fbdry(bnum));
 			break;
 		}
-		case tet_hp_cd_stype::adiabatic: {
+		case tet_hp_cd_ftype::adiabatic: {
 			temp = new neumann(*this,*fbdry(bnum));
 			break;
 		}

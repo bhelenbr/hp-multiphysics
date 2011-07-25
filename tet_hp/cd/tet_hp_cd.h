@@ -29,9 +29,13 @@ class tet_hp_cd : public tet_hp {
 		} *gbl;
 		
 		FLT adis; // DISSIPATION CONSTANT
-		
+
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
+		hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata);
 		hp_face_bdry* getnewfaceobject(int bnum, input_map &bdrydata);
-		init_bdry_cndtn *getnewibc(std::string suffix, input_map& inmap);
+
+	
+		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 		
 	public:
 		void* create_global_structure() {return new global;}
