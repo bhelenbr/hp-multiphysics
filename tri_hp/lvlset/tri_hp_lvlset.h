@@ -52,6 +52,7 @@ class tri_hp_lvlset : public tri_hp_ins {
 		bool minvrt_reinit_phival(int edgenum, int segnum, FLT nx, FLT ny, FLT xloc, FLT yloc, FLT basephi, int onezero, FLT& phi);
 		int minvrt_reinit_phiside(int edgenum);
 		void minvrt_reinit_direction(int edgenum, int side, FLT& nx, FLT& ny, FLT& xloc, FLT &yloc, FLT &basephi);
+		void get_correct_normstuff(int i, int bdryside, normstuff norm0list[], normstuff norm1list[], normstuff& goodlist);
 	public:
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
