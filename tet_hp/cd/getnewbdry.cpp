@@ -39,7 +39,18 @@ hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, input_map &bdrydata) {
     
     
     switch(type) {
-
+		case tet_hp_cd_vtype::plain: {
+			temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
+			break;
+		}
+		case tet_hp_cd_vtype::dirichlet: {
+			temp = new dirichlet_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tet_hp_cd_vtype::adiabatic: {
+			temp = new neumann_pt(*this,*vbdry(bnum));
+			break;
+		}
         default: {
             temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
             break;
@@ -92,7 +103,18 @@ hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, input_map &bdrydata) {
     }
 	
     switch(type) {
-
+		case tet_hp_cd_etype::plain: {
+			temp = new hp_edge_bdry(*this,*ebdry(bnum));
+			break;
+		}
+		case tet_hp_cd_etype::dirichlet: {
+			temp = new dirichlet_edge(*this,*ebdry(bnum));
+			break;
+		}
+		case tet_hp_cd_etype::adiabatic: {
+			temp = new neumann_edge(*this,*ebdry(bnum));
+			break;
+		}
         default: {
             temp = tet_hp::getnewedgeobject(bnum,bdrydata);
             break;

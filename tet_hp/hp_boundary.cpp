@@ -404,7 +404,7 @@ void hp_face_bdry::init(input_map& inmap,void* gbl_in) {
 	std::istringstream data;
 	std::string filename;
 	
-		if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
+	if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
 		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
 	}
 	
@@ -469,18 +469,18 @@ void hp_face_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 				bout.writeInt(x.p0,sizeof(int));
 
-			for(j=0;j<base.nseg;++j) {
-				for(m=0;m<x.em0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						bout.writeFloat(ecrvbd(tlvl)(j,m)(n),binio::Double);
+				for(j=0;j<base.nseg;++j) {
+					for(m=0;m<x.em0;++m) {
+						for(n=0;n<tet_mesh::ND;++n)
+							bout.writeFloat(ecrvbd(tlvl)(j,m)(n),binio::Double);
+					}
 				}
-			}
-			for(j=0;j<base.ntri;++j) {
-				for(m=0;m<x.fm0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						bout.writeFloat(fcrvbd(tlvl)(j,m)(n),binio::Double);
+				for(j=0;j<base.ntri;++j) {
+					for(m=0;m<x.fm0;++m) {
+						for(n=0;n<tet_mesh::ND;++n)
+							bout.writeFloat(fcrvbd(tlvl)(j,m)(n),binio::Double);
+					}
 				}
-			}
 			}
 			break;
 			

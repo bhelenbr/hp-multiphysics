@@ -37,33 +37,33 @@ namespace bdry_cd {
 		dirichlet(const dirichlet& inbdry, tet_hp_cd &xin, face_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 		dirichlet* create(tet_hp& xin, face_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
 		void vdirichlet() { 
-				int v0; 											
-				for(int j=0;j<base.npnt;++j) {
-					v0 = base.pnt(j).gindx;
-						x.gbl->res.v(v0,0) = 0.0;
-				}			
-			}
+			int v0; 											
+			for(int j=0;j<base.npnt;++j) {
+				v0 = base.pnt(j).gindx;
+					x.gbl->res.v(v0,0) = 0.0;
+			}			
+		}
 
-			void edirichlet() {
-				int sind;
-				if (basis::tet(x.log2p).em > 0) {
-					for(int j=0;j<base.nseg;++j) {
-						sind = base.seg(j).gindx;
-						x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
-					}
+		void edirichlet() {
+			int sind;
+			if (basis::tet(x.log2p).em > 0) {
+				for(int j=0;j<base.nseg;++j) {
+					sind = base.seg(j).gindx;
+					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
 				}
 			}
+		}
 			
-			void fdirichlet() {
-				int find;
+		void fdirichlet() {
+			int find;
 
-				if (basis::tet(x.log2p).fm > 0) {
-					for(int j=0;j<base.ntri;++j) {
-						find = base.tri(j).gindx;
-						x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
-					}
+			if (basis::tet(x.log2p).fm > 0) {
+				for(int j=0;j<base.ntri;++j) {
+					find = base.tri(j).gindx;
+					x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
 				}
 			}
+		}
 //			void apply_sparse_dirichlet(bool compressed_column) {
 //				int gind;
 //				int em=basis::tet(x.log2p).em;
@@ -97,63 +97,117 @@ namespace bdry_cd {
 		neumann(tet_hp_cd &xin, face_bdry &bin) : generic(xin,bin), x(xin) {mytype = "neumann";}
 		neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 		neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void rsdl(int stage);
 		void element_rsdl(int find,int stage);
 	};
 
-
-//   class characteristic : public neumann {
-//        public:
-//            FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> pt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {
-//                FLT vel;
-//
-//                vel =  (x.gbl->ax-mv(0))*norm(0) +(x.gbl->ay -mv(1))*norm(1);        
-//
-//
-//                if (vel > 0.0)
-//                    return(vel*u);
-//
-//                return(x.gbl->ibc->f(0, pt, x.gbl->time)*vel);
-//            }
-//            characteristic(tet_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
-//            characteristic(const characteristic &inbdry, tet_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
-//            characteristic* create(tet_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-//    };
-//
-//    class mixed : public neumann {
-//        public:
-//            TinyVector<FLT,5> c;
-//            
-//            FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> pt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {
-//                
-//                FLT fout = 0.0;
-//                for(int i=0;i<5;++i)
-//                    fout += c(i)*pow(u,i);
-//                
-//                return(fout);
-//            }
-//            mixed(tet_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "mixed";}
-//            mixed(const mixed& inbdry, tet_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), c(inbdry.c) {}
-//            mixed* create(tet_hp& xin, edge_bdry &bin) const {return new mixed(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-//            
-//            void init(input_map& inmap, void* gbl_in) {
-//                std::string keyword;
-//                std::istringstream data;
-//                std::string val;
-//                
-//                neumann::init(inmap,gbl_in);
-//
-//                keyword = base.idprefix + "_cd_mixed_coefficients";
-//                
-//                if (inmap.getline(keyword,val)) {
-//                        data.str(val);
-//                        data >> c(0) >> c(1) >> c(2) >> c(3) >> c(4);  
-//                        data.clear(); 
-//                }
-//                else {
-//                    *x.gbl->log << "couldn't find coefficients" << std::endl;
-//                }
-//                return;
-//            }
-//    };
+	
+	class generic_edge : public hp_edge_bdry {
+		tet_hp_cd &x;
+		bool report_flag;
+		
+	public:
+		generic_edge(tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_edge";}
+		generic_edge(const generic_edge& inbdry, tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
+		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void init(input_map& input,void* gbl_in) {
+			hp_edge_bdry::init(input,gbl_in);
+			std::string keyword = base.idprefix +"_report";
+			input.getwdefault(keyword,report_flag,false);       
+		}
+		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+	};
+	
+	class dirichlet_edge : public generic_edge {
+		tet_hp_cd &x;
+		
+	public:
+		dirichlet_edge(tet_hp_cd &xin, edge_bdry &bin) : generic_edge(xin,bin), x(xin) {mytype = "dirichlet_edge";}
+		dirichlet_edge(const dirichlet_edge& inbdry, tet_hp_cd &xin, edge_bdry &bin) : generic_edge(inbdry,xin,bin), x(xin) {}
+		dirichlet_edge* create(tet_hp& xin, edge_bdry &bin) const {return new dirichlet_edge(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void vdirichlet3d() {
+			int sind=-2,v0;
+			
+			for(int j=0;j<base.nseg;++j) {
+				sind = base.seg(j).gindx;
+				v0 = x.seg(sind).pnt(0);
+				x.gbl->res.v(v0,0) = 0.0;
+			}
+			v0 = x.seg(sind).pnt(1);
+			x.gbl->res.v(v0,0) = 0.0;
+		}
+		
+		void edirichlet3d() {			
+			int sind;
+			if (basis::tet(x.log2p).em > 0) {
+				for(int j=0;j<base.nseg;++j) {
+					sind = base.seg(j).gindx;
+					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
+				}
+			}
+		}
+		
+		void tadvance(); 
+	};
+	
+	class neumann_edge : public generic_edge {
+	protected:
+		tet_hp_cd &x;
+		virtual FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> x, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {return(0.0);}
+		
+	public:
+		neumann_edge(tet_hp_cd &xin, edge_bdry &bin) : generic_edge(xin,bin), x(xin) {mytype = "neumann_edge";}
+		neumann_edge(const neumann_edge& inbdry, tet_hp_cd &xin, edge_bdry &bin) : generic_edge(inbdry,xin,bin), x(xin) {}
+		neumann_edge* create(tet_hp& xin, edge_bdry &bin) const {return new neumann_edge(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void rsdl(int stage);
+		void element_rsdl(int eind,int stage);
+	};
+	
+	
+	class generic_pt : public hp_vrtx_bdry {
+		tet_hp_cd &x;
+		bool report_flag;
+		
+	public:
+		generic_pt(tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_pt";}
+		generic_pt(const generic_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
+		generic_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new generic_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void init(input_map& input,void* gbl_in) {
+			hp_vrtx_bdry::init(input,gbl_in);
+			std::string keyword = base.idprefix +"_report";
+			input.getwdefault(keyword,report_flag,false);       
+		}
+		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+	};
+	
+	class dirichlet_pt : public generic_pt {
+		tet_hp_cd &x;
+		
+	public:
+		dirichlet_pt(tet_hp_cd &xin, vrtx_bdry &bin) : generic_pt(xin,bin), x(xin) {mytype = "dirichlet_pt";}
+		dirichlet_pt(const dirichlet_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : generic_pt(inbdry,xin,bin), x(xin) {}
+		dirichlet_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new dirichlet_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void vdirichlet3d() { 
+			x.gbl->res.v(base.pnt,0) = 0.0;					
+		}
+		
+		void tadvance(); 
+	};
+	
+	class neumann_pt : public generic_pt {
+	protected:
+		tet_hp_cd &x;
+		virtual FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> x, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {return(0.0);}
+		
+	public:
+		neumann_pt(tet_hp_cd &xin, vrtx_bdry &bin) : generic_pt(xin,bin), x(xin) {mytype = "neumann_pt";}
+		neumann_pt(const neumann_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : generic_pt(inbdry,xin,bin), x(xin) {}
+		neumann_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new neumann_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+		void rsdl(int stage);
+		void element_rsdl(int stage);
+	};
+	
+	
+	
 }
 
