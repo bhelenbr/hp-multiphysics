@@ -11,6 +11,7 @@
 #define _hp_boundary_h_
 
 #include "tri_hp.h"
+#include <symbolic_function.h>
 
 class hp_edge_bdry;
 
@@ -104,13 +105,15 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		init_bdry_cndtn *ibc;
 		bool curved, coupled;
 		int jacobian_start;
+		bool report_flag;
+		symbolic_function<2> l2norm;
 		Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 		Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 		Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
 
 	public:
-		hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain"; ibc=x.gbl->ibc;}
-		hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
+		hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false), report_flag(false) {mytype = "plain"; ibc=x.gbl->ibc;}
+		hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled), report_flag(inbdry.report_flag) {
 			if (curved && !x.coarse_level) {
 				crv.resize(base.maxseg,x.sm0);
 				crvbd.resize(x.gbl->nhist+1);
@@ -118,6 +121,9 @@ class hp_edge_bdry : public egeometry_interface<2> {
 					crvbd(i).resize(base.maxseg,x.sm0);
 				crvbd(0).reference(crv);
 			}
+			if (report_flag)
+				l2norm = inbdry.l2norm;
+				
 			dxdt.resize(x.log2pmax+1,base.maxseg);
 #ifndef petsc
 			base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
@@ -158,6 +164,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void calculate_unsteady_sources();
 		virtual void element_rsdl(int sind,int stage) {x.lf = 0.0;}
 		virtual void rsdl(int stage);
+		virtual void rsdl_after(int stage) {}
 		virtual void element_jacobian(int sind, Array<FLT,2>& K);
 		virtual int dofs(int start) {
 			jacobian_start = start;

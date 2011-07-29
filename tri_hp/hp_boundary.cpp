@@ -151,6 +151,14 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 			crvbd(i).resize(base.maxseg,x.sm0);
 		crvbd(0).reference(crv);
 	}
+	
+	keyword = base.idprefix +"_report";
+	inmap.getwdefault(keyword,report_flag,false);
+	
+	if (inmap.find(base.idprefix+"_norm") == inmap.end())	{
+		inmap[base.idprefix+"_norm"] = "0.0";
+	}
+	l2norm.init(inmap,base.idprefix+"_norm");
 
 	dxdt.resize(x.log2pmax+1,base.maxseg);
 
@@ -198,6 +206,94 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 				}
 			}
 			break;
+		
+		case(tri_hp::tecplot): {
+			if (!report_flag) break;
+			
+			std::ostringstream fname;
+			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
+			std::ofstream fout;
+			fout.open(fname.str().c_str());
+			
+			FLT circumference = 0.0;
+			FLT l2error = 0.0;
+			TinyVector<FLT,tri_mesh::ND> xpt,norm,mvel;
+
+			int ind = 0;
+			do { 
+				int sind = base.seg(ind);
+				int tind = x.seg(sind).tri(0);        
+				
+				int seg;
+				for(seg=0;seg<3;++seg)
+					if (x.tri(tind).seg(seg) == sind) break;
+				assert(seg != 3);
+				
+				x.crdtocht(tind);
+				for(m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
+					for(n=0;n<tri_mesh::ND;++n)
+						x.cht(n,m) = 0.0;
+				
+				for(n=0;n<tri_mesh::ND;++n)
+					basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+				
+				x.ugtouht(tind);
+				for(n=0;n<x.NV;++n)
+					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+				
+				for (int i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					circumference += jcb;
+	
+					norm(0) = x.dcrd(1,0)(0,i);
+					norm(1) = -x.dcrd(0,0)(0,i);                
+					for(n=0;n<tri_mesh::ND;++n) {
+						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+					}
+					
+					xpt(0) = x.crd(0)(0,i);
+					xpt(1) = x.crd(1)(0,i);
+					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
+					
+					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					
+					for (n=0;n<x.NV;++n)
+						fout << x.u(n)(0,i) << ' ';
+					fout << std::endl;
+					
+					
+					fout << std::endl;
+					
+				}	
+			} while (++ind < base.nseg);
+			fout.close();
+			
+			streamsize oldprecision = (*x.gbl->log).precision(10);
+			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
+			/* OUTPUT AUXILIARY FLUXES */
+			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+			(*x.gbl->log).precision(oldprecision);
+			
+			break;
+	}
+	
+	case(tri_hp::auxiliary): {
+		if (!report_flag) return;                
+		
+		/* AUXILIARY FLUX METHOD */
+		int v0;
+		Array<FLT,1> total_flux(x.NV);
+		total_flux = 0.0;
+		int ind = 0;
+		int sind;
+		do {
+			sind = base.seg(ind);
+			v0 = x.seg(sind).pnt(0);
+			total_flux += x.gbl->res.v(v0,Range::all());
+		} while (++ind < base.nseg);
+		v0 = x.seg(sind).pnt(1);
+		total_flux += x.gbl->res.v(v0,Range::all());
+	}
 
 		default:
 			break;
