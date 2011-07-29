@@ -193,8 +193,8 @@ void tri_hp_buoyancy::setup_preconditioner() {
 		
 		
 		/* SET UP DIAGONAL PRECONDITIONER */
-		jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 		jcb1 = 2.5*jcb*lam2/h;
+		jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 #ifdef TIMEACCURATE
 		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
 		
