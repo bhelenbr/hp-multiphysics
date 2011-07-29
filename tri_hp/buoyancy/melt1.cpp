@@ -1018,7 +1018,7 @@ void melt::setup_preconditioner() {
 	TinyMatrix<FLT,4,MXGP> lf;
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
-	// int last_phase, mp_phase;
+	int last_phase, mp_phase;
 
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
@@ -1042,7 +1042,7 @@ void melt::setup_preconditioner() {
 
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
-		gbl->meshc(indx) = 0.0e99;  // TEMPORARY
+		gbl->meshc(indx) = 1.0e99;  // TEMPORARY
 		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
@@ -1183,28 +1183,28 @@ void melt::setup_preconditioner() {
 		}
 	}
 
-//	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-//
-//		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
-//
-//		last_phase = true;
-//		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-//		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
-//	}
-//
-//	if (gbl->is_loop) {
-//		for(m=0;m<tri_mesh::ND;++m)
-//			for(n=0;n<tri_mesh::ND;++n)
-//				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
-//		gbl->vdt(base.nseg+1) = gbl->vdt(0);
-//	}
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
+
+		last_phase = true;
+		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
+	}
+
+	if (gbl->is_loop) {
+		for(int m=0;m<tri_mesh::ND;++m)
+			for(int n=0;n<tri_mesh::ND;++n)
+				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
+		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+	}
 
 	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {    

@@ -162,7 +162,7 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
-		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY NO!!! */
 		// res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 		/* Heat Flux */
 		Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
@@ -180,9 +180,9 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0)); // tangent
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1,0),&res(1,0)); // mass flux
-	// basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1,0),&res(2,0)); // mass flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1,0),&res(2,0)); // mass flux
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2,0),&res(3,0)); // heat flux
-	// basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2,0),&res(4,0)); // heat flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2,0),&res(4,0)); // heat flux
 	
 	return;
 }
@@ -273,7 +273,7 @@ void melt::rsdl(int stage) {
 	}
 }
 
-void melt::vdirichlet() {
+void melt::rsdl_after(int stage) {
 	int sind,v0;
 	
 	/* Move Heat equation Residual */
@@ -287,14 +287,22 @@ void melt::vdirichlet() {
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	gbl->vres(i)(1) = x.gbl->res.v(v0,2);
-	
+		
+}
+
+
+
+
+void melt::vdirichlet() {
+	int sind,v0;
+		
 	/* Now apply dirichlet B.C.s */
 	flexible::vdirichlet();
 	
 #ifdef petsc
 	/* Store rotated vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	i = 0;
+	int i = 0;
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
@@ -1155,7 +1163,7 @@ void melt::setup_preconditioner() {
 	TinyMatrix<FLT,4,MXGP> lf;
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
-	// int last_phase, mp_phase;
+	int last_phase, mp_phase;
 
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
@@ -1319,28 +1327,28 @@ void melt::setup_preconditioner() {
 		}
 	}
 
-//	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-//
-//		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
-//
-//		last_phase = true;
-//		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-//		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-//		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
-//		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
-//	}
-//
-//	if (gbl->is_loop) {
-//		for(m=0;m<tri_mesh::ND;++m)
-//			for(n=0;n<tri_mesh::ND;++n)
-//				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
-//		gbl->vdt(base.nseg+1) = gbl->vdt(0);
-//	}
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
+
+		last_phase = true;
+		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
+	}
+
+	if (gbl->is_loop) {
+		for(int m=0;m<tri_mesh::ND;++m)
+			for(int n=0;n<tri_mesh::ND;++n)
+				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
+		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+	}
 
 	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {    
