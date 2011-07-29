@@ -89,6 +89,7 @@ OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o buoyancy/length.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlset/reinit.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
+OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
 OBJPETSC = petsc.o sparse.o
 
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
@@ -103,6 +104,7 @@ OBJ += $(OBJINS)
 #OBJ += $(OBJEXPLICIT)
 #OBJ += $(OBJPS)
 #OBJ += $(OBJSWIRL)
+#OBJ += $(OBJNONNEWTONIAN)
 
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
@@ -158,6 +160,7 @@ dirs:
 	+@[ -d  swe ] || mkdir -p swe
 	+@[ -d  lvlset ] || mkdir -p lvlset
 	+@[ -d  explicit ] || mkdir -p explicit
+	+@[ -d  nonnewtonian ] || mkdir -p explicit
 	touch dirs
 
 
