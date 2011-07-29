@@ -102,10 +102,11 @@ namespace bdry_buoyancy {
 			}
 			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			
-			void init(input_map& input,void* gbl_in); 
+			void init(input_map& input,void* gbl_in);
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
+			void rsdl_after(int stage);
 			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
 			void maxres();
 			void setup_preconditioner();
