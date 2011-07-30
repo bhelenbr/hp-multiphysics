@@ -160,7 +160,7 @@ dirs:
 	+@[ -d  swe ] || mkdir -p swe
 	+@[ -d  lvlset ] || mkdir -p lvlset
 	+@[ -d  explicit ] || mkdir -p explicit
-	+@[ -d  nonnewtonian ] || mkdir -p explicit
+	+@[ -d  nonnewtonian ] || mkdir -p nonnewtonian
 	touch dirs
 
 
