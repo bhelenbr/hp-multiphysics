@@ -29,7 +29,7 @@ void tri_hp_nonnewtonian::init(input_map& input, void *gin) {
 		gbl->mu_of_strain.init(input,gbl->idprefix +"_mu_function");
 	}
 	else if (input.find("mu_function") != input.end()){
-		gbl->mu_of_strain.init(input,"rho_vs_T");
+		gbl->mu_of_strain.init(input,"mu_function");
 	}
 	else {
 		*gbl->log << "couldn't find nonnewtonian viscosity function " << gbl->idprefix +"_mu_function" << std::endl;
