@@ -480,36 +480,48 @@ void tet_mesh::match_bdry_numbering() {
 	/* Create global numbering system */
 	create_unique_numbering();
 	 
-	for(int i=0;i<nebd;++i) {
-		if(ebdry(i)->is_comm()){
-			ebdry(i)->setup_next_prev();
-			ebdry(i)->reorder();
-		}
-	}
+//	for(int i=0;i<nebd;++i) {
+//		//if(ebdry(i)->is_comm() && !ebdry(i)->is_frst()){
+//			ebdry(i)->setup_next_prev();
+//			ebdry(i)->reorder();
+//		//}
+//	}
 
-//	/* Reorder Side boundaries so direction is the same */
-//	for(int i=0;i<nebd;++i) 
-//		ebdry(i)->match_numbering(1);
-//
-//	/* FIRST PART OF SENDING, POST ALL RECEIVES */
-//	for(int i=0;i<nebd;++i)
-//		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
-//						
-//	/* SECOND PART */
-//	 for(int i=0;i<nebd;++i) 
-//		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
-//
-//	/* FINAL PART OF SENDING */
-//	for(int i=0;i<nebd;++i)
-//		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
-//	
-//	/* FINAL PART OF SENDING */
-//	for(int i=0;i<nebd;++i)
-//		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
-//	
-//	for(int i=0;i<nebd;++i) 
-//		ebdry(i)->match_numbering(2);		  
+	
+	
+	
+	
+	// dont think this needs to be done anymore
+	/* Reorder Side boundaries so direction is the same */
+	for(int i=0;i<nebd;++i) 
+		ebdry(i)->match_numbering(1);
 
+	/* FIRST PART OF SENDING, POST ALL RECEIVES */
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
+						
+	/* SECOND PART */
+	 for(int i=0;i<nebd;++i) 
+		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+
+	/* FINAL PART OF SENDING */
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
+	
+	/* FINAL PART OF SENDING */
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
+	
+	for(int i=0;i<nebd;++i) 
+		ebdry(i)->match_numbering(2);		  
+
+	
+	
+	
+	
+	
+	
+	
 	/* Redefine tets based on global numbering system */
 	reorient_tets(true);
 	match_all();

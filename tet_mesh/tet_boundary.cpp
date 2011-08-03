@@ -382,6 +382,7 @@ void ecomm::match_numbering(int step) {
 
 						if (dist <  10.*EPSILON) {
 							seg(i).gindx = gindx(j);
+							//*x.gbl->log << "found edge" << endl;
 							break;
 						}
 						
@@ -392,7 +393,8 @@ void ecomm::match_numbering(int step) {
 						}
 
 						if (dist < 10.*EPSILON) {
-							seg(i).gindx = gindx(j);
+							seg(i).gindx = gindx(nseg-j-1);/* assumes edge boundary was already in order */
+							//*x.gbl->log << "found edge but backwards, edge:" << idprefix << endl;
 							break;
 						}
 						
@@ -509,8 +511,22 @@ void ecomm::match_numbering(int step) {
 		*x.gbl->log << " These are my options " << std::endl;
 		for (int i=0;i<nseg;++i) {
 			sind = seg(i).gindx;
-			*x.gbl->log << "global edge " << sind << "  pnts " << x.pnt(x.seg(sind).pnt(0)).info << ' ' << x.pnt(x.seg(sind).pnt(1)).info << std::endl;
+			*x.gbl->log << "global edge " << sind << "  pnts " << x.pnt(x.seg(sind).pnt(0)).info  << ' '<< x.pnt(x.seg(sind).pnt(1)).info <<  std::endl;
 		}
+		for (int i=0;i<nseg;++i) {
+			sind = seg(i).gindx;
+			for (int n=0; n<3; ++n) 
+				*x.gbl->log << x.pnts(x.seg(sind).pnt(0))(n) << ", ";
+
+			*x.gbl->log << "\n";
+		}
+		for (int n=0; n<3; ++n) 
+			*x.gbl->log << x.pnts(x.seg(seg(nseg-1).gindx).pnt(1))(n) <<  ", ";
+		*x.gbl->log << "\n";
+			
+		exit(9);
+
+			
 	 }
 	
 

@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
 	}
 		
 #ifdef PTH
-	pth_exit(NULL);
+	pth_kill();
 #endif    
 #ifdef MPISRC
 	MPI_Finalize();

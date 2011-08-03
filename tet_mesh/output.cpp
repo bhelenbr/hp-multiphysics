@@ -3,7 +3,9 @@
 #include <fstream>
 #include <iomanip>
 #include "tet_mesh.h"
-
+#ifdef USING_MADLIB
+#include "MAdLibInterface.h"
+#endif
 // #define DATATANK
 
 #ifdef DATATANK
@@ -239,7 +241,8 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			
 		case (gmsh): {
 #ifdef USING_MADLIB
-			MAdLib_output(filename);
+			fnmapp = filename + ".msh";
+			//MAdLib_output(filename);
 #else
 			*gbl->log << "gmsh Not supported on this platform\n";
 #endif
