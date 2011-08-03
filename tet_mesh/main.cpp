@@ -223,6 +223,8 @@ int main(int argc, char *argv[]) {
 			zpart(i).partition(zx,i);
 			zpart(i).checkintegrity();
 			zpart(i).output(fname,out);
+			zpart(i).output(fname,tet_mesh::gmsh);
+
             //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
         }
 #else

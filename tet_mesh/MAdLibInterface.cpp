@@ -106,22 +106,22 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 	MAdLibInterface::importFromMAdMesh(MAdMesh,this);
 }
 	
-void tet_mesh::MAdLib_output(const std::string filename){
-//	std::string fnmapp;
-//	fnmapp = filename + ".msh";
-//	
-//	pGModel MAdModel = NULL;
-//	GM_create(&MAdModel,"theModel");
-//	MAdLibInterface::exportToMAdModel(this, MAdModel);
-//	
-//	// 1.C. Build the MadLib mesh and delete the solver mesh.
-//	pMesh MAdMesh = M_new(MAdModel);
-//	MAdLibInterface::exportToMAdMesh(this, MAdMesh);
-//	M_writeMsh(MAdMesh,filename.c_str(),2);
-//	
-//	delete MAdMesh;
-//	delete MAdModel;
-//	return;
+void tet_mesh::MAdLib_output(const std::string filename) const {
+	std::string fnmapp;
+	fnmapp = filename + ".msh";
+	
+	pGModel MAdModel = NULL;
+	GM_create(&MAdModel,"theModel");
+	MAdLibInterface::exportToMAdModel(this, MAdModel);
+	
+	// 1.C. Build the MadLib mesh and delete the solver mesh.
+	pMesh MAdMesh = M_new(MAdModel);
+	MAdLibInterface::exportToMAdMesh(this, MAdMesh);
+	M_writeMsh(MAdMesh,fnmapp.c_str(),2);
+	
+	delete MAdMesh;
+	delete MAdModel;
+	return;
 }
 
 

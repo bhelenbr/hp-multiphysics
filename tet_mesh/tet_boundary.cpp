@@ -402,7 +402,7 @@ void ecomm::match_numbering(int step) {
 					
 					if (dist > 10.*EPSILON) {
 						printstuff = true;
-						*x.gbl->log << "Matching edge numbering error dist:" << endl;
+						*x.gbl->log << "Matching edge numbering error, edge: " << idprefix << endl;
 						exit(4);
 						//*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << ' ' << x.pnts(pnt(i).gindx) << '\n';
 						//*x.gbl->log << "idnum " << idnum << " lcl point " << i << " gbl point " << pnt(i).gindx << '\n';
