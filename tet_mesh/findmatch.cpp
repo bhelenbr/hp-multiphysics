@@ -343,7 +343,7 @@ void tet_mesh::create_unique_numbering() {
 
 		for (int i=0;i<nebd;++i) {
 			if (!ebdry(i)->is_comm()) continue;
-			
+
 			for (int j=0;j<ebdry(i)->nseg;++j) {
 				sind = ebdry(i)->seg(j).gindx;
 				pnt0 = seg(sind).pnt(0);
@@ -351,6 +351,7 @@ void tet_mesh::create_unique_numbering() {
 			}
 			pnt0 = seg(sind).pnt(1);
 			ebdry(i)->isndbuf(ebdry(i)->nseg) = pnt(pnt0).info;
+
 			ebdry(i)->sndsize() = ebdry(i)->nseg+1;
 			ebdry(i)->sndtype() = boundary::int_msg;
 		}
@@ -403,7 +404,7 @@ void tet_mesh::create_unique_numbering() {
 
 		for (int i=0;i<nebd;++i) {
 			if (!ebdry(i)->is_comm()) continue;
-			
+
 			for (int j=0;j<ebdry(i)->nseg;++j) {
 				sind = ebdry(i)->seg(j).gindx;
 				pnt0 = seg(sind).pnt(0);
@@ -411,12 +412,15 @@ void tet_mesh::create_unique_numbering() {
 			}
 			pnt0 = seg(sind).pnt(1);
 			pnt(pnt0).info = ebdry(i)->isndbuf(ebdry(i)->nseg);
+
 		}
 
 		for (int i=0;i<nvbd;++i) {
+
 			if (!vbdry(i)->is_comm()) continue;
 
 			pnt(vbdry(i)->pnt).info = vbdry(i)->isndbuf(0);
+
 		}
 	}
 
@@ -448,31 +452,63 @@ void tet_mesh::match_bdry_numbering() {
 	for(int i=0;i<nfbd;++i)
 		fbdry(i)->match_numbering(1);
 
-	/* Create global numbering system */
-	create_unique_numbering();
-	 
-	/* Reorder Side boundaries so direction is the same */
+	
+	/* ALL BOUNDARIES LOAD POSITIONS INTO BUFFERS */
 	for(int i=0;i<nebd;++i) 
-		ebdry(i)->match_numbering(1);
-
-	/* FIRST PART OF SENDING, POST ALL RECEIVES */
+		ebdry(i)->ploadbuff(boundary::all,&(pnts(0)(0)),0,ND-1,ND);
+	
+	/* FIRST PART OF SENDING, POST ALL RECEIVES, ALL MASTERS SEND TO SLAVES */
 	for(int i=0;i<nebd;++i)
 		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
-						
+	
 	/* SECOND PART */
-	 for(int i=0;i<nebd;++i) 
+	for(int i=0;i<nebd;++i) 
 		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
-
+	
 	/* FINAL PART OF SENDING */
 	for(int i=0;i<nebd;++i)
 		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
 	
-	/* FINAL PART OF SENDING */
+	/* FINAL PART OF SENDING, REPLACE SLAVES BUFFER WITH MASTER BUFFER */
 	for(int i=0;i<nebd;++i)
 		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
+	
+	/* Slave receives vertex positions & matches vertex numbering */
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->match_numbering(0);
+	
+	/* Create global numbering system */
+	create_unique_numbering();
+	 
+	for(int i=0;i<nebd;++i) {
+		if(ebdry(i)->is_comm()){
+			ebdry(i)->setup_next_prev();
+			ebdry(i)->reorder();
+		}
+	}
 
-	for(int i=0;i<nebd;++i) 
-		ebdry(i)->match_numbering(2);		  
+//	/* Reorder Side boundaries so direction is the same */
+//	for(int i=0;i<nebd;++i) 
+//		ebdry(i)->match_numbering(1);
+//
+//	/* FIRST PART OF SENDING, POST ALL RECEIVES */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
+//						
+//	/* SECOND PART */
+//	 for(int i=0;i<nebd;++i) 
+//		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+//
+//	/* FINAL PART OF SENDING */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
+//	
+//	/* FINAL PART OF SENDING */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
+//	
+//	for(int i=0;i<nebd;++i) 
+//		ebdry(i)->match_numbering(2);		  
 
 	/* Redefine tets based on global numbering system */
 	reorient_tets(true);
@@ -508,7 +544,7 @@ void tet_mesh::match_bdry_numbering() {
 		}
 	}  
 	
-#define TEST_MATCH
+//#define TEST_MATCH
 #ifdef TEST_MATCH
 	for (int i=0;i<nfbd;++i) {
 		if (!fbdry(i)->is_comm()) continue;

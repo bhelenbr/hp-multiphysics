@@ -236,6 +236,16 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			break;
 		}
 			
+			
+		case (gmsh): {
+#ifdef USING_MADLIB
+//			MAdLib_output(filename, this);
+#else
+			*gbl->log << "gmsh Not supported on this platform\n";
+#endif
+			break;
+		}
+			
 		case(vlength): {
 			fnmapp = filename +".lngth";
 			out.open(fnmapp.c_str());

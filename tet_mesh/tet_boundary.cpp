@@ -335,92 +335,80 @@ void edge_bdry::reorder() {
 	return;
 }
 
-void face_bdry::pull_apart_face_boundaries() {
-	Array<int,2> listoftris(ntri,ntri);
-	Array<int,1> numoftris(ntri);
-	
-	listoftris = -1;
-	numoftris = 0;	
-	
-	for (int i=0; i < ntri; ++i) 
-		tri(i).info = -1;
-	
-	int chunk = 0;
 
-	for (int n=0; n<ntri; ++n) {
-		if (tri(n).info < 0) {	
-			
-			tri(n).info = chunk;
-			numoftris(chunk) = 1;
-			listoftris(0,chunk) = n;
-			
-			for (int i=0; i < numoftris(chunk); ++i) {
-				for (int j=0; j<3; ++j) {
-					
-					int tind = tri(listoftris(i,chunk)).tri(j);
-
-					if (tri(tind).info < 0 && tind > -1) {
-						tri(tind).info = chunk;
-						listoftris(numoftris(chunk)++,chunk) = tind;
-					}
-				}
-			}
-			
-			++chunk;
-		}
-	}
-
-	if (chunk>1) {
-		*x.gbl->log << "#creating " << chunk << " new " << mytype << " face boundaries: " << idnum  << std::endl;
-
-		Array<int,2> listofgindx(ntri,chunk);
-		listofgindx = -1;
-		
-		for (int i=0; i<chunk; ++i) {
-			for (int j=0; j<numoftris(i); ++j) {
-				listofgindx(j,i) = tri(listoftris(j,i)).gindx;
-			}
-		}
-
-		x.nfbd += chunk-1;
-		x.fbdry.resizeAndPreserve(x.nfbd);
-		ntri = numoftris(0);
-		alloc(static_cast<int>(ntri*3));
-
-		for (int i=0; i<ntri; ++i) {
-			tri(i).gindx = listofgindx(i,0);
-			for (int j=0; j<3; ++j) {
-				tri(i).pnt(j) = x.tri(tri(i).gindx).pnt(j);
-			}
-		}
-		
-		create_from_tri();
-
-		for (int n=1; n<chunk; ++n) {
-			int fbd = x.nfbd-n;
-			x.fbdry(fbd) = create(x);
-			//x.fbdry(fbd)->copy(*this);
-			x.fbdry(fbd)->alloc(static_cast<int>(numoftris(n)*3));
-			x.fbdry(fbd)->ntri = numoftris(n);
-			
-			for (int i=0; i<numoftris(n); ++i) {
-				x.fbdry(fbd)->tri(i).gindx = listofgindx(i,n);
-				for (int j=0; j<3; ++j) {
-					x.fbdry(fbd)->tri(i).pnt(j) = x.tri(x.fbdry(fbd)->tri(i).gindx).pnt(j);
-				}
-			}
-			
-			x.fbdry(fbd)->create_from_tri();
-
-		}	
-	}
-	
-	return;
-}
 
 void ecomm::match_numbering(int step) {
-	int sind;
+	int sind,sind2;
+	TinyVector<FLT,tet_mesh::ND> mpnt1,mpnt2;
+
 	switch(step) {
+			
+		case(0): {
+			if (is_frst()) {
+				return;
+			}
+			else {
+				/* Slave receives master boundaries vertex positions */
+				int count = 0;
+				bool printstuff = false;	
+				
+				Array<int,1> gindx(nseg);
+				
+				for (int i=0;i<nseg;++i)
+					gindx(i) = seg(i).gindx;
+
+				for (int n=0;n<tet_mesh::ND;++n)
+					mpnt2(n) = fsndbuf(count++);
+				
+				for (int i=0;i<nseg;++i) {
+					mpnt1 = mpnt2;
+					for (int n=0;n<tet_mesh::ND;++n)
+						mpnt2(n) = fsndbuf(count++);
+
+					/* brute force */
+					FLT dist = 0.0;
+					seg(i).gindx = -1;
+					for (int j=0; j<nseg; ++j) {
+						TinyVector<FLT,tet_mesh::ND> lclpnts1,lclpnts2;
+						lclpnts1 = x.pnts(x.seg(gindx(j)).pnt(0));
+						lclpnts2 = x.pnts(x.seg(gindx(j)).pnt(1));
+						
+						dist = 0.0;
+						for (int k=0; k<tet_mesh::ND; ++k) {
+							dist += pow(lclpnts1(k)-mpnt1(k), 2.0);
+							dist += pow(lclpnts2(k)-mpnt2(k), 2.0);
+
+						}
+
+						if (dist <  10.*EPSILON) {
+							seg(i).gindx = gindx(j);
+							break;
+						}
+						
+						dist = 0.0;
+						for (int k=0; k<tet_mesh::ND; ++k) {
+							dist += pow(lclpnts2(k)-mpnt1(k), 2.0);
+							dist += pow(lclpnts1(k)-mpnt2(k), 2.0);
+						}
+
+						if (dist < 10.*EPSILON) {
+							seg(i).gindx = gindx(j);
+							break;
+						}
+						
+					}
+					
+					if (dist > 10.*EPSILON) {
+						printstuff = true;
+						*x.gbl->log << "Matching edge numbering error dist:" << endl;
+						exit(4);
+						//*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << ' ' << x.pnts(pnt(i).gindx) << '\n';
+						//*x.gbl->log << "idnum " << idnum << " lcl point " << i << " gbl point " << pnt(i).gindx << '\n';
+					}					
+				}
+			}
+			return;
+		}
 		case 1: {
 			if (is_frst()) {
 				sind = seg(0).gindx;
@@ -432,14 +420,17 @@ void ecomm::match_numbering(int step) {
 			break;
 		}
 		case 2: {
+
 			if (is_frst()) return;
 			
+			*x.gbl->log << "match numbering for edge: " << idprefix << "\n";
+
 			sind = seg(0).gindx;
 			if (isndbuf(0) == x.pnt(x.seg(sind).pnt(0)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(1)).info) {
+				*x.gbl->log << "code returned 0 \n";
 				return;
 			}
 				
-			*x.gbl->log << "Reversing edge: " << idprefix << " This part of code not tested\n";
 			
 			/* EDGE IS ORIENTED BACKWARDS FROM MASTER OR IS MISALIGNED LOOP OR BOTH */
 			sind = seg(nseg-1).gindx;
@@ -447,15 +438,50 @@ void ecomm::match_numbering(int step) {
 				/* just backwards, swap first & last, then reorder */
 				swap(0,nseg-1);
 				reorder();
+				*x.gbl->log << "code returned 1 \n";
+
 				return;
 			}
 			
+			/* correct order but endpoints flipped */
+			sind = seg(0).gindx;
+			sind2 = seg(nseg-1).gindx;
+			if (isndbuf(0) == x.pnt(x.seg(sind2).pnt(1)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(1)).info) {
+				swap(0,nseg-1);
+				setup_next_prev();
+				reorder();
+				*x.gbl->log << "code returned 2 \n";
+				return;
+			}
+
+			/* reverse order and endpoints flipped */
+			if (isndbuf(0) == x.pnt(x.seg(sind2).pnt(0)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(0)).info) {
+				
+//				swap(0,nseg-1);
+//				
+//				/* invert side direction */
+//				int temp = seg(0).next;
+//				seg(0).next = seg(0).prev;
+//				seg(0).prev = temp;
+//				sind = seg(0).gindx;
+//				int v0 = x.seg(sind).pnt(0);
+//				x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+//				x.seg(sind).pnt(1) = v0;
+				setup_next_prev();
+				reorder();
+				*x.gbl->log << "code returned 3 \n";
+				
+				return;
+			}
+
 			/* Find Start of Loop */
 			for (int i=0;i<nseg;++i) {
 				sind = seg(i).gindx;
 				if (isndbuf(0) == x.pnt(x.seg(sind).pnt(0)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(1)).info) {
 					swap(0,i);
 					reorder();
+					*x.gbl->log << "code returned 4 \n";
+
 					return;
 				}
 				
@@ -471,11 +497,23 @@ void ecomm::match_numbering(int step) {
 					x.seg(sind).pnt(1) = v0;
 					
 					reorder();
+					*x.gbl->log << "code returned 5 \n";
+
 					return;
 				}
 			}
 		}
+			
+		*x.gbl->log << " Didn't find match for edge? " << idprefix;
+		*x.gbl->log << " Trying to find " << isndbuf(0) << ' ' << isndbuf(1) << std::endl;
+		*x.gbl->log << " These are my options " << std::endl;
+		for (int i=0;i<nseg;++i) {
+			sind = seg(i).gindx;
+			*x.gbl->log << "global edge " << sind << "  pnts " << x.pnt(x.seg(sind).pnt(0)).info << ' ' << x.pnt(x.seg(sind).pnt(1)).info << std::endl;
+		}
 	 }
+	
+
 	return;
 }
 	
@@ -936,7 +974,90 @@ void fcomm::match_numbering(int step) {
 	
 	return;
 }
+	
+void face_bdry::pull_apart_face_boundaries() {
+	Array<int,2> listoftris(ntri,ntri);
+	Array<int,1> numoftris(ntri);
+	
+	listoftris = -1;
+	numoftris = 0;	
+	
+	for (int i=0; i < ntri; ++i) 
+		tri(i).info = -1;
+	
+	int chunk = 0;
+	
+	for (int n=0; n<ntri; ++n) {
+		if (tri(n).info < 0) {	
+			
+			tri(n).info = chunk;
+			numoftris(chunk) = 1;
+			listoftris(0,chunk) = n;
+			
+			for (int i=0; i < numoftris(chunk); ++i) {
+				for (int j=0; j<3; ++j) {
+					
+					int tind = tri(listoftris(i,chunk)).tri(j);
+					
+					if (tri(tind).info < 0 && tind > -1) {
+						tri(tind).info = chunk;
+						listoftris(numoftris(chunk)++,chunk) = tind;
+					}
+				}
+			}
+			
+			++chunk;
+		}
+	}
+	
+	if (chunk>1) {
+		*x.gbl->log << "#creating " << chunk << " new " << mytype << " face boundaries: " << idnum  << std::endl;
 		
+		Array<int,2> listofgindx(ntri,chunk);
+		listofgindx = -1;
+		
+		for (int i=0; i<chunk; ++i) {
+			for (int j=0; j<numoftris(i); ++j) {
+				listofgindx(j,i) = tri(listoftris(j,i)).gindx;
+			}
+		}
+		
+		x.nfbd += chunk-1;
+		x.fbdry.resizeAndPreserve(x.nfbd);
+		ntri = numoftris(0);
+		alloc(static_cast<int>(ntri*3));
+		
+		for (int i=0; i<ntri; ++i) {
+			tri(i).gindx = listofgindx(i,0);
+			for (int j=0; j<3; ++j) {
+				tri(i).pnt(j) = x.tri(tri(i).gindx).pnt(j);
+			}
+		}
+		
+		create_from_tri();
+		
+		for (int n=1; n<chunk; ++n) {
+			int fbd = x.nfbd-n;
+			x.fbdry(fbd) = create(x);
+			//x.fbdry(fbd)->copy(*this);
+			x.fbdry(fbd)->alloc(static_cast<int>(numoftris(n)*3));
+			x.fbdry(fbd)->ntri = numoftris(n);
+			
+			for (int i=0; i<numoftris(n); ++i) {
+				x.fbdry(fbd)->tri(i).gindx = listofgindx(i,n);
+				for (int j=0; j<3; ++j) {
+					x.fbdry(fbd)->tri(i).pnt(j) = x.tri(x.fbdry(fbd)->tri(i).gindx).pnt(j);
+				}
+			}
+			
+			x.fbdry(fbd)->create_from_tri();
+			
+		}	
+	}
+	
+	return;
+}
+
 void fpartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
 	cout << "fpartition::mgconnect being called and doesnt work" << endl;
 	
