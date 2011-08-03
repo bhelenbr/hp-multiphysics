@@ -239,7 +239,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			
 		case (gmsh): {
 #ifdef USING_MADLIB
-//			MAdLib_output(filename, this);
+			MAdLib_output(filename);
 #else
 			*gbl->log << "gmsh Not supported on this platform\n";
 #endif

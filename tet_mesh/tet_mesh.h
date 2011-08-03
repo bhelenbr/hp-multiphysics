@@ -195,7 +195,7 @@ class tet_mesh : public multigrid_interface {
 		void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
 #ifdef USING_MADLIB
 		void MAdLib_input(const std::string filename, FLT grwfac, input_map& input);
-		void MAdLib_output(const std::string filename, tet_mesh* mesh);
+		void MAdLib_output(const std::string filename);
 #endif
 		/** Virtual routine so inheritors can set up info after input/adaptation */
 		virtual void setinfo();  
