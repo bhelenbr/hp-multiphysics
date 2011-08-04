@@ -81,8 +81,10 @@ template<class BASE> class pod_sim_edge_bdry {
 };
 
 //template<class BASE> class pod_coefficients : public pod_simulate<BASE> {
+//	ofstream coefficient_file;
 //	public:
 //		pod_coefficents<BASE>* create() { return new pod_coefficients<BASE>();}
+//    void init(input_map& input); // Read name of coefficient file and open it for writing in tadvance
 //		void tadvance();
 //}
 
