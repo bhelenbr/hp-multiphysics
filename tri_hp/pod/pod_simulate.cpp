@@ -813,10 +813,10 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 	return;
 }
 
-//void class BASE> void pod_coefficients<BASE>::tadvance() {
+//template<class BASE> void pod_coefficients<BASE>::tadvance() {
 //	std::ostringstream nstr;
 //	std::string fname;
-//	nstr << x.gbl->tstep << std::flush;
+//	nstr << BASE::gbl->tstep << std::flush;
 //	fname = "rstrt" +nstr.str() +"_" +x.gbl->idprefix;
 //	x.input(fname);
 //
