@@ -824,6 +824,7 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 //	int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
 //	FLT dotp, dotp_recv;
 //	Array<FLT,1> low_noise_dot(BASE::ntri);
+//	vsi ugstore;
 //	ugstore.v.reference(BASE::ugbd(1).v);
 //	ugstore.s.reference(BASE::ugbd(1).s);
 //	ugstore.i.reference(BASE::ugbd(1).i);
