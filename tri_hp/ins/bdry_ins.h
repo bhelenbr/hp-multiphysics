@@ -33,7 +33,7 @@ using namespace blitz;
 //#define DETAILED_DT
 //#define DETAILED_MINV
 
-//#define L2_ERROR
+#define L2_ERROR
 
 namespace bdry_ins {
 
@@ -1119,6 +1119,7 @@ namespace bdry_ins {
 	};
 
 	class hybrid_pt : public surface_outflow {
+		TinyVector<FLT,tri_mesh::ND> tang;
 		
 		public:
 			hybrid_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow(xin,bin) {mytype = "hybrid_pt"; contact_type = prdc;}
@@ -1136,18 +1137,6 @@ namespace bdry_ins {
 
 			void rsdl(int stage); 			
 			void update(int stage);
-			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-				switch(wall_type) {
-					case(vertical):
-						pt(0) = position;
-						break;
-					case(horizontal):
-						pt(1) = position;
-						break;
-					case(angled):case(curved):
-						break;
-				}
-			}
 	};
 
 }

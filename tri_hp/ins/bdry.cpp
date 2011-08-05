@@ -572,7 +572,7 @@ void hybrid_slave_pt::update(int stage) {
 	
 	if (stage == -1) return;
 	
-	int sendsize(6);
+	int sendsize(8);
 	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
 	base.fsndbuf(0) = 0.0;
@@ -581,6 +581,8 @@ void hybrid_slave_pt::update(int stage) {
 	base.fsndbuf(3) = 0.0;
 	base.fsndbuf(4) = 0.0;
 	base.fsndbuf(5) = 0.0;
+	base.fsndbuf(6) = 0.0;
+	base.fsndbuf(7) = 0.0;
 	
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
@@ -595,71 +597,43 @@ void hybrid_slave_pt::update(int stage) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
-	// flow is into moving-mesh
 	if (base.fsndbuf(0) > 0.0) {
+		// flow is into moving-mesh from level-set
+		// Match position to levelset
+		x.pnts(base.pnt)(0) = base.fsndbuf(4);
 		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-		if(base.fsndbuf(4) == 2.0)
-			x.pnts(base.pnt)(0) = base.fsndbuf(4) -2.0;
-		else
-			x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		//mvpttobdry(x.pnts(base.pnt));
+		
+		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
+		x.pnts(base.pnt)(0) = 0.0;  // TEMPORARY
 	}
-	/* to move the other point along the edge back to the boundary */
-	/*
-	 //std::cout<<"start moving points: SLAVE"<<endl;
-	 int nsides(4);
-	 for(int q=0;q<nsides;q++)
-	 {
-	 if(base.ebdry(q) != 0)
-	 {
-	 //std::cout<<"QQQQ: "<<q<<endl;
-	 //std::cout<<base.ebdry(0)<<endl;
-	 cout<<"NUMBER "<<q<<endl;
-	 for(int r=0;r<x.ebdry(q)->nseg;r++)
-	 {
-	 //std::cout<<"r: "<<r<<endl;
-	 x.ebdry(base.ebdry(q))->mvpttobdry(x.ebdry(base.ebdry(q))->seg(q),0.0,x.pnts(x.seg(x.ebdry(base.ebdry(q))->seg(r)).pnt(0)));
-	 }
-	 }
-	 }
-	 */
-	/*
-	 //std::cout<<"start moving points: SLAVE"<<endl;
-	 int nsides(4);
-	 for(int q=0;q<nsides;q++)
-	 {
-	 for(int r=0;r<x.ebdry(q)->nseg;r++)
-	 x.ebdry(q)->mvpttobdry(x.ebdry(q)->seg(r),0.0,x.pnts(x.seg(x.ebdry(q)->seg(r)).pnt(0)));
-	 }
-	 */
-	//std::cout<<"slave error: "<<x.pnts(base.pnt)(0)<<' '<<x.pnts(base.pnt)(1)<<' '<<x.pnts(base.pnt)(0)-0.1*sin(3.1415926*x.pnts(base.pnt)(1))-1<<std::endl;
 }
 
 void hybrid_pt::rsdl(int stage) {
+	// This is supposed to be called by surface::rsdl
 	int sind,v0,v1;
-	TinyVector<FLT,2> tang,vel;
-	FLT tangvel;
+	TinyVector<FLT,2> pt,vel;
+	FLT tangvel,psi;
 	
 	if (surfbdry == 0) {
 		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
 		v0 = x.seg(sind).pnt(1);
 		v1 = x.seg(sind).pnt(0);
+		psi = 1.0;
 	}
 	else {
 		sind = x.ebdry(base.ebdry(1))->seg(0);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
+		psi = -1.0;
 	}
 	
+	x.crdtocht1d(sind);
+	basis::tri(x.log2p)->ptprobe1d(2,pt.data(),tang.data(),psi,&x.cht(0,0),MXTM);
+																 
 	
 	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
-	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
-	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-	
-	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-								x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-								x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	vel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+	vel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
 	
 	if (tangvel > 0.0)
@@ -671,10 +645,9 @@ void hybrid_pt::rsdl(int stage) {
 }
 
 void hybrid_pt::update(int stage) {
-	
 	if (stage == -1) return;
 	
-	int sendsize(6);
+	int sendsize(8);
 	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
 	// (0) = flow direction
@@ -687,6 +660,9 @@ void hybrid_pt::update(int stage) {
 	base.fsndbuf(3) = 0.0;
 	base.fsndbuf(4) = 0.0;
 	base.fsndbuf(5) = 0.0;
+	// Tack on tangent so levelset can also determine correct slope on boundary
+	base.fsndbuf(6) = tang(0);
+	base.fsndbuf(7) = tang(1);
 	
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
@@ -702,14 +678,14 @@ void hybrid_pt::update(int stage) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
-	// flow is into moving-mesh
 	if (base.fsndbuf(0) > 0.0) {
+		// flow is into moving-mesh from level-set
+		// Match position to levelset
+		x.pnts(base.pnt)(0) = base.fsndbuf(4);
 		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-		if(base.fsndbuf(4) == 2.0)
-			x.pnts(base.pnt)(0) = base.fsndbuf(4) -2.0;
-		else
-			x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		//mvpttobdry(x.pnts(base.pnt));
+		
+		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
+		x.pnts(base.pnt)(0) = 0.0;  // TEMPORARY
 	}
 }
 
