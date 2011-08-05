@@ -789,8 +789,6 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 
 	BASE::output(fname,why);
 	
-	
-	int i,j;
 	std::string fnmapp, namewdot;
 	std::ostringstream nstr;
 	ofstream out;
