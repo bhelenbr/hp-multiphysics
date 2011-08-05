@@ -294,12 +294,12 @@ void melt::rsdl_after(int stage) {
 
 
 void melt::vdirichlet() {
-	int sind,v0;
-		
 	/* Now apply dirichlet B.C.s */
 	flexible::vdirichlet();
 	
 #ifdef petsc
+	int sind,v0;
+
 	/* Store rotated vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	int i = 0;
