@@ -24,7 +24,7 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
 	TinyMatrix<FLT,MXGP,MXGP> rho, mu;
-	FLT heavy, delt, length, phidw, signphi, deltw;
+	FLT heavy, delt, length, phidw, signphi;
 	TinyVector<FLT,ND> tang,norm;
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> phivel;
 
@@ -413,7 +413,7 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					cv(1,1)(i,j) += -delt*gbl->sigma*norm(0)*length*(ldcrd(1,0)*norm(1) +ldcrd(0,0)*norm(0));
 
 #ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
-					deltw = gbl->width*delt;
+					FLT deltw = gbl->width*delt;
 					phivel(0)(i,j) = deltw*(u(0)(i,j)-mvel(0)(i,j)) +(1.0-deltw)*signphi*norm(0)/length;
 					phivel(1)(i,j) = deltw*(u(1)(i,j)-mvel(1)(i,j)) +(1.0-deltw)*signphi*norm(1)/length;
 
