@@ -371,7 +371,7 @@ void hybrid_pt::update(int stage) {
 
 	if (stage == -1) return;
 	
-	int sendsize(6);
+	int sendsize(8);
 	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
 	// see /ins/bdry.cpp hybrid_pt::update
@@ -385,6 +385,8 @@ void hybrid_pt::update(int stage) {
 	base.fsndbuf(3) = 1.0;
 	base.fsndbuf(4) = 0.0;
 	base.fsndbuf(5) = 0.0;
+	base.fsndbuf(6) = 0.0;
+	base.fsndbuf(7) = 0.0;
 
 	int sind = x.ebdry(base.ebdry(1))->seg(0);
 	int v0 = x.seg(sind).pnt(0);
@@ -393,13 +395,12 @@ void hybrid_pt::update(int stage) {
 	TinyVector<FLT,2> nrm, vel;
 	FLT normvel;
 
+	/* Normal to hybrid boundary */
 	nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 	nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
 
-	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	vel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+	vel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 
 	/* normvel is defined positive outward */
 	normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
@@ -409,29 +410,27 @@ void hybrid_pt::update(int stage) {
 		int p0 = x.seg(x.ebdry(base.ebdry(1))->seg(0)).pnt(1);
 		int p1 = x.seg(x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1)).pnt(0);
 
+		/* MOVE TO INTERSECTION POINT */
 		if (x.ug.v(base.pnt,2)*x.ug.v(p0,2) < 0.0) {
-			/* MOVE TO INTERSECTION POINT */
+			/* Between base.pnt and point above */
 			TinyVector<FLT,2> dx = x.pnts(p0)-x.pnts(base.pnt);
 			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p0,2)-x.ug.v(base.pnt,2));
 			x.pnts(base.pnt) += dx;
 			x.ug.v(base.pnt,2) = 0.0;
 		}
 		else {
-			/* MOVE TO INTERSECTION POINT */
+			/* Between base.pnt and point below */
 			TinyVector<FLT,2> dx = x.pnts(p1)-x.pnts(base.pnt);
 			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p1,2)-x.ug.v(base.pnt,2));
 			x.pnts(base.pnt) += dx;
 			x.ug.v(base.pnt,2) = 0.0;	
 		}
 		base.fsndbuf(3) = -1.0;
-
 	}
-	// move the approximation to the boundary
-//	base.mvpttobdry(x.pnts(base.pnt));
+	// move the approximation to the boundary if it an analytically defined boundary
+	x.ebdry(base.ebdry(1))->mvpttobdry(0,-1.0,x.pnts(base.pnt));
 	base.fsndbuf(4) = x.pnts(base.pnt)(0);
 	base.fsndbuf(5) = x.pnts(base.pnt)(1);
-
-	if (!base.is_comm()) return;
 
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
@@ -447,16 +446,18 @@ void hybrid_pt::update(int stage) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
-	// flow is into lvl-set
+	
 	if (base.fsndbuf(0) < 0.0) {
-		// specific for the hybrid example. required since one of hybrid points has different x coordinate in lvlset, mesh grid */
-		if (base.fsndbuf(1) == 0.0){
-			x.pnts(base.pnt)(0) = base.fsndbuf(1) + 2.0;
-		}
-		else {
-			x.pnts(base.pnt)(0) = base.fsndbuf(1);
-		}
+		// flow is into lvl-set
+		// Set point to location sent from moving mesh
+		x.pnts(base.pnt)(0) = base.fsndbuf(1);
 		x.pnts(base.pnt)(1) = base.fsndbuf(2);
+		
+		// Load tangent sent from moving mesh 
+		// this will be used to determine slope of levelset along hybrid inflow boundaries
+		tang(0) = base.fsndbuf(6);
+		tang(1) = base.fsndbuf(7);
+		tangset = true;
 	}
 }
 
@@ -467,20 +468,22 @@ void hybrid::update(int stage) {
 	FLT xloc, yloc;
 	FLT x2,y2,velx,vely,nrmx,nrmy;
 	FLT normux, normuy, lengthu;
+	TinyVector<FLT,tri_mesh::ND> tang;
 	
 	// return;  // Uncomment this to simply freeze values on incoming boundaries
 
-	if (stage == -1 || x.coarse_flag) return;
+	if (stage == -1 || x.coarse_flag || x.reinit_flag) return;
 
 	// Find hybrid point //
-	if (base.vbdry(0) > -1){
+	hybrid_pt *hpt;
+	if ((hpt = dynamic_cast<hybrid_pt *>(x.vbdry(base.vbdry(0))))){
 		sind = base.seg(0);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(0);
 		v2 = x.seg(sind).pnt(1);
 		flag = true;
 	}
-	else if (base.vbdry(1) > -1){
+	else if ((hpt = dynamic_cast<hybrid_pt *>(x.vbdry(base.vbdry(0))))){
 		sind = base.seg(base.nseg-1);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(1);
@@ -489,45 +492,30 @@ void hybrid::update(int stage) {
 	}
 	else {
 		*x.gbl->log << "Neither was a hybrid_pt?  What gives?" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
+	
+	/* Load surface tangent from hybrid_pt */
+	tang(0) = hpt->tang(0);
+	tang(1) = hpt->tang(1);
+	bool tangset = hpt->tangset;
+	if (!tangset) return;
+	
+	/* normal to levelset */
+	lengthu = sqrt(tang(0)*tang(0)+tang(1)*tang(1));
+	normux = tang(1)/lengthu;
+	normuy = -tang(0)/lengthu;
+	
+	/* get sign right? */
+	TinyVector<FLT,tri_mesh::ND> dx = x.pnts(v2)-x.pnts(v0);
+	if ((dx(0)*normux +dx(1)*normuy)*x.ug.v(v2,2) < 0.0) {
+		normux *= -1;
+		normuy *= -1;
+	}	
+	
 	/* Location of hybrid point */
 	xloc = x.pnts(v0)(0);
 	yloc = x.pnts(v0)(1);
-	
-		
-	// At what point of triangle do we need to know derivative? //
-	int j;
-	for (j=0;j<3;++j)
-		if (x.tri(tind).pnt(j) == v0) break;
-	assert(j < 3);
-	
-	// Figure out what r & s should be based on vertex # //
-	FLT r,s;
-	r=-1.0;
-	s=-1.0;
-	if (j==0) s=1.0;
-	if (j==2) r=1.0;	
-	
-	/* Evaluate solution derivatives at point */
-	TinyVector<FLT,tri_mesh::ND> xpt,dxdr,dxds,dxmax;
-	TinyVector<FLT,4> upt,dudr,duds;
-	x.ugtouht(tind);
-	x.crdtocht(tind);
-	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&x.cht(0,0),MXTM); 
-	basis::tri(x.log2p)->ptprobe(x.NV,upt.data(),dudr.data(),duds.data(),r,s,&x.uht(0)(0),MXTM); 
-	
-	/* Calculate grad phi at hybrid point */
-	TinyMatrix<FLT,2,2> ldcrd;
-	ldcrd(0,0) = dxdr(0);
-	ldcrd(0,1) = dxds(0);
-	ldcrd(1,0) = dxdr(1);
-	ldcrd(1,1) = dxds(1);
-	FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-	normux = (+ldcrd(1,1)*dudr(2) -ldcrd(1,0)*duds(2))/cjcb;
-	normuy = (-ldcrd(0,1)*dudr(2) +ldcrd(0,0)*duds(2))/cjcb;
-	lengthu = sqrt(normux*normux +normuy*normuy); //for projection in this direction
-	normux /= lengthu; // phi unit normal vector x direction (in the positive phi direction)
-	normuy /= lengthu; // phi y direction
 
 	/* Re-evaluate phi at inflow points */
 	for(int j=0;j<base.nseg;++j) {
@@ -548,7 +536,7 @@ void hybrid::update(int stage) {
 			v2 = x.seg(sind).pnt(flag);
 			x2 = x.pnts(v2)(0);
 			y2 = x.pnts(v2)(1);
-			
+
 			// use these lines to apply phi along the boundary as the normal distance from the two-phase boundary tangent
 			FLT temp = (x2-xloc)*normux + (y2-yloc)*normuy;
 			if (fabs(x.ug.v(v2,2) - temp) > 0.1) {
