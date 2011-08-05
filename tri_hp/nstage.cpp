@@ -34,6 +34,8 @@ void tri_hp::rsdl(int stage) {
 		}
 	}
 
+//	for(int i=0;i<nvbd;++i)
+//		hp_vbdry(i)->rsdl(stage);  // CONFLICT BETWEEN ebdry's calling rsdl and vbdry's having their own rsdl (melt_end_pt)
 
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
@@ -126,6 +128,9 @@ void tri_hp::rsdl(int stage) {
 				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
 		}
 	}
+	
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->rsdl_after(stage);
 	
 	return;
 }
