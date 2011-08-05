@@ -228,6 +228,7 @@ void neumann::element_rsdl(int eind, int stage) {
 
 
 void melt_end_pt::rsdl(int stage) {
+	// THIS IS SUPPOSED TO BE CALLED FROM tri_hp::update, but these are usually commented out.
 	int ebdry = base.ebdry(1);
 	int sind = x.ebdry(ebdry)->seg(0);
 	x.crdtocht1d(sind);
