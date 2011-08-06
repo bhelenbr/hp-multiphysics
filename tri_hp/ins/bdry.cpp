@@ -626,9 +626,10 @@ void hybrid_pt::rsdl(int stage) {
 		v1 = x.seg(sind).pnt(1);
 		psi = -1.0;
 	}
-	
+
 	x.crdtocht1d(sind);
 	basis::tri(x.log2p)->ptprobe1d(2,pt.data(),tang.data(),psi,&x.cht(0,0),MXTM);
+	tang *= -psi;
 																 
 	
 	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
