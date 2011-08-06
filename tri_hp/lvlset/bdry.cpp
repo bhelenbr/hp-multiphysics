@@ -428,7 +428,7 @@ void hybrid_pt::update(int stage) {
 		base.fsndbuf(3) = -1.0;
 	}
 	// move the approximation to the boundary if it an analytically defined boundary
-	x.ebdry(base.ebdry(1))->mvpttobdry(0,-1.0,x.pnts(base.pnt));
+	// x.ebdry(base.ebdry(1))->mvpttobdry(0,-1.0,x.pnts(base.pnt));
 	base.fsndbuf(4) = x.pnts(base.pnt)(0);
 	base.fsndbuf(5) = x.pnts(base.pnt)(1);
 
@@ -474,26 +474,31 @@ void hybrid::update(int stage) {
 
 	if (stage == -1 || x.coarse_flag || x.reinit_flag) return;
 
+
+	// To get this to work had to reorder the vbdry->update and ebdry->update calls in nstage so that the vbdry went first
 	// Find hybrid point //
-	hybrid_pt *hpt;
-	if ((hpt = dynamic_cast<hybrid_pt *>(x.vbdry(base.vbdry(0))))){
+	if (base.vbdry(0) > -1) {
 		sind = base.seg(0);
-		tind = x.seg(sind).tri(0);
-		v0 = x.seg(sind).pnt(0);
-		v2 = x.seg(sind).pnt(1);
 		flag = true;
 	}
-	else if ((hpt = dynamic_cast<hybrid_pt *>(x.vbdry(base.vbdry(0))))){
+	else if (base.vbdry(1) > -1) {
 		sind = base.seg(base.nseg-1);
-		tind = x.seg(sind).tri(0);
-		v0 = x.seg(sind).pnt(1);
-		v2 = x.seg(sind).pnt(0);
 		flag = false;
 	}
 	else {
 		*x.gbl->log << "Neither was a hybrid_pt?  What gives?" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
+	
+	hybrid_pt *hpt;
+	if ((hpt = dynamic_cast<hybrid_pt *>(x.hp_vbdry(base.vbdry(1-flag)))) == NULL) {
+		*x.gbl->log << "Neither was a hybrid_pt?  What gives? " << hpt << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+
+	tind = x.seg(sind).tri(0);
+	v0 = x.seg(sind).pnt(1-flag);
+	v2 = x.seg(sind).pnt(flag);
 	
 	/* Load surface tangent from hybrid_pt */
 	tang(0) = hpt->tang(0);
@@ -550,7 +555,7 @@ void hybrid::update(int stage) {
 				x.ug.v(v2,2) = temp;
 			}
 			// OR use this line to apply phi along the boundary as the vertical distance from the hybrid point
-			//x.ug.v(v2,2) = y2 - yloc;
+			// x.ug.v(v2,2) = y2 - yloc;
 		}
 	}
 
