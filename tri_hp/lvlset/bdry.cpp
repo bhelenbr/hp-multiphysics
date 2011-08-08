@@ -455,9 +455,13 @@ void hybrid_pt::update(int stage) {
 		
 		// Load tangent sent from moving mesh 
 		// this will be used to determine slope of levelset along hybrid inflow boundaries
-		tang(0) = base.fsndbuf(6);
-		tang(1) = base.fsndbuf(7);
-		tangset = true;
+		// Had to do this check because hybrid update occurs before hybrid_pt update.  With
+		// Multigrid tang got messed up by coarse log2p levels 
+		if (x.log2p == x.log2pmax) {
+			tang(0) = base.fsndbuf(6);
+			tang(1) = base.fsndbuf(7);
+			tangset = true;
+		}
 	}
 }
 
@@ -470,12 +474,10 @@ void hybrid::update(int stage) {
 	FLT normux, normuy, lengthu;
 	TinyVector<FLT,tri_mesh::ND> tang;
 	
-	// return;  // Uncomment this to simply freeze values on incoming boundaries
+	//  return;  // Uncomment this to simply freeze values on incoming boundaries
 
-	if (stage == -1 || x.coarse_flag || x.reinit_flag) return;
+	if (stage == -1 || x.coarse_flag || x.reinit_iterations) return;
 
-
-	// To get this to work had to reorder the vbdry->update and ebdry->update calls in nstage so that the vbdry went first
 	// Find hybrid point //
 	if (base.vbdry(0) > -1) {
 		sind = base.seg(0);
