@@ -8,49 +8,11 @@
 // #define RSDL_DEBUG
 #define DEBUG_OUTPUT
 
-void tri_hp_lvlset::reinitialize() {
-	normstuff norm0list[6];
-	normstuff norm1list[6];
+void tri_hp_lvlset::reinitialize() {	
 	
-	// The info gathered here is more than necessary for the implemented method, but it may be useful for another
-	// First go through both end points of all boundaries and see if a bc is applied
-	for(int i=0;i<nebd;++i){
-		FLT nx, ny, xloc, yloc, phi, basephi;
-
-		// norm0list contains this info for all points at the ends of an edge, as determined by the ccw-following edge segment
-		// norm1list is the same but as determined by the cw-following edge segment
-		// (the only difference should be the normal vectors : nx,ny)
-		
-		minvrt_reinit_direction(i, 0, nx, ny, xloc, yloc, basephi);
-		if( !minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 1, phi) ){
-			norm0list[i].use = true;
-		}
-		else {
-			norm0list[i].use = false;
-		}
-		minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 0, phi); 
-		norm0list[i].nx = nx;
-		norm0list[i].ny = ny;
-		norm0list[i].xloc = xloc;
-		norm0list[i].yloc = yloc;
-		norm0list[i].basephi = basephi;
-
-		minvrt_reinit_direction(i, 1, nx, ny, xloc, yloc, basephi);
-		if( !minvrt_reinit_phival(i, ebdry(i)->nseg-1, nx, ny, xloc, yloc, basephi, 0, phi) ){
-			norm1list[i].use = true;
-		}
-		else {
-			norm1list[i].use = false;
-		}
-		minvrt_reinit_phival(i, ebdry(i)->nseg-1, nx, ny, xloc, yloc, basephi, 1, phi);
-		norm1list[i].nx = nx;
-		norm1list[i].ny = ny;
-		norm1list[i].xloc = xloc;
-		norm1list[i].yloc = yloc;
-		norm1list[i].basephi = basephi;
-
-	}
-	
+	for(int i=0;i<nebd;++i)
+		reinit_bdry(i)->init();
+				
 #ifdef DEBUG_OUTPUT
 	std::ostringstream nstr;
 	std::string fname;
@@ -61,8 +23,8 @@ void tri_hp_lvlset::reinitialize() {
 	FLT lasterror = 1.0;
 	FLT maxerr = 0.0;
 	for (int ii=0; ii<reinit_iterations; ii++){
-		setup_preconditioner_reinit();
-		reinit(norm0list, norm1list);
+		reinit_setup_preconditioner();
+		reinit_update();
 		
 #ifdef DEBUG_OUTPUT
 		/* To output during reinitialization */
@@ -82,7 +44,7 @@ void tri_hp_lvlset::reinitialize() {
 	}
 }
 
-void tri_hp_lvlset::reinit(normstuff norm0list[], normstuff norm1list[]) {
+void tri_hp_lvlset::reinit_update() {
 	int i,m,k,n,indx,indx1;
 	FLT cflalpha;
 
@@ -96,7 +58,7 @@ void tri_hp_lvlset::reinit(normstuff norm0list[], normstuff norm1list[]) {
 	}
 	
 	for (int stage = 0; stage < gbl->nstage; ++stage) {
-		rsdl_reinit(stage);
+		reinit_rsdl(stage);
 
 	/*  for debugging
 		for(i=0;i<npnt;++i) {
@@ -135,8 +97,7 @@ void tri_hp_lvlset::reinit(normstuff norm0list[], normstuff norm1list[]) {
 		*/
 		
 		/* SET RESDIUALS TO ZERO ON INCOMING CHARACTERISTIC BOUNDARIES */
-		minvrt_reinit(norm0list, norm1list);
-		
+		reinit_minvrt();
 		
 // TO DEBUG: copy and paste from /tri_hp/nstage/ void tri_hp::update  #ifdef DEBUG
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
@@ -170,7 +131,7 @@ void tri_hp_lvlset::reinit(normstuff norm0list[], normstuff norm1list[]) {
 	*gbl->log << "#reinit rsdl: " << maxerr << std::endl; 
 }
 
-void tri_hp_lvlset::rsdl_reinit(int stage) {
+void tri_hp_lvlset::reinit_rsdl(int stage) {
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
 	FLT oneminusbeta = 1.0-gbl->beta(stage);
 	gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
@@ -204,7 +165,7 @@ void tri_hp_lvlset::rsdl_reinit(int stage) {
 		ugtouht(tind);
 		
 		/* call rsdl for element */
-		element_rsdl_reinit(tind,stage,uht,lf_re,lf_im);
+		reinit_element_rsdl(tind,stage,uht,lf_re,lf_im);
 		
 		/* load imaginary local residual into global residual */
 		for (int m = 0; m < basis::tri(log2p)->tm(); ++m) 
@@ -263,7 +224,7 @@ void tri_hp_lvlset::rsdl_reinit(int stage) {
 #endif
 }
 
-void tri_hp_lvlset::element_rsdl_reinit(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
+void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
 	int i,j,n;
 	const int NV = 4;
 	TinyVector<int,3> v;
@@ -316,66 +277,67 @@ void tri_hp_lvlset::element_rsdl_reinit(int tind, int stage, Array<TinyVector<FL
 			lf_im(n)(i) = 0.0;	
 		}
 	}
+	
+	for(i=0;i<lgpx;++i) {
+		for(j=0;j<lgpn;++j) {
+			// STUFF FOR LEVEL SET //
+			phidw = u(2)(i,j)/(gbl->width);
+			cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+			norm(0) = (+ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j))/cjcb;
+			norm(1) = (-ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j))/cjcb;
+			length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+			
+			if (phidw < -1.0) {
+				res(2)(i,j) = -RAD(crd(0)(i,j))*cjcb*(length-1.0);
+				phivel(0)(i,j) = -norm(0)/length;
+				phivel(1)(i,j) = -norm(1)/length;
+			}
+			else if (phidw > 1.0) {
+				res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0);
+				phivel(0)(i,j) = norm(0)/length;
+				phivel(1)(i,j) = norm(1)/length;
+			}
+			else {
+				// signphi = phidw;
+				// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(1-length,2) * pow(gbl->width/2.0,2), 0.5 );
+				// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(1-phidw,2) * pow(gbl->width/2.0,2), 0.5 );
+				// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(length,2) * pow(gbl->width,2), 0.5 );
+				signphi = sin(M_PI*phidw/2.0);
+				phivel(0)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(0)/length;
+				phivel(1)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(1)/length;
+				//res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
+				res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
+
+			}
+		}
+	}
+	basis::tri(log2p)->intgrt(&lf_im(NV-2)(0),&res(NV-2)(0,0),MXGP);
+
+	// NEGATIVE REAL TERMS //
+	if (gbl->beta(stage) > 0.0) {
+		for(n=0;n<basis::tri(log2p)->tm();++n)
+			lf_re(NV-2)(n) = 0.0;
+
+		// THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES //
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
-				// STUFF FOR LEVEL SET //
-				phidw = u(2)(i,j)/(gbl->width);
-				cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-				norm(0) = (+ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j))/cjcb;
-				norm(1) = (-ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j))/cjcb;
-				length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-				
-				if (phidw < -1.0) {
-					res(2)(i,j) = -RAD(crd(0)(i,j))*cjcb*(length-1.0);
-					phivel(0)(i,j) = -norm(0)/length;
-					phivel(1)(i,j) = -norm(1)/length;
-				}
-				else if (phidw > 1.0) {
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0);
-					phivel(0)(i,j) = norm(0)/length;
-					phivel(1)(i,j) = norm(1)/length;
-				}
-				else {
-					// signphi = phidw;
-					// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(1-length,2) * pow(gbl->width/2.0,2), 0.5 );
-					// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(1-phidw,2) * pow(gbl->width/2.0,2), 0.5 );
-					// signphi = u(2)(i,j) / pow( pow(u(2)(i,j),2) + pow(length,2) * pow(gbl->width,2), 0.5 );
-					signphi = sin(M_PI*phidw/2.0);
-					phivel(0)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(0)/length;
-					phivel(1)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(1)/length;
-					//res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
+				tres(2) = gbl->tau(tind,2)*res(2)(i,j);
 
-				}
+				df(2,0)(i,j) = -(ldcrd(1,1)*phivel(0)(i,j) -ldcrd(0,1)*phivel(1)(i,j))*tres(2);
+				df(2,1)(i,j) = -(-ldcrd(1,0)*phivel(0)(i,j) +ldcrd(0,0)*phivel(1)(i,j))*tres(2);
 			}
 		}
-		basis::tri(log2p)->intgrt(&lf_im(NV-2)(0),&res(NV-2)(0,0),MXGP);
+		basis::tri(log2p)->intgrtrs(&lf_re(2)(0),&df(2,0)(0,0),&df(2,1)(0,0),MXGP);
+		
+		for(i=0;i<basis::tri(log2p)->tm();++i)
+			lf_re(2)(i) *= gbl->beta(stage);
 
-		// NEGATIVE REAL TERMS //
-		if (gbl->beta(stage) > 0.0) {
-			for(n=0;n<basis::tri(log2p)->tm();++n)
-				lf_re(NV-2)(n) = 0.0;
-
-			// THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES //
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpn;++j) {
-					tres(2) = gbl->tau(tind,2)*res(2)(i,j);
-
-					df(2,0)(i,j) = -(ldcrd(1,1)*phivel(0)(i,j) -ldcrd(0,1)*phivel(1)(i,j))*tres(2);
-					df(2,1)(i,j) = -(-ldcrd(1,0)*phivel(0)(i,j) +ldcrd(0,0)*phivel(1)(i,j))*tres(2);
-				}
-			}
-			basis::tri(log2p)->intgrtrs(&lf_re(2)(0),&df(2,0)(0,0),&df(2,1)(0,0),MXGP);
-			
-			for(i=0;i<basis::tri(log2p)->tm();++i)
-				lf_re(2)(i) *= gbl->beta(stage);
-
-		}
+	}
 
 	return;
 }
 
-void tri_hp_lvlset::setup_preconditioner_reinit() {
+void tri_hp_lvlset::reinit_setup_preconditioner() {
 
 	if (gbl->diagonal_preconditioner) {
 		// set-up diagonal preconditioner //
@@ -421,11 +383,11 @@ void tri_hp_lvlset::setup_preconditioner_reinit() {
 			jcb *= 1.0e99*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 			// brute force way to freeze flow //
-			gbl->tprcn(tind,0) = jcb;   
-			gbl->tprcn(tind,1) = jcb;   
-			gbl->tprcn(tind,3) =  jcb; 
+			gbl->tprcn(tind,0) = jcb;
+			gbl->tprcn(tind,1) = jcb;
+			gbl->tprcn(tind,3) =  jcb;
 
-			gbl->tprcn(tind,2) = jcbphi;      
+			gbl->tprcn(tind,2) = jcbphi;
 			for(i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
 				if (basis::tri(log2p)->sm() > 0) {
@@ -446,13 +408,11 @@ void tri_hp_lvlset::setup_preconditioner_reinit() {
 	return;
 }
 
-void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) {
+void tri_hp_lvlset::reinit_minvrt() {
 	int i,j(0),k,m,tind,sind,v0,indx,indx1,indx2,sgn,msgn;
 	TinyVector<int,3> sign,side;
 	Array<FLT,2> tinv(NV,NV);
 	Array<FLT,1> temp(NV);
-	FLT basephi;
-	normstuff goodlist;
 
 	/* LOOP THROUGH SIDES */
 	if (basis::tri(log2p)->sm() > 0) {
@@ -507,37 +467,13 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 	
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
-	for(i=0;i<nebd;++i) {
-		FLT nx(0), ny(0), xloc(0), yloc(0), phi(0);
-		//FLT nx2, ny2;
-		int bdryside( minvrt_reinit_phiside(i) );
-
-		get_correct_normstuff(i, bdryside, norm0list, norm1list, goodlist);
-		nx = goodlist.nx;
-		ny = goodlist.ny;
-		xloc = goodlist.xloc;
-		yloc = goodlist.yloc;
-		basephi = goodlist.basephi;
+	for(i=0;i<nebd;++i) 
+		reinit_bdry(i)->vdirichlet();
 		
-		// this is to set the first point along the boundary ...
-		if( minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 0, phi) ) {
-			gbl->res.v(seg(ebdry(i)->seg(0)).pnt(0),2) = 0.0;
-			ug.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-			gbl->ug0.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-		}
-		// ... and all the rest
-		for (int j=0;j<ebdry(i)->nseg;++j) {
-			 /* SET VERTEX RESIDUALS TO ZERO IF INCOMING */
-		  	if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
-				gbl->res.v(seg(ebdry(i)->seg(j)).pnt(1),2) = 0.0;
-				ug.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
-				gbl->ug0.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
-			}
-		}
-	}
-
-	//exit(1);
-
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(i=0;i<nvbd;++i) 
+		gbl->res.v(vbdry(i)->pnt,2) = 0.0;
+		
 	if(basis::tri(log2p)->sm() == 0) return;
 
 	/* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
@@ -577,29 +513,9 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 		*/
 		
 		/* APPLY SIDE DIRICHLET B.C.'S */
-		for(i=0;i<nebd;++i) {
-			FLT nx(0), ny(0), xloc(0), yloc(0), phi(0);
-			//FLT nx2, ny2;
-			int bdryside( minvrt_reinit_phiside(i) );
+		for(i=0;i<nebd;++i) 
+			reinit_bdry(i)->sdirichlet(mode);
 			
-			get_correct_normstuff(i, bdryside, norm0list, norm1list, goodlist);
-			nx = goodlist.nx;
-			ny = goodlist.ny;
-			xloc = goodlist.xloc;
-			yloc = goodlist.yloc;
-			basephi = goodlist.basephi;
-
-			// ... and all the rest
-			for (int j=0;j<ebdry(i)->nseg;++j) {
-				 /* SET SIDE RESIDUALS TO ZERO IF INCOMING and MAKE SOLUTION TO LINEAR */
-			  	if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
-					gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
-					ug.s(ebdry(i)->seg(j),mode,2) = 0.0;
-					gbl->ug0.s(ebdry(i)->seg(j),mode,2) = 0.0;
-				}
-			}
-		}
-		
 		/* REMOVE MODE FROM HIGHER MODES */
 		for(tind=0;tind<ntri;++tind) {
 			for(i=0;i<3;++i) {
@@ -636,28 +552,8 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 	*/
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
-	for(i=0;i<nebd;++i) {
-		FLT nx(0), ny(0), xloc(0), yloc(0), phi(0);
-		//FLT nx2, ny2;
-		int bdryside( minvrt_reinit_phiside(i) );
-		
-		get_correct_normstuff(i, bdryside, norm0list, norm1list, goodlist);
-		nx = goodlist.nx;
-		ny = goodlist.ny;
-		xloc = goodlist.xloc;
-		yloc = goodlist.yloc;
-		basephi = goodlist.basephi;
-
-		// ... and all the rest
-		for (int j=0;j<ebdry(i)->nseg;++j) {
-			/* SET SIDE RESIDUALS TO ZERO IF INCOMING and MAKE SOLUTION TO LINEAR */
-			if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
-				gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
-				ug.s(ebdry(i)->seg(j),mode,2) = 0.0;
-				gbl->ug0.s(ebdry(i)->seg(j),mode,2) = 0.0;
-			}
-		}
-	}
+	for(i=0;i<nebd;++i)
+		reinit_bdry(i)->sdirichlet(mode);
 	
 	if (basis::tri(log2p)->im() == 0) return;
 	
@@ -677,256 +573,145 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 	return;
 }
 
-int tri_hp_lvlset::minvrt_reinit_phiside(int edgenum){
-	FLT vone, vtwo;
-	int nseg(ebdry(edgenum)->nseg);
-	// find which side is closer to zero level
-	vone = ug.v(seg(ebdry(edgenum)->seg(0)).pnt(0),2);
-	vtwo = ug.v(seg(ebdry(edgenum)->seg(nseg-1)).pnt(1),2);
-	/* COMPARE MAGNITUDE OF PHI AT ENDPOINTS */
-	if (fabs(vone) < fabs(vtwo) )
-		return 0;
-	else 
-		return 1;
-}
-
-void tri_hp_lvlset::minvrt_reinit_direction(int edgenum, int side, FLT&nx, FLT&ny, FLT&xloc, FLT&yloc, FLT&basephi) {
-	// given an edge number and a side, this returns the physical location (xloc,yloc) of that point, the unit normal direction (nx,ny) of phi at that point, and the value of phi at that point (basephi)
-	int sind(0),tind(0),v0(0);
-	FLT vone, vtwo;
-	int nseg(ebdry(edgenum)->nseg);
-	vone = ug.v(seg(ebdry(edgenum)->seg(0)).pnt(0),2);
-	vtwo = ug.v(seg(ebdry(edgenum)->seg(nseg-1)).pnt(1),2);
-	FLT vphi;
-	if ( side ==0 ){
-		vphi = vone;
-		sind = ebdry(edgenum)->seg(0);
-		tind = seg(sind).tri(0); 
-		v0 = seg(sind).pnt(0);
+void tri_hp_lvlset::reinit_bc::init() {
+	// Set up reinitizialization B.C.'s
+	// Find grad phi at point closest to zero level
+	// Based on grad phi decide if side should be a dirchlet b.c.
+	
+	int sind, tind, v0;
+	const int nseg(base.nseg);
+	
+	FLT phi0 = x.ug.v(x.seg(base.seg(0)).pnt(0),2);
+	FLT phi1 = x.ug.v(x.seg(base.seg(nseg-1)).pnt(1),2);
+	if (fabs(phi0) < fabs(phi1)) {
+		phi_at_endpt = phi0;
+		closer_endpt = 0;
+		sign_phi = (phi1 > 0.0 ? 1.0 : -1.0);
+		sind = base.seg(0);
+		tind = x.seg(sind).tri(0); 
+		v0 = x.seg(sind).pnt(0);
 	}
 	else {
-		vphi = vtwo;
-		sind = ebdry(edgenum)->seg(nseg-1);
-		tind = seg(sind).tri(0); 
-		v0 = seg(sind).pnt(1);
+		phi_at_endpt = phi1;
+		sign_phi = (phi0 > 0.0 ? 1.0 : -1.0);
+		closer_endpt = 1;
+		sind = base.seg(nseg-1);
+		tind = x.seg(sind).tri(0); 
+		v0 = x.seg(sind).pnt(1);
 	}
-	basephi = vphi;
-	xloc = pnts(v0)(0);
-	yloc = pnts(v0)(1);
 	
-	/* AT WHAT POINT OF TRIANGLE DO WE NEED TO KNOW DERIVATIVE? */
+	// At what point of triangle do we need to know derivative? //
 	int j;
 	for (j=0;j<3;++j)
-		if (tri(tind).pnt(j) == v0) break;
+	if (x.tri(tind).pnt(j) == v0) break;
 	assert(j < 3);
+	
+	// Figure out what r & s should be based on vertex # //
 	FLT r,s;
-	// from point number to r,s
 	r=-1.0;
 	s=-1.0;
 	if (j==0) s=1.0;
 	if (j==2) r=1.0;	
-	/* Figure out what r & s should be based on vertex # */
-	ugtouht(tind);
-	crdtocht(tind);
-	// 2 -> ND, 4 -> NV
-	TinyVector<FLT,2> xpt,dxdr,dxds,dxmax;
+	
+	/* Evaluate solution derivatives at point */
+	TinyVector<FLT,tri_mesh::ND> xpt,dxdr,dxds,dxmax;
 	TinyVector<FLT,4> upt,dudr,duds;
-	basis::tri(log2p)->ptprobe_bdry(ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&cht(0,0),MXTM); 
-	basis::tri(log2p)->ptprobe(NV,upt.data(),dudr.data(),duds.data(),r,s,&uht(0)(0),MXTM); 
+	x.ugtouht(tind);
+	x.crdtocht(tind);
+	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&x.cht(0,0),MXTM); 
+	basis::tri(x.log2p)->ptprobe(x.NV,upt.data(),dudr.data(),duds.data(),r,s,&x.uht(0)(0),MXTM); 
+	
+	/* Calculate grad phi at hybrid point */
 	TinyMatrix<FLT,2,2> ldcrd;
 	ldcrd(0,0) = dxdr(0);
 	ldcrd(0,1) = dxds(0);
 	ldcrd(1,0) = dxdr(1);
 	ldcrd(1,1) = dxds(1);
 	FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-	FLT normux, normuy, lengthu;
-	normux = (+ldcrd(1,1)*dudr(2) -ldcrd(1,0)*duds(2))/cjcb;
-	normuy = (-ldcrd(0,1)*dudr(2) +ldcrd(0,0)*duds(2))/cjcb;
-	lengthu = sqrt(normux*normux +normuy*normuy); //for projection in this direction
-	nx = normux / lengthu; // phi unit normal vector x direction (in the positive phi direction)
-	ny = normuy / lengthu; // phi y direction
+	norm(0) = (+ldcrd(1,1)*dudr(2) -ldcrd(1,0)*duds(2))/cjcb;
+	norm(1) = (-ldcrd(0,1)*dudr(2) +ldcrd(0,0)*duds(2))/cjcb;
+	FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1)); //for projection in this direction
+	norm(0) /= length;
+	norm(1) /= length;
+	
+	/* Determine if normal is in or out (outward normal)*/
+	int v1 = x.seg(sind).pnt(0);
+	int v2 = x.seg(sind).pnt(1);
+	FLT nrmx =  (x.pnts(v2)(1) -x.pnts(v1)(1));
+	FLT nrmy = -(x.pnts(v2)(0) -x.pnts(v1)(0));
+	length = sqrt(nrmx*nrmx +nrmy*nrmy);
+	nrmx /= length;
+	nrmy /= length;
+	
+	if ((nrmx*norm(0) +nrmy*norm(1))*sign_phi < 0.35) {
+		active = true;
+		*x.gbl->log << base.idprefix << ' ' << v0 << ' ' << phi_at_endpt << ' ' << norm << ' ' << sign_phi << std::endl;
+	}
+	else {
+		active = false;
+	}
+		
+	/* Now set values if appropriate */
+	set_values();
 }
 
-bool tri_hp_lvlset::minvrt_reinit_phival(int edgenum, int segnum, FLT nx, FLT ny, FLT xloc, FLT yloc, FLT basephi, int onezero, FLT& phi) {
-	// this determines what phi should be at a specific point along the edge (given by edgenum,segnum,onezero) if the flow were into the lvlset block - 
-	// phi is calculated as the signed distance normal (nx,ny) to the base point ((xloc,yloc), with phi value of basephi)
-	// true is returned if the flow is in, false otherwise
-	int sind(0),v0(0);
-	sind = ebdry(edgenum)->seg(segnum);
-	v0 = seg(sind).pnt(0);
-	int v1 = seg(sind).pnt(1);
-	FLT xdir, ydir;
-	// a vector pointing along the segment
-	xdir = pnts(v0)(0)-pnts(v1)(0);
-	ydir = pnts(v0)(1)-pnts(v1)(1);
-	// rotate the vector so it is pointing OUT of the domain
-	FLT voutx(-ydir), vouty(xdir);
-	// the check will be opposite if phi is + or -
-	if( (ug.v(seg(ebdry(edgenum)->seg(segnum)).pnt(onezero),2)) > 0 ) {
-		// checked if phi is positive
-		if ( (nx*voutx + ny*vouty) < 0.0  ){ // check if flow in
-			if (onezero == 0)
-				phi = (pnts(v0)(0)-xloc)*nx + (pnts(v0)(1)-yloc)*ny + basephi;
-			if (onezero == 1)
-				phi = (pnts(v1)(0)-xloc)*nx + (pnts(v1)(1)-yloc)*ny + basephi;
-			return true;
-		}
+void tri_hp_lvlset::reinit_bc::set_values() {
+	// this determines  phi along the edge
+	// phi is calculated as the signed distance normal (nx,ny) to the base point, with phi value of basephi)
+	if (!active) return;
+	
+	int v0;
+	if (closer_endpt == 0) {
+		v0 = x.seg(base.seg(0)).pnt(0);
 	}
-	else { // phi is negative
-		if ( (nx*voutx + ny*vouty) > 0.0 ) {
-			if (onezero == 0)
-				phi = (pnts(v0)(0)-xloc)*nx + (pnts(v0)(1)-yloc)*ny + basephi;
-			if (onezero == 1)
-				phi = (pnts(v1)(0)-xloc)*nx + (pnts(v1)(1)-yloc)*ny + basephi;
-			return true;
-		}
+	else {
+		v0 = x.seg(base.seg(base.nseg-1)).pnt(1);
 	}
-	return false;
+	
+	/* Re-evaluate phi at inflow points */
+	for(int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
+		int v1 = x.seg(sind).pnt(0);
+		TinyVector<FLT,tri_mesh::ND> dx;
+		dx = x.pnts(v1) -x.pnts(v0);
+		
+		x.ug.v(v1,2) = dx(0)*norm(0) +dx(1)*norm(1) +phi_at_endpt;
+		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
+			x.ug.s(sind,m,2) = 0.0;
+	}
+	int sind = base.seg(base.nseg-1);
+	int v1 = x.seg(sind).pnt(1);
+	TinyVector<FLT,tri_mesh::ND> dx;
+	dx = x.pnts(v1) -x.pnts(v0);
+	x.ug.v(v1,2) = dx(0)*norm(0) +dx(1)*norm(1) +phi_at_endpt;
+	
+	return;
 }
 
-
-void tri_hp_lvlset::get_correct_normstuff(int i, int bdryside, normstuff norm0list[], normstuff norm1list[], normstuff& goodlist){
-	FLT nx, ny, xloc, yloc, basephi;
-
-	FLT phireal, phi1;
-	FLT diff1, percent;
-	percent = 0.25;
-
-	// get the correct info
-	if (bdryside==1){
-		if ( (norm1list[i].use) || (!norm1list[i].use && !norm0list[(i+1)%nebd].use) ){
-			nx = norm1list[i].nx;
-			ny = norm1list[i].ny;
-			xloc = norm1list[i].xloc;
-			yloc = norm1list[i].yloc;
-			basephi = norm1list[i].basephi;
-		}
-		else {
-			nx = norm0list[(i+1)%nebd].nx;
-			ny = norm0list[(i+1)%nebd].ny;
-			xloc = norm0list[(i+1)%nebd].xloc;
-			yloc = norm0list[(i+1)%nebd].yloc;
-			basephi = norm0list[(i+1)%nebd].basephi;
-		}
-		// make sure nx, ny aren't way off. if they are correct them
-		//test what the difference in calculated phi (by the normal method) would be compared to the actaul value of phi at the other end of the edge
-		phireal = norm0list[i].basephi;
-		phireal = gbl->ug0.v(seg(ebdry(i)->seg(0)).pnt(0),2);
-		minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 0, phi1); 
-		diff1 = fabs((phi1-phireal)/phireal);
-		FLT NX(nx), NY(ny);
-		if ( diff1 > percent) {
-			// set nx, ny to be what is required to get the same phivalue
-			int sind(0),v0(0), v1(0);
-			sind = ebdry(i)->seg(0);
-			v0 = seg(sind).pnt(0);
-			sind = ebdry(i)->seg(ebdry(i)->nseg-1);
-			v1 = seg(sind).pnt(1);
-			FLT xdir, ydir;
-			// a vector pointing along the segment
-			xdir = pnts(v0)(0)-pnts(v1)(0);
-			ydir = pnts(v0)(1)-pnts(v1)(1);
-			FLT phishouldbe;
-			phishouldbe = ug.v(seg(ebdry(i)->seg(0)).pnt(0),2);
-			FLT dphi, length;
-			dphi = phishouldbe-basephi;
-			length = sqrt(xdir*xdir+ydir*ydir);
-			if ( dphi/length >= 1.0 ){
-				nx = xdir;
-				ny = ydir;
-			}
-			else if ( dphi/length <= -1.0 ){
-				nx = -xdir;
-				ny = -ydir;
-			}
-			else {
-				FLT theta(acos(dphi/length));
-				FLT nx2, ny2;
-				// the normal can be in one of two directions, so make it the one which is closer to the original normal
-				nx = cos(theta)*xdir - sin(theta)*ydir;
-				ny = sin(theta)*xdir + cos(theta)*ydir;
-				theta = -theta;
-				nx2 = cos(theta)*xdir - sin(theta)*ydir;
-				ny2 = sin(theta)*xdir + cos(theta)*ydir;
-				if ( (nx*NX+ny*NY) < (nx2*NX+ny2*NY) ) {
-					nx = nx2;
-					ny = ny2;
-				}
-			}
-			length = sqrt(nx*nx+ny*ny);
-			nx = nx / length;
-			ny = ny / length;
-		}
-	}
-	if (bdryside==0){
-		if ( (norm0list[i].use) || (!norm0list[i].use && !norm1list[(i-1)%nebd].use) ){
-			nx = norm0list[i].nx;
-			ny = norm0list[i].ny;
-			xloc = norm0list[i].xloc;
-			yloc = norm0list[i].yloc;
-			basephi = norm0list[i].basephi;
-		}
-		else {
-			nx = norm1list[(i-1)%nebd].nx;
-			ny = norm1list[(i-1)%nebd].ny;
-			xloc = norm1list[(i-1)%nebd].xloc;
-			yloc = norm1list[(i-1)%nebd].yloc;
-			basephi = norm1list[(i-1)%nebd].basephi;
-		}
-		// make sure nx, ny aren't way off. if they are correct them
-		//test what the difference in calculated phi (by the normal method) would be compared to the actaul value of phi at the other end of the edge
-		phireal = norm1list[i].basephi;
-		phireal = gbl->ug0.v(seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1),2);
-		minvrt_reinit_phival(i, ebdry(i)->nseg-1, nx, ny, xloc, yloc, basephi, 1, phi1); 
-		diff1 = fabs((phi1-phireal)/phireal);
-		FLT NX(nx), NY(ny);
-		if ( diff1 > percent) {
-			// set nx, ny to be what is required to get the same phivalue
-			int sind(0),v0(0), v1(0);
-			sind = ebdry(i)->seg(ebdry(i)->nseg-1);
-			v0 = seg(sind).pnt(1);
-			sind = ebdry(i)->seg(0);
-			v1 = seg(sind).pnt(0);
-			FLT xdir, ydir;
-			// a vector pointing along the segment
-			xdir = pnts(v0)(0)-pnts(v1)(0);
-			ydir = pnts(v0)(1)-pnts(v1)(1);
-			FLT phishouldbe;
-			phishouldbe = ug.v(seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1),2);
-			FLT dphi, length;
-			dphi = phishouldbe-basephi;
-			length = sqrt(xdir*xdir+ydir*ydir);
-			if ( dphi/length >= 1.0 ){
-				nx = xdir;
-				ny = ydir;
-			}
-			else if ( dphi/length <= -1.0 ){
-				nx = -xdir;
-				ny = -ydir;
-			}
-			else {
-				FLT theta(acos(dphi/length));
-				FLT nx2, ny2;
-				// the normal can be in one of two directions, so make it the one which is closer to the original normal
-				nx = cos(theta)*xdir - sin(theta)*ydir;
-				ny = sin(theta)*xdir + cos(theta)*ydir;
-				theta = -theta;
-				nx2 = cos(theta)*xdir - sin(theta)*ydir;
-				ny2 = sin(theta)*xdir + cos(theta)*ydir;
-				if ( (nx*NX+ny*NY) < (nx2*NX+ny2*NY) ) {
-					nx = nx2;
-					ny = ny2;
-				}
-			}
-			length = sqrt(nx*nx+ny*ny);
-			nx = nx / length;
-			ny = ny / length;
-		}
-	}
-	goodlist.nx=nx;
-	goodlist.ny=ny;
-	goodlist.xloc=xloc;
-	goodlist.yloc=yloc;
-	goodlist.basephi=basephi;
-
+void tri_hp_lvlset::reinit_bc::vdirichlet() {
+	if (!active) return;
+	
+	int sind,j,v0;
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		x.gbl->res.v(v0,2) = 0.0;
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	x.gbl->res.v(v0,2) = 0.0;
 }
+	
+void tri_hp_lvlset::reinit_bc::sdirichlet(int mode) {
+	int sind;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		x.gbl->res.s(sind,mode,2) = 0.0;
+	}
+}
+	
+	
+	
+	
+
