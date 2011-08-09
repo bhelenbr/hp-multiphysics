@@ -480,40 +480,32 @@ void tet_mesh::match_bdry_numbering() {
 	/* Create global numbering system */
 	create_unique_numbering();
 	 
-//	for(int i=0;i<nebd;++i) {
-//		//if(ebdry(i)->is_comm() && !ebdry(i)->is_frst()){
-//			ebdry(i)->setup_next_prev();
-//			ebdry(i)->reorder();
-//		//}
-//	}
-
 	
 	
 	
-	
-	// dont think this needs to be done anymore
-	/* Reorder Side boundaries so direction is the same */
-	for(int i=0;i<nebd;++i) 
-		ebdry(i)->match_numbering(1);
-
-	/* FIRST PART OF SENDING, POST ALL RECEIVES */
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
-						
-	/* SECOND PART */
-	 for(int i=0;i<nebd;++i) 
-		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
-
-	/* FINAL PART OF SENDING */
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
-	
-	/* FINAL PART OF SENDING */
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
-	
-	for(int i=0;i<nebd;++i) 
-		ebdry(i)->match_numbering(2);		  
+//	// dont think this needs to be done anymore
+//	/* Reorder Side boundaries so direction is the same */
+//	for(int i=0;i<nebd;++i) 
+//		ebdry(i)->match_numbering(1);
+//
+//	/* FIRST PART OF SENDING, POST ALL RECEIVES */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
+//						
+//	/* SECOND PART */
+//	 for(int i=0;i<nebd;++i) 
+//		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+//
+//	/* FINAL PART OF SENDING */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
+//	
+//	/* FINAL PART OF SENDING */
+//	for(int i=0;i<nebd;++i)
+//		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
+//	
+//	for(int i=0;i<nebd;++i) 
+//		ebdry(i)->match_numbering(2);		  
 
 	
 	
@@ -640,20 +632,14 @@ void tet_mesh::setpartition(int nparts) {
 }
 #endif
 
-/* WHEN THIS ROUTINE EXITS */
-/* THE OLD MESH STORES  */
-/* pnt(pind).info = new pnt index or -1 */
-/* THE NEW MESH STORES */
-/* pnt(sind).info = old pnt index */
-/* seg(sind).info = old side index */
-/* tri(tind).info = old tri index */
-void tet_mesh::partition(class tet_mesh& xin, int npart) {
+
+void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 	int i,j,n,tind,indx,lcl,p0,p1,sind,egindx,gindx,newid,find;
 	Array<int,2> bcntr(xin.nfbd +40,2);
 	Array<int,2> ecntr(xin.nfbd+xin.nebd +40,4);
 	int number_problem_edges = 0;
 	Array<int,2> problem_edges(number_problem_edges,2);
-
+	
 	//TinyVector<int,2> a,b;//don't need?
 	int bnum,match;
 	
@@ -680,6 +666,9 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	
 	for(i=0;i<xin.npnt;++i)
 		xin.pnt(i).info = -1;
+	
+	for(i=0;i<xin.nseg;++i)
+		xin.seg(i).info = -1;
 	
 	ntet = 0;
 	for(i=0;i<xin.ntet;++i) {
@@ -728,7 +717,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	}
 	
 	/* fill in the rest of the mesh data structure */
-	create_from_tet();
+	create_from_tet();// messes up pnt,seg,tri.info
 	
 	/* find and create face boundaries */
 	nfbd = 0;
@@ -742,7 +731,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		/* tet.info = gbl index of tet*/
 		int gbl_tind = tet(tind).info;		
 		
-		/* find gbl index of original tet in xin mesh */
+		/* find gbl index of original tri in xin mesh */
 		for(n=0;n<4;++n){	
 			tri(i).info = xin.tet(gbl_tind).tri(n);
 			lcl = 0;
@@ -750,22 +739,22 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				lcl += xin.pnt(xin.tri(tri(i).info).pnt(j)).info;
 				lcl -= tri(i).pnt(j);
 			}
-
+			
 			if (lcl == 0) break;
 			
 		}
 		assert(n < 4);
-
+		
 		/* if tri.tet(1) < 0 then it is a boundary tet in new mesh */
 		if (tri(i).tet(1) < 0) {		
 			
 			/* find out if it is an original boundary or a new partition */
 			indx = xin.tet(gbl_tind).tet(n);
-
+			
 			if (indx < 0) {
 				/* BOUNDARY TRI */
 				bnum = getbdrynum(indx);
-
+				
 				for (j = 0; j <nfbd;++j) {
 					if (bnum == bcntr(j,0)) {
 						++bcntr(j,1);
@@ -783,7 +772,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				/* find partition number of connected tet */
 				match = xin.tet(indx).info;
 				bnum = match+10;
-
+				
 				for (j = 0; j <nfbd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
@@ -797,9 +786,9 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				bcntr(nfbd++,1) = 1;
 			}
 		}
-		next1: continue;
+	next1: continue;
 	}
-
+	
 	/* Make new face boundaries and print boundary information */
 	fbdry.resize(nfbd);
 	for(i=0;i<nfbd;++i) {		
@@ -832,164 +821,169 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		/* fill in mesh data structure on face boundaries */
 		fbdry(i)->create_from_tri();
 	}
-
-	for(i = 0; i < nfbd; ++i) {
-		fbdry(i)->pull_apart_face_boundaries();
-	}
 	
-	
+	/* find face boundaries that are disconnected and separate them */
+	for(i = 0; i < nfbd; ++i) 
+		fbdry(i)->pull_apart_face_boundaries();	
+		
 	/* find and create edge boundaries */
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)
-		seg(i).info= -1;
-
-	ecntr = -1;
+		seg(i).info = -1; 
+	
+	Array<int,1> edge_partitions(nparts); /* list of 1's and 0's to keep track if a segment touches a partition */	
+	Array<int,2> edge_boundary_list(0,nparts); /* each unique combination of partitions touching an edge boundary  */
+	Array<int,2> edge_boundary_count(0,2); /* keeps track of boundary number and number of segs on edge boundary */
 	
 	for(i = 0; i < nfbd; ++i){
 		for(int sind = 0; sind < fbdry(i)->nseg;++sind){
 			if (fbdry(i)->seg(sind).tri(1) < 0){
-				find = fbdry(i)->seg(sind).tri(0);
-				gindx = fbdry(i)->seg(sind).gindx;
+				find = fbdry(i)->seg(sind).tri(0); /* inside fbdry triangle connected to seg */
+				gindx = fbdry(i)->seg(sind).gindx; /* global index of segment */
 				
-				/* edge found first time */
-				if(seg(gindx).info == -1) {
-					seg(gindx).info = i;
-					goto next_seg;
-				}
+				/* check if edge is already found */
+				if(seg(gindx).info != -1) goto nextseg;
 				
-				tind = fbdry(i)->tri(find).gindx;
+				tind = fbdry(i)->tri(find).gindx; /* global index of triangle */
 				
-				/* find global index to old mesh but don't store yet */
+				/* find global index to old xin mesh but don't store yet */
 				for(n=0;n<3;++n){					
-					egindx = xin.tri(tri(tind).info).seg(n);
+					egindx = xin.tri(tri(tind).info).seg(n); 
 					p0 = xin.pnt(xin.seg(egindx).pnt(0)).info;
 					p1 = xin.pnt(xin.seg(egindx).pnt(1)).info;
 
-					if (p0 == seg(gindx).pnt(0) && p1 == seg(gindx).pnt(1))	break;
-										
+					if (p0 == seg(gindx).pnt(0) && p1 == seg(gindx).pnt(1)) break;
+									
 					if (p1 == seg(gindx).pnt(0) && p0 == seg(gindx).pnt(1)) break;
+					
 				}
 				assert(n < 3);
+				
+				/* find all tets connected to edge */
+				xin.ring(egindx);
 
-				/* search if edge is connected to extra face boundaries */
-				for(j = 0; j < xin.nfbd; ++j){
-					for(int eind = 0; eind < xin.fbdry(j)->nseg;++eind){
-						if (xin.fbdry(j)->seg(eind).gindx == egindx) {
-							if ((xin.fbdry(j)->idnum != fbdry(i)->idnum) && (xin.fbdry(j)->idnum != fbdry(seg(gindx).info)->idnum)) {
-								problem_edges.resizeAndPreserve(++number_problem_edges,2);
-								problem_edges(number_problem_edges-1,0) = gindx; /* global index */
+				/* number of tets connected to edge */
+				int nnbor = xin.seg(egindx).nnbor;
 
-								for (int k=0; k<xin.nebd; ++k) {
-									if (xin.ebdry(k)->idnum == xin.seg(egindx).info) {
-										problem_edges(number_problem_edges-1,1) = k; /* boundary index number */
-										//cout << "#problem edge " << gindx << " idnum " << xin.ebdry(k)->idnum << endl;
-										break;
-									} 
-								} 
-								goto next_seg;
-							}
+				/* if an edge is attached to a partition insert a 1 */
+				edge_partitions = 0;
+				for(n = 0; n < nnbor; ++n)    
+					edge_partitions(xin.tet(xin.gbl->i2wk(n)).info) = 1;
+								
+				/* keep list of boundary numbers positive for predifined and negative for partition */
+				bool newedgebdry = true;
+				for(n=0;n<nebd;++n){
+					/* check to see if edge boundary already exists */
+					int diff_boundary_list = 0;
+					for (j=0; j<nparts; ++j) 
+						diff_boundary_list += abs(edge_boundary_list(n,j) - edge_partitions(j));
+
+					if(diff_boundary_list == 0){
+						newedgebdry = false;
+						
+						/* assume a partition and set to a unique negative number */
+						seg(gindx).info = n; 
+						edge_boundary_count(n,0) = -n-1; 
+						
+						/* add seg to number of segs on edge boundary */
+						++edge_boundary_count(n,1);
+
+						/* check to see if edge is on a predefined edge boundary */
+						for (j = 0; j < xin.nebd; ++j) {
+							if (xin.ebdry(j)->idnum == xin.seg(egindx).info)
+								edge_boundary_count(n,0) = j;
+							
 						}
-					}
-				}
-				
-				/* edge found second time, search if boundary is already defined */
-				for(j=0;j<nebd;++j){
-					if(ecntr(j,0) == seg(gindx).info && ecntr(j,1) == i){
-						++ecntr(j,2); // count number of edges
-						goto next_seg;
-					}
-				}				
-
-				/* edge found second time, create new boundary */
-				ecntr(nebd,0) = seg(gindx).info; // first face boundary
-				ecntr(nebd,1) = i; // second face boundary
-				ecntr(nebd,2) = 1; // count number of edges
-				
-				ecntr(nebd,3) = -i-10; // partition boundary
-				/* search for boundary number else partition */
-				for (j=0; j<xin.nebd; ++j) {
-					if (xin.ebdry(j)->idnum == xin.seg(egindx).info) {
-						ecntr(nebd,3) = j; // boundary number
+						
+						
 						break;
-					} 
+					}
 				}
 				
-				++nebd;
-				
-			}	 
-			next_seg:;
+				/* new edge boundary */
+				if(newedgebdry == true){
+					++nebd;
+					edge_boundary_list.resizeAndPreserve(nebd,nparts);
+					edge_boundary_count.resizeAndPreserve(nebd,2);
+					
+					for (j=0; j<nparts; ++j) 
+						edge_boundary_list(nebd-1,j) = edge_partitions(j);
+
+					/* assume a partition and give a unique negative number */
+					seg(gindx).info = nebd-1;
+					edge_boundary_count(nebd-1,0) = -nebd; 
+					edge_boundary_count(nebd-1,1) = 1; /* first edge found */	
+					
+					/* check to see if edge is on a predefined edge boundary */
+					for (j = 0; j < xin.nebd; ++j) {
+						if (xin.ebdry(j)->idnum == xin.seg(egindx).info) 
+							edge_boundary_count(nebd-1,0) = j;
+						 
+					}
+				}
+			}
+			nextseg:;
 		}
 	}
-	
-	/* create edge boundaries */
-	ebdry.resize(nebd+number_problem_edges);
+
+	/* allocate edge boundaries */
+	ebdry.resize(nebd);
 	for(i=0;i<nebd;++i) {
-		if (ecntr(i,3) < 0) {
-			ebdry(i) = new epartition(maxenum+abs(ecntr(i,3)),*this);
+		if (edge_boundary_count(i,0) < 0) {
+			ebdry(i) = new epartition(maxenum+abs(edge_boundary_count(i,0)),*this);
 		}
 		else {
-			ebdry(i) = xin.ebdry(ecntr(i,3))->create(*this);
+			ebdry(i) = xin.ebdry(edge_boundary_count(i,0))->create(*this);
 		}
-		ebdry(i)->alloc(static_cast<int>(ecntr(i,2)*2));
+		ebdry(i)->alloc(static_cast<int>(5*edge_boundary_count(i,1)));
 		ebdry(i)->nseg = 0;
 	}
 	
-	for(i=0;i<number_problem_edges;++i) {		
-		ebdry(nebd+i) = xin.ebdry(problem_edges(i,1))->create(*this);		
-		ebdry(nebd+i)->alloc(static_cast<int>(10)); // fix me temp could make this smaller than 5 maybe 1?
-		ebdry(nebd+i)->nseg = 0;
-	}
-		
 	/* create global index pointer for edge boundaries */
 	for(i = 0; i < nfbd; ++i){
 		for(int sind = 0; sind < fbdry(i)->nseg;++sind){
 			if (fbdry(i)->seg(sind).tri(1) < 0){
 				tind = fbdry(i)->seg(sind).tri(0);
 				gindx = fbdry(i)->seg(sind).gindx;	
+				int bdryindx = seg(gindx).info;
 				
-				for (j=0; j<number_problem_edges; ++j) {
-					if (problem_edges(j,0) == gindx) {
-						
-						if (problem_edges(j,1) == -1) goto next_seg2;
-						
-						problem_edges(j,1) = -1; /* so it doesn't find it more than once */
-						ebdry(j+nebd)->seg(ebdry(j+nebd)->nseg++).gindx = gindx;
-
-						goto next_seg2;
-					}
-				}
+				if (bdryindx != -1) 
+					ebdry(bdryindx)->seg(ebdry(bdryindx)->nseg++).gindx = gindx;
 				
-				for(j=0;j<nebd;++j){
-					if(ecntr(j,0) == seg(gindx).info && ecntr(j,1) == i){
-						ebdry(j)->seg(ebdry(j)->nseg++).gindx = gindx;
-						goto next_seg2;
-					}
-				}				
+				seg(gindx).info = -1;
+	
 			}	
-			next_seg2:;
 		}
 	}
 	
 	/* now find pointer to seg from old mesh and store in seg.info 
-	   used later to define partition numbering */
+	 used later to define partition numbering */
 	for(sind = 0; sind < nseg; ++sind){
 		tind=seg(sind).tet;
 		for(n=0;n<6;++n){
 			int eind = tet(tind).seg(n);			
 			if(eind == sind){
 				seg(sind).info=xin.tet(tet(tind).info).seg(n);
+				xin.seg(seg(sind).info).info = sind;
 				break;
 			}
 		}
 		assert(n<6);
 
+		bool pointsmatch = false;
+		p0 = xin.pnt(xin.seg(seg(sind).info).pnt(0)).info;
+		p1 = xin.pnt(xin.seg(seg(sind).info).pnt(1)).info;
+		if (p0 == seg(sind).pnt(0) && p1 == seg(sind).pnt(1)) pointsmatch = true;		
+		if (p1 == seg(sind).pnt(0) && p0 == seg(sind).pnt(1)) pointsmatch = true;
+		if (pointsmatch=false) {
+			*gbl->log << "points dont match for edge" << endl;
+			exit(2);
+		}
 	}
-	
-	nebd += number_problem_edges;
 
-	/* reorder edge boundaries to make it easy to find vertex boundaries */
+	/* reorder edge boundaries to make it easy to find vertex boundaries 
+	   also can separate disconnected edge boundaries */
 	for(i=0;i<nebd;++i) {
-		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();
 	}
@@ -1011,7 +1005,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			++nvbd;
 		}
 	}
-
+	
 	/* CREATE COMMUNICATION FACE BOUNDARIES */
 	for(i=0;i<nfbd;++i) {
 		if (fbdry(i)->mytype == "partition") {
@@ -1049,7 +1043,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	
 	/* CREATE COMMUNICATION VERTEX BOUNDARIES */
 	for(i=0;i<nebd;++i) {
-		sind = ebdry(i)->seg(0).gindx;			
+		sind = ebdry(i)->seg(0).gindx;	
 		p0 = seg(sind).pnt(0);
 		
 		for(j=0;j<nvbd;++j)
@@ -1087,7 +1081,68 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		continue;
 		
 	}
+	
+	for (int i=0; i<npnt; ++i) 
+		pnt(i).info = 0;	
+	
+	for (int i=0; i<nseg; ++i) 
+		seg(i).info = 0;
+	
+	for (int i=0; i < nfbd; ++i) {
+		if (fbdry(i)->mytype != "partition") {
+			for (int j=0; j<fbdry(i)->npnt; ++j) 
+				pnt(fbdry(i)->pnt(j).gindx).info = 1;
+			
+			for (int j=0; j<fbdry(i)->nseg; ++j) 
+				seg(fbdry(i)->seg(j).gindx).info = 1;
+			
+		}
+	}
+	
+	for (int k=0; k < xin.nfbd; ++k) {
+		for (int n=0; n< xin.fbdry(k)->npnt; ++n) {
+			p0 = xin.pnt(xin.fbdry(k)->pnt(n).gindx).info;
+			if (p0 != -1 ) {
+				if (pnt(p0).info == 0) {
+					pnt(p0).info == 1;
+					std::cout << "# found a lone pnt idnum: " << xin.fbdry(k)->pnt(n).gindx+maxvnum << " point: " << p0 << endl;
+					std::cout << "# should be set to same BC as face boundary idnum: " << xin.fbdry(k)->idnum << endl;
+//				
+//					vbdry.resizeAndPreserve(nvbd+1);
+//					vbdry(nvbd) = new vcomm(xin.fbdry(k)->pnt(n).gindx+maxvnum,*this);
+//					vbdry(nvbd)->alloc(4);
+//					vbdry(nvbd)->pnt = p0;
+//					std::cout << vbdry(nvbd)->idprefix << "_cd_type: dirichlet\n";
+//					++nvbd;
+				}
+			}
+		}
+		
+		/* not sure if this is correct */
+		for (int n=0; n< xin.fbdry(k)->nseg; ++n) {
+			p0 = xin.seg(xin.fbdry(k)->seg(n).gindx).info;
+			if (p0 != -1 ) {
+				if (seg(p0).info == 0) {
+					seg(p0).info == 1;
+					std::cout << "# found a lone seg idnum: " << xin.fbdry(k)->seg(n).gindx+maxenum << " seg:" <<  xin.seg(xin.fbdry(k)->seg(n).gindx).info << endl;//<< xin.fbdry(k)->pnt(n).gindx+maxvnum << " point: " << p0 << endl;
+					std::cout << "# should be set to same BC as face boundary idnum: " << xin.fbdry(k)->idnum << endl;	
+					
+//					ebdry.resizeAndPreserve(nebd+1);				
+//					ebdry(nebd) = new epartition(maxenum+xin.fbdry(k)->seg(n).gindx,*this);
+//					ebdry(nebd)->alloc(static_cast<int>(5));
+//					ebdry(nebd)->nseg = 0;
+//					ebdry(nebd)->seg(0).gindx = xin.seg(xin.fbdry(k)->seg(n).gindx).info;
+//					ebdry(nebd)->setup_next_prev();
+//					ebdry(nebd)->reorder();
+//					std::cout << ebdry(nebd)->idprefix << "_cd_type: dirichlet\n";
+//					++nebd;
+				}
+			}
+		}
+	}
+	
 
+	
 	/* call match_all because reorder doesnt account for sign change */
 	match_all();
 	for(int i = 0; i < nfbd; ++i){
@@ -1107,7 +1162,5 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	
 	return;
 }
-
-
 
 

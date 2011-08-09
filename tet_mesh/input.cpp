@@ -322,7 +322,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
 				in.ignore(80,':');
 				in >> ebdry(i)->nseg;
-				ebdry(i)->alloc(static_cast<int>(10*grwfac*ebdry(i)->nseg));
+				ebdry(i)->alloc(static_cast<int>(20*grwfac*ebdry(i)->nseg));
 				for(int j=0;j<ebdry(i)->nseg;++j) {
 					in.ignore(80,':');
 					in >> ebdry(i)->seg(j).gindx;

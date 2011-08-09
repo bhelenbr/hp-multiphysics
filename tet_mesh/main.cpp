@@ -220,10 +220,10 @@ int main(int argc, char *argv[]) {
 			fname = "partition_" +nstr.str();
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart(i).partition(zx,i);
+			zpart(i).partition(zx,i,p);
 			zpart(i).checkintegrity();
 			zpart(i).output(fname,out);
-			zpart(i).output(fname,tet_mesh::gmsh);
+			//zpart(i).output(fname,tet_mesh::gmsh);
 
             //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
         }

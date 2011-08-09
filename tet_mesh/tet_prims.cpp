@@ -282,7 +282,7 @@ void tet_mesh::ring(int eind){
 		tind = gbl->i2wk(i);  
 		for(j = 0; j < 4; ++j) {            
 			tind2 = tet(tind).tet(j);
-			if (tind2 == -1)
+			if (tind2 < 0)
 				goto NEXTFACE;
 			if (gbl->i1wk(tind2) < 0) {            
 				for(k = 0; k < 6; ++k) {
