@@ -166,22 +166,26 @@ void tet_hp_cns::setup_preconditioner() {
 		gbl->epreconditioner(i,Range::all(),Range::all()) /=  gbl->eprcn(i,0);
 	}
 	
-	// note temp: remember to do parallel communication
-	
 	tet_hp::setup_preconditioner();
 	
 	int last_phase,mp_phase;
 	
-	if(gbl->diagonal_preconditioner){
-		for(int stage = 0; stage<NV; ++stage) {
-			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				pc0load(mp_phase,gbl->vpreconditioner.data() +stage*NV,NV);
-				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-				last_phase = true;
-				last_phase &= pc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
-			}
+	for(int stage = 0; stage<NV; ++stage) {
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			pc0load(mp_phase,gbl->vpreconditioner.data() +stage*NV,NV);
+			pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+			last_phase = true;
+			last_phase &= pc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
+		}
+		if (log2p) {
+			sc0load(mp_phase,gbl->epreconditioner.data()+stage*NV,0,em0,NV);
+			smsgpass(boundary::all,0,boundary::symmetric);
+			sc0wait_rcv(mp_phase,gbl->epreconditioner.data()+stage*NV,0,em0,NV);
 		}
 	}
+	
+
+	
 	
 }
 

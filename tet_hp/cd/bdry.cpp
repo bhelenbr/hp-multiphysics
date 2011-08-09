@@ -123,24 +123,26 @@ void dirichlet_edge::tadvance() {
 }
 
 void neumann_edge::rsdl(int stage){
+	int sind = -1;
 	
 	for(int i=0;i<base.nseg;++i){
+		sind = base.seg(i).gindx;
 		
-		x.ugtouht1d(i);
+		x.ugtouht1d(sind);
 		
-		element_rsdl(i,stage);
-		
-		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.seg(i).pnt(0),n) += x.lf(n)(0);
+		element_rsdl(sind,stage);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.seg(i).pnt(1),n) += x.lf(n)(1);
+			x.gbl->res.v(x.seg(sind).pnt(0),n) += x.lf(n)(0);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.seg(sind).pnt(1),n) += x.lf(n)(1);
 		
 		int indx = 3;
 
 		for(int k=0;k<basis::tet(x.log2p).em;++k) {
 			for(int n=0;n<x.NV;++n)
-				x.gbl->res.e(i,k,n) += x.lf(n)(indx);
+				x.gbl->res.e(sind,k,n) += x.lf(n)(indx);
 			++indx;
 		}	
 	}

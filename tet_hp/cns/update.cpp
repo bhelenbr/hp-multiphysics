@@ -422,16 +422,13 @@ void tet_hp_cns::minvrt() {
 		last_phase = true;
 		last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
 	}
+	
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<nfbd;++i)
 		hp_fbdry(i)->edirichlet();
 	
 	for (int i=0;i<nebd;++i) 
-		hp_ebdry(i)->edirichlet3d();
-	
-	
-	
-	
+		hp_ebdry(i)->edirichlet3d();	
 	
 	return;
 }
