@@ -397,6 +397,10 @@ void tri_hp_lvlset::reinit_setup_preconditioner() {
 			}
 		}
 	}
+	
+	// Uncomment this to do reinitialization with periodic boundary (not hybrid)
+	// tri_hp::setup_preconditioner();
+	
 	/* PREINVERT PRECONDITIONER FOR VERTICES */
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
 
@@ -413,6 +417,8 @@ void tri_hp_lvlset::reinit_minvrt() {
 	TinyVector<int,3> sign,side;
 	Array<FLT,2> tinv(NV,NV);
 	Array<FLT,1> temp(NV);
+	// int last_phase,mp_phase;
+
 
 	/* LOOP THROUGH SIDES */
 	if (basis::tri(log2p)->sm() > 0) {
@@ -642,15 +648,26 @@ void tri_hp_lvlset::reinit_bc::init() {
 	length = sqrt(nrmx*nrmx +nrmy*nrmy);
 	nrmx /= length;
 	nrmy /= length;
-	
-	if ((nrmx*norm(0) +nrmy*norm(1))*sign_phi < 0.35) {
+
+	//	if ((nrmx*norm(0) +nrmy*norm(1))*sign_phi < 0.35) {
+	//		active = true;
+	//		*x.gbl->log << base.idprefix << ' ' << v0 << ' ' << phi_at_endpt << ' ' << norm << ' ' << sign_phi << std::endl;
+	//	}
+	//	else {
+	//		active = false;
+	//	}
+		
+	// This is a complete hack and is totally not general TEMPORARY
+	if (v0 == 0 || v0 == 3) {
 		active = true;
-		*x.gbl->log << base.idprefix << ' ' << v0 << ' ' << phi_at_endpt << ' ' << norm << ' ' << sign_phi << std::endl;
 	}
 	else {
 		active = false;
 	}
-		
+	
+	// This is for periodic b.c.'s to make non active
+	// active = false;
+
 	/* Now set values if appropriate */
 	set_values();
 }
