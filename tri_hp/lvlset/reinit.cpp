@@ -8,6 +8,8 @@
 // #define RSDL_DEBUG
 #define DEBUG_OUTPUT
 
+#define USECOMM
+
 void tri_hp_lvlset::reinitialize() {	
 	
 	for(int i=0;i<nebd;++i)
@@ -20,8 +22,6 @@ void tri_hp_lvlset::reinitialize() {
 	nstr << gbl->tstep << "." << gbl->substep << std::flush;
 #endif
 
-	FLT lasterror = 1.0;
-	FLT maxerr = 0.0;
 	for (int ii=0; ii<reinit_iterations; ii++){
 		reinit_setup_preconditioner();
 		reinit_update();
@@ -31,14 +31,6 @@ void tri_hp_lvlset::reinitialize() {
 		s.str("");
 		s<<ii;
 		fname = "reinit" + nstr.str() + "_" + s.str() +"_" +gbl->idprefix;
-		maxerr = 0.0;
-		for(int i = 0;i<npnt;++i) {
-			maxerr = MAX(maxerr,fabs(gbl->res.v(i,2)));
-		}
-//		if ( maxerr > lasterror ){
-//			break;
-//		}
-		lasterror = maxerr;
 		output(fname,tecplot);
 #endif
 	}
@@ -60,46 +52,9 @@ void tri_hp_lvlset::reinit_update() {
 	for (int stage = 0; stage < gbl->nstage; ++stage) {
 		reinit_rsdl(stage);
 
-	/*  for debugging
-		for(i=0;i<npnt;++i) {
-			*gbl->log << "rsdl reinit v: " << i << ' ';
-			if (i==315) std::cout<<"problem: "<<gbl->res.v(i,3)<<std::endl;
-			if (i==315){
-				std::cout<<"This may break everything: "<<i+1<<' ' << std::endl;
-				for (n=0;n<NV;++n) 
-					std::cout << gbl->res.v(i+1,n)<<' ';
-				std::cout<<std::endl;
-			}
-			for (n=0;n<NV;++n) 
-				*gbl->log << gbl->res.v(i,n) << ' ';
-			*gbl->log << '\n';
-		}
-		
-		std::cout<<"nseg: "<<nseg<<std::endl;
-		for(i=0;i<nseg;++i) {
-			for(int m=0;m<basis::tri(log2p)->sm();++m) {
-				*gbl->log << "rsdl reinit s: " << i << ' ' << m << ' '; 
-				for(n=0;n<NV;++n)
-					*gbl->log << gbl->res.s(i,m,n) << ' ';
-				*gbl->log << '\n';
-			}
-		}
-		
-		std::cout<<"ntri: "<<ntri<<std::endl;
-		for(i=0;i<ntri;++i) {
-			for(int m=0;m<basis::tri(log2p)->im();++m) {
-				*gbl->log << "rsdl reinit i: " << i << ' ' << m << ' ';
-				for(n=0;n<NV;++n) 
-					*gbl->log << gbl->res.i(i,m,n) << ' ';
-				*gbl->log << '\n';
-			}
-		}
-		*/
-		
 		/* SET RESDIUALS TO ZERO ON INCOMING CHARACTERISTIC BOUNDARIES */
 		reinit_minvrt();
 		
-// TO DEBUG: copy and paste from /tri_hp/nstage/ void tri_hp::update  #ifdef DEBUG
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 
@@ -148,16 +103,6 @@ void tri_hp_lvlset::reinit_rsdl(int stage) {
 	}
 
 	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
-#ifdef RSDL_DEBUG
-	// for reinit debug
-	for(int i=0;i<npnt;++i) {
-		for(int n=0;n<NV;++n) {
-			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
-			else *gbl->log << "0.0 ";
-		}
-		*gbl->log << '\n';
-	}
-#endif
 	
 	for(int tind = 0; tind<ntri;++tind) {
 		
@@ -192,7 +137,6 @@ void tri_hp_lvlset::reinit_rsdl(int stage) {
 	}
 
 #ifdef RSDL_DEBUG
-// for reinit debug {
 	int i, n;
 //	if (coarse_flag) {
 		for(i=0;i<npnt;++i) {
@@ -219,7 +163,6 @@ void tri_hp_lvlset::reinit_rsdl(int stage) {
 				*gbl->log << '\n';
 			}
 		}
-//	}
 //	}
 #endif
 }
@@ -305,7 +248,6 @@ void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FL
 				signphi = sin(M_PI*phidw/2.0);
 				phivel(0)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(0)/length;
 				phivel(1)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(1)/length;
-				//res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
 				res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
 
 			}
@@ -398,9 +340,9 @@ void tri_hp_lvlset::reinit_setup_preconditioner() {
 		}
 	}
 	
-	// Uncomment this to do reinitialization with periodic boundary (not hybrid)
-	// tri_hp::setup_preconditioner();
-	
+#ifdef USECOMM
+	tri_hp::setup_preconditioner();
+#else
 	/* PREINVERT PRECONDITIONER FOR VERTICES */
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
 
@@ -408,6 +350,7 @@ void tri_hp_lvlset::reinit_setup_preconditioner() {
 		/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */ 
 		gbl->sprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->sprcn(Range(0,nseg-1),Range::all());
 	}
+#endif
 
 	return;
 }
@@ -417,7 +360,9 @@ void tri_hp_lvlset::reinit_minvrt() {
 	TinyVector<int,3> sign,side;
 	Array<FLT,2> tinv(NV,NV);
 	Array<FLT,1> temp(NV);
-	// int last_phase,mp_phase;
+#ifdef USECOMM
+	int last_phase,mp_phase;
+#endif
 
 
 	/* LOOP THROUGH SIDES */
@@ -464,13 +409,14 @@ void tri_hp_lvlset::reinit_minvrt() {
 	
 	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
 	
-//	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//		vc0load(mp_phase,gbl->res.v.data());
-//		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-//		last_phase = true;
-//		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
-//	}
-	
+#ifdef USECOMM
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,gbl->res.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
+	}
+#endif
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(i=0;i<nebd;++i) 
@@ -512,11 +458,11 @@ void tri_hp_lvlset::reinit_minvrt() {
 		/* SOLVE FOR SIDE MODE */
 		gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all())*basis::tri(log2p)->sdiag(mode);
 		
-		/*
+#ifdef USECOMM
 		sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
 		smsgpass(boundary::all,0,boundary::symmetric);
 		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
-		*/
+#endif
 		
 		/* APPLY SIDE DIRICHLET B.C.'S */
 		for(i=0;i<nebd;++i) 
@@ -551,11 +497,11 @@ void tri_hp_lvlset::reinit_minvrt() {
 	int mode = basis::tri(log2p)->sm()-1;
 	gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all())*basis::tri(log2p)->sdiag(mode);
 
-	/*
+#ifdef USECOMM
 	sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
 	smsgpass(boundary::all,0,boundary::symmetric);
 	sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
-	*/
+#endif
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(i=0;i<nebd;++i)
@@ -571,8 +517,7 @@ void tri_hp_lvlset::reinit_minvrt() {
 			gbl->res.i(tind,k,Range::all()) /= gbl->tprcn(tind,Range::all());
 			
 			for (i=0;i<basis::tri(log2p)->bm();++i)
-				 
-					gbl->res.i(tind,k,2) -= basis::tri(log2p)->bfmi(i,k)*uht(2)(i);
+				gbl->res.i(tind,k,2) -= basis::tri(log2p)->bfmi(i,k)*uht(2)(i);
 		}
 	}
 	
@@ -665,8 +610,10 @@ void tri_hp_lvlset::reinit_bc::init() {
 		active = false;
 	}
 	
+#ifdef USECOMM
 	// This is for periodic b.c.'s to make non active
-	// active = false;
+	active = false;
+#endif
 
 	/* Now set values if appropriate */
 	set_values();
