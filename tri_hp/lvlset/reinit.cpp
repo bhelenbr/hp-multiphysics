@@ -8,7 +8,8 @@
 // #define RSDL_DEBUG
 #define DEBUG_OUTPUT
 
-#define USECOMM
+// #define USECOMM
+// #define ADD_DIFFUSION
 
 void tri_hp_lvlset::reinitialize() {	
 	
@@ -175,10 +176,10 @@ void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FL
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	FLT  cjcb, oneminusbeta;
-	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
+	TinyMatrix<FLT,ND,ND> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
-	TinyMatrix<FLT,MXGP,MXGP> rho, mu;
+	TinyMatrix<FLT,MXGP,MXGP> rho, mu,e00,e01;
 	FLT length, phidw, signphi;
 	TinyVector<FLT,ND> tang,norm;
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> phivel;
@@ -187,25 +188,15 @@ void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FL
 	// LOAD INDICES OF VERTEX POINTS //
 	v = tri(tind).pnt;
 
-	// IF TINFO > -1 IT IS CURVED ELEMENT //
-	if (tri(tind).info > -1) {
-		// LOAD ISOPARAMETRIC MAPPING COEFFICIENTS //
-		crdtocht(tind);
 
-		// PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS //
-		for(n=0;n<ND;++n)
-			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-	}
-	else {
-		// PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS //
-		for(n=0;n<ND;++n)
-			basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
+	// PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS //
+	for(n=0;n<ND;++n)
+		basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 
-		// CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY //
-		for(n=0;n<ND;++n) {
-			ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
-			ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
-		}
+	// CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY //
+	for(n=0;n<ND;++n) {
+		ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
+		ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 	}
 
 	// LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT //
@@ -221,24 +212,27 @@ void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FL
 		}
 	}
 	
+	cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+
 	for(i=0;i<lgpx;++i) {
 		for(j=0;j<lgpn;++j) {
 			// STUFF FOR LEVEL SET //
 			phidw = u(2)(i,j)/(gbl->width);
-			cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 			norm(0) = (+ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j))/cjcb;
 			norm(1) = (-ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j))/cjcb;
 			length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-			
+
 			if (phidw < -1.0) {
 				res(2)(i,j) = -RAD(crd(0)(i,j))*cjcb*(length-1.0);
 				phivel(0)(i,j) = -norm(0)/length;
 				phivel(1)(i,j) = -norm(1)/length;
+				signphi = -1.0;
 			}
 			else if (phidw > 1.0) {
 				res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0);
 				phivel(0)(i,j) = norm(0)/length;
 				phivel(1)(i,j) = norm(1)/length;
+				signphi = 1.0;
 			}
 			else {
 				// signphi = phidw;
@@ -249,27 +243,60 @@ void tri_hp_lvlset::reinit_element_rsdl(int tind, int stage, Array<TinyVector<FL
 				phivel(0)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(0)/length;
 				phivel(1)(i,j) = signphi/(fabs(signphi)+EPSILON)*norm(1)/length;
 				res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(length-1.0)*signphi;
-
-			}
+			}			
 		}
 	}
 	basis::tri(log2p)->intgrt(&lf_im(NV-2)(0),&res(NV-2)(0,0),MXGP);
 
 	// NEGATIVE REAL TERMS //
 	if (gbl->beta(stage) > 0.0) {
-		for(n=0;n<basis::tri(log2p)->tm();++n)
-			lf_re(NV-2)(n) = 0.0;
+	
+#ifdef ADD_DIFFUSION
+		/* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
+		/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
+		FLT mu = gbl->width/cjcb;
+		visc(0,0) = -mu*(ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
+		visc(1,1) = -mu*(ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
+		visc(0,1) =  mu*(ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));		
+		
+
+		/* DIFFUSIVE TERMS?  */
+		for(i=0;i<basis::tri(log2p)->gpx();++i) {
+			for(j=0;j<basis::tri(log2p)->gpn();++j) {
+				
+				phidw = u(2)(i,j)/(gbl->width);
+
+				if (phidw < -1.0) {
+					signphi = -1.0;
+				}
+				else if (phidw > 1.0) {
+					signphi = 1.0;
+				}
+				else {
+					signphi = sin(M_PI*phidw/2.0);
+				}
+				
+				e00(i,j) = fabs(signphi)*(visc(0,0)*du(2,0)(i,j) +visc(0,1)*du(2,1)(i,j));
+				e01(i,j) = fabs(signphi)*(viscI1II0I*du(2,0)(i,j) +visc(1,1)*du(2,1)(i,j));
+			}
+		}
+		basis::tri(log2p)->derivr(e00.data(),&res(2)(0,0),MXGP);
+		basis::tri(log2p)->derivs(e01.data(),&res(2)(0,0),MXGP);
+#else
+		e00 = 0.0;
+		e01 = 0.0;
+#endif
 
 		// THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES //
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 				tres(2) = gbl->tau(tind,2)*res(2)(i,j);
 
-				df(2,0)(i,j) = -(ldcrd(1,1)*phivel(0)(i,j) -ldcrd(0,1)*phivel(1)(i,j))*tres(2);
-				df(2,1)(i,j) = -(-ldcrd(1,0)*phivel(0)(i,j) +ldcrd(0,0)*phivel(1)(i,j))*tres(2);
+				e00(i,j) -= (ldcrd(1,1)*phivel(0)(i,j) -ldcrd(0,1)*phivel(1)(i,j))*tres(2);
+				e01(i,j) -= (-ldcrd(1,0)*phivel(0)(i,j) +ldcrd(0,0)*phivel(1)(i,j))*tres(2);
 			}
 		}
-		basis::tri(log2p)->intgrtrs(&lf_re(2)(0),&df(2,0)(0,0),&df(2,1)(0,0),MXGP);
+		basis::tri(log2p)->intgrtrs(&lf_re(2)(0),e00.data(),e01.data(),MXGP);
 		
 		for(i=0;i<basis::tri(log2p)->tm();++i)
 			lf_re(2)(i) *= gbl->beta(stage);
