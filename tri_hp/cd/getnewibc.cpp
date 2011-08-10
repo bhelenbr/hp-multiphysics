@@ -12,7 +12,6 @@
 #include <math.h>
 #include <fstream>
 #include <iostream>
-//#include <time.h>
 using std::ifstream;
 namespace ibc_cd {
 	
@@ -137,8 +136,8 @@ namespace ibc_cd {
 		ifstream infile;
 		
 	public:
-		double fq,wth,c,S; //	(frequency (fq), width (wth), power input (c))
-		int cycle,source_switch,icount;// R is the random key;icount is increment counters;L is the option of data loading
+		double fq,wth,c; //	(frequency (fq), width (wth), power input (c))
+		int cycle,source_switch,S,icount;// R is the random key;g and incount are increment counters;L is the option of data loading
 		string binary_filename;
 		
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> xpt, FLT time) {
@@ -152,7 +151,7 @@ namespace ibc_cd {
 				
 				
 				/*Option to load data from a file*/
-				if (S==0.0){ 
+				if (S==0){ 
 					
 					//Operation to be performed at the end of the file
 					if (infile.eof()) {
@@ -189,23 +188,21 @@ namespace ibc_cd {
 				
 				/*Switch between Random and Continuous*/
 				/*Continuous*/
-				if (S==1.0) 	{
+				if (S==1) 	{
 					source_switch=1;
 					*x.gbl->log << "#Switch is on this cycle\n";
 				}
 				/*Random*/
-				if (S==2.0){
-					//srand (time);
-					//srand(1);
-                 *x.gbl->log << "seed counter at" << time << std::endl; 
-					FLT random_number=rand() % 100;
+				if (S==2){
+					
+	                FLT random_number=rand() % 100;
 					if (random_number < 50) {
-						source_switch = 1;
-						*x.gbl->log << "#Switch is on this cycle\n" ;
+						source_switch = 0;
+						*x.gbl->log << "#Switch is off this cycle\n" ;
 						
 					} else {
-						source_switch =0;
-						*x.gbl->log << "#Switch is off this cycle\n" ;
+						source_switch = 1;
+						*x.gbl->log << "#Switch is on this cycle\n" ;
 						
 					}
 				}   
@@ -225,7 +222,7 @@ namespace ibc_cd {
 			
 			
 			keyword = idnty+"_simopt";
-			blockdata.getwdefault(keyword,S,1.0);
+			blockdata.getwdefault(keyword,S,1);
 			
 			keyword = idnty+"_frequency";
 			blockdata.getwdefault(keyword,fq,0.595);
