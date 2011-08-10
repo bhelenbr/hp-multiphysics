@@ -131,7 +131,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
 	}
 
-	if (base.is_comm() || inmap.find(base.idprefix+"_type") == inmap.end()) {
+	if (base.is_comm() || inmap.find(base.idprefix+"_type") == inmap.end() || inmap[base.idprefix+"_type"] == "plain") {
 		curved = false;
 	}
 	else {
