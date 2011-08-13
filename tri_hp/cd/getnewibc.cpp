@@ -136,8 +136,8 @@ namespace ibc_cd {
 		ifstream infile;
 		
 	public:
-		double fq,wth,c; //	(frequency (fq), width (wth), power input (c))
-		int cycle,source_switch,S,icount;// R is the random key;g and incount are increment counters;L is the option of data loading
+		double fq,wth,c,S; //	(frequency (fq), width (wth), power input (c))
+		int cycle,source_switch,icount;// R is the random key;g and incount are increment counters;L is the option of data loading
 		string binary_filename;
 		
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> xpt, FLT time) {
@@ -151,7 +151,7 @@ namespace ibc_cd {
 				
 				
 				/*Option to load data from a file*/
-				if (S==0){ 
+				if (S==0.0){ 
 					
 					//Operation to be performed at the end of the file
 					if (infile.eof()) {
@@ -188,12 +188,12 @@ namespace ibc_cd {
 				
 				/*Switch between Random and Continuous*/
 				/*Continuous*/
-				if (S==1) 	{
+				if (S==1.0) 	{
 					source_switch=1;
 					*x.gbl->log << "#Switch is on this cycle\n";
 				}
 				/*Random*/
-				if (S==2){
+				if (S==2.0){
 					
 	                FLT random_number=rand() % 100;
 					if (random_number < 50) {
@@ -222,7 +222,7 @@ namespace ibc_cd {
 			
 			
 			keyword = idnty+"_simopt";
-			blockdata.getwdefault(keyword,S,1);
+			blockdata.getwdefault(keyword,S,1.0);
 			
 			keyword = idnty+"_frequency";
 			blockdata.getwdefault(keyword,fq,0.595);
