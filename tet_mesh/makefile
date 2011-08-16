@@ -97,7 +97,7 @@ libtet_mesh_mpi.a: $(OBJ)
 	cp -f ../*.h $(HOME)/Codes/include/
 
 tet_mesh_mpi: $(OBJ) $(MAINOBJ)
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh  $(LIB)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi  $(LIB)
 	cp tet_mesh_mpi $(HOME)/bin
 
 %.o: %.cpp
