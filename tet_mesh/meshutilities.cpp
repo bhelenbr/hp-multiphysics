@@ -281,20 +281,20 @@
 			
 	
 
-void tet_mesh::shift(TinyVector<FLT,ND>& s) {
+void tet_mesh::shift(TinyVector<FLT,tet_mesh::ND>& s) {
 	int n;
 	
 	for(int i=0;i<npnt;++i)
-		for(n=0;n<ND;++n)
+		for(n=0;n<tet_mesh::ND;++n)
 			pnts(i)(n) += s(n);
 
 	return;
 }
 
-void tet_mesh::scale(TinyVector<FLT,ND>& s) {
+void tet_mesh::scale(TinyVector<FLT,tet_mesh::ND>& s) {
 	int n;
 	for(int i=0;i<npnt;++i)
-		for(n=0;n<ND;++n)
+		for(n=0;n<tet_mesh::ND;++n)
 			pnts(i)(n) *= s(n);
 
 	return;

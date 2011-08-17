@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 	if (Scale) {     
 		class tet_mesh zx;
 		TinyVector<FLT,tet_mesh::ND> s;
-		printf("Enter x and y scaling\n");
+		printf("Enter x y and z scaling\n");
 		scanf("%le%le%le",&s(0),&s(1),&s(2));
 		zx.input(argv[1],in,1.0,bdrymap);
 		zx.scale(s);
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 		class tet_mesh zx;
 
 		TinyVector<FLT,tet_mesh::ND> s;
-		printf("Enter x and y shift\n");
+		printf("Enter x y and z shift\n");
 		scanf("%le%le%le",&s(0),&s(1),&s(2));
 		zx.input(argv[1],in,1.0,bdrymap);
 		zx.shift(s);
