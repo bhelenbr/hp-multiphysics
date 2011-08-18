@@ -48,8 +48,9 @@ MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran  $(EXTRAFLAGS)
 DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz
-LIB += -lMAdLib -llapack
+LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
+LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs -lMAdLib
+
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 CXXMPI = ${CXX}
 
@@ -70,6 +71,7 @@ CXXMPI = ${CXX}
 CPPFLAGS += -I/opt/openmpi/include #(cares)
 #CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 CXXMPI = /opt/openmpi/bin/mpicxx
+LIB += -lblas -llapack #(cares)
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -88,8 +90,8 @@ libtet_mesh.a: $(OBJ)
 	cp -f libtet_mesh.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
 
-tet_mesh: $(OBJ) $(MAINOBJ)
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh  $(LIB)
+tet_mesh: libtet_mesh.a $(MAINOBJ)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh $(LIB)
 	cp tet_mesh $(HOME)/bin
 
 libtet_mesh_mpi.a: $(OBJ)
@@ -97,8 +99,8 @@ libtet_mesh_mpi.a: $(OBJ)
 	cp -f libtet_mesh_mpi.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
 
-tet_mesh_mpi: $(OBJ) $(MAINOBJ)
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi  $(LIB)
+tet_mesh_mpi: libtet_mesh_mpi.a $(MAINOBJ)
+	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi $(LIB)
 	cp tet_mesh_mpi $(HOME)/bin
 
 %.o: %.cpp
