@@ -67,11 +67,13 @@ CXXMPI = ${CXX}
 #CXX=g++3 #(shelob)
 #CPPFLAGS += -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
 #LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-CPPFLAGS += -I/opt/openmpi/include #(cares)
-#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
-CXXMPI = /opt/openmpi/bin/mpicxx
+CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
+CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 LIB += -lblas -llapack #(cares)
+
+## To use openmpi
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
