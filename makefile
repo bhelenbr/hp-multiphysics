@@ -15,8 +15,8 @@ tet_mesh: tri_mesh $(DIRS) force_look
 tet_basis: utilities force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tri_hp: tri_mesh tri_basis force_look
-	cd $@; $(MAKE) $(MFLAGS)
+#tri_hp: tri_mesh tri_basis force_look
+#	cd $@; $(MAKE) $(MFLAGS)
 
 tri_mesh: $(DIRS) utilities input_map quadtree spline++ symbolic_function force_look
 	cd $@; $(MAKE) $(MFLAGS)
