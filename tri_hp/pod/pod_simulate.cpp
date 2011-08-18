@@ -788,20 +788,43 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, block::output_purpose why) {
 
 	BASE::output(fname,why);
-	
-	std::string fnmapp, namewdot;
-	std::ostringstream nstr;
-	ofstream out;
-	out.setf(std::ios::scientific, std::ios::floatfield);
-	out.precision(4);
+	std::string fnmapp;
 	
 	switch(why) {
 		case(block::display): {
-			/* don't do anything */
+			ofstream out;
+			out.setf(std::ios::scientific, std::ios::floatfield);
+			out.precision(4);
+			fnmapp = fname +"_coeff.txt";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*BASE::gbl->log << "couldn't open text output file " << fname;
+				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+			}
+			
+			for (int l=0;l<nmodes;++l) 
+				out << coeffs(l) << std::endl;
+			
+			out.close();
 			return;
 		}
 		case(block::restart): {
 			/* Output list of coefficents */
+			fnmapp = fname +"_coeff.bin";
+			binofstream bout;
+			bout.open(fnmapp.c_str());
+			if (bout.error()) {
+				*BASE::gbl->log << "couldn't open coefficient output file " << fname;
+				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+			}
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+			
+			for (int l=0;l<nmodes;++l) 
+				bout.writeFloat(coeffs(l),binio::Double);
+			
+			bout.close();
+			
 			return;
 		}
 		case(block::debug): {
@@ -810,6 +833,13 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 	}
 	return;
 }
+
+/* OUTPUT COEFFICIENT VECTOR */
+/*	nstr.str("");
+ 
+ 
+
+ 
 
 //template<class BASE> void pod_coefficients<BASE>::tadvance() {
 //	std::ostringstream nstr;
