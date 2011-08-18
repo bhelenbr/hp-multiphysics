@@ -6,21 +6,28 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: planar 
 
-planar: tet_hp
+planar: tet_hp tet_hp_mpi
 
 tet_hp:
-	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile tet_hp EXTRAFLAGS='-DPTH'
-	cp _serial/tet_hp $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp EXTRAFLAGS='-DPTH'
+	cp _$@/tet_hp $(HOME)/bin/$@
 
 .PHONY: tet_hp
+
+tet_hp_mpi:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp_mpi EXTRAFLAGS='-DMPISRC'
+	cp _$@/tet_hp_mpi $(HOME)/bin/$@
+
+.PHONY: tet_hp_mpi
 
 makefile : ;
 %.mk :: ;
 
 .PHONY: clean
 clean:
-	rm -rf _serial
+	rm -rf _tri_hp*
 
 else
 
@@ -70,6 +77,9 @@ CPPFLAGS += $(DEFINES)
 tet_hp: dirs $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh -ltet_mesh $(LIB)
 
+tet_hp_mpi: dirs $(OBJ) 
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi -ltet_mesh_mpi $(LIB)
+	
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
 	+@[ -d  cns ] || mkdir -p cns
