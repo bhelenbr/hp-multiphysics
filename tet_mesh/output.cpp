@@ -262,7 +262,62 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			break;
 		}
 
+		case (vtu): {
+			
+			fnmapp = filename +".vtu";
+			out.open(fnmapp.c_str());
+			out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+			out << "	<UnstructuredGrid>" << endl;
+			out << "		<Piece NumberOfPoints=\"" << npnt << "\" NumberOfCells=\"" << ntet << "\">" << endl;
+			
+			out << "			<PointData>" << endl;
+			out << "			</PointData>" << endl;
+			
+			out << "			<CellData>" << endl;
+			out << "			</CellData>" << endl;
+			
+			out << "			<Points>" << endl;
+			out << "				<DataArray type=\"Float32\" NumberOfComponents=\"3\" Format=\"ascii\">" << endl;
+			for(int i = 0; i < npnt; ++i)
+				out << "						" << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) << endl;
+			out << "				</DataArray>" << endl;
+			out << "			</Points>" << endl;
+			
+			out << "			<Cells>" << endl;
+			out << "				<DataArray type=\"Int32\" Name=\"connectivity\" Format=\"ascii\">" << endl;
+				// output tet connection data
+				for(int i = 0; i < ntet; ++i){
+					for(int j = 0; j < 4; ++j)
+						out << tet(i).pnt(j) << ' ' ;
+					out << endl;
+				}
 
+			out << "				</DataArray>" << endl;
+			out << "				<DataArray type=\"Int32\" Name=\"offsets\" Format=\"ascii\">" << endl;
+			out << "					";
+			/* offsets */
+			for(int i = 0; i < ntet; ++i)
+				out << (i+1)*4 << ' ';
+			out << endl;
+				
+			out << "				</DataArray>" << endl;
+			out << "				<DataArray type=\"Int32\" Name=\"types\" Format=\"ascii\">" << endl;
+			out << "					";
+			/* vtk file type 10 for tetrahedrals 24 for quadratic tet */
+			for(int i = 0; i < ntet; ++i)
+				out << 10 << ' '; 
+			out << endl;
+			
+			out << "				</DataArray>" << endl;
+			out << "			</Cells>" << endl;
+			out << "		</Piece>" << endl;
+			out << "	</UnstructuredGrid>" << endl;
+			out << "</VTKFile>" << endl;
+		
+			out.close();
+			break;
+		}
+			
 		default:
 			*gbl->log << "That filetype is not supported yet" << endl;
 			break;

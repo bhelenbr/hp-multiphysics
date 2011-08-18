@@ -61,7 +61,7 @@ void tet_mesh::mgconnect(tet_mesh &tgt, Array<transfer,1> &cnnct) {
 
 	/* LOOP THROUGH POINTS AND FIND SURROUNDING TRIANGLE */
 	for(i=0;i<npnt;++i) {
-		tgt.otree.nearpt(pnts(i).data(),p0);
+		tgt.otree.nearpt(pnts(i),p0);
 		tgt.findtet(pnts(i),p0,cnnct(i).tet);
 		tgt.getwgts(cnnct(i).wt);
 	}

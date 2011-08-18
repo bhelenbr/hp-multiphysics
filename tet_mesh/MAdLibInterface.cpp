@@ -19,11 +19,14 @@
 using namespace MAd;
 
 void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& input) {
+	std::string fnmapp;
+	fnmapp = filename + ".msh";
+
 	pGModel MAdModel = NULL;
 	GM_create(&MAdModel,"theModel");
-	GM_readFromMSH(MAdModel, filename.c_str());
+	GM_readFromMSH(MAdModel, fnmapp.c_str());
 	pMesh MAdMesh = M_new(MAdModel);
-	M_load(MAdMesh,filename.c_str());
+	M_load(MAdMesh,fnmapp.c_str());
 
 	if (!initialized) {
 		maxvst = M_numTets(MAdMesh);

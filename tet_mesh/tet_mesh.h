@@ -189,7 +189,7 @@ class tet_mesh : public multigrid_interface {
 		void copy(const tet_mesh& tgt);
 		
 		/** Innput/Output file types */
-		enum filetype {easymesh, baker, gambit, tecplot, grid, text, binary, BRep, gmsh, boundary, vlength, debug_adapt, datatank};
+		enum filetype {easymesh, baker, gambit, tecplot, grid, text, binary, BRep, gmsh, boundary, vlength, debug_adapt, datatank,vtu};
 		
 		/** Input mesh */
 		void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
