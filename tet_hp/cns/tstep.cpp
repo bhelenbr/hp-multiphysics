@@ -178,9 +178,12 @@ void tet_hp_cns::setup_preconditioner() {
 			last_phase &= pc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
 		}
 		if (log2p) {
-			sc0load(mp_phase,gbl->epreconditioner.data()+stage*NV,0,em0,NV);
-			smsgpass(boundary::all,0,boundary::symmetric);
-			sc0wait_rcv(mp_phase,gbl->epreconditioner.data()+stage*NV,0,em0,NV);
+			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+				sc0load(mp_phase,gbl->epreconditioner.data()+stage*NV,0,0,NV);
+				smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+				last_phase = true;
+				last_phase &= sc0wait_rcv(mp_phase,gbl->epreconditioner.data()+stage*NV,0,0,NV);
+			}
 		}
 	}
 	
