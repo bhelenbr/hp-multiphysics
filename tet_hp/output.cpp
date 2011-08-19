@@ -555,6 +555,11 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 				*gbl->log<< "couldn't open vtu output file " << fnmapp;
 				exit(1);
 			}
+			if (basis::tet(log2p).p > 2) {
+				*gbl->log << "vtu output routine does not work for p > 2 " << endl;
+				exit(2);
+			}
+			
 			int numpnts,numtets;
 			numpnts = npnt+basis::tet(log2p).em*nseg+basis::tet(log2p).fm*ntri+basis::tet(log2p).im*ntet;
 			numtets = ntet*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1);
@@ -562,10 +567,16 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
 			out << "	<UnstructuredGrid>" << endl;
 			out << "		<Piece NumberOfPoints=\"" << numpnts << "\" NumberOfCells=\"" << numtets << "\">" << endl;
-			
-			out << "			<PointData Scalars=\"Pressure\" Vectors=\"Velocity\">" << endl;
-			out << "				<DataArray type=\"Float32\" Name=\"Pressure\" Format=\"ascii\">" << endl;
-			
+			if(NV == 1) {
+				out << "			<PointData Scalars=\"Temperature\">" << endl;
+				out << "				<DataArray type=\"Float32\" Name=\"Temperature\" format=\"ascii\">" << endl;
+				
+			} 
+			else {
+				out << "			<PointData Scalars=\"Pressure\" Vectors=\"Velocity\">" << endl;
+				out << "				<DataArray type=\"Float32\" Name=\"Pressure\" format=\"ascii\">" << endl;				
+			}
+
 			/* VERTEX MODES */
 			for(i=0;i<npnt;++i) 
 				out << ugbd(tlvl).v(i,0)<< std::endl;
@@ -583,51 +594,56 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			}
 			
 			out << "				</DataArray>" << endl;
-			out << "				<DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" Format=\"ascii\">" << endl;
 			
-			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
-				for(n=1;n<NV-1;++n) 
-					out << ugbd(tlvl).v(i,n)<< ' ';
-				out << std::endl;
-			}
-			
-			if (basis::tet(log2p).p > 1) {
-				/* EDGE MODES */
-				for(eind=0;eind<nseg;++eind) {
-					ugtouht1d(eind,tlvl);
-					for(n=1;n<NV-1;++n)
-						basis::tet(log2p).proj1d_leg(&uht(n)(0),&u1d(n)(0));
-					
-					for(i=1;i<basis::tet(log2p).em+1;++i) {
-						for(n=1;n<NV-1;++n){
-							out << u1d(n)(i)<< ' ';               
-						}            
-						out << std::endl; 
+			if (NV > 1) {			
+				out << "				<DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+				
+				/* VERTEX MODES */
+				for(i=0;i<npnt;++i) {
+					for(n=1;n<NV-1;++n) 
+						out << ugbd(tlvl).v(i,n)<< ' ';
+					out << std::endl;
+				}
+				
+				if (basis::tet(log2p).p > 1) {
+					/* EDGE MODES */
+					for(eind=0;eind<nseg;++eind) {
+						ugtouht1d(eind,tlvl);
+						for(n=1;n<NV-1;++n)
+							basis::tet(log2p).proj1d_leg(&uht(n)(0),&u1d(n)(0));
+						
+						for(i=1;i<basis::tet(log2p).em+1;++i) {
+							for(n=1;n<NV-1;++n){
+								out << u1d(n)(i)<< ' ';               
+							}            
+							out << std::endl; 
+						}
 					}
 				}
+				
+				out << "				</DataArray>" << endl;
 			}
-			
-			out << "				</DataArray>" << endl;
-			out << "				<DataArray type=\"Float32\" Name=\"Temperature\" Format=\"ascii\">" << endl;
-			
-			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) 
-				out << ugbd(tlvl).v(i,NV-1)<< std::endl;
-			
-			if (basis::tet(log2p).p > 1) {
-				/* EDGE MODES */
-				for(eind=0;eind<nseg;++eind) {
-					ugtouht1d(eind,tlvl);
-					basis::tet(log2p).proj1d_leg(&uht(NV-1)(0),&u1d(NV-1)(0));
-					
-					for(i=1;i<basis::tet(log2p).em+1;++i) 
-						out << u1d(NV-1)(i)<< std::endl;               
-					
+			if (NV > 4) {
+				out << "				<DataArray type=\"Float32\" Name=\"Temperature\" format=\"ascii\">" << endl;
+				
+				/* VERTEX MODES */
+				for(i=0;i<npnt;++i) 
+					out << ugbd(tlvl).v(i,NV-1)<< std::endl;
+				
+				if (basis::tet(log2p).p > 1) {
+					/* EDGE MODES */
+					for(eind=0;eind<nseg;++eind) {
+						ugtouht1d(eind,tlvl);
+						basis::tet(log2p).proj1d_leg(&uht(NV-1)(0),&u1d(NV-1)(0));
+						
+						for(i=1;i<basis::tet(log2p).em+1;++i) 
+							out << u1d(NV-1)(i)<< std::endl;               
+						
+					}
 				}
+				
+				out << "				</DataArray>" << endl;
 			}
-			
-			out << "				</DataArray>" << endl;
 			
 			out << "			</PointData>" << endl;
 			
@@ -635,7 +651,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			out << "			</CellData>" << endl;
 			
 			out << "			<Points>" << endl;
-			out << "				<DataArray type=\"Float32\" NumberOfComponents=\"3\" Format=\"ascii\">" << endl;
+			out << "				<DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<ND;++n) 
 					out << vrtxbd(tlvl)(i)(n) << ' ';
@@ -672,7 +688,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			out << "			</Points>" << endl;
 			
 			out << "			<Cells>" << endl;
-			out << "				<DataArray type=\"Int32\" Name=\"connectivity\" Format=\"ascii\">" << endl;
+			out << "				<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" << endl;
 			/* OUTPUT CONNECTIVY INFO */
 			for(tind=0;tind<ntet;++tind) {
 				
@@ -875,7 +891,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			
 			
 			out << "				</DataArray>" << endl;
-			out << "				<DataArray type=\"Int32\" Name=\"offsets\" Format=\"ascii\">" << endl;
+			out << "				<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" << endl;
 			out << "					";
 			/* offsets */
 			for(int i = 0; i < numtets; ++i)
@@ -883,7 +899,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			out << endl;
 			
 			out << "				</DataArray>" << endl;
-			out << "				<DataArray type=\"Int32\" Name=\"types\" Format=\"ascii\">" << endl;
+			out << "				<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" << endl;
 			out << "					";
 			/* vtk file type 10 for tetrahedrals 24 for quadratic tet */
 			for(int i = 0; i < numtets; ++i)
@@ -900,23 +916,36 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			if(gbl->idnum==0){
 				std::ostringstream nstr;
 				nstr.str("");
-				nstr << gbl->tstep << std::flush;
-				fnmapp = "data" +nstr.str()+".pvtu";
+				int tstep = gbl->tstep;
+				if (tstep == -1) tstep = 0; 
+				
+				nstr << tstep << std::flush;
+				fnmapp = "data" +nstr.str()+".pvtu";				
 				out.open(fnmapp.c_str());
-
-				out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+				
+				fnmapp = "data" +nstr.str();
+				
+				out << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
 				out << "	<PUnstructuredGrid GhostLevel=\"0\">" << endl;
-				out << "		<PPointData Scalars=\"Pressure\" Vectors=\"Velocity\">" << endl;
-				out << "			<PDataArray type=\"Float32\" Name=\"Pressure\" Format=\"ascii\">" << endl;
-				out << "			<PDataArray type=\"Float32\" Name=\"Velocity\" Format=\"ascii\">" << endl;
-				out << "			<PDataArray type=\"Float32\" Name=\"Temperature\" Format=\"ascii\">" << endl;
+				if(NV == 1) {
+					out << "		<PPointData Scalars=\"Temperature\">" << endl;
+					out << "			<PDataArray type=\"Float32\" Name=\"Temperature\"/>" << endl;
+				}
+				else{
+					out << "		<PPointData Scalars=\"Pressure\" Vectors=\"Velocity\">" << endl;
+					out << "			<PDataArray type=\"Float32\" Name=\"Pressure\"/>" << endl;
+				}
+				if(NV > 1) out << "			<PDataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\"/>" << endl;
+				if(NV > 4) out << "			<PDataArray type=\"Float32\" Name=\"Temperature\"/>" << endl;
 				out << "		</PPointData>" << endl;
+				out << "		<PCellData>" << endl;
+				out << "		</PCellData>" << endl;
 				out << "		<PPoints>" << endl;
-				out << "			<PDataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"appended\"/>" << endl;
+				out << "			<PDataArray type=\"Float32\" NumberOfComponents=\"3\"/>" << endl;
 				out << "		</PPoints>" << endl;
 				
 				for(int i=0;i<sim::blks.nblock; ++i)
-					out << "		<Piece Source=\"" << fname << "_b" << i << ".vtu\"/>" << endl;
+					out << "		<Piece Source=\"" << fnmapp << "_b" << i << ".vtu\"/>" << endl;
 
 				out << "	</PUnstructuredGrid>" << endl; 
 				out << "</VTKFile>" << endl;

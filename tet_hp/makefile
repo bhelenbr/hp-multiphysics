@@ -36,7 +36,7 @@ VPATH = ../
 BASE = allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o mg_prolongate.o mg_restrict.o minvrt.o  \
 tadvance.o output.o ptprobe.o particle.o tobasis.o update.o test.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o 
-OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o
+OBJCD = cd/minvrt.o cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/tstep.o 
 OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/tstep.o 
 
@@ -49,6 +49,7 @@ OBJ += $(OBJCNS_EXPLICIT)
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
+LIB += -lMAdLib
 
 CXXMPI = ${CXX}
 ### Begin machine dependent
