@@ -29,6 +29,7 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 		virtual void init(input_map& input,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
 		virtual void copy(const hp_vrtx_bdry& tgt) {}
 		virtual ~hp_vrtx_bdry() {}
+		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
 
 		/* input output functions */
 		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0) {
@@ -112,6 +113,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0); 
+		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
 
 		/* CURVATURE FUNCTIONS */
 		bool is_curved() {return(curved);}

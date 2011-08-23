@@ -21,6 +21,17 @@ hp_vrtx_bdry* tet_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	return(temp);
 }
 
+void hp_vrtx_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, int ndirichlets) {
+	
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	int v0 = base.pnt;
+	for(int n=0;n<ndirichlets;++n)
+		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);		
+		
+	return;
+}
+
+
 hp_edge_bdry* tet_hp::getnewedgeobject(int bnum, input_map &bdrydata) {
 	hp_edge_bdry *temp = new hp_edge_bdry(*this,*ebdry(bnum));
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
@@ -381,6 +392,66 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 	
 	return;
 }
+
+
+void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, int ndirichlets) {
+	int i,j,k,m,n,v0,v1,v2,sind,find;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(j=0;j<base.nseg;++j) {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		for(n=0;n<ndirichlets;++n)
+			x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);		
+	}
+	v0 = x.seg(sind).pnt(1);
+	for(n=0;n<ndirichlets;++n)
+		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
+	
+	/*******************/    
+	/* SET SIDE VALUES */
+	/*******************/
+	for(j=0;j<base.nseg;++j) {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+		
+		if (is_curved()) {
+			x.crdtocht1d(sind);
+			for(n=0;n<tet_mesh::ND;++n)
+				basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0));
+		}
+		else {
+			for(n=0;n<tet_mesh::ND;++n) {
+				basis::tet(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd1d(n)(0));
+			}
+		}
+		if (basis::tet(x.log2p).em) {
+			for(n=0;n<ndirichlets;++n)
+				basis::tet(x.log2p).proj1d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),&x.res1d(dirichlets(n))(0));
+			
+			for(k=0;k<basis::tet(x.log2p).gpx; ++k) {
+				pt(0) = x.crd1d(0)(k);
+				pt(1) = x.crd1d(1)(k);
+				pt(2) = x.crd1d(2)(k);
+				
+				for(n=0;n<ndirichlets;++n)
+					x.res1d(dirichlets(n))(k) -= ibc->f(dirichlets(n),pt,x.gbl->time);
+			}
+			for(n=0;n<ndirichlets;++n)
+				basis::tet(x.log2p).intgrt1d(&x.lf(dirichlets(n))(0),&x.res1d(dirichlets(n))(0));
+			
+			for(n=0;n<ndirichlets;++n) 
+				for(m=0;m<basis::tet(x.log2p).em;++m) 
+					x.ug.e(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m)*basis::tet(x.log2p).diag1d(m);
+			
+		}
+	}
+	
+	return;
+}
+
 
 hp_face_bdry* tet_hp::getnewfaceobject(int bnum, input_map &bdrydata) {
 	hp_face_bdry *temp = new hp_face_bdry(*this,*fbdry(bnum));

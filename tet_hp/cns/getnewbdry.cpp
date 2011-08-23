@@ -73,9 +73,8 @@ hp_vrtx_bdry* tet_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tet_hp_cns_etype {
     public:
-        static const int ntypes = 11;
-        enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset,force_coupling};
+        static const int ntypes = 4;
+        enum ids {unknown=-1,plain,inflow,outflow,adiabatic};
         static const char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i)
@@ -84,8 +83,7 @@ class tet_hp_cns_etype {
         }
 };
 
-const char tet_hp_cns_etype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
+const char tet_hp_cns_etype::names[ntypes][40] = {"plain","inflow","outflow","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tet_hp_cns::getnewedgeobject(int bnum, input_map &bdrydata) {
@@ -108,6 +106,22 @@ hp_edge_bdry* tet_hp_cns::getnewedgeobject(int bnum, input_map &bdrydata) {
     }
 
     switch(type) {
+		case tet_hp_cns_etype::plain: {
+			temp = new generic_edge(*this,*ebdry(bnum));
+			break;
+		}
+		case tet_hp_cns_etype::inflow: {
+			temp = new inflow_edge(*this,*ebdry(bnum));
+			break;
+		}
+		case tet_hp_cns_etype::outflow: {
+			temp = new neumann_edge(*this,*ebdry(bnum));
+			break;
+		}
+		case tet_hp_cns_etype::adiabatic: {
+			temp = new adiabatic_edge(*this,*ebdry(bnum));
+			break;
+		}
         default: {
             temp = tet_hp::getnewedgeobject(bnum,bdrydata);
             break;

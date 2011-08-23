@@ -27,7 +27,7 @@ makefile : ;
 
 .PHONY: clean
 clean:
-	rm -rf _tri_hp*
+	rm -rf _tet_hp*
 
 else
 
@@ -42,9 +42,9 @@ OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getne
 
 OBJ = $(BASE)
 OBJ += $(OBJCD) 
-OBJ += $(OBJINS) 
+#OBJ += $(OBJINS) 
 OBJ += $(OBJCNS)
-OBJ += $(OBJCNS_EXPLICIT)
+#OBJ += $(OBJCNS_EXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
@@ -75,10 +75,10 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
-tet_hp: dirs $(OBJ) 
+tet_hp: $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh -ltet_mesh $(LIB)
 
-tet_hp_mpi: dirs $(OBJ) 
+tet_hp_mpi: $(OBJ) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi -ltet_mesh_mpi $(LIB)
 	
 dirs:
@@ -86,8 +86,10 @@ dirs:
 	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
-
-%.o: %.cpp
+	touch dirs
+	
+	
+%.o: %.cpp dirs
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \

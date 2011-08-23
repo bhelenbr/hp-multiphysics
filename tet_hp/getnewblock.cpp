@@ -10,9 +10,9 @@
 #include "tet_hp.h"
 
 #define CD
-#define INS
+//#define INS
 #define CNS
-#define CNS_EXPLICIT
+//#define CNS_EXPLICIT
 
 
 //#define POD

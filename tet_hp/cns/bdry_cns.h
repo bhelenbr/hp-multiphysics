@@ -176,5 +176,114 @@ namespace bdry_cns {
 			void init(input_map& inmap,void* gbl_in);
 	};
 	
+	class generic_edge : public hp_edge_bdry {
+	protected:
+		tet_hp_cns &x;
+		bool report_flag;
+#ifdef L2_ERROR
+		symbolic_function<2> l2norm;
+#endif
+		enum bctypes {ess, nat, mix};
+		
+	public:
+		Array<FLT,1> total_flux,diff_flux,conv_flux;
+		FLT circumference,moment,convect,circulation;
+		
+	public:
+		generic_edge(tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic_edge";}
+		generic_edge(const generic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
+			if (report_flag) {
+#ifdef L2_ERROR
+				l2norm = inbdry.l2norm;
+#endif
+				total_flux.resize(x.NV);
+				diff_flux.resize(x.NV);
+				conv_flux.resize(x.NV);  
+			}
+		}
+		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		void init(input_map& input,void* gbl_in) {
+			hp_edge_bdry::init(input,gbl_in);
+			std::string keyword = base.idprefix +"_report";
+			input.getwdefault(keyword,report_flag,false);
+			
+			if (report_flag) {
+#ifdef L2_ERROR
+				l2norm.init(input,base.idprefix+"_norm");
+#endif
+				total_flux.resize(x.NV);
+				diff_flux.resize(x.NV);
+				conv_flux.resize(x.NV);            
+			}
+		}
+	};
+	
+	class neumann_edge : public generic_edge {
+	protected:
+		virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx);
+		
+	public:
+		neumann_edge(tet_hp_cns &xin, edge_bdry &bin) : generic_edge(xin,bin) {mytype = "neumann_edge";}
+		neumann_edge(const neumann_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : generic_edge(inbdry,xin,bin) {}
+		neumann_edge* create(tet_hp& xin, edge_bdry &bin) const {return new neumann_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		void rsdl(int stage);
+		void element_rsdl(int find,int stage);
+	};
+	
+	
+	
+	class inflow_edge : public neumann_edge {  
+	protected:
+		Array<int,1> dirichlets;
+		int ndirichlets;
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx);
+		
+	public:
+		inflow_edge(tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(xin,bin) {
+			mytype = "inflow_edge";
+			ndirichlets = x.NV-1;
+			dirichlets.resize(ndirichlets);
+			for (int n=1;n<x.NV;++n)
+				dirichlets(n-1) = n;
+		}
+		inflow_edge(const inflow_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		inflow_edge* create(tet_hp& xin, edge_bdry &bin) const {return new inflow_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+		void vdirichlet3d();
+		void edirichlet3d();	
+		
+		void tadvance() {
+			hp_edge_bdry::tadvance();
+			setvalues(ibc,dirichlets,ndirichlets);
+		};
+	};
+	
+	
+	class adiabatic_edge : public neumann_edge {  
+	protected:
+		Array<int,1> dirichlets;
+		int ndirichlets;
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx);
+		
+	public:
+		adiabatic_edge(tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(xin,bin) {
+			mytype = "adiabatic_edge";
+			ndirichlets = x.NV-2;
+			dirichlets.resize(ndirichlets);
+			for (int n=1;n<x.NV-1;++n)
+				dirichlets(n-1) = n;
+		}
+		adiabatic_edge(const adiabatic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		adiabatic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new adiabatic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+		void vdirichlet3d();
+		void edirichlet3d();	
+		
+		void tadvance() {
+			hp_edge_bdry::tadvance();
+			setvalues(ibc,dirichlets,ndirichlets);
+		};
+	};
+	
 }
 #endif

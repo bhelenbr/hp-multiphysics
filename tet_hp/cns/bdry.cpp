@@ -8,6 +8,137 @@
 /*************************************************/
 using namespace bdry_cns;
 
+
+/* ---------------------- */
+/* edge boundary routines */
+/* ---------------------- */
+
+
+void neumann_edge::rsdl(int stage){
+	int sind = -1;
+	
+	for(int i=0;i<base.nseg;++i){
+		sind = base.seg(i).gindx;
+		
+		x.ugtouht1d(sind);
+		
+		element_rsdl(sind,stage);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.seg(sind).pnt(0),n) += x.lf(n)(0);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.seg(sind).pnt(1),n) += x.lf(n)(1);
+		
+		int indx = 3;
+		
+		for(int k=0;k<basis::tet(x.log2p).em;++k) {
+			for(int n=0;n<x.NV;++n)
+				x.gbl->res.e(sind,k,n) += x.lf(n)(indx);
+			++indx;
+		}	
+	}
+	
+	return;
+}
+
+void neumann_edge::element_rsdl(int eind,int stage) {
+	
+	//temp need to fix
+	// only works for inflow/adiabatic walls
+
+	x.lf = 0.0;
+	//flux();
+	
+	return;
+}
+
+
+void neumann_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+	
+	//temp need to fix
+	// only works for inflow/adiabatic walls
+	return;
+}
+
+void inflow_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
+
+	//temp need to fix
+	// only works for inflow walls
+	
+	return;
+}
+
+void inflow_edge::vdirichlet3d() {	
+	int v0=-1,sind=-1;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		for(int n=0; n<ndirichlets; ++n) 
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+		
+	}
+	
+	v0 = x.seg(sind).pnt(1);
+	for(int n=0; n<ndirichlets; ++n) 
+		x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+	
+}
+
+void inflow_edge::edirichlet3d() {
+	if (basis::tet(x.log2p).em > 0) {
+		for(int j=0;j<base.nseg;++j) {
+			int sind = base.seg(j).gindx;
+			for(int n=0; n<ndirichlets; ++n) 
+				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}		
+	
+
+
+void adiabatic_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
+	
+	//temp need to fix
+	// only works for adiabatic walls
+	
+	return;
+}
+
+void adiabatic_edge::vdirichlet3d() {	
+	int v0=-1,sind=-1;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		for(int n=0; n<ndirichlets; ++n) 
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+		
+	}
+	
+	v0 = x.seg(sind).pnt(1);
+	for (int n=0; n<ndirichlets; ++n) 
+		x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+	
+}
+
+void adiabatic_edge::edirichlet3d() {
+	if (basis::tet(x.log2p).em > 0) {
+		for(int j=0;j<base.nseg;++j) {
+			int sind = base.seg(j).gindx;
+			for(int n=0; n<ndirichlets; ++n) 
+				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}	
+
+
+
+/* ---------------------- */
+/* face boundary routines */
+/* ---------------------- */
+
 void generic::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 //	cout << "warning generic::output in bdry.cpp is being called and is not functioning" << endl;
 	return;
