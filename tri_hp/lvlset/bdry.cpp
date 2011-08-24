@@ -127,6 +127,65 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 	return(temp);
 }
 
+
+/* THIS CLASS IS FOR UNSTEADY FROZEN FLOW STUFF */
+class reinitialize_flow : public tri_hp_helper {
+	public:
+		reinitialize_flow(tri_hp &xin) :tri_hp_helper(xin) {}
+		void update(int stage) {
+			const int npnt = x.npnt, nseg = x.nseg, ntri = x.ntri;
+			const int sm0 = x.sm0, im0 = x.im0;
+			
+			/* This is for an unsteady frozen flow */
+			/* Store current value of level-set */
+			x.ugbd(1).v(Range(0,npnt-1),0) = x.ug.v(Range(0,npnt-1),2);
+			if (x.sm0) x.ugbd(1).s(Range(0,nseg-1),Range(0,sm0-1),0) = x.ug.s(Range(0,nseg-1),Range(0,sm0-1),2);
+			if (x.im0) x.ugbd(1).i(Range(0,ntri-1),Range(0,im0-1),0) = x.ug.i(Range(0,ntri-1),Range(0,im0-1),2);
+			x.tobasis(x.gbl->ibc);
+			x.ug.v(Range(0,npnt-1),2) = x.ugbd(1).v(Range(0,npnt-1),0); 
+			if (x.sm0) x.ug.s(Range(0,nseg-1),Range(0,sm0-1),2) = x.ugbd(1).s(Range(0,nseg-1),Range(0,sm0-1),0);
+			if (x.im0) x.ug.i(Range(0,ntri-1),Range(0,im0-1),2) = x.ugbd(1).i(Range(0,ntri-1),Range(0,im0-1),0);
+		}
+};
+
+class tri_hp_lvlset_helper_type {
+	public:
+		const static int ntypes = 1;
+		enum ids {reinitialize};
+		const static char names[ntypes][40];
+		static int getid(const char *nin) {
+			int i;
+			for(i=0;i<ntypes;++i) 
+				if (!strcmp(nin,names[i])) return(i);
+			return(-1);
+		}
+};
+const char tri_hp_lvlset_helper_type::names[ntypes][40] = {"reinitialize"};
+
+
+tri_hp_helper *tri_hp_lvlset::getnewhelper(input_map& inmap) {
+	std::string movername;
+	int type;
+	
+	/* FIND INITIAL CONDITION TYPE */
+	if (!inmap.get(gbl->idprefix + "_helper",movername))
+		inmap.getwdefault("tri_hp_helper",movername,std::string("default"));
+	
+	type = tri_hp_lvlset_helper_type::getid(movername.c_str());
+	
+	switch(type) {
+		case tri_hp_lvlset_helper_type::reinitialize: {
+			tri_hp_helper *temp = new reinitialize_flow(*this);
+			return(temp);
+		}
+		default: {
+			tri_hp_helper *temp = new tri_hp_helper(*this);
+			return(temp);
+		}
+	}
+}
+
+
 void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
 	int j,k,count,sind(0),offset;
 
@@ -476,7 +535,7 @@ void hybrid::update(int stage) {
 	
 	//  return;  // Uncomment this to simply freeze values on incoming boundaries
 
-	if (stage == -1 || x.coarse_flag || x.reinit_iterations) return;
+	if (stage == -1 || x.coarse_flag) return;
 
 	// Find hybrid point //
 	if (base.vbdry(0) > -1) {
@@ -551,7 +610,7 @@ void hybrid::update(int stage) {
 				*x.gbl->log << "big change " << xloc << ' ' << yloc << std::endl;
 				*x.gbl->log << "big change " << normux << ' ' << normuy << std::endl;
 				x.output("bigchange",tri_hp::tecplot);
-				exit(1);
+				// exit(1);
 			}
 			else {
 				x.ug.v(v2,2) = temp;

@@ -19,7 +19,10 @@ void tri_hp_lvlset::init(input_map& input, void *gin) {
 	input.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
 	/* get estimate of mesh length to use for width */
 	FLT dx = circumradius(0)/basis::tri(log2p)->sm();
-	input.getwdefault(gbl->idprefix + "_width",gbl->width,dx);
+	if (!input.get(gbl->idprefix + "_width",gbl->width)) {
+		input.getwdefault(gbl->idprefix +"_width_multiplier",gbl->width,2.0);
+		gbl->width *= dx;
+	}
 	
 	input.getwdefault(gbl->idprefix + "_reinit_iterations",reinit_iterations,0);
 	reinit_bdry.resize(nebd);

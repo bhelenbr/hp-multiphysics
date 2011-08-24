@@ -13,6 +13,10 @@
 
 void tri_hp_lvlset::reinitialize() {	
 	
+	const int store_log2p = log2p;  
+	/* Only reinitialize vertices? */
+	// log2p = 0;  // Uncomment this to only reinitialize vertex description of levelset
+
 	for(int i=0;i<nebd;++i)
 		reinit_bdry(i)->init();
 				
@@ -24,6 +28,24 @@ void tri_hp_lvlset::reinitialize() {
 #endif
 
 	for (int ii=0; ii<reinit_iterations; ii++){
+		
+		/* Lets set all high-order stuff away from the interface to 0 */
+		for(int i=0;i<nseg;++i) {
+			if (fabs(ug.v(seg(i).pnt(0),2) +ug.v(seg(i).pnt(1),2))/(gbl->width*basis::tri(log2p)->sm()) > 1.0) {
+				for(int m=0;m<basis::tri(log2p)->sm();++m) {
+					ug.s(i,m,2) = 0.0;
+				}
+			}
+		}
+		
+		for(int i=0;i<ntri;++i) {
+			if (fabs(ug.v(tri(i).pnt(0),2) +ug.v(tri(i).pnt(1),2) +ug.v(tri(i).pnt(2),2))/(gbl->width*basis::tri(log2p)->sm()) > 1.0) {
+				for(int m=0;m<basis::tri(log2p)->im();++m) {
+					ug.i(i,m,2) = 0.0;
+				}
+			}
+		}
+		
 		reinit_setup_preconditioner();
 		reinit_update();
 		
@@ -35,6 +57,8 @@ void tri_hp_lvlset::reinitialize() {
 		output(fname,tecplot);
 #endif
 	}
+	
+	log2p = store_log2p;
 }
 
 void tri_hp_lvlset::reinit_update() {
