@@ -333,12 +333,21 @@ class output_contour : public tri_hp_helper {
 		}
 };
 
+/* THIS CLASS IS FOR UNSTEADY FROZEN FLOW STUFF */
+class reinitialize : public tri_hp_helper {
+	public:
+		reinitialize(tri_hp &xin) :tri_hp_helper(xin) {}
+		void update(int stage) {
+			x.tobasis(x.gbl->ibc);
+		}
+};
+
 
 
 class helper_type {
 	public:
-		const static int ntypes = 6;
-		enum ids {translating,print_averages,l2error,output_contour,gcl_test,cartesian_interpolation};
+		const static int ntypes = 7;
+		enum ids {translating,print_averages,l2error,output_contour,gcl_test,cartesian_interpolation,reinitialize};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -347,7 +356,7 @@ class helper_type {
 			return(-1);
 		}
 };
-const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test","cartesian_interpolation"};
+const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test","cartesian_interpolation","reinitialize"};
 
 
 tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
@@ -383,6 +392,10 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
 		}
 		case helper_type::cartesian_interpolation: {
 			tri_hp_helper *temp = new cartesian_interpolation(*this);
+			return(temp);
+		}
+		case helper_type::reinitialize: {
+			tri_hp_helper *temp = new reinitialize(*this);
 			return(temp);
 		}
 		default: {
