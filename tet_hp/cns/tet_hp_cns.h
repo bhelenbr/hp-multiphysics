@@ -57,8 +57,8 @@ public:
 	void setup_preconditioner();
 	void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 	void calculate_unsteady_sources();
-	void pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
-	void project_new_variables();
+	void calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
+	//void project_new_variables();
 	void switch_variables(Array<double,1> pvu, Array<double,1> &a);
 	
 	

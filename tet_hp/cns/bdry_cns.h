@@ -41,44 +41,15 @@ namespace bdry_cns {
 	class generic : public hp_face_bdry {
 	protected:
 		tet_hp_cns &x;
-		bool report_flag;
-#ifdef L2_ERROR
-		symbolic_function<2> l2norm;
-#endif
-		enum bctypes {ess, nat, mix};
-		
-	public:
-		Array<FLT,1> total_flux,diff_flux,conv_flux;
-		FLT circumference,moment,convect,circulation;
 		
 	public:
 		generic(tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "generic";}
-		generic(const generic& inbdry, tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
-			if (report_flag) {
-#ifdef L2_ERROR
-				l2norm = inbdry.l2norm;
-#endif
-				total_flux.resize(x.NV);
-				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);  
-			}
-		}
+		generic(const generic& inbdry, tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		void init(input_map& input,void* gbl_in) {
 			hp_face_bdry::init(input,gbl_in);
-			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);
-			
-			if (report_flag) {
-#ifdef L2_ERROR
-				l2norm.init(input,base.idprefix+"_norm");
-#endif
-				total_flux.resize(x.NV);
-				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);            
-			}
 		}
-		void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+
 	};
 		
 
@@ -122,7 +93,7 @@ namespace bdry_cns {
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
 		//void apply_sparse_dirichlet(bool compressed_column);
-		void modify_boundary_residual();
+		//void modify_boundary_residual();
 	};
 	
 	
@@ -152,7 +123,7 @@ namespace bdry_cns {
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
 		//void apply_sparse_dirichlet(bool compressed_column);
-		void modify_boundary_residual();
+		//void modify_boundary_residual();
 	};
 	
 	class characteristic : public neumann {
@@ -179,42 +150,13 @@ namespace bdry_cns {
 	class generic_edge : public hp_edge_bdry {
 	protected:
 		tet_hp_cns &x;
-		bool report_flag;
-#ifdef L2_ERROR
-		symbolic_function<2> l2norm;
-#endif
-		enum bctypes {ess, nat, mix};
-		
-	public:
-		Array<FLT,1> total_flux,diff_flux,conv_flux;
-		FLT circumference,moment,convect,circulation;
 		
 	public:
 		generic_edge(tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic_edge";}
-		generic_edge(const generic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
-			if (report_flag) {
-#ifdef L2_ERROR
-				l2norm = inbdry.l2norm;
-#endif
-				total_flux.resize(x.NV);
-				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);  
-			}
-		}
+		generic_edge(const generic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		void init(input_map& input,void* gbl_in) {
 			hp_edge_bdry::init(input,gbl_in);
-			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);
-			
-			if (report_flag) {
-#ifdef L2_ERROR
-				l2norm.init(input,base.idprefix+"_norm");
-#endif
-				total_flux.resize(x.NV);
-				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);            
-			}
 		}
 	};
 	
@@ -227,7 +169,7 @@ namespace bdry_cns {
 		neumann_edge(const neumann_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : generic_edge(inbdry,xin,bin) {}
 		neumann_edge* create(tet_hp& xin, edge_bdry &bin) const {return new neumann_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		void rsdl(int stage);
-		void element_rsdl(int find,int stage);
+		void element_rsdl(int eind,int stage);
 	};
 	
 	
@@ -283,6 +225,68 @@ namespace bdry_cns {
 			hp_edge_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
+	};
+	
+	class inflow_pt : public hp_vrtx_bdry {
+	protected:
+		tet_hp_cns &x;
+		
+	public:
+		inflow_pt(tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "inflow_pt";}
+		inflow_pt(const inflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+		inflow_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+		void tadvance() { 
+			for(int n=1;n<x.NV;++n)
+				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+			return;
+		}
+		
+		void vdirichlet3d() {
+			x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
+		}
+		
+	};
+	
+	class adiabatic_pt : public hp_vrtx_bdry {
+	protected:
+		tet_hp_cns &x;
+		
+	public:
+		adiabatic_pt(tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "adiabatic_pt";}
+		adiabatic_pt(const adiabatic_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+		adiabatic_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new adiabatic_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+		void tadvance() { 
+			for(int n=1;n<x.NV-1;++n)
+				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+			return;
+		}
+		
+		void vdirichlet3d() {
+			x.gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
+		}
+		
+	};
+	
+	class outflow_pt : public hp_vrtx_bdry {
+	protected:
+		tet_hp_cns &x;
+		
+	public:
+		outflow_pt(tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "outflow_pt";}
+		outflow_pt(const outflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+		outflow_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new outflow_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+		void tadvance() { 
+			x.ug.v(base.pnt,0) = x.gbl->ibc->f(0,x.pnts(base.pnt),x.gbl->time);  
+			return;
+		}
+		
+		void vdirichlet3d() {
+			x.gbl->res.v(base.pnt,0) = 0.0;
+		}
+		
 	};
 	
 }

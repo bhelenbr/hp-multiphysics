@@ -447,6 +447,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						FLT rho = pr/rt;
 						
 						/* df/dw */
+						i think these are the wrong matrices see tri_hp
 						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,
 						    uv*uv/rt+1.0,        2.0*rho*uv,                  0.0,       0.0,       -rho*uv*uv/rt,
 						    uv*vv/rt,            rho*vv,                      rho*uv,    0.0,       -rho*uv*vv/rt,

@@ -22,8 +22,8 @@ using namespace bdry_cns;
  */
 class tet_hp_cns_vtype {
     public:
-        static const int ntypes = 5;
-        enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,inflow};
+        static const int ntypes = 3;
+        enum ids {unknown=-1,inflow,adiabatic,outflow};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i) 
@@ -32,7 +32,7 @@ class tet_hp_cns_vtype {
         }
 };
 
-const char tet_hp_cns_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar","inflow"};
+const char tet_hp_cns_vtype::names[ntypes][40] = {"inflow","adiabatic","outflow"};
 
 hp_vrtx_bdry* tet_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
@@ -54,6 +54,18 @@ hp_vrtx_bdry* tet_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
     
     
     switch(type) {
+		case tet_hp_cns_vtype::inflow: {
+			temp = new inflow_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tet_hp_cns_vtype::adiabatic: {
+			temp = new adiabatic_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tet_hp_cns_vtype::outflow: {
+			temp = new outflow_pt(*this,*vbdry(bnum));
+			break;
+		}
         default: {
             temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
             break;

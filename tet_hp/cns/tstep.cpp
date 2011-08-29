@@ -109,7 +109,7 @@ void tet_hp_cns::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}		
 		
-		pennsylvania_peanut_butter(umax,hmin,tprcn,tau,tstep);
+		calculate_preconditioner_tau_timestep(umax,hmin,tprcn,tau,tstep);
 
 		dtstari = 1.0/tstep;
 
@@ -192,7 +192,7 @@ void tet_hp_cns::setup_preconditioner() {
 	
 }
 
-void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV),Ceigs(NV);
