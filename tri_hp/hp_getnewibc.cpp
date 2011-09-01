@@ -46,10 +46,20 @@ class symbolic_ibc : public init_bdry_cndtn {
 		}
 };
 
+class communication_test : public init_bdry_cndtn {
+	tri_hp& x;
+	public:
+		communication_test(tri_hp& xin) : x(xin) {}
+		FLT f(int n, TinyVector<FLT,tri_mesh::ND> xy, FLT time) {
+			return(x.gbl->idnum+n);
+		}
+};
+
+
 class ibc_type {
 	public:
-		const static int ntypes = 1;
-		enum ids {symbolic};
+		const static int ntypes = 2;
+		enum ids {symbolic,communication_test};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -58,7 +68,7 @@ class ibc_type {
 			return(-1);
 		}
 };
-const char ibc_type::names[ntypes][40] = {"symbolic"};
+const char ibc_type::names[ntypes][40] = {"symbolic","communication_test"};
 
 
 
@@ -81,6 +91,10 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 	switch(type) {
 		case ibc_type::symbolic: {
 			temp = new symbolic_ibc;
+			break;
+		}
+		case ibc_type::communication_test: {
+			temp = new communication_test(*this);
 			break;
 		}
 		default: {
