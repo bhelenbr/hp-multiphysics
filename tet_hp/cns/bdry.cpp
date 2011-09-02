@@ -508,7 +508,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	FLT v = Roe(2)/Roe(0);
 	FLT w = Roe(3)/Roe(0);
 	FLT ke = 0.5*(u*u+v*v+w*w);
-	FLT E = Roe(3)/Roe(0);
+	FLT E = Roe(4)/Roe(0);
 	FLT rt = gm1*(E-ke);
 	//FLT pr = rho*rt;
 	FLT c2 = gam*rt;
@@ -553,7 +553,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 		0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 0.0, 1.0;
 	
 	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u,u;
-	
+
 	for(int i=0; i<x.NV; ++i)
 		Aeigs(i) = abs(Aeigs(i));
 	
