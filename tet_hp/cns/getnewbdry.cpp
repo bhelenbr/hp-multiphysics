@@ -154,8 +154,8 @@ hp_edge_bdry* tet_hp_cns::getnewedgeobject(int bnum, input_map &bdrydata) {
  */
 class tet_hp_cns_ftype {
 	public:
-		static const int ntypes = 6;
-		enum ids {unknown=-1,plain,inflow,outflow,adiabatic,characteristic,applied_stress};
+		static const int ntypes = 7;
+		enum ids {unknown=-1,plain,inflow,outflow,adiabatic,characteristic,applied_stress,pure_slip};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -164,7 +164,7 @@ class tet_hp_cns_ftype {
 		}
 };
 
-const char tet_hp_cns_ftype::names[ntypes][40] = {"plain","inflow","outflow","adiabatic","characteristic","applied_stress"};
+const char tet_hp_cns_ftype::names[ntypes][40] = {"plain","inflow","outflow","adiabatic","characteristic","applied_stress","pure_slip"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_face_bdry* tet_hp_cns::getnewfaceobject(int bnum, input_map &bdrydata) {
@@ -209,6 +209,10 @@ hp_face_bdry* tet_hp_cns::getnewfaceobject(int bnum, input_map &bdrydata) {
 		}
 		case tet_hp_cns_ftype::applied_stress: {
 			temp = new applied_stress(*this,*fbdry(bnum));
+			break;
+		}
+		case tet_hp_cns_ftype::pure_slip: {
+			temp = new pure_slip(*this,*fbdry(bnum));
 			break;
 		}
 		default: {

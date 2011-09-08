@@ -21,17 +21,22 @@ namespace ibc_cns {
 		public:
 			FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
+				amp = perturb_amp;
+				
+				for (int i=0; i<3; ++i) 
+					amp *= 4.0*x(i)*(1.0-x(i))*(sin(2.0*M_PI*x(i))+sin(16*M_PI*x(i)));
+
 				switch(n) {
 					case(0):
-						return(1.0/gamma);
+						return(1.0/gamma+amp);
 					case(1):
-						return(vel(0)+amp*x(0)*(1.0-x(0)));
+						return(vel(0)+amp);
 					case(2):
-						return(vel(1));
+						return(vel(1)+amp);
 					case(3):
-						return(vel(2));
+						return(vel(2)+amp);
 					case(4):
-						return(1.0/gamma);
+						return(1.0/gamma+amp);
 				}
 				return(0.0);
 			}
@@ -297,11 +302,55 @@ namespace ibc_cns {
 		
 	};
 	
+	class hydrostatic : public init_bdry_cndtn {
+	private:
+		FLT gamma,pressure,temperature,shiftz,gravity;
+		
+	public:
+		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
+
+			switch(n) {
+				case(0):
+					return(pressure*exp(gravity*(x(2)-shiftz)/temperature));
+				case(1):case(2):case(3):
+					return(0.0);
+				case(4):
+					return(temperature);
+			}
+			return(0.0);
+		}
+		
+		void input(input_map &blockdata,std::string idnty) {
+			std::string keyword,val;
+			std::istringstream data;
+			
+			keyword = idnty +"_gamma";
+			if (!blockdata.get(keyword,gamma))
+				blockdata.getwdefault("gamma",gamma,1.4);
+			
+			keyword = idnty +"_pressure";
+			if (!blockdata.get(keyword,pressure)) 
+				blockdata.getwdefault("pressure",pressure,1.0/gamma);
+			
+			keyword = idnty +"_temperature";
+			if (!blockdata.get(keyword,temperature)) 
+				blockdata.getwdefault("temperature",temperature,1.0/gamma);  
+			
+			keyword = idnty +"_shiftz";
+			if (!blockdata.get(keyword,shiftz)) 
+				blockdata.getwdefault("shiftz",shiftz,0.0); 
+			
+			keyword = idnty +"_gravity";
+			if (!blockdata.get(keyword,gravity)) 
+				blockdata.getwdefault("gravity",gravity,-9.81); 
+			
+		}
+	};
 	
 	class ibc_type {
 		public:
-			const static int ntypes = 3;
-			enum ids {freestream,sphere,ringleb};
+			const static int ntypes = 4;
+			enum ids {freestream,sphere,ringleb,hydrostatic};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -310,7 +359,7 @@ namespace ibc_cns {
 				return(-1);
 		}
 	};
-	const char ibc_type::names[ntypes][40] = {"freestream","sphere","ringleb"};
+	const char ibc_type::names[ntypes][40] = {"freestream","sphere","ringleb","hydrostatic"};
 	
 	
 	class helper_type {
@@ -386,6 +435,10 @@ init_bdry_cndtn *tet_hp_cns::getnewibc(std::string suffix, input_map& inmap) {
 			temp = new ibc_cns::ringleb;
 			break;
 		}
+		case ibc_cns::ibc_type::hydrostatic: {
+			temp = new ibc_cns::hydrostatic;
+			break;
+		}		
 		default: {
 			return(tet_hp::getnewibc(suffix,inmap));
 		}

@@ -177,6 +177,23 @@ void tet_hp_cns::minvrt() {
 			lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
 		}
 		
+//		int info,ipiv[NV];
+//		Array<double,2> P(NV,NV);
+//		
+//		for(int j=0;j<NV;++j)
+//			for(int k=0;k<NV;++k)
+//				P(j,k) = gbl->vpreconditioner(i,j,k);
+//			
+//		GETRF(NV, NV, P.data(), NV, ipiv, info);
+//		
+//		if (info != 0) {
+//			*gbl->log << "DGETRF FAILED FOR CNS MINVRT" << std::endl;
+//			sim::abort(__LINE__,__FILE__,gbl->log);
+//		}
+//		
+//		char trans[] = "T";
+//		GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+
 		for(int n = 0; n < NV; ++n)
 			gbl->res.v(i,n) = lclres(n);
 		
@@ -219,6 +236,23 @@ void tet_hp_cns::minvrt() {
 			lclres(j) = lcl0/gbl->epreconditioner(sind,j,j);
 		}
 
+//		int info,ipiv[NV];
+//		Array<double,2> P(NV,NV);
+//		
+//		for(int j=0;j<NV;++j)
+//			for(int k=0;k<NV;++k)
+//				P(j,k) = gbl->epreconditioner(sind,j,k);
+//		
+//		GETRF(NV, NV, P.data(), NV, ipiv, info);
+//		
+//		if (info != 0) {
+//			*gbl->log << "DGETRF FAILED FOR CNS MINVRT EDGE" << std::endl;
+//			sim::abort(__LINE__,__FILE__,gbl->log);
+//		}
+//		
+//		char trans[] = "T";
+//		GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+		
 		for(int n = 0; n < NV; ++n)
 			gbl->res.e(sind,0,n) = lclres(n);
 		

@@ -348,7 +348,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				C(i,j)+=V(i,k)*VINV(k,j);
-
+	
 	S = 0.0, 0.0,      0.0,      0.0,      0.0,
 		0.0, nu/(h*h), 0.0,      0.0,      0.0,
 		0.0, 0.0,      nu/(h*h), 0.0,      0.0,
@@ -364,6 +364,16 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*S(k,j);
 	S = temp;
+	
+//	/* preconditioning squared */	
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=Pinv(i,k)*(A(k,j)+B(k,j)+C(k,j)+h*S(k,j));
+//	
+//	Tinv = A+B+C+h*S;
+//	Pinv = temp/spectral_radius(Tinv);
 	
 	/* This is the inverse of Tau tilde */
 	Tinv = 2.0/h*(A+B+C+h*S);

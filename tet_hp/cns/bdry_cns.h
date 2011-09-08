@@ -147,6 +147,15 @@ namespace bdry_cns {
 			void init(input_map& inmap,void* gbl_in);
 	};
 	
+	class pure_slip : public neumann {
+	protected:
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx);
+	public:
+		pure_slip(tet_hp_cns &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "pure_slip";}
+		pure_slip(const pure_slip& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin) {}
+		pure_slip* create(tet_hp& xin, face_bdry &bin) const {return new pure_slip(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+	};
+	
 	class generic_edge : public hp_edge_bdry {
 	protected:
 		tet_hp_cns &x;
