@@ -526,7 +526,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */;
 			compatibilityVersion = "Xcode 3.0";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -699,7 +706,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		6F2262C208672FD1001017D0 /* Development */ = {
+		6F2262C208672FD1001017D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -710,9 +717,9 @@
 				PRODUCT_NAME = tri_mesh;
 				SKIP_INSTALL = NO;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6F2262C308672FD1001017D0 /* Deployment */ = {
+		6F2262C308672FD1001017D0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -723,9 +730,9 @@
 				PRODUCT_NAME = tri_mesh;
 				SKIP_INSTALL = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6F27981008B9FA5A007BECA9 /* Development */ = {
+		6F27981008B9FA5A007BECA9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -742,9 +749,9 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Development;
+			name = Debug;
 		};
-		6F27981108B9FA5A007BECA9 /* Deployment */ = {
+		6F27981108B9FA5A007BECA9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -761,9 +768,9 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FB91AD90ACCB10300792B04 /* Development */ = {
+		6FB91AD90ACCB10300792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -774,9 +781,9 @@
 				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = NO;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB91ADA0ACCB10300792B04 /* Deployment */ = {
+		6FB91ADA0ACCB10300792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -787,9 +794,9 @@
 				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FB91B100ACCB1E100792B04 /* Development */ = {
+		6FB91B100ACCB1E100792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
@@ -801,9 +808,9 @@
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB91B110ACCB1E100792B04 /* Deployment */ = {
+		6FB91B110ACCB1E100792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
@@ -817,9 +824,9 @@
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FD540630863870800D6A762 /* Development */ = {
+		6FD540630863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
@@ -837,9 +844,9 @@
 				);
 				PRODUCT_NAME = tri_mesh;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD540640863870800D6A762 /* Deployment */ = {
+		6FD540640863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
@@ -857,9 +864,9 @@
 				);
 				PRODUCT_NAME = tri_mesh;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FD540670863870800D6A762 /* Development */ = {
+		6FD540670863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -897,9 +904,9 @@
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD540680863870800D6A762 /* Deployment */ = {
+		6FD540680863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -936,7 +943,7 @@
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";
 			};
-			name = Deployment;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -944,56 +951,56 @@
 		6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "libtri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F2262C208672FD1001017D0 /* Development */,
-				6F2262C308672FD1001017D0 /* Deployment */,
+				6F2262C208672FD1001017D0 /* Debug */,
+				6F2262C308672FD1001017D0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F27981008B9FA5A007BECA9 /* Development */,
-				6F27981108B9FA5A007BECA9 /* Deployment */,
+				6F27981008B9FA5A007BECA9 /* Debug */,
+				6F27981108B9FA5A007BECA9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "libtri_mesh_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB91AD90ACCB10300792B04 /* Development */,
-				6FB91ADA0ACCB10300792B04 /* Deployment */,
+				6FB91AD90ACCB10300792B04 /* Debug */,
+				6FB91ADA0ACCB10300792B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "tri_mesh_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB91B100ACCB1E100792B04 /* Development */,
-				6FB91B110ACCB1E100792B04 /* Deployment */,
+				6FB91B100ACCB1E100792B04 /* Debug */,
+				6FB91B110ACCB1E100792B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "tri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD540630863870800D6A762 /* Development */,
-				6FD540640863870800D6A762 /* Deployment */,
+				6FD540630863870800D6A762 /* Debug */,
+				6FD540640863870800D6A762 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD540670863870800D6A762 /* Development */,
-				6FD540680863870800D6A762 /* Deployment */,
+				6FD540670863870800D6A762 /* Debug */,
+				6FD540680863870800D6A762 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
