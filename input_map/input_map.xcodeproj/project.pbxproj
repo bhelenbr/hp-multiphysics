@@ -157,7 +157,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* input_map */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -312,7 +319,7 @@
 				6FD651C30922EC5F00D18689 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */ = {
 			isa = XCConfigurationList;
@@ -321,7 +328,7 @@
 				6FD651C70922EC5F00D18689 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		6FD651F90922EFCF00D18689 /* Build configuration list for PBXNativeTarget "main" */ = {
 			isa = XCConfigurationList;
@@ -330,7 +337,7 @@
 				6FD651FB0922EFCF00D18689 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
