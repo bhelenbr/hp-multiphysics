@@ -176,6 +176,7 @@ move to Packages, extract
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
 # on cluster
 ./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/ --with-parmetis-dir=/export/apps
+./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
@@ -196,6 +197,8 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	Read README
 	[mkdir build; cd build]
 	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/mpich/myrinet/gnu
+	# OR
+	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi
 
 	## USE CCMAKE TO CHANGE INSTALL OPTIONS
 	## ON CLUSTER:
@@ -274,26 +277,21 @@ make -j 2
 ###################################################################
 	[cd ${HOME}/Codes]
 	[cd utilities]
-	[xcodebuild -target myblas -configuration Deployment]
-	[xcodebuild -target util -configuration Deployment]
+	[xcodebuild -alltargets -configuration Release]
 	[cd ../quadtree]
-	[xcodebuild -target quad -configuration Deployment]
+	[xcodebuild -alltargets -configuration Release]
 	[cd ../spline++]
-	[xcodebuild -target spline++ -configuration Release]
+	[xcodebuild -alltargets  -configuration Release]
 	[cd ../input_map]
-	[xcodebuild -target input_map -configuration Release]
+	[xcodebuild -alltargets  -configuration Release]
 	[cd ../symbolic_function]
-	[xcodebuild -target install -configuration Release]
+	[xcodebuild -alltargets  -configuration Release]
 	[cd ../tri_mesh]
-	[xcodebuild -target tri_mesh -configuration Deployment]
-	[xcodebuild -target libtri_mesh -configuration Deployment]
-	[xcodebuild -target tri_mesh_mpi -configuration Deployment]
-	[xcodebuild -target libtri_mesh_mpi -configuration Deployment]
+	[xcodebuild -alltargets -configuration Release]
 	[cd ../tri_basis]
-	[xcodebuild -target tri_basis -configuration Deployment]
+	[xcodebuild -alltargets -configuration Release]
 	[cd ../tri_hp]
-	[xcodebuild -target tri_hp -configuration Release]
-	[xcodebuild -target tri_hp_mpi -configuration Release]
+	[xcodebuild -alltargets -configuration Release]
 ###################################################################
 
 
