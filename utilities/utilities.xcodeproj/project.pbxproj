@@ -6,22 +6,6 @@
 	objectVersion = 42;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		6FB150A8086782CE00EAF2E5 /* All */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 6FB150C8086782E900EAF2E5 /* Build configuration list for PBXAggregateTarget "All" */;
-			buildPhases = (
-			);
-			dependencies = (
-				6FB150AA086782DC00EAF2E5 /* PBXTargetDependency */,
-				6FB150AE086782E400EAF2E5 /* PBXTargetDependency */,
-				6FB150B0086782E600EAF2E5 /* PBXTargetDependency */,
-			);
-			name = All;
-			productName = All;
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		6F16C6F80D82062100F03F54 /* myblas.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C3084C097A00C7F857 /* myblas.c */; };
 		6F16C6F90D82062200F03F54 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; };
@@ -34,30 +18,6 @@
 		6FB150A1086781E400EAF2E5 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
 		8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		6FB150A9086782DC00EAF2E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6FB1507E0867810C00EAF2E5;
-			remoteInfo = myblas;
-		};
-		6FB150AD086782E400EAF2E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6FB150950867814600EAF2E5;
-			remoteInfo = util;
-		};
-		6FB150AF086782E600EAF2E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8DD76FA90486AB0100D96B5E;
-			remoteInfo = utilities;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -228,12 +188,18 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* utilities */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6FB150A8086782CE00EAF2E5 /* All */,
 				6FB1507E0867810C00EAF2E5 /* myblas */,
 				6FB150950867814600EAF2E5 /* util */,
 				8DD76FA90486AB0100D96B5E /* main */,
@@ -271,26 +237,8 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		6FB150AA086782DC00EAF2E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6FB1507E0867810C00EAF2E5 /* myblas */;
-			targetProxy = 6FB150A9086782DC00EAF2E5 /* PBXContainerItemProxy */;
-		};
-		6FB150AE086782E400EAF2E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6FB150950867814600EAF2E5 /* util */;
-			targetProxy = 6FB150AD086782E400EAF2E5 /* PBXContainerItemProxy */;
-		};
-		6FB150B0086782E600EAF2E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8DD76FA90486AB0100D96B5E /* main */;
-			targetProxy = 6FB150AF086782E600EAF2E5 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		6FB150740867810100EAF2E5 /* Development */ = {
+		6FB150740867810100EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -306,9 +254,9 @@
 				PRODUCT_NAME = utilities;
 				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB150750867810100EAF2E5 /* Deployment */ = {
+		6FB150750867810100EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -325,23 +273,23 @@
 				PRODUCT_NAME = main;
 				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FB150780867810100EAF2E5 /* Development */ = {
+		6FB150780867810100EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB150790867810100EAF2E5 /* Deployment */ = {
+		6FB150790867810100EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FB1508B0867812C00EAF2E5 /* Development */ = {
+		6FB1508B0867812C00EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -358,9 +306,9 @@
 				PRODUCT_NAME = myblas;
 				SECTORDER_FLAGS = "";
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB1508C0867812C00EAF2E5 /* Deployment */ = {
+		6FB1508C0867812C00EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -387,9 +335,9 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FB150A30867821E00EAF2E5 /* Development */ = {
+		6FB150A30867821E00EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -412,9 +360,9 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FB150A40867821E00EAF2E5 /* Deployment */ = {
+		6FB150A40867821E00EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -439,21 +387,7 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Deployment;
-		};
-		6FB150C9086782E900EAF2E5 /* Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = All;
-			};
-			name = Development;
-		};
-		6FB150CA086782E900EAF2E5 /* Deployment */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = All;
-			};
-			name = Deployment;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -461,47 +395,38 @@
 		6FB150730867810100EAF2E5 /* Build configuration list for PBXNativeTarget "main" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB150740867810100EAF2E5 /* Development */,
-				6FB150750867810100EAF2E5 /* Deployment */,
+				6FB150740867810100EAF2E5 /* Debug */,
+				6FB150750867810100EAF2E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB150780867810100EAF2E5 /* Development */,
-				6FB150790867810100EAF2E5 /* Deployment */,
+				6FB150780867810100EAF2E5 /* Debug */,
+				6FB150790867810100EAF2E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FB1508A0867812C00EAF2E5 /* Build configuration list for PBXNativeTarget "myblas" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB1508B0867812C00EAF2E5 /* Development */,
-				6FB1508C0867812C00EAF2E5 /* Deployment */,
+				6FB1508B0867812C00EAF2E5 /* Debug */,
+				6FB1508C0867812C00EAF2E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 		6FB150A20867821E00EAF2E5 /* Build configuration list for PBXNativeTarget "util" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FB150A30867821E00EAF2E5 /* Development */,
-				6FB150A40867821E00EAF2E5 /* Deployment */,
+				6FB150A30867821E00EAF2E5 /* Debug */,
+				6FB150A40867821E00EAF2E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
-		};
-		6FB150C8086782E900EAF2E5 /* Build configuration list for PBXAggregateTarget "All" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				6FB150C9086782E900EAF2E5 /* Development */,
-				6FB150CA086782E900EAF2E5 /* Deployment */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
