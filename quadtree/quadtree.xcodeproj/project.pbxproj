@@ -154,7 +154,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* quadtree */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -195,7 +202,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		6FD8AE7708651561005A8B60 /* Development */ = {
+		6FD8AE7708651561005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CC = /usr/bin/gcc;
@@ -224,9 +231,9 @@
 				);
 				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD8AE7808651561005A8B60 /* Deployment */ = {
+		6FD8AE7808651561005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CC = /usr/bin/gcc;
@@ -257,59 +264,24 @@
 				);
 				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FD8AE7908651561005A8B60 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CC = /usr/bin/gcc;
-				CPLUSPLUS = "/usr/bin/g++";
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = ../include;
-				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = ../lib;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = quadtree;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				ZERO_LINK = NO;
-			};
-			name = Default;
-		};
-		6FD8AE7B08651561005A8B60 /* Development */ = {
+		6FD8AE7B08651561005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD8AE7C08651561005A8B60 /* Deployment */ = {
+		6FD8AE7C08651561005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FD8AE7D08651561005A8B60 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-			};
-			name = Default;
-		};
-		6FD8B0170865BC8A005A8B60 /* Development */ = {
+		6FD8B0170865BC8A005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -330,9 +302,9 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD8B0180865BC8A005A8B60 /* Deployment */ = {
+		6FD8B0180865BC8A005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -363,29 +335,7 @@
 					"-Wno-unknown-pragmas",
 				);
 			};
-			name = Deployment;
-		};
-		6FD8B0190865BC8A005A8B60 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = libquad;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -393,32 +343,29 @@
 		6FD8AE7608651561005A8B60 /* Build configuration list for PBXNativeTarget "quadtree" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD8AE7708651561005A8B60 /* Development */,
-				6FD8AE7808651561005A8B60 /* Deployment */,
-				6FD8AE7908651561005A8B60 /* Default */,
+				6FD8AE7708651561005A8B60 /* Debug */,
+				6FD8AE7808651561005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD8AE7B08651561005A8B60 /* Development */,
-				6FD8AE7C08651561005A8B60 /* Deployment */,
-				6FD8AE7D08651561005A8B60 /* Default */,
+				6FD8AE7B08651561005A8B60 /* Debug */,
+				6FD8AE7C08651561005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		6FD8B0160865BC8A005A8B60 /* Build configuration list for PBXNativeTarget "quad" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD8B0170865BC8A005A8B60 /* Development */,
-				6FD8B0180865BC8A005A8B60 /* Deployment */,
-				6FD8B0190865BC8A005A8B60 /* Default */,
+				6FD8B0170865BC8A005A8B60 /* Debug */,
+				6FD8B0180865BC8A005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
