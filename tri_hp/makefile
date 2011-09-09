@@ -120,15 +120,15 @@ CXXMPI = ${CXX}
 
 ## Linux:
 LIB += -L$(HOME)  -llapack -lblas #(cares)
-CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
+#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
+#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## Intel Compilers & MKL
 #LIB += -L$(HOME)  -lmkl -lmkl_lapack -lmpi -lmpi++  #(hawk)
 
 ## To use openmpi
-#CPPFLAGS += -I/opt/openmpi/include
-#CXXMPI = /opt/openmpi/bin/mpic++
+CPPFLAGS += -I/opt/openmpi/include
+CXXMPI = /opt/openmpi/bin/mpic++
 
 # (ubuntu) should really make symbolic links to liblapack and libatlas
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
