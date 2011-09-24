@@ -9,10 +9,10 @@
 template<int N> class symbolic_function {
 	protected:
 		mu::Parser p;
-		blitz::TinyVector<double,N+1> x; 
+		mutable blitz::TinyVector<double,N+1> x; 
 		int nchildren;
 		blitz::Array<symbolic_function<N> *, 1> children;
-		blitz::Array<double,1> child_values;
+		mutable blitz::Array<double,1> child_values;
       
 	public:		
 	symbolic_function() : nchildren(0) {
@@ -37,7 +37,7 @@ template<int N> class symbolic_function {
 	
 	symbolic_function(const symbolic_function& tgt) : p(tgt.p), nchildren(tgt.nchildren) {
 		std::ostringstream varname;
-
+		
 		/* Reassociate Variables */
 		if (N > 1) {
 			for (int n=0;n<N;++n) {
@@ -50,16 +50,14 @@ template<int N> class symbolic_function {
 		else if (N == 1) {
 			p.DefineVar("x", &x(0));
 		}
-      	p.DefineVar("t",&x(N));
-      	
-      	children.resize(nchildren);
-      	child_values.resize(nchildren);
-      	
-
-		mu::varmap_type variables = p.GetUsedVar();
+		p.DefineVar("t",&x(N));
+				
+		children.resize(nchildren);
+		child_values.resize(nchildren);
+		mu::varmap_type variables = p.GetVar();
 
 		/* Reassociate Children */
-		nchildren = 0;
+		int nchild_temp = 0;
 		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
 			if (N > 1) {
 				for (int n=0;n<N;++n) {
@@ -74,17 +72,18 @@ template<int N> class symbolic_function {
 			}
 			if (item->first == "t") goto NEXT;
 			
-			/* This is a child variable */
-			children(nchildren) = new symbolic_function<N>(*tgt.children(nchildren));
-			p.DefineVar(item->first, &child_values(nchildren));
-			++nchildren;
+			/* This is a child variable? */
+			children(nchild_temp) = new symbolic_function<N>(*tgt.children(nchild_temp));
+			p.DefineVar(item->first, &child_values(nchild_temp));
+			++nchild_temp;
 			NEXT: continue;
-		 }
+		}
+		assert(nchild_temp == nchildren);
 	}
 	
 	void init(input_map& input, std::string idprefix);
 		
-	double Eval(blitz::TinyVector<double,N> xin, double t = 0.0) {
+	double Eval(blitz::TinyVector<double,N> xin, double t = 0.0) const {
  		double rslt;
 		for (int n = 0; n < N; ++n)
 			x(n) = xin(n);
@@ -109,7 +108,7 @@ template<int N> class symbolic_function {
 	}
 	
 	/* Special case for one-spatial variable function */
-	double Eval(double xin, double t) {
+	double Eval(double xin, double t) const {
 		double rslt;
 
 		x(0) = xin;
@@ -132,7 +131,7 @@ template<int N> class symbolic_function {
 	}
 
 	/* Special case for zero-variable functions */
-	double Eval(double t) {
+	double Eval(double t) const {
 		double rslt;
 
 		x(0) = t;

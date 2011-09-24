@@ -4,42 +4,38 @@
 #define TESTING
 
 int main (int argc, char *argv[]) {
-
 #ifdef TESTING
 	input_map inmap;
 	std::string prefix;
-	symbolic_function<1> f;
-	symbolic_function<2> g,g1,g3;
+	symbolic_function<1> f; 
+	symbolic_function<2> e1 ,e2,dhdx0;
 	blitz::TinyVector<double,2>  x2d(1.0, 0.0);
 		
 	inmap["Re"] = "100.0";
 	inmap["l1"] = "37.0";
-	inmap["E1"] = "exp(-x/l1*Re)";
-	inmap["E2"] = "sin(-x0/l1*Re+x1)";
-	inmap["E3"] = "x0*E2";
+	inmap["f"] = "exp(-x/l1*Re)";
+	inmap["e1"] = "sin(-x0/l1*Re+x1)";
+	inmap["e2"] = "x0*e1";
 	inmap["dhdx0"] = "2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k-2*s*(x0-ex0)/denom^2*exp(-(x0-ex0)^2/denom^2)*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)-s*(1-exp(-(x0-ex0)^2/denom^2))/(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)*(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)*(2*h*ke^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^4*x0^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^2*x0*exp(-ke^2*x0^2)*sin(k*x0-w*t)*k-h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)*k^2)";
 
+	std::cout << inmap << std::endl;
+	inmap.echo = true;
 
-//	std::cout << inmap << std::endl;
-//
-//	inmap.echo = true;
-//
-//	f.init(inmap,"E1");
-//	std::cout << f.Eval(1.0) << std::endl;
-//
-//	g.init(inmap,"E2");
-//	std::cout << g.Eval(x2d) << std::endl;
-//	
-//	g1.init(inmap,"E3");
-//	std::cout << g1.Eval(x2d) << std::endl;
-//	
-//	symbolic_function<2> g2(g1);
-//	
-//	std::cout << g2.Eval(x2d) << std::endl;
-//	
-//	g3.init(inmap,"dhdx0");
-//	std::cout << g3.Eval(x2d,1.0) << std::endl;
+	f.init(inmap,"f");
+	std::cout << "f " << f.Eval(1.0) << ' ' << exp(-1.0/37.0*100.0) << std::endl;
+ 
+	e1.init(inmap,"e1");
+	std::cout << " e1 eval " << e1.Eval(x2d) << ' ' << sin(-1.0/37.0*100.0 +0.0) << std::endl;
 	
+	e2.init(inmap,"e2");
+	std::cout << " e2 eval " << e2.Eval(x2d) << ' ' << 1.0*sin(-1.0/37.0*100.0 +0.0) << std::endl;
+	
+	symbolic_function<2> e3(e2);
+	
+	std::cout << " e3 eval " << e3.Eval(x2d) << std::endl;
+	
+//	dhdx0.init(inmap,"dhdx0");
+//	std::cout << "dhdx0 " << dhdx0.Eval(x2d,1.0) << std::endl;
 	
 	
 	/* Vector Function Testing */
