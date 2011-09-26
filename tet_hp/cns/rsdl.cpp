@@ -191,8 +191,10 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						res(NV-1)(i)(j)(k) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i)(j)(k);
 						
 #ifdef BODYFORCE
-						for(int n=1;n<NV-1;++n)
-							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
+						for(int n=1;n<NV-1;++n){
+							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= rho*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+						}
 						
 #endif    
 						
@@ -553,8 +555,10 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						res(NV-1)(i)(j)(k) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i)(j)(k);
 						
 #ifdef BODYFORCE
-						for(int n=1;n<NV-1;++n)
-							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
+						for(int n=1;n<NV-1;++n){
+							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= rho*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+						}		
 						
 #endif         
 

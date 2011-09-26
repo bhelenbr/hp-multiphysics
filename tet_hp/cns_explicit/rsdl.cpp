@@ -220,8 +220,10 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						res(NV-1)(i)(j)(k) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i)(j)(k);
 						
 #ifdef BODYFORCE
-						for(int n=1;n<NV-1;++n)
-							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
+						for(int n=1;n<NV-1;++n){
+							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= rho*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+						}		
 						
 #endif    
 						
@@ -437,36 +439,32 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						for(int m = 0; m < NV; ++m)
 							for(int n = 0; n < NV; ++n)							
 								tres(m) += gbl->tau(tind,m,n)*res(n)(i)(j)(k);
-												
-						FLT pr = u(0)(i)(j)(k);
-						FLT uv = u(1)(i)(j)(k);
-						FLT vv = u(2)(i)(j)(k);
-						FLT wv = u(3)(i)(j)(k);
+						
+						FLT u1 = u(1)(i)(j)(k);
+						FLT u2 = u(2)(i)(j)(k);
+						FLT u3 = u(3)(i)(j)(k);
 						FLT rt = u(4)(i)(j)(k);					
-						FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
-						FLT rho = pr/rt;
+						FLT ke = 0.5*(u1*u1+u2*u2+u3*u3);
+						FLT E = rt/gm1+ke;
 						
-						/* df/dw */
-						i think these are the wrong matrices see tri_hp
-						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,
-						    uv*uv/rt+1.0,        2.0*rho*uv,                  0.0,       0.0,       -rho*uv*uv/rt,
-						    uv*vv/rt,            rho*vv,                      rho*uv,    0.0,       -rho*uv*vv/rt,
-                            uv*wv/rt,            rho*wv,                      0.0,       rho*uv,    -rho*uv*wv/rt,
-						    uv*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*uv*uv, rho*uv*vv, rho*uv*wv, -rho*uv*ke/rt;
-					
-						/* dg/dw */
-						B = vv/rt,               0.0,       rho,                         0.0,       -rho*vv/rt,
-						    uv*vv/rt,            rho*vv,    rho*uv,                      0.0,       -rho*uv*vv/rt,
-						    vv*vv/rt+1.0,        0.0,       2.0*rho*vv,                  0.0,       -rho*vv*vv/rt,
-						    vv*wv/rt,            0.0,       rho*wv,                      rho*vv,    -rho*vv*wv/rt,
-						    vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, rho*vv*wv,	-rho*vv*ke/rt;
+						/* df/dw derivative of fluxes wrt conservative variables */
+						A = 0.0,                    1.0,                  0.0,        0.0,        0.0,
+							-u1*u1+gm1*ke,          (2.0-gm1)*u1,         -gm1*u2,    -gm1*u3,    gm1,
+							-u1*u2,                 u2,                   u1,         0.0,        0.0,
+							-u1*u3,                 u3,                   0.0,        u1,         0.0,
+							u1*(-gam*E+2.0*gm1*ke), gam*E-gm1*(u1*u1+ke), -u1*gm1*u2, -u1*gm1*u3, gam*u1;
 						
-						/* dh/dw */
-						C = wv/rt,               0.0,       0.0,       rho,                         -rho*wv/rt,
-						    uv*wv/rt,            rho*wv,    0.0,       rho*uv,                      -rho*uv*wv/rt,
-						    vv*wv/rt,            0.0,       rho*wv,    rho*vv,                      -rho*vv*wv/rt,
-						    wv*wv/rt+1.0,        0.0,       0.0,       2.0*rho*wv,                  -rho*wv*wv/rt,
-							wv*(gogm1*rt+ke)/rt, rho*uv*wv, rho*vv*wv, rho*(gogm1*rt+ke)+rho*wv*wv, -rho*wv*ke/rt;				
+						B = 0.0,                    0.0,        1.0,                  0.0,        0.0,
+							-u1*u2,	                u2,	        u1,	                  0.0,	      0.0,
+							-u2*u2+gm1*ke,          -gm1*u1,    (2.0-gm1)*u2,         -gm1*u3,    gm1,
+							-u2*u3,                 0.0,        u3,                   u2,         0.0,
+							u2*(-gam*E+2.0*gm1*ke), -u1*gm1*u2, gam*E-gm1*(u1*u1+ke), -u2*gm1*u3, gam*u2;
+						
+						C = 0.0,					0.0,		0.0,		1.0,			      0.0,
+							-u1*u3,                 u3,			0.0,		u1,					  0.0,
+							-u2*u3,					0.0,		u3,			u2,					  0.0,
+							-u3*u3+gm1*ke,          -gm1*u1,    -gm1*u2,    (2.0-gm1)*u3,         gm1,
+							u3*(-gam*E+2.0*gm1*ke), -u3*gm1*u1, -u2*gm1*u3, gam*E-gm1*(u3*u3+ke), gam*u3;			
 											
 						for(int m = 0; m < NV; ++m) {
 							for(int n = 0; n < NV; ++n) {
@@ -583,8 +581,10 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						res(NV-1)(i)(j)(k) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i)(j)(k);
 						
 #ifdef BODYFORCE
-						for(int n=1;n<NV-1;++n)
-							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
+						for(int n=1;n<NV-1;++n){
+							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= rho*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+						}			
 						
 #endif         
 
