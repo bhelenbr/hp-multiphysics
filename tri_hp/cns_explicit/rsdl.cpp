@@ -172,6 +172,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(2)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(3)(i,j) -= rho*cjcb*RAD(crd(0)(i,j))*(u(1)(i,j)*gbl->body(0)+u(2)(i,j)*gbl->body(1));
 #endif     
 					
 #ifdef MMS
@@ -360,6 +361,8 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(2)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(3)(i,j) -= rho*cjcb*RAD(crd(0)(i,j))*(u(1)(i,j)*gbl->body(0)+u(2)(i,j)*gbl->body(1));
+
 #endif     
 					
 #ifdef MMS
