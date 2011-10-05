@@ -85,6 +85,8 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 	public:
 		comm_bdry(int inid, MESH &xin) : BASE(inid,xin), first(1), groupmask(0x3), buffsize(0), nmatch(0), maxphase(0) {
+			for (int m=0;m<maxmatch;++m)
+				rcvbuf(m) = NULL; // So I know they haven't been allocated
 			phase = 0;
 		}
 		comm_bdry(const comm_bdry<BASE,MESH> &inbdry, MESH& xin) : BASE(inbdry,xin), first(inbdry.first), groupmask(inbdry.groupmask), buffsize(0), nmatch(0),
@@ -98,6 +100,8 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #ifdef MPISRC
 			mpi_match = inbdry.mpi_match;
 #endif
+			for (int m=0;m<maxmatch;++m)
+				rcvbuf(m) = NULL; // So I know they haven't been allocated
 			return;
 		}
 
@@ -124,8 +128,8 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			isndbufarray.reference(temp1);
 			
 			for (int m=0;m<nmatch;++m) {
-				if (rcvbuf(m)) free(rcvbuf(m));
-				rcvbuf(m) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
+				if (rcvbuf(m) != NULL) free(rcvbuf(m));
+				rcvbuf(m) = malloc(buffsize); 
 				Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
 				frcvbufarray(m).reference(temp);
 				Array<int,1> temp1(static_cast<int *>(rcvbuf(m)), buffsize/sizeof(int), neverDeleteData);
@@ -216,7 +220,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				local_match(nmatch) = bin;
 				snd_tags(nmatch) = snd_tag;
 				rcv_tags(nmatch) = rcv_tag;
-				rcvbuf(nmatch) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
+				rcvbuf(nmatch) = malloc(buffsize);
 				Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 				frcvbufarray(nmatch).reference(temp);
 				Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
@@ -234,7 +238,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			mpi_match(nmatch) = nproc;
 			snd_tags(nmatch) = snd_tag;
 			rcv_tags(nmatch) = rcv_tag;
-			rcvbuf(nmatch) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
+			rcvbuf(nmatch) = malloc(buffsize);
 			Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 			frcvbufarray(nmatch).reference(temp);
 			Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
@@ -915,7 +919,7 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 		}
 	public:
 		symbolic_shape() : geometry<ND>() {}
-		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt), h(tgt.h), dhdx0(tgt.dhdx0), dhdx1(tgt.dhdx1) {}
+		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt),  h(tgt.h), dhdx0(tgt.dhdx0), dhdx1(tgt.dhdx1) {}
 		void init(input_map& inmap, std::string idprefix, std::ostream& log) {
 			geometry<ND>::init(inmap,idprefix,log);
 			if (inmap.find(idprefix +"_h") != inmap.end()) {
