@@ -898,6 +898,10 @@
 					"${packages}/lib",
 					"${prefix}/lib",
 				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-inline",
+					"$(OTHER_CFLAGS)",
+				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SKIP_INSTALL = NO;
 				STRIP_INSTALLED_PRODUCT = NO;
