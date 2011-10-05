@@ -366,7 +366,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib/";
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-inline",
+					"$(OTHER_CFLAGS)",
+				);
 			};
 			name = Debug;
 		};

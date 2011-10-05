@@ -2,6 +2,8 @@ OBJ = spline.o
 
 CPPFLAGS = -I${HOME}/Codes/include/ -I$(PACKAGES)/include/
 
+# CPFLAGS += -debug -DBZ_DEBUG #(for icc)
+
 ### Begin machine dependent
 
 ## Darwin:

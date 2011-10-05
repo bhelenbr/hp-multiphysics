@@ -2,6 +2,8 @@ OBJ = input_map.o
 
 CPPFLAGS = -O3
 
+#CPPFLAGS = -debug -DBZ_DEBUG #(for intel procs)
+
 CPPFLAGS += -I$(PACKAGES)/include
 LIBS = -L$(PACKAGES)/lib -lparseargs -lmuparser
 

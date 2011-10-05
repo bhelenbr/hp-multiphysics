@@ -2,8 +2,11 @@ OBJ = instances.o
 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 CPPFLAGS += -fno-inline
+#CPPFLAGS += -debug #(for icc)
 DEFINES = -Df2cFortran
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lmyblas -lm
+
+
 
 ### Begin machine dependent
 
@@ -25,6 +28,7 @@ CPPFLAGS += -O3
 #DEFINES = -DpgiFortran
 #LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 LIB += -llapack -lblas
+#LIB += -lmkl -lmkl_lapack #(for icc)
 
 
 ## IRIX64:

@@ -347,7 +347,7 @@
 				6FD8AE7808651561005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */ = {
 			isa = XCConfigurationList;
@@ -356,7 +356,7 @@
 				6FD8AE7C08651561005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		6FD8B0160865BC8A005A8B60 /* Build configuration list for PBXNativeTarget "quad" */ = {
 			isa = XCConfigurationList;
@@ -365,7 +365,7 @@
 				6FD8B0180865BC8A005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

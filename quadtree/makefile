@@ -2,6 +2,8 @@ OBJ = quad.o
 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 
+# CPPFLAGS += -debug -DBZ_DEBUG #(for icc)
+
 ### Begin machine dependent
 
 ## Darwin:
