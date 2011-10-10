@@ -166,6 +166,7 @@
 		B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewbdry.cpp; sourceTree = "<group>"; };
 		B24119840C623C2300EA7B1A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
+		E642B18814437A1700F3CDC9 /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -322,6 +323,7 @@
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				E642B18814437A1700F3CDC9 /* partition.bash */,
 				6F9D57311047327300216CB3 /* makefile */,
 			);
 			name = Scripts;

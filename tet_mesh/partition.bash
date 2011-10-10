@@ -12,10 +12,13 @@ cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt
 #echo -n "text "
 
 echo "filetype: 4" >> partition.inpt
-echo -n "nblock: ${BLKS}" >> partition.inpt
+
+#echo -n "nblock: ${BLKS}" >> partition.inpt
+echo -n "nblock: " >> partition.inpt
+
 let p=0
 while [ $p -lt $BLKS ]; do
-#	echo -n "1 " >> partition.inpt
+	echo -n "1 " >> partition.inpt
 	let p=$p+1
 done
 echo "" >> partition.inpt
@@ -58,7 +61,7 @@ for line in ${RMV}; do
 	grep -v ${line} temp.inpt > temp1.inpt
 	mv temp1.inpt temp.inpt
 done
-#mv temp.inpt partition.inpt
+mv temp.inpt partition.inpt
 
 RMV=$(grep '_e' partition.inpt | grep ': comm' | cut -d _ -f2 | sort | uniq -c | sort | grep '  2 e' | cut -d \  -f 5)
 
@@ -68,16 +71,15 @@ for line in ${RMV}; do
 	grep -v ${line} temp.inpt > temp1.inpt
 	mv temp1.inpt temp.inpt
 done
-#mv temp.inpt partition.inpt
+mv temp.inpt partition.inpt
 
-RMV=$(grep -w 'Info:' partition.inpt )
-
-cp partition.inpt temp.inpt
-for line in ${RMV}; do
+#RMV=$(grep -w 'Info:' partition.inpt )
+#cp partition.inpt temp.inpt
+#for line in ${RMV}; do
 #	echo ${line}
-	grep -v ${line} temp.inpt > temp1.inpt
-	mv temp1.inpt temp.inpt
-done
+#	grep -v ${line} temp.inpt > temp1.inpt
+#	mv temp1.inpt temp.inpt
+#done
 #mv temp.inpt partition.inpt
 
 #grep -v 'Info' partition.inpt
