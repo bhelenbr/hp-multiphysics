@@ -181,6 +181,37 @@ void neumann::element_rsdl(int find,int stage) {
 //	return;
 //}
 
+void symmetry::tadvance() {
+	int j,m,v0,sind,find;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	
+	hp_face_bdry::tadvance();
+	
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(int j=0;j<base.npnt;++j) {
+		v0 = base.pnt(j).gindx;
+		x.ug.v(v0,dir) = 0.0;
+	}
+
+	if (basis::tet(x.log2p).em > 0) {
+		for(int j=0;j<base.nseg;++j) {
+			sind = base.seg(j).gindx;
+			x.ug.e(sind,Range(0,basis::tet(x.log2p).em-1),dir) = 0.0;
+		}
+	}
+
+	if (basis::tet(x.log2p).fm > 0) {
+		for(int j=0;j<base.ntri;++j) {
+			find = base.tri(j).gindx;
+			x.ug.f(find,Range(0,basis::tet(x.log2p).fm-1),dir) = 0.0;
+		}
+	}
+	
+	return;
+}
+
+
+
 void applied_stress::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	std::ostringstream nstr;

@@ -200,8 +200,8 @@ hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, input_map &bdrydata) {
  */
 class tet_hp_ins_ftype {
 	public:
-		static const int ntypes = 4;
-		enum ids {unknown=-1,plain,inflow,outflow,applied_stress};
+		static const int ntypes = 5;
+		enum ids {unknown=-1,plain,inflow,outflow,symmetry,applied_stress};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -210,7 +210,7 @@ class tet_hp_ins_ftype {
 		}
 };
 
-const char tet_hp_ins_ftype::names[ntypes][40] = {"plain","inflow","outflow","applied_stress"};
+const char tet_hp_ins_ftype::names[ntypes][40] = {"plain","inflow","outflow","symmetry","applied_stress"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_face_bdry* tet_hp_ins::getnewfaceobject(int bnum, input_map &bdrydata) {
@@ -243,6 +243,10 @@ hp_face_bdry* tet_hp_ins::getnewfaceobject(int bnum, input_map &bdrydata) {
 		}
 		case tet_hp_ins_ftype::outflow: {
 			temp = new neumann(*this,*fbdry(bnum));
+			break;
+		}
+		case tet_hp_ins_ftype::symmetry: {
+			temp = new symmetry(*this,*fbdry(bnum));
 			break;
 		}
 		case tet_hp_ins_ftype::applied_stress: {

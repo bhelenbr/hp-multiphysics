@@ -220,6 +220,79 @@ namespace bdry_ins {
 	};
 	
 	
+	class symmetry : public generic {  
+		protected:
+			int dir;
+		public:
+			symmetry(tet_hp_ins &xin, face_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
+			symmetry(const symmetry& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
+			symmetry* create(tet_hp& xin, face_bdry &bin) const {return new symmetry(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
+			void init(input_map& input,void* gbl_in) {
+				generic::init(input,gbl_in);
+				std::string keyword = base.idprefix +"_dir";
+				input.getwdefault(keyword,dir,0);
+			}
+		
+			void vdirichlet() {
+				int sind,v0;
+				
+				for(int j=0;j<base.npnt;++j) {
+					v0 = base.pnt(j).gindx;
+					x.gbl->res.v(v0,dir) = 0.0;
+				}
+			}
+			
+			void edirichlet() {
+				int sind;
+				if (basis::tet(x.log2p).em > 0) {
+					for(int j=0;j<base.nseg;++j) {
+						sind = base.seg(j).gindx;
+						x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),dir) = 0.0;
+					}
+				}
+			}		
+
+			void fdirichlet() {
+				int find;
+				if (basis::tet(x.log2p).fm > 0) {
+					for(int j=0;j<base.ntri;++j) {
+						find = base.tri(j).gindx;
+						x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),dir) = 0.0;
+					}
+				}
+			}	
+			
+			//		void apply_sparse_dirichlet(bool compressed_column) {
+			//			/* only works if pressure is 4th variable */
+			//			int gind;
+			//			int em=basis::tet(x.log2p).em;
+			//			int fm=basis::tet(x.log2p).fm;
+			//			
+			//			for(int i=0;i<base.npnt;++i){
+			//				gind = base.pnt(i).gindx*x.NV;
+			//				for(int n=0;n<x.NV-1;++n)
+			//					x.sparse_dirichlet(gind+n,compressed_column);
+			//			}
+			//			
+			//			for(int i=0;i<base.nseg;++i){
+			//				gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
+			//				for(int m=0; m<em; ++m)
+			//					for(int n=0;n<x.NV-1;++n)
+			//						x.sparse_dirichlet(gind+m*x.NV+n,compressed_column);
+			//			}
+			//			
+			//			for(int i=0;i<base.ntri;++i){
+			//				gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
+			//				for(int m=0; m<fm; ++m)
+			//					for(int n=0;n<x.NV-1;++n)
+			//						x.sparse_dirichlet(gind+m*x.NV+n,compressed_column);
+			//			}			
+			//		}
+			
+			void tadvance();
+	};
+	
+	
 	
 	class applied_stress : public neumann {
 		Array<symbolic_function<3>,1> stress;
