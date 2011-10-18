@@ -205,7 +205,7 @@ void tri_hp::petsc_setup_preconditioner() {
 #ifdef MY_SPARSE
 
 	/* Not sure if I have to delete it each time or not */
-	err = MatDestroy(petsc_J);
+	err = MatDestroy(&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	J._val = 0.0;
@@ -268,6 +268,7 @@ void tri_hp::petsc_setup_preconditioner() {
 
 	PetscGetTime(&time1);	 
 	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);
+	//err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
@@ -477,19 +478,19 @@ void tri_hp::petsc_finalize(){
 	 */
 
 	PetscErrorCode err;
-	err = KSPDestroy(ksp);
+	err = KSPDestroy(&ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = VecDestroy(petsc_f);
+	err = VecDestroy(&petsc_f);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = VecDestroy(petsc_u);
+	err = VecDestroy(&petsc_u);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = VecDestroy(petsc_du);
+	err = VecDestroy(&petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = MatDestroy(petsc_J);
+	err = MatDestroy(&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 		
 	return;

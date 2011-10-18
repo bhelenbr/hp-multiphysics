@@ -119,9 +119,9 @@ void tri_hp::petsc_jacobian() {
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian();
 	
-	/* This one does nothing */
+//	/* This one does nothing? */
 //	for(int i=0;i<nvbd;++i) 
-//		hp_vbdry(i)->petsc_jacobian();
+//		hp_vbdry(i)->petsc_jacobian();  // TEMPORARY
 		
 #ifndef MY_SPARSE
 	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
@@ -165,9 +165,9 @@ void tri_hp::petsc_jacobian() {
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
 
 	/* FIX ME!! NOT SURE WHERE TO CALL THIS TEMPORARY */
-	for(int i=0;i<nvbd;++i) 
-		hp_vbdry(i)->petsc_jacobian_dirichlet();
-			
+//	for(int i=0;i<nvbd;++i) 
+//		hp_vbdry(i)->petsc_jacobian_dirichlet();
+//			
 	return;
 }
 
@@ -237,8 +237,8 @@ void tri_hp::test_jacobian() {
 			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
 			Mat *submat;
 			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
-			ISDestroy(Irows);
-			ISDestroy(Icols);
+			ISDestroy(&Irows);
+			ISDestroy(&Icols);
 			MatDestroyMatrices(1,&submat);		
 			
 			Array<FLT,2> testJ(dof,dof);
@@ -439,8 +439,8 @@ void tri_hp::test_jacobian() {
 			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
 			Mat *submat;
 			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
-			ISDestroy(Irows);
-			ISDestroy(Icols);
+			ISDestroy(&Irows);
+			ISDestroy(&Icols);
 			
 			Array<FLT,2> testJ(jacobian_size,ranges[proc+1]-ranges[proc]);
 			testJ = 0.0;

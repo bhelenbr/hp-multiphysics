@@ -117,7 +117,7 @@ void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
 	input.getwdefault(base.idprefix +"_report", report_flag, false);
 	
 #ifdef petsc
-	base.resize_buffers((x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+	base.resize_buffers((x.NV+x.ND)*60*(3 +3*x.sm0+x.im0));  // Allows for 10 elements of jacobian entries to be sent 
 #endif	
 }
 
@@ -165,7 +165,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 #ifndef petsc
 	base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
 #else
-	base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*8*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+	base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
 #endif
 
 	return;
@@ -1089,9 +1089,9 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 			if (sm) {
 				for (int i=base.nseg-1;i>=0;--i) {
 					int sind = base.seg(i);
-					for (int m=0;m<sm;++m) {
+					for (int mode=0;mode<sm;++mode) {
 						for(int n=0;n<NV;++n) {
-							nnzero(begin_seg +sind*sm*NV +m*NV +n) += base.ircvbuf(m,count++);
+							nnzero(begin_seg +sind*sm*NV +mode*NV +n) += base.ircvbuf(m,count++);
 						}
 					}
 				}
@@ -1117,9 +1117,9 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 			if (sm) {
 				for (int i=base.nseg-1;i>=0;--i) {
 					int sind = base.seg(i);
-					for (int m=0;m<sm;++m) {
+					for (int mode=0;mode<sm;++mode) {
 						for(int n=0;n<NV;++n) {
-							nnzero_mpi(begin_seg +sind*sm*NV +m*NV +n) += base.ircvbuf(m,count++);
+							nnzero_mpi(begin_seg +sind*sm*NV +mode*NV +n) += base.ircvbuf(m,count++);
 						}
 					}
 				}
@@ -1367,8 +1367,8 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	}
 	
 	
-	count = 0;
 	for (int m=0;m<base.nmatches();++m) {
+		count = 0;
 		int row_mpi = static_cast<int>(base.frcvbuf(m,count++));
 		int jstart_mpi = static_cast<int>(base.frcvbuf(m,count++));
 		if (base.is_local(m)) {

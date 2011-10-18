@@ -24,7 +24,11 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
 
 	public:
 		hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), report_flag(false) {mytype = "plain";}
-		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype), report_flag(inbdry.report_flag) {}
+		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype), report_flag(inbdry.report_flag) {
+#ifdef petsc
+			base.resize_buffers((x.NV+x.ND)*60*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+#endif
+		}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
 		virtual void init(input_map& input,void* gbl_in); /**< This is to read definition data only (not solution data) */
@@ -128,7 +132,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 #ifndef petsc
 			base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
 #else
-			base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*8*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+			base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
 #endif
 		}
 		virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
