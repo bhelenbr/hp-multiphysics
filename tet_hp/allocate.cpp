@@ -444,26 +444,52 @@ void tet_hp::setinfo() {
 
 	for(i=0;i<nvbd;++i)
 		pnt(vbdry(i)->pnt).info = i;
-//	for(i=0;i<nebd;++i)
-//		for(j=0;j<ebdry(i)->nseg;++j)
-//			seg(ebdry(i)->seg(j).gindx).info = i;
-//	for(i=0;i<nfbd;++i)
-//		for(j=0;j<fbdry(i)->ntri;++j)
-//			tri(fbdry(i)->tri(j).gindx).info = i;
 	
-//   if (log2p > 0) {  // FIXME
-//      for(i=0;i<nfbd;++i) {
-//         if (hp_fbdry(i)->is_curved()) {
-//            for(int j=0;j<fbdry(i)->ntri;++j) {
-//               int tind = fbdry(i)->tri(j).gindx;
-//               tri(tind).tet(1) = 
-//               tri(tind).info = i;
-//               tet(tri(tind).tet(0)).info = 0;     
-//            }
-//         } 
-//      }
-//   }
-
+	if(log2p > 0){		
+		for(i=0;i<nfbd;++i){
+			if(hp_fbdry(i)->is_curved()){
+				for(int j=0;j<fbdry(i)->ntri;++j){
+					tri(fbdry(i)->tri(j).gindx).info = 0; /* tag segment as curved on face */
+					tri(fbdry(i)->tri(j).gindx).bnum = i;
+					tri(fbdry(i)->tri(j).gindx).lnum = j;
+				}
+				for(int j=0;j<fbdry(i)->nseg;++j){
+					seg(fbdry(i)->seg(j).gindx).info = 0; /* tag segment as curved on face */
+					seg(fbdry(i)->seg(j).gindx).bnum = i;
+					seg(fbdry(i)->seg(j).gindx).lnum = j;
+				}
+			}
+		}
+		
+		for(i=0;i<nebd;++i){
+			if(hp_ebdry(i)->is_curved()){
+				for(int j=0;j<ebdry(i)->nseg;++j){
+					seg(ebdry(i)->seg(j).gindx).info = 1; /* overide face curvature tag */
+					seg(ebdry(i)->seg(j).gindx).bnum = i;
+					seg(ebdry(i)->seg(j).gindx).lnum = j;
+				}
+			}
+		}
+		
+		/* tag any tet that has something curvy on it */
+		for(i=0;i<ntet;++i){
+			for(int j = 0; j < 4; ++j){
+				int find = tet(i).tri(j);
+				if(tri(find).info != -1){
+					tet(i).info = 1;
+					break;
+				}
+			}
+			for(int j = 0; j < 6; ++j){
+				int eind = tet(i).tri(j);
+				if(seg(eind).info != -1){
+					tet(i).info = 1;
+					break;
+				}
+			}
+		}	
+	}
+	
 	return;
 }
 

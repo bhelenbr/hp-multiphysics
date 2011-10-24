@@ -52,7 +52,7 @@ void tet_hp::conjugate_gradient() {
 	p = gbl->res;	
 	
 	inner_product(rtrold,z,gbl->res);
-	
+
 	for(int i = 0; i < max_iter; ++i) {
 
 		matrix_multiply(p,Ap);
@@ -89,7 +89,7 @@ void tet_hp::conjugate_gradient() {
 		
 		rtrold = rtrnew;
 	
-		cout << i << ' ' << rtrold << endl;
+		*gbl->log << i << ' ' << rtrold << endl;
 
 		//if(rtrold < 1.0e-15) break;
 		

@@ -707,7 +707,6 @@ void tet_hp::minvrt_test() {
 				crdtocht(tind);
 				for(n=0;n<ND;++n)
 					basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
-				cout << "curvy" << endl;
 
 			}
 			

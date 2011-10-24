@@ -147,9 +147,8 @@ void tet_hp::updatesdata(int sind) {
 			basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(0,0));
 
 		for(n=0;n<NV;++n) {
-			PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
 			for(m=0;m<basis::tri(log2p).sm;++m) 
-				ugbd(step).s(sind,m,n) = -lf(n)(2+m);
+				ugbd(step).s(sind,m,n) = -lf(n)(2+m)*basis::tet(x.log2p).diag1d(m);
 		}
 	}
 	return;
@@ -201,10 +200,9 @@ void tet_hp::updatesdata_bdry(int bnum,int bel) {
 		for(step=0;step<gbl->nadapt;++step) {
 			for(n=0;n<ND;++n) {
 				basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(1,0));
-				PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
 
 				for(m=0;m<basis::tri(log2p).sm;++m)
-						hp_ebdry(bnum)->crdsbd(step,bel,m,n) = -lf(n)(m+2);
+						hp_ebdry(bnum)->crdsbd(step,bel,m,n) = -lf(n)(m+2)*basis::tet(x.log2p).diag1d(m);
 			}
 		}
 	}

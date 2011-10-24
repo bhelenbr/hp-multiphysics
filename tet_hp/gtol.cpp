@@ -12,6 +12,7 @@
 #include <assert.h>
 
 //#define NODAL			
+FLT coeff[3] = {-0.02,-0.02,-0.0};
 
 /* Global to Local */
 void tet_hp::ugtouht(int tind) {
@@ -441,6 +442,136 @@ void tet_hp::ugtouht1d(int eind, int tlvl) {
 	return;
 }
 
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//void tet_hp::crdtocht(int tind) {
+//	int i,m,n,cnt,bnum,eind,find,indx;
+//	
+//	/* VERTICES */   
+//	for (i=0; i < 4; ++i) {
+//		indx = tet(tind).pnt(i);
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i) = pnts(indx)(n);
+//	}
+//	
+//	if (basis::tet(log2p).em == 0) return;
+//
+//	for (i=0; i < 6; ++i) {
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i+4) = coeff[n];
+//	}
+//		
+//	return;
+//}
+//
+//
+//void tet_hp::crdtocht(int tind, int tlvl) {
+//	int i,m,n,cnt,bnum,eind,find,indx;
+//		
+//		/* VERTICES */   
+//	for (i=0; i < 4; ++i) {
+//		indx = tet(tind).pnt(i);
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i) = vrtxbd(tlvl)(indx)(n);
+//	}
+//	
+//	if (basis::tet(log2p).em == 0) return;
+//	
+//	for (i=0; i < 6; ++i) {
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i+4) = coeff[n];
+//	}	
+//	return;
+//}
+//
+//
+//void tet_hp::crdtocht2d(int find){
+//	int i,m,n,cnt,bnum,indx,eind;
+//	
+//	/* VERTICES */   
+//	for (i=0; i < 3; ++i) {
+//		indx = tri(find).pnt(i);
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i) = pnts(indx)(n);
+//	}
+//	
+//	if (basis::tet(log2p).em == 0) return;
+//	
+//	for (i=0; i < 3; ++i) {
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i+3) = coeff[n];
+//	}
+//
+//	return;
+//}
+//
+//
+//void tet_hp::crdtocht2d(int find, int tlvl) {
+//	int i,m,n,cnt,bnum,eind,indx;
+//		
+//	/* VERTICES */   
+//	for (i=0; i < 3; ++i) {
+//		indx = tri(find).pnt(i);
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i) = vrtxbd(tlvl)(indx)(n);
+//	}
+//	
+//	if (basis::tet(log2p).em == 0) return;
+//	
+//	for (i=0; i < 3; ++i) {
+//		for(n=0; n<ND; ++n)
+//			cht(n)(i+3) = coeff[n];
+//	}
+//	return;
+//}
+//
+//
+//void tet_hp::crdtocht1d(int eind) {
+//	int m,n,bnum,find,tind,indx,v0,v1,nnbor;
+//	
+//	v0 = seg(eind).pnt(0);
+//	v1 = seg(eind).pnt(1);
+//	for(n=0;n<ND;++n) {
+//		cht(n)(0) = pnts(v0)(n);
+//		cht(n)(1) = pnts(v1)(n);
+//	}
+//	
+//	if (basis::tet(log2p).em == 0) return;
+//	
+//	for(n=0; n<ND; ++n)
+//		cht(n)(2) = coeff[n];
+//	
+//			
+//	return;
+//}
+//
+//void tet_hp::crdtocht1d(int eind,int tlvl) {
+//	int m,n,bnum,indx,v0,v1,i,j,nnbor,tind,find;
+//	
+//	v0 = seg(eind).pnt(0);
+//	v1 = seg(eind).pnt(1);
+//	for(n=0;n<ND;++n) {
+//		cht(n)(0) = vrtxbd(tlvl)(v0)(n);
+//		cht(n)(1) = vrtxbd(tlvl)(v1)(n);
+//	}
+//
+//	if (basis::tet(log2p).em == 0) return;
+//	
+//	for(n=0; n<ND; ++n)
+//		cht(n)(2) = coeff[n];	
+//	return;
+//}
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
 void tet_hp::crdtocht(int tind) {
 	int i,m,n,cnt,bnum,eind,find,indx;
 	
@@ -457,21 +588,31 @@ void tet_hp::crdtocht(int tind) {
 	cnt = 4;
 	for (i = 0; i < 6; ++i){
 		eind=tet(tind).seg(i);
-		if(seg(eind).info < 0){
+
+		if(seg(eind).info == 0){
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-				   cht(n)(cnt) = 0.0;
+					cht(n)(cnt) = hp_fbdry(bnum)->crde(indx,m,n);
 				++cnt;
-			 }
+			}	
 		}
-		else {
-			bnum = getbdrynum(seg(eind).info);
-			indx = getbdrytri(seg(eind).info);
+		else if(seg(eind).info == 1) {
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);/// temporary fix crde(indx,m,n)
+					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);
 				++cnt;
 			 }		
+		}
+		else {
+			for(m = 0; m < basis::tet(log2p).em; ++m) {
+				for(n = 0; n < ND; ++n)
+					cht(n)(cnt) = 0.0;
+				++cnt;
+			}
 		}
 	}
 	
@@ -488,11 +629,11 @@ void tet_hp::crdtocht(int tind) {
 			 }
 		}
 		else {
-			bnum = getbdrynum(tri(find).tet(1));
-			indx = getbdrytri(tri(find).tet(1));
+			bnum = tri(find).bnum;
+			indx = tri(find).lnum;
 			for(m = 0; m < basis::tet(log2p).fm; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_fbdry(bnum)->crdf(indx,m,n);/// temporary fix crdf(indx,m,n)
+					cht(n)(cnt) = hp_fbdry(bnum)->crdf(indx,m,n);
 				++cnt;
 			 }		
 		}
@@ -502,10 +643,11 @@ void tet_hp::crdtocht(int tind) {
 }
 
 
+
 void tet_hp::crdtocht(int tind, int tlvl) {
 	int i,m,n,cnt,bnum,eind,find,indx;
 		
-		/* VERTICES */   
+	/* VERTICES */   
 	for (i=0; i < 4; ++i) {
 		indx = tet(tind).pnt(i);
 		for(n=0; n<ND; ++n)
@@ -518,45 +660,54 @@ void tet_hp::crdtocht(int tind, int tlvl) {
 	cnt = 4;
 	for (i = 0; i < 6; ++i){
 		eind=tet(tind).seg(i);
-		if(seg(eind).info < 0){
+		
+		if(seg(eind).info == 0){
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-				   cht(n)(cnt) = 0.0;
+					cht(n)(cnt) = hp_fbdry(bnum)->crdebd(tlvl,indx,m,n);
 				++cnt;
-			 }
+			}	
+		}
+		else if(seg(eind).info == 1) {
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
+			for(m = 0; m < basis::tet(log2p).em; ++m) {
+				for(n = 0; n < ND; ++n)
+					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);
+				++cnt;
+			}		
 		}
 		else {
-			bnum = getbdrynum(seg(eind).info);
-			indx = getbdrytri(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);/// fix crdebd(tlvl,indx,m,n)
+					cht(n)(cnt) = 0.0;
 				++cnt;
-			 }		
+			}
 		}
 	}
 	
 	if (basis::tet(log2p).fm == 0) return;
-
+	
 	/* FACES */
 	for (i = 0; i < 4; ++i){
 		find=tet(tind).tri(i);
-		//cout << endl << tri(find).info << endl;
 		if(tri(find).info < 0){
 			for(m = 0; m < basis::tet(log2p).fm; ++m) {
 				for(n = 0; n < ND; ++n)
-				   cht(n)(cnt) = 0.0;
+					cht(n)(cnt) = 0.0;
 				++cnt;
-			 }
+			}
 		}
 		else {
-			bnum = getbdrynum(tri(find).tet(1));
-			indx = getbdrytri(tri(find).tet(1));
+			bnum = tri(find).bnum;
+			indx = tri(find).lnum;
 			for(m = 0; m < basis::tet(log2p).fm; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_fbdry(bnum)->crdfbd(tlvl,indx,m,n);/// fix crdf(indx,m,n)
+					cht(n)(cnt) = hp_fbdry(bnum)->crdfbd(tlvl,indx,m,n);
 				++cnt;
-			 }		
+			}		
 		}
 	}
 	
@@ -574,28 +725,58 @@ void tet_hp::crdtocht2d(int find){
 			cht(n)(i) = pnts(indx)(n);
 	}
 	
-		if (basis::tet(log2p).em == 0) return;
+	if (basis::tet(log2p).em == 0) return;
 	
 	/* EDGES */
 	cnt = 3;
 	for (i = 0; i < 3; ++i){
 		eind=tri(find).seg(i);
-		if(seg(eind).info < 0){
+		
+		if(seg(eind).info == 0){
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-				   cht(n)(cnt) = 0.0;
+					cht(n)(cnt) = hp_fbdry(bnum)->crde(indx,m,n);
 				++cnt;
-			 }
+			}	
+		}
+		else if(seg(eind).info == 1) {
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
+			for(m = 0; m < basis::tet(log2p).em; ++m) {
+				for(n = 0; n < ND; ++n)
+					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);
+				++cnt;
+			}		
 		}
 		else {
-			bnum = getbdrynum(seg(eind).info);
-			indx = getbdrytri(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);/// fix crde(indx,m,n)
+					cht(n)(cnt) = 0.0;
 				++cnt;
-			 }		
+			}
 		}
+	}
+	
+	if (basis::tet(log2p).fm == 0) return;
+	
+	/* FACES */
+	if(tri(find).info < 0){
+		for(m = 0; m < basis::tet(log2p).fm; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = 0.0;
+			++cnt;
+		}
+	}
+	else {
+		bnum = tri(find).bnum;
+		indx = tri(find).lnum;
+		for(m = 0; m < basis::tet(log2p).fm; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_fbdry(bnum)->crdf(indx,m,n);
+			++cnt;
+		}		
 	}
 	
 
@@ -608,43 +789,73 @@ void tet_hp::crdtocht2d(int find, int tlvl) {
 		
 	/* VERTICES */   
 	for (i=0; i < 3; ++i) {
-		//cout << tri(find).pnt(i) << endl;
 		indx = tri(find).pnt(i);
 		for(n=0; n<ND; ++n)
 			cht(n)(i) = vrtxbd(tlvl)(indx)(n);
 	}
 	
-		if (basis::tet(log2p).em == 0) return;
+	if (basis::tet(log2p).em == 0) return;
 	
 	/* EDGES */
 	cnt = 3;
 	for (i = 0; i < 3; ++i){
 		eind=tri(find).seg(i);
-		// if (eind != 0) cout << endl << eind << endl;
-		if(seg(eind).info < 0){
+		
+		if(seg(eind).info == 0){
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-				   cht(n)(cnt) = 0.0;
+					cht(n)(cnt) = hp_fbdry(bnum)->crdebd(tlvl,indx,m,n);
 				++cnt;
-			 }
+			}	
+		}
+		else if(seg(eind).info == 1) {
+			bnum = seg(eind).bnum;
+			indx = seg(eind).lnum;
+			for(m = 0; m < basis::tet(log2p).em; ++m) {
+				for(n = 0; n < ND; ++n)
+					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);
+				++cnt;
+			}		
 		}
 		else {
-			bnum = getbdrynum(seg(eind).info);
-			indx = getbdrytri(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
-					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);/// fix crde(indx,m,n)
+					cht(n)(cnt) = 0.0;
 				++cnt;
-			 }		
+			}
 		}
-	}	
-
+	}
+	
+	if (basis::tet(log2p).fm == 0) return;
+	
+	/* FACES */
+	if(tri(find).info < 0){
+		for(m = 0; m < basis::tet(log2p).fm; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = 0.0;
+			++cnt;
+		}
+	}
+	else {
+		bnum = tri(find).bnum;
+		indx = tri(find).lnum;
+		for(m = 0; m < basis::tet(log2p).fm; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_fbdry(bnum)->crdfbd(tlvl,indx,m,n);
+			++cnt;
+		}		
+	}
+	
+	
 	return;
+
 }
 
 
 void tet_hp::crdtocht1d(int eind) {
-	int m,n,bnum,indx,v0,v1;
+	int m,n,bnum,find,tind,cnt,indx,v0,v1,nnbor;
 	
 	v0 = seg(eind).pnt(0);
 	v1 = seg(eind).pnt(1);
@@ -653,25 +864,42 @@ void tet_hp::crdtocht1d(int eind) {
 		cht(n)(1) = pnts(v1)(n);
 	}
 	
-	if (seg(eind).info < 0) {
-		for(m=0;m<basis::tet(log2p).em;++m)
-			for(n=0;n<ND;++n) 
-			cht(n)(m+2) = 0.0;
+	if (basis::tet(log2p).em == 0) return;
+
+	/* EDGES */
+	cnt = 2;
+	if(seg(eind).info == 0){
+		bnum = seg(eind).bnum;
+		indx = seg(eind).lnum;
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_fbdry(bnum)->crde(indx,m,n);
+			++cnt;
+		}	
+	}
+	else if(seg(eind).info == 1) {
+		bnum = seg(eind).bnum;
+		indx = seg(eind).lnum;
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);
+			++cnt;
+		}		
 	}
 	else {
-		bnum = getbdrynum(seg(eind).info);
-		indx = getbdrytri(seg(eind).info);      
-		for(m=0;m<basis::tet(log2p).em;++m)
-			for(n=0;n<ND;++n) 
-				cht(n)(m+2) = hp_ebdry(bnum)->crde(indx,m,n);     
-
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = 0.0;
+			++cnt;
+		}
 	}
-			
+	
 	return;
+	
 }
 
 void tet_hp::crdtocht1d(int eind,int tlvl) {
-	int m,n,bnum,indx,v0,v1;
+	int m,n,bnum,indx,cnt,v0,v1,i,j,nnbor,tind,find;
 	
 	v0 = seg(eind).pnt(0);
 	v1 = seg(eind).pnt(1);
@@ -679,21 +907,37 @@ void tet_hp::crdtocht1d(int eind,int tlvl) {
 		cht(n)(0) = vrtxbd(tlvl)(v0)(n);
 		cht(n)(1) = vrtxbd(tlvl)(v1)(n);
 	}
-	//cout << seg(eind).info << endl;
 
-	if (seg(eind).info < 0) {
-		for(m=0;m<basis::tet(log2p).em;++m)
-			for(n=0;n<ND;++n) 
-			cht(n)(m+2) = 0.0;
+	if (basis::tet(log2p).em == 0) return;
+	
+	/* EDGES */
+	cnt = 2;
+	if(seg(eind).info == 0){
+		bnum = seg(eind).bnum;
+		indx = seg(eind).lnum;
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_fbdry(bnum)->crdebd(tlvl,indx,m,n);
+			++cnt;
+		}	
+	}
+	else if(seg(eind).info == 1) {
+		bnum = seg(eind).bnum;
+		indx = seg(eind).lnum;
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);
+			++cnt;
+		}		
 	}
 	else {
-		bnum = getbdrynum(seg(eind).info);
-		indx = getbdrytri(seg(eind).info);      
-		for(m=0;m<basis::tet(log2p).em;++m)
-			for(n=0;n<ND;++n) 
-				cht(n)(m+2) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);     
-
-	}         
+		for(m = 0; m < basis::tet(log2p).em; ++m) {
+			for(n = 0; n < ND; ++n)
+				cht(n)(cnt) = 0.0;
+			++cnt;
+		}
+	}
+	
 	return;
 }
 

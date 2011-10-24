@@ -227,9 +227,8 @@ void hp_edge_bdry::input(ifstream& fin,tet_hp::filetype typ,int tlvl) {
 //}
 
 void hp_edge_bdry::curv_init(int tlvl) {
-	int i,j,m,n,v0,v1,sind,info;
+	int i,j,m,n,v0,v1,sind;
 	TinyVector<FLT,tet_mesh::ND> pt;
-	char uplo[] = "U";
 	TinyMatrix<FLT,tet_mesh::ND,MXGP> crd;
 
 	if (!curved) return;
@@ -267,10 +266,9 @@ void hp_edge_bdry::curv_init(int tlvl) {
 		
 		for(n=0;n<tet_mesh::ND;++n) {
 			basis::tet(x.log2p).intgrt1d(&x.cf(n,0),&crd(n,0));
-			DPBTRS(uplo,basis::tet(x.log2p).em,basis::tet(x.log2p).sbwth,1,&basis::tet(x.log2p).sdiag1d(0,0),basis::tet(x.log2p).sbwth+1,&x.cf(n,2),basis::tet(x.log2p).em,info);
 		
 			for(m=0;m<basis::tet(x.log2p).em;++m)
-			crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2);
+			crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
 		}
 	}
 	return;
@@ -395,7 +393,7 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 
 
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, int ndirichlets) {
-	int i,j,k,m,n,v0,v1,v2,sind,find;
+	int j,k,m,n,v0,v1,sind;
 	TinyVector<FLT,tet_mesh::ND> pt;
 	
 	/* UPDATE BOUNDARY CONDITION VALUES */
@@ -740,6 +738,18 @@ void hp_face_bdry::curv_init(int tlvl) {
 	int stridey = MXGP;
 
 	if (!curved) return;
+		
+	// fix me wrong temp
+	for(j=0;j<base.nseg;++j) {
+		ecrvbd(tlvl)(j,0)(0) = -.02;
+		ecrvbd(tlvl)(j,0)(1) = -.02;
+		ecrvbd(tlvl)(j,0)(2) = 0.0;
+	}
+	
+	return;
+	
+	
+	
 	
 	/* SKIP END VERTICES */
 	for(j=1;j<base.npnt;++j) {
@@ -773,10 +783,9 @@ void hp_face_bdry::curv_init(int tlvl) {
 		
 		for(n=0;n<tet_mesh::ND;++n) {
 			basis::tet(x.log2p).intgrt1d(&x.cf(n,0),&crd(n,0));
-			DPBTRS(uplo,basis::tet(x.log2p).em,basis::tet(x.log2p).sbwth,1,&basis::tet(x.log2p).sdiag1d(0,0),basis::tet(x.log2p).sbwth+1,&x.cf(n,2),basis::tet(x.log2p).em,info);
 		
 			for(m=0;m<basis::tet(x.log2p).em;++m)
-			ecrvbd(tlvl)(j,m)(n) = -x.cf(n,m+2);
+			ecrvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
 		}
 	}
 	
@@ -1248,6 +1257,12 @@ void tet_hp::matchboundaries() {
 	tmsgpass(boundary::all,0,boundary::symmetric);
 	tc0wait_rcv(ug.f.data(),0,fm0-1,ug.f.extent(secondDim));      
 
+	
+	// need to match curved edges on face boundaries too fix me temp
+	
+	
+	
+	
 //   /* Match curved sides */  // MAJOR FIXME HERE
 //   for(bnum=0;bnum<nfbd;++bnum) {
 //      if (fbdry(bnum)->is_comm() && hp_fbdry(bnum)->is_curved()) {            

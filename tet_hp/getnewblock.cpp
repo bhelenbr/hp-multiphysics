@@ -9,6 +9,7 @@
 
 #include "tet_hp.h"
 
+#define MASS
 #define CD
 //#define INS
 #define CNS
@@ -16,6 +17,9 @@
 
 
 //#define POD
+#ifdef MASS
+#include "mass/tet_hp_mass.h"
+#endif
 
 #ifdef CD
 #include "cd/tet_hp_cd.h"
@@ -41,8 +45,8 @@
 
 class btype {
 	public:
-		const static int ntypes = 9;
-		enum ids {plain,cd,ins,cns,cns_explicit,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim};
+		const static int ntypes = 10;
+		enum ids {plain,mass,cd,ins,cns,cns_explicit,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -51,7 +55,7 @@ class btype {
 			return(-1);
 		}
 };
-const char btype::names[ntypes][40] = {"plain","cd","ins","cns","cns_explicit","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
+const char btype::names[ntypes][40] = {"plain","mass","cd","ins","cns","cns_explicit","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname,srcname;
@@ -75,6 +79,14 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			tet_hp *temp = new tet_hp();
 			return(temp);
 		}
+			
+#ifdef MASS
+		case btype::mass: {
+			tet_hp_mass *temp = new tet_hp_mass();
+			return(temp);
+		}
+#endif
+			
 #ifdef CD
 		case btype::cd: {
 			tet_hp_cd *temp = new tet_hp_cd();

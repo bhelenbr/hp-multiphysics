@@ -435,6 +435,8 @@ void tet_hp::update() {
 			hp_vbdry(i)->update(stage);
 		}
 
+		l2error(gbl->ibc);// fix me temp 
+		
 #ifdef DEBUG
 //   if (coarse_level) {
 #ifdef PTH
