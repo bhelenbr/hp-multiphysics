@@ -230,18 +230,18 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	int i,j,m,n,v0,v1,sind;
 	TinyVector<FLT,tet_mesh::ND> pt;
 	TinyMatrix<FLT,tet_mesh::ND,MXGP> crd;
-
-	if (!curved) return;
 	
-	/* SKIP END VERTICES */
-	for(j=1;j<base.nseg;++j) {
+	j = 0;
+	do {
 		sind = base.seg(j).gindx;
 		v0 = x.seg(sind).pnt(0);
 		base.mvpttobdry(j,-1.0, x.pnts(v0));
-	}
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
+	
+	if (!curved || basis::tet(x.log2p).p == 1) return;
 
-	if (basis::tet(x.log2p).p == 1) return;
-		
 	/*****************************/
 	/* SET UP HIGHER ORDER MODES */
 	/*****************************/
@@ -268,7 +268,7 @@ void hp_edge_bdry::curv_init(int tlvl) {
 			basis::tet(x.log2p).intgrt1d(&x.cf(n,0),&crd(n,0));
 		
 			for(m=0;m<basis::tet(x.log2p).em;++m)
-			crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
+				crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
 		}
 	}
 	return;
@@ -319,8 +319,9 @@ void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,tet_mesh::ND> &xp) 
 
 	/* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
 	/* FIRST GET LINEAR APPROXIMATION TO LOCATION */
-	base.edge_bdry::mvpttobdry(bel, psi, xp);
-	adapt_storage->findandmovebdrypt(xp,bel,psi);
+	cout << "awww does nothing edge bdry mvpttobdry " << endl;
+	//base.edge_bdry::mvpttobdry(bel, psi, xp);
+	//adapt_storage->findandmovebdrypt(xp,bel,psi);
 	
 	return;
 }
@@ -737,27 +738,26 @@ void hp_face_bdry::curv_init(int tlvl) {
 	TinyMatrix<FLT,tet_mesh::ND,MXGP> crd;
 	int stridey = MXGP;
 
-	if (!curved) return;
-		
-	// fix me wrong temp
-	for(j=0;j<base.nseg;++j) {
-		ecrvbd(tlvl)(j,0)(0) = -.02;
-		ecrvbd(tlvl)(j,0)(1) = -.02;
-		ecrvbd(tlvl)(j,0)(2) = 0.0;
-	}
+	j = 0;
+	do {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		base.mvpttobdry(j,-1.0, x.pnts(v0));
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 	
-	return;
-	
-	
+	if (!curved || basis::tet(x.log2p).p == 1) return;
 	
 	
-	/* SKIP END VERTICES */
-	for(j=1;j<base.npnt;++j) {
-		v0 = base.pnt(j).gindx;
-		base.mvpttobdry(base.pnt(j).tri,-1.0,-1.0,x.pnts(v0));  // FIXME WRONG
-	}
-
-	if (basis::tet(x.log2p).p == 1) return;
+//	
+//	/* SKIP END VERTICES */
+//	for(j=1;j<base.npnt;++j) {
+//		v0 = base.pnt(j).gindx;
+//		base.mvpttobdry(base.pnt(j).tri,-1.0,-1.0,x.pnts(v0));  // FIXME WRONG
+//	}
+//
+//	if (basis::tet(x.log2p).p == 1) return;
 		
 	/*****************************/
 	/* SET UP HIGHER ORDER MODES */
@@ -775,7 +775,8 @@ void hp_face_bdry::curv_init(int tlvl) {
 			pt(0) = crd(0,i);
 			pt(1) = crd(1,i);
 			pt(2) = crd(2,i);
-			base.mvpttobdry(base.seg(j).tri(0),-1.0,basis::tet(x.log2p).xp(i),pt); // FIXME
+			//base.mvpttobdry(base.seg(j).tri(0),-1.0,basis::tet(x.log2p).xp(i),pt); // FIXME
+			base.mvpttobdry(base.seg(j).gindx,basis::tet(x.log2p).xp(i),pt); // FIXME
 			crd(0,i) -= pt(0);
 			crd(1,i) -= pt(1);
 			crd(2,i) -= pt(2);
@@ -926,18 +927,29 @@ void hp_face_bdry::tmatchsolution_rcv(FLT *fdata, int bgnmode, int endmode, int 
 //   } while (fabs(dpsi) > roundoff);
 //   xp = pt;
 //}
-//
-//void hp_face_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,tet_mesh::ND> &xp) {
-//
-//   /* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
-//   /* FIRST GET LINEAR APPROXIMATION TO LOCATION */
-//   base.face_bdry::mvpttobdry(bel, psi, xp);
-//   adapt_storage->findandmovebdrypt(xp,bel,psi);
-//   
-//   return;
-//}
-//
-//
+
+void hp_face_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,tet_mesh::ND> &xp) {
+
+   /* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
+   /* FIRST GET LINEAR APPROXIMATION TO LOCATION */
+	cout << "awww does nothing face boundary mvpttobdry 1" << endl;
+  // base.face_bdry::mvpttobdry(bel, psi, xp);
+   //adapt_storage->findandmovebdrypt(xp,bel,psi);
+   
+   return;
+}
+
+void hp_face_bdry::mvpttobdry(int bel, FLT r, FLT s, TinyVector<FLT, tet_mesh::ND> &xp) {
+	
+	/* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
+	/* FIRST GET LINEAR APPROXIMATION TO LOCATION */
+	cout << "awww does nothing face boundary mvpttobdry 2" << endl;
+	// base.face_bdry::mvpttobdry(bel, psi, xp);
+	//adapt_storage->findandmovebdrypt(xp,bel,psi);
+	
+	return;
+}
+
 void hp_face_bdry::tadvance() {
 	int stage = x.gbl->substep +x.gbl->esdirk;  
 		

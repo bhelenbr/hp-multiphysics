@@ -855,7 +855,7 @@ void tet_hp::crdtocht2d(int find, int tlvl) {
 
 
 void tet_hp::crdtocht1d(int eind) {
-	int m,n,bnum,find,tind,cnt,indx,v0,v1,nnbor;
+	int m,n,bnum,cnt,indx,v0,v1;
 	
 	v0 = seg(eind).pnt(0);
 	v1 = seg(eind).pnt(1);
@@ -899,7 +899,7 @@ void tet_hp::crdtocht1d(int eind) {
 }
 
 void tet_hp::crdtocht1d(int eind,int tlvl) {
-	int m,n,bnum,indx,cnt,v0,v1,i,j,nnbor,tind,find;
+	int m,n,bnum,indx,cnt,v0,v1;
 	
 	v0 = seg(eind).pnt(0);
 	v1 = seg(eind).pnt(1);

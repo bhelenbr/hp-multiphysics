@@ -282,7 +282,9 @@ class hp_face_bdry : public fgeometry_interface<3> {
 
 		/* SEARCH FUNCTIONS */
 //     virtual void findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &tind, FLT &r, FLT &s) const;
-//     virtual void mvpttobdry(int tind, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt);
+	   virtual void mvpttobdry(int tind, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt);
+	   virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
+
 };
 
 #endif
