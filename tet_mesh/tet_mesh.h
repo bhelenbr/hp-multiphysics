@@ -618,7 +618,8 @@ class face_bdry : public boundary {
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
 		virtual void findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s);
 		virtual void mvpttobdry(int ntri, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt);
-		
+		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
+
 //        /* MESH MODIFICATION FUNCTIONS */
 //        /* 4 binary digits for vertex, side, tri */
 //        const static int VSPEC = 0x4, VDLTE = 0x2, VTOUC=0x1;

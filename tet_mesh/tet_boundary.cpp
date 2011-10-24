@@ -800,6 +800,16 @@ void face_bdry::mvpttobdry(int indx, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> 
 	return;
 }
 
+void face_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt) {
+	/* FOR A LINEAR SIDE */
+	int n;
+	
+	for (n=0;n<tet_mesh::ND;++n)
+		pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(seg(indx).gindx).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(seg(indx).gindx).pnt(1))(n));
+	
+	return;
+}
+
 void fcomm::ploadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
 	int j,k,count,offset;
 	

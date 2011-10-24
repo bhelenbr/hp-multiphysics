@@ -178,6 +178,10 @@ public:
 		geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
 		return;
 	}
+	void mvpttobdry(int seg,FLT psi, TinyVector<FLT,tet_mesh::ND> &pt) {
+		geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
+		return;
+	}
 };
 
 template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
