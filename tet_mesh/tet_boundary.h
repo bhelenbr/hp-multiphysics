@@ -155,6 +155,31 @@ typedef prdc_template<fcomm> fprdc;  /**< Periodic face boundary */
  * BASE is the boundary object 
  * GEOM object should be of type "geometry"
  */
+
+template<class BASE,class GEOM> class fboundary_with_geometry : public BASE {
+public:
+	GEOM geometry_object;
+	
+public: 
+	fboundary_with_geometry(int inid, tet_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+	fboundary_with_geometry(const fboundary_with_geometry<BASE,GEOM> &inbdry, tet_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+	fboundary_with_geometry* create(tet_mesh& xin) const {return(new fboundary_with_geometry<BASE,GEOM>(*this,xin));}
+	
+	void output(std::ostream& fout) {
+		BASE::output(fout);
+		geometry_object.output(fout,BASE::idprefix);
+	}
+	void init(input_map& inmap) {
+		BASE::init(inmap);
+		geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
+	}
+	
+	void mvpttobdry(int ntri,FLT r,FLT s, TinyVector<FLT,tet_mesh::ND> &pt) {
+		geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
+		return;
+	}
+};
+
 template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
 	public:
 		GEOM geometry_object;

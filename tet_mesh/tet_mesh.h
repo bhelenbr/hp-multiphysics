@@ -78,7 +78,9 @@ class tet_mesh : public multigrid_interface {
 			int tet;   /**< one tet connected to a segment */
 			int nnbor;    /**< number of neighboring tets */
 			int info;   /**< General purpose (mostly for adaptation) */
-			int nspk;  /**< Number of tris connected to this point */
+			int nspk;  /**< Number of tris connected to this seg */
+			int bnum;  /**< boundary number of edge/face bdry */
+			int lnum;  /**< local number on associated edge/face bdry */
 		};
 		Array<segstruct,1> seg; /**< Array of segment data */
 		//@}
@@ -101,6 +103,8 @@ class tet_mesh : public multigrid_interface {
 			TinyVector<int,2> tet;  /**< 2 tets sharing common tri */
 			TinyVector<int,3> sgn;  /**< sign convention for each segment on tri */
 			int info; /**< General purpose (mostly for adaptation) */
+			int bnum;  /**< face boundary number */
+			int lnum;  /**< local tri number on associated face bdry */
 		};
 		Array<tristruct,1> tri; /**< Array of triangle data */
 		
@@ -453,7 +457,8 @@ class edge_bdry : public boundary {
 			int gindx;  /**< global index of side */
 			int info; /**< General purpose (mostly for adaptation) */
 		};
-		  Array<segstruct,1> seg;
+		
+		Array<segstruct,1> seg;
 
 		/* CONSTRUCTOR */
 		edge_bdry(int inid, tet_mesh &xin) : boundary(inid), x(xin), maxseg(0)  {idprefix = x.gbl->idprefix +"_e" +idprefix; mytype="plain"; vbdry = -1;}

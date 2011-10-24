@@ -195,8 +195,8 @@ edge_bdry* tet_mesh::getnewedgeobject(int idnum, input_map& in_map) {
  */
 class ftype {
 	public:
-		static const int ntypes = 4;
-		enum ids {plain=1, comm, prdc, partition};
+		static const int ntypes = 6;
+		enum ids {plain=1, comm, prdc, partition,symbolic,symbolic_comm};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -205,7 +205,7 @@ class ftype {
 		}
 };
 
-const char ftype::names[ntypes][40] = {"plain","comm","prdc","partition"};
+const char ftype::names[ntypes][40] = {"plain","comm","prdc","partition","symbolic","symbolic_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
@@ -246,6 +246,14 @@ face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
 		}
 		case ftype::partition: {
 			temp = new fpartition(idnum,*this);
+			break;
+		}
+		case ftype::symbolic: {
+			temp = new fboundary_with_geometry<face_bdry,symbolic_shape<tet_mesh::ND> >(idnum,*this);
+			break;
+		}
+		case ftype::symbolic_comm: {
+			temp = new fboundary_with_geometry<fcomm,symbolic_shape<tet_mesh::ND> >(idnum,*this);
 			break;
 		}
 		default: {
