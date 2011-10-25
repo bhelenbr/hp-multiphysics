@@ -876,7 +876,7 @@ template<int ND> class geometry {
 
 template<int ND> class symbolic_point : public geometry<ND> {
 	protected:
-		TinyVector<symbolic_function<0>,2> loc;
+		TinyVector<symbolic_function<0>,ND> loc;
 	public:
 		symbolic_point() : geometry<ND>() {}
 		symbolic_point(const symbolic_point& tgt) : geometry<ND>(tgt), loc(tgt.loc) {}
@@ -884,42 +884,42 @@ template<int ND> class symbolic_point : public geometry<ND> {
 		void init(input_map& inmap, std::string idprefix, std::ostream& log) {
 			geometry<ND>::init(inmap,idprefix,log);
 
-			if (inmap.find(idprefix +"_locx0") != inmap.end()) {
-				loc(0).init(inmap,idprefix+"_locx0");
-			}
-			else {
-				log << "couldn't find shape function " << idprefix << "_locx0" << std::endl;
-				sim::abort(__LINE__,__FILE__,&log);
-			}
-
-			if (inmap.find(idprefix +"_locx1") != inmap.end()) {
-				loc(1).init(inmap,idprefix+"_locx1");
-			}
-			else {
-				log << "couldn't find shape function " << idprefix << "_locx1" << std::endl;
-				sim::abort(__LINE__,__FILE__,&log);
+			ostringstream nstr;
+			
+			for(int n=0;n<ND;++n) {
+				nstr.str("");
+				nstr << "_locx" << n;
+				
+				if (inmap.find(idprefix + nstr.str()) != inmap.end()) {
+					loc(n).init(inmap,idprefix+nstr.str());
+				}
+				else {
+					log << "couldn't find shape function " << idprefix << nstr.str() << std::endl;
+					sim::abort(__LINE__,__FILE__,&log);
+				}
 			}
 		}
 
 		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
-			pt(0) = loc(0).Eval(time);
-			pt(1) = loc(1).Eval(time);
+			for(int i = 0; i < ND; ++i)
+				pt(i) = loc(i).Eval(time);
 		}
 };
 
 template<int ND> class symbolic_shape : public geometry<ND> {
 	protected:
-		symbolic_function<ND> h, dhdx0, dhdx1;
+		symbolic_function<ND> h;
+		TinyVector<symbolic_function<ND>,ND> dhdx;
 		FLT hgt(TinyVector<FLT,ND> pt, FLT time = 0.0) {
 			return(h.Eval(pt,time));
 		}
 		FLT dhgt(int dir, TinyVector<FLT,ND> pt, FLT time = 0.0) {
-			if (dir) return(dhdx1.Eval(pt,time));
-			return(dhdx0.Eval(pt,time));
+			return(dhdx(dir).Eval(pt,time));
 		}
 	public:
 		symbolic_shape() : geometry<ND>() {}
-		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt),  h(tgt.h), dhdx0(tgt.dhdx0), dhdx1(tgt.dhdx1) {}
+		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt), h(tgt.h), dhdx(tgt.dhdx) {}
+
 		void init(input_map& inmap, std::string idprefix, std::ostream& log) {
 			geometry<ND>::init(inmap,idprefix,log);
 			if (inmap.find(idprefix +"_h") != inmap.end()) {
@@ -930,21 +930,21 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 				sim::abort(__LINE__,__FILE__,&log);
 			}
 
-			if (inmap.find(idprefix +"_dhdx0") != inmap.end()) {
-				dhdx0.init(inmap,idprefix+"_dhdx0");
+			ostringstream nstr;
+			
+			for(int n=0;n<ND;++n) {
+				nstr.str("");
+				nstr << "_dhdx" << n;
+				if (inmap.find(idprefix +nstr.str()) != inmap.end()) {
+					dhdx(n).init(inmap,idprefix+nstr.str());
+				}
+				else {
+					log << "couldn't find shape function for " << idprefix << nstr.str() << std::endl;
+					sim::abort(__LINE__,__FILE__,&log);
+				}
+			
 			}
-			else {
-				log << "couldn't find shape function for " << idprefix << "_dhdx0" << std::endl;
-				sim::abort(__LINE__,__FILE__,&log);
-			}
-
-			if (inmap.find(idprefix +"_dhdx1") != inmap.end()) {
-				dhdx1.init(inmap,idprefix+"_dhdx1");
-			}
-			else {
-				log << "couldn't find shape function " << idprefix << "_dhdx1" << std::endl;
-				sim::abort(__LINE__,__FILE__,&log);
-			}
+			
 		}
 
 };
