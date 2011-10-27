@@ -732,9 +732,8 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 }
 
 void hp_face_bdry::curv_init(int tlvl) {
-	int i,j,m,n,v0,v1,sind,info;
+	int i,j,m,n,v0,v1,sind;
 	TinyVector<FLT,tet_mesh::ND> pt;
-	char uplo[] = "U";
 	TinyMatrix<FLT,tet_mesh::ND,MXGP> crd;
 	int stridey = MXGP;
 
@@ -742,23 +741,13 @@ void hp_face_bdry::curv_init(int tlvl) {
 	do {
 		sind = base.seg(j).gindx;
 		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
 		base.mvpttobdry(j,-1.0, x.pnts(v0));
+		base.mvpttobdry(j,1.0, x.pnts(v1));/* extra work but necessary to not skip vertices */
 	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 	
 	if (!curved || basis::tet(x.log2p).p == 1) return;
 	
-	
-//	
-//	/* SKIP END VERTICES */
-//	for(j=1;j<base.npnt;++j) {
-//		v0 = base.pnt(j).gindx;
-//		base.mvpttobdry(base.pnt(j).tri,-1.0,-1.0,x.pnts(v0));  // FIXME WRONG
-//	}
-//
-//	if (basis::tet(x.log2p).p == 1) return;
-		
 	/*****************************/
 	/* SET UP HIGHER ORDER MODES */
 	/*****************************/
@@ -775,8 +764,7 @@ void hp_face_bdry::curv_init(int tlvl) {
 			pt(0) = crd(0,i);
 			pt(1) = crd(1,i);
 			pt(2) = crd(2,i);
-			//base.mvpttobdry(base.seg(j).tri(0),-1.0,basis::tet(x.log2p).xp(i),pt); // FIXME
-			base.mvpttobdry(base.seg(j).gindx,basis::tet(x.log2p).xp(i),pt); // FIXME
+			base.mvpttobdry(base.seg(j).gindx,basis::tet(x.log2p).xp(i),pt);
 			crd(0,i) -= pt(0);
 			crd(1,i) -= pt(1);
 			crd(2,i) -= pt(2);
@@ -786,15 +774,14 @@ void hp_face_bdry::curv_init(int tlvl) {
 			basis::tet(x.log2p).intgrt1d(&x.cf(n,0),&crd(n,0));
 		
 			for(m=0;m<basis::tet(x.log2p).em;++m)
-			ecrvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
+				ecrvbd(tlvl)(j,m)(n) = -x.cf(n,m+2)*basis::tet(x.log2p).diag1d(m);
 		}
 	}
 	
 	if (basis::tet(x.log2p).fm <= 0) return;  
 	
 	for(j=0;j<base.ntri;++j) {
-		int tind = base.tri(j).gindx;
-		// x.crdtocht2d_bdry(tind,tlvl);  FIXME
+		x.crdtocht2d(base.tri(j).gindx,tlvl);
 		
 		for(n=0;n<tet_mesh::ND;++n)
 			basis::tet(x.log2p).proj2d_bdry(&x.cht(n)(0),&x.crd2d(n)(0)(0),stridey);
@@ -814,7 +801,7 @@ void hp_face_bdry::curv_init(int tlvl) {
 		for(n=0;n<tet_mesh::ND;++n) {
 			basis::tet(x.log2p).intgrt2d(&x.lf(n)(0),&x.crd2d(n)(0)(0),stridey);
 			for(i=0;i<basis::tet(x.log2p).fm;++i){
-			fcrvbd(tlvl)(j,m)(n) = -x.lf(n)(3+3*basis::tet(x.log2p).em+i)*basis::tet(x.log2p).diag2d(i);
+				fcrvbd(tlvl)(j,m)(n) = -x.lf(n)(3+3*basis::tet(x.log2p).em+i)*basis::tet(x.log2p).diag2d(i);
 			}
 		}
 	}
