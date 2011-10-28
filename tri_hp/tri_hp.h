@@ -296,7 +296,7 @@ class tri_hp_helper {
 				std::string fname;
 				nstr << x.gbl->tstep << std::flush;
 				fname = "rstrt" +nstr.str() +"_" +x.gbl->idprefix;
-				x.input(fname);
+				if (!x.coarse_flag) x.input(fname);
 			} 
 		}
 		virtual void setup_preconditioner() {}
