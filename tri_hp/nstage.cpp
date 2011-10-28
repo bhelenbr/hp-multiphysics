@@ -373,7 +373,7 @@ void tri_hp::update() {
 
 		for(i=0;i<nseg;++i) {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
-				*gbl->log << gbl->idprefix << " ug.s: " << i << '\n';
+				*gbl->log << gbl->idprefix << " ug.s: " << i << ' ';
 				for(n=0;n<NV;++n) {
 					if (fabs(ug.s(i,m,n)) > DEBUG_TOL) *gbl->log << ug.s(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
