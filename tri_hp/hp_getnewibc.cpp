@@ -255,9 +255,18 @@ class cartesian_interpolation : public tri_hp_helper {
 			post_process = true;
 			std::ofstream out;
 			std::ostringstream filename;
-			filename << "cartesian_pts" << x.gbl->tstep << ".dat";
+			
+			
+			TinyVector<FLT,tri_mesh::ND> xmin, xmax;
+			for(int n=0;n<tri_mesh::ND;++n) {
+				xmin[n] = x.qtree.xmin(n);
+				xmax[n] = x.qtree.xmax(n);
+				if (bbox(0,n) > xmax(n) || bbox(1,n) < xmin(n))
+					return;
+			}
+			filename << "cartesian_pts" << x.gbl->tstep << "_" << x. gbl->idprefix << ".dat";
 			out.open(filename.str().c_str());
-			out << "ZONE I=" << ndiv(0)+1 << ", J=" << ndiv(1)+1 << ", F=POINT\n"; 
+			out << "ZONE I=" << ndiv(0)+1 << ", J=" << ndiv(1)+1 << ", F=POINT\n";
 
 			int tind = -1;
 			for (int jx=0;jx<ndiv(1)+1;++jx) {
