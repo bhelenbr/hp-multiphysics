@@ -76,33 +76,69 @@ void tri_hp::rsdl(int stage) {
 		}
 	}
 	
+	
+	
 #ifdef RSDL_DEBUG
-	int i, n;
-//	if (coarse_flag) {
-		for(i=0;i<npnt;++i) {
-			*gbl->log << "rsdl v: " << i << ' ';
-			for (n=0;n<NV;++n) 
-				*gbl->log << gbl->res.v(i,n) << ' ';
+	int last_phase, mp_phase;
+	int i,m,n;
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,gbl->res.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
+	}
+	
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->vdirichlet();
+	
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->vdirichlet2d();
+			
+	sc0load(gbl->res.s.data(),0,basis::tri(log2p)->sm()-1,gbl->res.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(gbl->res.s.data(),0,basis::tri(log2p)->sm()-1,gbl->res.s.extent(secondDim));
+	
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int i=0;i<nebd;++i)
+		for(int sm=0;sm<basis::tri(log2p)->sm();++sm)
+			hp_ebdry(i)->sdirichlet(sm);
+	
+	// if (coarse_level || log2p != log2pmax) {	
+	for(i=0;i<npnt;++i) {
+		*gbl->log << gbl->idprefix << " v: " << i << ' ';
+		for(n=0;n<NV;++n) {
+			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+			else *gbl->log << "0.0 ";
+		}
+		*gbl->log << '\n';
+	}
+	
+	for(i=0;i<nseg;++i) {
+		for(m=0;m<basis::tri(log2p)->sm();++m) {
+			*gbl->log << gbl->idprefix << " s: " << i << ' ';
+			for(n=0;n<NV;++n) {
+				if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
 			*gbl->log << '\n';
 		}
-		
-		for(i=0;i<nseg;++i) {
-			for(int m=0;m<basis::tri(log2p)->sm();++m) {
-				*gbl->log << "rsdl s: " << i << ' ' << m << ' '; 
-				for(n=0;n<NV;++n)
-					*gbl->log << gbl->res.s(i,m,n) << ' ';
-				*gbl->log << '\n';
+	}
+	
+	
+	for(i=0;i<ntri;++i) {
+		for(m=0;m<basis::tri(log2p)->im();++m) {
+			*gbl->log << gbl->idprefix << " i: " << i << ' ';
+			for(n=0;n<NV;++n) {
+				if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
+			*gbl->log << '\n';
 		}
-		
-		for(i=0;i<ntri;++i) {
-			for(int m=0;m<basis::tri(log2p)->im();++m) {
-				*gbl->log << "rsdl i: " << i << ' ' << m << ' ';
-				for(n=0;n<NV;++n) 
-					*gbl->log << gbl->res.i(i,m,n) << ' ';
-				*gbl->log << '\n';
-			}
-		}
+	}
+	sim::finalize(__LINE__,__FILE__,gbl->log);		
+
 //	}
 #endif
 	
