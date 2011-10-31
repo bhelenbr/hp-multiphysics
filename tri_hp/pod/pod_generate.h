@@ -10,7 +10,7 @@
 #ifndef _POD_GENERATE_H_
 #define _POD_GENERATE_H_
 
-//#define LOWNOISE
+#define LOWNOISE
 
 #ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry;

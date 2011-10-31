@@ -371,12 +371,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".dat";
 		ofstream out;
 		out.open(filename.c_str());
+		out.precision(8);
 
 		for (l=0;l<nmodes;++l) {
 			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
-			out << psimatrix_recv(k*nmodes +l);
-			out << std::endl;
-
+			out << psimatrix_recv(k*nmodes +l) << std::endl;
 		}
 
 		bout.close();
@@ -652,6 +651,57 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			BASE::ugbd(1).i(Range(0,BASE::ntri-1)) -= dotp_recv*BASE::ug.i(Range(0,BASE::ntri-1));
 			BASE::output(filename, BASE::binary, 1);
 			coeff(k,eig_ct) = dotp_recv;
+
+#ifdef TEST_MODES
+			/* TESTING */
+			nstr.str("");
+			nstr << k*restart_interval +restartfile << std::flush;
+			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+			BASE::input(filename, BASE::binary, 1);
+			dotp = 0.0;
+			
+			for(tind=0;tind<BASE::ntri;++tind) {          
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				BASE::crdtocht(tind);
+				
+				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(n=0;n<BASE::ND;++n)
+					basis::tri(BASE::log2p)->proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+				
+				/* PROJECT SNAPSHOT TO GAUSS POINTS */
+				BASE::ugtouht(tind);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+				
+				/* PROJECT MODE TO GAUSS POINTS */
+				BASE::ugtouht(tind,1);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+				
+				
+				FLT tmp_store = 0.0;
+				for(i=0;i<lgpx;++i) {
+					for(j=0;j<lgpn;++j) {
+						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+						for(n=0;n<BASE::NV;++n) {
+							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						}
+					}
+				}
+				low_noise_dot(tind) = tmp_store;
+			}
+			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+				for (tind=0;tind<halfcount;++tind) 
+					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+			}
+			dotp = low_noise_dot(0);
+			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
+			
+			*BASE::gbl->log << "Hrmmph: " << dotp_recv << ' ' << coeff(k,eig_ct) << ' ' << coeff(k,eig_ct) - dotp_recv << std::endl;
+#endif
+
 		}
 	}
 
@@ -670,13 +720,21 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+		
+		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".dat";
+		ofstream out;
+		out.open(filename.c_str());
+		out.precision(8);
 
-		for (l=0;l<nmodes;++l) 
-			bout.writeFloat(coeff(k-restartfile,l),binio::Double);
+		for (l=0;l<nmodes;++l) {
+			bout.writeFloat(coeff(k,l),binio::Double);
+			out << coeff(k,l) << std::endl;
+		}
 
 		bout.close();
+		out.close();
 	}
-
+	
 #ifdef POD_BDRY
 	/* NOW GENERATE BDRY POD MODES */
 	for (int i=0;i<BASE::nebd;++i)
