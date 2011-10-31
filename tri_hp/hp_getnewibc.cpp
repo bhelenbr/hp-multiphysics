@@ -259,8 +259,8 @@ class cartesian_interpolation : public tri_hp_helper {
 			
 			TinyVector<FLT,tri_mesh::ND> xmin, xmax;
 			for(int n=0;n<tri_mesh::ND;++n) {
-				xmin[n] = x.qtree.xmin(n);
-				xmax[n] = x.qtree.xmax(n);
+				xmin(n) = x.qtree.xmin(n);
+				xmax(n) = x.qtree.xmax(n);
 				if (bbox(0,n) > xmax(n) || bbox(1,n) < xmin(n))
 					return;
 			}
@@ -271,10 +271,30 @@ class cartesian_interpolation : public tri_hp_helper {
 			int tind = -1;
 			for (int jx=0;jx<ndiv(1)+1;++jx) {
 				xpt(1) = bbox(0,1) +jx*(bbox(1,1)-bbox(0,1))/ndiv(1);
+				if ((xpt(1)-xmin(1))*(xmax(1)-xpt(1)) < 0.0) {
+					/* Skip entire row */
+					for (int ix=0;ix<ndiv(0)+1;++ix) {
+						xpt(0) = bbox(0,0) +ix*(bbox(1,0)-bbox(0,0))/ndiv(0);
+						for(int n=0;n<x.ND;++n) {
+							out << xpt(n) << ' ';
+						}
+						for(int n=0;n<x.NV;++n) {
+							out << 0.0 << ' ';
+						}
+						out << '\n';
+					}
+					continue;
+				}
 				for (int ix=0;ix<ndiv(0)+1;++ix) {
 					xpt(0) = bbox(0,0) +ix*(bbox(1,0)-bbox(0,0))/ndiv(0);
-					bool found = x.ptprobe(xpt,u,tind);
-					if (!found) u = 0.0;
+					
+					if ((xpt(0)-xmin(0))*(xmax(0)-xpt(0)) > 0.0) {
+						bool found = x.ptprobe(xpt,u,tind);
+						if (!found) u = 0.0;
+					}
+					else {
+						u = 0.0;
+					}
 					for(int n=0;n<x.ND;++n) {
 						out << xpt(n) << ' ';
 					}
@@ -388,7 +408,7 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
 
 	/* FIND INITIAL CONDITION TYPE */
 	if (!inmap.get(gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("tri_hp_helper",movername,std::string("default"));
+		inmap.getwdefault("helper",movername,std::string("default"));
 
 	type = helper_type::getid(movername.c_str());
 
