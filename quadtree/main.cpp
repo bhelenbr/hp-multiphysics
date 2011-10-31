@@ -25,7 +25,7 @@ int main() {
 
 #ifdef TEST
 	class quadtree<2> testtree,testtree2;
-	TinyVector<FLT,2> x1(0.0,0.0),x2(1.0,1.0);
+	TinyVector<FLT,2> x1(0.0,0.0),x2(1.0,1.0),x3(1.1,1.1);
 	FLT vtest[17][2] = {{0.1,0.1},{0.2,0.4},{.9,0.2},{.125,0.7},{0.51,0.53},{0.85,0.15},{0.25,0.85},{0.99,0.99},{0.001,.3},{0.01,0.3},{0.2,0.1},
 	{2.0,2.0},{0.9,0.9},{0.9,0.9},{0.9,0.9},{0.9,0.9},{0.9,0.9}};
 	blitz::Array<blitz::TinyVector<FLT,2>,1> vtest2(17);
@@ -71,6 +71,9 @@ int main() {
 	printf("%d %f\n",i,dist);  
 	
 	dist = testtree.nearpt(0, i); 
+	printf("%d %f\n",i,dist);
+	
+	dist = testtree.nearpt(x3.data(), i); 
 	printf("%d %f\n",i,dist);
 	
 	testtree.output("out");

@@ -327,17 +327,29 @@ template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
 }
 
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
-template<int ND> FLT quadtree<ND>::nearpt(const TinyVector<FLT,ND> x, int& pt) const {
+template<int ND> FLT quadtree<ND>::nearpt(const TinyVector<FLT,ND> xin, int& pt) const {
     int i,n,nsrch,exclude;
     class box<ND> *topbox;
     FLT dist,mindist;
-		TinyVector<FLT,ND> dx,xh,xl;
+		TinyVector<FLT,ND> x,dx,xh,xl,dx1,dx2;
     class box<ND> *qpt;
 
+		x = xin;
     mindist = 0.0;
     for(n=0;n<ND;++n) {
         xl[n] = base[0].xmin[n];
         xh[n] = base[0].xmax[n];
+				dx1(n) = x(n) -xl[n];
+				dx2(n) = x(n) -xh[n];
+				if (dx1(n)*dx2(n) > 0.0) {
+					std::cout << "Searching for point outside of quadtree bounding box ";
+					std::cout << n << ' ' << xl[n] << ' ' << xh[n] << ' ' << x(n) << std::endl;
+					if (dx1(n) < 0.0)
+						x(n) = xl(n);
+					else {
+						x(n) = xh(n);
+					}
+				}
         mindist += pow(xh[n]-xl[n],2);
     }
     nsrch = 0;
