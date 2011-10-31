@@ -10,6 +10,10 @@
 #include <myblas.h>
 #include <libbinio/binfile.h>
 
+#define FULL_JACOBIAN
+
+//#define DEBUG
+
 #ifdef POD_BDRY
 struct bd_str {
 	int nmodes;
@@ -258,7 +262,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 #endif
 		sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 		coeffs(l) = dotp_recv;
-	}
+	}     
 	
 	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
@@ -300,9 +304,8 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 template<class BASE> void pod_simulate<BASE>::tadvance() {
 
 	BASE::tadvance();
-
-	/* EXTRAPOLATE GUESS FOR COEFF'S HERE FOR NEXT TIME STEP??*/
 	
+	/* EXTRAPOLATE GUESS FOR COEFF'S HERE FOR NEXT TIME STEP??*/
 	
 	/* CALCULATE SOLUTION BASED ON COEFFS */
 	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
@@ -330,16 +333,15 @@ template<class BASE> void pod_simulate<BASE>::tadvance() {
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nebd;++i)
-	BASE::hp_ebdry(i)->vdirichlet();
+		BASE::hp_ebdry(i)->vdirichlet();
 
 	for(int i=0;i<BASE::nvbd;++i)
-	BASE::hp_vbdry(i)->vdirichlet2d();
+		BASE::hp_vbdry(i)->vdirichlet2d();
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
-	for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
-	BASE::hp_ebdry(i)->sdirichlet(sm);
-
+		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+			BASE::hp_ebdry(i)->sdirichlet(sm);
 
 	BASE::ug.v(Range(0,BASE::npnt-1)) += BASE::gbl->res.v(Range(0,BASE::npnt-1));
 	BASE::ug.s(Range(0,BASE::nseg-1)) += BASE::gbl->res.s(Range(0,BASE::nseg-1));
@@ -351,36 +353,48 @@ template<class BASE> void pod_simulate<BASE>::tadvance() {
 template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	BASE::rsdl(stage);
-
-	rsdls = 0.0;  // Need to do this, because not every block will touch every rsdl
-
+	
+#ifdef DEBUG
+	int last_phase, mp_phase;
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,BASE::gbl->res.v.data());
+		BASE::pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,BASE::gbl->res.v.data());
+	}
+	sc0load(BASE::gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::gbl->res.s.extent(secondDim));
+	BASE::smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(BASE::gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::gbl->res.s.extent(secondDim));
+#endif
+	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nebd;++i)
 		BASE::hp_ebdry(i)->vdirichlet();
-
+	
 	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
-
+		
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
 		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
-
+	
+	rsdls = 0.0;  // Need to do this, because not every block will touch every rsdl		
 	for (int k = 0; k < nmodes; ++k) {
 		for(int i=0; i<BASE::npnt;++i)
-			for(int n=0;n<BASE::NV;++n)
+			for(int n=0;n<BASE::NV;++n) 
 				rsdls(k) += modes(k).v(i,n)*BASE::gbl->res.v(i,n);
 
 		for(int i=0; i<BASE::nseg;++i)
 			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
-				for(int n=0;n<BASE::NV;++n)
+				for(int n=0;n<BASE::NV;++n) 
 					rsdls(k) += modes(k).s(i,sm,n)*BASE::gbl->res.s(i,sm,n);
 
 		for(int i=0; i<BASE::ntri;++i)
 			for(int im=0;im<basis::tri(BASE::log2p)->im();++im)
-				for(int n=0;n<BASE::NV;++n)
+				for(int n=0;n<BASE::NV;++n) 
 					rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
-
 	}
 
 #ifdef POD_BDRY
@@ -404,9 +418,9 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 	for(int i=0;i<BASE::nebd;++i) 
 		pod_ebdry(i)->finalrcv(rsdls_recv);
 #endif
-
+	
 	sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),tmodes,blocks::flt_msg,blocks::sum,pod_id);	
-
+	
 	return;
 }
 
@@ -414,6 +428,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	BASE::setup_preconditioner();
+		
 	rsdl(BASE::gbl->nstage);
 
 	/* STORE BASELINE IN LAST COLUMN */
@@ -424,7 +439,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
 		/* PERTURB EACH COEFFICIENT */
-		FLT delta = 1.0e-2*coeffs(modeloop) +1.0e-12;
+		FLT delta = 1.0e-2*coeffs(modeloop) +1.0e-8;
 		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = delta*modes(modeloop).v(Range(0,BASE::npnt-1));
 		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = delta*modes(modeloop).s(Range(0,BASE::nseg-1));
 		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = delta*modes(modeloop).i(Range(0,BASE::ntri-1));
@@ -487,6 +502,8 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
 	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
 
+	
+#ifdef FULL_JACOBIAN
 	/* FACTORIZE PRECONDITIONER */
 	int info;
 	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
@@ -494,25 +511,61 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
+#endif
+
 	return;
 }
 
 template<class BASE> void pod_simulate<BASE>::update() {
-	char trans[] = "T";
-	int info;
 
 	rsdl(BASE::gbl->nstage);
+	
+#ifdef DEBUG
+//	for(int i=0; i<BASE::npnt;++i)
+//		for(int n=0;n<BASE::NV;++n) {
+//			if (fabs(BASE::gbl->res.v(i,n)) > 1.0e-9) {
+//				*BASE::gbl->log << "v" << i << ' ' << n << ' ' << BASE::gbl->res.v(i,n) << std::endl;
+//			}
+//		}
+//	
+//	for(int i=0; i<BASE::nseg;++i)
+//		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+//			for(int n=0;n<BASE::NV;++n) {
+//				if (fabs(BASE::gbl->res.s(i,sm,n)) > 1.0e-9) {
+//					*BASE::gbl->log <<  "s" << i << ' ' << sm << ' ' << n << ' ' << BASE::gbl->res.s(i,sm,n) << std::endl;
+//				}
+//			}
+//	
+//	for(int i=0; i<BASE::ntri;++i)
+//		for(int im=0;im<basis::tri(BASE::log2p)->im();++im)
+//			for(int n=0;n<BASE::NV;++n) {
+//				if (fabs(BASE::gbl->res.i(i,im,n)) > 1.0e-9) {
+//					*BASE::gbl->log << "i" << i << ' ' << im << ' ' << n << ' ' << BASE::gbl->res.i(i,im,n) << std::endl;
+//				}
+//			}
+			
+	*BASE::gbl->log << "These are the residuals " << rsdls_recv(Range(0,tmodes-1)) << std::endl;
+#endif
 
+#ifdef FULL_JACOBIAN
+	char trans[] = "T";
+	int info;
+	
 	GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
 	if (info != 0) {
 		*BASE::gbl->log << "DGETRS FAILED FOR POD UPDATE " << info << std::endl;
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
+#else
+	for(int i=0;i<tmodes;++i)
+		rsdls_recv(i) /= 2*tmodes*jacobian(i,i);
+#endif
+		
 	/* Need to fix pod boundaries so coefficients are equal */
 	/* store rsdls_recv to compare to after boundary comm */
 	rsdls0 = rsdls_recv;	
 	rsdls = rsdls_recv;
-
+	
 #ifdef POD_BDRY
 	/* COMMUNICATE POD BDRY CORRECTIONS */
 	for(int i=0;i<BASE::nebd;++i)
@@ -540,7 +593,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	rsdls_recv += rsdls0;
 #endif
 
-	coeffs -= rsdls_recv;
+	coeffs -= rsdls_recv;	
 
 	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
 	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
