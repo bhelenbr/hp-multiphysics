@@ -481,7 +481,7 @@ void tet_hp::setinfo() {
 				}
 			}
 			for(int j = 0; j < 6; ++j){
-				int eind = tet(i).tri(j);
+				int eind = tet(i).seg(j);
 				if(seg(eind).info != -1){
 					tet(i).info = 1;
 					break;
