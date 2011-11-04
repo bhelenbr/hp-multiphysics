@@ -39,6 +39,7 @@ template<class BASE> class pod_simulate : public BASE {
 		void init(input_map& input, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
 		void output(const std::string& fname, block::output_purpose why);
+		// void calc_coeffs();
 		void tadvance();
 		void rsdl(int stage);
 		void setup_preconditioner();
@@ -80,13 +81,22 @@ template<class BASE> class pod_sim_edge_bdry {
 		void finalrcv(Array<FLT,1>& sdata);
 };
 
-//template<class BASE> class pod_coefficients : public pod_simulate<BASE> {
-//	ofstream coefficient_file;
+//template<class BASE> class calc_coeffs : public tri_hp_helper {	
+//	protected:
+//		pod_simulate<BASE> &x;
+//
 //	public:
-//		pod_coefficents<BASE>* create() { return new pod_coefficients<BASE>();}
-//    void init(input_map& input); // Read name of coefficient file and open it for writing in tadvance
-//		void tadvance();
-//}
+//		tri_hp_helper(tri_hp& xin) : x(xin), post_process(false) {}
+//		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin), post_process(in_help.post_process) {}
+//		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
+//		virtual ~tri_hp_helper() {};
+//		virtual void tadvance() {
+//			tri_hp_helper::tadvance(); // Loads restart files when post-processing is on
+//			x.calc_coeffs(); 
+//		}
+//};
+	
+	
 
 #endif
 
