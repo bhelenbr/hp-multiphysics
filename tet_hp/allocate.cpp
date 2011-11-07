@@ -235,6 +235,13 @@ void tet_hp::init(input_map& inmap, void *gin) {
 		tobasis(gbl->ibc);
 	}
 	
+	/* fix volume of tets after they are curved */
+	if(basis::tet(log2p).p > 1) {
+		for(i=0;i<ntet;++i) {
+			tet(i).vol = volume_curved(i); /* which is actually 8*volume */
+		}
+	}
+	
 	if(basis::tet(log2p).p == 3){
 		spkmass.resize(npnt);
 		spklink.resize(npnt);
@@ -487,7 +494,7 @@ void tet_hp::setinfo() {
 					break;
 				}
 			}
-		}	
+		}
 	}
 	
 	return;
@@ -524,4 +531,48 @@ FLT tet_hp::maxres() {
 	
 }
 
+
+/* calculate jacobian including curvature */
+FLT tet_hp::jacobian(int tind) {
+	
+	TinyVector<int,4> v;
+	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
+	int stridey = MXGP;
+	int stridex = MXGP*MXGP; 
+	FLT cjcb = 0.0;
+	
+	
+	/* LOAD INDICES OF VERTEX POINTS */
+	v = tet(tind).pnt;
+	
+	if (tet(tind).info < 0) {		
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpy;++j) {
+				for(int k=0;k<lgpz;++k) {
+					for(int n=0;n<ND;++n) {
+						dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
+						dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(1))(n) -pnts(tet(tind).pnt(2))(n));
+						dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(0))(n) -pnts(tet(tind).pnt(2))(n));
+					}
+				}
+			}
+		}
+	}
+	else {
+		crdtocht(tind);
+		for(int n=0;n<ND;++n)
+			basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
+	}
+	
+	for(int i=0;i<lgpx;++i) {
+		for(int j=0;j<lgpy;++j) {
+			for(int k=0;k<lgpz;++k) {
+				cjcb += basis::tet(log2p).wtx(i)*basis::tet(log2p).wty(j)*basis::tet(log2p).wtz(k)*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
+
+			}
+		}
+	} 
+		
+	return(cjcb);
+}
 

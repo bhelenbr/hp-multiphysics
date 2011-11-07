@@ -88,7 +88,7 @@ void tet_hp_cd::setup_preconditioner() {
 		jcb = 0.125*tet(tind).vol*dtstari;
 #endif
 		/* explicit */
-		//jcb = 0.125*tet(tind).vol*12000.0;
+		jcb = 0.125*tet(tind).vol*12000.0;
 		
 		gbl->iprcn(tind,0) = jcb; 
 			
@@ -109,7 +109,7 @@ void tet_hp_cd::setup_preconditioner() {
 		}	
 
 	}
-	
+
 	tet_hp::setup_preconditioner();
 	
 	return; 

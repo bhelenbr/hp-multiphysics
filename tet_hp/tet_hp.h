@@ -186,6 +186,11 @@ class tet_hp : public tet_mesh  {
 		/* SETUP V/S/T INFO */
 		void setinfo();
 		
+		/* Calculate more accurate determinant of jacobian */
+		FLT jacobian(int tind);
+		FLT volume_curved(int tind) {return(6.0*jacobian(tind));}
+			   
+		
 	public:
 		tet_hp() : tet_mesh() {}
 		virtual tet_hp* create() {return new tet_hp;}
