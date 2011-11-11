@@ -780,8 +780,8 @@ void face_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 
 		// Assumes Definition of face is compatible with definition on tet, which should always be true :-)
 		cnnct(p0).wt(vf1(k,0)) = 0.5*(1.+s);
-		cnnct(p0).wt(vf1(k,1)) = 0.5*(-r -s);
-		cnnct(p0).wt(vf1(k,2)) = 0.5*(1.+r);
+		cnnct(p0).wt(vf1(k,2)) = 0.5*(-r -s);
+		cnnct(p0).wt(vf1(k,1)) = 0.5*(1.+r);
 	}
 	
 	return;

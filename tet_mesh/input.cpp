@@ -83,7 +83,8 @@ void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizer
 			vbdry(i)->alloc(4);
 		}
 		otree.allocate(pnts, maxvst);
-		coarse_level = inmesh.coarse_level+1;
+		if (why == multigrid) coarse_level = inmesh.coarse_level+1;
+		else coarse_level = 0;
 		initialized = 1;
 	}
 	 
@@ -169,6 +170,20 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 	else 
 		grd_nm = filename;
 
+	/* Override filetype based on ending? */
+	size_t dotloc;
+	dotloc = grd_nm.find_last_of('.');
+	string ending;
+	ending = grd_nm.substr(dotloc+1);
+	if (ending == "grd") {
+		filetype = grid;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "msh") {
+		filetype = gmsh;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	
 	switch (filetype) { 
 					
 		case(baker):
