@@ -9,9 +9,9 @@
 
 #include "tet_hp.h"
 
-#define MASS
+//#define MASS
 #define CD
-//#define INS
+#define INS
 #define CNS
 //#define CNS_EXPLICIT
 

@@ -21,11 +21,10 @@ void tet_hp_cd::minvrt() {
 
 	int i,k,m,n,indx,eind,cnt,find;
 	int sign, msgn;
-	int j,tind,p0,p1,p2;
+	int j,tind;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP;
-	FLT jcb,a,h,amax,amin,hmax,hmin,havg,maxvres,maxeres;
-	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
+	FLT maxvres,maxeres;
 	TinyVector<int,4> v;
 	Array<TinyVector<TinyVector<TinyVector<double,MXGP>,MXGP>,MXGP>,1> ug0(NV);
 	TinyVector<FLT,3> pt;

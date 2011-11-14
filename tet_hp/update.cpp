@@ -379,10 +379,11 @@ void tet_hp::update() {
 #endif
 
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
-
+		
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 
 		if (basis::tet(log2p).em > 0) {
+			
 			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 
 			if (basis::tet(log2p).fm > 0) {
@@ -434,7 +435,7 @@ void tet_hp::update() {
 		for(i=0;i<nvbd;++i) {
 			hp_vbdry(i)->update(stage);
 		}
-		l2error(gbl->ibc);
+
 #ifdef DEBUG
 //   if (coarse_level) {
 #ifdef PTH

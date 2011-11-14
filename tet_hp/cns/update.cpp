@@ -71,6 +71,15 @@ void tet_hp_cns::update() {
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 		
 		if (basis::tet(log2p).em > 0) {
+//			FLT maxrese = 0.0;
+//			
+//			for(int i=0;i<nseg;++i)
+//				for(int n=0;n<NV;++n)
+//					if(maxrese < fabs(gbl->res.e(i,0,n)))
+//						maxrese = fabs(gbl->res.e(i,0,n));
+//			
+//			cout << maxrese << endl;
+			
 			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 			
 			if (basis::tet(log2p).fm > 0) {
@@ -283,8 +292,8 @@ void tet_hp_cns::minvrt() {
 	}
 	
 	
-	//basis::tet(log2p).ediag(0) = 120.0;//for fast convergence 
-	basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
+	basis::tet(log2p).ediag(0) = 100.0;//for fast convergence 
+	//basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
 	gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {

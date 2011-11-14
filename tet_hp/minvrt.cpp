@@ -193,8 +193,8 @@ void tet_hp::minvrt() {
 	}
 	
 	if(basis::tet(log2p).p == 2) {
-		//basis::tet(log2p).ediag(0) = 120.0;//for fast convergence  maybe 50?
-		basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
+		basis::tet(log2p).ediag(0) = 100.0;//for fast convergence  maybe 50?
+		//basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 		
 		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
@@ -575,7 +575,7 @@ void tet_hp::spoke(){
 }
 
 void tet_hp::minvrt_test() {
-	int i,j,k,n,find,tind,p0,p1,p2,v0;
+	int i,j,k,n,find,tind,p0,p1,p2;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP;
 	FLT jcb,a,h,amax,amin,hmax,hmin,havg;

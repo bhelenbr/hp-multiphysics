@@ -347,10 +347,86 @@ namespace ibc_cns {
 		}
 	};
 	
+	
+	class spinninglid : public init_bdry_cndtn {
+
+	private:
+		FLT omega,epsilon,radius,height,gamma;
+	public:
+		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
+			double R,A,B,C,D;
+			R=radius;
+			A=-omega*R*(-R*R*R+3*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
+			B=omega*(-3*R*R*R+6*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
+			C=-3*(-R+epsilon)*R*omega/(epsilon*epsilon*epsilon);
+			D=-R*omega/(epsilon*epsilon*epsilon);
+			switch(n) {
+				case(0):
+					return(1.0/gamma);
+				case(1):
+					return(0.0);
+				case(2):
+					if(x(0)<height) {
+						return(0.0);
+					}
+					else {
+						if(x(0)<R-epsilon) {
+							return(x(3)*omega);
+						}
+						else {
+							return(A+B*x(3)+C*x(3)*x(3)+D*x(3)*x(3)*x(3));
+						}
+					}
+				case(3):
+					if(x(0)<height) {
+						return(0.0);
+					}
+					else {
+						if(x(0)<R-epsilon) {
+							return(-x(2)*omega);
+						}
+						else {
+							return(-A-B*x(2)-C*x(2)*x(2)-D*x(2)*x(2)*x(2));
+						}
+					}				
+				case(4):
+					return(1.0/gamma);
+			}
+			return(0.0);
+		}
+		
+		void input(input_map &blockdata,std::string idnty) {
+			std::string keyword,val;
+			std::istringstream data;
+			
+			keyword = idnty +"_rotationalspeed";
+			if (!blockdata.get(keyword,omega)) 
+				blockdata.getwdefault("rotationalspeed",omega,0.1); 
+			
+			keyword = idnty +"_offset";
+			if (!blockdata.get(keyword,epsilon)) 
+				blockdata.getwdefault("offset",epsilon,0.01); 
+			
+			keyword = idnty +"_height";
+			if (!blockdata.get(keyword,height)) 
+				blockdata.getwdefault("height",height,2.5); 
+			
+			keyword = idnty +"_radius";
+			if (!blockdata.get(keyword,radius)) 
+				blockdata.getwdefault("radius",radius,1.0); 
+			
+			keyword = idnty +"_gamma";
+			if (!blockdata.get(keyword,gamma)) 
+				blockdata.getwdefault("gamma",gamma,1.4);
+			
+		}
+	};
+	
+	
 	class ibc_type {
 		public:
-			const static int ntypes = 4;
-			enum ids {freestream,sphere,ringleb,hydrostatic};
+			const static int ntypes = 5;
+			enum ids {freestream,sphere,ringleb,hydrostatic,spinninglid};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -359,7 +435,7 @@ namespace ibc_cns {
 				return(-1);
 		}
 	};
-	const char ibc_type::names[ntypes][40] = {"freestream","sphere","ringleb","hydrostatic"};
+	const char ibc_type::names[ntypes][40] = {"freestream","sphere","ringleb","hydrostatic","spinninglid"};
 	
 	
 	class helper_type {
@@ -438,7 +514,11 @@ init_bdry_cndtn *tet_hp_cns::getnewibc(std::string suffix, input_map& inmap) {
 		case ibc_cns::ibc_type::hydrostatic: {
 			temp = new ibc_cns::hydrostatic;
 			break;
-		}		
+		}	
+		case ibc_cns::ibc_type::spinninglid: {
+			temp = new ibc_cns::spinninglid;
+			break;
+		}	
 		default: {
 			return(tet_hp::getnewibc(suffix,inmap));
 		}

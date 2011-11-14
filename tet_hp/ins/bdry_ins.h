@@ -143,7 +143,7 @@ namespace bdry_ins {
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
 		
 		void vdirichlet() {
-			int sind,v0;
+			int v0;
 			
 			for(int j=0;j<base.npnt;++j) {
 				v0 = base.pnt(j).gindx;
@@ -234,7 +234,7 @@ namespace bdry_ins {
 			}
 		
 			void vdirichlet() {
-				int sind,v0;
+				int v0;
 				
 				for(int j=0;j<base.npnt;++j) {
 					v0 = base.pnt(j).gindx;

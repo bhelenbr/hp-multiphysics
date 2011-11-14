@@ -216,15 +216,18 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	
 	FLT hdt = 0.5*h*gbl->bd(0)/c;
 	FLT umag = sqrt(u*u+v*v+w*w);
-	FLT M = MAX(umag/c,1.0e-5);
+	FLT M = MIN(MAX(umag/c,1.0e-5),0.8);
 	FLT nuh = 4.0*nu/(h*c);
 	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
-	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+	FLT b2;
+	if(gbl->preconditioner) {
+		b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh, 1.0);
+	} else {
+		b2 = 1.0; // turn off preconditioner 
+	}
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
-	//b2 = 1.0; // turn off preconditioner 
-	
 	/* Preconditioner */
 	P = b2,					  0.0, 0.0, 0.0, 0.0,
 		0.0,				  1.0, 0.0, 0.0, 0.0,
@@ -354,6 +357,8 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 		0.0, 0.0,      nu/(h*h), 0.0,      0.0,
 		0.0, 0.0,      0.0,      nu/(h*h), 0.0,
 		0.0, 0.0,      0.0,      0.0,      alpha/(h*h);
+	
+	S=4.0*S;
 	
 	for(int i=0; i<NV; ++i)
 		S(i,i) += gbl->bd(0);

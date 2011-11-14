@@ -7,7 +7,7 @@
 
 void tet_hp_cd::setup_preconditioner() {
 	int tind,find,i,j,side,p0,p1,p2,v0;
-	FLT jcb,a,h,amax,lam1,q,qmax,amin,hmax,hmin,dtcheck;
+	FLT jcb,a,h,amax,lam1,q,qmax,dtcheck;
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
 

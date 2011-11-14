@@ -7,7 +7,7 @@
 void tet_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
-		int tind,i,j,side,find;
+		int tind,i,j,side;
 		FLT jcb,h,hmax,q,qmax,lam1,gam,a,amax,amin;
 		TinyVector<int,4> v;
 		TinyVector<int,3> vtri;

@@ -20,6 +20,9 @@ public:
 		/* STABILIZATION */
 		Array<FLT,3> tau;
 		
+		/*preconditioner flag*/
+		bool preconditioner;
+		
 		/* PHYSICAL CONSTANTS */
 		FLT mu,kcond,R,gamma;
 		TinyVector<double,tet_mesh::ND> body;

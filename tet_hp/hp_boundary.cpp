@@ -873,8 +873,10 @@ void hp_face_bdry::tmatchsolution_rcv(FLT *fdata, int bgnmode, int endmode, int 
 }
 
 
-//
-//void hp_face_bdry::findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &bel,FLT &psi) const {
+
+void hp_face_bdry::findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &bel,FLT &r, FLT &s) const {
+	cout << "awww does nothingface bdry findandmovebdrypt " << endl;
+
 //   int sind,v0,v1,iter;
 //   FLT dx,dy,dz,ol,roundoff,dpsi;
 //   TinyVector<FLT,tet_mesh::ND> pt;
@@ -913,7 +915,9 @@ void hp_face_bdry::tmatchsolution_rcv(FLT *fdata, int bgnmode, int endmode, int 
 //      }  
 //   } while (fabs(dpsi) > roundoff);
 //   xp = pt;
-//}
+	
+	
+}
 
 void hp_face_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,tet_mesh::ND> &xp) {
 
@@ -938,8 +942,10 @@ void hp_face_bdry::mvpttobdry(int bel, FLT r, FLT s, TinyVector<FLT, tet_mesh::N
 }
 
 void hp_face_bdry::tadvance() {
+	
 	int stage = x.gbl->substep +x.gbl->esdirk;  
-		
+
+	
 	if (x.p0 > 1 && curved) {
 		if (stage) {
 			/* BACK CALCULATE K TERM */

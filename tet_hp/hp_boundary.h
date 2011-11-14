@@ -91,8 +91,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 
 	public:
 		hp_edge_bdry(tet_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
-		hp_edge_bdry(const hp_edge_bdry &inbdry, tet_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), 
-		x(xin), base(bin), adapt_storage(inbdry.adapt_storage), curved(inbdry.curved), coupled(inbdry.coupled) {
+		hp_edge_bdry(const hp_edge_bdry &inbdry, tet_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
 			if (curved && !x.coarse_level) {
 				crv.resize(base.maxseg,x.em0);
 				crvbd.resize(x.gbl->nhist+1);
@@ -189,7 +188,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 
 	public:
 		hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
-		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {			
+		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {			
 			if (curved && !x.coarse_level) {
 				ecrvbd.resize(x.gbl->nhist+1);
 				ecrv.resize(base.maxpst,x.em0);
@@ -281,7 +280,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 //     }
 
 		/* SEARCH FUNCTIONS */
-//     virtual void findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &tind, FLT &r, FLT &s) const;
+       virtual void findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &tind, FLT &r, FLT &s) const;
 	   virtual void mvpttobdry(int tind, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt);
 	   virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
 

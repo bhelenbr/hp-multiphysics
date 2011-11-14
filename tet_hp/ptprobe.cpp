@@ -56,11 +56,13 @@ void tet_hp::ptprobe(TinyVector<FLT,3> xp, Array<FLT,1> uout, int tlvl) {
 int mistake_counter = 0;
 
 int tet_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s, FLT &t) {
-	FLT dr,ds,dx,dy,det,roundoff;
-	TinyVector<FLT,4> wgt;
-	TinyVector<FLT,ND> x,dxmax,ddr,dds;
-	int n,iter,v0,tind1;
+//	FLT dr,ds,dx,dy,det,roundoff;
+//	TinyVector<FLT,ND> x,dxmax,ddr,dds;
+//	int n,iter,tind1;
+
 	int ierr = 0;
+	TinyVector<FLT,4> wgt;
+	int v0;
 	bool found;
 
 	otree.nearpt(xp.data(),v0);

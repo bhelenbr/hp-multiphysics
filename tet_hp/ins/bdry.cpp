@@ -182,7 +182,7 @@ void neumann::element_rsdl(int find,int stage) {
 //}
 
 void symmetry::tadvance() {
-	int j,m,v0,sind,find;
+	int v0,sind,find;
 	TinyVector<FLT,tet_mesh::ND> pt;
 	
 	hp_face_bdry::tadvance();

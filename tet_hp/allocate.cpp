@@ -344,12 +344,16 @@ void tet_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 
 	/* ALLOCATE WORK ARRAYS */
 	u.resize(NV);
+	u2d.resize(NV);
+	u1d.resize(NV);
 	res.resize(NV);
+	res2d.resize(NV);
+	res1d.resize(NV);
 	du.resize(NV,ND);
 	uht.resize(NV);
 	lf.resize(MAX(NV,ND));
 	// bdwk.resize(gbl->nhist+1,MAX(NV,ND)); TEMPORARY
-		
+	
 	/* Allocate solution vector storage */
 	ug.v.resize(maxvst,NV);
 	ug.e.resize(maxvst,em0,NV);
@@ -408,6 +412,9 @@ void tet_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 				ugbd(i).i.resize(maxvst,im0,NV);
 				vrtxbd(i).resize(maxvst);
 			}
+			break;
+		}
+		default: {
 			break;
 		}
 	}
@@ -513,7 +520,7 @@ FLT tet_hp::maxres() {
 			mxr(n) = MAX(mxr(n),fabs(gbl->res.v(i,n)));
 		}
 	}
-		
+			
 	for(n=0;n<NV;++n)
 		*gbl->log << ' ' << mxr(n) << ' ';
 

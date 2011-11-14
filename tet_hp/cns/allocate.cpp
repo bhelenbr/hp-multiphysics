@@ -26,6 +26,8 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	
 	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 		
+	input.getwdefault("preconditioner",gbl->preconditioner,true);
+
 	gbl->tau.resize(maxvst,NV,NV);
 
 	gbl->vpreconditioner.resize(maxvst,NV,NV);
