@@ -268,7 +268,7 @@ class tet_mesh : public multigrid_interface {
 		//@{ 
 		int coarse_level; /**< Integer telling which multigrid level I am */
 		multigrid_interface *fine, *coarse; /**< Pointers to fine and coarse objects */
-		void coarsen(FLT factor, const class tet_mesh& xmesh); /**< Coarsens by triangulating then inserting */
+		void coarsen(FLT factor, const class tet_mesh& xmesh, FLT size_reduce = 1.0); /**< Coarsens by triangulating then inserting */
 //        void coarsen2(FLT factor, const class tet_mesh& inmesh, FLT size_reduce = 1.0);  /**< Coarsens by using yaber */
 //        void coarsen3(); /**< Coarsens based on marks stored in pnt().info */
 

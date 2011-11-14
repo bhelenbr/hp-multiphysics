@@ -12,7 +12,12 @@
 // #include <boost/bind.hpp>
 // #include <boost/thread.hpp>
 
-void tet_mesh::coarsen(FLT factor, const tet_mesh& tgt) {
+void tet_mesh::coarsen(FLT factor, const class tet_mesh& tgt, FLT size_reduce) {
+
+	if (!initialized) {
+		init(tgt,duplicate,size_reduce);
+	}
+	
 	copy(tgt);
 #ifdef USING_MADLIB
 	MAdLibInterface::coarsenMesh(factor,this);
@@ -28,7 +33,7 @@ void tet_mesh::connect(multigrid_interface& in) {
 	tgt.coarse = this;    
 	if (fcnnct.ubound(firstDim) < maxvst-1) fcnnct.resize(maxvst);
 	if (tgt.ccnnct.ubound(firstDim) < tgt.maxvst-1) tgt.ccnnct.resize(tgt.maxvst);
-	
+
 	// copy(tgt);
 	coarsen(2.0,tgt);
 	mgconnect(tgt,fcnnct);

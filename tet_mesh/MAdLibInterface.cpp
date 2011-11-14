@@ -162,7 +162,14 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 1.E. Build the adaptation tool
 	MeshAdapter * adapter = new MeshAdapter(MAdMesh,sizeField);
 	adapter->setMaxIterationsNumber(10);
-	adapter->setCollapseOnBoundary(true,1.0);
+	//adapter->setCollapseOnBoundary(true,1.0);
+
+	
+	adapter->setSliverPermissionInESplit( true, 10. );
+    adapter->setSliverPermissionInECollapse( true, 0.1 );
+	
+    adapter->setCollapseOnBoundary( true, 1.e-6 );
+    adapter->setSwapOnBoundary( true, 1.e-6 );
 	
 	// 1.F. Register the callback function(s) of the solver
 	// adapter->addCallback(Solver_CBFunction,(void*)this);
