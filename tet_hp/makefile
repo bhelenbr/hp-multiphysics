@@ -39,12 +39,14 @@ OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o
 OBJCD = cd/minvrt.o cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/tstep.o 
 OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/tstep.o 
+OBJMASS = mass/allocate.o mass/bdry.o mass/getnewbdry.o mass/getnewibc.o mass/rsdl.o mass/setup_preconditioner.o
 
 OBJ = $(BASE)
 OBJ += $(OBJCD) 
-#OBJ += $(OBJINS) 
+OBJ += $(OBJINS) 
 OBJ += $(OBJCNS)
 #OBJ += $(OBJCNS_EXPLICIT)
+#OBJ += $(OBJMASS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
@@ -61,12 +63,12 @@ CXXMPI = ${CXX}
 
 ## Linux:
 LIB += -L$(HOME)  -llapack -lblas #(cares)
-CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
+#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
+#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## To use openmpi
-#CPPFLAGS += -I/opt/openmpi/include
-#CXXMPI = /opt/openmpi/bin/mpic++
+CPPFLAGS += -I/opt/openmpi/include
+CXXMPI = /opt/openmpi/bin/mpic++
 
 # (ubuntu) should really make symbolic links to liblapack and libatlas
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
@@ -86,6 +88,7 @@ dirs:
 	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
+	+@[ -d  mass ] || mkdir -p mass
 	touch dirs
 	
 	
