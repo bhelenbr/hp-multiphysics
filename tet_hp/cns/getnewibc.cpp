@@ -352,8 +352,32 @@ namespace ibc_cns {
 
 	private:
 		FLT omega,epsilon,radius,height,gamma;
+		int axis;
 	public:
 		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
+			TinyVector<FLT,tet_mesh::ND> y;
+			
+			switch(axis) {
+				case(0):
+					y = x;
+					break;
+				case(1):
+					y(0) = x(1);
+					y(1) = x(0);
+					y(2) = x(2);
+					break;
+				case(2):
+					y(0) = x(1);
+					y(1) = x(2);
+					y(2) = x(0);
+					break;
+				default:
+					y = x;
+					break;					
+			}
+			
+			x = y;
+					
 			double R,A,B,C,D;
 			R=radius;
 			A=-omega*R*(-R*R*R+3*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
@@ -371,10 +395,10 @@ namespace ibc_cns {
 					}
 					else {
 						if(x(0)<R-epsilon) {
-							return(x(3)*omega);
+							return(x(2)*omega);
 						}
 						else {
-							return(A+B*x(3)+C*x(3)*x(3)+D*x(3)*x(3)*x(3));
+							return(A+B*x(2)+C*x(2)*x(2)+D*x(2)*x(2)*x(2));
 						}
 					}
 				case(3):
@@ -386,7 +410,7 @@ namespace ibc_cns {
 							return(-x(2)*omega);
 						}
 						else {
-							return(-A-B*x(2)-C*x(2)*x(2)-D*x(2)*x(2)*x(2));
+							return(-A-B*x(1)-C*x(1)*x(1)-D*x(1)*x(1)*x(1));
 						}
 					}				
 				case(4):
@@ -418,6 +442,10 @@ namespace ibc_cns {
 			keyword = idnty +"_gamma";
 			if (!blockdata.get(keyword,gamma)) 
 				blockdata.getwdefault("gamma",gamma,1.4);
+
+			keyword = idnty +"_axis";
+			if (!blockdata.get(keyword,axis)) 
+				blockdata.getwdefault("axis",axis,0);
 			
 		}
 	};
