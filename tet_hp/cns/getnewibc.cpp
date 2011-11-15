@@ -352,38 +352,17 @@ namespace ibc_cns {
 
 	private:
 		FLT omega,epsilon,radius,height,gamma;
-		int axis;
 	public:
 		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
-			TinyVector<FLT,tet_mesh::ND> y;
+				
+			FLT A = -omega*radius*(-radius*radius*radius+3.0*radius*radius*epsilon-3.0*radius*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
+			FLT B = omega*(-3.0*radius*radius*radius+6.0*radius*radius*epsilon-3.0*radius*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
+			FLT C = -3.0*(-radius+epsilon)*radius*omega/(epsilon*epsilon*epsilon);
+			FLT D = -radius*omega/(epsilon*epsilon*epsilon);
 			
-			switch(axis) {
-				case(0):
-					y = x;
-					break;
-				case(1):
-					y(0) = x(1);
-					y(1) = x(0);
-					y(2) = x(2);
-					break;
-				case(2):
-					y(0) = x(1);
-					y(1) = x(2);
-					y(2) = x(0);
-					break;
-				default:
-					y = x;
-					break;					
-			}
+			FLT r = sqrt(x(1)*x(1)+x(2)*x(2));		
+			FLT vtheta = A+B*r+C*r*r+D*r*r*r;
 			
-			x = y;
-					
-			double R,A,B,C,D;
-			R=radius;
-			A=-omega*R*(-R*R*R+3*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
-			B=omega*(-3*R*R*R+6*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
-			C=-3*(-R+epsilon)*R*omega/(epsilon*epsilon*epsilon);
-			D=-R*omega/(epsilon*epsilon*epsilon);
 			switch(n) {
 				case(0):
 					return(1.0/gamma);
@@ -394,11 +373,11 @@ namespace ibc_cns {
 						return(0.0);
 					}
 					else {
-						if(x(0)<R-epsilon) {
+						if(r<radius-epsilon) {
 							return(x(2)*omega);
 						}
 						else {
-							return(A+B*x(2)+C*x(2)*x(2)+D*x(2)*x(2)*x(2));
+							return(vtheta*x(2)/r);
 						}
 					}
 				case(3):
@@ -406,11 +385,11 @@ namespace ibc_cns {
 						return(0.0);
 					}
 					else {
-						if(x(0)<R-epsilon) {
-							return(-x(2)*omega);
+						if(r<radius-epsilon) {
+							return(-x(1)*omega);
 						}
 						else {
-							return(-A-B*x(1)-C*x(1)*x(1)-D*x(1)*x(1)*x(1));
+							return(-vtheta*x(1)/r);
 						}
 					}				
 				case(4):
@@ -429,7 +408,7 @@ namespace ibc_cns {
 			
 			keyword = idnty +"_offset";
 			if (!blockdata.get(keyword,epsilon)) 
-				blockdata.getwdefault("offset",epsilon,0.01); 
+				blockdata.getwdefault("offset",epsilon,0.05); 
 			
 			keyword = idnty +"_height";
 			if (!blockdata.get(keyword,height)) 
@@ -442,10 +421,6 @@ namespace ibc_cns {
 			keyword = idnty +"_gamma";
 			if (!blockdata.get(keyword,gamma)) 
 				blockdata.getwdefault("gamma",gamma,1.4);
-
-			keyword = idnty +"_axis";
-			if (!blockdata.get(keyword,axis)) 
-				blockdata.getwdefault("axis",axis,0);
 			
 		}
 	};

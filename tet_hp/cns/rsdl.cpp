@@ -95,7 +95,6 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	
 	if (tet(tind).info > -1) {
 		/* CURVED ELEMENT */
-		cout << " curvy element being called in rsdl"<<endl;
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpy;++j) {
