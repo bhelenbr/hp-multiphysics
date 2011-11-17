@@ -47,6 +47,16 @@ change blitz/indexexpr.h 158
 add "return T_numtype();"
 )
 
+##################################################################
+#### GET OPENMPI IF NOT INSTALLED (LION) ####
+###################################################################
+http://www.open-mpi.org/
+Download button, current version openmpi-1.4.4.tar.gz
+Put in Packages directory
+tar zxvf openmpi-1.4.4.tar.gz
+./configure --prefix=${HOME}/Packages
+make all install
+
 ###################################################################
 ######### MATH PARSING LIBRARY ##################
 ###################################################################
@@ -171,6 +181,9 @@ move to Packages, extract
 
 # To know what packages are available: ./config/configure.py --help
 # with superlu
+# ON LION
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-include=${HOME}/Packages/include --with-mpi-lib=${HOME}/Packages/lib/libmpi
+# ON SNOW LEOPARD
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-include=/usr/include --with-mpi-lib=libmpi
 # with out downloading parmetis
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
