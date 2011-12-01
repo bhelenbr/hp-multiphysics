@@ -32,7 +32,8 @@ namespace bdry_cd {
 	};
 
 	class dirichlet : public generic {
-		tri_hp_cd &x;
+        protected:
+            tri_hp_cd &x;
 
 		public:
 			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "dirichlet";}
@@ -192,6 +193,54 @@ namespace bdry_cd {
 				return;
 			}
 	};
+	
+	
+	class melt : public dirichlet {
+		public:
+			melt(tri_hp_cd &xin, edge_bdry &bin) : dirichlet(xin,bin) {mytype = "melt";}
+			melt(const melt& inbdry, tri_hp_cd &xin, edge_bdry &bin) : dirichlet(inbdry,xin,bin) {}
+			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+			void vdirichlet() {
+				int sind=-2,v0;
+				
+				for(int j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					x.gbl->res.v(v0,0) = 0.0;
+				}
+				v0 = x.seg(sind).pnt(1);
+				x.gbl->res.v(v0,0) = 0.0;
+			}
+			
+			void sdirichlet(int mode) {
+				int sind;
+				
+				for(int j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					x.gbl->res.s(sind,mode,0) = 0.0;
+				}
+			}
+			
+			/* FOR COUPLED DYNAMIC BOUNDARIES */
+			void init(input_map& inmap,void* gbl_in);
+			void tadvance();
+			void rsdl(int stage);
+			void rsdl_after(int stage);
+			void update(int stage);
+#ifdef petsc
+			void petsc_matchjacobian_snd();
+			void petsc_matchjacobian_rcv(int phase);
+			int petsc_rsdl(Array<FLT,1> res);
+			void petsc_jacobian();
+			void petsc_jacobian_dirichlet();
+			void non_sparse(Array<int,1> &nnzero);
+			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+#endif
+	};
+	
+	
+	
 	
 	
 	class melt_end_pt : public hp_vrtx_bdry {
