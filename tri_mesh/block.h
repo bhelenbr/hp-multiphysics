@@ -115,7 +115,7 @@ class block {
 		//@{
 		int out_intrvl; /**< Number of time-steps between data outputs */
 		int rstrt_intrvl; /**< Number of output intervals between restart files */
-		bool debug_output; /**< Output file every iteration */
+		int debug_output; /**< Output file every iteration */
 		//@}
 
 		/** @name Multigrid parameters

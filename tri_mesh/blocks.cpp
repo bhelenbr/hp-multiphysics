@@ -532,7 +532,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 	/* FIGURE OUT MY LOCAL BLOCK NUMBER & GRID LEVEL? */
 	int b1;
 	for (b1=0;b1<myblock;++b1)
-		if (sim::blks.blk(b1)->grd(grdlvl) == this) break;
+		if (sim::blks.blk(b1)->idprefix == gbl->idprefix) break;
 	if (b1 >= myblock) {
 		*gbl->log << "Didn't find myself in block list?\n";
 		sim::abort(__LINE__,__FILE__,gbl->log);
@@ -948,7 +948,7 @@ void block::init(input_map &input) {
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
-	input.getwdefault("debug_output",debug_output,false);
+	input.getwdefault("debug_output",debug_output,0);
 
 	input.getwdefault("adapt_output",gbl->adapt_output,false);
 
@@ -1017,12 +1017,14 @@ void block::cycle(int vw, int lvl) {
 			*gbl->log << ' ' << error/maxerror << std::endl;
 			if (error/maxerror > error_control_tolerance) vcount = vw-2;
 			if (debug_output) {
-				std::string outname;
-				std::ostringstream nstr("");
-				nstr.str("");
-				nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count++ << std::flush;
-				outname = "coarse_debug" +nstr.str();
-				output(outname,block::debug,gridlevel);
+				if (extra_count % debug_output == 0) {
+					std::string outname;
+					std::ostringstream nstr("");
+					nstr.str("");
+					nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count++ << std::flush;
+					outname = "coarse_debug" +nstr.str();
+					output(outname,block::debug,gridlevel);
+				}
 			}
 			if (lvl == mglvls-1) continue;
 		}
@@ -1074,10 +1076,12 @@ void block::go(input_map input) {
 				maxerror = MAX(error,maxerror);
 				*gbl->log << std::endl << std::flush;
 				if (debug_output) {
-					nstr.str("");
-					nstr << gbl->tstep << '_' << gbl->substep << '_' << i << std::flush;
-					outname = "debug" +nstr.str();
-					output(outname,block::debug);
+					if (i % debug_output == 0) {
+						nstr.str("");
+						nstr << gbl->tstep << '_' << gbl->substep << '_' << i << std::flush;
+						outname = "debug" +nstr.str();
+						output(outname,block::debug);
+					}
 				}
 				if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
 			}
