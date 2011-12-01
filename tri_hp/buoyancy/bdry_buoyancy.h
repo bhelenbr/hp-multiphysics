@@ -116,21 +116,21 @@ namespace bdry_buoyancy {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 			void vdirichlet();
 #ifdef petsc
-//			void petsc_matchjacobian_snd();
-//			void petsc_matchjacobian_rcv(int phase);
 			int petsc_rsdl(Array<FLT,1> res);
 			void petsc_jacobian();
 			void petsc_jacobian_dirichlet();
+			void petsc_matchjacobian_snd();
+			void petsc_matchjacobian_rcv(int phase);
 			void non_sparse(Array<int,1> &nnzero);
-//			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
-//			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 #endif
 		
-			/* For matching with solid phase not working yet */
-			//void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
-//			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
-//			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
-//			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
+			/* For matching with solid phase */
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,x.ND,x.ND,vrtstride*x.NV);}
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,x.ND,x.ND, x.NV*vrtstride);}
+			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
+			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 
 		
 	};

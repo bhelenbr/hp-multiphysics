@@ -2,7 +2,7 @@
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
 
-//#define MPDEBUG
+#define MPDEBUG
 
 //#define DEBUG
 
@@ -275,7 +275,20 @@ void melt::rsdl(int stage) {
 
 void melt::rsdl_after(int stage) {
 	int sind,v0;
+    
+	/* Communicate here???? */
+	pmatchsolution_snd(0, x.gbl->res.v.data(), 1);
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	pmatchsolution_rcv(0,x.gbl->res.v.data(),1);
 	
+	smatchsolution_snd(x.gbl->res.s.data(),0,basis::tri(x.log2p)->sm()-1, basis::tri(x.log2p)->sm());
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	smatchsolution_rcv(x.gbl->res.s.data(),0,basis::tri(x.log2p)->sm()-1, basis::tri(x.log2p)->sm());
+        
 	/* Move Heat equation Residual */
 	int i = 0;
 	do {
@@ -287,7 +300,11 @@ void melt::rsdl_after(int stage) {
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	gbl->vres(i)(1) = x.gbl->res.v(v0,2);
-		
+	
+	vdirichlet();
+	for(int m=0;m<basis::tri(x.log2p)->sm();++m) 
+		sdirichlet(m);
+
 }
 
 
@@ -751,6 +768,94 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	return;
 }
 
+void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
+	int j,k,n,countup,offset;
+
+	if (!base.is_comm()) return;
+
+#ifdef MPDEBUG
+	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+
+	countup = 0;
+	for(j=0;j<base.nseg;++j) {
+		offset = base.seg(j)*stride*x.NV;
+		for(k=bgn;k<=end;++k) {
+			for(n=x.ND;n<x.ND+1;++n) {
+				base.fsndbuf(countup++) = sdata[offset +k*x.NV +n];
+#ifdef MPDEBUG
+				*x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+			}
+		}
+	}
+	base.sndsize() = countup;
+	base.sndtype() = boundary::flt_msg;
+	return;
+}
+
+void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+
+	if (!base.is_comm()) return;
+
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,m,n,count,countdn,countup,offset,sind,sign;
+	FLT mtchinv;
+
+	/* ASSUMES REVERSE ORDERING OF SIDES */
+	/* WON'T WORK IN 3D */
+
+	int matches = 1;
+
+	int bgnsign = (bgn % 2 ? -1 : 1);
+
+	/* RELOAD FROM BUFFER */
+	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
+	for(m=0;m<base.nmatches();++m) {            
+		++matches;
+
+		int ebp1 = end-bgn+1;
+
+		countdn = (base.nseg-1)*ebp1*1;
+		countup = 0;
+		for(j=0;j<base.nseg;++j) {
+			sign = bgnsign;
+			for(k=0;k<ebp1;++k) {
+				for(n=0;n<1;++n) {
+					base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+				}
+				sign *= -1;
+			}
+			countdn -= 2*ebp1*1;
+		}
+	}
+
+	if (matches > 1) {
+		mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+		*x.gbl->log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+		count = 0;
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			offset = sind*stride*x.NV;
+			for (k=bgn;k<=end;++k) {
+				for(n=x.ND;n<x.ND+1;++n) {
+					sdata[offset +k*x.NV +n] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+					*x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+				}
+			}
+
+		}
+	}
+	return;
+}
+
+
 #ifdef petsc
 void melt::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
@@ -915,6 +1020,272 @@ void melt::petsc_jacobian() {
 //	x.hp_vbdry(base.vbdry(1))->petsc_jacobian_dirichlet();
 }
 
+void melt::petsc_matchjacobian_snd() {	
+	const int ND = x.ND;
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+    
+	if (!base.is_comm()) return;
+    
+	/* Now do stuff for communication boundaries */
+	int row,sind=-2;
+	
+	std::vector<int> c0vars;
+	c0vars.push_back(ND);
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars.push_back(n);
+	}		
+	
+	/* I am cheating here and sending floats and int's together */
+#ifdef MY_SPARSE
+	/* Send Jacobian entries for u,v but not p */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+    
+	for(int i=0;i<base.nseg;++i) {
+		sind = base.seg(i);
+		int rowbase = x.seg(sind).pnt(0)*vdofs; 
+		
+		/* attach diagonal column # to allow continuity enforcement */
+		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
+		
+		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+			row = rowbase + *it;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+#endif
+			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+				*x.gbl->log << x.J._col(col) << ' ';
+#endif
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._val(col);
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+		}
+		
+		/* Send Side Information */
+		row = x.npnt*vdofs +sind*x.NV*x.sm0+x.ND;  // SKIP TO TEMPERATURE VARIABLE
+		
+		/* attach diagonal column # to allow continuity enforcement */
+		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		
+		for(int mode=0;mode<x.sm0;++mode) {
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << 2 << std::endl;
+#endif
+			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+				*x.gbl->log << x.J._col(col) << ' ';
+#endif
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._val(col);
+			}
+							
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+			row += x.NV;
+		}
+	}
+	
+	/* LAST POINT */
+	int rowbase = x.seg(sind).pnt(1)*vdofs; 
+	
+	/* attach diagonal # to allow continuity enforcement */
+	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+	
+	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+		row = rowbase + *it;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+#endif
+		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+			*x.gbl->log << x.J._col(col) << ' ';
+#endif
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._val(col);
+		}
+        
+#ifdef MPDEBUG
+		*x.gbl->log << std::endl;
+#endif
+	}
+	/* Send index of start of curved modes */
+	base.fsndbuf(base.sndsize()++) = jacobian_start;
+}
+
+void melt::petsc_matchjacobian_rcv(int phase) {
+	const int ND = x.ND;
+	
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	int count = 0;
+	int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++));
+	
+	sparse_row_major *pJ_mpi;
+	if (base.is_local(0)) {
+		pJ_mpi = &x.J;
+		Jstart_mpi = 0;
+	}
+	else {
+		pJ_mpi = &x.J_mpi;
+	}
+	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+    
+	int sm = basis::tri(x.log2p)->sm();	
+    
+	
+	/* Now do stuff for communication boundaries */
+	int row;
+	
+	std::vector<int> c0vars;
+	c0vars.push_back(ND);
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars.push_back(n);
+	}		
+	
+	/* Now Receive Information */		
+	for (int i=base.nseg-1;i>=0;--i) {
+		int sind = base.seg(i);
+		int rowbase = x.seg(sind).pnt(1)*vdofs; 
+		int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+        
+		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+			row = rowbase + *it;
+			int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+#endif
+			for (int k = 0;k<ncol;++k) {
+				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+#ifdef MPDEBUG
+				*x.gbl->log  << col << ' ';
+#endif
+				FLT val = base.frcvbuf(0,count++);
+				(*pJ_mpi).add_values(row,col,val);
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+			/* Shift all entries for this vertex.  Remote variables on solid are T, x, y */
+			for(int n=0;n<1+x.ND;++n) {
+				FLT dval = x.J_mpi(row,row_mpi +n);
+				(*pJ_mpi)(row,row_mpi  +n) = 0.0;				
+				x.J(row,rowbase  +c0vars[n]) += dval;
+			}
+			x.J.multiply_row(row,0.5);
+			x.J_mpi.multiply_row(row,0.5);
+		}  
+		
+		/* Now receive side Jacobian information */
+		row = x.npnt*vdofs +sind*x.NV*x.sm0;
+		row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+        
+		int mcnt = x.ND;
+		int sgn = 1;
+		for(int mode=0;mode<x.sm0;++mode) {
+			int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+			*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << 2 << std::endl;
+#endif
+			for (int k = 0;k<ncol;++k) {
+				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+#ifdef MPDEBUG
+				*x.gbl->log  << col << ' ';
+#endif
+				FLT val = sgn*base.frcvbuf(0,count++);
+				(*pJ_mpi).add_values(row+mcnt,col,val);
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+							
+			/* Shift all modes in equation */
+			int mcnt_mpi = 0;
+			int sgn_mpi = 1;
+			for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+				FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
+				(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+				x.J(row+mcnt,row+x.ND+mode_mpi*x.NV) += sgn_mpi*dval;
+				sgn_mpi *= -1;
+				mcnt_mpi += 1; // Only temperature on solid block
+			}
+			x.J.multiply_row(row+mcnt,0.5);
+			x.J_mpi.multiply_row(row+mcnt,0.5);
+			mcnt += x.NV;
+			sgn *= -1;
+		}
+	}
+	
+	int sind = base.seg(0);
+	int rowbase = x.seg(sind).pnt(0)*vdofs; 
+	int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+    
+	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+		row = rowbase + *it;
+		int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+#endif
+		for (int k = 0;k<ncol;++k) {
+			int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+#ifdef MPDEBUG
+			*x.gbl->log << col << ' ';
+#endif
+			FLT val = base.frcvbuf(0,count++);
+			(*pJ_mpi).add_values(row,col,val);
+		}
+#ifdef MPDEBUG
+		*x.gbl->log << std::endl;
+#endif
+		/* Shift all entries for this vertex.  Remote variables on solid are T, x, y */
+		for(int n=0;n<1+x.ND;++n) {
+			FLT dval = x.J_mpi(row,row_mpi +n);
+			(*pJ_mpi)(row,row_mpi +n) = 0.0;				
+			x.J(row,rowbase +c0vars[n]) += dval;
+		}
+		x.J.multiply_row(row,0.5);
+		x.J_mpi.multiply_row(row,0.5);
+	} 
+#endif
+    
+	if (sm && !base.is_frst()) {
+		/* Equality of curved mode constraint */
+		int ind = jacobian_start;
+		int ind_mpi = static_cast<int>(base.frcvbuf(0,count++)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
+		for(int i=0;i<base.nseg;++i) {
+			int sgn = 1;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for (int n=0;n<x.ND;++n) {
+					x.J(ind,ind) = 1.0;
+					(*pJ_mpi)(ind,ind_mpi) = -1.0*sgn;
+					++ind;
+					++ind_mpi;
+				}
+				sgn *= -1;
+			}
+			ind_mpi -= 2*sm*x.ND;		
+		}
+	}
+}
+
+
 void melt::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
 	int sm=basis::tri(x.log2p)->sm();
@@ -993,6 +1364,76 @@ void melt::petsc_jacobian_dirichlet() {
 	 }	
 	 x.J._val(row2++) = x.J._val(row1++);
 	}
+	
+	
+	/* MOVE MPI HEAT EQUATION TO LAST ROW  */
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		row = v0*vdofs +x.NV-2;
+		int nnz1 = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row);
+		int nnz2 = x.J_mpi._cpt(row+4) -x.J_mpi._cpt(row+3);
+		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+		if (nnz1 != nnz2) {
+			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		int row1 = x.J_mpi._cpt(row);
+		int row2 = x.J_mpi._cpt(row+3);
+		for(int col=0;col<nnz1;++col) {
+			if (x.J_mpi._col(row1) != x.J_mpi._col(row2)) {
+				*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
+				for(int col=0;col<nnz1;++col) {
+					int row1 = x.J_mpi._cpt(row);
+					int row2 = x.J_mpi._cpt(row+3);
+					*x.gbl->log << "vertex " << v0 << ' ' << x.J_mpi._col(row1+col) << ' ' << x.J_mpi._col(row2+col) << std::endl;
+				}
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}	
+			x.J_mpi._val(row2++) = x.J_mpi._val(row1++);
+		}
+		
+		for (int m=0;m<sm;++m) {
+			int row1 = begin_seg +sind*sm*x.NV +m*x.NV +x.NV-2;
+			int row2 = jacobian_start +j*sm*x.ND +m*x.ND +1;
+			int nnz1 = x.J_mpi._cpt(row1+1) -x.J_mpi._cpt(row1);
+			int nnz2 = x.J_mpi._cpt(row2+1) -x.J_mpi._cpt(row2);
+			/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+			if (nnz1 != nnz2) {
+				*x.gbl->log << "zeros problem in moving heat equation to mesh movement location " << nnz1 << ' ' << nnz2 << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			row1 = x.J_mpi._cpt(row1);
+			row2 = x.J_mpi._cpt(row2);
+			for(int col=0;col<nnz1;++col) {
+				/* Overwrite row */
+				x.J_mpi._col(row2) = x.J_mpi._col(row1);
+				x.J_mpi._val(row2++) = x.J_mpi._val(row1++);
+			}
+		}
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	row = v0*vdofs +x.NV-2;
+	nnz1 = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row);
+	nnz2 = x.J_mpi._cpt(row+4) -x.J_mpi._cpt(row+3);
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	if (nnz1 != nnz2) {
+		*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	row1 = x.J_mpi._cpt(row);
+	row2 = x.J_mpi._cpt(row+3);
+	for(int col=0;col<nnz1;++col) {
+		if (x.J_mpi._col(row1) != x.J_mpi._col(row2)) {
+			*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}	
+		x.J_mpi._val(row2++) = x.J_mpi._val(row1++);
+	}
+	
+	
+	
 
 	/* Rotate for diagonal dominance */
 	/* MOVE HEAT EQUATION TO LAST ROW  */
@@ -1081,6 +1522,98 @@ void melt::petsc_jacobian_dirichlet() {
 		++row1;
 		++row2;
 	}
+	
+	
+	
+	/* ROTATE J_mpi as well */
+	/* Rotate for diagonal dominance */
+	/* MOVE HEAT EQUATION TO LAST ROW  */
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		row = v0*vdofs +x.NV;
+		int nnz1 = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row);
+		int nnz2 = x.J_mpi._cpt(row+2) -x.J_mpi._cpt(row+1);
+		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+		if (nnz1 != nnz2) {
+			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		int row1 = x.J_mpi._cpt(row);
+		int row2 = x.J_mpi._cpt(row+1);
+		for(int col=0;col<nnz2;++col) {
+			if (x.J_mpi._col(row1) != x.J_mpi._col(row2)) {
+				*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}	
+			double row_store = x.J_mpi._val(row1)*gbl->vdt(j)(0,0) +x.J_mpi._val(row2)*gbl->vdt(j)(0,1);
+			x.J_mpi._val(row2) = x.J_mpi._val(row1)*gbl->vdt(j)(1,0) +x.J_mpi._val(row2)*gbl->vdt(j)(1,1);
+			x.J_mpi._val(row1) = row_store;	
+			++row1;
+			++row2;
+		}
+		
+		for (int m=0;m<sm;++m) {
+			int row1 = jacobian_start +j*sm*x.ND +m*x.ND;
+			int row2 = jacobian_start +j*sm*x.ND +m*x.ND +1;
+			int nnz1 = x.J_mpi._cpt(row1+1) -x.J_mpi._cpt(row1);
+			int nnz2 = x.J_mpi._cpt(row2+1) -x.J_mpi._cpt(row2);
+			/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+			if (nnz1 != nnz2) {
+				*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			
+			/* Fill in zeros */
+			int cpt1 = x.J_mpi._cpt(row1);
+			int cpt2 = x.J_mpi._cpt(row2);
+			for(int col=0;col<nnz2;++col) {
+				if (x.J_mpi._col(cpt2) < x.J_mpi._col(cpt1)) {
+					x.J_mpi.set_values(row1, x.J_mpi._col(cpt2), 0.0); 
+				}
+				++cpt2;
+				++cpt1;
+			}
+			
+			cpt1 = x.J_mpi._cpt(row1);
+			cpt2 = x.J_mpi._cpt(row2);
+			for(int col=0;col<nnz1;++col) {
+				if (x.J_mpi._col(cpt1) != x.J_mpi._col(cpt2)) {
+					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
+				}	
+				double row_store = x.J_mpi._val(cpt1)*gbl->sdt(j)(0,0) +x.J_mpi._val(cpt2)*gbl->sdt(j)(0,1);
+				x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1)*gbl->sdt(j)(1,0) +x.J_mpi._val(cpt2)*gbl->sdt(j)(1,1);
+				x.J_mpi._val(cpt1) = row_store;	
+				++cpt1;
+				++cpt2;
+			}
+		}
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	row = v0*vdofs +x.NV;
+	nnz1 = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row);
+	nnz2 = x.J_mpi._cpt(row+2) -x.J_mpi._cpt(row+1);
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	if (nnz1 != nnz2) {
+		*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	row1 = x.J_mpi._cpt(row);
+	row2 = x.J_mpi._cpt(row+1);
+	for(int col=0;col<nnz1;++col) {
+		if (x.J_mpi._col(row1) != x.J_mpi._col(row2)) {
+			*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}	
+		double row_store = x.J_mpi._val(row1)*gbl->vdt(j)(0,0) +x.J_mpi._val(row2)*gbl->vdt(j)(0,1);
+		x.J_mpi._val(row2) = x.J_mpi._val(row1)*gbl->vdt(j)(1,0) +x.J_mpi._val(row2)*gbl->vdt(j)(1,1);
+		x.J_mpi._val(row1) = row_store;	
+		++row1;
+		++row2;
+	}
+
 
 	flexible::petsc_jacobian_dirichlet();
 }
@@ -1136,16 +1669,111 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 			}
 		}
 		
-		if (base.is_frst()) {
-			/* Side mode heat equation will be copied into this location */
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +ND*sm;
+		/* Side mode heat equation will be copied into this location */
+		nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +ND*sm;
+	}
+}
+
+void melt::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+    
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;	
+	
+	
+	/* INTERFACE TEMPERATURE EQUATION JACOBIAN WILL BE EXCHANGED */
+	/* IT WILL THEN BE REPLACED BY A DIRCHLET CONDITION AND MOVED TO X/Y EQUATION */
+	std::vector<int> c0vars;
+	c0vars.push_back(ND);
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars.push_back(n);
+	}		
+	
+	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	for (int i=0;i<base.nseg;++i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it)
+			base.isndbuf(base.sndsize()++) = nnzero(pind +*it);
+	}
+	int sind = base.seg(base.nseg-1);
+	int pind = x.seg(sind).pnt(1)*vdofs;
+	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it)
+		base.isndbuf(base.sndsize()++) = nnzero(pind +*it);
+	
+	/* Last thing to send is nnzero for edges (all the same) */
+	if (sm)
+		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+    
+	return;
+}
+
+void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	if (!base.is_frst() && sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+    
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
+	
+	std::vector<int> c0vars;
+	c0vars.push_back(ND);
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars.push_back(n);
+	}		
+	
+	int count = 0;
+	for (int i=base.nseg-1;i>=0;--i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(1)*vdofs;
+		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+			nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
 		}
-		else {
-			/* Just an equality constraint */
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+	}
+	int sind = base.seg(0);
+	int pind = x.seg(sind).pnt(0)*vdofs;
+	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
+		nnzero_mpi(pind +*it) += base.ircvbuf(0,count++);
+	}
+	
+	
+	/* Now add to side degrees of freedom */
+	if (sm) {
+		int toadd = base.ircvbuf(0,count++); 
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			for (int mode=0;mode<sm;++mode) {
+				for(int n=x.ND;n<x.ND+1;++n) {
+					nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+				}
+			}
 		}
 	}
 }
+
 #endif
 
 /* Remember that vertex jacobians need to be written */
@@ -1360,13 +1988,6 @@ void melt::setup_preconditioner() {
 		gbl->vdt(indx)(1,1) = temp;
 		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
-		
-		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
-//		FLT theta =  100.0*M_PI/180.0;
-//		gbl->vdt(indx)(0,0) = -sin(theta);
-//		gbl->vdt(indx)(1,1) =  sin(theta);
-//		gbl->vdt(indx)(0,1) = cos(theta);
-//		gbl->vdt(indx)(1,0) = cos(theta);		
 	}
 
 	/* INVERT SIDE MATRIX */    
