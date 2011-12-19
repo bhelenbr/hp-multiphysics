@@ -95,7 +95,7 @@ OBJPETSC = petsc.o sparse.o
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
 OBJ += $(OBJCD)
-OBJ += $(OBJINS)
+#OBJ += $(OBJINS)
 #OBJ += $(OBJCNS) 
 #OBJ += $(OBJCNSEXPLICIT)
 #OBJ += $(OBJLVLSET)
@@ -144,10 +144,10 @@ tri_hp_mpi: $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 	
 tri_hp_petsc: $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.5 -lparmetis -lmetis -ldl
 
 tri_hp_petsc_mpi: $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.5 -lparmetis -lmetis -ldl
 
 dirs: 
 	+@[ -d  ins ] || mkdir -p ins
