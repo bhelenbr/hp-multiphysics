@@ -741,16 +741,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		pod_ebdry(i)->calculate_modes();
 #endif
 
-#ifdef petsc
-	PetscFinalize();
-#endif
-#ifdef PTH
-	pth_exit(NULL);
-#endif    
-#ifdef MPISRC
-	MPI_Finalize();
-#endif
-	sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
+
 }
 #endif
 

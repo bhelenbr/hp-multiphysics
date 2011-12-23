@@ -22,6 +22,7 @@ template<class BASE> class pod_simulate : public BASE {
 		int nmodes;
 		int tmodes;
 		Array<FLT,1> coeffs, rsdls, rsdls_recv, rsdls0;
+		Array<FLT,1> scaling;
 		typedef typename BASE::vsi vsi;
 		Array<vsi,1> modes;
 #ifdef POD_BDRY
@@ -38,8 +39,9 @@ template<class BASE> class pod_simulate : public BASE {
 	public:
 		void init(input_map& input, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
+		tri_hp_helper* getnewhelper(input_map& inmap);
 		void output(const std::string& fname, block::output_purpose why);
-		// void calc_coeffs();
+		void calc_coeffs();
 		void tadvance();
 		void rsdl(int stage);
 		void setup_preconditioner();
@@ -53,7 +55,7 @@ template<class BASE> class pod_simulate : public BASE {
 #endif
 };
 
-#ifdef POD_BRY
+#ifdef POD_BDRY
 template<class BASE> class pod_sim_edge_bdry {
 	protected:
 		pod_simulate<BASE> &x;
@@ -80,25 +82,53 @@ template<class BASE> class pod_sim_edge_bdry {
 		void loadbuff(Array<FLT,1>& sdata);
 		void finalrcv(Array<FLT,1>& sdata);
 };
-
-//template<class BASE> class calc_coeffs : public tri_hp_helper {	
-//	protected:
-//		pod_simulate<BASE> &x;
-//
-//	public:
-//		tri_hp_helper(tri_hp& xin) : x(xin), post_process(false) {}
-//		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin), post_process(in_help.post_process) {}
-//		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
-//		virtual ~tri_hp_helper() {};
-//		virtual void tadvance() {
-//			tri_hp_helper::tadvance(); // Loads restart files when post-processing is on
-//			x.calc_coeffs(); 
-//		}
-//};
-	
-	
-
 #endif
+
+class svv_ins : public pod_simulate<tri_hp_ins> {
+	public:
+		int cutoff; // Mode number to turn on additional viscosity
+		FLT alpha; // Additional viscosity beyond cut-off mode
+		bool remove_pressure; // Flag to remove pressure from equations based on incompressibility
+	
+		svv_ins* create() { return new svv_ins();}
+		void init(input_map& input, void *gin) { 
+			pod_simulate<tri_hp_ins>::init(input,gin);
+			if (!input.get("svv_cutoff", cutoff)) {
+				*gbl->log << "Failed to find svv cutoff number" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			input.getwdefault("svv_alpha", alpha,0.0);	
+			input.getwdefault("svv_remove_pressure",remove_pressure,false);
+			
+			if (remove_pressure) {
+				for(int m=0;m<tmodes;++m) {
+					modes(m).v(Range::all(),NV-1) = 0.0;
+					modes(m).s(Range::all(),Range::all(),NV-1) = 0.0;
+					modes(m).i(Range::all(),Range::all(),NV-1) = 0.0;
+				}
+			}
+		}
+	
+	
+		void rsdl(int stage){
+			
+			// calculate residaul with normal viscosity
+			pod_simulate<tri_hp_ins>::rsdl(stage);
+			// Store this POD resdiual in rsdls0
+			rsdls0 = rsdls_recv;
+
+			// Add spetral vanishing viscosity
+			gbl->mu += alpha;
+			// Recalculate residuals 
+			pod_simulate<tri_hp_ins>::rsdl(stage);
+			
+			// combine previously stored rsdls_recv with this new one.
+			rsdls_recv(Range(0,cutoff-1)) = rsdls0(Range(0,cutoff-1));
+			
+			// Remove spectral vansishing viscosity
+			gbl->mu -= alpha;
+		}
+};
 
 #include "pod_simulate.cpp"
 
