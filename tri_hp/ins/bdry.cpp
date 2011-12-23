@@ -21,7 +21,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			hp_edge_bdry::output(fout,typ,tlvl);
 			break;
 		}
-		case(tri_hp::tecplot): {
+		case(tri_hp::tecplot): case(tri_mesh::vtk): {
 			if (!report_flag) return;
 			
 			std::ostringstream fname;
@@ -430,18 +430,18 @@ void flexible2::element_rsdl(int indx, int stage) {
 		
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
-			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+			mvel(n,i) = x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i));
 		}
 		
 		/* Evaluate Fluxes */
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
-		amv(0) = mvel(0,i)-u(0)(i); amv(1) = mvel(1,i)-u(1)(i);
-		anorm(0)= norm(0); anorm(1) = norm(1);
+		amv(0) = mvel(0,i); amv(1) = mvel(1,i);
+		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		for(int n=0;n<x.NV;++n)
 			au(n) = u(n)(i);
 		
 		for(int n=0;n<x.NV;++n) {
-			cflux(n,i) = RAD(crd(0,i))*fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
+			cflux(n,i) = RAD(crd(0,i))*fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
 			dflux(n,i) = RAD(crd(0,i))*derivative_fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
 		}
 	}
@@ -453,7 +453,6 @@ void flexible2::element_rsdl(int indx, int stage) {
 		
 	return;
 }
-
 
 void symmetry::tadvance() {
 	int j,m,v0,sind;
