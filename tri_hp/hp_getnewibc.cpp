@@ -310,6 +310,50 @@ class cartesian_interpolation : public tri_hp_helper {
 		}
 };
 
+/* Matlab Cartesion Points Reassembly script 
+clear 
+
+suffix = {
+	'_b0.dat'
+	'_b1.dat'
+};
+
+prefix = 'cartesian_pts';
+
+nx = 401;
+ny = 101;
+
+for tstep = 3601:3601
+	prefixWithTimeStep = [prefix +int2str(tstep)];
+	fid = fopen([prefixWithTimeStep suffix{1}]);
+	outputmat = textscan(fid,'%f %f %f %f %f','HeaderLines',1);
+	fclose(fid);
+
+	for i=2:length(suffix)
+		fid = fopen([prefixWithTimeStep suffix{i}]);
+		inputmat = textscan(fid,'%*f %*f %f %f %f','HeaderLines',1);
+		fclose(fid);
+		for n=3:5
+			outputmat{n} = outputmat{n} +inputmat{n-2};
+		end
+	end
+
+	xmat = reshape(outputmat{1},nx,ny);
+	ymat = reshape(outputmat{2},nx,ny);
+	umat = reshape(outputmat{3},nx,ny);
+	vmat = reshape(outputmat{4},nx,ny);
+	pmat = reshape(outputmat{5},nx,ny);
+
+
+	save([prefixWithTimeStep 'x.dat'],'xmat','-ASCII');
+	save([prefixWithTimeStep 'y.dat'],'ymat','-ASCII');
+	save([prefixWithTimeStep 'u.dat'],'umat','-ASCII');
+	save([prefixWithTimeStep 'v.dat'],'vmat','-ASCII');
+	save([prefixWithTimeStep 'p.dat'],'pmat','-ASCII');
+
+end
+*/
+
 class output_contour : public tri_hp_helper {
 	protected:
 		int var;
