@@ -1887,7 +1887,7 @@ void surface_slave::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
 	
-	if (!base.is_frst()) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+	if (!base.is_frst() && sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
