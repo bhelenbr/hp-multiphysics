@@ -21,7 +21,7 @@
 //#define EXPLICIT
 //#define CNS
 //define CNS_EXPLICIT
-#define NONNEWTONIAN
+//#define NONNEWTONIAN
 
 #define POD
 
@@ -77,8 +77,8 @@
 
 class btype {
 	public:
-		const static int ntypes = 18;
-		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,lvlset,explct,cns,cns_explicit,nonnewtonian};
+		const static int ntypes = 19;
+		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,lvlset,explct,cns,cns_explicit,nonnewtonian,svv};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -88,7 +88,7 @@ class btype {
 		}
 };
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
-    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns","cns_explicit","nonnewtonian"};
+    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns","cns_explicit","nonnewtonian","svv"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname;
@@ -221,6 +221,13 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 #ifdef NONNEWTONIAN
 		case btype::nonnewtonian: {
 			tri_hp_nonnewtonian *temp = new tri_hp_nonnewtonian();
+			return(temp);
+		}
+#endif
+			
+#if (defined(POD) && defined(INS))
+		case btype::svv: {
+			svv_ins *temp = new svv_ins();
 			return(temp);
 		}
 #endif
