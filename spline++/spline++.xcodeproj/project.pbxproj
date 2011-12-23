@@ -185,7 +185,9 @@
 		1DEB91EC08733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "${HOME}/Packages/include";
 				PRODUCT_NAME = "spline++";
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Debug;
 		};
@@ -195,10 +197,9 @@
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = "$(HOME)/Codes";
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
+				HEADER_SEARCH_PATHS = "${HOME}/Packages/include";
 				INSTALL_PATH = /lib;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = spline;
+				PRODUCT_NAME = "spline++";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Release;
@@ -206,10 +207,9 @@
 		1DEB91F008733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
-				SDKROOT = "";
 			};
 			name = Debug;
 		};
@@ -219,8 +219,6 @@
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
 			};
 			name = Release;
 		};
@@ -228,30 +226,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = main;
-				ZERO_LINK = YES;
 			};
 			name = Debug;
 		};
 		6F2EF3820DB780B4001358E1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
 				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
+				GCC_OPTIMIZATION_LEVEL = 3;
 				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = main;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
