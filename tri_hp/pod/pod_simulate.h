@@ -107,6 +107,8 @@ class svv_ins : public pod_simulate<tri_hp_ins> {
 					modes(m).i(Range::all(),Range::all(),NV-1) = 0.0;
 				}
 			}
+			
+			adis = 0.0;
 		}
 	
 	
