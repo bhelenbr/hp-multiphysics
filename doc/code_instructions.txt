@@ -12,6 +12,7 @@
 9 petsc for parallel matrix inversion and iteration
 10 MeshAdapt for tetrahedral mesh generation
 11 Gmsh for tetrahedrals
+12 valgrind for debugging
 
 ###################################################################
 #### GET BLITZ ####
@@ -170,6 +171,14 @@ http://www-zeus.desy.de/~burow/cfortran/
 save cfortran.h to ${HOME}/Packages/include/
 
 ###################################################################
+#### (VALGRIND ONLY FOR DEBUGGING) ####
+###################################################################
+# download valgrind from web
+./configure --prefix=/share/apps
+make
+make install
+
+###################################################################
 ######## FOR PETSC ############
 ###################################################################
 download current version at
@@ -189,7 +198,7 @@ move to Packages, extract
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
 # on cluster
 ./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/ --with-parmetis-dir=/export/apps
-./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps
+./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps  --with-valgrind-dir=/share/apps
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
@@ -252,9 +261,6 @@ In CMAKE:
 	[CMAKE_PREFIX_PATH ${HOME}/Packages]
 	[FLTK_DIR ${HOME}/Packages/fltk-1.3x...]
 	[ENABLE_GRAPHICS]
-
-
-
 
 ###################################################################
 NOW DOWNLOAD MY CODE
