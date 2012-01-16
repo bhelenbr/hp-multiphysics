@@ -99,7 +99,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 					ldiff_flux = 0.0;
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						ldiff_flux(n) = x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
+						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
 					ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
@@ -138,7 +138,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					
 					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
 					for(n=0;n<x.NV;++n)
-						fout << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
+						fout << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
 					fout << std::endl;
 
 				}	
