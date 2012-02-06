@@ -344,11 +344,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 					df(2,0)(i,j) = +RAD(crd(0)(i,j))*(visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j));
 					df(2,1)(i,j) = +RAD(crd(0)(i,j))*(viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j));
-//					if (u(2)(i,j) < 1.0) {
-//						df(2,0)(i,j) *= 2.0 +erf((1.0 -u(2)(i,j))/1.e-3);  // TEMPORARY
-//						df(2,1)(i,j) *=  2.0 +erf((1.0 -u(2)(i,j))/1.e-3);  // TEMPORARY
-//					}
-					
+
 					for(n=0;n<NV-1;++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);

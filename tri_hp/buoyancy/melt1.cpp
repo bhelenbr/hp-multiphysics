@@ -933,7 +933,7 @@ void melt::petsc_jacobian() {
 #endif		
 	}
 	
-	/* FIXME: NOT SURE ABOUT THIS */
+	/* FIXME: NOT SURE ABOUT THIS TEMPORARY */
 	//x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
 //	x.hp_vbdry(base.vbdry(1))->petsc_jacobian();
 //	x.hp_vbdry(base.vbdry(0))->petsc_jacobian_dirichlet();

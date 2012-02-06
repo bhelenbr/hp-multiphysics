@@ -19,7 +19,7 @@
 #include "bdry_cd.h"
 #include "myblas.h"
 
-#define MPDEBUG
+// #define MPDEBUG
 
 using namespace bdry_cd;
 
@@ -335,7 +335,6 @@ void melt::update(int stage) {
 }
 
 #ifdef petsc
-//#define MPDEBUG
 void melt::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 	int vdofs;
@@ -475,11 +474,8 @@ void melt::petsc_matchjacobian_snd() {
 	int row,sind=-2;
 	
 	std::vector<int> c0vars;
-	c0vars.push_back(0);
-	for(int n=x.NV;n<vdofs;++n) {
-		c0vars.push_back(n);
-	}	
-	
+	c0vars.push_back(0);  // Only temperature row
+	 
 	/* I am cheating here and sending floats and int's together */
 #ifdef MY_SPARSE
 	/* Send Jacobian entries for u,v but not p */
@@ -570,6 +566,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 	
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
 	
+	Array<int,1> indices(tri_mesh::ND+1 +x.sm0);
 	int count = 0;
 	int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++));
 	
@@ -592,123 +589,78 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 	
 	
 	/* Now do stuff for communication boundaries */
-	int row;
-	
-	std::vector<int> c0vars;
-	c0vars.push_back(0);
-	for(int n=x.NV;n<vdofs;++n) {
-		c0vars.push_back(n);
-	}	
-	
 	/* Now Receive Information */		
 	for (int i=base.nseg-1;i>=0;--i) {
 		int sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(1)*vdofs; 
 		int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+#ifdef MPDEBUG
+		*x.gbl->log << "received vertex rowbase " << row_mpi << std::endl;
+#endif	
 		
-		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-			row = rowbase + *it;
-			int ncol = static_cast<int>(base.frcvbuf(0,count++));
-#ifdef MPDEBUG
-			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+#ifdef MY_SPARSE
+		indices(0) = rowbase;
+		indices(1) = rowbase+1;
+		indices(2) = rowbase+2;
+		x.J.zero_rows(3,indices);
+		(*pJ_mpi).zero_rows(3,indices);
+		x.J.set_diag(3,indices,1.0);
+		(*pJ_mpi).set_values(rowbase,row_mpi+2,-1.0);
+		(*pJ_mpi).set_values(rowbase+1,row_mpi+4,-1.0);
+		(*pJ_mpi).set_values(rowbase+2,row_mpi+5,-1.0);
+#else
+		This is not working
 #endif
-			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-#ifdef MPDEBUG
-				*x.gbl->log  << col << ' ';
-#endif
-				FLT val = base.frcvbuf(0,count++);
-				(*pJ_mpi).add_values(row,col,val);
-			}
-#ifdef MPDEBUG
-			*x.gbl->log << std::endl;
-#endif
-			/* Shift all entries for this vertex */
-			for(std::vector<int>::iterator it_mpi=c0vars.begin();it_mpi!=c0vars.end();++it_mpi) {
-				FLT dval = x.J_mpi(row,row_mpi+*it_mpi);
-				(*pJ_mpi)(row,row_mpi+*it_mpi) = 0.0;				
-				x.J(row,rowbase+*it_mpi) += dval;
-			}
-			x.J.multiply_row(row,0.5);
-			x.J_mpi.multiply_row(row,0.5);
-		}  
-		
+
 		/* Now receive side Jacobian information */
-		row = x.npnt*vdofs +sind*x.NV*x.sm0;
+		int row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-		
-		int mcnt = 0;
-		int sgn = 1;
-		for(int mode=0;mode<x.sm0;++mode) {
-			int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
-			*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << 0 << std::endl;
-#endif
-			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-#ifdef MPDEBUG
-				*x.gbl->log  << col << ' ';
-#endif
-				FLT val = sgn*base.frcvbuf(0,count++);
-				(*pJ_mpi).add_values(row+mcnt,col,val);
+		*x.gbl->log << "received side rowbase " << row_mpi << std::endl;
+#endif	
+		if (x.sm0) {
+			for(int mode=0;mode<x.sm0;++mode)
+				indices(mode) = row +mode;
+				
+			x.J.zero_rows(x.sm0,indices);
+			(*pJ_mpi).zero_rows(x.sm0,indices);
+			x.J.set_diag(x.sm0,indices,1.0);
+			FLT sgn = 1;
+			for(int mode=0;mode<x.sm0;++mode) {
+				(*pJ_mpi).add_values(row+mode,row_mpi+6*mode +2,sgn);
+				sgn *= -1.;
 			}
-#ifdef MPDEBUG
-			*x.gbl->log << std::endl;
-#endif
-			
-			/* Shift all modes in equation */
-			int mcnt_mpi = 2;  // TEMPERATURE IS 3rd Variable
-			int sgn_mpi = 1;
-			for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
-				FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
-				(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
-				x.J(row+mcnt,row+mode_mpi) += sgn_mpi*dval;
-				mcnt_mpi += 4;  // Four variables
-				sgn_mpi *= -1;
-			}
-			x.J.multiply_row(row+mcnt,0.5);
-			x.J_mpi.multiply_row(row+mcnt,0.5);
-			++mcnt;
 		}
-		sgn *= -1;
 	}
 
 	int sind = base.seg(0);
 	int rowbase = x.seg(sind).pnt(0)*vdofs; 
 	int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-	
-	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-		row = rowbase + *it;
-		int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
-		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
+	*x.gbl->log << "received vertex rowbase " << row_mpi << std::endl;
+#endif	
+#ifdef MY_SPARSE
+	indices(0) = rowbase;
+	indices(1) = rowbase+1;
+	indices(2) = rowbase+2;
+	x.J.zero_rows(3,indices);
+	(*pJ_mpi).zero_rows(3,indices);
+	x.J.set_diag(3,indices,1.0);
+	(*pJ_mpi).add_values(rowbase,row_mpi+2,-1.0);
+	(*pJ_mpi).add_values(rowbase+1,row_mpi+4,-1.0);
+	(*pJ_mpi).add_values(rowbase+2,row_mpi+5,-1.0);
+#else
+	This is not working
 #endif
-		for (int k = 0;k<ncol;++k) {
-			int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-#ifdef MPDEBUG
-			*x.gbl->log << col << ' ';
-#endif
-			FLT val = base.frcvbuf(0,count++);
-			(*pJ_mpi).add_values(row,col,val);
-		}
-#ifdef MPDEBUG
-		*x.gbl->log << std::endl;
-#endif
-		/* Shift all entries for this vertex */
-		for(std::vector<int>::iterator it_mpi=c0vars.begin();it_mpi!=c0vars.end();++it_mpi) {
-			FLT dval = x.J_mpi(row,row_mpi +*it_mpi);
-			(*pJ_mpi)(row,row_mpi +*it_mpi) = 0.0;				
-			x.J(row,rowbase +*it_mpi) += dval;
-		}
-		x.J.multiply_row(row,0.5);
-		x.J_mpi.multiply_row(row,0.5);
-	} 
 #endif
 	
 	if (sm && !base.is_frst()) {
 		/* Equality of curved mode constraint */
 		int ind = jacobian_start;
 		int ind_mpi = static_cast<int>(base.frcvbuf(0,count++)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
+#ifdef MPDEBUG
+		*x.gbl->log << "received jacobian start " << ind_mpi << std::endl;
+#endif	
 		for(int i=0;i<base.nseg;++i) {
 			int sgn = 1;
 			for(int mode=0;mode<x.sm0;++mode) {
@@ -927,13 +879,17 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 		int sind = base.seg(i);
 		int pind = x.seg(sind).pnt(1)*vdofs;
 		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-			nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
+			//nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
+			nnzero_mpi(pind+*it) += 1;  // Just continuity constraint
+			count++;
 		}
 	}
 	int sind = base.seg(0);
 	int pind = x.seg(sind).pnt(0)*vdofs;
 	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-		nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
+		//nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
+		nnzero_mpi(pind+*it) += 1; // Just continuity constraint
+		count++;
 	}
 	
 	/* Now add to side degrees of freedom */

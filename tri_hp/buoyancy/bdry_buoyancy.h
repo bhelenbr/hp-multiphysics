@@ -117,6 +117,25 @@ namespace bdry_buoyancy {
 			void vdirichlet();
 #ifdef petsc
 			int petsc_rsdl(Array<FLT,1> res);
+			/* This is wickedly complicated (doh! suffering for confusion early on about manifold b.c.'s) */
+			/* element_rsdl/rsdl adds to residual for temperature, mass conservation */
+			/* and then makes tangential equation residual */
+			/* rsdl also applies b.c. to tangent residual vbdry->rsdl() */
+			/* tangential residual goes in vres(0)/sres(0) */
+			/* rsdl_after moves heat equation residual to vres(1)/sres(1) after it has been made */
+			/* Then applies dirichlet b.c. to temperature */
+			/* in petsc case vdirichlet rotates residual to be aligned with x,y and puts it in r_mesh rsdl */
+			/* vbdry-vdirchlet zeros residuals for mesh movement in x,y directions in both places (r_gbl and vres */
+			/* petsc_rsdl does the rotating instead of sdirichlet for the side modes (called from petsc_rsdl) */
+
+			
+			/* For jacobian */
+			/* petsc_jacobian calculates how residuals change in normal way */
+			/* petsc_matchjacobian_snd()  Sends T, tangent, normal
+			/* petsc_matchjacobian_rcv()	Receives T
+			/* petsc_matchjacobian_dirichlet() -> moves heat equation jacobian to normal row */
+			/* then rotates normal and tangential row to x,y directions */
+			
 			void petsc_jacobian();
 			void petsc_jacobian_dirichlet();
 			void petsc_matchjacobian_snd();
