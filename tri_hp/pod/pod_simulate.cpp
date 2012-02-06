@@ -220,10 +220,6 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 			BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
 			BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
 		}
-		
-		BASE::ugbd(1).v.reference(ugstore.v);
-		BASE::ugbd(1).s.reference(ugstore.s);
-		BASE::ugbd(1).i.reference(ugstore.i);
 	}
 
 #ifdef POD_BDRY
@@ -894,6 +890,11 @@ template<class BASE> void pod_simulate<BASE>::calc_coeffs() {
 		sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 		coeffs(l) = dotp_recv;
 	}
+	
+	BASE::ugbd(1).v.reference(ugstore.v);
+	BASE::ugbd(1).s.reference(ugstore.s);
+	BASE::ugbd(1).i.reference(ugstore.i);
+
 }
 
 
