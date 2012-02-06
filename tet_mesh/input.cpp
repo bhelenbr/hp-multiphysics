@@ -31,7 +31,22 @@ void tet_mesh::init(input_map &input, void *gin) {
 		FLT grwfac;
 		keyword = gbl->idprefix + "_growth factor";
 		if (!input.get(keyword,grwfac)) {
-			input.getwdefault("growth factor",grwfac,1.0);
+			input.getwdefault("growth factor",grwfac,2.0);
+		}
+		if (grwfac < 1.0) {
+			*gbl->log << "growth factor must be greater than one\n";
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		keyword = gbl->idprefix + "_mesh";
+		if (!input.get(keyword,filename)) {
+			if (input.get("mesh",filename)) {
+				filename = filename +"_" +gbl->idprefix;
+			}
+			else {
+				*gbl->log << "no mesh name" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
 		}
 		
 		int filetype;
@@ -40,13 +55,6 @@ void tet_mesh::init(input_map &input, void *gin) {
 			input.getwdefault("filetype",filetype,static_cast<int>(tet_mesh::grid));
 		}
 		
-		keyword = gbl->idprefix + "_mesh";
-		if (!input.get(keyword,filename)) {
-			if (!input.get("mesh",filename))  {
-				*gbl->log << "no mesh name\n";
-				exit(1);
-			}
-		}
 		coarse_level = 0;
 		tet_mesh::input(filename.c_str(),static_cast<tet_mesh::filetype>(filetype),grwfac,input);
 	}
@@ -57,24 +65,27 @@ void tet_mesh::init(input_map &input, void *gin) {
 
 void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizereduce1d) {
 	int i;
-
 	const tet_mesh& inmesh = dynamic_cast<const tet_mesh &>(mgin);
 
 	if (!initialized) {
 		gbl = inmesh.gbl;
 		maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d*sizereduce1d)),10);
+		maxvst =  inmesh.maxvst;
+
 		allocate(maxvst);
 		nfbd = inmesh.nfbd;
 		fbdry.resize(nfbd);
 		for(i=0;i<nfbd;++i) {
 			fbdry(i) = inmesh.fbdry(i)->create(*this);
-			fbdry(i)->alloc(MAX(static_cast<int>(inmesh.fbdry(i)->maxpst/(sizereduce1d*sizereduce1d)),10));
+			//fbdry(i)->alloc(MAX(static_cast<int>(inmesh.fbdry(i)->maxpst/(sizereduce1d*sizereduce1d)),10));
+			fbdry(i)->alloc(inmesh.fbdry(i)->maxpst);
 		}		
 		nebd = inmesh.nebd;
 		ebdry.resize(nebd);
 		for(i=0;i<nebd;++i) {
 			ebdry(i) = inmesh.ebdry(i)->create(*this);
-			ebdry(i)->alloc(MAX(static_cast<int>(inmesh.ebdry(i)->maxseg/sizereduce1d),10));
+			//ebdry(i)->alloc(MAX(static_cast<int>(inmesh.ebdry(i)->maxseg/sizereduce1d),10));
+			ebdry(i)->alloc(inmesh.ebdry(i)->maxseg);
 		}
 		nvbd = inmesh.nvbd;
 		vbdry.resize(nvbd);
