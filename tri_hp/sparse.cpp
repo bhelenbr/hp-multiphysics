@@ -119,7 +119,8 @@ void tri_hp::petsc_jacobian() {
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian();
 	
-//	/* This one does nothing? */
+//  /* Typically this is called from within hp_ebdry->petsc_jacobian() */
+//  /* Not sure when this needs to be uncommented */
 //	for(int i=0;i<nvbd;++i) 
 //		hp_vbdry(i)->petsc_jacobian();  // TEMPORARY
 		
@@ -165,8 +166,9 @@ void tri_hp::petsc_jacobian() {
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
 
 	/* FIX ME!! NOT SURE WHERE TO CALL THIS TEMPORARY */
-//	for(int i=0;i<nvbd;++i) 
-//		hp_vbdry(i)->petsc_jacobian_dirichlet();
+	/* This must be uncommented for the melt case to work */
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->petsc_jacobian_dirichlet();
 //			
 	return;
 }
@@ -174,9 +176,9 @@ void tri_hp::petsc_jacobian() {
 void tri_hp::petsc_rsdl() {
 
 	rsdl();
-	
-	enforce_continuity(gbl->res, r_tri_mesh::gbl->res);
 		
+	enforce_continuity(gbl->res, r_tri_mesh::gbl->res);
+			
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->vdirichlet();

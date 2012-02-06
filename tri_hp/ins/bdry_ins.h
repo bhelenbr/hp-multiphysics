@@ -33,7 +33,7 @@ using namespace blitz;
 //#define DETAILED_DT
 //#define DETAILED_MINV
 
-#define L2_ERROR
+//#define L2_ERROR
 
 namespace bdry_ins {
 

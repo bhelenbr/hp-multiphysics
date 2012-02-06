@@ -1361,7 +1361,10 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 		for (int k = 0;k<ncol;++k) {
 			int col = static_cast<int>(base.fsndbuf(count++));
 			FLT val = base.fsndbuf(count++);
-			x.J.set_values(row+n,col,val);
+			/* This is a check that we aren't receiving unusued local degrees of freedom */
+			if (abs(col) < INT_MAX-10) {
+				x.J.set_values(row+n,col,val);
+			}
 		}
 		x.J_mpi.multiply_row(row+n, 0.0);
 	}
@@ -1386,12 +1389,16 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(m,count++)) +jstart_mpi;
-#ifdef MPDEBUG
-				*x.gbl->log  << col << ' ';
-#endif
+				int col = static_cast<int>(base.frcvbuf(m,count++));
 				FLT val = base.frcvbuf(m,count++);
-				(*pJ_mpi).add_values(row+n,col,val);
+				
+				if (abs(col) < INT_MAX-10) {
+					col += jstart_mpi;
+#ifdef MPDEBUG
+					*x.gbl->log  << col << ' ';
+#endif
+					(*pJ_mpi).add_values(row+n,col,val);
+				}
 			}
 #ifdef MPDEBUG
 			*x.gbl->log << std::endl;
@@ -1413,7 +1420,6 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	This Part not working
 #endif
 }
-
 
 void hp_edge_bdry::petsc_matchjacobian_snd() {
 
@@ -1542,10 +1548,10 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-
+				int col = static_cast<int>(base.frcvbuf(0,count++));
 				FLT val = base.frcvbuf(0,count++);
 				if (abs(col) < INT_MAX-10) {
+					 col += Jstart_mpi;
 #ifdef MPDEBUG
 					*x.gbl->log  << col << ' ';
 #endif
@@ -1577,14 +1583,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 				for (int k = 0;k<ncol;++k) {
-					int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-
+					int col = static_cast<int>(base.frcvbuf(0,count++));
 					FLT val = sgn*base.frcvbuf(0,count++);
 					if (abs(col) < INT_MAX-10) {
+						col += Jstart_mpi;
 #ifdef MPDEBUG
-							*x.gbl->log  << col << ' ';
+						*x.gbl->log  << col << ' ';
 #endif				
-							(*pJ_mpi).add_values(row+mcnt,col,val);
+						(*pJ_mpi).add_values(row+mcnt,col,val);
 					}
 				}
 #ifdef MPDEBUG
@@ -1618,12 +1624,10 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 		for (int k = 0;k<ncol;++k) {
-			int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-#ifdef MPDEBUG
-			*x.gbl->log << col << ' ';
-#endif
+			int col = static_cast<int>(base.frcvbuf(0,count++));
 			FLT val = base.frcvbuf(0,count++);
-			if (abs(col) < INT_MAX-100) {
+			if (abs(col) < INT_MAX-10) {
+				col += Jstart_mpi;
 #ifdef MPDEBUG
 				*x.gbl->log  << col << ' ';
 #endif							

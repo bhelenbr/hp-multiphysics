@@ -1146,9 +1146,10 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+				int col = static_cast<int>(base.frcvbuf(0,count++));
 				FLT val = base.frcvbuf(0,count++);
 				if (abs(col) < INT_MAX-10) {
+					col += Jstart_mpi;
 #ifdef MPDEBUG
 					*x.gbl->log  << col << ' ';
 #endif
@@ -1181,9 +1182,10 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
 				for (int k = 0;k<ncol;++k) {
-					int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+					int col = static_cast<int>(base.frcvbuf(0,count++));
 					FLT val = sgn*base.frcvbuf(0,count++);
 					if (abs(col) < INT_MAX-10) {
+						col += Jstart_mpi;
 #ifdef MPDEBUG
 						*x.gbl->log  << col << ' ';
 #endif
@@ -1226,9 +1228,10 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 		for (int k = 0;k<ncol;++k) {
-			int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+			int col = static_cast<int>(base.frcvbuf(0,count++));
 			FLT val = base.frcvbuf(0,count++);
 			if (abs(col) < INT_MAX-10) {
+				col += Jstart_mpi;
 #ifdef MPDEBUG
 				*x.gbl->log  << col << ' ';
 #endif

@@ -27,9 +27,10 @@ void tri_hp::petsc_initialize(){
 	else
 		vdofs = ND+NV;
 
+	/* Internal degrees of freedom */
 	jacobian_size = npnt*vdofs +(nseg*sm +ntri*im)*NV;
 
-	/* count total degrees of freedom on boundaries */
+	/* Count total degrees of freedom on boundaries */
 	if (mmovement == coupled_deformable) {
 		for(int i=0;i < nebd; ++i) {
 			jacobian_size += hp_ebdry(i)->dofs(jacobian_size);
@@ -38,6 +39,7 @@ void tri_hp::petsc_initialize(){
 	}
 	
 	
+	/* Assemble list of sizes for each block */
 	const int nblock = sim::blks.nblock;
 	const int idnum = gbl->idnum;
 
@@ -47,6 +49,7 @@ void tri_hp::petsc_initialize(){
 	sim::blks.allreduce(sndsize.data(),size.data(),nblock,blocks::int_msg,blocks::sum);
 	~sndsize;
 	
+	/* Add up total size */
 	int total_size = 0;
 	for(int i=0;i<nblock;++i) {
 		total_size += size(i);
@@ -93,6 +96,14 @@ void tri_hp::petsc_initialize(){
 		hp_vbdry(i)->non_sparse(nnzero);
 		
 	/* Connections to other blocks */
+	/* Jacobian rows for matching degrees of freedom are added together */
+	/* so there must be enough space for the entire jacobian row */
+	/* Both rows end up being basically the same except the diagonal entries */
+	/* one each row are the local degrees of freedom which implicitly enforces */
+	/* continuity of the degrees of freedom by: */
+	/* a_ii u_l +rest of row = b */
+	/* a_ii u_r +rest of row = b */
+	/* a_ii (u_r -u_l) = 0 */
 	Array<int,1> nnzero_mpi(jacobian_size);
 	nnzero_mpi = 0;
 	for(int i=0;i<nebd;++i) 
@@ -214,6 +225,11 @@ void tri_hp::petsc_setup_preconditioner() {
 	petsc_jacobian();
 	J.check_for_unused_entries();
 	J_mpi.check_for_unused_entries();	
+	
+//	for(int n=0;n<3;++n) {
+//		J.output_row(*gbl->log,n);
+//		J_mpi.output_row(*gbl->log,n);
+//	}
 
 #ifndef MPISRC
 	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
@@ -451,6 +467,8 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 				rv(ind++) = r_tri_mesh::gbl->res(i)(n);
 		}
 	}
+	
+	*gbl->log << rv(0) << ' ' << rv(1) << ' ' << rv(2) << std::endl;
 	
 	for (int i=0;i<nseg;++i) 
 		for(int m=0;m<sm0;++m)
