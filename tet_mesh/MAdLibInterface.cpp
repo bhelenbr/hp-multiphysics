@@ -141,6 +141,11 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	//									the solver to free memory
 	// solver->deleteData();
 
+
+//	input_map empty;
+//	mesh->input("asdf",tet_mesh::gmsh,1.0,empty);
+
+	
 	// 1.B. Build the MAdLib geometrical model.
 	//			(see note in MAdLibInterface.h about models)
 	pGModel MAdModel = NULL;
@@ -150,8 +155,14 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 1.C. Build the MadLib mesh and delete the solver mesh.
 	pMesh MAdMesh = M_new(MAdModel);
 	exportToMAdMesh(mesh, MAdMesh);
-	M_writeMsh(MAdMesh,"starting_mesh.msh",2);
+	//M_writeMsh(MAdMesh,"starting_mesh.msh",2);
+	//cout << "number of nodes starting mesh: " <<  mesh->npnt << endl;
+	
+	//temp
+//	importFromMAdMesh(MAdMesh, mesh);
+//	mesh->output("starting_mesh",tet_mesh::grid);
 
+	
 	// solver->deleteMesh();
 
 	// 1.D. Build the size field used in adaptation
@@ -168,8 +179,8 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	adapter->setSliverPermissionInESplit( true, 10. );
     adapter->setSliverPermissionInECollapse( true, 0.1 );
 	
-    adapter->setCollapseOnBoundary( true, 1.e-6 );
-    adapter->setSwapOnBoundary( true, 1.e-6 );
+    //adapter->setCollapseOnBoundary( true, 1.e-6 );
+    //adapter->setSwapOnBoundary( true, 1.e-6 );
 	
 	// 1.F. Register the callback function(s) of the solver
 	// adapter->addCallback(Solver_CBFunction,(void*)this);
@@ -186,8 +197,10 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 
 	// optional output
 	adapter->printStatistics(std::cout);
-	M_writeMsh(MAdMesh,"adapted_mesh.msh",2);
+	//M_writeMsh(MAdMesh,"adapted_mesh.msh",2);
+	//cout << "number of nodes adapted mesh: " <<  mesh->npnt << endl;
 
+	
 	delete adapter;
 	delete sizeField;
 
@@ -198,6 +211,9 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 3.A. Rebuild the solver mesh
 	importFromMAdMesh(MAdMesh, mesh);
 	
+	//temp
+	//mesh->output("adapted_mesh",tet_mesh::grid);
+
 	// 3.B. get the solution from the MDB mesh
 //	solver->allocateSolution();
 //	getSolutionFromMesh(MAdMesh);
@@ -335,6 +351,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 		int gId = GEN_tag(pge);
 		
 		if (gDim == 2) {
+			cout << "why is this here" << endl;
 			// Edge Boundary */
 			for (int i=0;i<mesh->nfbd;++i) {
 				if (gId == mesh->fbdry(i)->idnum) {
@@ -400,7 +417,19 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 	
 	
 	
-
+//	mesh->output("asdf",tet_mesh::grid);
+//	
+//	pGModel MAdModel = NULL;
+//	GM_create(&MAdModel,"theModel");
+//	exportToMAdModel(mesh, MAdModel);
+//	
+//	// 1.C. Build the MadLib mesh and delete the solver mesh.
+//	pMesh MAdMesh2 = M_new(MAdModel);
+//	exportToMAdMesh(mesh, MAdMesh2);
+//	M_writeMsh(MAdMesh2,"asdf.msh",2);
+//	
+//	delete MAdModel;
+//	delete MAdMesh2;
 	
 	
 }
