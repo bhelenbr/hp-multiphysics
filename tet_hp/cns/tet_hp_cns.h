@@ -21,16 +21,17 @@ public:
 		Array<FLT,3> tau;
 		
 		/*preconditioner flag*/
-		bool preconditioner;
+		int preconditioner;
 		
 		/* PHYSICAL CONSTANTS */
-		FLT mu,kcond,R,gamma;
+		FLT mu,kcond,R,gamma,atm_pressure;
 		TinyVector<double,tet_mesh::ND> body;
 		
 		/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 		TinyVector<FLT,2> eanda, eanda_recv;
 				
 		Array<FLT,3> vpreconditioner,epreconditioner;
+		Array<FLT,1> betasquared;
 		
 		/* SOURCE FUNCTION FOR MMS */
 		//init_bdry_cndtn *src;
@@ -60,7 +61,7 @@ public:
 	void setup_preconditioner();
 	void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 	void calculate_unsteady_sources();
-	void calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
+	void calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT h, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep, FLT &b2);
 	//void project_new_variables();
 	void switch_variables(Array<double,1> pvu, Array<double,1> &a);
 	

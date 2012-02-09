@@ -85,6 +85,15 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex,stridey);
 	}
 	
+//	/* add atm pressure */
+//	for(int i=0;i<lgpx;++i) {
+//		for(int j=0;j<lgpy;++j) {
+//			for(int k=0;k<lgpz;++k) {
+//				u(0)(i)(j)(k) += gbl->atm_pressure;
+//			}
+//		}
+//	}
+	
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 	for(int n=0;n<NV;++n){
 		for(int i=0;i<basis::tet(log2p).tm;++i){
@@ -110,7 +119,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
-					double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+					double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 
 					fluxx = rho*(u(1)(i)(j)(k) -mvel(0)(i)(j)(k));
 					fluxy = rho*(u(2)(i)(j)(k) -mvel(1)(i)(j)(k));
@@ -175,7 +184,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 						d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 						
-						double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 						cjcb = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 						
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
@@ -416,7 +425,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						FLT wv = u(3)(i)(j)(k);
 						FLT rt = u(4)(i)(j)(k);					
 						FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
-						FLT rho = pr/rt;
+						FLT rho = (pr+gbl->atm_pressure)/rt;
 						
 						/* df/dw */
 						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,
@@ -485,7 +494,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int j=0;j<lgpy;++j) {
 				for(int k=0;k<lgpz;++k) {
 					
-					double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+					double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 					
 					fluxx = rho*(u(1)(i)(j)(k) -mvel(0)(i)(j)(k));
 					fluxy = rho*(u(2)(i)(j)(k) -mvel(1)(i)(j)(k));
@@ -540,7 +549,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				for(int j=0;j<lgpy;++j) {
 					for(int k=0;k<lgpz;++k) {
 						
-						double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 					
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
@@ -783,7 +792,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						FLT wv = u(3)(i)(j)(k);
 						FLT rt = u(4)(i)(j)(k);					
 						FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
-						FLT rho = pr/rt;
+						FLT rho = (pr+gbl->atm_pressure)/rt;
 						
 						/* df/dw */
 						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,

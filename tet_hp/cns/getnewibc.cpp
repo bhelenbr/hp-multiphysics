@@ -15,7 +15,7 @@ namespace ibc_cns {
 
 	class freestream : public init_bdry_cndtn {
 		private:
-		FLT angle1,angle2, speed,perturb_amp,gamma;
+		FLT angle1,angle2,speed,perturb_amp,gamma,pressure,atm_pressure,temperature;
 		TinyVector<FLT,tet_mesh::ND> vel;
 
 		public:
@@ -28,7 +28,7 @@ namespace ibc_cns {
 
 				switch(n) {
 					case(0):
-						return(1.0/gamma+amp);
+						return(pressure+amp);
 					case(1):
 						return(vel(0)+amp);
 					case(2):
@@ -36,7 +36,7 @@ namespace ibc_cns {
 					case(3):
 						return(vel(2)+amp);
 					case(4):
-						return(1.0/gamma+amp);
+						return(temperature+amp);
 				}
 				return(0.0);
 			}
@@ -64,6 +64,21 @@ namespace ibc_cns {
 				keyword = idnty +"_gamma";
 				if (!blockdata.get(keyword,gamma))
 					blockdata.getwdefault("gamma",gamma,1.4);
+				
+				keyword = idnty +"_atm_pressure";
+				if (!blockdata.get(keyword,atm_pressure))
+					blockdata.getwdefault("atm_pressure",atm_pressure,0.0);
+				
+				keyword = idnty +"_temperature";
+				if (!blockdata.get(keyword,temperature))
+					blockdata.getwdefault("temperature",temperature,1.0/gamma);
+				
+				if(atm_pressure > 0.0)
+					pressure = 0.0;
+				else
+					pressure = 1.0/gamma;
+				
+						
 				
 				angle1 *= M_PI/180.0;
 				angle2 *= M_PI/180.0;

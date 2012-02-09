@@ -49,7 +49,6 @@ namespace bdry_cns {
 		void init(input_map& input,void* gbl_in) {
 			hp_face_bdry::init(input,gbl_in);
 		}
-
 	};
 		
 
@@ -63,6 +62,7 @@ namespace bdry_cns {
 			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 			void rsdl(int stage);
 			void element_rsdl(int find,int stage);
+			FLT beta_squared;
 	};
 
 

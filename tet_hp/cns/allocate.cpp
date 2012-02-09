@@ -26,18 +26,21 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	
 	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 		
-	input.getwdefault("preconditioner",gbl->preconditioner,true);
+	/* no preconditioner = 0, weiss-smith preconditioner = 1, squared preconditioner = 2 */
+	input.getwdefault("preconditioner",gbl->preconditioner,1);
 
 	gbl->tau.resize(maxvst,NV,NV);
 
 	gbl->vpreconditioner.resize(maxvst,NV,NV);
 	gbl->epreconditioner.resize(maxvst,NV,NV);
+	gbl->betasquared.resize(ntet);
 
 	double prandtl;
 	
 	double bodydflt[3] = {0.0,0.0,0.0};
 	if (!input.get(gbl->idprefix +"_body_force",gbl->body.data(),3)) input.getwdefault("body_force",gbl->body.data(),3,bodydflt); 
-
+	
+	if (!input.get(gbl->idprefix + "_atm_pressure",gbl->atm_pressure)) input.getwdefault("atm_pressure",gbl->atm_pressure,0.0);	
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
 	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.713);
@@ -108,7 +111,7 @@ void tet_hp_cns::calculate_unsteady_sources() {
             for(i=0;i<basis::tet(log2p).gpx;++i) { 
                 for(j=0;j<basis::tet(log2p).gpy;++j) {    
 					for(k=0;k<basis::tet(log2p).gpz;++k) {    
-						double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 
 						cjcb(i)(j)(k) = -gbl->bd(0)*rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						

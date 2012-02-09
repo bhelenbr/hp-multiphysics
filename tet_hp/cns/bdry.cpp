@@ -60,6 +60,8 @@ void neumann::element_rsdl(int find,int stage) {
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 	
+	beta_squared = x.gbl->betasquared(x.tri(find).tet(0));
+	
 	x.lf = 0.0;
 	
 	x.crdtocht2d(find);
@@ -86,7 +88,7 @@ void neumann::element_rsdl(int find,int stage) {
 			
 			for(n=0;n<x.NV;++n)
 				u(n) = x.u2d(n)(j)(k);
-			
+						
 			flux(u,pt,mvel,nrm,flx);
 			
 			for(n=0;n<x.NV;++n)
@@ -108,7 +110,7 @@ void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector
 	v(1) = u(2)-mv(1);
 	v(2) = u(3)-mv(2);
 	FLT RT = u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -131,7 +133,7 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 	v(1) = ibc->f(2,xpt,x.gbl->time)-mv(1);
 	v(2) = ibc->f(3,xpt,x.gbl->time)-mv(2);
 	FLT RT = ibc->f(4,xpt,x.gbl->time);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -287,7 +289,7 @@ void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVect
 	v(1) = ibc->f(2,xpt,x.gbl->time);
 	v(2) = ibc->f(3,xpt,x.gbl->time);
 	FLT RT =u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -459,7 +461,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	ul(4) = pvu(4);
 
 	/* Roe Variables */
-	Rl(0) = sqrt(ul(0)/ul(x.NV-1)); // sqrt(rho)
+	Rl(0) = sqrt((ul(0)+x.gbl->atm_pressure)/ul(x.NV-1)); // sqrt(rho)
 	Rl(1) = Rl(0)*ul(1); // sqrt(rho)*u
 	Rl(2) = Rl(0)*ul(2); // sqrt(rho)*v
 	Rl(3) = Rl(0)*ul(3); // sqrt(rho)*w
@@ -477,7 +479,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	ur(4) = ub(4);
 	
 	/* Roe Variables */
-	Rr(0) = sqrt(ur(0)/ur(x.NV-1));
+	Rr(0) = sqrt((ur(0)+x.gbl->atm_pressure)/ur(x.NV-1));
 	Rr(1) = Rr(0)*ur(1);
 	Rr(2) = Rr(0)*ur(2);
 	Rr(3) = Rr(0)*ur(3);
@@ -520,15 +522,25 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	FLT alpha = x.gbl->kcond/(rho*cp);
 	
 	/* make sure this stuff matches what is in tstep */
-	FLT h = mag*2.0/(0.25*(basis::tet(x.log2p).p+1.0)*(basis::tet(x.log2p).p+1.0));
+	FLT h =  mag*2.0/(0.25*(basis::tet(x.log2p).p+1.0)*(basis::tet(x.log2p).p+1.0));
 	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
 	FLT umag = sqrt(u*u+v*v+w*w);
 	FLT M = MAX(umag/c,1.0e-5);
-	FLT nuh = 4.0*nu/(h*c);
-	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
+	FLT nuh = 2.0*MAX(4.0*nu/(3.0*h*c),alpha/(h*c));
 	
-	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
-	//b2 = 1.0; //turn off preconditioner
+	FLT b2;
+	if(M < 0.8 && x.gbl->preconditioner){
+	    b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh, 1.0);
+	}
+	else {
+		b2 = 1.0; // turn off preconditioner
+	}
+
+	/* b2 computed on cell in tstep */
+	b2 = beta_squared;
+	
+	//cout << "characteristic BC" << endl;
+	//cout << sqrt(b2) << ' ' << sqrt(M*M/(1.0-M*M)) << ' ' << hdt << ' ' << nuh << ' ' << 4.0*nu/(3.0*h*c) << ' ' << alpha/(h*c) << endl;
 
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0, 0.0,
@@ -543,6 +555,26 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 		   v/rt,                 0.0,   rho,   0.0,   -rho*v/rt,
 		   w/rt,                 0.0,   0.0,   rho,   -rho*w/rt,
 		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, rho*w, -rho*ke/rt;		
+	
+	temp = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				temp(i,j)+=dcdp(i,k)*Pinv(k,j);
+	
+	Pinv = temp;
+	
+	// need to fill in Tinv not sure if it is needed
+	//	if(gbl->preconditioner == 2) {
+	//		temp = 0.0;
+	//		for(int i=0; i<NV; ++i)
+	//			for(int j=0; j<NV; ++j)
+	//				for(int k=0; k<NV; ++k)
+	//					temp(i,j)+=Pinv(i,k)*Tinv(k,j);
+	//		
+	//		Pinv = temp/spectral_radius(Tinv);
+	//	}
+	
 	
 	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
@@ -579,13 +611,6 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 			for(int k=0; k<x.NV; ++k)
 				temp(i,j)+=Pinv(i,k)*A(k,j);
 	
-	A = temp;
-	
-	temp = 0.0;
-	for(int i=0; i<x.NV; ++i)
-		for(int j=0; j<x.NV; ++j)
-			for(int k=0; k<x.NV; ++k)
-				temp(i,j)+=dcdp(i,k)*A(k,j);
 	A = temp;
 	
 	for(int i = 0; i < x.NV; ++i)
@@ -640,7 +665,7 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, Tin
 	v(1) = u(2)-mv(1);
 	v(2) = u(3)-mv(2);
 	FLT RT = u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -666,7 +691,7 @@ void pure_slip::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVect
 	v(1) = ibc->f(2,xpt,x.gbl->time)-mv(1);
 	v(2) = ibc->f(3,xpt,x.gbl->time)-mv(2);
 	FLT RT = u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -773,7 +798,7 @@ void neumann_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyV
 	v(1) = u(2)-mv(1);
 	v(2) = u(3)-mv(2);
 	FLT RT = u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -797,7 +822,7 @@ void inflow_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVe
 	v(1) = ibc->f(2,xpt,x.gbl->time)-mv(1);
 	v(2) = ibc->f(3,xpt,x.gbl->time)-mv(2);
 	FLT RT = ibc->f(4,xpt,x.gbl->time);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
@@ -845,12 +870,12 @@ void inflow_edge::edirichlet3d() {
 void adiabatic_edge::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 	
 	Array<FLT,1> v(3);
-	FLT pr = u(0);
+	FLT pr = u(0)+x.gbl->atm_pressure;
 	v(0) = ibc->f(1,xpt,x.gbl->time);
 	v(1) = ibc->f(2,xpt,x.gbl->time);
 	v(2) = ibc->f(3,xpt,x.gbl->time);
 	FLT RT = u(4);
-	FLT rho = pr/RT;
+	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
 	/* CONTINUITY */
 	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));

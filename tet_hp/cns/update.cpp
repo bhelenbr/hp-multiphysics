@@ -136,6 +136,7 @@ void tet_hp_cns::update() {
 	return;
 }
 
+//#define lower_tri
 
 void tet_hp_cns::minvrt() {
 	int i,j,k,n,tind,msgn,sgn,sind,v0;
@@ -171,38 +172,43 @@ void tet_hp_cns::minvrt() {
 	/* LOOP THROUGH VERTICES */
 	for(int i=0;i<npnt;++i){
 		
-		for(int n = 0; n < NV; ++n){
-			lclug(n) = ug.v(i,n);
+		for(int n = 0; n < NV; ++n)
 			lclres(n) = gbl->res.v(i,n);
-		}
-		
-		switch_variables(lclug,lclres);
-		
-		for(int j=0;j<NV;++j){
-			FLT lcl0 = lclres(j);
-			for(int k=0;k<j;++k){
-				lcl0 -= gbl->vpreconditioner(i,j,k)*lclres(k);
-			}
-			lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
-		}
-		
-//		int info,ipiv[NV];
-//		Array<double,2> P(NV,NV);
-//		
-//		for(int j=0;j<NV;++j)
-//			for(int k=0;k<NV;++k)
-//				P(j,k) = gbl->vpreconditioner(i,j,k);
-//			
-//		GETRF(NV, NV, P.data(), NV, ipiv, info);
-//		
-//		if (info != 0) {
-//			*gbl->log << "DGETRF FAILED FOR CNS MINVRT" << std::endl;
-//			sim::abort(__LINE__,__FILE__,gbl->log);
-//		}
-//		
-//		char trans[] = "T";
-//		GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
 
+		
+		if(gbl->preconditioner == 0 || gbl->preconditioner == 1) {
+			for(int n = 0; n < NV; ++n)
+				lclug(n) = ug.v(i,n);
+
+			switch_variables(lclug,lclres);
+
+			for(int j=0;j<NV;++j){
+				FLT lcl0 = lclres(j);
+				for(int k=0;k<j;++k){
+					lcl0 -= gbl->vpreconditioner(i,j,k)*lclres(k);
+				}
+				lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
+			}
+		}
+		else {		
+			int info,ipiv[NV];
+			Array<double,2> P(NV,NV);
+			
+			for(int j=0;j<NV;++j)
+				for(int k=0;k<NV;++k)
+					P(j,k) = gbl->vpreconditioner(i,j,k);
+				
+			GETRF(NV, NV, P.data(), NV, ipiv, info);
+
+			if (info != 0) {
+				*gbl->log << "DGETRF FAILED FOR CNS MINVRT" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			char trans[] = "T";
+			GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+		}
+		
 		for(int n = 0; n < NV; ++n)
 			gbl->res.v(i,n) = lclres(n);
 		
@@ -230,37 +236,42 @@ void tet_hp_cns::minvrt() {
 	/* LOOP THROUGH SIDES */    
 	for(int sind=0;sind<nseg;++sind) {
 		
-		for(int n = 0; n < NV; ++n){
-			uavg(n) = 0.5*(ug.v(seg(sind).pnt(0),n)+ug.v(seg(sind).pnt(1),n));
+		for(int n = 0; n < NV; ++n)
 			lclres(n) = gbl->res.e(sind,0,n);
-		}
-		
-		switch_variables(uavg,lclres);
-		
-		for(int j=0;j<NV;++j){
-			FLT lcl0 = lclres(j);
-			for(int k=0;k<j;++k){
-				lcl0 -= gbl->epreconditioner(sind,j,k)*lclres(k);
-			}
-			lclres(j) = lcl0/gbl->epreconditioner(sind,j,j);
-		}
 
-//		int info,ipiv[NV];
-//		Array<double,2> P(NV,NV);
-//		
-//		for(int j=0;j<NV;++j)
-//			for(int k=0;k<NV;++k)
-//				P(j,k) = gbl->epreconditioner(sind,j,k);
-//		
-//		GETRF(NV, NV, P.data(), NV, ipiv, info);
-//		
-//		if (info != 0) {
-//			*gbl->log << "DGETRF FAILED FOR CNS MINVRT EDGE" << std::endl;
-//			sim::abort(__LINE__,__FILE__,gbl->log);
-//		}
-//		
-//		char trans[] = "T";
-//		GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+
+		if(gbl->preconditioner == 0 || gbl->preconditioner == 1) {
+			for(int n = 0; n < NV; ++n)
+				uavg(n) = 0.5*(ug.v(seg(sind).pnt(0),n)+ug.v(seg(sind).pnt(1),n));
+			
+			switch_variables(uavg,lclres);
+			
+			for(int j=0;j<NV;++j){
+				FLT lcl0 = lclres(j);
+				for(int k=0;k<j;++k){
+					lcl0 -= gbl->epreconditioner(sind,j,k)*lclres(k);
+				}
+				lclres(j) = lcl0/gbl->epreconditioner(sind,j,j);
+			}
+		}
+		else {
+			int info,ipiv[NV];
+			Array<double,2> P(NV,NV);
+			
+			for(int j=0;j<NV;++j)
+				for(int k=0;k<NV;++k)
+					P(j,k) = gbl->epreconditioner(sind,j,k);
+			
+			GETRF(NV, NV, P.data(), NV, ipiv, info);
+			
+			if (info != 0) {
+				*gbl->log << "DGETRF FAILED FOR CNS MINVRT EDGE" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			char trans[] = "T";
+			GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+		}
 		
 		for(int n = 0; n < NV; ++n)
 			gbl->res.e(sind,0,n) = lclres(n);
@@ -319,8 +330,9 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 	Array<double,1> temp(NV);
 	double gm1 = gbl->gamma-1.0;
 	
-	double pr = pvu(0),u = pvu(1),v = pvu(2),w = pvu(3), rt = pvu(4);
-	double rho = pr/rt;
+	double pr = pvu(0);
+	double u = pvu(1),v = pvu(2),w = pvu(3), rt = pvu(4);
+	double rho = (pr+gbl->atm_pressure)/rt;
 	double ke = 0.5*(u*u+v*v+w*w);
 	
 	/* jacobian derivative of primitive wrt conservative */
