@@ -129,13 +129,26 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 		flx(i) = 0.0;
 	return;
 	
-	//fix temp 
 	
+	Array<FLT,1> v(3);
+	FLT pr = (x.gbl->gamma-1.0)*(u(4)-0.5/u(0)*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3)));
+	v(0) = ibc->f(1,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(0);
+	v(1) = ibc->f(2,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(1);
+	v(2) = ibc->f(3,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(2);
+	FLT RT = (x.gbl->gamma-1.0)*(ibc->f(4,xpt,x.gbl->time)-0.5/ibc->f(0,xpt,x.gbl->time)*(ibc->f(1,xpt,x.gbl->time)*ibc->f(1,xpt,x.gbl->time)+ibc->f(2,xpt,x.gbl->time)*ibc->f(2,xpt,x.gbl->time)+ibc->f(3,xpt,x.gbl->time)*ibc->f(3,xpt,x.gbl->time)))/ibc->f(0,xpt,x.gbl->time);
+	FLT rho = pr/RT;
 	
 	/* CONTINUITY */
-	flx(0) = (u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2);
+	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
 	
-
+	/* XYZ MOMENTUM */
+	for (int n=1;n<tet_mesh::ND+1;++n)
+		flx(n) = flx(0)*v(n-1) + pr*norm(n-1);
+	
+	/* ENERGY EQUATION */
+	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
+	flx(x.NV-1) = h*flx(0);
+	
 	
 	return;
 }
