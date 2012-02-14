@@ -745,11 +745,11 @@ void neumann_edge::element_rsdl(int eind,int stage) {
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 	
-	sind = base.seg(eind).gindx;
+	//sind = base.seg(eind).gindx;
 	
 	x.lf = 0.0;
 	
-	x.crdtocht1d(sind);
+	x.crdtocht1d(eind);
 	for(n=0;n<tet_mesh::ND;++n)
 		basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0),&x.dcrd1d(n)(0));
 	
@@ -845,8 +845,7 @@ void inflow_edge::vdirichlet3d() {
 		sind = base.seg(j).gindx;
 		v0 = x.seg(sind).pnt(0);
 		for(int n=0; n<ndirichlets; ++n) 
-			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
-		
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;		
 	}
 	
 	v0 = x.seg(sind).pnt(1);
@@ -899,13 +898,11 @@ void adiabatic_edge::vdirichlet3d() {
 		v0 = x.seg(sind).pnt(0);
 		for(int n=0; n<ndirichlets; ++n) 
 			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
-		
-	}
+	}	
 	
 	v0 = x.seg(sind).pnt(1);
-	for (int n=0; n<ndirichlets; ++n) 
+	for(int n=0; n<ndirichlets; ++n) 
 		x.gbl->res.v(v0,dirichlets(n)) = 0.0;
-	
 }
 
 void adiabatic_edge::edirichlet3d() {

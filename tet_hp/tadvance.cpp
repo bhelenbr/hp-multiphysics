@@ -113,15 +113,19 @@ void tet_hp::tadvance() {
 		}
 	}
 
-	for(i=0;i<nvbd;++i) 
-		hp_vbdry(i)->tadvance();
+
 		
-	for(i=0;i<nebd;++i) 
-		hp_ebdry(i)->tadvance();
+
 		
 	for(i=0;i<nfbd;++i) 
 		hp_fbdry(i)->tadvance();
-		
+	
+	for(i=0;i<nebd;++i) 
+		hp_ebdry(i)->tadvance();
+	
+	for(i=0;i<nvbd;++i) 
+		hp_vbdry(i)->tadvance();
+	
 	helper->tadvance();
 
 	calculate_unsteady_sources();
@@ -255,14 +259,18 @@ void tet_hp::tadvance() {
 		}
 	}
 	
-	for(i=0;i<nvbd;++i) 
-		hp_vbdry(i)->tadvance();
+
+	
+
+	
+	for(i=0;i<nfbd;++i) 
+		hp_fbdry(i)->tadvance();
 	
 	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->tadvance();
 	
-	for(i=0;i<nfbd;++i) 
-		hp_fbdry(i)->tadvance();
+	for(i=0;i<nvbd;++i) 
+		hp_vbdry(i)->tadvance();
 	
 	helper->tadvance();
 	
