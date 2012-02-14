@@ -866,7 +866,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 						}
 					}
 					
-					/* if it already exist then mark and add to count */
+					/* if it already exists then mark and add to count */
 					for (n = 0; n < nebd; ++n) {
 						if (edge_boundary_count(n,0) == xin_index) {
 							seg(gindx).info = n;
@@ -921,7 +921,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 					
 					/* compare face boundaries */
 					diff_boundary_list += abs(edge_boundary_faces(n,0) - seg(gindx).info);
-					diff_boundary_list += abs(edge_boundary_faces(n,1) - i);
+					diff_boundary_list += abs(edge_boundary_faces(n,1) - i); // i is the face boundary
 
 					if(diff_boundary_list == 0){
 						
@@ -963,7 +963,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 			nextseg:;
 		}
 	}
-
+	
 	/* allocate edge boundaries */
 	ebdry.resize(nebd);
 	for(i=0;i<nebd;++i) {
@@ -1018,9 +1018,18 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		}
 	}
 
-	/* start each boundary with minimum xin gbl index 
-	 so loops start with the same edge on each partition*/
-	for (i=0; i<nebd; ++i) {
+	/* put zeros in because next prev is not setup yet and need to do a swap */
+	for(i=0;i<nebd;++i) {
+		for(j=0;j<ebdry(i)->nseg;++j){
+			ebdry(i)->seg(j).next = 0;
+			ebdry(i)->seg(j).prev = 0;			
+		}			
+	}
+
+	for(i=0;i<nebd;++i) {
+		
+		/* start each boundary with minimum xin gbl index 
+		   so loops start with the same edge on each partition*/
 		int minseg = seg(ebdry(i)->seg(0).gindx).info;
 		int minsegindx = 0;
 		for(j=1;j<ebdry(i)->nseg;++j) {
@@ -1029,17 +1038,19 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 				minsegindx = j;			
 			}
 		}
-		int temp = ebdry(i)->seg(0).gindx;
-		ebdry(i)->seg(0).gindx = ebdry(i)->seg(minsegindx).gindx;
-		ebdry(i)->seg(minsegindx).gindx = temp;
-	}
-	
-	/* reorder edge boundaries to make it easy to find vertex boundaries 
-	   also can separate disconnected edge boundaries */
-	for(i=0;i<nebd;++i) {
+		
+		/* swap so that minsegindx is first */
+		ebdry(i)->swap(minsegindx,0);
+		
+		/* set up all the next and prev for edge boundary */
 		ebdry(i)->setup_next_prev();
+
+		/* reorder edge boundaries to make it easy to find vertex boundaries 
+		 also can separate disconnected edge boundaries */
 		ebdry(i)->reorder();
+
 	}
+
 	
 	/* MOVE VERTEX BOUNDARY INFO */
 	nvbd = 0;

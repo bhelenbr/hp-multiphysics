@@ -214,52 +214,53 @@ void edge_bdry::setup_next_prev() {
 	/* DON'T ASSUME wk INITIALIZED TO -1 */
 	for(i=0;i<nseg;++i) {
 		sind = seg(i).gindx;
-		  seg(i).prev = -1;
-		  seg(i).next = -1;
+		seg(i).prev = -1;
+		seg(i).next = -1;
 		x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
-		  x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
+		x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
 	}
 	
 	/* FILL IN NEXT/PREV DATA */
 	for(i=0; i < nseg; ++i) {
 		sind = seg(i).gindx;
-		  int v0 = x.seg(sind).pnt(0);
-		  if (x.gbl->i1wk(v0) == -1) {
-			   x.gbl->i1wk(v0) = i;
-		  }
-		  else {
-		     /* found match */
-			  prev = x.gbl->i1wk(v0);
-			  seg(i).prev = prev;
-			  sind2 = seg(prev).gindx;
-			  if (x.seg(sind2).pnt(0) == v0)
-			     seg(prev).prev = i;
-			  else
-			     seg(prev).next = i;
-		  }
+		int v0 = x.seg(sind).pnt(0);
+		if (x.gbl->i1wk(v0) == -1) {
+			x.gbl->i1wk(v0) = i;
+		}
+		else {
+			/* found match */
+			prev = x.gbl->i1wk(v0);
+			seg(i).prev = prev;
+			sind2 = seg(prev).gindx;
+			if (x.seg(sind2).pnt(0) == v0)
+				seg(prev).prev = i;
+			else
+				seg(prev).next = i;
+		}
 
-		  int v1 = x.seg(sind).pnt(1);
-		  if (x.gbl->i1wk(v1) == -1) {
-			   x.gbl->i1wk(v1) = i;
-		  }
-		  else {
-		     /* found match */
-			  next = x.gbl->i1wk(v1);
-			  seg(i).next = next;
-			  sind2 = seg(next).gindx;
-			  if (x.seg(sind2).pnt(1) == v1)
-			     seg(next).next = i;
-			  else
-			     seg(next).prev = i;
-		  }
+		int v1 = x.seg(sind).pnt(1);
+		if (x.gbl->i1wk(v1) == -1) {
+		   x.gbl->i1wk(v1) = i;
+		}
+		else {
+			/* found match */
+			next = x.gbl->i1wk(v1);
+			seg(i).next = next;
+			sind2 = seg(next).gindx;
+			if (x.seg(sind2).pnt(1) == v1)
+				seg(next).next = i;
+			else
+				seg(next).prev = i;
+		}
 	 }
 	 
 	 /* RESET gbl->i1wk TO -1 */
 	for(i=0; i <nseg; ++i) {
 		sind = seg(i).gindx;
 		x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
-		  x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
+		x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
 	}
+	
 	return;
 }
 
@@ -268,7 +269,8 @@ void edge_bdry::setup_next_prev() {
 /* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
 void edge_bdry::reorder() {
 	int i,count,next,sind,first;
-
+	bool loop = false;
+	
 	/* FIND FIRST SIDE */    
 	first = -1;
 	for(i=0;i<nseg;++i) {
@@ -281,6 +283,7 @@ void edge_bdry::reorder() {
 	 if (first < 0) {
 		 /* EDGE LOOP */
 		 first = 0;
+		 loop = true;
 	 }
 	 else {
 	    if (seg(first).prev != -1) {
@@ -295,31 +298,35 @@ void edge_bdry::reorder() {
 		 }
 	 }
 	 
-	 /* First swap directions, then reorder */
-	 count = 0;
-	 int indx = first;
-	 while(count < nseg && (next = seg(indx).next) > -1) {
-		 if (seg(next).prev != indx) {
-		    /* Reverse orientation side */
-			 seg(next).next = seg(next).prev;
-			 seg(next).prev = indx;
-			 sind = seg(next).gindx;
-			 int v0 = x.seg(sind).pnt(0);
-			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
-			 x.seg(sind).pnt(1) = v0;
-			 //x.switch_edge_sign(sind);
-		 }
-		 ++count;
-		 indx = next;
+	/* First swap directions, then reorder */
+	count = 0;
+	int indx = first;	
+	while(count < nseg && (next = seg(indx).next) > -1) {
+		if (seg(next).prev != indx) {
+			/* Reverse orientation side */
+			seg(next).next = seg(next).prev;
+			seg(next).prev = indx;
+			sind = seg(next).gindx;
+			int v0 = x.seg(sind).pnt(0);
+			x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+			x.seg(sind).pnt(1) = v0;
+			//x.switch_edge_sign(sind);
+		}
+		++count;
+		indx = next;
 	}
 	 
-	/* Now reorder */
+	/* insert -1 so while loop exits for an edge loop */
+	if(loop == true) seg(seg(first).prev).next = -1;
+	
+	/* now reorder */
 	count = 0;
-	indx = first;
+	indx = first;	
 	do {
 		swap(count++,indx);
 	} while (count < nseg && (indx = seg(count-1).next) > -1);    
 	
+	/* separate disconnected edge boundaries */
 	 if (count < nseg) {
 		++x.nebd;
 		x.ebdry.resizeAndPreserve(x.nebd);
@@ -329,13 +336,11 @@ void edge_bdry::reorder() {
 			x.ebdry(x.nebd-1)->swap(i,i+count);
 		x.ebdry(x.nebd-1)->nseg = nseg -count;
 		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
-		  nseg = count;
+		nseg = count;
 	 }
 	
 	return;
 }
-
-
 
 void ecomm::match_numbering(int step) {
 	int sind,sind2;
@@ -1015,7 +1020,8 @@ void fcomm::match_numbering(int step) {
 	
 	return;
 }
-	
+
+
 void face_bdry::pull_apart_face_boundaries() {
 	Array<int,2> listoftris(ntri,ntri);
 	Array<int,1> numoftris(ntri);
