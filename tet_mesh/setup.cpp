@@ -470,8 +470,12 @@ void tet_mesh::match_tri_and_seg(void){
 		tind = tri(find).tet(0);
 		int findtri = -1;
 		for(i = 0; i < 4; ++i){
+			if(tind >= ntet){
+				cout << " big error in match_tri_and_seg too many tets " << endl;
+				exit(4);
+			}
 			if(tet(tind).tri(i) == -1){
-				cout << " big error in matc_tri_and_seg ahh tet.tri = -1 " << endl;
+				cout << " big error in match_tri_and_seg ahh tet.tri = -1 " << endl;
 				exit(4);
 			}
 			if(tet(tind).tri(i) == find){
