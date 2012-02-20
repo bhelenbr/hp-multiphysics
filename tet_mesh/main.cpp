@@ -215,18 +215,32 @@ int main(int argc, char *argv[]) {
         zx.setpartition(p);
         Array<tet_mesh,1> zpart(p);
         
-        for(int i=0;i<p;++i) {
+		Array<int,2> blist;
+		Array<int,1> bnum;
+	
+		zx.setup_partition(p,blist,bnum);
+		
+		for(int i=0;i<p;++i) {
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart(i).partition(zx,i,p);
-			zpart(i).checkintegrity();
-			zpart(i).output(fname,out);
-			//zpart(i).output(fname,tet_mesh::gmsh);
-
-            //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
+			zpart(i).partition2(zx,i,p,blist,bnum);
+			zpart(i).output(fname,tet_mesh::gmsh);			
         }
+		
+//        for(int i=0;i<p;++i) {
+//			nstr << "b" << i << std::flush;
+//			fname = "partition_" +nstr.str();
+//			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+//			nstr.str("");
+//			zpart(i).partition(zx,i,p);			
+//			zpart(i).checkintegrity();
+//			zpart(i).output(fname,out);
+//			zpart(i).output(fname,tet_mesh::gmsh);
+//
+//            //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
+//        }
 #else
         printf("Need metis package to partition\n");
 #endif

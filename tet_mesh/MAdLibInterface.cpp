@@ -106,6 +106,9 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 		}
 	}
 	
+	/* hack fix me temp need to delete vertex boundaries if stand alone in mesh */
+	//nvbd = 0;
+	
 	MAdLibInterface::importFromMAdMesh(MAdMesh,this);
 }
 	
@@ -451,9 +454,9 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 		V_setWhatIn(pv, geom);
 	}
 	
-	// --- Build the edges
-	for (int i=0;i<mesh->nseg;++i)
-		MAdMesh->add_edge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
+//	// --- Build the edges
+//	for (int i=0;i<mesh->nseg;++i)
+//		MAdMesh->add_edge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
 		
 	for (int i=0;i<mesh->nebd;++i) {
 		int idnum = mesh->ebdry(i)->idnum;
@@ -464,10 +467,10 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 		}
 	}	
 	
-	// --- Build the faces ---
-	for (int i=0;i<mesh->ntri;++i)
-		MAdMesh->add_triangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
-		
+//	// --- Build the faces ---
+//	for (int i=0;i<mesh->ntri;++i)
+//		MAdMesh->add_triangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
+	
 	for (int i=0;i<mesh->nfbd;++i) {
 		int idnum = mesh->fbdry(i)->idnum;
 		pGFace geom = GM_faceByTag(MAdMesh->model,idnum);
@@ -491,7 +494,7 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 
 //-----------------------------------------------------------------------------
 // Create in MAdModel all geometrical entities listed in solverModel.
-void MAdLibInterface::exportToMAdModel(const tet_mesh *mesh, MAd::pGModel MAdModel) {
+void MAdLibInterface::exportToMAdModel(const tet_mesh *mesh, MAd::pGModel MAdModel) {	
 	for (int i=0;i<mesh->nvbd;++i)
 		GM_entityByTag(MAdModel,0,mesh->vbdry(i)->idnum);
 

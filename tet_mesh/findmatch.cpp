@@ -827,7 +827,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)
 		seg(i).info = -1; 
-
+	
 	Array<int,1> edge_partitions(nparts); /* list of 1's and 0's to keep track if a segment touches a partition */	
 	Array<int,2> edge_boundary_list(0,nparts); /* each unique combination of partitions touching an edge boundary  */
 	Array<int,2> edge_boundary_faces(0,2); /* two faces touching an edge boundary  */
@@ -853,7 +853,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 					
 				}
 				assert(n < 3);
-				
+								
 				/* predefined edge boundary */
 				if (xin.seg(egindx).info != -1) {
 					
@@ -920,10 +920,12 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 						diff_boundary_list += abs(edge_boundary_list(n,j) - edge_partitions(j));
 					
 					/* compare face boundaries */
-					diff_boundary_list += abs(edge_boundary_faces(n,0) - seg(gindx).info);
-					diff_boundary_list += abs(edge_boundary_faces(n,1) - i); // i is the face boundary
+					// temp fix me: uncomment these two lines and get rid of -100 thing
+					//diff_boundary_list += abs(edge_boundary_faces(n,0) - seg(gindx).info);
+					//diff_boundary_list += abs(edge_boundary_faces(n,1) - i); // i is the face boundary
 
-					if(diff_boundary_list == 0){
+					if(diff_boundary_list == 0 && seg(gindx).info == -100){//temp fix me
+					//if(diff_boundary_list == 0 ){//temp fix me
 						
 						/* found a partition edge set to a unique negative number */
 						seg(gindx).info = n; 
@@ -939,8 +941,10 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 				/* edge found first time keep go to next seg */
 				if (seg(gindx).info == -1) {
 					seg(gindx).info = i;
+					seg(gindx).info = -100;//temp fix me 
 					goto nextseg;
 				}
+				
 				
 				/* new edge boundary */
 				++nebd;
@@ -1018,15 +1022,13 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		}
 	}
 
-	/* put zeros in because next prev is not setup yet and need to do a swap */
 	for(i=0;i<nebd;++i) {
+		
+		/* put zeros in because next prev is not setup yet and need to do a swap */
 		for(j=0;j<ebdry(i)->nseg;++j){
 			ebdry(i)->seg(j).next = 0;
 			ebdry(i)->seg(j).prev = 0;			
 		}			
-	}
-
-	for(i=0;i<nebd;++i) {
 		
 		/* start each boundary with minimum xin gbl index 
 		   so loops start with the same edge on each partition*/
@@ -1104,7 +1106,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		}
 	}
 	
-	
 	/* CREATE COMMUNICATION VERTEX BOUNDARIES */
 	for(i=0;i<nebd;++i) {
 		sind = ebdry(i)->seg(0).gindx;	
@@ -1112,7 +1113,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		
 		for(j=0;j<nvbd;++j)
 			if (vbdry(j)->pnt == p0) goto nextv0;
-		
+				
 		/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
 		tind = tet(seg(sind).tet).info;
 		for(n=0;n<4;++n)
@@ -1146,7 +1147,9 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		
 	}
 	
-	
+#define findlone
+
+#ifdef findlone 
 	/* find lone pnts and edges that may need to be set to dirichlet */
 	Array<int,1> seginfo(xin.nseg);
 	
@@ -1180,7 +1183,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 				pnt(p0).info = 1;
 				std::cout << "# found a lone pnt idnum: " << xin.fbdry(k)->pnt(n).gindx+maxvnum << " point: " << p0 << endl;
 				std::cout << "# should be set to same BC as face boundary idnum: " << xin.fbdry(k)->idnum << endl;
-//				
+				
 //					vbdry.resizeAndPreserve(nvbd+1);
 //					vbdry(nvbd) = new vcomm(xin.fbdry(k)->pnt(n).gindx+maxvnum,*this);
 //					vbdry(nvbd)->alloc(4);
@@ -1212,6 +1215,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		}
 	}
 	
+#endif
 
 	
 	/* call match_all because reorder doesnt account for sign change */
@@ -1234,4 +1238,562 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 	return;
 }
 
+void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, Array<int,1> & commbdrys) {
+	
+	int ncommbdry = 0;
+	
+	boundary_partitions.resize(ncommbdry,nparts);
+	commbdrys.resize(3);
+	commbdrys = 0;
+	
+	Array<int,1> temp(nparts);
 
+	/* fill in all infos with boundary index */
+	for(int i = 0; i < npnt; ++i)
+		pnt(i).info = -1;
+	
+	for(int i = 0; i < nvbd; ++i)
+		pnt(vbdry(i)->pnt).info = i;
+	
+	for(int i = 0; i < nseg; ++i)
+		seg(i).info = -1;
+	
+	for(int i = 0; i < nebd; ++i)
+		for(int j = 0; j < ebdry(i)->nseg; ++j)
+			seg(ebdry(i)->seg(j).gindx).info = i;
+	
+	for(int i = 0; i < ntri; ++i)
+		tri(i).info = -1;
+	
+	for(int i = 0; i < nfbd; ++i)
+		for(int j = 0; j < fbdry(i)->ntri; ++j)
+			tri(fbdry(i)->tri(j).gindx).info = i;
+	
+	/* find communication face boundaries */
+	for(int i = 0; i < ntri; ++i){
+
+		if(tri(i).tet(1) > -1){			
+			
+			/* tag partitions with 1's */
+			temp = 0;
+			for(int j = 0; j < 2; ++j){
+				temp(tet(tri(i).tet(j)).info) = 1;
+			}
+			
+			/* if sum is greater than one then it is a communication boundary */
+			int lcl = 0;
+			for(int j = 0; j < nparts; ++j)
+				lcl += temp(j);
+			
+			if(lcl > 1) {	
+				
+				/* check if boundary already defined */
+				int match = -1;
+				for(int j = 0; j < ncommbdry; ++j){
+					match = 0;
+					for(int k = 0; k < nparts; ++k)
+						match += abs(temp(k)-boundary_partitions(j,k));
+					
+					/* boundary found tag with unique number */
+					if(match == 0) {
+						tri(i).info = j+nfbd;
+						break;
+					}				
+				}
+				
+				/* new face boundary */
+				if(match != 0){
+					/* tag with unique number */
+					tri(i).info = ncommbdry+nfbd;
+					/* keep track of total boundaries */
+					++ncommbdry;
+					/* keep track of face boundaries */
+					++commbdrys(2);
+
+					boundary_partitions.resizeAndPreserve(ncommbdry,nparts);
+					/* store 0,1's */
+					for(int k = 0; k < nparts; ++k)
+						boundary_partitions(ncommbdry-1,k) = temp(k);				
+				}
+			}
+		}		
+	}
+	
+		
+	/* find communication edge boundaries */
+	for(int i = 0; i < nseg; ++i){
+		
+		/* search all tets surrounding edge */
+		int nbor = seg(i).nnbor; 		
+		ring(i);
+		
+		/* tag partitions with 1's */
+		temp = 0;
+		for(int j = 0; j < nbor; ++j){
+			temp(tet(gbl->i2wk(j)).info) = 1;
+		}
+		
+		/* if sum is greater than one then it is a communication boundary */
+		int lcl = 0;
+		for(int j = 0; j < nparts; ++j)
+			lcl += temp(j);
+		
+		if(lcl > 1) {
+			/* check if boundary already defined */
+			int match = -1;
+			for(int j = 0; j < ncommbdry; ++j){
+				match = 0;
+				for(int k = 0; k < nparts; ++k)
+					match += abs(temp(k)-boundary_partitions(j,k));
+				
+				/* boundary found tag with unique number */
+				if(match == 0) {
+					seg(i).info = j+nebd;
+					break;
+				}				
+			}
+
+			/* new edge boundary */
+			if(match != 0){
+				/* tag with unique number */
+				seg(i).info = ncommbdry+nebd;
+				/* keep track of total communication boundaries */
+				++ncommbdry;
+				/* keep track of total edge boundaries */
+				++commbdrys(1);
+				boundary_partitions.resizeAndPreserve(ncommbdry,nparts);
+				for(int k = 0; k < nparts; ++k)
+					boundary_partitions(ncommbdry-1,k) = temp(k);				
+			}
+		}
+	}
+	
+	for(int i = 0; i < npnt; ++i){
+		
+		/* search tets surrounding vertex */
+		int nbor = pnt(i).nnbor; 		
+		vertexball(i);
+		
+		/* tag partitions with 1's */
+		temp = 0;
+		for(int j = 0; j < nbor; ++j)
+			temp(tet(gbl->i2wk(j)).info) = 1;
+		
+		/* if sum is greater than one then it is a communication boundary */
+		int lcl = 0;
+		for(int j = 0; j < nparts; ++j)
+			lcl += temp(j);
+		
+		if(lcl > 1) {
+			/* check if boundary already defined */
+			int match = -1;
+			for(int j = 0; j < ncommbdry; ++j){
+				match = 0;
+				for(int k = 0; k < nparts; ++k)
+					match += abs(temp(k)-boundary_partitions(j,k));
+
+				/* boundary found tag with unique number */
+				if(match == 0) {
+					pnt(i).info = j+nvbd;
+					break;
+				}				
+			}
+			
+			/* new vertex boundary */
+			if(match != 0){
+				/* tag with unique number */
+				pnt(i).info = ncommbdry+nvbd;
+				/* keep track of total communication boundaries */
+				++ncommbdry;
+				/* keep track of total vertex boundaries */
+				++commbdrys(0);
+				boundary_partitions.resizeAndPreserve(ncommbdry,nparts);
+				for(int k = 0; k < nparts; ++k)
+					boundary_partitions(ncommbdry-1,k) = temp(k);				
+			}
+		}
+	}
+	
+	return;
+}
+
+void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,2> boundary_list, Array<int,1> commbdrys) {
+	
+	/* TO CREATE UNIQUE FACE NUMBERS */
+	int maxfnum = 0;
+	for(int i=0;i<xin.nfbd;++i) {
+		maxfnum = MAX(maxfnum,xin.fbdry(i)->idnum);
+	}
+	++maxfnum;
+	
+	/* TO CREATE UNIQUE EDGE NUMBERS */
+	int maxenum = 0;
+	for(int i=0;i<xin.nebd;++i) {
+		maxenum = MAX(maxenum,xin.ebdry(i)->idnum);
+	}
+	++maxenum;
+	
+	/* TO CREATE UNIQUE VERTEX NUMBERS */
+	int maxvnum = 0;
+	for(int i=0;i<xin.nvbd;++i) {
+		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
+	}
+	++maxvnum;
+	
+	/* work array intwk(xin pnt index) = local pnt index */
+	Array<int,1> intwk(xin.maxvst);
+	
+	for(int i=0;i<xin.npnt;++i)
+		intwk(i) = -1;
+	
+	/* count tets in partition and tag vertex */
+	ntet = 0;
+	for(int i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			++ntet;
+			for(int n=0;n<4;++n) {
+				intwk(xin.tet(i).pnt(n)) = npart;
+			}
+		}
+	}
+	
+	if (!initialized) {
+		maxvst = static_cast<int> (static_cast<FLT> (ntet) * static_cast<FLT> (xin.maxvst) / static_cast<FLT> (xin.ntet));
+		allocate(maxvst*2);
+	}
+	else if (4*ntet > maxvst) {//FIX ME 3->4??
+		*gbl->log << "mesh is too small" << std::endl;
+		exit(1);
+	}
+	
+	ostringstream nstr;
+	nstr << "b" << npart << std::flush;
+	gbl->idprefix = nstr.str();
+	gbl->idnum = npart;
+	nstr.clear();
+	
+	/* FILL IN PNT ARRAY */
+	npnt = 0;
+	for(int i=0;i<xin.npnt;++i) {
+		if (intwk(i) == npart) {
+			for(int n=0;n<ND;++n)
+				pnts(npnt)(n) = xin.pnts(i)(n);
+			intwk(i) = npnt;
+			++npnt;
+		}
+	}
+	
+	/* FILL IN TET ARRAY */
+	ntet = 0;
+	for(int i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			for(int n=0;n<4;++n)
+				tet(ntet).pnt(n) = intwk(xin.tet(i).pnt(n));
+			tet(ntet).info = i;
+			++ntet;
+		}
+	}
+	
+	nfbd = 0; ntri = 0;
+	Array<int,2> face_boundaries(nfbd,2);
+
+	/* find all face boundaries */
+	for(int i = 0; i < xin.ntri; ++i) {
+		if(xin.tri(i).info != -1){
+			
+			/* find out if boundary tri is connected to this partition */
+			bool partitionfound = false;
+			
+			if(xin.tri(i).tet(1) > -1) {
+				if(xin.tet(xin.tri(i).tet(0)).info == npart || xin.tet(xin.tri(i).tet(1)).info == npart ) 
+					partitionfound = true;
+			}
+			else {
+				if(xin.tet(xin.tri(i).tet(0)).info == npart ){
+					partitionfound = true;
+				}
+			}
+
+			/* tri is located on this partition */
+			if(partitionfound == true) {
+				
+				/* triangle vertex points */
+				for(int n = 0; n < 3; ++n)
+					tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
+				
+				/* store global index from xin mesh */
+				tri(ntri).info = i;
+				++ntri;
+				
+				
+				/* keep track of unique tag and count number of tri's on each boundary */
+				bool match_found = false;
+				for(int j = 0; j < nfbd; ++j){
+					if(xin.tri(i).info == face_boundaries(j,0)) {
+						++face_boundaries(j,1);
+						match_found = true;
+						break;
+					}					   
+				}
+				
+				if(match_found == false) {
+					face_boundaries.resizeAndPreserve(++nfbd,2);
+					face_boundaries(nfbd-1,0) = xin.tri(i).info;
+					face_boundaries(nfbd-1,1) = 1;
+				}
+			}
+		}			
+	}
+		
+	/* Make new face boundaries and print boundary information */
+	fbdry.resize(nfbd);
+	for(int i=0;i<nfbd;++i) {		
+		if (face_boundaries(i,0) >= xin.nfbd) {
+			/* create new partition */
+			fbdry(i) = new fpartition(maxfnum+face_boundaries(i,0),*this);
+		}
+		else {
+			/* reuse face boundary in original mesh */
+			fbdry(i) = xin.fbdry(face_boundaries(i,0))->create(*this);
+		}
+		fbdry(i)->alloc(static_cast<int>(face_boundaries(i,1)*3));
+		fbdry(i)->ntri = 0;
+	}
+	
+	/* fill in global index for face boundary */
+	for(int i = 0; i < ntri; ++i){
+		for(int j = 0; j < nfbd; ++j){
+			if(xin.tri(tri(i).info).info == face_boundaries(j,0)){
+				fbdry(j)->tri(fbdry(j)->ntri++).gindx = i;
+				break;
+			}
+		}
+	}
+
+//	for(int i = 0; i < nfbd; ++i)
+//		fbdry(i)->pull_apart_face_boundaries();
+
+	
+	/* CREATE COMMUNICATION FACE BOUNDARIES */
+	for(int i=0;i<nfbd;++i) {
+		if (fbdry(i)->mytype == "partition") {
+			/* now that all independent fbdry sides are determined give new numbers to partitions */
+			int minface = tri(fbdry(i)->tri(0).gindx).info;
+			for(int j=1;j<fbdry(i)->ntri;++j)
+				minface=MIN(minface,tri(fbdry(i)->tri(j).gindx).info);
+			int newid = minface+maxfnum;
+			ostringstream nstr;
+			nstr << "b" << npart << "_f" << newid << std::flush;
+			fbdry(i)->idprefix = nstr.str();
+			fbdry(i)->idnum = newid;
+			nstr.clear();	
+			std::cout << fbdry(i)->idprefix << "_type: comm\n";
+		}
+	}
+	
+	
+	nebd = 0; nseg = 0;
+	Array<int,2> edge_boundaries(nebd,2);
+	
+	for(int i = 0; i < xin.nseg; ++i) {
+		/* edge boundary index */
+		int seginfo = xin.seg(i).info;
+		
+		/* boundary edge */
+		if(seginfo != -1){
+			
+			bool partitionfound = false;
+
+			/* predefined non-partition edge */
+			if(seginfo < xin.nebd) {
+				
+				/* search if on partition */
+				int nbor = xin.seg(i).nnbor; 		
+				xin.ring(i);				
+				
+				for(int j = 0; j < nbor; ++j){
+					if(npart == xin.tet(xin.gbl->i2wk(j)).info) {
+						partitionfound = true;
+						break;
+					}
+				}
+			}
+		
+			/* only accept partition segments that have combinations other than face boundaries */
+			if(seginfo >= xin.nebd+commbdrys(2)){
+				if(boundary_list(seginfo-xin.nebd,npart) == 1) {
+					partitionfound = true;
+				}				
+			}
+		
+			/* segment is on this partition */
+			if(partitionfound == true) {
+				/* fill in seg.pnt info */
+				for(int n = 0; n < 2; ++n)
+					seg(nseg).pnt(n) = intwk(xin.seg(i).pnt(n));
+				
+				/* store index from xin mesh */
+				seg(nseg).info = i;
+				
+				/* add segment to mesh */
+				++nseg;
+				
+				/* check if edge boundary is already created */
+				bool match_found = false;
+				for(int j = 0; j < nebd; ++j){
+					/* edge boundary found */
+					if(seginfo == edge_boundaries(j,0)) {
+						/* keep track of total segments on edge boundary */
+						++edge_boundaries(j,1);
+						match_found = true;
+						break;
+					}					   
+				}
+				
+				/* if edge boundary not found then create it */
+				if(match_found == false) {
+					edge_boundaries.resizeAndPreserve(++nebd,2);
+					/* store boundary index */
+					edge_boundaries(nebd-1,0) = seginfo;
+					/* first segment on edge boundary */
+					edge_boundaries(nebd-1,1) = 1;
+				}
+			}
+			
+		}
+					
+	}
+	
+	/* Make new edge boundaries and print boundary information */
+	ebdry.resize(nebd);
+	for(int i=0;i<nebd;++i) {		
+		if (edge_boundaries(i,0) >= xin.nebd) {
+			/* create new partition with unique idnum */
+			ebdry(i) = new epartition(maxenum+maxfnum+edge_boundaries(i,0),*this);
+		}
+		else {
+			/* reuse face boundary in original mesh */
+			ebdry(i) = xin.ebdry(edge_boundaries(i,0))->create(*this);
+		}
+		ebdry(i)->alloc(static_cast<int>(edge_boundaries(i,1)*3));
+		ebdry(i)->nseg = 0;
+	}
+	
+	/* now that edge boundary is allocated fill in global index */
+	for(int i = 0; i < nseg; ++i){
+		for(int j = 0; j < nebd; ++j){
+			if(xin.seg(seg(i).info).info == edge_boundaries(j,0)){
+				ebdry(j)->seg(ebdry(j)->nseg++).gindx = i;
+				break;
+			}
+		}
+	}
+	
+	/* fill in edge boundary stuff and reorder/separte disconnected boundaries */
+	for(int i=0;i<nebd;++i) {
+		ebdry(i)->setup_next_prev();
+		ebdry(i)->reorder();
+	}
+	
+	/* CREATE COMMUNICATION EDGE BOUNDARIES */
+	for(int i=0;i<nebd;++i) {
+		if (ebdry(i)->mytype == "partition") {
+			/* Now that all independent ebdry sides are determined give new numbers to partitions */
+			int minseg = seg(ebdry(i)->seg(0).gindx).info;
+			for(int j=1;j<ebdry(i)->nseg;++j)
+				minseg=MIN(minseg,seg(ebdry(i)->seg(j).gindx).info);
+			int newid = minseg + maxenum;
+			ostringstream nstr;
+			nstr << "b" << npart << "_e" << newid << std::flush;
+			ebdry(i)->idprefix = nstr.str();
+			ebdry(i)->idnum = newid;
+			nstr.clear();
+			std::cout << ebdry(i)->idprefix << "_type: comm\n";
+		}
+	}
+	
+	
+	/* MOVE VERTEX BOUNDARY INFO */
+	nvbd = 0;
+	for(int i=0;i<xin.nvbd;++i){
+		if (intwk(xin.vbdry(i)->pnt) > -1){
+			++nvbd;
+		}
+	}
+
+	vbdry.resize(nvbd);
+	
+	nvbd = 0;
+	for(int i=0;i<xin.nvbd;++i) {
+		if (intwk(xin.vbdry(i)->pnt) > -1) {
+			vbdry(nvbd) = xin.vbdry(i)->create(*this);
+			vbdry(nvbd)->alloc(4);
+			vbdry(nvbd)->pnt = intwk(xin.vbdry(i)->pnt);
+			++nvbd;
+		}
+	}
+	
+	/* use pnt.info to store vertex boundary index used later in lone point finder */
+	for(int i = 0; i < npnt; ++i)
+		pnt(i).info = -1;	
+	
+	for(int i = 0; i < xin.npnt; ++i) {
+		int pntinfo = xin.pnt(i).info;
+		
+		/* check if point is a unique combination of partitions 
+		 other than face and edge communication boundaries*/
+		if(pntinfo >= xin.nvbd+commbdrys(1)+commbdrys(2)){
+			if(boundary_list(pntinfo-xin.nvbd,npart) == 1) {
+
+				vbdry.resizeAndPreserve(nvbd+1);
+				pnt(intwk(i)).info = nvbd;
+				vbdry(nvbd) = new vcomm(i+maxvnum,*this);
+				vbdry(nvbd)->alloc(4);
+				vbdry(nvbd)->pnt = intwk(i);
+				std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+				++nvbd;
+			}				
+		}		
+	}
+
+	/* check for lone points that need non communication boundaries */
+	for(int i = 0; i < xin.nfbd; ++i) {
+		for(int j = 0; j < xin.fbdry(i)->npnt; ++j) {
+			int p0 = intwk(xin.fbdry(i)->pnt(j).gindx);
+
+			if(p0 != -1 && pnt(p0).info != -1) {
+				std::cout << "# found lone point: " <<  vbdry(pnt(p0).info)->idnum << endl;
+				std::cout << vbdry(pnt(p0).info)->idprefix << "_type: plain" << endl;
+				std::cout << vbdry(pnt(p0).info)->idprefix << "_cns_type: inflow" << endl;
+			}			
+		}		
+	}
+	
+
+//	for(int i = 0; i < xin.nseg; ++i)
+//		intwk(i) = -1;	
+//	
+//	for(int i=0;i<nebd;++i) 
+//		if (ebdry(i)->mytype != "partition") 
+//			for(int j = 0; j < ebdry(i)->nseg; ++j)
+//				seg(ebdry(i)->seg(j).gindx).info = -1;
+//			
+//	for(int i = 0; i < nseg; ++i)
+//		intwk(seg(i).info) = 1;
+//	
+//	
+//	/* check for lone segments that need non communication boundaries */
+//	for(int i = 0; i < xin.nfbd; ++i) {
+//		for(int j = 0; j < xin.fbdry(i)->nseg; ++j) {
+//			int p0 = intwk(xin.fbdry(i)->seg(j).gindx);
+//			
+//			if(p0 != -1 && seg(p0).info != -1) {
+//				std::cout << "# found lone segment: " <<  p0+maxenum << endl;
+//				
+//			}			
+//		}		
+//	}
+	
+	
+	return;
+}

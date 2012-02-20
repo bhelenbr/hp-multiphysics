@@ -241,7 +241,9 @@ class tet_mesh : public multigrid_interface {
 #ifdef METIS
         void setpartition(int nparts);  /**< Set partition of mesh (in tri(i).info) */
 #endif 
-        void partition(class tet_mesh& xmesh, int npart, int nparts); /**< Creates a partition from xmesh */
+		void setup_partition(int nparts, Array<int,2> & boundary_partitions, Array<int,1> & commbdrys);
+		void partition(class tet_mesh& xmesh, int npart, int nparts); /**< Creates a partition from xmesh */
+		void partition2(class tet_mesh& xmesh, int npart, int nparts, Array<int,2> boundary_list, Array<int,1> commbdrys); /**< Creates a partition from xmesh */
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */
 		int comm_entity_list(Array<int,1>& list);  /**< Returns list of communication entities */
 		class boundary* getvbdry(int num); /**< Returns pointer to vertex boundary (for blocks.h) */
