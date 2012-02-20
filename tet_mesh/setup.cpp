@@ -370,6 +370,12 @@ void tet_mesh::match_tet_and_tri(void) {
 		tri(i).tet(0) = -1;
 		tri(i).tet(1) = -1;
 	}
+	
+	for(tind = 0; tind < ntet; ++tind){
+		for(i = 0; i < 4; ++i){
+			tet(tind).tri(i) = -1;
+		}
+	}
 		
 	for(int j = 0; j < ntri; ++j){
 		v(0) = tri(j).pnt(0);
@@ -387,11 +393,10 @@ void tet_mesh::match_tet_and_tri(void) {
 			tri(findprev).info = j;
 		tri(j).info = -1;    
 	}
+
 	
 	for(tind = 0; tind < ntet; ++tind){
 		for(i = 0; i < 4; ++i){
-			tet(tind).tri(i) = -1;
-			
 			for(j = 0; j < 3; ++j)
 				v(j)=tet(tind).pnt(vf(i,j));            
 			minv=min(v);
