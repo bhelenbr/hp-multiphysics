@@ -390,6 +390,8 @@ void tet_mesh::match_tet_and_tri(void) {
 	
 	for(tind = 0; tind < ntet; ++tind){
 		for(i = 0; i < 4; ++i){
+			tet(tind).tri(i) = -1;
+			
 			for(j = 0; j < 3; ++j)
 				v(j)=tet(tind).pnt(vf(i,j));            
 			minv=min(v);
@@ -463,6 +465,10 @@ void tet_mesh::match_tri_and_seg(void){
 		tind = tri(find).tet(0);
 		int findtri = -1;
 		for(i = 0; i < 4; ++i){
+			if(tet(tind).tri(i) == -1){
+				cout << " big error in matc_tri_and_seg ahh tet.tri = -1 " << endl;
+				exit(4);
+			}
 			if(tet(tind).tri(i) == find){
 				findtri = i;
 				break;
