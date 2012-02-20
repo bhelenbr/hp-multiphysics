@@ -215,11 +215,11 @@ void tet_mesh::vertexball(int vind){
 	
 	for(i = 0; i < nbor; ++i) {    
 		tind = gbl->i2wk(i);  
-		for(j = 0; j < 4; ++j) {            
+		for(j = 0; j < 4; ++j) { 
 			tind2 = tet(tind).tet(j);
-			if (tind2 == -1)
+			if (tind2 < 0)
 				goto NEXTFACE;
-			if (gbl->i1wk(tind2) < 0) {            
+			if (gbl->i1wk(tind2) < 0) { 
 				for(k = 0; k < 4; ++k) {
 					if(tet(tind2).pnt(k) == vind) {
 						gbl->i2wk(++ind) = tind2; // connected tet found
@@ -231,10 +231,11 @@ void tet_mesh::vertexball(int vind){
 			NEXTFACE:;        
 		}
 	}
-	
+
 	for(i = 0; i < nbor; ++i) {    
 		gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
 	}
+
 	return;
 }
 
