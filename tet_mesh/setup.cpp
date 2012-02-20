@@ -371,7 +371,7 @@ void tet_mesh::match_tet_and_tri(void) {
 		tri(i).tet(1) = -1;
 	}
 	
-	for(tind = 0; tind < ntet; ++tind){
+	for(tind = -1; tind < maxvst; ++tind){
 		for(i = 0; i < 4; ++i){
 			tet(tind).tri(i) = -1;
 		}
@@ -382,6 +382,12 @@ void tet_mesh::match_tet_and_tri(void) {
 		v(1) = tri(j).pnt(1);
 		v(2) = tri(j).pnt(2);
 		minv = min(v);
+		
+		if(minv >= npnt) {
+			cout << " pnt index out of bounds " << endl;
+			exit(5);
+		}
+		
 		find = pnt(minv).info;
 		while(find >= 0){
 			findprev = find;
@@ -420,7 +426,9 @@ void tet_mesh::match_tet_and_tri(void) {
 				a(2)=tri(find).pnt(2);
 				lcl2=abs(lcl0-a(0)-a(1)-a(2));
 				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
+
 				if(lcl2 == 0) {
+				
 					if (tri(find).tet(0) < 0) {
 						tri(find).pnt(0) = v(0);
 						tri(find).pnt(1) = v(1);
@@ -434,6 +442,10 @@ void tet_mesh::match_tet_and_tri(void) {
 						tri(find).pnt(2) = v(1);
 						tri(find).tet(1) = tind;
 						tet(tind).rot(i) = -1;
+					}
+					if(find == 0) {
+						cout << "first triangle found " << endl;
+						cout << "tri.tet: " << tri(find).tet(0) << ' ' << tri(find).tet(1) << endl;
 					}
 					tet(tind).tri(i) = find;
 					goto NEXTFACE;
@@ -468,6 +480,12 @@ void tet_mesh::match_tri_and_seg(void){
 	
 	for(find = 0; find < ntri; ++find){
 		tind = tri(find).tet(0);
+		
+		if(tind < 0){
+			cout << " uh oh negative tet index " << endl;
+			exit(3);
+		}
+			
 		int findtri = -1;
 		for(i = 0; i < 4; ++i){
 			if(tind >= ntet){
@@ -476,7 +494,7 @@ void tet_mesh::match_tri_and_seg(void){
 			}
 			if(tet(tind).tri(i) == -1){
 				cout << " big error in match_tri_and_seg ahh tet.tri = -1 " << endl;
-				exit(4);
+				exit(5);
 			}
 			if(tet(tind).tri(i) == find){
 				findtri = i;
