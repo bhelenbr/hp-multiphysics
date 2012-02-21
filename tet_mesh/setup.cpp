@@ -443,10 +443,7 @@ void tet_mesh::match_tet_and_tri(void) {
 						tri(find).tet(1) = tind;
 						tet(tind).rot(i) = -1;
 					}
-					if(find == 0) {
-						cout << "first triangle found " << endl;
-						cout << "tri.tet: " << tri(find).tet(0) << ' ' << tri(find).tet(1) << endl;
-					}
+
 					tet(tind).tri(i) = find;
 					goto NEXTFACE;
 				}            
