@@ -91,12 +91,12 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 						break;
 					case(1):
 						ebdry(nebd) = getnewedgeobject(gId,input);
-						ebdry(nebd)->alloc(grwfac*M_numClassifiedEdges(MAdMesh,pge));
+						ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pge));
 						++nebd;
 						break;
 					case(2):
 						fbdry(nfbd) = getnewfaceobject(gId,input);
-						fbdry(nfbd)->alloc(grwfac*2*M_numClassifiedEdges(MAdMesh,pge));
+						fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pge));
 						++nfbd;
 						break;
 				}
@@ -454,9 +454,9 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 		V_setWhatIn(pv, geom);
 	}
 	
-//	// --- Build the edges
-//	for (int i=0;i<mesh->nseg;++i)
-//		MAdMesh->add_edge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
+	// --- Build the edges
+	for (int i=0;i<mesh->nseg;++i)
+		MAdMesh->add_edge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
 		
 	for (int i=0;i<mesh->nebd;++i) {
 		int idnum = mesh->ebdry(i)->idnum;
@@ -467,9 +467,9 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 		}
 	}	
 	
-//	// --- Build the faces ---
-//	for (int i=0;i<mesh->ntri;++i)
-//		MAdMesh->add_triangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
+	// --- Build the faces ---
+	for (int i=0;i<mesh->ntri;++i)
+		MAdMesh->add_triangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
 	
 	for (int i=0;i<mesh->nfbd;++i) {
 		int idnum = mesh->fbdry(i)->idnum;
