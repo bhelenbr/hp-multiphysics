@@ -1738,9 +1738,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 
 	
 	/* use tagpnt to store vertex boundary index used later in lone point finder */
-	Array<int,1> tagpnt(npnt);
-	for(int i = 0; i < npnt; ++i)
-		tagpnt(i) = -2;	
+	Array<int,1> tagpnt(npnt); tagpnt = -2;	
 	
 	for(int i = 0; i < nfbd; ++i){
 		if(fbdry(i)->mytype != "partition") {
@@ -1782,7 +1780,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			if(p0 == -1) continue;
 			
 			if(tagpnt(p0) > -1) {
-				std::cout << "# found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(pnt(p0).info)->idnum << endl;
+				std::cout << "# found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(tagpnt(p0))->idnum << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
 			}	
@@ -1854,7 +1852,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	
 	Array<int,1> intwkseg(xin.maxvst);	intwkseg = -1;
 	
-	/* set intwk so intwk(xin seg index = local index */	
+	/* set intwk so intwkseg(xin seg index) = local index */	
 	for(int i = 0; i < nseg; ++i) {
 		intwkseg(seg(i).info) = i;
 		seg(i).info = -2;
@@ -1889,6 +1887,12 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 					}
 				}
 				if(lclindex == -1) cout << "we got problems" << endl;
+				
+				if(ebdry(seg(e0).info)->nseg == 1) {
+					std::cout << ebdry(seg(e0).info)->idprefix << "_type: plain" << endl;
+					std::cout << ebdry(seg(e0).info)->idprefix << "_cns_type: inflow" << endl;
+					continue;
+				}
 				
 				/* copy edge boundary */
 				ebdry.resizeAndPreserve(nebd+1);
@@ -1926,44 +1930,47 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}		
 	}
 	
-//	/* CREATE COMMUNICATION VERTEX BOUNDARIES */
-//	for(int i=0;i<nebd;++i) {
-//		int sind = ebdry(i)->seg(0).gindx;	
-//		int p0 = seg(sind).pnt(0);
-//		
-//		for(int j=0;j<nvbd;++j)
-//			if (vbdry(j)->pnt == p0) goto nextv0;
-//		
-//		/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
-//		vbdry.resizeAndPreserve(nvbd+1);
-//		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
-//		vbdry(nvbd)->alloc(4);
-//		vbdry(nvbd)->pnt = p0;
-//		std::cout << "# haha: " << pnt(p0).info  << endl;
-//		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-//		++nvbd;
-//		
-//	nextv0:
-//		
-//		sind = ebdry(i)->seg(ebdry(i)->nseg-1).gindx;
-//		p0 = seg(sind).pnt(1);
-//		
-//		for(int j=0;j<nvbd;++j)
-//			if (vbdry(j)->pnt == p0) goto nextv1;
-//		
-//		/* NEW ENDPOINT */
-//		vbdry.resizeAndPreserve(nvbd+1);
-//		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
-//		vbdry(nvbd)->alloc(4);
-//		vbdry(nvbd)->pnt = p0;
-//		std::cout << "# haha: 4" << endl;
-//		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
-//		++nvbd;
-//		
-//	nextv1:
-//		continue;
-//		
-//	}
+	for(int i = 0; i < xin.npnt; ++i)
+		pnt(intwk(i)).info = i;
+	
+	/* CREATE COMMUNICATION VERTEX BOUNDARIES */
+	for(int i=0;i<nebd;++i) {
+		int sind = ebdry(i)->seg(0).gindx;	
+
+		int p0 = seg(sind).pnt(0);
+		
+		for(int j=0;j<nvbd;++j)
+			if (vbdry(j)->pnt == p0) goto nextv0;
+		
+		/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
+		vbdry.resizeAndPreserve(nvbd+1);
+		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
+		vbdry(nvbd)->alloc(4);
+		vbdry(nvbd)->pnt = p0;
+		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+		++nvbd;
+
+	nextv0:
+
+		sind = ebdry(i)->seg(ebdry(i)->nseg-1).gindx;
+		p0 = seg(sind).pnt(1);
+
+		for(int j=0;j<nvbd;++j)
+			if (vbdry(j)->pnt == p0) goto nextv1;
+		
+
+		/* NEW ENDPOINT */
+		vbdry.resizeAndPreserve(nvbd+1);
+		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
+		vbdry(nvbd)->alloc(4);
+		vbdry(nvbd)->pnt = p0;
+		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+		++nvbd;
+
+	nextv1:
+		continue;
+		
+	}
 
 	return;
 }
