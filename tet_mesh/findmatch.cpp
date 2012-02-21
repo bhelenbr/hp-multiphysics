@@ -1783,8 +1783,8 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			
 			if(tagpnt(p0) > -1) {
 				std::cout << "# found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(pnt(p0).info)->idnum << endl;
-				std::cout << vbdry(pnt(p0).info)->idprefix << "_type: plain" << endl;
-				std::cout << vbdry(pnt(p0).info)->idprefix << "_cns_type: inflow" << endl;
+				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
+				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
 			}	
 			else if(tagpnt(p0) < -1) {
 				cout <<"# oh shit lone point on face boundary: " << xin.fbdry(i)->idnum << endl;
