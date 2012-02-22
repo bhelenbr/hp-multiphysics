@@ -239,20 +239,29 @@ namespace bdry_cns {
 	class inflow_pt : public hp_vrtx_bdry {
 	protected:
 		tet_hp_cns &x;
+		Array<int,1> dirichlets;
+		int ndirichlets;
 		
 	public:
-		inflow_pt(tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "inflow_pt";}
-		inflow_pt(const inflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+		inflow_pt(tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {
+			mytype = "inflow_pt";
+			ndirichlets = x.NV-1;
+			dirichlets.resize(ndirichlets);
+			for (int n=1;n<x.NV;++n)
+				dirichlets(n-1) = n;
+		}
+		inflow_pt(const inflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
 		inflow_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
-		void tadvance() { 
-			for(int n=1;n<x.NV;++n)
-				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
-			return;
-		}
-		
+		void tadvance() {
+			hp_vrtx_bdry::tadvance();
+			setvalues(ibc,dirichlets,ndirichlets);
+		};
+
 		void vdirichlet3d() {
-			x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
+			for(int n=0; n<ndirichlets; ++n) {
+				x.gbl->res.v(base.pnt,dirichlets(n)) = 0.0;
+			}
 		}
 		
 	};

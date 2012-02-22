@@ -21,13 +21,22 @@ hp_vrtx_bdry* tet_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	return(temp);
 }
 
-void hp_vrtx_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, int ndirichlets) {
+//void hp_vrtx_bdry::tadvance() {
+//	/* put some stuff in here*/
+//	
+//	calculate_unsteady_sources();
+//	return;
+//}
+
 	
+void hp_vrtx_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, int ndirichlets) {
+
 	/* UPDATE BOUNDARY CONDITION VALUES */
 	int v0 = base.pnt;
-	for(int n=0;n<ndirichlets;++n)
-		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);		
-		
+	for(int n=0;n<ndirichlets;++n){
+		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);	
+	}
+	
 	return;
 }
 

@@ -741,12 +741,10 @@ void neumann_edge::rsdl(int stage){
 }
 
 void neumann_edge::element_rsdl(int eind,int stage) {
-	int j,n,sind;
+	int j,n;
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
-	
-	//sind = base.seg(eind).gindx;
-	
+		
 	x.lf = 0.0;
 	
 	x.crdtocht1d(eind);
@@ -915,6 +913,18 @@ void adiabatic_edge::edirichlet3d() {
 	}
 }	
 
+
+
+//void inflow_pt::tadvance() {
+//	
+//	hp_vrtx_bdry::tadvance(); 
+//	
+//	for(int n=1;n<x.NV;++n)
+//		x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+//	
+//	return;
+//
+//}
 
 
 

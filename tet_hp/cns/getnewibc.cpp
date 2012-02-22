@@ -319,7 +319,8 @@ namespace ibc_cns {
 	
 	class hydrostatic : public init_bdry_cndtn {
 	private:
-		FLT gamma,pressure,temperature,shiftz,gravity;
+		FLT gamma,pressure,temperature,deltatemp,shiftz,gravity;
+		FLT xmin,xmax,ymin,ymax,zmin,zmax;
 		
 	public:
 		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
@@ -330,7 +331,10 @@ namespace ibc_cns {
 				case(1):case(2):case(3):
 					return(0.0);
 				case(4):
-					return(temperature);
+					if(x(0) < xmax && x(0) > xmin && x(1) < ymax && x(1) > ymin && x(2) < zmax && x(2) > zmin)						
+						return(temperature+deltatemp);
+					else
+						return(temperature);
 			}
 			return(0.0);
 		}
@@ -350,6 +354,10 @@ namespace ibc_cns {
 			keyword = idnty +"_temperature";
 			if (!blockdata.get(keyword,temperature)) 
 				blockdata.getwdefault("temperature",temperature,1.0/gamma);  
+
+			keyword = idnty +"_deltatemp";
+			if (!blockdata.get(keyword,deltatemp)) 
+				blockdata.getwdefault("deltatemp",deltatemp,0.05); 
 			
 			keyword = idnty +"_shiftz";
 			if (!blockdata.get(keyword,shiftz)) 
@@ -358,6 +366,32 @@ namespace ibc_cns {
 			keyword = idnty +"_gravity";
 			if (!blockdata.get(keyword,gravity)) 
 				blockdata.getwdefault("gravity",gravity,-9.81); 
+			
+			keyword = idnty +"_xmin";
+			if (!blockdata.get(keyword,xmin)) 
+				blockdata.getwdefault("xmin",xmin,-1.0);
+			
+			keyword = idnty +"_ymin";
+			if (!blockdata.get(keyword,ymin)) 
+				blockdata.getwdefault("ymin",ymin,-0.4);
+			
+			keyword = idnty +"_zmin";
+			if (!blockdata.get(keyword,zmin)) 
+				blockdata.getwdefault("zmin",zmin,-0.6);
+			
+			keyword = idnty +"_xmax";
+			if (!blockdata.get(keyword,xmax)) 
+				blockdata.getwdefault("xmax",xmax,.5);
+			
+			keyword = idnty +"_ymax";
+			if (!blockdata.get(keyword,ymax)) 
+				blockdata.getwdefault("ymax",ymax,0.4);
+			
+			keyword = idnty +"_zmax";
+			if (!blockdata.get(keyword,zmax)) 
+				blockdata.getwdefault("zmax",zmax,1.0);
+			
+			
 			
 		}
 	};
