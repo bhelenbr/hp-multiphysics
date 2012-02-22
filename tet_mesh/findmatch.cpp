@@ -1423,25 +1423,22 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	int maxfnum = 0;
 	for(int i=0;i<xin.nfbd;++i) {
 		maxfnum = MAX(maxfnum,xin.fbdry(i)->idnum);
-	}
-	++maxfnum;
+	} ++maxfnum;
 	
 	/* TO CREATE UNIQUE EDGE NUMBERS */
 	int maxenum = 0;
 	for(int i=0;i<xin.nebd;++i) {
 		maxenum = MAX(maxenum,xin.ebdry(i)->idnum);
-	}
-	++maxenum;
+	} ++maxenum;
 	
 	/* TO CREATE UNIQUE VERTEX NUMBERS */
 	int maxvnum = 0;
 	for(int i=0;i<xin.nvbd;++i) {
 		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
-	}
-	++maxvnum;
+	} ++maxvnum;
 	
 	/* work array intwk(xin pnt index) = local pnt index */
-	Array<int,1> intwk(xin.maxvst);	intwk = -1;
+	Array<int,1> intwk(xin.npnt); intwk = -1;
 	
 	/* count tets in partition and tag vertex */
 	ntet = 0;
@@ -1492,9 +1489,10 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}
 	}
 	
-	/* fill in tet info */
-	//create_from_tet();// messes up pnt,seg,tri.info
-
+	/**********************************/
+	/*             FACES              */
+	/**********************************/
+	
 	nfbd = 0; ntri = 0;
 	Array<int,2> face_boundaries(nfbd,2);
 
@@ -1564,12 +1562,9 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	/* fill in global index for face boundary */
 	for(int i = 0; i < ntri; ++i){
 		for(int j = 0; j < nfbd; ++j){
-			if(xin.tri(tri(i).info).info == face_boundaries(j,0)){
-								
-				fbdry(j)->tri(fbdry(j)->ntri).gindx = i;
-				
+			if(xin.tri(tri(i).info).info == face_boundaries(j,0)){								
+				fbdry(j)->tri(fbdry(j)->ntri).gindx = i;				
 				++fbdry(j)->ntri;
-
 				break;
 			}
 		}
@@ -1592,6 +1587,9 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}
 	}
 	
+	/**********************************/
+	/*             EDGES              */
+	/**********************************/
 	
 	nebd = 0; nseg = 0;
 	Array<int,2> edge_boundaries(nebd,2);
@@ -1685,16 +1683,99 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	for(int i = 0; i < nseg; ++i){
 		for(int j = 0; j < nebd; ++j){
 			if(xin.seg(seg(i).info).info == edge_boundaries(j,0)){
-				ebdry(j)->seg(ebdry(j)->nseg++).gindx = i;
+				ebdry(j)->seg(ebdry(j)->nseg).gindx = i;
+				++ebdry(j)->nseg;
 				break;
 			}
 		}
 	}
 	
-	/* fill in edge boundary stuff and reorder/separte disconnected boundaries */
+	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */
 	for(int i=0;i<nebd;++i) {
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();
+	}
+	
+	/* set intwk so intwkseg(xin seg index) = local index */	
+	Array<int,1> intwkseg(xin.nseg); intwkseg = -1;
+	for(int i = 0; i < nseg; ++i) {
+		intwkseg(seg(i).info) = i;
+	}
+	
+	/* tag edge communication boundaries 
+	 > -1 comm, -1 dirichlet */
+	Array<int,1> tagseg(nseg); tagseg = -1;
+	for(int i=0;i<nebd;++i) {
+		if (ebdry(i)->mytype == "partition") {
+			for(int j = 0; j < ebdry(i)->nseg; ++j) {
+				tagseg(ebdry(i)->seg(j).gindx) = i;
+			}
+		}
+	}
+	
+	/* check for lone segments that need non communication boundaries */
+	for(int i = 0; i < xin.nfbd; ++i) {
+		for(int j = 0; j < xin.fbdry(i)->nseg; ++j) {
+			int gindx = xin.fbdry(i)->seg(j).gindx;
+			int e0 = intwkseg(gindx);
+			
+			/* edge not in mesh */
+			if(e0 == -1) {					
+				continue;
+			}
+			
+			if(tagseg(e0) > -1) {
+				std::cout << "# found lone segment on face boundary: " <<  xin.fbdry(i)->idnum << endl;
+				
+				int lclindex = -1;
+				for(int k = 0; k < ebdry(tagseg(e0))->nseg; ++k){
+					if(e0 == ebdry(tagseg(e0))->seg(k).gindx){
+						lclindex = k;
+						break;
+					}
+				}
+				if(lclindex == -1) cout << "we got problems" << endl;
+				
+				if(ebdry(tagseg(e0))->nseg == 1) {
+					std::cout << ebdry(tagseg(e0))->idprefix << "_type: plain" << endl;
+					std::cout << ebdry(tagseg(e0))->idprefix << "_cns_type: inflow" << endl;
+					continue;
+				}
+				
+				/* copy edge boundary */
+				ebdry.resizeAndPreserve(nebd+1);
+				ebdry(nebd) = ebdry(tagseg(e0))->create(*this);
+				ebdry(nebd)->copy(*ebdry(tagseg(e0)));	
+				/* put lone edge in 0 index */
+				ebdry(nebd)->swap(0,lclindex);
+				/* set number of segs to 1 */
+				ebdry(nebd)->nseg = 1;
+				/* give unique number */
+				ebdry(nebd)->idnum = gindx+maxenum;
+				/* change type */
+				ebdry(nebd)->mytype = "plain";
+				
+				/* output stuff */
+				ostringstream nstr;
+				nstr << "b" << npart << "_e" << ebdry(nebd)->idnum << std::flush;
+				ebdry(nebd)->idprefix = nstr.str();
+				nstr.clear();
+				
+				std::cout << ebdry(nebd)->idprefix << "_type: plain" << endl;
+				std::cout << ebdry(nebd)->idprefix << "_cns_type: inflow" << endl;
+				
+				/* swap edge with last spot */
+				ebdry(tagseg(e0))->swap(lclindex,ebdry(tagseg(e0))->nseg-1);
+				/* subtract one off nseg */
+				--ebdry(tagseg(e0))->nseg;
+				/* now reorder */
+				ebdry(tagseg(e0))->setup_next_prev();
+				ebdry(tagseg(e0))->reorder();
+				tagseg(e0) = -1;
+				
+				++nebd;
+			}	
+		}		
 	}
 	
 	/* CREATE COMMUNICATION EDGE BOUNDARIES */
@@ -1713,8 +1794,12 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			std::cout << ebdry(i)->idprefix << "_type: comm\n";
 		}
 	}
+		
+	/**********************************/
+	/*           VERTICES             */
+	/**********************************/
 	
-	/* MOVE VERTEX BOUNDARY INFO */
+	/* count vertex boundaries */
 	nvbd = 0;
 	for(int i=0;i<xin.nvbd;++i){
 		if (intwk(xin.vbdry(i)->pnt) > -1){
@@ -1722,9 +1807,8 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}
 	}
 
+	/* MOVE VERTEX BOUNDARY INFO */
 	vbdry.resize(nvbd);
-	
-
 	nvbd = 0;
 	for(int i=0;i<xin.nvbd;++i) {
 		if (intwk(xin.vbdry(i)->pnt) > -1) {
@@ -1734,13 +1818,14 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			++nvbd;
 		}
 	}
-	
-
-	
-	/* use tagpnt to store vertex boundary index used later in lone point finder */
+		
+	/* use tagpnt to store vertex boundary index 
+	   used later in lone point finder  
+	   > -1 comm, -1 face dirichlet, -2 neither */
 	Array<int,1> tagpnt(npnt); tagpnt = -2;	
 	
-	for(int i = 0; i < nfbd; ++i){
+	/* tag pnts on dirichlet boundaries with -1 */
+	for(int i = 0; i < nfbd; ++i) {
 		if(fbdry(i)->mytype != "partition") {
 			for(int j = 0; j < fbdry(i)->ntri; ++j){
 				int gindx = fbdry(i)->tri(j).gindx;
@@ -1750,8 +1835,21 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			}
 		}
 	}
-	
-
+	for(int i = 0; i < nebd; ++i) {
+		if(ebdry(i)->mytype != "partition") {
+			for(int j = 0; j < ebdry(i)->nseg; ++j){
+				int gindx = ebdry(i)->seg(j).gindx;
+				for(int k = 0; k < 2; ++k){
+					tagpnt(seg(gindx).pnt(k)) = -1;
+				}
+			}
+		}
+	}
+	for(int i = 0; i < nvbd; ++i) {
+		tagpnt(vbdry(i)->pnt) = -1;
+	}
+			
+	/* find comm vertex boundaries and tag with > -1 */
 	for(int i = 0; i < xin.npnt; ++i) {
 		int pntinfo = xin.pnt(i).info;
 		
@@ -1771,7 +1869,6 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}		
 	}
 	
-
 	/* check for lone points that need non communication boundaries */
 	for(int i = 0; i < xin.nfbd; ++i) {
 		for(int j = 0; j < xin.fbdry(i)->npnt; ++j) {
@@ -1780,156 +1877,26 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			if(p0 == -1) continue;
 			
 			if(tagpnt(p0) > -1) {
-				std::cout << "# found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(tagpnt(p0))->idnum << endl;
+				std::cout << "# found lone point on face boundary: " <<  xin.fbdry(i)->idnum << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
+				tagpnt(p0) = -1;
 			}	
 			else if(tagpnt(p0) < -1) {
 				cout <<"# oh shit lone point on face boundary: " << xin.fbdry(i)->idnum << endl;
 				vbdry.resizeAndPreserve(nvbd+1);
 				vbdry(nvbd) = new vcomm(xin.fbdry(i)->pnt(j).gindx+maxvnum,*this);
 				vbdry(nvbd)->alloc(4);
-				vbdry(nvbd)->pnt = intwk(xin.fbdry(i)->pnt(j).gindx);
+				vbdry(nvbd)->pnt = p0;
 				std::cout << vbdry(nvbd)->idprefix << "_type: plain\n";
 				std::cout << vbdry(nvbd)->idprefix << "_cns_type: inflow\n";
+				tagpnt(p0) = -1;
 				++nvbd;
 			}
 		}
 	}
 	
-
-//	for(int i = 0; i < xin.nseg; ++i) {
-//		int seginfo = xin.seg(i).info;
-//		
-//		/* boundary edge */
-//		if(seginfo != -1){
-//			
-//			bool partitionfound = false;
-//			
-//			if(seginfo < (xin.nebd+commbdrys(2)) && seginfo >= xin.nebd){
-//				if(boundary_list(seginfo-xin.nebd,npart) == 1) {
-//					partitionfound = true;
-//				}				
-//			}
-//			
-//			if(partitionfound == true){
-//				for(int j = 0; j < xin.nfbd; ++j) {
-//					for(int k = 0; k < xin.fbdry(j)->nseg; ++k) {
-//						int gindx = xin.fbdry(j)->seg(k).gindx;
-//						if(gindx == i) {
-//							cout << "found lone edge that is not comm on face boundary: " << xin.fbdry(j)->idnum << endl;
-//							ebdry.resize(nebd+1);
-//							
-//							ebdry(nebd) = new epartition(maxenum+maxfnum+gindx,*this);
-//							
-//							ebdry(nebd)->alloc(5);
-//							ebdry(nebd)->nseg = 1;
-//							ebdry(nebd)->seg(0).gindx = nseg;
-//							seg(nseg).pnt(0) = intwk(xin.seg(gindx).pnt(0));
-//							seg(nseg).pnt(1) = intwk(xin.seg(gindx).pnt(1));
-//							seg(nseg).info = gindx;						
-//
-//							int newid = gindx + maxenum;
-//							ostringstream nstr;
-//							nstr << "b" << npart << "_e" << newid << std::flush;
-//							ebdry(nebd)->idprefix = nstr.str();
-//							ebdry(nebd)->idnum = newid;
-//							nstr.clear();
-//							std::cout << ebdry(nebd)->idprefix << "_type: plain \n";
-//							std::cout << ebdry(nebd)->idprefix << "_cns_type: inflow \n";
-//							
-//							++nebd;
-//							++nseg;
-//							
-//						}
-//						
-//					}
-//				}
-//			}
-//		}			
-//	}
-	
-	
-	Array<int,1> intwkseg(xin.maxvst);	intwkseg = -1;
-	
-	/* set intwk so intwkseg(xin seg index) = local index */	
-	for(int i = 0; i < nseg; ++i) {
-		intwkseg(seg(i).info) = i;
-		seg(i).info = -2;
-	}
-		
-	/* tag edge communication boundaries */
-	for(int i=0;i<nebd;++i) {
-		if (ebdry(i)->mytype == "partition") {
-			for(int j = 0; j < ebdry(i)->nseg; ++j) {
-				seg(ebdry(i)->seg(j).gindx).info = i;
-			}
-		}
-	}
-		
-	maxenum += xin.nseg;
-	
-	/* check for lone segments that need non communication boundaries */
-	for(int i = 0; i < xin.nfbd; ++i) {
-		for(int j = 0; j < xin.fbdry(i)->nseg; ++j) {
-			int e0 = intwkseg(xin.fbdry(i)->seg(j).gindx);
-			
-			if(e0 == -1) continue;
-
-			if(seg(e0).info > -1) {
-				std::cout << "# found lone segment on face boundary: " <<  xin.fbdry(i)->idnum << endl;
-				
-				int lclindex = -1;
-				for(int k = 0; k < ebdry(seg(e0).info)->nseg; ++k){
-					if(e0 == ebdry(seg(e0).info)->seg(k).gindx){
-						lclindex = k;
-						break;
-					}
-				}
-				if(lclindex == -1) cout << "we got problems" << endl;
-				
-				if(ebdry(seg(e0).info)->nseg == 1) {
-					std::cout << ebdry(seg(e0).info)->idprefix << "_type: plain" << endl;
-					std::cout << ebdry(seg(e0).info)->idprefix << "_cns_type: inflow" << endl;
-					continue;
-				}
-				
-				/* copy edge boundary */
-				ebdry.resizeAndPreserve(nebd+1);
-				ebdry(nebd) = ebdry(seg(e0).info)->create(*this);
-				ebdry(nebd)->copy(*ebdry(seg(e0).info));	
-				/* put lone edge in 0 index */
-				ebdry(nebd)->swap(0,lclindex);
-				/* set number of segs to 1 */
-				ebdry(nebd)->nseg = 1;
-				/* give unique number */
-				ebdry(nebd)->idnum = xin.fbdry(i)->seg(j).gindx+maxenum;
-				
-				/* output stuff */
-				ostringstream nstr;
-				nstr << "b" << npart << "_e" << ebdry(nebd)->idnum << std::flush;
-				ebdry(nebd)->idprefix = nstr.str();
-				nstr.clear();
-				
-				std::cout << ebdry(nebd)->idprefix << "_type: plain" << endl;
-				std::cout << ebdry(nebd)->idprefix << "_cns_type: inflow" << endl;
-				
-				/* swap edge with last spot */
-				ebdry(seg(e0).info)->swap(lclindex,ebdry(seg(e0).info)->nseg-1);
-				/* subtract one off nseg */
-				--ebdry(seg(e0).info)->nseg;
-				/* now reorder */
-				ebdry(seg(e0).info)->setup_next_prev();
-				ebdry(seg(e0).info)->reorder();
-				//seg(p0).info = nebd;
-				
-				++nebd;
-			}	
-			
-			/* need to add case of lone seg that isnt comm */
-		}		
-	}
-	
+	/* pnt( partition pnt index) = xin pnt index */
 	for(int i = 0; i < xin.npnt; ++i)
 		pnt(intwk(i)).info = i;
 	
@@ -1946,6 +1913,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		vbdry.resizeAndPreserve(nvbd+1);
 		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
 		vbdry(nvbd)->alloc(4);
+		tagpnt(p0) = nvbd;
 		vbdry(nvbd)->pnt = p0;
 		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 		++nvbd;
@@ -1958,18 +1926,35 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		for(int j=0;j<nvbd;++j)
 			if (vbdry(j)->pnt == p0) goto nextv1;
 		
-
 		/* NEW ENDPOINT */
 		vbdry.resizeAndPreserve(nvbd+1);
 		vbdry(nvbd) = new vcomm(pnt(p0).info+maxvnum,*this);
 		vbdry(nvbd)->alloc(4);
+		tagpnt(p0) = nvbd;
 		vbdry(nvbd)->pnt = p0;
 		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 		++nvbd;
 
 	nextv1:
+		
 		continue;
 		
+	}
+	
+	/* check for lone points that need non communication boundaries */
+	for(int i = 0; i < xin.nfbd; ++i) {
+		for(int j = 0; j < xin.fbdry(i)->npnt; ++j) {
+			int p0 = intwk(xin.fbdry(i)->pnt(j).gindx);
+			
+			if(p0 == -1) continue;
+			
+			if(tagpnt(p0) > -1) {
+				std::cout << "# wow wow found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(tagpnt(p0))->idnum << endl;
+				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
+				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
+				tagpnt(p0) = -1;
+			}	
+		}
 	}
 
 	return;
