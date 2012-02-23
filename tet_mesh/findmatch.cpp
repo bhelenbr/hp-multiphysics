@@ -1368,6 +1368,7 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 		}
 	}
 	
+	/* find communication vertex boundaries */
 	for(int i = 0; i < npnt; ++i){
 		
 		/* search tets surrounding vertex */
@@ -1413,7 +1414,40 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 			}
 		}
 	}
+
+
+	/* find comm pnts that are on more than one edge boundaries */
+	Array<int,1> findpnts(npnt); findpnts = -1;	
 	
+//	Array<int,1> storeinfo(npnt);
+//	for(int i = 0; i < npnt; ++i)
+//		storeinfo(i) = pnt(i).info;
+
+	for(int i = 0; i < nseg; ++i){
+		int seginfo = seg(i).info;
+		if(seginfo >= nebd+commbdrys(2)){
+			for(int j = 0; j < 2; ++j) {
+				int p0 = seg(i).pnt(j);
+				if(pnt(p0).info >= nvbd+commbdrys(2) && pnt(p0).info < nvbd+commbdrys(1)+commbdrys(2)) {
+					if(findpnts(p0) != seginfo && findpnts(p0) > -1 ) {
+						findpnts(p0) = -2;
+						//pnt(p0).info = ncommbdry+nvbd;
+						pnt(p0).info = -2;
+					}
+					if(findpnts(p0) == -1) {
+						findpnts(p0) = seginfo;
+					}
+				}
+			}			
+		}
+	}
+	
+//	for(int i = 0; i < npnt; ++i)
+//		if(storeinfo(i) != pnt(i).info)
+//			cout << "change to pnt info " << i << ' ' << storeinfo(i) << ' ' << pnt(i).info << endl;
+
+	
+			   
 	return;
 }
 
@@ -1436,7 +1470,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	for(int i=0;i<xin.nvbd;++i) {
 		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
 	} ++maxvnum;
-	
+
 	/* work array intwk(xin pnt index) = local pnt index */
 	Array<int,1> intwk(xin.npnt); intwk = -1;
 	
@@ -1593,7 +1627,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	
 	nebd = 0; nseg = 0;
 	Array<int,2> edge_boundaries(nebd,2);
-	
+
 	/* find all edge boundaries */
 	for(int i = 0; i < xin.nseg; ++i) {
 		/* edge boundary index */
@@ -1712,7 +1746,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			}
 		}
 	}
-	
+
 	/* check for lone segments that need non communication boundaries */
 	for(int i = 0; i < xin.nfbd; ++i) {
 		for(int j = 0; j < xin.fbdry(i)->nseg; ++j) {
@@ -1764,6 +1798,8 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 				std::cout << ebdry(nebd)->idprefix << "_type: plain" << endl;
 				std::cout << ebdry(nebd)->idprefix << "_cns_type: inflow" << endl;
 				
+				++nebd;
+
 				/* swap edge with last spot */
 				ebdry(tagseg(e0))->swap(lclindex,ebdry(tagseg(e0))->nseg-1);
 				/* subtract one off nseg */
@@ -1773,7 +1809,6 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 				ebdry(tagseg(e0))->reorder();
 				tagseg(e0) = -1;
 				
-				++nebd;
 			}	
 		}		
 	}
@@ -1853,6 +1888,27 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	for(int i = 0; i < xin.npnt; ++i) {
 		int pntinfo = xin.pnt(i).info;
 		
+		/* experimental: try and find segs that meet at vertex */
+		if(pntinfo == -2) {
+			
+			xin.vertexball(i);
+			for(int j = 0; j < xin.pnt(i).nnbor; ++j) {
+				if(xin.tet(xin.gbl->i2wk(j)).info == npart) {
+				
+					cout << "ASDFASDFASDFASDFASDFASDFASDFASDF: " << i+maxvnum <<  endl;
+					vbdry.resizeAndPreserve(nvbd+1);
+					tagpnt(intwk(i)) = nvbd;
+					vbdry(nvbd) = new vcomm(i+maxvnum,*this);
+					vbdry(nvbd)->alloc(4);
+					vbdry(nvbd)->pnt = intwk(i);
+					std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+					++nvbd;
+					break;
+				}
+			}
+			continue;
+		}
+		
 		/* check if point is a unique combination of partitions 
 		 other than face and edge communication boundaries*/
 		if(pntinfo >= xin.nvbd+commbdrys(1)+commbdrys(2)){
@@ -1866,7 +1922,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 				std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 				++nvbd;
 			}				
-		}		
+		}
 	}
 	
 	/* check for lone points that need non communication boundaries */
@@ -1915,6 +1971,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		vbdry(nvbd)->alloc(4);
 		tagpnt(p0) = nvbd;
 		vbdry(nvbd)->pnt = p0;
+		cout << " add vertex to beginning of edge:  " << endl;
 		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 		++nvbd;
 
@@ -1932,6 +1989,8 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		vbdry(nvbd)->alloc(4);
 		tagpnt(p0) = nvbd;
 		vbdry(nvbd)->pnt = p0;
+		cout << " add vertex to end of edge:  " << endl;
+
 		std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 		++nvbd;
 
@@ -1941,6 +2000,53 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		
 	}
 	
+	/* find pnts that are on two edge boundaries */
+	Array<int,1> findpnts(npnt); findpnts = -1;	
+	for(int i = 0; i < nebd; ++i){
+		int p0 = seg(ebdry(i)->seg(0).gindx).pnt(0);
+		
+		/* vertex already found and not on this ebdry */
+		if (findpnts(p0) > -1 && findpnts(p0) != i){
+			findpnts(p0) = -2;
+		}
+
+		/* first time vertex found */
+		if(findpnts(p0) == -1)
+			findpnts(p0) = i;
+			
+		for(int sind = 0; sind < ebdry(i)->nseg; ++sind){
+			p0 = seg(ebdry(i)->seg(sind).gindx).pnt(1);
+			/* vertex already found and not on this ebdry */
+			if (findpnts(p0) > -1 && findpnts(p0) != i){
+				findpnts(p0) = -2;
+			}
+			
+			/* first time vertex found */
+			if(findpnts(p0) == -1)
+				findpnts(p0) = i;
+		}		
+	}
+	
+	for(int i = 0; i < nvbd; ++i)
+		findpnts(vbdry(i)->pnt) = -1;
+	
+	for(int i = 0; i < npnt; ++i) {
+		if(findpnts(i) == -2) {
+			cout << "HEY LOOK HERE make new vertex comm: " << pnt(i).info+maxvnum << endl;
+			cout << "code is gonna crash with this mesh" << endl;
+			//exit(1);
+//			vbdry.resizeAndPreserve(nvbd+1);
+//			vbdry(nvbd) = new vcomm(pnt(i).info+maxvnum,*this);
+//			vbdry(nvbd)->alloc(4);
+//			tagpnt(i) = nvbd;
+//			vbdry(nvbd)->pnt = i;
+//			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+//			++nvbd;
+		}
+	}
+
+	
+	
 	/* check for lone points that need non communication boundaries */
 	for(int i = 0; i < xin.nfbd; ++i) {
 		for(int j = 0; j < xin.fbdry(i)->npnt; ++j) {
@@ -1949,7 +2055,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			if(p0 == -1) continue;
 			
 			if(tagpnt(p0) > -1) {
-				std::cout << "# wow wow found lone point on face boundary: " <<  xin.fbdry(i)->idnum << " vertex id num " << vbdry(tagpnt(p0))->idnum << endl;
+				std::cout << "# wow wow found lone point on face boundary: " <<  xin.fbdry(i)->idnum << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
 				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
 				tagpnt(p0) = -1;
