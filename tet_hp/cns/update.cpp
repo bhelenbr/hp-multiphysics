@@ -70,15 +70,8 @@ void tet_hp_cns::update() {
 		
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 		
+		
 		if (basis::tet(log2p).em > 0) {
-//			FLT maxrese = 0.0;
-//			
-//			for(int i=0;i<nseg;++i)
-//				for(int n=0;n<NV;++n)
-//					if(maxrese < fabs(gbl->res.e(i,0,n)))
-//						maxrese = fabs(gbl->res.e(i,0,n));
-//			
-//			cout << maxrese << endl;
 			
 			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 			

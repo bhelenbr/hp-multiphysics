@@ -263,7 +263,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 		   -w/rho,          0.0,        0.0,		1.0/rho,    0.0,
 		   (gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, -w*gm1/rho, gm1/rho;	
 	
-	/* jacobian of primitive wrt conservative */
+	/* jacobian of conservative wrt primitive */
 	dcdp = 1.0/rt,               0.0,   0.0,   0.0,   -rho/rt,
 		   u/rt,                 rho,   0.0,   0.0,   -rho*u/rt,
 		   v/rt,                 0.0,   rho,   0.0,   -rho*v/rt,

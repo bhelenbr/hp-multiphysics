@@ -357,7 +357,7 @@ namespace ibc_cns {
 
 			keyword = idnty +"_deltatemp";
 			if (!blockdata.get(keyword,deltatemp)) 
-				blockdata.getwdefault("deltatemp",deltatemp,0.05); 
+				blockdata.getwdefault("deltatemp",deltatemp,0.2); 
 			
 			keyword = idnty +"_shiftz";
 			if (!blockdata.get(keyword,shiftz)) 
@@ -369,27 +369,27 @@ namespace ibc_cns {
 			
 			keyword = idnty +"_xmin";
 			if (!blockdata.get(keyword,xmin)) 
-				blockdata.getwdefault("xmin",xmin,-1.0);
+				blockdata.getwdefault("xmin",xmin,-0.2);
 			
 			keyword = idnty +"_ymin";
 			if (!blockdata.get(keyword,ymin)) 
-				blockdata.getwdefault("ymin",ymin,-0.4);
+				blockdata.getwdefault("ymin",ymin,-0.2);
 			
 			keyword = idnty +"_zmin";
 			if (!blockdata.get(keyword,zmin)) 
-				blockdata.getwdefault("zmin",zmin,-0.6);
+				blockdata.getwdefault("zmin",zmin,-.679);
 			
 			keyword = idnty +"_xmax";
 			if (!blockdata.get(keyword,xmax)) 
-				blockdata.getwdefault("xmax",xmax,.5);
+				blockdata.getwdefault("xmax",xmax,0.2);
 			
 			keyword = idnty +"_ymax";
 			if (!blockdata.get(keyword,ymax)) 
-				blockdata.getwdefault("ymax",ymax,0.4);
+				blockdata.getwdefault("ymax",ymax,0.2);
 			
 			keyword = idnty +"_zmax";
 			if (!blockdata.get(keyword,zmax)) 
-				blockdata.getwdefault("zmax",zmax,1.0);
+				blockdata.getwdefault("zmax",zmax,0.1);
 			
 			
 			
