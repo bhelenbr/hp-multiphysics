@@ -41,6 +41,7 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	if (!input.get(gbl->idprefix +"_body_force",gbl->body.data(),3)) input.getwdefault("body_force",gbl->body.data(),3,bodydflt); 
 	
 	if (!input.get(gbl->idprefix + "_atm_pressure",gbl->atm_pressure)) input.getwdefault("atm_pressure",gbl->atm_pressure,0.0);	
+	if (!input.get(gbl->idprefix + "_density",gbl->density)) input.getwdefault("density",gbl->density,0.0);	
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
 	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.713);
@@ -48,9 +49,11 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	
 	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
 
+	*gbl->log << "#conductivity: " << gbl->kcond << endl;
+	
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);
-		
+	
 	return;
 }
 

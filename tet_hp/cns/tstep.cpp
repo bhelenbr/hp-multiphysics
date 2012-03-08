@@ -208,7 +208,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	FLT v = pvu(2);
 	FLT w = pvu(3);
 	FLT rt = pvu(4);
-	FLT rho = pr/rt;
+	FLT rho = pr/rt; /* atm pressure already accounted for in setup_preconditioner */
 	FLT ke = 0.5*(u*u+v*v+w*w);
 	FLT c2 = gam*rt;
 	FLT c = sqrt(c2);
@@ -219,13 +219,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	FLT hdt = 0.5*hmax*gbl->bd(0)/c;
 	FLT umag = sqrt(u*u+v*v+w*w);
 	FLT M = MAX(umag/c,1.0e-5);
-	FLT nuh = 3.0*MAX(4.0*nu/(3.0*hmax*c),alpha/(hmax*c));
-
-//	umag = sqrt(pow(0.5*hmax*gbl->bd(0),2.0)+pow(4.0*nu/hmax,2.0)+u*u+v*v+w*w);
-//	M = MAX(umag/c,1.0e-5);	
-//	hdt = 0.0;
-//	nuh = 0.0;
-	
+	FLT nuh = 3.0*MAX(4.0*nu/(3.0*hmax*c),alpha/(hmax*c));	
 	
 	if(M < 0.8 && gbl->preconditioner > 0){
 	    //b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh, 1.0);
@@ -238,7 +232,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 		b2 = 1.0; // turn off preconditioner
 	}
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << endl;
-
+	//cout << "umag " << umag  << " c " << c << " M " << M << endl;
 	//cout << sqrt(b2) << ' ' << sqrt(M*M/(1.0-M*M)) << ' ' << hdt << ' ' << nuh << ' ' << 4.0*nu/(3.0*h*c) << ' ' << alpha/(h*c) << endl;
 
 	/* probably could be more efficient if in entropy variables */
@@ -409,6 +403,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	
 	
 	FLT maxeig = 0.5*(umag+umag*b2+sqrt(umag*umag*(1.0-2.0*b2+b2*b2)+4.0*b2*c2));
+
 	//maxeig *= 2.0;
 	//if(gbl->bd(0) + nu == 0.0) maxeig *= 2.0;
 
@@ -440,8 +435,9 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 
 	/* smallest eigenvalue of Tau tilde */
 	//timestep = 1.0/spectral_radius(Tinv);
+	//cout << "timestep " << timestep;
 	timestep = 1.0/MAX(3.0*maxeig/h,MAX(0.5*gbl->bd(0),3.0*MAX(4.0*nu/(3.0*h*h),alpha/(h*h))));
-	//cout << timestep;
+	//cout << ' ' << timestep << endl;;
 
 	//timestep = 0.5*h/maxeig;
 	//cout << ' ' << timestep << endl;;

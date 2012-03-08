@@ -24,7 +24,7 @@ public:
 		int preconditioner;
 		
 		/* PHYSICAL CONSTANTS */
-		FLT mu,kcond,R,gamma,atm_pressure;
+		FLT mu,kcond,R,gamma,atm_pressure,density;
 		TinyVector<double,tet_mesh::ND> body;
 		
 		/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
@@ -35,6 +35,7 @@ public:
 		
 		/* SOURCE FUNCTION FOR MMS */
 		//init_bdry_cndtn *src;
+
 		
 	} *gbl;
 	

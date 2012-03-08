@@ -319,7 +319,7 @@ namespace ibc_cns {
 	
 	class hydrostatic : public init_bdry_cndtn {
 	private:
-		FLT gamma,pressure,temperature,deltatemp,shiftz,gravity;
+		FLT gamma,atm_pressure,pressure,temperature_wall,temperature_man,shiftz,gravity;
 		FLT xmin,xmax,ymin,ymax,zmin,zmax;
 		
 	public:
@@ -327,14 +327,14 @@ namespace ibc_cns {
 
 			switch(n) {
 				case(0):
-					return(pressure*exp(gravity*(x(2)-shiftz)/temperature));
+					return(pressure*exp(gravity*(x(2)-shiftz)/temperature_wall)-atm_pressure);
 				case(1):case(2):case(3):
 					return(0.0);
 				case(4):
 					if(x(0) < xmax && x(0) > xmin && x(1) < ymax && x(1) > ymin && x(2) < zmax && x(2) > zmin)						
-						return(temperature+deltatemp);
+						return(temperature_man);
 					else
-						return(temperature);
+						return(temperature_wall);
 			}
 			return(0.0);
 		}
@@ -351,13 +351,13 @@ namespace ibc_cns {
 			if (!blockdata.get(keyword,pressure)) 
 				blockdata.getwdefault("pressure",pressure,1.0/gamma);
 			
-			keyword = idnty +"_temperature";
-			if (!blockdata.get(keyword,temperature)) 
-				blockdata.getwdefault("temperature",temperature,1.0/gamma);  
+			keyword = idnty +"_temperature_wall";
+			if (!blockdata.get(keyword,temperature_wall)) 
+				blockdata.getwdefault("temperature_wall",temperature_wall,1.0/gamma);  
 
-			keyword = idnty +"_deltatemp";
-			if (!blockdata.get(keyword,deltatemp)) 
-				blockdata.getwdefault("deltatemp",deltatemp,0.2); 
+			keyword = idnty +"_temperature_man";
+			if (!blockdata.get(keyword,temperature_man)) 
+				blockdata.getwdefault("temperature_man",temperature_man,1.0/gamma); 
 			
 			keyword = idnty +"_shiftz";
 			if (!blockdata.get(keyword,shiftz)) 
@@ -391,6 +391,9 @@ namespace ibc_cns {
 			if (!blockdata.get(keyword,zmax)) 
 				blockdata.getwdefault("zmax",zmax,0.1);
 			
+			keyword = idnty + "_atm_pressure";
+			if (!blockdata.get(keyword,atm_pressure)) 
+				blockdata.getwdefault("atm_pressure",atm_pressure,0.0);
 			
 			
 		}
