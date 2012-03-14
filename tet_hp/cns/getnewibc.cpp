@@ -331,7 +331,7 @@ namespace ibc_cns {
 				case(1):case(2):case(3):
 					return(0.0);
 				case(4):
-					if(x(0) < xmax && x(0) > xmin && x(1) < ymax && x(1) > ymin && x(2) < zmax && x(2) > zmin)						
+					if(time > 0.0 && x(0) < xmax && x(0) > xmin && x(1) < ymax && x(1) > ymin && x(2) < zmax && x(2) > zmin)						
 						return(temperature_man);
 					else
 						return(temperature_wall);
