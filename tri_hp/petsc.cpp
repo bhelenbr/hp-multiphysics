@@ -14,7 +14,7 @@
 #include <limits.h>
 
 
-//#define DEBUG_JAC
+// #define DEBUG_JAC
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
@@ -225,11 +225,15 @@ void tri_hp::petsc_setup_preconditioner() {
 	petsc_jacobian();
 	J.check_for_unused_entries();
 	J_mpi.check_for_unused_entries();	
-	
+
+#ifdef DEBUG_JAC
+	*gbl->log << J << std::endl;
+	*gbl->log << J_mpi << std::endl;
 //	for(int n=0;n<3;++n) {
 //		J.output_row(*gbl->log,n);
 //		J_mpi.output_row(*gbl->log,n);
 //	}
+#endif
 
 #ifndef MPISRC
 	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
@@ -467,9 +471,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 				rv(ind++) = r_tri_mesh::gbl->res(i)(n);
 		}
 	}
-	
-	*gbl->log << rv(0) << ' ' << rv(1) << ' ' << rv(2) << std::endl;
-	
+		
 	for (int i=0;i<nseg;++i) 
 		for(int m=0;m<sm0;++m)
 			for(int n=0;n<NV;++n)

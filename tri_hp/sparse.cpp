@@ -164,7 +164,7 @@ void tri_hp::petsc_jacobian() {
 		
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
-
+	
 	/* FIX ME!! NOT SURE WHERE TO CALL THIS TEMPORARY */
 	/* This must be uncommented for the melt case to work */
 	for(int i=0;i<nvbd;++i) 
@@ -204,11 +204,10 @@ void tri_hp::petsc_rsdl() {
 }
 
 
-#define DEBUG_TOL 1.0e-5
+#define DEBUG_TOL 1.0e-4
 #define WBC
 
 void tri_hp::test_jacobian() {
-
 	/*************** TESTING ROUTINE ***********************/
 	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
 	/*******************************************************/
@@ -252,7 +251,7 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.v(pind,n);
 						ug.v(pind,n) += dw(n);
-						enforce_continuity(ug,pnts);
+						// enforce_continuity(ug,pnts);
 						
 #ifdef WBC
 						petsc_rsdl();
@@ -277,7 +276,7 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.v(pind,n);
 						ug.v(pind,n) += dw(n);
-						enforce_continuity(ug,pnts);
+						// enforce_continuity(ug,pnts);
 
 #ifdef WBC
 						petsc_rsdl();
@@ -297,7 +296,7 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<ND;++n) {
 						FLT stored_value = pnts(pind)(n);
 						pnts(pind)(n) += dx;
-						enforce_continuity(ug,pnts);
+						// enforce_continuity(ug,pnts);
 
 #ifdef WBC
 						petsc_rsdl();
@@ -321,7 +320,7 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.s(sind,m,n);
 						ug.s(sind,m,n) += dw(n);
-						enforce_continuity(ug,pnts);
+						// enforce_continuity(ug,pnts);
 
 #ifdef WBC
 						petsc_rsdl();
@@ -345,7 +344,7 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.i(tind,m,n);
 						ug.i(tind,m,n) += dw(n);
-						enforce_continuity(ug,pnts);
+						// enforce_continuity(ug,pnts);
 
 #ifdef WBC
 						petsc_rsdl();
@@ -372,16 +371,17 @@ void tri_hp::test_jacobian() {
 						for(int n=0;n<ND;++n) {
 							FLT stored_value = hp_ebdry(i)->crds(j,m,n);
 							hp_ebdry(i)->crds(j,m,n) += dx;
+							// enforce_continuity(ug, pnts);
 #ifdef WBC
 							petsc_rsdl();
 							VecGetArray(petsc_f,&array);
 							Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
-							testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
+							testJ(Range::all(),ind) = (rtemp-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
 							VecRestoreArray(petsc_f, &array);
 #else
 							rsdl();
 							petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-							testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw(n);
+							testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
 #endif
 							++ind;
 							hp_ebdry(i)->crds(j,m,n) = stored_value;
@@ -399,34 +399,39 @@ void tri_hp::test_jacobian() {
 				MatGetRow(petsc_J,i+jacobian_start,&nnz,&cols,&vals);
 				*gbl->log << "row " << i+jacobian_start << ": ";
 				int cnt = 0;
+				/* Skip things on previous processors */
+				while (cols[cnt] < jacobian_start) {
+					++cnt;
+				}
+				
 				for(int j=0;j<jacobian_size;++j) {
 					if (!(fabs(testJ(i,j)) < DEBUG_TOL)) {	
 						if (cnt >= nnz) {
-							*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start << ' ' << testJ(i,j) << ") ";
+							*gbl->log << " (F " <<  j+jacobian_start << ' ' << testJ(i,j) << ") ";
 							continue;
 						}
 						if (cols[cnt] == j+jacobian_start) {
 							if (!(fabs(testJ(i,j) -vals[cnt]) < DEBUG_TOL)) 
-								*gbl->log << " (Jacobian " << j+jacobian_start << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+								*gbl->log << " (FS " << j+jacobian_start << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 							++cnt;
 						}
 						else if (cols[cnt] < j+jacobian_start) {
 							do {
 								if (!(fabs(vals[cnt]) < DEBUG_TOL) && cols[cnt] >= jacobian_start)
-									*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+									*gbl->log << " (S " << cols[cnt] << ' ' << vals[cnt] << ") ";
 								++cnt;
 							} while (cols[cnt] < j+jacobian_start);
 							--j;
 						}
 						else {
-							*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start  << ' ' << testJ(i,j) << ") ";
+							*gbl->log << " (F " <<  j+jacobian_start  << ' ' << testJ(i,j) << ") ";
 						}
 					}
 				}
 				if (cnt < nnz) {
 					do {
 						if (!(fabs(vals[cnt]) < DEBUG_TOL) && cols[cnt] < jacobian_start+jacobian_size)
-							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+							*gbl->log << " (S " << cols[cnt] << ' ' << vals[cnt] << ") ";
 					} while (++cnt < nnz);
 				}
 					
@@ -464,7 +469,7 @@ void tri_hp::test_jacobian() {
 			
 			/* calculate residual enough times */
 			for(int i=0;i<ranges[proc+1]-ranges[proc];++i) {
-				enforce_continuity(ug, pnts);
+				// enforce_continuity(ug, pnts);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
@@ -477,39 +482,40 @@ void tri_hp::test_jacobian() {
 			const PetscScalar *vals;
 			const PetscInt *cols;
 			int nnz;
-
+			
 			for(int i=0;i<jacobian_size;++i) { 
 				MatGetRow(*submat,i,&nnz,&cols,&vals);
 				*gbl->log << "row " << i+jacobian_start << ": ";
+
 				int cnt = 0;
 				for(int j=0;j<ranges[proc+1]-ranges[proc];++j){
 					if (fabs(testJ(i,j)) > DEBUG_TOL) {
 						if (cnt >= nnz) {
-							*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start << ' ' << testJ(i,j) << ") ";
+							*gbl->log << " (F " <<  j+ranges[proc] << ' ' << testJ(i,j) << ") ";
 							continue;
 						}
-						if (cols[cnt] == j+ranges[proc]) {
+						if (cols[cnt] == j) {
 							if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
-								*gbl->log << " (Jacobian " << j+ranges[proc] << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+								*gbl->log << " (FS " << j+ranges[proc] << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 							++cnt;
 						}
-						else if (cols[cnt] < j+ranges[proc]) {
+						else if (cols[cnt] < j) {
 							do {
 								if (fabs(vals[cnt]) > DEBUG_TOL && cols[cnt] >= ranges[proc])
-									*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+									*gbl->log << " (S " << cols[cnt] << ' ' << vals[cnt] << ") ";
 								++cnt;
-							} while (cols[cnt] < j+ranges[proc]);
+							} while (cols[cnt] < j);
 							--j;
 						}
 						else {
-							*gbl->log << " (Extra entry in full matrix " <<  j+ranges[proc]  << ' ' << testJ(i,j) << ") ";
+							*gbl->log << " (F " <<  j+ranges[proc]  << ' ' << testJ(i,j) << ") ";
 						}
 					}
 				}
 				if (cnt < nnz) {
 					do {
 						if (fabs(vals[cnt]) > DEBUG_TOL && cols[cnt] < ranges[proc+1])
-							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+							*gbl->log << " (S " << cols[cnt] +ranges[proc] << ' ' << vals[cnt] << ") ";
 					} while (++cnt < nnz);
 				}
 				
@@ -523,10 +529,9 @@ void tri_hp::test_jacobian() {
 
 		}
 	}
-			
-	*gbl->log << J << std::endl;
 
-	// MatView(petsc_J,0);
+
+	MatView(petsc_J,0);
 }
 
 void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
