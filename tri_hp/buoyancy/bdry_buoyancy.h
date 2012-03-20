@@ -131,8 +131,8 @@ namespace bdry_buoyancy {
 			
 			/* For jacobian */
 			/* petsc_jacobian calculates how residuals change in normal way */
-			/* petsc_matchjacobian_snd()  Sends T, tangent, normal
-			/* petsc_matchjacobian_rcv()	Receives T
+			/* petsc_matchjacobian_snd()  Sends T, tangent, normal */
+			/* petsc_matchjacobian_rcv()	Receives T */
 			/* petsc_matchjacobian_dirichlet() -> moves heat equation jacobian to normal row */
 			/* then rotates normal and tangential row to x,y directions */
 			

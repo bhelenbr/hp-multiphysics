@@ -39,16 +39,22 @@ void melt::init(input_map& inmap,void* gbl_in) {
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	
-	keyword = base.idprefix + "_cp_s";
-	if (!inmap.get(keyword,gbl->cp_s)) {
-		*x.gbl->log << "Missing c_p of solid " << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	if (!base.is_comm()) {
+		keyword = base.idprefix + "_cp_s";
+		if (!inmap.get(keyword,gbl->cp_s)) {
+			*x.gbl->log << "Missing c_p of solid " << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		
+		keyword = base.idprefix + "_rho_s";
+		if (!inmap.get(keyword,gbl->rho_s)) {
+			*x.gbl->log << "Missing rho of solid " << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
 	}
-	
-	keyword = base.idprefix + "_rho_s";
-	if (!inmap.get(keyword,gbl->rho_s)) {
-		*x.gbl->log << "Missing rho of solid " << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	else {
+		gbl->cp_s = 0.0;
+		gbl->rho_s = 0.0;
 	}
 	
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
@@ -172,6 +178,7 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
+		
 		/* Heat Flux Upwinded NO!!! */
 		// res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 	}
@@ -302,8 +309,6 @@ void melt::rsdl_after(int stage) {
 	gbl->vres(i)(1) = x.gbl->res.v(v0,2);
 
 }
-
-
 
 
 void melt::vdirichlet() {
@@ -772,6 +777,7 @@ void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
 
+	/* This boundary should always be first so send going up */
 	countup = 0;
 	for(j=0;j<base.nseg;++j) {
 		offset = base.seg(j)*stride*x.NV;
@@ -794,15 +800,12 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 	if (!base.is_comm()) return;
 
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-	int j,k,m,n,count,countdn,countup,offset,sind,sign;
+	int j,k,m,n,count,countup,offset,sind;
 	FLT mtchinv;
 
-	/* ASSUMES REVERSE ORDERING OF SIDES */
-	/* WON'T WORK IN 3D */
+	/* OPPOSING BOUNDARY SENDS BACKWARDS SO THIS CAN GO UP */
 
 	int matches = 1;
-
-	int bgnsign = (bgn % 2 ? -1 : 1);
 
 	/* RELOAD FROM BUFFER */
 	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
@@ -812,17 +815,14 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 
 		int ebp1 = end-bgn+1;
 
-		countdn = (base.nseg-1)*ebp1*1;
 		countup = 0;
 		for(j=0;j<base.nseg;++j) {
-			sign = bgnsign;
 			for(k=0;k<ebp1;++k) {
 				for(n=0;n<1;++n) {
-					base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+					base.fsndbuf(countup) += base.frcvbuf(m,countup);
+					++countup;
 				}
-				sign *= -1;
 			}
-			countdn -= 2*ebp1*1;
 		}
 	}
 
@@ -1233,7 +1233,7 @@ void melt::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
 	int sm=basis::tri(x.log2p)->sm();
 	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-	
+		
 	int vdofs;
 	if (x.mmovement == x.coupled_deformable)
 		vdofs = x.NV +tri_mesh::ND;
@@ -1241,8 +1241,10 @@ void melt::petsc_jacobian_dirichlet() {
 		vdofs = x.NV;
 		
 	int begin_seg = x.npnt*vdofs;
-		
-	/* MOVE HEAT EQUATION TO LAST ROW  */
+	
+	/****************************************/
+	/* MOVE HEAT EQUATION IN J TO LAST ROW  */
+	/****************************************/
 	int j = 0;
 	do {
 		sind = base.seg(j);
@@ -1299,7 +1301,9 @@ void melt::petsc_jacobian_dirichlet() {
 		x.J._val(cpt2++) = x.J._val(cpt1++);
 	}
 	
-	/* MOVE MPI HEAT EQUATION TO LAST ROW  */
+	/********************************************/
+	/* MOVE HEAT EQUATION IN J_mpi TO LAST ROW  */
+	/********************************************/
 	j = 0;
 	do {
 		sind = base.seg(j);
@@ -1309,11 +1313,12 @@ void melt::petsc_jacobian_dirichlet() {
 		int nnz2 = x.J_mpi._cpt(row+4) -x.J_mpi._cpt(row+3);
 		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 		if (nnz1 != nnz2) {
-			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location " << v0 << ' ' << nnz1 << ' ' << nnz2 << std::endl;;
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		int cpt1 = x.J_mpi._cpt(row);
 		int cpt2 = x.J_mpi._cpt(row+3);
+		
 		for(int col=0;col<nnz1;++col) {
 			/* Overwrite row */
 			x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
@@ -1356,7 +1361,10 @@ void melt::petsc_jacobian_dirichlet() {
 		x.J_mpi._val(cpt2++) = x.J_mpi._val(cpt1++);
 	}
 
-	/* Rotate for diagonal dominance */
+	
+	/***********************************/
+	/* Rotate J for diagonal dominance */
+	/***********************************/
 	j = 0;
 	do {
 		sind = base.seg(j);
@@ -1399,7 +1407,7 @@ void melt::petsc_jacobian_dirichlet() {
 			int cpt2 = x.J._cpt(row2);
 			for(int col=0;col<nnz2;++col) {
 				if (x.J._col(cpt2) < x.J._col(cpt1)) {
-					x.J.set_values(cpt1, x.J._col(cpt2), 0.0); 
+					x.J.set_values(row1, x.J._col(cpt2), 0.0); 
 				}
 				++cpt2;
 				++cpt1;
@@ -1444,8 +1452,9 @@ void melt::petsc_jacobian_dirichlet() {
 	}
 	
 	
-	
-	/* Rotate J_mpi as well */
+	/***************************************/
+	/* Rotate J_mpi for diagonal dominance */
+	/***************************************/
 	/* The x-equation has no entries it is only the tangential equation */
 	j = 0;
 	do {
@@ -1483,9 +1492,21 @@ void melt::petsc_jacobian_dirichlet() {
 			
 			cpt1 = x.J_mpi._cpt(row1);
 			cpt2 = x.J_mpi._cpt(row2);
+			/* Fill in zeros */
+			for(int col=0;col<nnz2;++col) {
+				if (x.J_mpi._col(cpt2) < x.J_mpi._col(cpt1)) {
+					x.J_mpi.set_values(row1, x.J_mpi._col(cpt2), 0.0); 
+				}
+				++cpt2;
+				++cpt1;
+			}
+			
+			cpt1 = x.J_mpi._cpt(row1);
+			cpt2 = x.J_mpi._cpt(row2);
 			for(int col=0;col<nnz2;++col) {
 				if (x.J_mpi._col(cpt1) != x.J_mpi._col(cpt2)) {
-					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
+					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location "  << 
+						row1 << ' ' <<  x.J_mpi._col(cpt1) << ' ' << row2 << ' ' << x.J_mpi._col(cpt2) << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}	
 				double row_store = x.J_mpi._val(cpt1)*gbl->sdt(j)(0,0) +x.J_mpi._val(cpt2)*gbl->sdt(j)(0,1);
@@ -1516,7 +1537,7 @@ void melt::petsc_jacobian_dirichlet() {
 		++cpt2;
 	}
 
-
+	
 	flexible::petsc_jacobian_dirichlet();  // Sets heat equation row to be just 1 on diagonal
 }
 
@@ -1630,9 +1651,7 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	if (!base.is_frst() && sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
-    
+	    
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
 		vdofs = NV;
@@ -1651,14 +1670,21 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	for (int i=base.nseg-1;i>=0;--i) {
 		int sind = base.seg(i);
 		int pind = x.seg(sind).pnt(1)*vdofs;
+		int nentry = base.ircvbuf(0,count);
 		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-			nnzero_mpi(pind+*it) += base.ircvbuf(0,count++);
+			// T received from conv-diffusive side;
+			nnzero_mpi(pind+*it) += nentry;
+			++count; // Skip sizes sent for x & y rows (must match T size)
 		}
+		
 	}
 	int sind = base.seg(0);
 	int pind = x.seg(sind).pnt(0)*vdofs;
+	int nentry = base.ircvbuf(0,count);
 	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
-		nnzero_mpi(pind +*it) += base.ircvbuf(0,count++);
+		// T received from conv-diffusive side;
+		nnzero_mpi(pind+*it) += nentry;
+		++count; // Skip sizes sent for x & y rows (must match T size)
 	}
 	
 	
@@ -1673,6 +1699,8 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 				}
 			}
 		}
+		/* Make these big enough to hold heat equation */
+		nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) += toadd;
 	}
 }
 

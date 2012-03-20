@@ -19,7 +19,7 @@
 #include "bdry_cd.h"
 #include "myblas.h"
 
-// #define MPDEBUG
+//#define MPDEBUG
 
 using namespace bdry_cd;
 
@@ -599,6 +599,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 #endif	
 		
 #ifdef MY_SPARSE
+		/* ZERO ROWS AND SET EQUATIONS TO BE EQUALITY CONSTRAINTS (FOR T,X,Y FOR EACH VERTEX) */
 		indices(0) = rowbase;
 		indices(1) = rowbase+1;
 		indices(2) = rowbase+2;
@@ -627,7 +628,8 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 			x.J.set_diag(x.sm0,indices,1.0);
 			FLT sgn = 1;
 			for(int mode=0;mode<x.sm0;++mode) {
-				(*pJ_mpi).add_values(row+mode,row_mpi+6*mode +2,sgn);
+				/* In buoyancy class, there are 4 degrees of freedom and T is 2nd */
+				(*pJ_mpi).add_values(row+mode,row_mpi +4*mode +2,sgn);
 				sgn *= -1.;
 			}
 		}
@@ -774,7 +776,6 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 				nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
 			}
 			
-			
 			for(int j=0;j<3;++j) {
 				int sind1 = x.tri(tind).seg(j);
 				nnzero(Range(begin_seg+sind1*NV*sm,begin_seg+(sind1+1)*NV*sm-1)) += ND*sm;
@@ -787,20 +788,10 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 			}
 			
 			int pind = x.seg(sind).pnt(0);
-			if (base.is_frst()) {
-				nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;
-			}
-			else {
-				nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
-			}
+			nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
 			
 			pind = x.seg(sind).pnt(1);
-			if (base.is_frst()) {
-				nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;
-			}
-			else {
-				nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
-			}
+			nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
 		}
 	}
 }
@@ -858,7 +849,7 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
 	
-	if (!base.is_frst() && sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+	if (sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 	
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
@@ -894,12 +885,14 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
 	/* Now add to side degrees of freedom */
 	if (sm) {
-		int toadd = base.ircvbuf(0,count++); 
+		// int toadd = base.ircvbuf(0,count++); 
 		for (int i=0;i<base.nseg;++i) {
 			int sind = base.seg(i);
 			for (int mode=0;mode<sm;++mode) {
-				for(int n=0;n<x.NV-1;++n) {
-					nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+				for(int n=0;n<x.NV;++n) {
+					//nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+					nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += 1;  // Just continuity constraint
+
 				}
 			}
 		}
