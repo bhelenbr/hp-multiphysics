@@ -14,9 +14,7 @@
 #include <blocks.h>
 
 class tri_hp_ins : public tri_hp {
-	public:
-		enum error_estimator_type {none,energy_norm,scale_independent};
-		
+	public:		
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
 		struct global : public tri_hp::global {
 			/* STABILIZATION */
@@ -25,10 +23,6 @@ class tri_hp_ins : public tri_hp {
 			/* PHYSICAL CONSTANTS */
 			FLT rho, mu;
 			Array<FLT,1> D;
-
-			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-			TinyVector<FLT,3> eanda, eanda_recv;
-			error_estimator_type error_estimator;
 
 		} *gbl;
 

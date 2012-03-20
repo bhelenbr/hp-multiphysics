@@ -99,7 +99,10 @@ class tri_hp : public r_tri_mesh  {
 			* could be used for ug0 res and res_r as well? 
 			*/
 			tri_hp *pstr;  
-			FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  */
+			FLT curvature_sensitivity; /**<  sensitivity to boundary curvature  */
+			TinyVector<FLT,3> eanda, eanda_recv; /**< Storage for calculation of error energy and area for adaptation */
+			enum error_estimator_type {none,energy_norm,scale_independent};
+			error_estimator_type error_estimator;
 
 			/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 			vsi ug0;
@@ -208,7 +211,7 @@ class tri_hp : public r_tri_mesh  {
 		FLT maxres();
 
 		/* FUNCTIONS FOR ADAPTION */ 
-		void length() {*gbl->log << "using generic length\n";}
+		void length(); 
 		void adapt();
 		void copy(const tri_hp &tgt);
 		void movepdata(int frm, int to);

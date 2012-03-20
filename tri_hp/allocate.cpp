@@ -218,6 +218,19 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	/* ALLOCATE ADAPTATION STORAGE    */
 	/*********************************/
 	if (gbl->adapt_flag) {
+		std::string estring;
+		if (!inmap.get(gbl->idprefix + "_error_estimator",estring)) inmap.getwdefault("error_estimator",estring,std::string("none"));
+		if (estring == "none") 
+			gbl->error_estimator = global::none;
+		else if (estring == "energy_norm")
+			gbl->error_estimator = global::energy_norm;
+		else if (estring == "scale_independent")
+			gbl->error_estimator = global::scale_independent;
+		else {
+			*gbl->log << "Error estimator not recognized" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
 		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,20.0);
 		gbl->pstr = create();
 		gbl->pstr->init(*this,adapt_storage);
@@ -226,6 +239,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		for(i=0;i<nebd;++i)
 			hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
 	}
+	
 #ifdef petsc
 	inmap.getwdefault("under_relaxation",under_relax,1.0);
 	string petsc_options;

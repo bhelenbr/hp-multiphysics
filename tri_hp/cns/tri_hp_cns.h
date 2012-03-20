@@ -16,8 +16,6 @@
 
 class tri_hp_cns : public tri_hp {
 	public:
-		enum error_estimator_type {none,energy_norm,scale_independent};
-
 		/* THINGS SHARED BY ALL tri_hp_cns in same multigrid block */
 		struct global : public tri_hp::global {
 			/* STABILIZATION */
@@ -33,9 +31,6 @@ class tri_hp_cns : public tri_hp {
 			
 			/* SOURCE FUNCTION FOR MMS */
 			//init_bdry_cndtn *src;
-			
-			error_estimator_type error_estimator;
-			
 			vsi	res_temp;
 			
 			/* preconditioner could make 2d but keep general for now */
