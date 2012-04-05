@@ -78,7 +78,7 @@ void tet_hp::tadvance() {
 		
 		/* EXTRAPOLATE */
 		if (stage  && gbl->dti > 0.0) {
-			FLT constant =  0*gbl->cdirk(gbl->substep);  // Extrapolation seems to cause more trouble than it is worth
+			FLT constant =  0.0*gbl->cdirk(gbl->substep);  // Extrapolation seems to cause more trouble than it is worth
 			ugbd(0).v(Range(0,npnt-1),Range::all()) += constant*ugbd(stage+1).v(Range(0,npnt-1),Range::all());
 			if (basis::tet(log2p).em) {
 				ugbd(0).e(Range(0,nseg-1),Range::all(),Range::all()) += constant*ugbd(stage+1).e(Range(0,nseg-1),Range::all(),Range::all());

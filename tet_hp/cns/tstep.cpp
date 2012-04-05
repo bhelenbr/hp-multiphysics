@@ -162,10 +162,11 @@ void tet_hp_cns::setup_preconditioner() {
 	for(int i=0;i<npnt;++i) {
 		gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
 	}
-	for(int i=0;i<nseg;++i) {
-		gbl->epreconditioner(i,Range::all(),Range::all()) /=  gbl->eprcn(i,0);
-	}
-	
+	if (basis::tet(log2p).em > 0) {
+		for(int i=0;i<nseg;++i) {
+			gbl->epreconditioner(i,Range::all(),Range::all()) /=  gbl->eprcn(i,0);
+		}
+	}	
 	tet_hp::setup_preconditioner();
 	
 	int last_phase,mp_phase;
@@ -424,10 +425,10 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 					temp(i,j)+=Pinv(i,k)*(A(k,j)+B(k,j)+C(k,j));
 
 		// uncomment me and fix me
-		Pinv = temp;
+		//Pinv = temp;
 		
-		temp = A+B+C+hmax*S;
-		Pinv /= spectral_radius(temp);
+		//temp = A+B+C+hmax*S;
+		//Pinv /= spectral_radius(temp);
 	}
 
 	/* This is the inverse of Tau tilde */

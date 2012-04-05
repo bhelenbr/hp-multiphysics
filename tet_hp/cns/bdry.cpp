@@ -149,6 +149,59 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 	return;
 }
 
+//void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {	
+//	
+//	
+//	TinyVector<FLT,5> fluxtemp,ub;
+//	TinyVector<FLT,3> vec1,vec2,vec3,vecr;
+//	FLT gogm1 = x.gbl->gamma/(x.gbl->gamma-1.0);
+//	
+//	FLT mag = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
+//	norm /= mag;
+//	
+//	/* align u to the normal */
+//	vec1 = norm;
+//	/* find random vector different than norm */
+//	vecr(0) = vec1(1),	vecr(1) = vec1(2), vecr(2) = vec1(0);
+//	vec2 = cross(norm, vecr);
+//	vec3 = cross(norm, vec2);
+//	
+//	for(int n=0;n<x.NV;++n)
+//		ub(n) = ibc->f(n,xpt,x.gbl->time);
+//	
+//	/* Rotate Coordinate System so that U aligns with normal vector */
+//	FLT pr = u(0);
+//	FLT ur = ub(1)*vec1(0)+ub(2)*vec1(1)+ub(3)*vec1(2);	
+//	FLT vr = ub(1)*vec2(0)+ub(2)*vec2(1)+ub(3)*vec2(2);
+//	FLT wr = ub(1)*vec3(0)+ub(2)*vec3(1)+ub(3)*vec3(2);
+//	FLT RT = ub(4);
+//	
+//	FLT rho = (pr+x.gbl->atm_pressure)/RT;
+//	
+//	fluxtemp(0) = rho*ur;
+//	fluxtemp(1) = rho*ur*ur+pr;
+//	fluxtemp(2) = rho*ur*vr;
+//	fluxtemp(3) = rho*ur*wr;
+//	fluxtemp(4) = rho*ur*(gogm1*RT+0.5*(ur*ur+vr*vr+wr*wr));	
+//	
+//	/* CHANGE BACK TO X,Y,Z COORDINATES */
+//	FLT temp2 = 1.0/(1.0-norm(2)*norm(1)-norm(1)*norm(0)-norm(0)*norm(2))/(1.0+norm(2)*norm(1)+norm(1)*norm(0)+norm(0)*norm(2));
+//	vec1(0) = norm(0), vec1(1) = temp2*(norm(1)*norm(0)-norm(2)*norm(2)), vec1(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(1)*norm(1)*norm(1)-norm(2)*norm(2)*norm(1)+norm(0)*norm(0)*norm(2));
+//	vec2(0) = norm(1), vec2(1) = temp2*(norm(2)*norm(1)-norm(0)*norm(0)), vec2(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(2)*norm(2)*norm(2)-norm(0)*norm(0)*norm(2)+norm(1)*norm(1)*norm(0));
+//	vec3(0) = norm(2), vec3(1) = temp2*(norm(2)*norm(0)-norm(1)*norm(1)), vec3(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(0)*norm(0)*norm(0)-norm(1)*norm(1)*norm(0)+norm(2)*norm(2)*norm(1));
+//	
+//	flx(0) = fluxtemp(0);
+//	flx(1) = fluxtemp(1)*vec1(0) + fluxtemp(2)*vec1(1) + fluxtemp(3)*vec1(2);
+//	flx(2) = fluxtemp(1)*vec2(0) + fluxtemp(2)*vec2(1) + fluxtemp(3)*vec2(2);
+//	flx(3) = fluxtemp(1)*vec3(0) + fluxtemp(2)*vec3(1) + fluxtemp(3)*vec3(2);
+//	flx(4) = fluxtemp(4);
+//	
+//	flx *= mag;
+//	
+//	return;
+//}
+
+
 void inflow::vdirichlet() {	
 	for(int j=0;j<base.npnt;++j) {
 		int v0 = base.pnt(j).gindx;
@@ -486,13 +539,13 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	Rr(4) = Rr(0)*(ur(x.NV-1)/gm1+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));	
 	
 	/* Average left and right flux */
-	fluxleft(0) = ul(0)*ul(1)/ul(x.NV-1);
+	fluxleft(0) = (ul(0)+x.gbl->atm_pressure)*ul(1)/ul(x.NV-1);
 	fluxleft(1) = fluxleft(0)*ul(1)+ul(0);
 	fluxleft(2) = fluxleft(0)*ul(2);
 	fluxleft(3) = fluxleft(0)*ul(3);
 	fluxleft(4) = fluxleft(0)*(gogm1*ul(x.NV-1)+0.5*(ul(1)*ul(1)+ul(2)*ul(2)+ul(3)*ul(3)));
 	
-	fluxright(0) = ur(0)*ur(1)/ur(x.NV-1);
+	fluxright(0) = (ur(0)+x.gbl->atm_pressure)*ur(1)/ur(x.NV-1);
 	fluxright(1) = fluxright(0)*ur(1)+ur(0);
 	fluxright(2) = fluxright(0)*ur(2);
 	fluxright(3) = fluxright(0)*ur(3);

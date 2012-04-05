@@ -55,12 +55,22 @@ void tet_hp_cns::update() {
 //		for(int i=0;i<nfbd;++i)
 //			hp_fbdry(i)->fdirichlet();
 		
+		
 #ifdef JACOBI
 		tet_hp::jacobi_relaxation();
 #else
 		minvrt();
 #endif
 
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->vdirichlet();
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->edirichlet();
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->fdirichlet();
+
+		
+		
 //		for(int i=0;i<nfbd;++i)
 //			hp_fbdry(i)->modify_boundary_residual();		
 		
