@@ -81,6 +81,59 @@ template<int N> class symbolic_function {
 		assert(nchild_temp == nchildren);
 	}
 	
+	void operator=(const symbolic_function& tgt) {
+		/* Delete Children */
+		for(int n=0;n<nchildren;++n)
+			delete children(n);
+		
+		p = tgt.p;
+		nchildren = tgt.nchildren;
+		std::ostringstream varname;
+		
+		/* Reassociate Variables */
+		if (N > 1) {
+			for (int n=0;n<N;++n) {
+				varname.str("");
+				varname << "x" << n << std::flush;
+				p.DefineVar(varname.str(), &x(n));
+				varname.clear();
+			}
+		}
+		else if (N == 1) {
+			p.DefineVar("x", &x(0));
+		}
+		p.DefineVar("t",&x(N));
+		
+		children.resize(nchildren);
+		child_values.resize(nchildren);
+		mu::varmap_type variables = p.GetVar();
+		
+		/* Reassociate Children */
+		int nchild_temp = 0;
+		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+			if (N > 1) {
+				for (int n=0;n<N;++n) {
+					varname.str("");
+					varname << "x" << n << std::flush;
+					if (item->first == varname.str()) goto NEXT;
+					varname.clear();
+				}
+			}
+			else {
+				if (item->first == "x") goto NEXT;
+			}
+			if (item->first == "t") goto NEXT;
+			
+			/* This is a child variable? */
+			children(nchild_temp) = new symbolic_function<N>(*tgt.children(nchild_temp));
+			p.DefineVar(item->first, &child_values(nchild_temp));
+			++nchild_temp;
+		NEXT: continue;
+		}
+		assert(nchild_temp == nchildren);
+	}
+
+	
 	void init(input_map& input, std::string idprefix);
 		
 	double Eval(blitz::TinyVector<double,N> xin, double t = 0.0) const {
@@ -103,6 +156,7 @@ template<int N> class symbolic_function {
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
 		}
 		return(rslt);
 	}
@@ -126,6 +180,8 @@ template<int N> class symbolic_function {
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -148,6 +204,8 @@ template<int N> class symbolic_function {
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -199,7 +257,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 				}
 				else {
 					std::cout << "couldn't find expression " << item->first << '\n';
-					exit(1);
+					abort();
 				}
 			}
 			
@@ -238,7 +296,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 				}
 				else {
 					std::cout << "couldn't find expression " << item->first << '\n';
-					exit(1);
+					abort();
 				}
 			}
 			p.DefineConst(item->first,value);
@@ -381,6 +439,7 @@ public:
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
 		}
 		return(rslt);
 	}
@@ -409,6 +468,8 @@ public:
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -440,6 +501,8 @@ public:
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -474,6 +537,8 @@ public:
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -511,6 +576,8 @@ public:
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
 			rslt = 0.0;
+			abort();
+
 		}
 		return(rslt);
 	}
@@ -563,7 +630,7 @@ public:
 					}
 					else {
 						std::cout << "couldn't find expression " << item->first << '\n';
-						exit(1);
+						abort();
 					}
 				}
 				NEXT: continue;
@@ -603,7 +670,7 @@ public:
 					}
 					else {
 						std::cout << "couldn't find expression " << item->first << '\n';
-						exit(1);
+						abort();
 					}
 				}
 				p.DefineConst(item->first,value);
