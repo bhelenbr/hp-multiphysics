@@ -213,8 +213,8 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 #### FOR TETRAHEDRAL CODE, DO THIS HERE ####
 #### NOT NECESSARY FOR 2D CODE ###
 #### (FOR TETS ONLY) FOR MADLIB ####
-
-	[svn co https://svn.uclouvain.be/repos/MAdLib/trunk MAdLib]
+(NEED PASSWORD FROM BRIAN)
+	[svn co https://svn.cenaero.be/MAdLib/trunk MAdLib]
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
@@ -225,8 +225,10 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	## USE CCMAKE TO CHANGE INSTALL OPTIONS
 	## ON CLUSTER:
 	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]
+	Hit t to toggle expert mode.
         ## ON MAC CAN USE CMAKE GUI TO CHANGE OPTION
 	### CHANGE EXTENDED_API TO YES (find correct checkbox)
+	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 
 	[cmake ..]
 	[make depend]
@@ -281,9 +283,20 @@ now make all of my stuff:
 #### UNIX ####
 # On cares modify your .bash_profile file in your home directory by 
 # adding the location of the packages directory:
-# On Ccluster:
+# On cluster:
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/share/apps/lib
 export PACKAGES=/export/apps
+# For Linux:
+export PACKAGES=/${HOME}/Packages
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PACKAGES/lib
+
+# you may have to monkey with the makefiles to change
+# blasé & lapack libraries, as well as mpic++ location 
+# and directory of mph include.  
+
+# Other things is that getnewblock in tri_hp and 
+# the makefile have to compile the same classes.
+
 
 make -j 2 tri_hp (For 2 processor machine)
 or to do everything including 3D stuff too
