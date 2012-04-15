@@ -20,7 +20,7 @@
 //#define LVLSET
 //#define EXPLICIT
 //#define CNS
-//define CNS_EXPLICIT
+//#define CNS_EXPLICIT
 //#define NONNEWTONIAN
 
 #define POD
