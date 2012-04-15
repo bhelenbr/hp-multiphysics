@@ -35,4 +35,26 @@ template<int ND> class spline {
 		int find(double &spt, TinyVector<double,ND>& loc);
 };
 
+template<int ND> class spline3 {
+	private:
+		int npts;
+		Array<double,1> x;
+		Array<TinyVector<double,ND>,1> y;
+		Array<TinyVector<TinyVector<double,ND>,4>,1> c;
+		
+	public:
+		spline3() : npts(0) {}
+		spline3(const spline3<ND>& inpt) : npts(inpt.npts) {
+			x.resize(npts);
+			y.resize(npts);
+			c.resize(npts);
+			x = inpt.x;
+			y = inpt.y;
+			c = inpt.c;
+		}
+		int read(std::string filename);
+		int interpolate(const double spt, TinyVector<double,ND>& loc);
+		int find(double &spt, TinyVector<double,ND>& loc);
+};
+
 #endif

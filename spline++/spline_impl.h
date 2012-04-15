@@ -10,6 +10,7 @@
 #include "spline.h"
 #include <fstream>
 #include <blitz/tinyvec-et.h>
+#include "myblas.h"
 
 template<int ND> int spline<ND>::read(std::string filename) {
 	std::ifstream in;
@@ -309,6 +310,182 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
 	
 	return(1);
 }
+
+
+template<int ND> int spline3<ND>::read(std::string filename) {
+	std::ifstream in;
+	Array<TinyVector<double,3>,1> tri_diagonal;
+	TinyVector<Array<double,1>,ND> rhs;
+	
+	in.open(filename.c_str());
+	if (!in) {
+		std::cerr << "couldn't open spline input file " << filename << std::endl;
+		exit(1);
+	}
+	
+	/* READ # OF POINTS AND ALLOCATE */
+	in.ignore(80,'\n');
+	in.ignore(80,':');
+	in >> npts;
+	
+	c.resize(npts);
+	x.resize(npts);
+	y.resize(npts);
+	tri_diagonal.resize(npts);
+	for (int n=0;n<ND;++n)
+		rhs(n).resize(npts);
+	
+	in.ignore(80,'\n');
+	in.ignore(80,'\n');
+	
+	/* NOW READ DATA */
+	for (int i=0;i<npts;++i) {
+		for(int n=0;n<ND;++n)
+			in >> y(i)(n);
+		
+		in >> x(i);
+	}
+	
+	// http://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline
+	for (int row=1;row<npts-1;++row) {
+		tri_diagonal(row)(0) = 1./(x(row)-x(row-1));
+		tri_diagonal(row)(1) = 2.*(1./(x(row)-x(row-1)) +1./(x(row+1)-x(row)));
+		tri_diagonal(row)(2) = 1./(x(row+1)-x(row));
+
+		for(int n=0;n<ND;++n)
+			rhs(n)(row) = 3*((y(row)(n) -y(row-1)(n))/pow(x(row)-x(row-1),2) +(y(row+1)(n) -y(row)(n))/pow(x(row+1)-x(row),2));
+	}
+	
+	/* Can either constrain slope or do natural spline */  
+	/* Here we do natural spline */
+
+	tri_diagonal(0)(0) = 0.0;
+	tri_diagonal(0)(1) = 2./(x(1)-x(0));
+	tri_diagonal(0)(2) = 1./(x(1)-x(0));
+	for(int n=0;n<ND;++n)
+		rhs(n)(0) = 3*((y(1)(n) -y(0)(n))/pow(x(1)-x(0),2));
+
+	tri_diagonal(npts-1)(0) = 1./(x(npts-1)-x(npts-2));
+	tri_diagonal(npts-1)(1) = 2./(x(npts-1)-x(npts-2));
+	tri_diagonal(npts-1)(2) = 0.0;
+	for(int n=0;n<ND;++n)
+		rhs(n)(npts-1) = 3*((y(npts-1)(n) -y(npts-2)(n))/pow(x(npts-1)-x(npts-2),2));
+
+	/* PUT IN BANDED FORM & INVERT */
+	Array<double,2> band_matrix(npts,2);
+	for(int j=0;j<npts;++j) {
+		int i1 = (0 > j-1 ? 0 : j-1);
+		for(int i=i1;i<=j;++i) {
+			int k = i - (j-1);
+			band_matrix(j,k) = tri_diagonal(j)(k);
+		}
+	}
+	
+	int info;
+	char uplo[] = "U";
+	DPBTRF(uplo,npts,1,band_matrix.data(),2,info);
+	if (info != 0) {
+		printf("1:PBTRF FAILED info: %d\n", info);
+		exit(1);
+	}		
+	
+	for (int n=0;n<ND;++n)
+		DPBTRS(uplo,npts,1,1,band_matrix.data(),2,rhs(n).data(),npts,info);
+	
+	for(int seg=0;seg<npts-1;++seg) {
+		for(int n=0;n<ND;++n) {
+			c(seg)(0)(n) = y(seg)(n);
+			c(seg)(1)(n) = y(seg+1)(n);
+			c(seg)(2)(n) = rhs(n)(seg)*(x(seg+1)-x(seg)) -(y(seg+1)(n)-y(seg)(n));
+			c(seg)(3)(n) = -rhs(n)(seg+1)*(x(seg+1)-x(seg)) +(y(seg+1)(n)-y(seg)(n));
+		}
+	}
+		
+	return 0;
+}
+
+template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) {
+	double a,b,bma,t;
+	
+	double xpt = xptin;
+	if (xpt < x(0)) xpt=x(0);
+	if (xpt > x(npts-1)) xpt=x(npts-1);
+	
+	int i;
+	for (i=1;i<npts;++i)
+		if (x(i) >= xpt) break;
+	--i;
+	
+	a=x(i);
+	b=x(i+1);
+	bma=b-a;
+	t=(xpt-a)/bma;
+	loc=c(i)(0)*(1-t) + c(i)(1)*t +t*(1-t)*(c(i)(2)*(1-t) + c(i)(3)*t);
+	
+	return 0;
+}
+
+template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
+	int k,sidloc,sidlocprev;
+	double ol,psi,normdist;
+	double psiloc,psinew,psiprev,normdistprev;
+	double mindist = 1.0e32;
+	TinyVector<double,2> dy, dy1;
+	
+	psiprev = -1.0;
+	
+	for(k=0;k<npts-1;++k) {
+		dy = y(k+1) -y(k);
+		ol = 2./dot(dy,dy);
+		dy1 = ypt -y(k);
+		psi = ol*(dot(dy1,dy)) -1.;
+		normdist = dy(0)*dy1(1)-dy(1)*dy1(0);
+		normdist *= sqrt(ol/2.);
+		
+		if (psi <= -1.0 && psiprev >= 1.0) {
+			/* PREVIOUS & THIS SIDE ARE POTENTIAL MATCHES */
+			if (fabs(normdist) < mindist) {
+				mindist = fabs(normdist);
+				sidloc = k;
+				psiloc = -1.0;
+			}
+			if (fabs(normdistprev) < mindist) {
+				mindist = fabs(normdistprev);
+				sidloc = sidlocprev;
+				psiloc = 1.0;
+			}
+		}
+		else if (psi >= -1.0 && psi <= 1.0) {
+			/* POTENTIAL SIDE */
+			if (fabs(normdist) < mindist) {
+				mindist = fabs(normdist);
+				sidloc = k;
+				psiloc = psi;
+			}
+		}
+		psiprev = psi;
+		normdistprev = normdist;
+		sidlocprev = k;
+	}
+	
+	int i = sidloc;
+	dy = y(i+1)-y(i);
+	ol = 2./dot(dy,dy);
+	
+	psi = psiloc;
+	s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
+	
+	for (int iter=0;iter<100;++iter) {
+		interpolate(s0,ypt);
+		dy1 = ypt-y(i);
+		psinew = ol*(dot(dy1,dy)) -1.;
+		s0 = s0 - 0.5*(psinew-psi)*(x(i+1)-x(i));
+		if (fabs(psinew-psi) < 1.0e-10) return 0;
+	}
+	
+	return(1);
+}
+
 
 
 
