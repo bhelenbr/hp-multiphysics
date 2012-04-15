@@ -18,13 +18,10 @@
 
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
-void tri_hp_cns::length() {
+void tri_hp_cns::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
-	
-	if (gbl->error_estimator == global::none) 
-		return;
 	
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
@@ -114,6 +111,5 @@ void tri_hp_cns::length() {
 	gbl->eanda(1) = e2to_pow;
 	gbl->eanda(2) = totalerror2;
 
-	tri_hp::length();
 	return;
 }

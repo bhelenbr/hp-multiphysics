@@ -16,13 +16,19 @@
 
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
-void tri_hp_ins::length() {
+void tri_hp_ins::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	if (gbl->error_estimator == global::none) 
+	if (gbl->error_estimator == global::none) {
+		if (gbl->adapt_output) {
+			ostringstream fname;
+			fname << "adapt_diagnostic" << gbl->tstep << '_' << gbl->idprefix;
+			output(fname.str(),tri_hp::adapt_diagnostic);
+		}
 		return;
+	}
 	
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
@@ -114,7 +120,7 @@ void tri_hp_ins::length() {
 	gbl->eanda(1) = e2to_pow;
 	gbl->eanda(2) = totalerror2;
 
-	tri_hp::length();
+	tri_hp::error_estimator();
 	
 	return;
 }

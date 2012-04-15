@@ -12,7 +12,7 @@
 #include <math.h>
 #include <utilities.h>
 
-void tri_hp_cd::length() {
+void tri_hp_cd::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
@@ -102,8 +102,6 @@ void tri_hp_cd::length() {
 	gbl->eanda(0) = totalenergy2;
 	gbl->eanda(1) = e2to_pow;
 	gbl->eanda(2) = totalerror2;
-
-	tri_hp::length();
 
 	return;
 }
