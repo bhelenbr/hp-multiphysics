@@ -360,7 +360,7 @@ void tri_hp_lvlset::reinit_setup_preconditioner() {
 			if (!(jcb > 0.0)) {  // this catches nan's too
 				*gbl->log << "negative triangle area caught in tstep. problem triangle is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-				tri_mesh::output("negative",grid);
+				tri_mesh::output("negative_"+gbl->idprefix+gbl->idprefix,grid);
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
