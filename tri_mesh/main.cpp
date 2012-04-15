@@ -4,6 +4,7 @@
 #include "tri_mesh.h"
 #include "math.h"
 #include <input_map.h>
+#include <symbolic_function.h>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -128,22 +129,27 @@ int main(int argc, char *argv[]) {
 
 	/* TO SYMMETRIZE A MESH */
 	if (Symmetrize) {
-	    class tri_mesh zx;
+		class tri_mesh zx;
 		zx.input(argv[1],in,8.0,bdrymap);
 		zx.symmetrize();
 		return 0;
 	}
 
 	if (Vlngth) {
-	    class tri_mesh zx;
-
+		class tri_mesh zx;
 		zx.input(argv[1],in,8.0,bdrymap);
-		std::string name;
-		name = std::string(argv[1]) +".lngth";
-		FILE *fp = fopen(name.c_str(),"w");
-		for(int i=0;i<zx.npnt;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.lngth(i));
-		fclose(fp);
-		return 0;
+		
+		symbolic_function<2> length_modifier_function;
+		input_map length_modifier_input;
+		std::string length_modifier_string;
+		std::cout << "Input function of (x0,x1) and t where t is the current mesh length" << std::endl;
+		std::cin >> length_modifier_string;
+		length_modifier_input["length_modifier"] = length_modifier_string;
+		length_modifier_function.init(length_modifier_input,"length_modifier");
+		for(int i=0;i<zx.npnt;++i) 
+			zx.lngth(i) = length_modifier_function.Eval(zx.pnts(i),zx.lngth(i));
+		zx.output(argv[2],out);
+		return 0; 
 	}
 
 	if (Smooth) {
@@ -156,7 +162,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (Refineby2) {
-	    class tri_mesh zx,zy;
+		class tri_mesh zx,zy;
 		zx.input(argv[1],in,8.0,bdrymap);
 		zy.refineby2(zx);
 		zy.checkintegrity();
@@ -165,7 +171,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (Coarsen_hp) {
-	    class tri_mesh zx,zy;
+		class tri_mesh zx,zy;
 
 		int p;
 		zx.input(argv[1],in,1.0,bdrymap);
@@ -177,7 +183,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (Scale) {
-	    class tri_mesh zx;
+		class tri_mesh zx;
 		TinyVector<FLT,2> s;
 		printf("Enter x and y scaling\n");
 		scanf("%le%le",&s(0),&s(1));

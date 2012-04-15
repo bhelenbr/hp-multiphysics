@@ -1,9 +1,9 @@
+#include "tri_mesh.h"
 #include <string.h>
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
 #include <libbinio/binfile.h>
-#include "tri_mesh.h"
 
 // #define DATATANK
 
@@ -45,6 +45,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 		filetype = tecplot;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}		
+	else if (ending == "lngth") {
+		filetype = vlength;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}	
 	
 
 	switch (filetype) {

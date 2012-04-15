@@ -98,6 +98,7 @@ struct block_global {
 	bool adapt_output; /**< Flag to tell whether to give detailed adaptation data */
 	FLT tolerance; /**< Tolerance for mesh adaptation scheme */
 	FLT error_target; /**< Error target for mesh adaptation scheme */
+	int length_smoothing_steps;
 	//@}
 };
 

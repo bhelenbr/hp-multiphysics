@@ -1069,7 +1069,7 @@ next1c:      continue;
 		for(i=0;i<npnt;++i) in >> lngth(i);
 		in.close();
 	}
-	else if (filetype != boundary) initlngth();
+	else if (filetype != boundary && filetype != binary) initlngth();
 
 
 	tri_mesh::setinfo();  // Don't call virtual because other objects must be set-up first

@@ -45,13 +45,14 @@ void tri_mesh::adapt() {
 
 	/* CALCULATE TARGET LENGTH */
 	length();
+	
 	for(int last_phase = 0, mp_phase = 0; !last_phase; ++mp_phase) {
 		pmsgload(boundary::all_phased,mp_phase,boundary::symmetric,lngth.data(),0,0,1);
 		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
-		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,lngth.data(),0,0,1);
+		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::minimum,lngth.data(),0,0,1);
 	}
-
+	
 	/* SET FLAGS ETC... */
 	setup_for_adapt();
 

@@ -832,25 +832,30 @@ class rigid_movement_interface2D {
 /* GENERIC TEMPLATE FOR SHAPES */
 template<int ND> class geometry {
 	protected:
-		virtual FLT hgt(TinyVector<FLT,ND> pt, FLT time = 0.0) {return(0.0);}
-		virtual FLT dhgt(int dir, TinyVector<FLT,ND> pt, FLT time = 0.0) {return(1.0);}
+		virtual FLT hgt(TinyVector<FLT,ND> &pt, FLT time = 0.0) {return(0.0);}
+		virtual FLT dhgt(int dir, TinyVector<FLT,ND> &pt, FLT time = 0.0) {return(1.0);}
 
 	public:
-		geometry* create() const {return(new geometry);}
+		// virtual geometry* create() const {return(new geometry);}
 		virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			int iter,n;
 			FLT mag, delt_dist;
-
+			TinyVector<FLT,ND> deriv;
+			
+			
 			/* FOR AN ANALYTIC SURFACE */
 			iter = 0;
 			do {
 				mag = 0.0;
+				for(n=0;n<ND;++n) {
+					deriv(n) = dhgt(n,pt,time);
+					mag += deriv(n)*deriv(n);
+				}				
+				delt_dist = -hgt(pt,time)/mag;
+				
 				for(n=0;n<ND;++n)
-					mag += pow(dhgt(n,pt.data(),time),2);
-				mag = sqrt(mag);
-				delt_dist = -hgt(pt.data(),time)/mag;
-				for(n=0;n<ND;++n)
-					pt(n) += delt_dist*dhgt(n,pt.data(),time)/mag;
+					pt(n) += delt_dist*deriv(n);
+								
 				if (++iter > 100) {
 					std::cout << "Warning: curved iterations exceeded for symbolic curved boundary " << pt(0) << ' ' << pt(1) << "Ratio to target error level " << fabs(delt_dist)/(10.*EPSILON) << '\n';  // FIXME:  NEED TO FIX
 				}
@@ -861,7 +866,7 @@ template<int ND> class geometry {
 		virtual void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
 			FLT mag = 0.0;
 			for(int n=0;n<ND;++n) {
-				norm(n) = dhgt(n,pt.data(),time);
+				norm(n) = dhgt(n,pt,time);
 				mag += norm(n)*norm(n);
 			}
 			norm /= sqrt(mag);
@@ -910,15 +915,21 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 	protected:
 		symbolic_function<ND> h;
 		TinyVector<symbolic_function<ND>,ND> dhdx;
-		FLT hgt(TinyVector<FLT,ND> pt, FLT time = 0.0) {
-			return(h.Eval(pt,time));
+	
+		FLT hgt(TinyVector<FLT,ND> &pt, FLT time = 0.0) {
+			return(h.Eval(pt,time)); 
 		}
-		FLT dhgt(int dir, TinyVector<FLT,ND> pt, FLT time = 0.0) {
+		FLT dhgt(int dir, TinyVector<FLT,ND> &pt, FLT time = 0.0) {
 			return(dhdx(dir).Eval(pt,time));
 		}
+
 	public:
 		symbolic_shape() : geometry<ND>() {}
-		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt), h(tgt.h), dhdx(tgt.dhdx) {}
+		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt), h(tgt.h) { 
+			for(int n=0; n<ND;++n) {
+				dhdx(n) = tgt.dhdx(n);
+			}
+		}
 
 		void init(input_map& inmap, std::string idprefix, std::ostream& log) {
 			geometry<ND>::init(inmap,idprefix,log);
@@ -954,10 +965,10 @@ class circle : public geometry<2> {
 	public:
 		// Position is kept in rigid class
 		FLT radius;
-		FLT hgt(TinyVector<FLT,2> pt,FLT time = 0.0) {
+		FLT hgt(TinyVector<FLT,2>& pt,FLT time = 0.0) {
 			return(radius*radius -pt[0]*pt[0] -pt[1]*pt[1]);
 		}
-		FLT dhgt(int dir, TinyVector<FLT,2> pt,FLT time = 0.0) {
+		FLT dhgt(int dir, TinyVector<FLT,2>& pt,FLT time = 0.0) {
 			return(-2.*(pt[dir]));
 		}
 
@@ -979,10 +990,10 @@ class circle : public geometry<2> {
 class ellipse : public geometry<2> {
 	public:
 		TinyVector<FLT,2> axes;
-		FLT hgt(TinyVector<FLT,2> pt, FLT time = 0.0) {
+		FLT hgt(TinyVector<FLT,2>& pt, FLT time = 0.0) {
 			return(1 -pow(pt[0]/axes(0),2) -pow(pt[1]/axes(1),2));
 		}
-		FLT dhgt(int dir, TinyVector<FLT,2> pt, FLT time = 0.0) {
+		FLT dhgt(int dir, TinyVector<FLT,2>& pt, FLT time = 0.0) {
 			return(-2.*pt[dir]/pow(axes(dir),2));
 		}
 
@@ -1010,12 +1021,12 @@ class naca : public geometry<2> {
 		TinyVector<FLT,5> coeff;
 		FLT scale;
 
-		FLT hgt(TinyVector<FLT,2> pt, FLT time = 0.0) {
+		FLT hgt(TinyVector<FLT,2>& pt, FLT time = 0.0) {
 			pt *= scale;
 			FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];
 			return(coeff[0]*pt[0] -poly*poly/coeff[0]);
 		}
-		FLT dhgt(int dir, TinyVector<FLT,2> pt, FLT time = 0.0) {
+		FLT dhgt(int dir, TinyVector<FLT,2>& pt, FLT time = 0.0) {
 			pt *= scale;
 
 			TinyVector<FLT,2> ddx;
@@ -1074,10 +1085,10 @@ class naca : public geometry<2> {
 class plane : public geometry<2> {
 	public:
 		// Rotation and position information is kept in rigid class
-		FLT hgt(TinyVector<FLT,2> xin, FLT time = 0.0) {
+		FLT hgt(TinyVector<FLT,2>& xin, FLT time = 0.0) {
 			return(xin[0]);
 		}
-		FLT dhgt(int dir, TinyVector<FLT,2> x, FLT time = 0.0) {
+		FLT dhgt(int dir, TinyVector<FLT,2>& x, FLT time = 0.0) {
 			if (dir == 0) return(1.0);
 			return(0.0);
 		}
@@ -1086,7 +1097,43 @@ class plane : public geometry<2> {
 		plane(const plane &inbdry) : geometry<2>(inbdry) {}
 		plane* create() const {return(new plane(*this));}
 };
-#endif
 
+#include <spline.h>
+#include <blitz/tinyvec-et.h>
+
+class spline_geometry {
+	protected:
+		spline3<tri_mesh::ND> my_spline;
+		FLT smin, smax; // LIMITS FOR BOUNDARY
+	public:
+		void output(std::ostream& fout) {}
+		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
+			std::string line;
+			if (!inmap.get(idprefix+"_filename",line)) {
+				log << "Couldn't fine spline file name in input file\n";
+			}
+			my_spline.read(line);
+			
+			inmap.getlinewdefault(idprefix+"_s_limits",line,"0 1");
+			std::istringstream data(line);
+			data >> smin >> smax;
+			data.clear();
+		}
+			
+		void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt, FLT time) {
+			FLT sloc;
+			
+			my_spline.find(sloc,pt);
+			if (sloc > smax) sloc = smax;
+			if (sloc < smin) sloc = smin;
+			my_spline.interpolate(sloc,pt);
+			return;
+		}
+		void bdry_normal(TinyVector<FLT,tri_mesh::ND> pt, FLT time, TinyVector<FLT,tri_mesh::ND>& norm) {
+			std::cerr << "bdry_normal not implemented for spline_geoemtry" << std::endl;			
+			return;
+		}
+};
+#endif
 
 

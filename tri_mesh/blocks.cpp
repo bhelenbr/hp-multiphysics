@@ -23,6 +23,8 @@
 #endif
 #include <blitz/array.h>
 
+#define petsc
+
 using namespace std;
 using namespace blitz;
 
@@ -270,6 +272,7 @@ void sim::finalize(int line,const char *file, std::ostream *log) {
 #ifdef MPISRC
 	MPI_Finalize();
 #endif
+	std::abort();
 }
 
 /* This routine forces everyone to die */
@@ -962,6 +965,10 @@ void block::init(input_map &input) {
 
 	if (!input.get(idprefix + "_error_target",gbl->error_target)) {
 		input.getwdefault("error_target",gbl->error_target,1.0e-4);
+	}
+	
+	if (!input.get(idprefix+"_length_smoothing_steps",gbl->length_smoothing_steps)) {
+		input.getwdefault("length_smoothing_steps",gbl->length_smoothing_steps,0);
 	}
 
 	/* LOAD FINE MESH INFORMATION */

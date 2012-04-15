@@ -1,6 +1,7 @@
 #ifndef _tri_mesh_h_
 #define _tri_mesh_h_
 
+#include "blocks.h"
 #include <math.h>
 #include <quadtree.h>
 #include <iostream>
@@ -11,7 +12,6 @@
 #include <string>
 #include <sstream>
 #include <blitz/array.h>
-#include "blocks.h"
 
 #ifdef SINGLE
 #define FLT float

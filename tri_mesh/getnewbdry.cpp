@@ -87,9 +87,9 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
  */
 class etype {
 	public:
-		static const int ntypes = 13;
+		static const int ntypes = 16;
 		enum ids {plain=1, comm, partition, prdc, symbolic, symbolic_comm, coupled_symbolic,
-			coupled_symbolic_comm, spline,circle, naca, ellipse,planar};
+			coupled_symbolic_comm, spline, spline_comm, coupled_spline, coupled_spline_comm, circle, naca, ellipse,planar};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -99,7 +99,7 @@ class etype {
 };
 
 const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic","symbolic_comm",
-	"coupled_symbolic","coupled_symbolic_comm", "spline","circle", "naca","ellipse","planar"};
+	"coupled_symbolic","coupled_symbolic_comm", "spline","spline_comm","coupled_spline","coupled_spline_comm","circle", "naca","ellipse","planar"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
@@ -157,6 +157,18 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 		}
 		case etype::spline: {
 			temp = new spline_bdry(idnum,*this);
+			break;
+		}
+		case etype::spline_comm: {
+			temp = new eboundary_with_geometry<ecomm,spline_geometry>(idnum,*this);
+			break;
+		}
+		case etype::coupled_spline: {
+			temp = new ecoupled_physics<eboundary_with_geometry<edge_bdry,spline_geometry> >(idnum,*this);
+			break;
+		}
+		case etype::coupled_spline_comm: {
+			temp = new ecoupled_physics<eboundary_with_geometry<ecomm,spline_geometry> >(idnum,*this);
 			break;
 		}
 
