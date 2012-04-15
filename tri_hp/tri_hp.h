@@ -211,7 +211,8 @@ class tri_hp : public r_tri_mesh  {
 		FLT maxres();
 
 		/* FUNCTIONS FOR ADAPTION */ 
-		void length(); 
+		void length();
+		virtual void error_estimator() {};
 		void adapt();
 		void copy(const tri_hp &tgt);
 		void movepdata(int frm, int to);

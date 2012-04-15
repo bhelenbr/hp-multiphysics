@@ -42,158 +42,172 @@ void tri_hp::adapt() {
 
 void tri_hp::length() {
 	
-	const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
-
-	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
-	FLT energy2 = gbl->eanda_recv(0);
-	FLT e2to_pow = gbl->eanda_recv(1);
-	FLT totalerror2 = gbl->eanda_recv(2);
-
-	if (gbl->error_estimator == global::energy_norm) {
-		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/energy2) << " Target " << gbl->error_target << '\n';
+	if (gbl->error_estimator != gbl->none) {
+		error_estimator();
 		
-		/* Determine error target (SEE AEA Paper) */
-		FLT etarget2 = gbl->error_target*gbl->error_target*energy2;
-		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-		gbl->res.v(Range(0,npnt-1),0) = 1.0;
-		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-		for(int tind=0;tind<ntri;++tind) {
-			FLT error2 = gbl->fltwk(tind);
-			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
-			for (int j=0;j<3;++j) {
-				int p0 = tri(tind).pnt(j);
-				/* Calculate average at vertices */
-				gbl->res.v(p0,0) *= ri;
-				gbl->res_r.v(p0,0) += 1.0;
+		const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
+
+		sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
+		FLT energy2 = gbl->eanda_recv(0);
+		FLT e2to_pow = gbl->eanda_recv(1);
+		FLT totalerror2 = gbl->eanda_recv(2);
+
+		if (gbl->error_estimator == global::energy_norm) {
+			*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/energy2) << " Target " << gbl->error_target << '\n';
+			
+			/* Determine error target (SEE AEA Paper) */
+			FLT etarget2 = gbl->error_target*gbl->error_target*energy2;
+			FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
+			gbl->res.v(Range(0,npnt-1),0) = 1.0;
+			gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+			for(int tind=0;tind<ntri;++tind) {
+				FLT error2 = gbl->fltwk(tind);
+				FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+				for (int j=0;j<3;++j) {
+					int p0 = tri(tind).pnt(j);
+					/* Calculate average at vertices */
+					gbl->res.v(p0,0) *= ri;
+					gbl->res_r.v(p0,0) += 1.0;
+				}
 			}
 		}
-	}
-	else if (gbl->error_estimator == global::scale_independent) {
-		/* This is to maintain a constant local truncation error (independent of scale) */
-		gbl->res.v(Range(0,npnt-1),0) = 1.0;
-		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-		for(int tind=0;tind<ntri;++tind) {
-			FLT jcb = 0.25*area(tind);
-			gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
-			FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
-			FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
-			for (int j=0;j<3;++j) {
-				int p0 = tri(tind).pnt(j);
-				/* Calculate average at vertices */
-				gbl->res.v(p0,0) *= ri;
-				gbl->res_r.v(p0,0) += 1.0;
-			}
-		}	
-	}
-	else {
-		*gbl->log << "Unknown error estimator??" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	for (int pind=0;pind<npnt;++pind) {
-		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
-		if (ri < 2.0 && ri > 0.5)
-			ri = 1.0;
-		gbl->res.v(pind,0) = ri;
-	}
-	
-	/* This is to smooth the change to the length function */
-	int iter,sind,i,j,p0,p1;
-	int niter = 1;
-	
-	for(i=0;i<npnt;++i)
-	pnt(i).info = 0;
-	
-	for(i=0;i<nebd;++i) {
-		for(j=0;j<ebdry(i)->nseg;++j) {
-			sind = ebdry(i)->seg(j);
-			pnt(seg(sind).pnt(0)).info = -1;
-			pnt(seg(sind).pnt(1)).info = -1;
+		else if (gbl->error_estimator == global::scale_independent) {
+			/* This is to maintain a constant local truncation error (independent of scale) */
+			gbl->res.v(Range(0,npnt-1),0) = 1.0;
+			gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+			for(int tind=0;tind<ntri;++tind) {
+				FLT jcb = 0.25*area(tind);
+				gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
+				FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+				FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
+				for (int j=0;j<3;++j) {
+					int p0 = tri(tind).pnt(j);
+					/* Calculate average at vertices */
+					gbl->res.v(p0,0) *= ri;
+					gbl->res_r.v(p0,0) += 1.0;
+				}
+			}	
 		}
-	}
-	
-	for(iter=0; iter< niter; ++iter) {
-		/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
+		else {
+			*gbl->log << "Unknown error estimator??" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		for (int pind=0;pind<npnt;++pind) {
+			FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
+			if (ri < 2.0 && ri > 0.5)
+				ri = 1.0;
+			gbl->res.v(pind,0) = ri;
+		}
+		
+		/* This is to smooth the change to the length function */
+		int iter,sind,i,j,p0,p1;
+		int niter = 0;
+		
 		for(i=0;i<npnt;++i)
-			gbl->res_r.v(i,0) = 0.0;
+			pnt(i).info = 0;
 		
-		for(i=0;i<nseg;++i) {
-			p0 = seg(i).pnt(0);
-			p1 = seg(i).pnt(1);
-			gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
-			gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
-		}
-		
-		for(i=0;i<npnt;++i) {
-			if (pnt(i).info == 0) {
-				gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+		for(i=0;i<nebd;++i) {
+			for(j=0;j<ebdry(i)->nseg;++j) {
+				sind = ebdry(i)->seg(j);
+				pnt(seg(sind).pnt(0)).info = -1;
+				pnt(seg(sind).pnt(1)).info = -1;
 			}
 		}
-	}
-	
-	/* NOW RESCALE AT VERTICES */
-	FLT maxlngth = 50.0;
-	FLT minlngth = 0.0;
-	for (int pind=0;pind<npnt;++pind) {
-		lngth(pind) *= gbl->res.v(pind,0);
-		lngth(pind) = MIN(lngth(pind),maxlngth);
-		lngth(pind) = MAX(lngth(pind),minlngth);
-	}
-	
-	/* LIMIT BOUNDARY CURVATURE */
-	for(int i=0;i<nebd;++i) {
-		if (!(hp_ebdry(i)->is_curved())) continue;
 		
-		for(int j=0;j<ebdry(i)->nseg;++j) {
-			int sind = ebdry(i)->seg(j);
-			int v1 = seg(sind).pnt(0);
-			int v2 = seg(sind).pnt(1);
+		for(iter=0; iter< niter; ++iter) {
+			/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
+			for(i=0;i<npnt;++i)
+				gbl->res_r.v(i,0) = 0.0;
 			
-			crdtocht1d(sind);
+			for(i=0;i<nseg;++i) {
+				p0 = seg(i).pnt(0);
+				p1 = seg(i).pnt(1);
+				gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
+				gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
+			}
 			
-			/* FIND ANGLE BETWEEN LINEAR SIDES */
-			int tind = seg(sind).tri(0);
-			int k;
-			for(k=0;k<3;++k)
-				if (tri(tind).seg(k) == sind) break;
-			
-			int v0 = tri(tind).pnt(k);
-			
-			TinyVector<FLT,ND> dx0;
-			dx0(0) = pnts(v2)(0)-pnts(v1)(0);
-			dx0(1) = pnts(v2)(1)-pnts(v1)(1);
-			FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
-			
-			TinyVector<FLT,ND> dx1;
-			dx1(0) = pnts(v0)(0)-pnts(v2)(0);
-			dx1(1) = pnts(v0)(1)-pnts(v2)(1);
-			FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
-			
-			TinyVector<FLT,ND> dx2;
-			dx2(0) = pnts(v1)(0)-pnts(v0)(0);
-			dx2(1) = pnts(v1)(1)-pnts(v0)(1);
-			FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
-			
-			TinyVector<FLT,2> ep, dedpsi;
-			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
-			FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-			
-			FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
-			FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
-			
-			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
-			lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-			
-			FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
-			FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
-			
-			// FIXME: end points are wrong for periodic boundary or communication boundary
-			FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
-			lngth(v1) /= 1. +sum;
-			lngth(v2) /= 1. +sum;
+			for(i=0;i<npnt;++i) {
+				if (pnt(i).info == 0) {
+					gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+				}
+			}
 		}
-	}
-	
+		
+		/* NOW RESCALE AT VERTICES */
+		FLT maxlngth = 50.0;
+		FLT minlngth = 0.0;
+		for (int pind=0;pind<npnt;++pind) {
+			lngth(pind) *= gbl->res.v(pind,0);
+			lngth(pind) = MIN(lngth(pind),maxlngth);
+			lngth(pind) = MAX(lngth(pind),minlngth);
+		}
+		
+		/* LIMIT BOUNDARY CURVATURE */
+		for(int i=0;i<nebd;++i) {
+			if (!(hp_ebdry(i)->is_curved())) continue;
+			
+			for(int j=0;j<ebdry(i)->nseg;++j) {
+				int sind = ebdry(i)->seg(j);
+				int v1 = seg(sind).pnt(0);
+				int v2 = seg(sind).pnt(1);
+				
+				crdtocht1d(sind);
+				
+				/* FIND ANGLE BETWEEN LINEAR SIDES */
+				int tind = seg(sind).tri(0);
+				int k;
+				for(k=0;k<3;++k)
+					if (tri(tind).seg(k) == sind) break;
+				
+				int v0 = tri(tind).pnt(k);
+				
+				TinyVector<FLT,ND> dx0;
+				dx0(0) = pnts(v2)(0)-pnts(v1)(0);
+				dx0(1) = pnts(v2)(1)-pnts(v1)(1);
+				FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
+				
+				TinyVector<FLT,ND> dx1;
+				dx1(0) = pnts(v0)(0)-pnts(v2)(0);
+				dx1(1) = pnts(v0)(1)-pnts(v2)(1);
+				FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
+				
+				TinyVector<FLT,ND> dx2;
+				dx2(0) = pnts(v1)(0)-pnts(v0)(0);
+				dx2(1) = pnts(v1)(1)-pnts(v0)(1);
+				FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
+				
+				TinyVector<FLT,2> ep, dedpsi;
+				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
+				FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+				
+				FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
+				FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
+				
+				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
+				lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+				
+				FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
+				FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
+				
+				// FIXME: end points are wrong for periodic boundary or communication boundary
+				FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
+				lngth(v1) /= 1. +sum;
+				lngth(v2) /= 1. +sum;
+			}
+		}
+		
+		/* Smooth length function? */
+		for (int i=0;i<gbl->length_smoothing_steps;++i) {
+			for(int last_phase = 0, mp_phase = 0; !last_phase; ++mp_phase) {
+				pmsgload(boundary::all_phased,mp_phase,boundary::symmetric,lngth.data(),0,0,1);
+				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+				last_phase = true;
+				last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::minimum,lngth.data(),0,0,1);
+			}
+			smooth_lngth(1);
+		}
+		
 	//	/* AVOID HIGH ASPECT RATIOS */
 	//	int nsweep = 0;
 	//	int count;
@@ -216,6 +230,7 @@ void tri_hp::length() {
 	//		++nsweep;
 	//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
 	//	} while(count > 0 && nsweep < 5);
+	}
 	
 	
 	if (gbl->adapt_output) {

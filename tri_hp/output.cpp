@@ -724,7 +724,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			}
 
 			/* OUTPUT CONNECTIVY INFO */
-			out << std::endl << "#CONNECTION DATA#" << std::endl;
+			out << "\n#CONNECTION DATA# \n";
 
 			for(tind=0;tind<ntri;++tind)
 				out << tri(tind).pnt(0)+1 << ' ' << tri(tind).pnt(1)+1 << ' ' << tri(tind).pnt(2)+1 << std::endl;
@@ -749,7 +749,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			}
 
 			/* OUTPUT CONNECTIVY INFO */
-			out << std::endl << "#CONNECTION DATA#" << std::endl;
+			out << "\n#CONNECTION DATA# \n";
 
 			for(tind=0;tind<ntri;++tind)
 				out << 3*tind+1 << ' ' << 3*tind+2 << ' ' << 3*tind+3 << std::endl;
