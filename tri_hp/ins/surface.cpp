@@ -22,7 +22,7 @@ void surface_slave::init(input_map& inmap,void* gbl_in) {
 	keyword = base.idprefix + "_coupled";
 	inmap[keyword] = "1";
 
-	neumann::init(inmap,gbl_in);
+	generic::init(inmap,gbl_in);
 
 	return;
 }
@@ -167,11 +167,10 @@ void surface::rsdl(int stage) {
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 
-	const int sm = basis::tri(x.log2p)->sm();
 #ifndef DROP
-	Array<FLT,2> lf(x.NV+tri_mesh::ND,sm+2);
+	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+tri_mesh::ND);
 #else
-	Array<FLT,2> lf(x.NV+tri_mesh::ND+1,sm+2);
+	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+tri_mesh::ND+1);
 #endif
 
 	
@@ -195,34 +194,34 @@ void surface::rsdl(int stage) {
 
 		/* ADD FLUXES TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf(n,0);
+			x.gbl->res.v(v0,n) += lf(n)(0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf(n,1);
+			x.gbl->res.v(v1,n) += lf(n)(1);
 
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf(n,m+2);
+				x.gbl->res.s(sind,m,n) += lf(n)(m+2);
 		} 
 		
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
 		for(n=0;n<tri_mesh::ND;++n) {
-			gbl->vres(indx)(n) += lf(x.NV+n,0);
-			gbl->vres(indx+1)(n) = lf(x.NV+n,1);
+			gbl->vres(indx)(n) += lf(x.NV+n)(0);
+			gbl->vres(indx+1)(n) = lf(x.NV+n)(1);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(indx,m)(n) = lf(x.NV+n,m+2);
+				gbl->sres(indx,m)(n) = lf(x.NV+n)(m+2);
 		}
 		
 #ifdef DROP
-		gbl->vres(indx)(1) += lf(x.NV+2,0);
-		gbl->vres(indx+1)(1) += lf(x.NV+2,1);
+		gbl->vres(indx)(1) += lf(x.NV+2)(0);
+		gbl->vres(indx+1)(1) += lf(x.NV+2)(1);
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->sres(indx,m)(1) += lf(x.NV+2,m+2);        
+			gbl->sres(indx,m)(1) += lf(x.NV+2)(m+2);        
 
-		gbl->vvolumeflux(indx) += lf(x.NV+2,0);
-		gbl->vvolumeflux(indx+1) = lf(x.NV+2,1);
+		gbl->vvolumeflux(indx) += lf(x.NV+2)(0);
+		gbl->vvolumeflux(indx+1) = lf(x.NV+2)(1);
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->svolumeflux(indx,m) = lf(x.NV+2,m+2);                    
+			gbl->svolumeflux(indx,m) = lf(x.NV+2)(m+2);                    
 #endif
 	}
 	
@@ -338,7 +337,7 @@ int surface::petsc_rsdl(Array<double,1> res) {
 #endif
 
 
-void surface::element_rsdl(int indx, Array<FLT,2> lf) {
+void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
@@ -397,35 +396,35 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 
 	lf = 0.0;
 	/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-	basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(4,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(5,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(6,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(7,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(4,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(0)(0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(6,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(1)(0),&res(7,0));
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1,0),&res(1,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1,0),&res(2,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
 
 #ifndef petsc
 	/* mass flux preconditioning */
 	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1,m); 
+		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1)(m); 
 #ifndef INERTIALESS
 	for (n=0;n<x.NV-1;++n) 
 		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
 
 	for (n=0;n<x.NV-1;++n) {
-		lf(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,0);
-		lf(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,1);
+		lf(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(0);
+		lf(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(1);
 		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
-			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,m+2);
+			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
 	}
 #endif
 #endif
 
 #ifdef DROP
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2,0),&res(3,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(3,0));
 #endif
 
 	return;
@@ -1094,7 +1093,7 @@ void surface::maxres() {
 
 void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
-	Array<FLT,2> Rbar(x.NV+tri_mesh::ND,sm+2),lf(x.NV+tri_mesh::ND,sm+2);
+	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND),lf(x.NV+tri_mesh::ND);
 #ifdef BZ_DEBUG
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
@@ -1127,7 +1126,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 					
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
@@ -1141,7 +1140,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 
 			++kcol;
 			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
@@ -1158,7 +1157,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
@@ -1172,7 +1171,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 					
 					++kcol;
 			
@@ -2132,10 +2131,10 @@ void surface::setup_preconditioner() {
 				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
 
 				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(1,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(2,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);
-				lf(3,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);                        
+				lf(0) /= gbl->cfl(0,x.log2p);
+				lf(1) /= gbl->cfl(0,x.log2p);
+				lf(2) /= gbl->cfl(1,x.log2p);
+				lf(3) /= gbl->cfl(1,x.log2p);                        
 
 				for (n=0;n<lsm;++n) {
 					gbl->ms(indx)(2*m,2*n) = lf(0,n+2);

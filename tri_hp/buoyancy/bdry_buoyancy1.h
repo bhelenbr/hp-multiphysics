@@ -44,10 +44,10 @@ namespace bdry_buoyancy {
 			surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			void init(input_map& input,void* gbl_in); 
-			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	
-	class melt : public bdry_ins::flexible {	
+	class melt : public symbolic {	
 			tri_hp_buoyancy &x;
 
 		protected:
@@ -90,10 +90,10 @@ namespace bdry_buoyancy {
 			
 		public:
 			void* create_global_structure() {return new global;}
-			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : flexible(xin,bin), x(xin) {
+			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin), x(xin) {
 				mytype = "melt";
 			}
-			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : flexible(inbdry,xin,bin), x(xin) {
+			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin), x(xin) {
 				gbl = inbdry.gbl;
 				ksprg.resize(base.maxseg);
 				vug_frst.resize(base.maxseg+1);
@@ -106,7 +106,7 @@ namespace bdry_buoyancy {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
-			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void maxres();
 			void setup_preconditioner();
 			void minvrt();

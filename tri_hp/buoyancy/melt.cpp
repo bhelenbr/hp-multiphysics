@@ -15,24 +15,28 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	
 	keyword = base.idprefix + "_curved";
 	inmap[keyword] = "1";
-
+	
 	keyword = base.idprefix + "_coupled";
 	inmap[keyword] = "1";
-
+	
 	/* Load in the heat flux */
-	keyword = base.idprefix + "_ins_typelist";
+	keyword = base.idprefix + "_hp_typelist";
 	inmap[keyword] = "0 0 1 0";
-	flexible::init(inmap,gbl_in);
+	symbolic::init(inmap,gbl_in);
 	
 	/* Now that we have loaded flux, make temperature a dirichlet bc */
 	/* And make pressure neumann */
-	dirichlets(ndirichlets-1) = 2;	
-
+	essential_indices.clear();
+	for(int n=0;n<x.NV-1;++n)
+		essential_indices.push_back(n);
+	type(Range(0,x.NV-2)) = essential;
+	type(x.NV-1) = natural;
+	
 	gbl = static_cast<global *>(gbl_in);
 	ksprg.resize(base.maxseg);
 	vdres.resize(x.log2pmax,base.maxseg);
 	sdres.resize(x.log2pmax,base.maxseg,x.sm0);
-
+	
 	keyword = base.idprefix + "_Lf";
 	if (!inmap.get(keyword,gbl->Lf)) {
 		*x.gbl->log << "Missing latent heat of fusion " << keyword << std::endl;
@@ -59,50 +63,50 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
 	else gbl->is_loop = false;
-
+	
 	gbl->vug0.resize(base.maxseg+1);
 	gbl->sug0.resize(base.maxseg,x.sm0);
-
+	
 	gbl->vres.resize(base.maxseg+1);
 	gbl->sres.resize(base.maxseg,x.sm0); 
 	gbl->vres0.resize(base.maxseg+1);
 	gbl->sres0.resize(base.maxseg,x.sm0); 
-
+	
 	gbl->vdt.resize(base.maxseg+1);
 	gbl->sdt.resize(base.maxseg);      
 	gbl->meshc.resize(base.maxseg);
-
+	
 #ifdef DETAILED_MINV
 	gbl->ms.resize(base.maxseg); 
 	gbl->vms.resize(base.maxseg,2,2,MAXP,2);
 	gbl->ipiv.resize(base.maxseg); 
 #endif
-
+	
 	/* Multigrid Storage all except highest order (log2p+1)*/
 	vdres.resize(x.log2p+1,base.maxseg+1);
 	sdres.resize(x.log2p+1,base.maxseg,x.sm0);
-
+	
 	keyword = base.idprefix + "_fadd";
 	inmap.getlinewdefault(keyword,val,"1.0 1.0");
 	data.str(val);
 	data >> gbl->fadd(0) >> gbl->fadd(1);  
 	data.clear(); 
-
+	
 	double CFLtdflt[3] = {2.5, 1.5, 1.0};
 	inmap.getwdefault(base.idprefix + "_cfltangent",&gbl->cfl(0,0),3,CFLtdflt); 
-
+	
 	double CFLndflt[3] = {2.0, 1.25, 0.75};
 	inmap.getwdefault(base.idprefix + "_cflnormal",&gbl->cfl(1,0),3,CFLndflt); 
-
+	
 	inmap.getwdefault(base.idprefix +"_adis",gbl->adis,1.0);
-
+	
 	return;
 }
 
 void melt::tadvance() {
 	int i,j,m,sind;    
 
-	flexible::tadvance();
+	symbolic::tadvance();
 
 	if (x.gbl->substep == 0) {
 		/* SET SPRING CONSTANTS */
@@ -134,7 +138,7 @@ void melt::tadvance() {
 	return;
 }
 
-void melt::element_rsdl(int indx, Array<FLT,2> lf) {
+void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
@@ -163,7 +167,7 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));  
 		}
-
+		
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
@@ -185,11 +189,11 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 	lf = 0.0;
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0)); // tangent
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1,0),&res(1,0)); // mass flux
-	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1,0),&res(2,0)); // mass flux
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2,0),&res(3,0)); // heat flux
-	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2,0),&res(4,0)); // heat flux
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1)(0),&res(2,0)); // mass flux
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2)(0),&res(3,0)); // heat flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2)(0),&res(4,0)); // heat flux
 	
 	return;
 }
@@ -202,49 +206,48 @@ void melt::rsdl(int stage) {
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
-
-	const int sm = basis::tri(x.log2p)->sm();
-	Array<FLT,2> lf(x.NV+tri_mesh::ND,sm+2);
-
+	
+	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+tri_mesh::ND);
+	
 	/**************************************************/
 	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
 	/**************************************************/
 	for(n=0;n<tri_mesh::ND;++n)
 		gbl->vres(0)(n) = 0.0;
-
+	
 	for(indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
-	
+		
 		x.ugtouht1d(sind);
 		element_rsdl(indx,lf);
-
+		
 		/* ADD FLUXES TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf(n,0);
-
+			x.gbl->res.v(v0,n) += lf(n)(0);
+		
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf(n,1);
-
+			x.gbl->res.v(v1,n) += lf(n)(1);
+		
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf(n,m+2);
+				x.gbl->res.s(sind,m,n) += lf(n)(m+2);
 		} 
 		
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
-		for(n=0;n<1;++n) {
-			gbl->vres(indx)(n) += lf(x.NV+n,0);
-			gbl->vres(indx+1)(n) = lf(x.NV+n,1);
+		for(n=0;n<x.ND;++n) {  // sets n = 1 to zero
+			gbl->vres(indx)(n) += lf(x.NV+n)(0);
+			gbl->vres(indx+1)(n) = lf(x.NV+n)(1);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(indx,m)(n) = lf(x.NV+n,m+2);
+				gbl->sres(indx,m)(n) = lf(x.NV+n)(m+2);
 		}
 	}
 	
 	/* CALL VERTEX RESIDUAL HERE */
 	for(i=0;i<2;++i)
 		x.hp_vbdry(base.vbdry(i))->rsdl(stage);
-
+	
 	/************************************************/
 	/* MODIFY SURFACE RESIDUALS ON COARSER MESHES    */
 	/************************************************/    
@@ -253,17 +256,17 @@ void melt::rsdl(int stage) {
 			for(i=0;i<base.nseg+1;++i) 
 				for(n=0;n<1;++n)
 					vdres(x.log2p,i)(n) = gbl->fadd(n)*gbl->vres0(i)(n) -gbl->vres(i)(n);
-
+			
 			for(i=0;i<base.nseg;++i) 
 				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 					for(n=0;n<1;++n)
 						sdres(x.log2p,i,m)(n) = gbl->fadd(n)*gbl->sres0(i,m)(n) -gbl->sres(i,m)(n);
-
+			
 		}
 		for(i=0;i<base.nseg+1;++i) 
 			for(n=0;n<1;++n)
 				gbl->vres(i)(n) += vdres(x.log2p,i)(n);
-
+		
 		for(i=0;i<base.nseg;++i) 
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 				for(n=0;n<1;++n)
@@ -273,7 +276,7 @@ void melt::rsdl(int stage) {
 		/* ADD TANGENTIAL MESH MOVEMENT SOURCE */    
 		for(i=0;i<base.nseg+1;++i)
 			gbl->vres(i)(0) += vdres(x.log2p,i)(0);
-
+		
 		for(i=0;i<base.nseg;++i)
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 				gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
@@ -281,8 +284,19 @@ void melt::rsdl(int stage) {
 }
 
 void melt::rsdl_after(int stage) {
-	int sind,v0;
-    
+	int i,sind,v0;
+	
+	
+	//	i = 0;
+	//	do {
+	//		sind = base.seg(i);
+	//		v0 = x.seg(sind).pnt(0);
+	//		*x.gbl->log << x.gbl->res.v(v0,2) << std::endl;
+	//	} while (++i < base.nseg);
+	//	v0 = x.seg(sind).pnt(1);
+	//	*x.gbl->log << x.gbl->res.v(v0,2) << std::endl;
+	
+	
 	/* Communicate here???? */
 	pmatchsolution_snd(0, x.gbl->res.v.data(), 1);
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
@@ -295,9 +309,9 @@ void melt::rsdl_after(int stage) {
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
 	base.comm_wait(boundary::all,0,boundary::symmetric);
 	smatchsolution_rcv(x.gbl->res.s.data(),0,basis::tri(x.log2p)->sm()-1, basis::tri(x.log2p)->sm());
-        
+	
 	/* Move Heat equation Residual */
-	int i = 0;
+	i = 0;
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
@@ -307,17 +321,17 @@ void melt::rsdl_after(int stage) {
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	gbl->vres(i)(1) = x.gbl->res.v(v0,2);
-
+	
 }
 
 
 void melt::vdirichlet() {
 	/* Now apply dirichlet B.C.s */
-	flexible::vdirichlet();
+	symbolic::vdirichlet();
 	
 #ifdef petsc
 	int sind,v0;
-
+	
 	/* Store rotated vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	int i = 0;
@@ -331,12 +345,145 @@ void melt::vdirichlet() {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
 	r_gbl->res(v0)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
-#endif	
+#endif		
+}
 
 
-#ifdef DEBUG
-	int n,m;
+#ifdef petsc
+int melt::petsc_rsdl(Array<double,1> res) {
+	int sm = basis::tri(x.log2p)->sm();
+	int ind = 0;
 	
+	/* Rotated for better diagonal dominance */
+	for(int j=0;j<base.nseg;++j) {
+		for(int m=0;m<sm;++m) {
+			res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(0,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(0,1);
+			res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(1,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(1,1);
+		}
+	}
+	return(ind);
+}
+#endif
+
+
+
+void melt::minvrt() {
+	int i,m,n,indx;
+	int last_phase, mp_phase;
+	FLT temp;
+	
+	/* INVERT MASS MATRIX */
+	/* LOOP THROUGH SIDES */
+	if (basis::tri(x.log2p)->sm() > 0) {
+		for(indx = 0; indx<base.nseg; ++indx) {
+			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */            
+			for (m=0; m <basis::tri(x.log2p)->sm(); ++m) {
+				for(n=0;n<tri_mesh::ND;++n)
+					gbl->vres(indx)(n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m)(n);
+				for(n=0;n<tri_mesh::ND;++n)
+					gbl->vres(indx+1)(n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m)(n);
+			}
+		}
+	}
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vres(0)(0),0,1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vres(base.nseg)(0),0,1,0);
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		
+		last_phase = true;
+		
+		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(0)(0),0,1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(base.nseg)(0),0,1,0);
+	}
+	
+	if (gbl->is_loop) {
+		gbl->vres(0)(1) = 0.5*(gbl->vres(0)(1) +gbl->vres(base.nseg+1)(1));
+		gbl->vres(base.nseg+1)(1) = gbl->vres(0)(1);
+		gbl->vres(0)(0) = 0.0;
+		gbl->vres(base.nseg+1)(0) = 0.0;
+	}
+	x.hp_vbdry(base.vbdry(0))->vdirichlet();
+	x.hp_vbdry(base.vbdry(1))->vdirichlet();
+	
+	
+	/* SOLVE FOR VERTEX MODES */
+	for(i=0;i<base.nseg+1;++i) {
+		temp                     = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
+		gbl->vres(i)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
+		gbl->vres(i)(0) = temp;
+	}
+	
+	/* SOLVE FOR SIDE MODES */
+	if (basis::tri(x.log2p)->sm() > 0) {
+		for(indx = 0; indx<base.nseg; ++indx) {                   
+			
+#ifdef DETAILED_MINV
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+				for(n=0;n<tri_mesh::ND;++n) {
+					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,0)*gbl->vres(indx)(0);
+					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,1)*gbl->vres(indx+1)(0);
+					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,1,m,0)*gbl->vres(indx)(1);
+					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,1,m,1)*gbl->vres(indx+1)(1);                            
+				}
+			}
+			int info;
+			char trans[] = "T";
+			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
+			if (info != 0) {
+				*x.gbl->log << "DGETRS FAILED FOR SIDE MODE UPDATE" << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+#else
+			
+			/* INVERT SIDE MODES */
+			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0)(0)),tri_mesh::ND);
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+				temp                             = gbl->sres(indx,m)(0)*gbl->sdt(indx)(0,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(0,1);
+				gbl->sres(indx,m)(1) = gbl->sres(indx,m)(0)*gbl->sdt(indx)(1,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(1,1);         
+				gbl->sres(indx,m)(0) = temp;
+			}
+			
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+				for(n=0;n<tri_mesh::ND;++n) {
+					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx)(n);
+					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1)(n);
+				}
+			}
+#endif
+		}
+	}
+	
+	return;
+}
+
+void melt::update(int stage) {
+	int i,m,n,count,sind,indx,v0;
+	
+	if (stage < 0) {
+		indx = 0;
+		int i = 0;
+		do {
+			sind = base.seg(i);
+			v0 = x.seg(sind).pnt(0);
+			gbl->vug0(i) = x.pnts(v0);
+		} while (++i < base.nseg);
+		v0 = x.seg(sind).pnt(1);
+		gbl->vug0(base.nseg) = x.pnts(v0);
+		
+		if (basis::tri(x.log2p)->sm() > 0) gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
+		return;
+	}
+	
+	minvrt();
+	
+#ifdef DEBUG
 	//   if (x.coarse_flag) {
 	for(i=0;i<base.nseg+1;++i)
 		*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i)(0,0) << ' ' << gbl->vdt(i)(0,1) << ' ' << gbl->vdt(i)(1,0) << ' ' << gbl->vdt(i)(1,1) << '\n';
@@ -379,187 +526,6 @@ void melt::vdirichlet() {
 	// }
 #endif
 	
-
-}
-
-
-#ifdef petsc
-int melt::petsc_rsdl(Array<double,1> res) {
-	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
-	
-	/* Rotated for better diagonal dominance */
-	for(int j=0;j<base.nseg;++j) {
-		for(int m=0;m<sm;++m) {
-				res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(0,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(0,1);
-				res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(1,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(1,1);
-		}
-	}
-	return(ind);
-}
-#endif
-
-
-
-void melt::minvrt() {
-	int i,m,n,indx;
-	int last_phase, mp_phase;
-	FLT temp;
-
-	/* INVERT MASS MATRIX */
-	/* LOOP THROUGH SIDES */
-	if (basis::tri(x.log2p)->sm() > 0) {
-		for(indx = 0; indx<base.nseg; ++indx) {
-			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */            
-			for (m=0; m <basis::tri(x.log2p)->sm(); ++m) {
-				for(n=0;n<tri_mesh::ND;++n)
-					gbl->vres(indx)(n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m)(n);
-				for(n=0;n<tri_mesh::ND;++n)
-					gbl->vres(indx+1)(n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m)(n);
-			}
-		}
-	}
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vres(0)(0),0,1,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vres(base.nseg)(0),0,1,0);
-		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-
-		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
-
-		last_phase = true;
-
-		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(0)(0),0,1,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(base.nseg)(0),0,1,0);
-	}
-
-	if (gbl->is_loop) {
-		gbl->vres(0)(1) = 0.5*(gbl->vres(0)(1) +gbl->vres(base.nseg+1)(1));
-		gbl->vres(base.nseg+1)(1) = gbl->vres(0)(1);
-		gbl->vres(0)(0) = 0.0;
-		gbl->vres(base.nseg+1)(0) = 0.0;
-	}
-	x.hp_vbdry(base.vbdry(0))->vdirichlet();
-	x.hp_vbdry(base.vbdry(1))->vdirichlet();
-
-
-	/* SOLVE FOR VERTEX MODES */
-	for(i=0;i<base.nseg+1;++i) {
-		temp                     = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
-		gbl->vres(i)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
-		gbl->vres(i)(0) = temp;
-	}
-
-	/* SOLVE FOR SIDE MODES */
-	if (basis::tri(x.log2p)->sm() > 0) {
-		for(indx = 0; indx<base.nseg; ++indx) {                   
-
-#ifdef DETAILED_MINV
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-				for(n=0;n<tri_mesh::ND;++n) {
-					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,0)*gbl->vres(indx)(0);
-					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,1)*gbl->vres(indx+1)(0);
-					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,1,m,0)*gbl->vres(indx)(1);
-					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,1,m,1)*gbl->vres(indx+1)(1);                            
-				}
-			}
-			int info;
-			char trans[] = "T";
-			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
-			if (info != 0) {
-				*x.gbl->log << "DGETRS FAILED FOR SIDE MODE UPDATE" << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
-			}
-#else
-
-			/* INVERT SIDE MODES */
-			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0)(0)),tri_mesh::ND);
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-				temp                             = gbl->sres(indx,m)(0)*gbl->sdt(indx)(0,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(0,1);
-				gbl->sres(indx,m)(1) = gbl->sres(indx,m)(0)*gbl->sdt(indx)(1,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(1,1);         
-				gbl->sres(indx,m)(0) = temp;
-			}
-
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-				for(n=0;n<tri_mesh::ND;++n) {
-					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx)(n);
-					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1)(n);
-				}
-			}
-#endif
-		}
-	}
-
-	return;
-}
-
-void melt::update(int stage) {
-	int i,m,n,count,sind,indx,v0;
-
-	if (stage < 0) {
-		indx = 0;
-		int i = 0;
-		do {
-			sind = base.seg(i);
-			v0 = x.seg(sind).pnt(0);
-			gbl->vug0(i) = x.pnts(v0);
-		} while (++i < base.nseg);
-		v0 = x.seg(sind).pnt(1);
-		gbl->vug0(base.nseg) = x.pnts(v0);
-
-		if (basis::tri(x.log2p)->sm() > 0) gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
-		return;
-	}
-
-	minvrt();
-
-#ifdef DEBUG
-//   if (x.coarse_flag) {
-	for(i=0;i<base.nseg+1;++i)
-		*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i)(0,0) << ' ' << gbl->vdt(i)(0,1) << ' ' << gbl->vdt(i)(1,0) << ' ' << gbl->vdt(i)(1,1) << '\n';
-
-    for(i=0;i<base.nseg;++i)
-		*x.gbl->log << "sdt: " << i << ' ' << gbl->sdt(i)(0,0) << ' ' << gbl->sdt(i)(0,1) << ' ' << gbl->sdt(i)(1,0) << ' ' << gbl->sdt(i)(1,1) << '\n';
-
-    for(i=0;i<base.nseg+1;++i) {
-		*x.gbl->log << "vres: " << i << ' ';
-		for(n=0;n<tri_mesh::ND;++n) {
-			if (fabs(gbl->vres(i)(n)) > 1.0e-9) *x.gbl->log << gbl->vres(i)(n) << ' ';
-			else *x.gbl->log << "0.0 ";
-		}
-		*x.gbl->log << '\n';
-	}
-
-	for(i=0;i<base.nseg;++i) {
-		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-			*x.gbl->log << "sres: " << i << ' ';
-			for(n=0;n<tri_mesh::ND;++n) {
-				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) *x.gbl->log << gbl->sres(i,m)(n) << ' ';
-				else *x.gbl->log << "0.0 ";
-			}
-			*x.gbl->log << '\n';
-		}
-	}
-
-	i = 0;
-	do {
-		sind = base.seg(i);
-		v0 = x.seg(sind).pnt(0);
-		*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
-	} while(++i < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
-
-	for(i=0;i<base.nseg;++i)
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
-   // }
-#endif
-
 	i = 0;
 	do {
 		sind = base.seg(i);
@@ -568,17 +534,17 @@ void melt::update(int stage) {
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	x.pnts(v0) = gbl->vug0(base.nseg) -x.gbl->alpha(stage)*gbl->vres(base.nseg);
-
+	
 	if (basis::tri(x.log2p)->sm() > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
-
+	
 	/* FIX POINTS THAT SLIDE ON CURVE */
 	x.hp_vbdry(base.vbdry(1))->mvpttobdry(x.pnts(v0));
 	sind = base.seg(0);
 	v0 = x.seg(sind).pnt(0);
 	x.hp_vbdry(base.vbdry(0))->mvpttobdry(x.pnts(v0));
-
+	
 #ifdef DEBUG
-//   if (x.coarse_flag) {
+	//   if (x.coarse_flag) {
 	i = 0;
 	do {
 		sind = base.seg(i);
@@ -587,13 +553,13 @@ void melt::update(int stage) {
 	} while(++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
-
+	
 	for(i=0;i<base.nseg;++i)
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
 			*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
-   // }
+	// }
 #endif
-
+	
 	if (base.is_comm()) {                
 		count = 0;
 		i = 0;
@@ -606,7 +572,7 @@ void melt::update(int stage) {
 		v0 = x.seg(sind).pnt(1);
 		for(n=0;n<tri_mesh::ND;++n)
 			base.fsndbuf(count++) = x.pnts(v0)(n);                
-
+		
 		for(i=0;i<base.nseg;++i) {
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<tri_mesh::ND;++n)
@@ -619,13 +585,13 @@ void melt::update(int stage) {
 		base.comm_exchange(boundary::all,0,boundary::master_slave);
 		base.comm_wait(boundary::all,0,boundary::master_slave);
 	}
-
+	
 	return;
 }
 
 void melt::mg_restrict() {
 	int i,bnum,indx,tind,v0,snum,sind;
-
+	
 	if(x.p0 > 1) {
 		/* TRANSFER IS ON FINEST MESH */
 		gbl->vres0(Range(0,base.nseg)) = gbl->vres(Range(0,base.nseg));
@@ -635,12 +601,12 @@ void melt::mg_restrict() {
 	else {
 		/* TRANSFER IS BETWEEN DIFFERENT MESHES */
 		gbl->vres0(Range(0,base.nseg)) = 0.0;
-
+		
 		/* CALCULATE COARSE RESIDUALS */
 		/* DO ENDPOINTS FIRST */
 		gbl->vres0(0) = gbl->vres(0);
 		gbl->vres0(base.nseg) = gbl->vres(fine->base.nseg);
-
+		
 		tri_mesh *fmesh = dynamic_cast<tri_mesh *>(x.fine);
 		for (bnum = 0; x.hp_ebdry(bnum) != this; ++bnum);
 		for(i=1;i<fine->base.nseg;++i) {
@@ -655,7 +621,7 @@ void melt::mg_restrict() {
 			gbl->vres0(indx+1) += fmesh->ccnnct(v0).wt((snum+2)%3)*gbl->vres(i);
 		}
 	}
-
+	
 	return;
 }
 
@@ -663,23 +629,23 @@ void melt::mg_restrict() {
 void melt::maxres() {
 	int i,n;
 	TinyVector<FLT,tri_mesh::ND> mxr;
-
+	
 	mxr = 0.0;
-
+	
 	for(i=0;i<base.nseg+1;++i)
 		for(n=0;n<tri_mesh::ND;++n)
 			mxr(n) = MAX(fabs(gbl->vres(i)(n)),mxr(n));
-
+	
 	for(n=0;n<tri_mesh::ND;++n)
 		*x.gbl->log << ' ' << mxr(n) << ' ';
-
+	
 	return;
 }
 
 
 void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
-	Array<FLT,2> Rbar(x.NV+tri_mesh::ND,sm+2),lf(x.NV+tri_mesh::ND,sm+2);
+	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND),lf(x.NV+tri_mesh::ND);
 #ifdef BZ_DEBUG
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
@@ -690,7 +656,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sind = base.seg(indx);
 	x.ugtouht1d(sind);
 	element_rsdl(indx,Rbar);
-
+	
 	Array<FLT,1> dw(x.NV);
 	dw = 0.0;
 	for(int i=0;i<2;++i)
@@ -712,43 +678,43 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
-					
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
+			
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
 		}
 		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			x.pnts(x.seg(sind).pnt(mode))(var) += dx;
-
+			
 			element_rsdl(indx,lf);
-
+			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
-
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+			
 			++kcol;
 			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
 		}
 	}
-
+	
 	
 	for(int mode = 2; mode < sm+2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
 			x.uht(var)(mode) += dw(var);
-
+			
 			element_rsdl(indx,lf);
-
+			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
-
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
+			
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
 		}
-					 
+		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			crds(indx,mode-2,var) += dx;
 			
@@ -757,26 +723,26 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
-					
-					++kcol;
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+			
+			++kcol;
 			
 			crds(indx,mode-2,var) -= dx;
 		}
 	}
-
+	
 	return;
 }
 
 void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	int j,k,n,countup,offset;
-
+	
 	if (!base.is_comm()) return;
-
+	
 #ifdef MPDEBUG
 	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
-
+	
 	/* This boundary should always be first so send going up */
 	countup = 0;
 	for(j=0;j<base.nseg;++j) {
@@ -796,25 +762,25 @@ void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 }
 
 void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
-
+	
 	if (!base.is_comm()) return;
-
+	
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
 	int j,k,m,n,count,countup,offset,sind;
 	FLT mtchinv;
-
+	
 	/* OPPOSING BOUNDARY SENDS BACKWARDS SO THIS CAN GO UP */
-
+	
 	int matches = 1;
-
+	
 	/* RELOAD FROM BUFFER */
 	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
 	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
 	for(m=0;m<base.nmatches();++m) {            
 		++matches;
-
+		
 		int ebp1 = end-bgn+1;
-
+		
 		countup = 0;
 		for(j=0;j<base.nseg;++j) {
 			for(k=0;k<ebp1;++k) {
@@ -825,10 +791,10 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 			}
 		}
 	}
-
+	
 	if (matches > 1) {
 		mtchinv = 1./matches;
-
+		
 #ifdef MPDEBUG
 		*x.gbl->log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
@@ -844,7 +810,7 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 #endif
 				}
 			}
-
+			
 		}
 	}
 	return;
@@ -863,7 +829,7 @@ void melt::petsc_jacobian() {
 	Array<FLT,1> row_store(vdofs*(sm+2));
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
 	
-
+	
 	
 	/* ZERO ROWS CREATED BY R_MESH */
 	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
@@ -907,19 +873,19 @@ void melt::petsc_jacobian() {
 		for(int mode = 0; mode < sm; ++mode) {
 			for(int var = 0; var < x.NV; ++var)
 				loc_to_glo(ind++) = gindxNV++;
-				
+			
 			for(int var = 0; var < tri_mesh::ND; ++var)
 				loc_to_glo(ind++) = gindxND++;
 		}
 		
 		element_jacobian(j,K);
-
+		
 #ifdef MY_SPARSE
 		x.J.add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
 #else
 		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 #endif
-	
+		
 		if (!sm) continue;
 		
 		/* Now fill in effect of curvature on element resdiuals */
@@ -929,7 +895,7 @@ void melt::petsc_jacobian() {
 #else
 		const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 #endif
-
+		
 		int tind = x.seg(sind).tri(0);		
 		x.ugtouht(tind);
 		FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
@@ -938,12 +904,12 @@ void melt::petsc_jacobian() {
 		Array<FLT,2> Ke(x.NV*tm,x.ND*sm);
 		Array<int,1> loc_to_glo_e(x.NV*tm);
 		Array<int,1> loc_to_glo_crv(sm*tri_mesh::ND);
-
+		
 		x.element_rsdl(tind,0,x.uht,lf_re,lf_im);
 		for(int i=0;i<tm;++i) 
 			for(int n=0;n<x.NV;++n) 
 				Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
-	
+		
 		int kcol = 0;
 		for(int mode = 2; mode < sm+2; ++mode) {
 			for(int var = 0; var < tri_mesh::ND; ++var) {
@@ -955,8 +921,8 @@ void melt::petsc_jacobian() {
 				for(int i=0;i<tm;++i)
 					for(int n=0;n<x.NV;++n) 
 						Ke(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dx;	
-
-						
+				
+				
 				++kcol;
 				crds(j,mode-2,var) -= dx;
 			}
@@ -1000,7 +966,7 @@ void melt::petsc_jacobian() {
 		gindxND = jacobian_start +j*tri_mesh::ND*sm;
 		for(int m=0;m<sm*tri_mesh::ND;++m)
 			loc_to_glo_crv(m) = gindxND++;
-			
+		
 #ifdef MY_SPARSE
 		x.J.add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
 #else
@@ -1009,10 +975,10 @@ void melt::petsc_jacobian() {
 	}
 	
 	/* FIXME: NOT SURE ABOUT THIS TEMPORARY */
-	//x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
-//	x.hp_vbdry(base.vbdry(1))->petsc_jacobian();
-//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian_dirichlet();
-//	x.hp_vbdry(base.vbdry(1))->petsc_jacobian_dirichlet();
+	//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
+	//	x.hp_vbdry(base.vbdry(1))->petsc_jacobian();
+	//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian_dirichlet();
+	//	x.hp_vbdry(base.vbdry(1))->petsc_jacobian_dirichlet();
 }
 
 void melt::petsc_matchjacobian_snd() {	
@@ -1024,18 +990,18 @@ void melt::petsc_matchjacobian_snd() {
 		vdofs = x.NV;
 	else
 		vdofs = x.NV+x.ND;
-    
+	
 	if (!base.is_comm()) return;
-		
+	
 	int sind=-2;
-
+	
 #ifdef MY_SPARSE
 	/* Send Jacobian indices for T,x,y posiions for continuity constraint */
 	/* I am cheating here and sending floats and int's together */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
 	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
-    
+	
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		
@@ -1093,9 +1059,9 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 		vdofs = x.NV;
 	else
 		vdofs = x.NV+x.ND;
-    
+	
 	int sm = basis::tri(x.log2p)->sm();	
-    
+	
 	
 	/* Now do stuff for communication boundaries */
 	int row;
@@ -1108,7 +1074,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 		int sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(1)*vdofs; 
 		int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-        
+		
 		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
 			row = rowbase + *it;
 			int ncol = static_cast<int>(base.frcvbuf(0,count++));
@@ -1139,7 +1105,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 		/* Now receive side Jacobian information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-        
+		
 		int mcnt = x.ND;
 		int sgn = 1;
 		for(int mode=0;mode<x.sm0;++mode) {
@@ -1158,7 +1124,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 			*x.gbl->log << std::endl;
 #endif
-							
+			
 			/* Shift all modes in equation */
 			int mcnt_mpi = 0;
 			int sgn_mpi = 1;
@@ -1179,7 +1145,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 	int sind = base.seg(0);
 	int rowbase = x.seg(sind).pnt(0)*vdofs; 
 	int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-    
+	
 	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
 		row = rowbase + *it;
 		int ncol = static_cast<int>(base.frcvbuf(0,count++));
@@ -1207,7 +1173,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 		x.J_mpi.multiply_row(row,0.5);
 	} 
 #endif
-    
+	
 	if (sm && !base.is_frst()) {
 		/* Equality of curved mode constraint */
 		int ind = jacobian_start;
@@ -1233,13 +1199,13 @@ void melt::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
 	int sm=basis::tri(x.log2p)->sm();
 	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-		
+	
 	int vdofs;
 	if (x.mmovement == x.coupled_deformable)
 		vdofs = x.NV +tri_mesh::ND;
 	else
 		vdofs = x.NV;
-		
+	
 	int begin_seg = x.npnt*vdofs;
 	
 	/****************************************/
@@ -1290,8 +1256,8 @@ void melt::petsc_jacobian_dirichlet() {
 	int nnz2 = x.J._cpt(row+4) -x.J._cpt(row+3);
 	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 	if (nnz1 != nnz2) {
-	 *x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
-	 sim::abort(__LINE__,__FILE__,x.gbl->log);
+		*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	int cpt1 = x.J._cpt(row);
 	int cpt2 = x.J._cpt(row+3);
@@ -1360,7 +1326,7 @@ void melt::petsc_jacobian_dirichlet() {
 		x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
 		x.J_mpi._val(cpt2++) = x.J_mpi._val(cpt1++);
 	}
-
+	
 	
 	/***********************************/
 	/* Rotate J for diagonal dominance */
@@ -1506,7 +1472,7 @@ void melt::petsc_jacobian_dirichlet() {
 			for(int col=0;col<nnz2;++col) {
 				if (x.J_mpi._col(cpt1) != x.J_mpi._col(cpt2)) {
 					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location "  << 
-						row1 << ' ' <<  x.J_mpi._col(cpt1) << ' ' << row2 << ' ' << x.J_mpi._col(cpt2) << std::endl;
+					row1 << ' ' <<  x.J_mpi._col(cpt1) << ' ' << row2 << ' ' << x.J_mpi._col(cpt2) << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}	
 				double row_store = x.J_mpi._val(cpt1)*gbl->sdt(j)(0,0) +x.J_mpi._val(cpt2)*gbl->sdt(j)(0,1);
@@ -1536,9 +1502,9 @@ void melt::petsc_jacobian_dirichlet() {
 		++cpt1;
 		++cpt2;
 	}
-
 	
-	flexible::petsc_jacobian_dirichlet();  // Sets heat equation row to be just 1 on diagonal
+	
+	symbolic::petsc_jacobian_dirichlet();  // Sets heat equation row to be just 1 on diagonal
 }
 
 void melt::non_sparse(Array<int,1> &nnzero) {
@@ -1706,8 +1672,6 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 
 #endif
 
-/* Remember that vertex jacobians need to be written */
-
 void melt::setup_preconditioner() {
 
 	int indx,sind,v0,v1;
@@ -1848,10 +1812,10 @@ void melt::setup_preconditioner() {
 				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
 
 				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(1,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(2,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);
-				lf(3,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);                        
+				lf(0) /= gbl->cfl(0,x.log2p);
+				lf(1) /= gbl->cfl(0,x.log2p);
+				lf(2) /= gbl->cfl(1,x.log2p);
+				lf(3) /= gbl->cfl(1,x.log2p);                        
 
 				for (n=0;n<lsm;++n) {
 					gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
@@ -1939,67 +1903,128 @@ void melt::setup_preconditioner() {
 #ifdef petsc
 void melt_end_pt::petsc_jacobian_dirichlet() {
 	 	 
-	 int indx;
-	 if (surfbdry == 0) {
-		 indx = x.ebdry(base.ebdry(0))->nseg;
-	 }
-	 else {
-		 indx = 0;
-	 }
-	 
-	 /* GET X & Y MESH MOVEMENT ROW */
-	 /* CONSTRAIN MOTION NORMAL TO BOUNDARY */
-	 int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV; 
-	 int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
-	 int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
-	 Array<int,1> cols(nnz1);
-	 Array<FLT,2> vals(2,nnz1);
-	 
-	 /* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
-	 if (nnz1 != nnz2) {
-		 *x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-		 sim::abort(__LINE__,__FILE__,x.gbl->log);
-	 }
-	 int row1 = x.J._cpt(row);
-	 int row2 = x.J._cpt(row+1);
-	 for(int col=0;col<nnz1;++col) {
-		 if (x.J._col(row1++) != x.J._col(row2++)) {
-			 *x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
-			 sim::abort(__LINE__,__FILE__,x.gbl->log);
-		 }	
-	 }
+	int indx;
+	if (surfbdry == 0) {
+	 indx = x.ebdry(base.ebdry(0))->nseg;
+	}
+	else {
+	 indx = 0;
+	}
 
-	 /* Get back unrotated equation for normal direction */
-	 FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
-	 vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*surf->gbl->vdt(indx)(1,0)/J;
-	 vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*surf->gbl->vdt(indx)(0,0)/J;
-	 
-	 /* Replace x equation with tangential position equation */
-	 /* Replacy y equation with normal displacement equation */
-	 /* Normal Equation */
-	 vals(1,Range::all()) = 0.0;
-	 for(int col=0;col<nnz1;++col) {
-		 if (x.J._col(row1+col) == row) {
-			 vals(1,col) = wall_normal(0);
-			 break;
-		 }
+	/* GET X & Y MESH MOVEMENT ROW */
+	/* CONSTRAIN MOTION NORMAL TO BOUNDARY */
+	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV; 
+	int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
+	int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
+	Array<int,1> cols(nnz1);
+	Array<FLT,2> vals(2,nnz1);
+
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	if (nnz1 != nnz2) {
+	 *x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+	 sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	int row1 = x.J._cpt(row);
+	int row2 = x.J._cpt(row+1);
+	for(int col=0;col<nnz1;++col) {
+	 if (x.J._col(row1++) != x.J._col(row2++)) {
+		 *x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+		 sim::abort(__LINE__,__FILE__,x.gbl->log);
+	 }	
+	}
+
+	/* Get back unrotated equation for normal direction */
+	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
+	vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*surf->gbl->vdt(indx)(1,0)/J;
+	vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*surf->gbl->vdt(indx)(0,0)/J;
+
+	/* Replace x equation with tangential position equation */
+	/* Replacy y equation with normal displacement equation */
+	/* Normal Equation */
+	vals(1,Range::all()) = 0.0;
+	for(int col=0;col<nnz1;++col) {
+	 if (x.J._col(row1+col) == row) {
+		 vals(1,col) = wall_normal(0);
+		 break;
 	 }
-	 for(int col=0;col<nnz1;++col) {
-		 if (x.J._col(row1+col) == row+1) {
-			 vals(1,col) = wall_normal(1);
-			 break;
-		 }
+	}
+	for(int col=0;col<nnz1;++col) {
+	 if (x.J._col(row1+col) == row+1) {
+		 vals(1,col) = wall_normal(1);
+		 break;
 	 }
-	 	 
-	 /* tangent = -sin(theta) i +cos(theta) j */
-	 /* normal = cos(theta) i + sin(theta) j */
-	 /* Rotate equations for diagonal dominance to match what is done to residual */
-	 Array<FLT,2> temp(2,nnz1);
-	 temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(0,1) +vals(1,Range::all())*wall_normal(0);
-	 temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
+	}
 	 
-	 TinyVector<int,2> rows(row,row+1);
-	 x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
-	 x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());	 
- }
- #endif
+	/* tangent = -sin(theta) i +cos(theta) j */
+	/* normal = cos(theta) i + sin(theta) j */
+	/* Rotate equations for diagonal dominance to match what is done to residual */
+	Array<FLT,2> temp(2,nnz1);
+	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(0,1) +vals(1,Range::all())*wall_normal(0);
+	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
+
+	TinyVector<int,2> rows(row,row+1);
+	x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
+	x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());	 
+}
+#endif
+
+					 
+void kellerman::init(input_map& inmap,void* gbl_in) {
+	melt::init(inmap,gbl_in);
+	
+	/* Set u,v fixed, T & P to be free */
+	essential_indices.clear();
+	for(int n=0;n<x.ND;++n)
+		essential_indices.push_back(n);
+	type = natural;
+	type(Range(0,x.ND-1)) = essential;
+
+	return;
+}
+
+#ifdef petsc			
+void kellerman::petsc_jacobian_dirichlet() {
+	melt::petsc_jacobian_dirichlet();
+	
+	int sm=basis::tri(x.log2p)->sm();
+	Array<int,1> indices((base.nseg+1)*x.ND +base.nseg*sm*x.ND);
+
+	int vdofs = x.NV +tri_mesh::ND;
+	
+	int gind,v0,sind;
+	int counter = 0;
+	
+	int j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		gind = v0*vdofs;
+		for(int n=x.NV;n < vdofs;++n) {
+			indices(counter++)= gind +n;
+		}
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	gind = v0*vdofs;
+	for(int n=x.NV;n < vdofs;++n) {
+		indices(counter++)= gind +n;
+	}
+	
+	
+	gind = jacobian_start;
+	for(int i=0;i<base.nseg;++i) {
+		for(int m=0; m<sm; ++m) {
+			for(int n=0;n < x.ND;++n) {
+				indices(counter++) = gind++;
+			}
+		}
+	}	
+	
+#ifdef MY_SPARSE
+	x.J.zero_rows(counter,indices);
+	x.J_mpi.zero_rows(counter,indices);
+	x.J.set_diag(counter,indices,1.0);
+#else
+	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+}
+#endif

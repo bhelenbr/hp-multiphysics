@@ -114,10 +114,15 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 		Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 		Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
+		virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;}
+		enum bctypes {essential, natural};
+		Array<bctypes,1> type;
+		std::vector<int> essential_indices;
 
 	public:
-		hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false), report_flag(false) {mytype = "plain"; ibc=x.gbl->ibc;}
-		hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled), report_flag(inbdry.report_flag) {
+		hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false), report_flag(false) {mytype = "plain"; ibc=x.gbl->ibc; type.resize(x.NV); type = natural;}
+		hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), 
+			curved(inbdry.curved), coupled(inbdry.coupled), report_flag(inbdry.report_flag), essential_indices(inbdry.essential_indices) {
 			if (curved && !x.coarse_level) {
 				crv.resize(base.maxseg,x.sm0);
 				crvbd.resize(x.gbl->nhist+1);
@@ -134,6 +139,9 @@ class hp_edge_bdry : public egeometry_interface<2> {
 #else
 			base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
 #endif
+				
+			type.resize(x.NV); 
+			type = inbdry.type;
 		}
 		virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 		virtual void* create_global_structure() {return 0;}
@@ -145,7 +153,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0); 
-		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
+		void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
 
 		/* CURVATURE FUNCTIONS */
 		bool is_curved() {return(curved);}
@@ -155,8 +163,8 @@ class hp_edge_bdry : public egeometry_interface<2> {
 
 		/* BOUNDARY CONDITION FUNCTIONS */
 		virtual void maxres() {}
-		virtual void vdirichlet() {}
-		virtual void sdirichlet(int mode) {}
+		virtual void vdirichlet();
+		virtual void sdirichlet(int mode);
 		virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
@@ -166,7 +174,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void setup_preconditioner() {}
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
-		virtual void element_rsdl(int sind,int stage) {x.lf = 0.0;}
+		virtual void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 		virtual void rsdl(int stage);
 		virtual void rsdl_after(int stage) {}
 		virtual void element_jacobian(int sind, Array<FLT,2>& K);
@@ -184,7 +192,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void petsc_matchjacobian_snd();
 		virtual void petsc_matchjacobian_rcv(int phase);
 		virtual void petsc_jacobian();
-		virtual void petsc_jacobian_dirichlet() {} 
+		virtual void petsc_jacobian_dirichlet(); 
 		virtual int petsc_rsdl(Array<FLT,1> res) {return(0);}
 #endif
 		virtual void update(int stage) {}
@@ -221,6 +229,76 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		/* SOME UTILITIES */
 		void findmax(FLT (*fxy)(TinyVector<FLT,2> &x));
 		void findintercept(FLT (*fxy)(TinyVector<FLT,2> &x));
+};
+
+class symbolic : public hp_edge_bdry {  
+	protected:
+		Array<vector_function,1> fluxes;
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			
+			FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+			Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+			axpt(0) = xpt(0); axpt(1) = xpt(1);
+			amv(0) = mv(0); amv(1) = mv(1);
+			anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
+			
+			for (int n=0;n<x.NV;++n) {
+				switch(type(n)) {
+					case(essential): {
+						flx(n) = 0.0;
+						break;
+					}
+					case(natural): {
+						flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
+						break;
+					}
+				}
+			}
+			
+			return;
+		}
+	public:
+		symbolic(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "symbolic"; fluxes.resize(x.NV);
+			Array<string,1> names(4);
+			Array<int,1> dims(4);
+			dims = x.ND;
+			names(0) = "u";
+			dims(0) = x.NV;
+			names(1) = "x";
+			names(2) = "xt";
+			names(3) = "n";
+			for(int n=0;n<x.NV;++n) {
+				fluxes(n).set_arguments(4,dims,names);
+			}
+		}
+		symbolic(const symbolic& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), fluxes(inbdry.fluxes) {}
+		symbolic* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic(*this,xin,bin);}
+		void init(input_map& input,void* gbl_in);
+};
+	
+
+class symbolic_with_integration_by_parts : public symbolic { 
+protected:
+	Array<vector_function,1> derivative_fluxes;
+
+public:
+	symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : symbolic(xin,bin) {mytype = "symbolic_with_integration_by_parts"; derivative_fluxes.resize(x.NV);
+		Array<string,1> names(4);
+		Array<int,1> dims(4);
+		dims = x.ND;
+		names(0) = "u";
+		dims(0) = x.NV;
+		names(1) = "x";
+		names(2) = "xt";
+		names(3) = "n";
+		for(int n=0;n<x.NV;++n) {
+			derivative_fluxes(n).set_arguments(4,dims,names);
+		}
+	}
+	symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : symbolic(inbdry,xin,bin), derivative_fluxes(inbdry.derivative_fluxes) {}
+	symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
+	void init(input_map& input,void* gbl_in);
+	void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 };
 
 #endif

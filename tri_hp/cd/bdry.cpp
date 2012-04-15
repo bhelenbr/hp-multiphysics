@@ -119,115 +119,6 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 }
 
 
-void dirichlet::tadvance() {
-	int j,k,m,n,v0,v1,sind=-2,indx,info;
-	TinyVector<FLT,tri_mesh::ND> pt;
-	char uplo[] = "U";
-
-	hp_edge_bdry::tadvance(); 
-
-
-	/* UPDATE BOUNDARY CONDITION VALUES */
-	for(j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		x.ug.v(v0,0) = ibc->f(0,x.pnts(v0),x.gbl->time);
-	}
-	v0 = x.seg(sind).pnt(1);
-	x.ug.v(v0,0) = ibc->f(0,x.pnts(v0),x.gbl->time);
-
-	/*******************/    
-	/* SET SIDE VALUES */
-	/*******************/
-	for(j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		v1 = x.seg(sind).pnt(1);
-
-		if (is_curved()) {
-			x.crdtocht1d(sind);
-			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-		}
-		else {
-			for(n=0;n<tri_mesh::ND;++n) {
-				basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-
-				for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-					x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
-			}
-		}
-
-		if (basis::tri(x.log2p)->sm()) {
-			for(n=0;n<x.NV;++n)
-				basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
-
-			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
-				pt(0) = x.crd(0)(0,k);
-				pt(1) = x.crd(1)(0,k);
-				for(n=0;n<x.NV;++n)
-					x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
-			}
-			for(n=0;n<x.NV;++n)
-				basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
-			indx = sind*x.sm0;
-			for(n=0;n<x.NV;++n) {
-				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
-				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-					x.ug.s(sind,m,n) = -x.lf(n)(2+m);
-			}
-		}
-	}
-
-	return;
-}
-
-void neumann::element_rsdl(int eind, int stage) {
-	int k,n,sind;
-	TinyVector<FLT,2> pt,mvel,nrm;
-	Array<FLT,1> u(x.NV),flx(x.NV);
-	
-	x.lf = 0.0;
-	
-	sind = base.seg(eind);
-	
-	x.crdtocht1d(sind);
-	for(n=0;n<tri_mesh::ND;++n)
-		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-	
-	// x.ugtouht1d(sind);
-	
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-	
-	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
-		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);                
-		for(n=0;n<tri_mesh::ND;++n) {
-			pt(n) = x.crd(n)(0,k);
-			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
-		}
-		x.res(0)(0,k) = RAD(x.crd(0)(0,k))*flux(x.u(0)(0,k),pt,mvel,nrm);
-		
-	}
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-	
-	//	for(n=0;n<x.NV;++n)
-	//		x.gbl->res.v(v0,n) += x.lf(n)(0);
-	//
-	//	for(n=0;n<x.NV;++n)
-	//		x.gbl->res.v(v1,n) += x.lf(n)(1);
-	//
-	//	for(k=0;k<basis::tri(x.log2p)->sm();++k) {
-	//		for(n=0;n<x.NV;++n)
-	//			x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
-	//	}
-	
-	return;
-}
-
 void melt::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	
@@ -238,7 +129,7 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	inmap[keyword] = "1";
 	
 	dirichlet::init(inmap,gbl_in);
-	
+
 	return;
 }
 
@@ -626,7 +517,7 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 			x.J.zero_rows(x.sm0,indices);
 			(*pJ_mpi).zero_rows(x.sm0,indices);
 			x.J.set_diag(x.sm0,indices,1.0);
-			FLT sgn = 1;
+			FLT sgn = -1;
 			for(int mode=0;mode<x.sm0;++mode) {
 				/* In buoyancy class, there are 4 degrees of freedom and T is 2nd */
 				(*pJ_mpi).add_values(row+mode,row_mpi +4*mode +2,sgn);
@@ -684,6 +575,9 @@ int melt::petsc_rsdl(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
 	int ind = 0;
 	
+	/* T,x,y continuity constraint */
+	
+	
 	/* Curvature equality constraint */
 	for(int j=0;j<base.nseg;++j) {
 		for(int m=0;m<sm;++m) {
@@ -694,54 +588,6 @@ int melt::petsc_rsdl(Array<double,1> res) {
 	return(ind);
 }
 
-void melt::petsc_jacobian_dirichlet() {
-	hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-	
-	int sm=basis::tri(x.log2p)->sm();
-	Array<int,1> indices((base.nseg+1)*(x.NV) +base.nseg*sm*(x.NV));
-	
-	int vdofs;
-	if (x.mmovement == x.coupled_deformable)
-		vdofs = x.NV +tri_mesh::ND;
-	else
-		vdofs = x.NV;
-	
-	/* only works if pressure is 4th variable */
-	int gind,v0,sind;
-	int counter = 0;
-	
-	int j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		gind = v0*vdofs;
-		for(int n=0;n<x.NV;++n) {						
-			indices(counter++)=gind+n;
-		}
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	gind = v0*vdofs;
-	for(int n=0;n<x.NV;++n) {
-		indices(counter++)=gind+n;
-	}
-	
-	for(int i=0;i<base.nseg;++i) {
-		gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
-		for(int m=0; m<sm; ++m) {
-			for(int n=0;n<x.NV;++n) {
-				indices(counter++)=gind+m*x.NV+n;
-			}
-		}
-	}	
-	
-#ifdef MY_SPARSE
-	x.J.zero_rows(counter,indices);
-	x.J_mpi.zero_rows(counter,indices);
-	x.J.set_diag(counter,indices,1.0);
-#else
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-}
 
 void melt::non_sparse(Array<int,1> &nnzero) {
 	const int sm=basis::tri(x.log2p)->sm();
@@ -900,9 +746,6 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 }
 #endif
 
-
-
-
 void melt_end_pt::rsdl(int stage) {
 	// THIS IS SUPPOSED TO BE CALLED FROM tri_hp::update, but these are usually commented out.
 	int ebdry = base.ebdry(1);
@@ -1019,8 +862,6 @@ void melt_end_pt::petsc_jacobian() {
 		cols(cind++) = vdofs*x.seg(sind).pnt(k)+1;  // For x position
 	}
 	
-
-	
 #ifdef MY_SPARSE
 	Array<int,1> rows(1);
 	
@@ -1040,3 +881,17 @@ void melt_end_pt::petsc_jacobian() {
 #endif
 }
 #endif
+
+void kellerman::init(input_map& inmap,void* gbl_in) {
+	melt::init(inmap,gbl_in);
+	
+	/* Set u,v fixed, T & P to be free */
+	essential_indices.clear();
+	type = natural;
+	
+	return;
+}
+
+
+
+

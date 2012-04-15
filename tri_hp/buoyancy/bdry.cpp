@@ -47,7 +47,7 @@ void surface::init(input_map& input,void* gbl_in) {
 
 
 /* Free-Surface that Allows Radiative Heat Flux & Marangoni Effects */
-void surface::element_rsdl(int indx, Array<FLT,2> lf) {
+void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV),flx(x.NV);
@@ -117,39 +117,39 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 	
 	lf = 0.0;
 	/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-	basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(4,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(5,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(6,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(7,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(4,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(0)(0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(6,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(1)(0),&res(7,0));
 	
 	/* Heat Flux Source Term */
-	basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(8,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(8,0));
 
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1,0),&res(1,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1,0),&res(2,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
 	
 #ifndef petsc
 	/* mass flux preconditioning */
 	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1,m); 
+		lf(x.NV-1)(m) = -x.gbl->rho*lf(x.NV+1)(m); 
 #ifndef INERTIALESS
 	for (n=0;n<x.NV-1;++n) 
 		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
 	
 	for (n=0;n<x.NV-1;++n) {
-		lf(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,0);
-		lf(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,1);
+		lf(n)(0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(0);
+		lf(n)(1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(1);
 		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
-			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,m+2);
+			lf(n)(m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
 	}
 #endif
 #endif
 	
 #ifdef DROP
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2,0),&res(3,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(3,0));
 #endif
 	
 	return;
@@ -216,8 +216,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 
 class tri_hp_buoyancy_stype {
 	public:
-		static const int ntypes = 2;
-		enum ids {unknown=-1,surface,melt};
+		static const int ntypes = 3;
+		enum ids {unknown=-1,surface,melt,kellerman};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -226,7 +226,7 @@ class tri_hp_buoyancy_stype {
 		}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt"};
+const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","kellerman"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -262,6 +262,18 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 		case tri_hp_buoyancy_stype::melt: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new melt(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for surface boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
+			}
+			break;
+		}
+		case tri_hp_buoyancy_stype::kellerman: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new kellerman(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
 			}
 			else {

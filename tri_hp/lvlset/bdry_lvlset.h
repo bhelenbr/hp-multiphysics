@@ -93,10 +93,10 @@ namespace bdry_lvlset {
 			}
 	};
 
-	class hybrid : public characteristic<bdry_ins::neumann> {                             
+	class hybrid : public characteristic<bdry_ins::generic> {                             
 		public:
-			hybrid(tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(xin,bin) {mytype = "hybrid";}
-			hybrid(const hybrid& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(inbdry,xin,bin) {}
+			hybrid(tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::generic>(xin,bin) {mytype = "hybrid";}
+			hybrid(const hybrid& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::generic>(inbdry,xin,bin) {}
 			hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new hybrid(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
 
 			void rsdl(int stage) {};

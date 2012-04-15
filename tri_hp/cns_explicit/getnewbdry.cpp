@@ -119,7 +119,7 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 			break;
 		}
 		case tri_hp_cns_explicit_stype::outflow: {
-			temp = new neumann(*this,*ebdry(bnum));
+			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
 		case tri_hp_cns_explicit_stype::characteristic: {

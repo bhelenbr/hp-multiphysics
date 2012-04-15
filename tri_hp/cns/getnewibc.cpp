@@ -498,7 +498,7 @@ namespace ibc_cns {
 //			}
 //	};
 
-	FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
+//	FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
 
 //	class force_coupling : public tri_hp_helper {
 //		protected:

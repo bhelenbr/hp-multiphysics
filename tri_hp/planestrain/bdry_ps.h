@@ -37,47 +37,21 @@ namespace bdry_ps {
 			neumann(tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "neumann";}
 			neumann(const neumann& inbdry, tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
-			void rsdl(int stage);
 	};
 
 
 
 	class dirichlet : public neumann {        
-		void flux(TinyVector<FLT,3> u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
-			/* THESE DON'T GET USED */
-			flx(0) = 0.0;
-			flx(1) = 0.0;
-			/* MASS FLUX */
-			flx(2) = u(0)*norm(0) +u(1)*norm(1);
-			return;
-		}
-
 		public:
-			dirichlet(tri_hp_ps &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "dirichlet";}
+			dirichlet(tri_hp_ps &xin, edge_bdry &bin) : neumann(xin,bin) {
+				mytype = "dirichlet";
+				for(int n=0;n<x.ND;++n) {
+					essential_indices.push_back(n);
+					type(n) = essential;
+				}
+			}
 			dirichlet(const dirichlet& inbdry, tri_hp_ps &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
 			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
-			void vdirichlet() {
-				int sind,v0;
-
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
-					v0 = x.seg(sind).pnt(0);
-					x.gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
-				}
-				v0 = x.seg(sind).pnt(1);
-				x.gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
-			}
-
-			void sdirichlet(int mode) {
-				int sind;
-
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
-					x.gbl->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
-				}
-			}
-
-			void tadvance();
 	};
 
 	class friction_wall : public hp_edge_bdry {

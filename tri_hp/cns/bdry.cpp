@@ -15,10 +15,6 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	FLT convect,jcb;
 
 	switch(typ) {
-		case(tri_hp::text): case(tri_hp::binary): {
-			hp_edge_bdry::output(fout,typ,tlvl);
-			break;
-		}
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
 
@@ -145,57 +141,19 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			}
 			v0 = x.seg(sind).pnt(1);
 			total_flux += x.gbl->res.v(v0,Range::all());
+			break;
+		}
+			
+		default: {
+			hp_edge_bdry::output(fout,typ,tlvl);
+			break;
 		}
 	}
 
 	return;
 }
 
-void neumann::element_rsdl(int eind, int stage) {
-	int k,n,sind;
-	TinyVector<FLT,2> pt,mvel,nrm;
-	Array<FLT,1> u(x.NV),flx(x.NV);
-	
-	x.lf = 0.0;
-
-	sind = base.seg(eind);
-	
-	x.crdtocht1d(sind);
-	for(n=0;n<tri_mesh::ND;++n)
-		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-	
-	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
-		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);                
-		for(n=0;n<tri_mesh::ND;++n) {
-			pt(n) = x.crd(n)(0,k);
-			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
-#ifdef DROP
-			mvel(n) += tri_hp_cns::mesh_ref_vel(n);
-#endif
-		}
-		
-	
-		for(n=0;n<x.NV;++n)
-			u(n) = x.u(n)(0,k);
-		
-		flux(u,pt,mvel,nrm,flx);
-		
-		for(n=0;n<x.NV;++n)
-			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n);
-		
-	}
-	
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
-	return;
-}
-
-void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 	
 	//			TinyVector<FLT,4> ub,fluxtemp;
 	//			FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
@@ -248,92 +206,6 @@ void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector
 	
 	return;
 }
-
-void inflow::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
-
-	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/pvu(x.NV-1)*((pvu(1) -mv(0))*norm(0) +(pvu(2) -mv(1))*norm(1));
-	
-	/* MOMENTUM & ENERGY EQUATION*/
-	for (int n=1;n<x.NV;++n)
-		flx(n) = 0.0;
-	
-	return;
-}
-
-void inflow::vdirichlet() {
-	int sind,j,v0;
-	j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
-		
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
-	
-}
-
-void inflow::sdirichlet(int mode) {
-	int sind;
-	
-	for(int j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		x.gbl->res.s(sind,mode,Range(1,x.NV-1)) = 0.0;
-		
-	}
-}
-
-#ifdef petsc			
-void inflow::petsc_jacobian_dirichlet() {
-	hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-	
-	int sm=basis::tri(x.log2p)->sm();
-	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-	
-	int vdofs;
-	if (x.mmovement == x.coupled_deformable)
-		vdofs = x.NV +tri_mesh::ND;
-	else
-		vdofs = x.NV;
-	
-	int gind,v0,sind;
-	int counter = 0;
-	
-	int j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		gind = v0*vdofs;
-		for(int n=1;n<x.NV;++n) {						
-			indices(counter++)=gind+n;
-		}
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	gind = v0*vdofs;
-	for(int n=1;n<x.NV;++n) {
-		indices(counter++)=gind+n;
-	}
-	
-	for(int i=0;i<base.nseg;++i) {
-		gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
-		for(int m=0; m<sm; ++m) {
-			for(int n=1;n<x.NV;++n) {
-				indices(counter++)=gind+m*x.NV+n;
-			}
-		}
-	}	
-	
-#ifdef MY_SPARSE
-	x.J.zero_rows(counter,indices);
-	x.J_mpi.zero_rows(counter,indices);
-	x.J.set_diag(counter,indices,1.0);
-#else			
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-}
-#endif
 
 void inflow::modify_boundary_residual() {
 	int j,k,m,n,v0,v1,sind,info;
@@ -441,76 +313,6 @@ void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVect
 	return;
 }
 
-void adiabatic::vdirichlet() {
-	int sind,j,v0;
-	j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
-}
-
-void adiabatic::sdirichlet(int mode) {
-	int sind;
-	
-	for(int j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		x.gbl->res.s(sind,mode,Range(1,x.NV-2)) = 0.0;
-	}
-}
-
-#ifdef petsc			
-void adiabatic::petsc_jacobian_dirichlet() {
-	hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-	
-	int sm=basis::tri(x.log2p)->sm();
-	Array<int,1> indices((base.nseg+1)*(x.NV-2) +base.nseg*sm*(x.NV-2));
-	
-	int vdofs;
-	if (x.mmovement == x.coupled_deformable)
-		vdofs = x.NV +tri_mesh::ND;
-	else
-		vdofs = x.NV;
-	
-	int gind,v0,sind;
-	int counter = 0;
-	
-	int j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		gind = v0*vdofs;
-		for(int n=1;n<x.NV-1;++n) {						
-			indices(counter++)=gind+n;
-		}
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	gind = v0*vdofs;
-	for(int n=1;n<x.NV-1;++n) {
-		indices(counter++)=gind+n;
-	}
-	
-	for(int i=0;i<base.nseg;++i) {
-		gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
-		for(int m=0; m<sm; ++m) {
-			for(int n=1;n<x.NV-1;++n) {
-				indices(counter++)=gind+m*x.NV+n;
-			}
-		}
-	}	
-	
-#ifdef MY_SPARSE
-	x.J.zero_rows(counter,indices);
-	x.J_mpi.zero_rows(counter,indices);
-	x.J.set_diag(counter,indices,1.0);
-#else			
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-}
-#endif
 
 void adiabatic::modify_boundary_residual() {
 	int j,k,m,n,v0,v1,sind,info;
@@ -519,7 +321,7 @@ void adiabatic::modify_boundary_residual() {
 	TinyVector<double,MXTM> rescoef;
 	char uplo[] = "U";
 	
-	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+//	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
 	
 	j = 0;
 	do {
@@ -794,7 +596,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	std::ostringstream nstr;
 	
-	neumann::init(inmap,gbl_in);
+	generic::init(inmap,gbl_in);
 	
 	stress.resize(x.NV-1);
 	

@@ -40,21 +40,30 @@ namespace bdry_ins {
 	class generic : public hp_edge_bdry {
 		protected:
 			tri_hp_ins &x;
-			bool report_flag;
-#ifdef L2_ERROR
-			symbolic_function<2> l2norm;
-#endif
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+				/* CONTINUITY */
+				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+				/* X&Y MOMENTUM */
+#ifdef INERTIALESS
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n) = ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+#else
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+#endif			
+				/* EVERYTHING ELSE */
+				for (int n=tri_mesh::ND;n<x.NV-1;++n)
+					flx(n) = flx(x.NV-1)*u(n);
+				return;
+			}
+
 		public:
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
 			FLT circumference,moment,convect,circulation;
 
 		public:
-			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
-			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
-#ifdef L2_ERROR
-				if (report_flag)
-					l2norm = inbdry.l2norm;
-#endif
+			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
+			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);  
@@ -62,13 +71,6 @@ namespace bdry_ins {
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				hp_edge_bdry::init(input,gbl_in);
-				std::string keyword = base.idprefix +"_report";
-				input.getwdefault(keyword,report_flag,false);
-
-#ifdef L2_ERROR
-				if (report_flag)
-					l2norm.init(input,base.idprefix+"_norm");
-#endif
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);            
@@ -77,249 +79,19 @@ namespace bdry_ins {
 	};
 
 
-	class neumann : public generic {
-		protected:
-			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-
-				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-
-				/* X&Y MOMENTUM */
-#ifdef INERTIALESS
-				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n) = ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
-#else
-				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
-#endif
-
-
-				/* EVERYTHING ELSE */
-				for (int n=tri_mesh::ND;n<x.NV-1;++n)
-					flx(n) = flx(x.NV-1)*u(n);
-
-				return;
-			}
-
+	class inflow : public generic {  
 		public:
-			neumann(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
-			neumann(const neumann& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
-			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void element_rsdl(int eind,int stage);
-
-	};
-
-
-
-	class inflow : public neumann {  
-		protected:
-			Array<int,1> dirichlets;
-			int ndirichlets;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-
-				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-
-				/* EVERYTHING ELSE DOESN'T MATTER */
-				for (int n=0;n<x.NV-1;++n)
-					flx(n) = 0.0;
-
-				return;
-			}
-
-		public:
-			inflow(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {
+			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "inflow";
-				dirichlets.resize(x.NV);
-				dirichlets = -1;
-				ndirichlets = x.NV-1;
 				for (int n=0;n<x.NV-1;++n)
-					dirichlets(n) = n;
+					essential_indices.push_back(n);
 			}
-			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(x.NV), dirichlets=inbdry.dirichlets;}
+			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-
-			void vdirichlet() {
-				int sind,j,v0;
-
-				j = 0;
-				do {
-					sind = base.seg(j);
-					v0 = x.seg(sind).pnt(0);
-					x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
-				} while (++j < base.nseg);
-				v0 = x.seg(sind).pnt(1);
-				x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
-			}
-
-			void sdirichlet(int mode) {
-				int sind;
-
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
-					x.gbl->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
-				}
-			}
-#ifdef petsc			
-			void petsc_jacobian_dirichlet() {
-				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-				
-				int sm=basis::tri(x.log2p)->sm();
-				Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-				
-				int vdofs;
-				if (x.mmovement == x.coupled_deformable)
-					vdofs = x.NV +tri_mesh::ND;
-				else
-					vdofs = x.NV;
-					
-				/* only works if pressure is 4th variable */
-				int gind,v0,sind;
-				int counter = 0;
-				
-				int j = 0;
-				do {
-					sind = base.seg(j);
-					v0 = x.seg(sind).pnt(0);
-					gind = v0*vdofs;
-					for(int n=0;n<x.NV-1;++n) {						
-						indices(counter++)=gind+n;
-					}
-				} while (++j < base.nseg);
-				v0 = x.seg(sind).pnt(1);
-				gind = v0*vdofs;
-				for(int n=0;n<x.NV-1;++n) {
-					indices(counter++)=gind+n;
-				}
-
-				for(int i=0;i<base.nseg;++i) {
-					gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
-					for(int m=0; m<sm; ++m) {
-						for(int n=0;n<x.NV-1;++n) {
-							indices(counter++)=gind+m*x.NV+n;
-						}
-					}
-				}	
-
-#ifdef MY_SPARSE
-				x.J.zero_rows(counter,indices);
-				x.J_mpi.zero_rows(counter,indices);
-				x.J.set_diag(counter,indices,1.0);
-#else
-				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-			}
-#endif
-
-			void tadvance() {
-				hp_edge_bdry::tadvance();
-				setvalues(ibc,dirichlets,ndirichlets);
-			}
 	};
 
-	class flexible : public inflow { 
-		protected:
-			enum bctypes {essential, natural};
-			Array<bctypes,1> type;
-			Array<vector_function,1> fluxes;
 
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-
-				Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
-				axpt(0) = xpt(0); axpt(1) = xpt(1);
-				amv(0) = mv(0); amv(1) = mv(1);
-				anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
-
-				for (int n=0;n<x.NV;++n) {
-					switch(type(n)) {
-						case(essential): {
-							flx(n) = 0.0;
-							break;
-						}
-						case(natural): {
-							flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
-							break;
-						}
-					}
-				}
-				
-				return;
-			}
-		public:
-			flexible(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "flexible"; type.resize(x.NV); fluxes.resize(x.NV);
-				Array<string,1> names(4);
-				Array<int,1> dims(4);
-				dims = x.ND;
-				names(0) = "u";
-				dims(0) = x.NV;
-				names(1) = "x";
-				names(2) = "xt";
-				names(3) = "n";
-				for(int n=0;n<x.NV;++n) {
-					fluxes(n).set_arguments(4,dims,names);
-				}
-			}
-			flexible(const flexible& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), type(inbdry.type), fluxes(inbdry.fluxes) {}
-			flexible* create(tri_hp& xin, edge_bdry &bin) const {return new flexible(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in);
-			void vdirichlet();
-			void sdirichlet(int mode);
-#ifdef petsc			
-			void petsc_jacobian_dirichlet();
-#endif
-	};
-	
-	class flexible2 : public flexible { 
-	protected:
-		Array<vector_function,1> derivative_fluxes;
-		
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-			
-			FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-			
-			Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
-			axpt(0) = xpt(0); axpt(1) = xpt(1);
-			amv(0) = mv(0); amv(1) = mv(1);
-			anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
-			
-			for (int n=0;n<x.NV;++n) {
-				switch(type(n)) {
-					case(essential): {
-						flx(n) = 0.0;
-						break;
-					}
-					case(natural): {
-						flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
-						break;
-					}
-				}
-			}
-			
-			return;
-		}
-	public:
-		flexible2(tri_hp_ins &xin, edge_bdry &bin) : flexible(xin,bin) {mytype = "flexible2"; derivative_fluxes.resize(x.NV);
-			Array<string,1> names(4);
-			Array<int,1> dims(4);
-			dims = x.ND;
-			names(0) = "u";
-			dims(0) = x.NV;
-			names(1) = "x";
-			names(2) = "xt";
-			names(3) = "n";
-			for(int n=0;n<x.NV;++n) {
-				derivative_fluxes(n).set_arguments(4,dims,names);
-			}
-		}
-		flexible2(const flexible2& inbdry, tri_hp_ins &xin, edge_bdry &bin) : flexible(inbdry,xin,bin), derivative_fluxes(inbdry.derivative_fluxes) {}
-		flexible2* create(tri_hp& xin, edge_bdry &bin) const {return new flexible2(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-		void init(input_map& input,void* gbl_in);
-		void element_rsdl(int eind, int stage);
-	};
-
-	class euler : public neumann {
+	class euler : public generic {
 		protected:
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 				Array<FLT,1> ub(x.NV);
@@ -340,8 +112,8 @@ namespace bdry_ins {
 				return;
 			}
 		public:
-			euler(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "euler";}
-			euler(const euler& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			euler(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "euler";}
+			euler(const euler& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 	};
 	
@@ -393,7 +165,7 @@ namespace bdry_ins {
 			}
 			void tadvance() {hp_edge_bdry::tadvance();}
 			void update(int stage) {
-				if (!x.coarse_flag) setvalues(this,dirichlets,ndirichlets);
+				if (!x.coarse_flag) setvalues(this,essential_indices);
 			}
 			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				// FIXME:  THIS DOESN'T WORK
@@ -412,7 +184,7 @@ namespace bdry_ins {
 
 	};
 	
-	class friction_slip : public neumann, public rigid {
+	class friction_slip : public generic, public rigid {
 		protected:
 			FLT slip_length;
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
@@ -463,11 +235,11 @@ namespace bdry_ins {
 				return;
 			}
 		public:
-			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin), rigid(), slip_length(0.0) {mytype = "friction_slip";}
-			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), rigid(inbdry), slip_length(inbdry.slip_length) {}
+			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin), rigid(), slip_length(0.0) {mytype = "friction_slip";}
+			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), rigid(inbdry), slip_length(inbdry.slip_length) {}
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
-				neumann::init(input,gbl_in);
+				generic::init(input,gbl_in);
 				rigid::input(input,base.idprefix);
 				std::string keyword = base.idprefix +"_sliplength";
 				if (!input.get(keyword,slip_length)) {
@@ -476,13 +248,13 @@ namespace bdry_ins {
 				}
 			}
 //			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-//				neumann::input(fin,typ,tlvl);
+//				generic::input(fin,typ,tlvl);
 //				if (typ == tri_hp::text) {
 //					fin >> omega >> vel >> ctr;
 //				}
 //			}
 //			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-//				neumann::output(fout,typ,tlvl);
+//				generic::output(fout,typ,tlvl);
 //				if (typ == tri_hp::text) {
 //					fout << omega << ' ' << vel << ' ' << ctr << '\n';
 //				}
@@ -493,7 +265,7 @@ namespace bdry_ins {
 //						int sind = base.seg(j);
 //						
 //						x.ugtouht1d(sind);
-//						element_rsdl(j,0);
+//						element_rsdl(j,x.lf);
 //						
 //						for(int n=0;n<x.NV;++n)
 //							diff_flux(n) += x.lf(n)(0);
@@ -506,12 +278,12 @@ namespace bdry_ins {
 	};
 
 
-	class characteristic : public neumann {
+	class characteristic : public generic {
 		protected:
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
 		public:
-			characteristic(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
-			characteristic(const characteristic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			characteristic(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
+			characteristic(const characteristic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
     };
 
@@ -526,78 +298,13 @@ namespace bdry_ins {
 				generic::init(input,gbl_in);
 				std::string keyword = base.idprefix +"_dir";
 				input.getwdefault(keyword,dir,0);
+				essential_indices.push_back(dir);
+				type(dir) = essential;
 			}
-
-			void vdirichlet() {
-				int sind,j,v0;
-				j = 0;
-				do {
-					sind = base.seg(j);
-					v0 = x.seg(sind).pnt(0);
-					x.gbl->res.v(v0,dir) = 0.0;
-				} while (++j < base.nseg);
-				v0 = x.seg(sind).pnt(1);
-				x.gbl->res.v(v0,dir) = 0.0;
-			}
-
-			void sdirichlet(int mode) {
-				int sind;
-
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
-					x.gbl->res.s(sind,mode,dir) = 0.0;
-				}
-			}
-			
-#ifdef petsc			
-			void petsc_jacobian_dirichlet() {
-				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-				
-				int sm=basis::tri(x.log2p)->sm();
-				Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-				
-				int vdofs;
-				if (x.mmovement == x.coupled_deformable)
-					vdofs = x.NV +tri_mesh::ND;
-				else
-					vdofs = x.NV;
-					
-				/* only works if pressure is 4th variable */
-				int gind,v0,sind;
-				int counter = 0;
-				
-				int j = 0;
-				do {
-					sind = base.seg(j);
-					v0 = x.seg(sind).pnt(0);
-					gind = v0*vdofs;
-					indices(counter++)=gind+dir;
-				} while (++j < base.nseg);
-				v0 = x.seg(sind).pnt(1);
-				gind = v0*vdofs;
-				indices(counter++)=gind+dir;
-
-				for(int i=0;i<base.nseg;++i) {
-					gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
-					for(int m=0; m<sm; ++m) {
-							indices(counter++)=gind+m*x.NV+dir;
-					}
-				}	
-
-#ifdef MY_SPARSE
-				x.J.zero_rows(counter,indices);
-				x.J_mpi.zero_rows(counter,indices);
-				x.J.set_diag(counter,indices,1.0);
-#else
-				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-			}
-#endif
-
 			void tadvance();
 	};
 
-	class applied_stress : public neumann {
+	class applied_stress : public generic {
 		Array<symbolic_function<2>,1> stress;
 
 		protected:
@@ -623,16 +330,16 @@ namespace bdry_ins {
 				return;
 			}
 		public:
-			applied_stress(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
-			applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
+			applied_stress(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "applied_stress";}
+			applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
 	};
 
-	class surface_slave : public neumann {
+	class surface_slave : public generic {
 		public:
-			surface_slave(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "surface_slave";}
-			surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			surface_slave(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "surface_slave";}
+			surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			surface_slave* create(tri_hp& xin, edge_bdry &bin) const {return new surface_slave(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
 
@@ -717,7 +424,7 @@ namespace bdry_ins {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
-			virtual void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void maxres();
 			void setup_preconditioner();
 			void minvrt();
@@ -726,12 +433,11 @@ namespace bdry_ins {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
 			void petsc_jacobian();
-			void petsc_jacobian_dirichlet() {} // Override r_mesh constraint on mesh positions
 			int petsc_rsdl(Array<FLT,1> res);
 #endif
 	};
 	
-	class actuator_disc : public neumann {
+	class actuator_disc : public generic {
 		bool start_pt_open, end_pt_open;
 		symbolic_function<3> dp;
 		
@@ -761,13 +467,13 @@ namespace bdry_ins {
 			return;
 		}
 		public:
-			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "actuator_disc";}
-			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), dp(inbdry.dp) {}
+			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "actuator_disc";}
+			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dp(inbdry.dp) {}
 			actuator_disc* create(tri_hp& xin, edge_bdry &bin) const {return new actuator_disc(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			/* To read in data */
 			void init(input_map& inmap,void* gbl_in) {
-				neumann::init(inmap,gbl_in);
+				generic::init(inmap,gbl_in);
 				
 				/* LOAD PRESSURE JUMP FUNCTION */
 				dp.init(inmap,base.idprefix+"_jump");

@@ -45,10 +45,10 @@ namespace bdry_buoyancy {
 			surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			void init(input_map& input,void* gbl_in); 
-			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	
-	class melt : public bdry_ins::flexible {	
+	class melt : public symbolic {	
 		protected:
 			tri_hp_buoyancy &x;
 			Array<FLT,1> ksprg;
@@ -90,10 +90,10 @@ namespace bdry_buoyancy {
 			
 		public:
 			void* create_global_structure() {return new global;}
-			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : flexible(xin,bin), x(xin) {
+			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin), x(xin) {
 				mytype = "melt";
 			}
-			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : flexible(inbdry,xin,bin), x(xin) {
+			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin), x(xin) {
 				gbl = inbdry.gbl;
 				ksprg.resize(base.maxseg);
 				vug_frst.resize(base.maxseg+1);
@@ -107,7 +107,7 @@ namespace bdry_buoyancy {
 			void tadvance();
 			void rsdl(int stage);
 			void rsdl_after(int stage);
-			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void maxres();
 			void setup_preconditioner();
 			void minvrt();
@@ -152,6 +152,30 @@ namespace bdry_buoyancy {
 			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 
 		
+	};
+	
+	class kellerman : public melt {
+		public:
+			kellerman(tri_hp_buoyancy &xin, edge_bdry &bin) : melt(xin,bin) {
+				mytype = "kellerman";
+			}
+			kellerman(const kellerman& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) {
+				gbl = inbdry.gbl;
+				ksprg.resize(base.maxseg);
+				vug_frst.resize(base.maxseg+1);
+				vdres.resize(1,base.maxseg+1);
+				fine = &inbdry;
+			}
+			kellerman* create(tri_hp& xin, edge_bdry &bin) const {return new kellerman(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
+
+			/* SET T TO NOT BE DIRICHLET */
+			void init(input_map& input,void* gbl_in);
+			/* STOP THE MOVEMENT OF THE HEAT EQUATION RESIDUAL */
+			void rsdl_after(int stage) {symbolic::rsdl_after(stage);}
+			void vdirichlet() {symbolic::vdirichlet();}
+#ifdef petsc
+			void petsc_jacobian_dirichlet();  // Set x & y rows to dirichlet conditions (no movement)
+#endif
 	};
 	
 	

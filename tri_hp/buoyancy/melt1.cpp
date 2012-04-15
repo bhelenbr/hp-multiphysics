@@ -22,11 +22,11 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	/* Load in the heat flux */
 	keyword = base.idprefix + "_ins_typelist";
 	inmap[keyword] = "0 0 1 0";
-	flexible::init(inmap,gbl_in);
+	symbolic::init(inmap,gbl_in);
 	
 	/* Now that we have loaded flux, make temperature a dirichlet bc */
 	/* And make pressure neumann */
-	dirichlets(ndirichlets-1) = 2;	
+	dirichlets(essential_indicess-1) = 2;	
 
 	gbl = static_cast<global *>(gbl_in);
 	ksprg.resize(base.maxseg);
@@ -96,7 +96,7 @@ void melt::init(input_map& inmap,void* gbl_in) {
 void melt::tadvance() {
 	int i,j,m,sind;    
 
-	flexible::tadvance();
+	symbolic::tadvance();
 
 	if (x.gbl->substep == 0) {
 		/* SET SPRING CONSTANTS */
@@ -129,7 +129,7 @@ void melt::tadvance() {
 }
 
 
-void melt::element_rsdl(int indx, Array<FLT,2> lf) {
+void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,seg,tind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
@@ -194,11 +194,11 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 	lf = 0.0;
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0)); // tangent
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1,0),&res(1,0)); // mass flux
-	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1,0),&res(2,0)); // mass flux upwinded
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1,0),&res(3,0)); // surface energy balance
-	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1,0),&res(4,0)); // surface energy balance upwinded
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1)(0),&res(2,0)); // mass flux upwinded
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(3,0)); // surface energy balance
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(4,0)); // surface energy balance upwinded
 	
 	return;
 }
@@ -213,7 +213,7 @@ void melt::rsdl(int stage) {
 	TinyMatrix<FLT,8,MXGP> res;
 
 	const int sm = basis::tri(x.log2p)->sm();
-	Array<FLT,2> lf(x.NV+tri_mesh::ND,sm+2);
+	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+tri_mesh::ND);
 
 	/**************************************************/
 	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
@@ -235,22 +235,22 @@ void melt::rsdl(int stage) {
 
 		/* ADD FLUXES TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf(n,0);
+			x.gbl->res.v(v0,n) += lf(n)(0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf(n,1);
+			x.gbl->res.v(v1,n) += lf(n)(1);
 
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf(n,m+2);
+				x.gbl->res.s(sind,m,n) += lf(n)(m+2);
 		} 
 		
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
 		for(n=0;n<tri_mesh::ND;++n) {
-			gbl->vres(indx)(n) += lf(x.NV+n,0);
-			gbl->vres(indx+1)(n) = lf(x.NV+n,1);
+			gbl->vres(indx)(n) += lf(x.NV+n)(0);
+			gbl->vres(indx+1)(n) = lf(x.NV+n)(1);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(indx,m)(n) = lf(x.NV+n,m+2);
+				gbl->sres(indx,m)(n) = lf(x.NV+n)(m+2);
 		}
 	}
 	
@@ -657,7 +657,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 					
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
@@ -671,7 +671,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 
 			++kcol;
 			x.pnts(x.tri(tind).pnt(mode))(n) -= dx;
@@ -687,7 +687,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
@@ -703,7 +703,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 					
 					++kcol;
 			crds(indx,mode-2,var) -= dx;

@@ -102,7 +102,7 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		case tri_hp_lvlset_stype::outflow: {
-			temp = new characteristic<bdry_ins::neumann>(*this,*ebdry(bnum));
+			temp = new characteristic<bdry_ins::generic>(*this,*ebdry(bnum));
 			break;
 		}
 		case tri_hp_lvlset_stype::characteristic: {
