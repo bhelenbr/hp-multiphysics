@@ -144,10 +144,10 @@ tri_hp_mpi: $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 	
 tri_hp_petsc: $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.5 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh -lpetsc -lsuperlu_dist_2.5 -lparmetis -ldl $(LIB)
 
 tri_hp_petsc_mpi: $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.5 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi -lpetsc -lsuperlu_dist_2.5 -lparmetis -ldl $(LIB) 
 
 dirs: 
 	+@[ -d  ins ] || mkdir -p ins

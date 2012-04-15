@@ -259,7 +259,7 @@ void tri_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 
 
 void tri_hp_cns::update() {
-	int i,m,k,n,indx,indx1,last_phase,mp_phase;
+	int i,m,k,n,indx,indx1;
 	FLT cflalpha;
 	
 	// temp fix need to better incorporate more solvers
