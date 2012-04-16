@@ -1,6 +1,6 @@
 OBJ = spline.o
 
-CPPFLAGS = -I${HOME}/Codes/include/ -I$(PACKAGES)/include/
+CPPFLAGS = -Df2cFortran -I${HOME}/Codes/include/ -I$(PACKAGES)/include/
 
 # CPFLAGS += -debug -DBZ_DEBUG #(for icc)
 
@@ -40,6 +40,6 @@ libspline.a: $(OBJ)
 	cp -f spline.h $(HOME)/Codes/include/
 
 splinetest: $(OBJ) main.o
-	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lspline -lm
+	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lspline -llapack -lblas -lm
 
 $(OBJ): spline.h spline_impl.h

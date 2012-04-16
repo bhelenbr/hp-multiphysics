@@ -16,3 +16,4 @@ template class spline<3>;
 template class spline3<1>;
 template class spline3<2>;
 template class spline3<3>;
+
