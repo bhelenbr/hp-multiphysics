@@ -332,6 +332,19 @@ namespace bdry_buoyancy {
 				
 				hp_vrtx_bdry::init(inmap,gbl_in);
 				
+//				if (typeid(*x.hp_ebdry(base.ebdry(0))) == typeid(melt)) {
+//					surf = dynamic_cast<melt *>(x.hp_ebdry(base.ebdry(0)));
+//					surfbdry = 0;
+//				}
+//				else if (typeid(*x.hp_ebdry(base.ebdry(1))) == typeid(melt)) {
+//					surf = dynamic_cast<melt *>(x.hp_ebdry(base.ebdry(1)));
+//					surfbdry = 1;
+//				}
+//				else {
+//					*x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
+//					sim::abort(__LINE__,__FILE__,x.gbl->log);
+//				}
+				
 				if ((surf = dynamic_cast<melt *>(x.hp_ebdry(base.ebdry(0))))) {
 					surfbdry = 0;
 				}
