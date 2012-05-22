@@ -9,6 +9,7 @@
 
 #include "tri_hp.h"
 #include <symbolic_function.h>
+#include <spline.h>
 
 class symbolic_ibc : public init_bdry_cndtn {
 	private:
@@ -46,6 +47,48 @@ class symbolic_ibc : public init_bdry_cndtn {
 		}
 };
 
+
+class temporal_spline : public init_bdry_cndtn {
+	private:
+		Array<spline3<1>,1> my_spline;
+	public:
+		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
+			TinyVector<FLT,1> loc;
+			my_spline(n).interpolate(time,loc);
+			return(loc(0));
+		}
+	
+		void input(input_map &inmap,std::string idnty) {
+			std::string filename;
+			std::string keyword,val;
+			std::istringstream data;
+			std::ostringstream nstr;
+			int nvar;
+			
+			/* Figure out how many variables */
+			for(nvar=0, nstr.str(""), nstr << idnty << nvar << std::flush; inmap.find(nstr.str()) != inmap.end(); ++nvar, nstr.str(""), nstr << idnty << nvar << std::flush);
+			
+			if (nvar == 0) {
+				std::cerr << "couldn't find initial condition spline filename" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
+			my_spline.resize(nvar);
+
+			for(int n=0;n<nvar;++n) {
+				nstr.str("");
+				nstr << idnty << n << std::flush;
+				if (inmap.find(nstr.str()) != inmap.end()) {
+					my_spline(n).read(inmap[nstr.str()]);
+				}
+				else {
+					std::cerr << "couldn't find initial condition spline filename" << std::endl;
+					sim::abort(__LINE__,__FILE__,&std::cerr);
+				}
+			}
+		}
+};
+
+
 class communication_test : public init_bdry_cndtn {
 	tri_hp& x;
 	public:
@@ -58,8 +101,8 @@ class communication_test : public init_bdry_cndtn {
 
 class ibc_type {
 	public:
-		const static int ntypes = 2;
-		enum ids {symbolic,communication_test};
+		const static int ntypes = 3;
+		enum ids {symbolic,communication_test,temporal_spline};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -68,7 +111,7 @@ class ibc_type {
 			return(-1);
 		}
 };
-const char ibc_type::names[ntypes][40] = {"symbolic","communication_test"};
+const char ibc_type::names[ntypes][40] = {"symbolic","communication_test","spline"};
 
 
 
@@ -95,6 +138,10 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 		}
 		case ibc_type::communication_test: {
 			temp = new communication_test(*this);
+			break;
+		}
+		case ibc_type::temporal_spline: {
+			temp = new temporal_spline;
 			break;
 		}
 		default: {
