@@ -15,8 +15,8 @@ void tri_hp_buoyancy::init(input_map& input, void *gin) {
 	input[gbl->idprefix + "_nvariable"] = "4";
 	tri_hp_ins::init(input,gin);
 
-	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.1*gbl->mu);
-	gbl->D(2) = gbl->kcond;
+	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
+	gbl->D(0) = gbl->kcond;
 	if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
 
 	if (input.find(gbl->idprefix+"_rho_vs_T") != input.end()) {
