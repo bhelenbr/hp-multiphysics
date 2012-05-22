@@ -39,8 +39,15 @@ void tri_hp_swe::setup_preconditioner() {
 		fmax = 0.0;
 		for(j=0;j<3;++j) {
 			v0 = v(j);
-			q = pow(ug.v(v0,0)/ug.v(v0,NV-1) -gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0)),2.0) 
-				+pow(ug.v(v0,1)/ug.v(v0,NV-1) -gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1)),2.0);  
+			
+			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+			mvel += gbl->mesh_ref_vel;
+#endif
+			
+			q = pow(ug.v(v0,0)/ug.v(v0,NV-1) -mvel(0),2.0) +pow(ug.v(v0,1)/ug.v(v0,NV-1) -mvel(1),2.0);  
+			
 			qmax = MAX(qmax,q);
 			hmax = MAX(hmax,ug.v(v0,NV-1));
 			umax = MAX(umax,ug.v(v0,0)/ug.v(v0,NV-1));

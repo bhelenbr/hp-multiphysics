@@ -10,10 +10,6 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-#ifdef DROP
-TinyVector<FLT,tri_mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
-#endif
-
 void tri_hp_ins::init(input_map& input, void *gin) {
 	std::string keyword;
 	std::istringstream data;

@@ -91,9 +91,9 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 		for(j=0;j<lgpn;++j) {
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
-#ifdef DROP
-			mvel(0)(i,j) += mesh_ref_vel(0);
-			mvel(1)(i,j) += mesh_ref_vel(1);
+#ifdef MESH_REF_VEL
+			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
 #endif                        
 		}
 	}
@@ -508,6 +508,10 @@ void tri_hp_nonnewtonian::setup_preconditioner() {
 				
 				mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 				mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+#ifdef MESH_REF_VEL
+				mvel(0) += gbl->mesh_ref_vel(0);
+				mvel(1) += gbl->mesh_ref_vel(1);
+#endif
 				FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 
 				jcbmin = MIN(jcbmin,cjcb);

@@ -166,6 +166,9 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = x.u(n)(0,i) -x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,indx)(n,i));
+#ifdef MESH_REF_VEL
+			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+#endif
 		}
 
 		/* HEAT FLUX*/
@@ -186,6 +189,10 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			au(n) = u(n)(i);
 		axpt(0) = x.crd(0)(0,i); axpt(1) = x.crd(1)(0,i);
 		amv(0) = (x.gbl->bd(0)*(x.crd(0)(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(x.crd(1)(0,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+		amv(0) += x.gbl->mesh_ref_vel(0);
+		amv(1) += x.gbl->mesh_ref_vel(1);
+#endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		res(3,i) = RAD(x.crd(0)(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
 		/* Heat Flux Upwinded? */
@@ -1051,6 +1058,9 @@ void melt::setup_preconditioner() {
 			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 			for(n=0;n<tri_mesh::ND;++n) {
 				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i))); 
+#ifdef MESH_REF_VEL
+				mvel(n) -= x.gbl->mesh_ref_vel(n);
+#endif
 			}
 
 			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
@@ -1080,12 +1090,19 @@ void melt::setup_preconditioner() {
 		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 
+#ifdef MESH_REF_VEL
+		mvel -= x.gbl->mesh_ref_vel;
+#endif
 
 		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
 		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
 
 		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+		
+#ifdef MESH_REF_VEL
+		mvel -= x.gbl->mesh_ref_vel;
+#endif
 
 		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
 		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));

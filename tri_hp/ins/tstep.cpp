@@ -58,9 +58,9 @@ void tri_hp_ins::setup_preconditioner() {
 					
 						mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 						mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
-#ifdef DROP
-						mvel(0) += mesh_ref_vel(0);
-						mvel(1) += mesh_ref_vel(1);
+#ifdef MESH_REF_VEL
+						mvel(0) += gbl->mesh_ref_vel(0);
+						mvel(1) += gbl->mesh_ref_vel(1);
 #endif                        
 						jcbmin = MIN(jcbmin,dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 						
@@ -102,9 +102,9 @@ void tri_hp_ins::setup_preconditioner() {
 						
 						mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 						mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
-#ifdef DROP
-						mvel(0) += mesh_ref_vel(0);
-						mvel(1) += mesh_ref_vel(1);
+#ifdef MESH_REF_VEL
+						mvel(0) += gbl->mesh_ref_vel(0);
+						mvel(1) += gbl->mesh_ref_vel(1);
 #endif                        
 						q = pow(u(0)(i,j)-0.5*mvel(0),2.0)  +pow(u(1)(i,j)-0.5*mvel(1),2.0);
 						qmax = MAX(qmax,q);
@@ -128,13 +128,15 @@ void tri_hp_ins::setup_preconditioner() {
 				hmax = (h > hmax ? h : hmax);
 
 				v0 = v(j);
-#ifdef DROP
-				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0)) +mesh_ref_vel(0)),2.0) 
-					+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1)) +mesh_ref_vel(1)),2.0);
-#else
-				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-					+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);  
+				
+				mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+				mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+				mvel += gbl->mesh_ref_vel;
 #endif
+				
+				q = pow(ug.v(v0,0)-0.5*mvel(0),2.0) +pow(ug.v(v0,1)-0.5*mvel(1),2.0);
+
 				qmax = MAX(qmax,q);
 			}
 			hmax = sqrt(hmax);
@@ -259,13 +261,14 @@ void tri_hp_ins::setup_preconditioner() {
 			vbar = 0.0;
 			for(j=0;j<3;++j) {
 				v0 = v(j);
-#ifdef DROP
-				q = pow(ug.v(v0,0)-(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0)) +mesh_ref_vel(0)),2.0) 
-					+pow(ug.v(v0,1)-(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1)) +mesh_ref_vel(1)),2.0);
-#else
-				q = pow(ug.v(v0,0)-(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-					+pow(ug.v(v0,1)-(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);  
+				mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+				mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+				mvel += gbl->mesh_ref_vel;
 #endif
+
+				q = pow(ug.v(v0,0)-mvel(0),2.0) +pow(ug.v(v0,1)-mvel(1),2.0);  
+
 				ubar += ug.v(v0,0);
 				vbar += ug.v(v0,1);
 				qmax = MAX(qmax,q);

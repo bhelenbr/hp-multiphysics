@@ -83,7 +83,7 @@ namespace bdry_ins {
 		public:
 			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "inflow";
-				for (int n=0;n<x.NV-1;++n)
+				for (int n=0;n<x.ND;++n)
 					essential_indices.push_back(n);
 			}
 			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
@@ -124,7 +124,7 @@ namespace bdry_ins {
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT r,cost,sint,v; 
 				TinyVector<FLT,2> dx;
-
+				
 				dx = x-ctr;
 				r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
 				cost = dx(0)/r;
@@ -135,7 +135,7 @@ namespace bdry_ins {
 					v = r*omega*cost +vel(1);
 				else
 					v = 0.0;
-
+				
 				return(v);
 			}
 			rigid() : omega(0.0), vel(0.0), ctr(0.0) {}
@@ -146,17 +146,18 @@ namespace bdry_ins {
 				inmap.getwdefault(idnty+"_velocity",vel.data(),2,dflt);
 			}
 	};		
-
+	
 	class force_coupling : public inflow, public rigid {
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-			for (int n=0;n<x.NV;++n)
-				flx(n) = 0.0;
-			return;
-		}
-
+		protected:
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+				for (int n=0;n<x.NV;++n)
+					flx(n) = 0.0;
+				return;
+			}
+			
 		public:
-			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin), rigid() {mytype = "force_coupling";}
-			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), rigid(inbdry) {}
+			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin), rigid() {mytype = "force_coupling"; /* ibc = this; */}
+			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), rigid(inbdry) {/*ibc = this;*/}
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				inflow::init(input,gbl_in);
@@ -180,8 +181,7 @@ namespace bdry_ins {
 				if (typ == tri_hp::text) {
 					fout << omega << ' ' << vel << ' ' << ctr << '\n';
 				}
-			}
-
+		}
 	};
 	
 	class friction_slip : public generic, public rigid {

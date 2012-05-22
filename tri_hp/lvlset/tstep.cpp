@@ -9,6 +9,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 		int tind,i,j,side,v0;
 		FLT jcb,jcbphi,h,hmax,q,qmax,lam1,lam2,gam,rho,rhomax,mu,nu,heavy,delt,deltamax,strss;
 		TinyVector<int,3> v;
+		TinyVector<FLT,ND> mvel;
 
 		/***************************************/
 		/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -44,8 +45,15 @@ void tri_hp_lvlset::setup_preconditioner() {
 			deltamax = 0.0;
 			for(j=0;j<3;++j) {
 				v0 = v(j);
-				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-					+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+				
+				mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+				mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+				mvel += gbl->mesh_ref_vel;
+#endif
+				
+				q = pow(ug.v(v0,0)-0.5*mvel(0),2.0) +pow(ug.v(v0,1)-0.5*mvel(1),2.0);
+
 				qmax = MAX(qmax,q);
 				heavyside_and_delta_if(ug.v(v0,2)/gbl->width,heavy,delt);
 				rho = gbl->rho +(gbl->rho2 -gbl->rho)*heavy;

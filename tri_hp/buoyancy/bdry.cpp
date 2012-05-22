@@ -76,11 +76,14 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef MESH_REF_VEL
+			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+#endif
 		}
 	
 		/* Evaluate Fluxes */
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
-		amv(0) = mvel(0,i)-u(0)(i); amv(1) = mvel(1,i)-u(1)(i);
+		amv(0) = -(mvel(0,i)-u(0)(i)); amv(1) = -(mvel(1,i)-u(1)(i));
 		anorm(0)= norm(0); anorm(1) = norm(1);
 		for(int n=0;n<x.NV;++n)
 			au(n) = u(n)(i);

@@ -460,6 +460,9 @@ void hybrid_pt::update(int stage) {
 
 	vel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 	vel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+	vel -= x.gbl->mesh_ref_vel;
+#endif
 
 	/* normvel is defined positive outward */
 	normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
@@ -596,6 +599,10 @@ void hybrid::update(int stage) {
 				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
 		vely = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
 				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+#ifdef MESH_REF_VEL
+		velx -= x.gbl->mesh_ref_vel(0);
+		vely -= x.gbl->mesh_ref_vel(1);
+#endif
 		FLT normvel = velx*nrmx+vely*nrmy;
 		
 		if (normvel < 0.0 ) {

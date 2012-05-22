@@ -55,7 +55,11 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 				for(j=0;j<lgpn;++j) {
 					
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));                  
+					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j)); 
+#ifdef MESH_REF_VEL
+					mvel(0) += gbl->mesh_ref_vel(0);
+					mvel(1) += gbl->mesh_ref_vel(1);
+#endif
 					jcbmin = MIN(jcbmin,dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					
 					/* CALCULATE CURVED SIDE LENGTHS */
@@ -99,7 +103,11 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 				for(j=0;j<lgpn;++j) {
 					
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));                       
+					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+#ifdef MESH_REF_VEL
+					mvel(0) += gbl->mesh_ref_vel(0);
+					mvel(1) += gbl->mesh_ref_vel(1);
+#endif
 				
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));

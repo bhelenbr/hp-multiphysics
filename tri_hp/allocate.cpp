@@ -117,6 +117,11 @@ void tri_hp::init(input_map& inmap, void *gin) {
 
 	/* GET INITIAL CONDITION FUNCTION */
 	gbl->ibc = getnewibc("ibc",inmap);
+	
+	/* SET MESH VELOCITY TO ZERO */
+#ifdef MESH_REF_VEL
+	gbl->mesh_ref_vel = 0;
+#endif
 
 	/* ALLOCATE BOUNDARY CONDITION STUFF */
 	gbl->ebdry_gbls.resize(nebd);

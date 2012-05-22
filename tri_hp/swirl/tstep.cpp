@@ -5,6 +5,7 @@
 void tri_hp_swirl::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qs,qmax,qsmax,lam1,gam;
+	TinyVector<FLT,ND> mvel;
 	TinyVector<int,3> v;
 
 	FLT nu = gbl->mu/gbl->rho;
@@ -41,8 +42,15 @@ void tri_hp_swirl::setup_preconditioner() {
 		qsmax = 0.0;
 		for(j=0;j<3;++j) {
 			v0 = v(j);
-			q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-				+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+
+			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+			mvel += gbl->mesh_ref_vel;
+#endif
+			
+			q = pow(ug.v(v0,0)-0.5*mvel(0),2.0) +pow(ug.v(v0,1)-0.5*mvel(1),2.0);
+
 			qs = q +pow(ug.v(v0,2),2.0); // FIXME?
 			qmax = MAX(qmax,q);
 			qsmax = MAX(qsmax,qs);

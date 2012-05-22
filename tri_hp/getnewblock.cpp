@@ -15,7 +15,7 @@
 #define INS
 //#define PS
 //#define SWIRL
-#define BUOYANCY
+//#define BUOYANCY
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT

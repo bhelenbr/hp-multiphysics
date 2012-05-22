@@ -296,6 +296,9 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					norm(1) = -x.dcrd(0,0)(0,i);                
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+#ifdef MESH_REF_VEL
+						mvel(n) += x.gbl->mesh_ref_vel(n);
+#endif
 					}
 					
 					xpt(0) = x.crd(0)(0,i);
@@ -1721,6 +1724,10 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 		for(n=0;n<tri_mesh::ND;++n) {
 			pt(n) = x.crd(n)(0,k);
 			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
+#ifdef MESH_REF_VEL
+			mvel(n) += x.gbl->mesh_ref_vel(n);
+#endif
+			
 		}
 		
 		for(n=0;n<x.NV;++n)
@@ -1902,6 +1909,9 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i));
+#ifdef MESH_REF_VEL
+			mvel(n,i) += x.gbl->mesh_ref_vel(n);
+#endif
 		}
 		
 		/* Evaluate Fluxes */

@@ -365,8 +365,8 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
-#ifdef DROP
-			mvel(n,i) -= tri_hp_ins::mesh_ref_vel(n);
+#ifdef MESH_REF_VEL
+			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
 #endif    
 		}
 		/* TANGENTIAL SPACING */                
@@ -1994,8 +1994,8 @@ void surface::setup_preconditioner() {
 			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 			for(n=0;n<tri_mesh::ND;++n) {
 				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
-#ifdef DROP
-				mvel(n) -= tri_hp_ins::mesh_ref_vel(n);
+#ifdef MESH_REF_VEL
+				mvel(n) -= x.gbl->mesh_ref_vel(n);
 #endif    
 			}
 
@@ -2042,9 +2042,9 @@ void surface::setup_preconditioner() {
 
 		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
-#ifdef DROP
-		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
-		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
+#ifdef MESH_REF_VEL
+		mvel(0) -= x.gbl->mesh_ref_vel(0);
+		mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
 
 		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
@@ -2052,9 +2052,9 @@ void surface::setup_preconditioner() {
 
 		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
-#ifdef DROP
-		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
-		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
+#ifdef MESH_REF_VEL
+		mvel(0) -= x.gbl->mesh_ref_vel(0);
+		mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
 		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
 		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));

@@ -30,6 +30,8 @@
 #define MXGP MAXP+2
 #define MXTM (MAXP+1)*(MAXP+2)/2 
 
+//#define MESH_REF_VEL
+
 class hp_vrtx_bdry;
 class hp_edge_bdry;
 
@@ -126,6 +128,10 @@ class tri_hp : public r_tri_mesh  {
 
 			/* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
 			init_bdry_cndtn *ibc;
+			
+#ifdef MESH_REF_VEL
+			TinyVector<FLT,ND> mesh_ref_vel;
+#endif
 
 			/* Pointers to block storage objects for edge boundary conditions */
 			Array<void *,1> ebdry_gbls;

@@ -27,10 +27,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			std::ostringstream fname;
 			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
 			
-			std::ofstream fout;
-			fout.open(fname.str().c_str());
+			std::ofstream file_out;
+			file_out.open(fname.str().c_str());
 			
-			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
+			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
 			conv_flux = 0.0;
 			diff_flux = 0.0;
@@ -115,8 +115,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					norm(1) = -x.dcrd(0,0)(0,i);                
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
-#ifdef DROP
-						mvel(n) += tri_hp_ins::mesh_ref_vel(n);
+#ifdef MESH_REF_VEL
+						mvel(n) += x.gbl->mesh_ref_vel(n);
 #endif
 					}
 
@@ -136,27 +136,27 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
 #endif
 					
-					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
 					for(n=0;n<x.NV;++n)
-						fout << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
-					fout << std::endl;
+						file_out << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
+					file_out << std::endl;
 
 				}	
 			} while (++ind < base.nseg);
-			fout.close();
+			file_out.close();
 			
-			streamsize oldprecision = (*x.gbl->log).precision(10);
-			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
-			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
-			*x.gbl->log << base.idprefix << " convective flux: " << conv_flux << std::endl;
-			*x.gbl->log << base.idprefix << " circulation: " << circulation << std::endl;
+			streamsize oldprecision = fout.precision(10);
+			fout << base.idprefix << " circumference: " << circumference << std::endl;
+			fout << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
+			fout << base.idprefix << " convective flux: " << conv_flux << std::endl;
+			fout << base.idprefix << " circulation: " << circulation << std::endl;
 
 			/* OUTPUT AUXILIARY FLUXES */
-			*x.gbl->log << base.idprefix << "total fluxes: " << total_flux << std::endl;
+			fout << base.idprefix << "total fluxes: " << total_flux << std::endl;
 #ifdef L2_ERROR
-			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+			fout << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
 #endif
-			(*x.gbl->log).precision(oldprecision);
+			fout.precision(oldprecision);
 			
 			break;
 		}
@@ -387,6 +387,9 @@ void hybrid_pt::rsdl(int stage) {
 	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
 	vel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 	vel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+	vel -= x.gbl->mesh_ref_vel;
+#endif
 	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
 	
 	if (tangvel > 0.0)
@@ -471,7 +474,11 @@ void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					for(n=0;n<tri_mesh::ND;++n) {
 						pt(n) = x.crd(n)(0,k);
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,ind)(n,k));
+#ifdef MESH_REF_VEL
+						mvel(n) += x.gbl->mesh_ref_vel(n);
+#endif
 					}
+					
 					FLT length = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
 					FLT norm_vel = ((x.u(0)(0,k) -mvel(0))*nrm(0) +(x.u(1)(0,k) -mvel(1))*nrm(1))/length;
 					TinyVector<FLT,3> inpt(pt(0),pt(1),norm_vel);

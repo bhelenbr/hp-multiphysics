@@ -83,6 +83,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					norm(1) = -x.dcrd(0,0)(0,i)/l; 
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+#ifdef MESH_REF_VEL
+						mvel(n) += x.gbl->mesh_ref_vel(n);
+#endif
 					}					
 #ifdef CONST_A
 					conv = x.u(0)(0,i)*((x.gbl->ax -mvel(0))*norm(0) +(x.gbl->ay -mvel(1))*norm(1));

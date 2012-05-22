@@ -96,8 +96,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					norm(1) = -x.dcrd(0,0)(0,i);                
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
-#ifdef DROP
-						mvel(n) += tri_hp_cns::mesh_ref_vel(n);
+#ifdef MESH_REF_VEL
+						mvel(n) += x.gbl->mesh_ref_vel(n);
 #endif
 					}
 

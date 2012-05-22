@@ -65,7 +65,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		for(int j = 0; j < lgpn; ++j) {
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
-#ifdef DROP
+#ifdef MESH_REF_VEL
 			mvel(0)(i,j) += mesh_ref_vel(0);
 			mvel(1)(i,j) += mesh_ref_vel(1);
 #endif                        

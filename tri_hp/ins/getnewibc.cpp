@@ -522,7 +522,7 @@ namespace ibc_ins {
 				rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 #ifdef DROP
 				if (!x.coarse_flag) gbl->vflux =  penalty1*kc*(rbar -0.5);
-				if (!x.coarse_flag) tri_hp_ins::mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);    
+				if (!x.coarse_flag) gbl->mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);    
 #endif
 
 				/* C_D TO G CONVERSION REMINDER 
@@ -552,7 +552,7 @@ namespace ibc_ins {
 				calculate_stuff();
 #ifdef DROP
 				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-					*x.gbl->log << "#gravity, velocity, height: " << x.gbl->g << ' ' << tri_hp_ins::mesh_ref_vel(1) << ' ';                        
+					*x.gbl->log << "#gravity, velocity, height: " << x.gbl->g << ' ' << x.gbl->mesh_ref_vel(1) << ' ';                        
 					int v0 = x.seg(surf->base.seg(0)).pnt(0);
 					int v1 = x.seg(surf->base.seg(surf->base.nseg-1)).pnt(1);
 					FLT height = x.pnts(v0)(1)-x.pnts(v1)(1);
@@ -709,7 +709,7 @@ class force_coupling : public tri_hp_helper {
 						input.getwdefault("dx0dt",w(1),0.0);
 						
 					if (!input.get(x.gbl->idprefix +"_k_linear0",k_linear(0))) 
-						input.getwdefault("k_linear0",k_linear(0),1.0);
+						input.getwdefault("k_linear0",k_linear(0),0.0);
 				}
 				
 				if (vertical) {
@@ -720,7 +720,7 @@ class force_coupling : public tri_hp_helper {
 						input.getwdefault("dx1dt",w(3),0.0);
 						
 					if (!input.get(x.gbl->idprefix +"_k_linear1",k_linear(0))) 
-						input.getwdefault("k_linear1",k_linear(1),1.0);
+						input.getwdefault("k_linear1",k_linear(1),0.0);
 				}
 				
 				if (horizontal || vertical) {
@@ -903,6 +903,10 @@ class force_coupling : public tri_hp_helper {
 					}
 				}
 
+#ifdef MESH_REF_VEL
+				x.gbl->mesh_ref_vel = vel;
+#endif
+
 				for (int i=0; i<nboundary; ++i) {
 					hp_ebdry_rigid(i)->ctr = ctr+disp;
 					hp_ebdry_rigid(i)->vel = vel;
@@ -932,15 +936,24 @@ class force_coupling : public tri_hp_helper {
 			}
 			
 			void rsdl(int s = 0) {
+				struct nullstream : std::ostream {
+					nullstream(): std::ios(0), std::ostream(0) {}
+				} ns;
+				
 				int stage = x.gbl->substep +x.gbl->esdirk;
 				FLT bd0 = x.gbl->dti*x.gbl->adirk(stage,stage);
-					
+				
+				/* Hack for quasi-steady drag simulation */
+//				bd0 = 10./(30./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
+//				bd0 = 10./(1000./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
+//				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
+				
 				/* GET FORCE & TORQUE */
 				TinyVector<FLT,tri_mesh::ND> force = 0.0;
 				FLT moment = 0.0;
 				for (int i=0; i<nboundary; ++i) { 
 					/* FORCE BOUNDARY TO CALCULATE ALL FLUXES */
-					hp_ebdry(i)->output(*x.gbl->log,tri_hp::tecplot);
+					hp_ebdry(i)->output(ns,tri_hp::tecplot);
 					force(0) -= hp_ebdry(i)->diff_flux(0);
 					force(1) -= hp_ebdry(i)->diff_flux(1);					
 					moment += hp_ebdry(i)->moment;
@@ -955,7 +968,7 @@ class force_coupling : public tri_hp_helper {
 					// translational displacement
 					res(0) = bd0*(w(0) -w_tilda(0)) -w(1);
 					// translational velocity
-					res(1) = mass*bd0*(w(1) -w_tilda(1)) -force(0) +k_linear(0)*w(0);
+					res(1) = mass*bd0*(w(1) -w_tilda(1)) +force(0) +k_linear(0)*w(0);
 				} 
 				else {
 					res(0) = 0.0;
@@ -966,7 +979,7 @@ class force_coupling : public tri_hp_helper {
 					// translational displacement
 					res(2) = bd0*(w(2) -w_tilda(2)) -w(3);
 					// translational velocity
-					res(3) = mass*bd0*(w(3) -w_tilda(3)) -force(1) +k_linear(1)*w(2);
+					res(3) = mass*bd0*(w(3) -w_tilda(3)) +force(1) +k_linear(1)*w(2);
 				} 
 				else {
 					res(2) = 0.0;

@@ -8,6 +8,7 @@ void tri_hp_cd::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1;
 	TinyVector<int,3> v;
+	TinyVector<FLT,ND> mvel;
 
 
 	/***************************************/
@@ -45,13 +46,21 @@ void tri_hp_cd::setup_preconditioner() {
 		qmax = 0.0;
 		for(j=0;j<3;++j) {
 			v0 = v(j);
+			
+			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+			mvel += gbl->mesh_ref_vel;
+#endif
+			
 #ifdef CONST_A
-			q = pow(gbl->ax -(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-				+pow(gbl->ay -(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+			q = pow(gbl->ax -mvel(0),2.0) 
+					+pow(gbl->ay -mvel(1),2.0);
 #else
-			q = pow(gbl->a->f(0,pnts(v0),gbl->time) -(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-			+pow(gbl->a->f(1,pnts(v0),gbl->time) -(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
-#endif		
+			q = pow(gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0) 
+					+pow(gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
+#endif	
+			
 			qmax = MAX(qmax,q);
 		}
 		q = sqrt(qmax);

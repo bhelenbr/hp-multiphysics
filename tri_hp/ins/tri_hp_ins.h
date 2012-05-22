@@ -26,11 +26,6 @@ class tri_hp_ins : public tri_hp {
 
 		} *gbl;
 
-#ifdef DROP
-		/** Rigid Mesh Motion for Finding Steady Translating Solutions */
-		static TinyVector<FLT,ND> mesh_ref_vel;
-#endif
-
 		FLT adis; // DISSIPATION CONSTANT
 
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);

@@ -13,7 +13,7 @@ using namespace bdry_ps;
 
 void friction_wall::rsdl(int stage) {
 	int j,k,m,n,seg,v0,v1,sind,tind;
-	TinyVector<FLT,2> pt,mvel,nrm;
+	TinyVector<FLT,2> pt,nrm;
 	TinyVector<FLT,3> u,flx;
 	TinyVector<FLT,tri_mesh::ND> stress;
 	FLT visc[x.ND][x.ND][x.ND][x.ND];
