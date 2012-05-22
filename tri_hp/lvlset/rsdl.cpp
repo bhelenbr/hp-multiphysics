@@ -27,6 +27,7 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	FLT heavy, delt, length, phidw, signphi;
 	TinyVector<FLT,ND> tang,norm;
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> phivel;
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 
 	oneminusbeta = 1.0-gbl->beta(stage);
 	/* LOAD INDICES OF VERTEX POINTS */

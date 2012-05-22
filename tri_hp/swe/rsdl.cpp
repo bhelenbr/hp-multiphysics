@@ -24,6 +24,7 @@ void tri_hp_swe::rsdl(int stage) {
 	TinyVector<FLT,ND> vel,pt;
 	TinyVector<FLT,NV> tres;
 	FLT drag;
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 
 	tri_hp::rsdl(stage);
 	oneminusbeta = 1.0-gbl->beta(stage);

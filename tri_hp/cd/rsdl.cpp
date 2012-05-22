@@ -21,6 +21,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	TinyVector<FLT,ND> pt;
 	TinyVector<int,3> v;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
+
 
 	oneminusbeta = 1.0-gbl->beta(stage);
 

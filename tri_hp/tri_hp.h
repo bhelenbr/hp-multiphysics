@@ -61,7 +61,6 @@ class tri_hp : public r_tri_mesh  {
 		TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND> dcrd;
 		Array<TinyVector<FLT,MXTM>,1> uht,lf;
 		TinyMatrix<FLT,ND,MXTM> cht, cf;
-		TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 		Array<TinyMatrix<FLT,MXGP,MXGP>,2> bdwk;
 
 		/** Stores vertex, side and interior coefficients of solution */

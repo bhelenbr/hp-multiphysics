@@ -7,6 +7,8 @@
 #define REFINED_WAY
 
 void tri_hp_ins::setup_preconditioner() {
+	TinyVector<FLT,ND> mvel;
+
 	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
 		int tind,i,j,side;
@@ -48,7 +50,6 @@ void tri_hp_ins::setup_preconditioner() {
 				for(int n=0;n<ND;++n)
 					basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 			
-				TinyVector<FLT,ND> mvel;
 				qmax = 0.0;
 				hmax = 0.0;
 				FLT jcbmin = jcb;
@@ -93,7 +94,6 @@ void tri_hp_ins::setup_preconditioner() {
 				for(int n=0;n<ND;++n)
 					basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 			
-				TinyVector<FLT,ND> mvel;
 				qmax = 0.0;
 				hmax = 0.0;
 				int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
@@ -266,8 +266,7 @@ void tri_hp_ins::setup_preconditioner() {
 #ifdef MESH_REF_VEL
 				mvel += gbl->mesh_ref_vel;
 #endif
-
-				q = pow(ug.v(v0,0)-mvel(0),2.0) +pow(ug.v(v0,1)-mvel(1),2.0);  
+				q = pow(ug.v(v0,0) -mvel(0),2.0) +pow(ug.v(v0,1) -mvel(1),2.0);  
 
 				ubar += ug.v(v0,0);
 				vbar += ug.v(v0,1);

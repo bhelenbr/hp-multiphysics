@@ -21,6 +21,7 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 	Array<TinyMatrix<FLT,ND,ND>,2> visc(NV-1,NV-1);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> cv(NV-1,NV-1), df(NV-1,NV-1), e(NV-1,NV-1);
 	Array<FLT,1> tres(NV);
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;

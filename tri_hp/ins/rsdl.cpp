@@ -24,6 +24,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;

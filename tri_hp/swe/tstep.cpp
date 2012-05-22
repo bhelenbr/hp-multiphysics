@@ -8,6 +8,7 @@ void tri_hp_swe::setup_preconditioner() {
 	FLT jcb,hmax,q,qmax,umax,vmax,c,c2,pre,rtpre,fmax,cflnow,alpha,alpha2,sigma;
 	FLT dx, dxmax, lambdamax;
 	TinyVector<int,3> v;
+	TinyVector<FLT,ND> mvel;
 
 	cflnow = 0.0;
 

@@ -33,6 +33,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/(gam-1.0);
 	FLT gogm1 = gam*ogm1;
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
