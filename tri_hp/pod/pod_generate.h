@@ -17,43 +17,38 @@ template<class BASE> class pod_gen_edge_bdry;
 template<class BASE> class pod_gen_vrtx_bdry;
 #endif
 
-#ifdef LOWNOISE
 template<class BASE> class pod_generate : public BASE {
 	public:
 		int nsnapshots;
 		int restart_interval;
 		int nmodes;
-		int pod_id;
 		int restartfile;
 		Array<FLT,1> scaling;
+#ifdef LOWNOISE
+		int pod_id;
+#else
+		typedef typename BASE::vsi vsi;
+		Array<vsi,1> modes;
+		Array<FLT,1> psimatrix,psimatrix_recv;
+#endif
 #ifdef POD_BDRY
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
 #endif
-
+	
 	public:
 		void init(input_map& input, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };
-#else
-template<class BASE> class pod_generate : public BASE {
-	protected:
-		int nsnapshots;
-		int restart_interval;
-		int nmodes;
-		int restartfile;
-		Array<FLT,1> scaling;
-		typedef typename BASE::vsi vsi;
-		Array<vsi,1> modes;
-		Array<FLT,1> psimatrix,psimatrix_recv;
 
+template<class BASE> class pod_generate_with_r_mesh : public pod_generate<BASE> {
 	public:
 		void init(input_map& input, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };
-#endif
+
 
 #ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry {

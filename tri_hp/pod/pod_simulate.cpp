@@ -458,6 +458,8 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	rsdl(BASE::gbl->nstage);
 	
+	
+	
 #ifdef DEBUG
 	for(int i=0; i<BASE::npnt;++i)
 		for(int n=0;n<BASE::NV;++n) {
@@ -567,6 +569,17 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
 	BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::gbl->res.s(Range(0,BASE::nseg-1));
 	BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::gbl->res.i(Range(0,BASE::ntri-1));
+	
+	
+	BASE::helper->update(-1);
+	
+	for(int i=0;i<BASE::nebd;++i) {
+		BASE::hp_ebdry(i)->update(-1);
+	}
+	
+	for(int i=0;i<BASE::nvbd;++i) {
+		BASE::hp_vbdry(i)->update(-1);
+	}
 
 	return;
 }
