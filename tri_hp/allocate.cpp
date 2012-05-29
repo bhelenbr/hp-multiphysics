@@ -64,6 +64,12 @@ void tri_hp::init(input_map& inmap, void *gin) {
 #else
 	*gbl->log << "#AXISYMMETRIC is NOT defined" << std::endl;
 #endif
+	
+#ifdef MESH_REF_VEL
+	*gbl->log << "#MESH_REF_VEL is defined" << std::endl;
+#else
+	*gbl->log << "#MESH_REF_VEL is NOT defined" << std::endl;
+#endif
 
 	p0 = basis::tri(log2p)->p();
 	sm0 = basis::tri(log2p)->sm();
