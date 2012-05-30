@@ -149,11 +149,27 @@ namespace bdry_cns {
 	
 	class pure_slip : public neumann {
 	protected:
+//		Array<int,1> dirichlets;
+//		int ndirichlets;
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx);
 	public:
-		pure_slip(tet_hp_cns &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "pure_slip";}
+		pure_slip(tet_hp_cns &xin, face_bdry &bin) : neumann(xin,bin) {
+			mytype = "pure_slip";
+//			ndirichlets = 1; // set to 1 if you want dirichlet
+//			dirichlets.resize(ndirichlets);
+//			dirichlets(0) = 1; // set x-velocity to zero		
+		}
 		pure_slip(const pure_slip& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin) {}
 		pure_slip* create(tet_hp& xin, face_bdry &bin) const {return new pure_slip(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
+		
+//		void vdirichlet();
+//		void edirichlet();	
+//		void fdirichlet();
+//		
+//		void tadvance() {
+//			hp_face_bdry::tadvance();
+//			setvalues(ibc,dirichlets,ndirichlets);
+//		};
 	};
 	
 	class generic_edge : public hp_edge_bdry {

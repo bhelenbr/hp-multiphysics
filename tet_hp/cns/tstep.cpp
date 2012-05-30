@@ -2,7 +2,8 @@
 //#include <myblas.h>
 
 #include "tet_hp_cns.h"
-#include "../hp_boundary.h"
+//#include "../hp_boundary.h"
+#include <myblas.h>
 #include<blitz/tinyvec-et.h>
 
 //#define TIMEACCURATE
@@ -39,11 +40,10 @@ void tet_hp_cns::setup_preconditioner() {
 		}
 	}
 
-	
 #ifdef TIMEACCURATE
 	FLT dtstarimax = 0.0;
 #endif
-	
+
 	for(int tind = 0; tind < ntet; ++tind) {
 		jcb = 0.125*tet(tind).vol;   /* volume is 8 x tet volume */
 		v = tet(tind).pnt;
@@ -79,6 +79,16 @@ void tet_hp_cns::setup_preconditioner() {
 			}
 		}
 
+//		umax = 0.0;
+//		for(int j=0;j<4;++j) { 			
+//			umax(0) = MAX(umax(0),fabs(ug.v(v(j),0)+gbl->atm_pressure));
+//			umax(1) = MAX(umax(1),fabs(ug.v(v(j),1))); /* put back in mvel */
+//			umax(2) = MAX(umax(2),fabs(ug.v(v(j),2)));
+//			umax(3) = MAX(umax(3),fabs(ug.v(v(j),3)));
+//			umax(4) = MAX(umax(4),fabs(ug.v(v(j),4)));
+//		}		
+		
+		
 		ubar /= gpx*gpy*gpz;					
 
 		FLT amin = 1.0e99;
@@ -111,7 +121,7 @@ void tet_hp_cns::setup_preconditioner() {
 		
 		calculate_preconditioner_tau_timestep(umax,hmin,hmax,tprcn,tau,tstep,gbl->betasquared(tind));
 
-		dtstari = 1.0/tstep;
+		dtstari = tstep;
 
 		tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
 
@@ -425,23 +435,20 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 					temp(i,j)+=Pinv(i,k)*(A(k,j)+B(k,j)+C(k,j));
 
 		// uncomment me and fix me
-		//Pinv = temp;
-		
+		//Pinv = temp;		
 		//temp = A+B+C+hmax*S;
-		//Pinv /= spectral_radius(temp);
+		//Pinv /= 2.0*spectral_radius(temp);
 	}
 
 	/* This is the inverse of Tau tilde */
 	Tinv = 2.0*(A+B+C+hmax*S)/h;
 
 	/* smallest eigenvalue of Tau tilde */
-	//timestep = 1.0/spectral_radius(Tinv);
+	//timestep = spectral_radius(Tinv);
 	//cout << "timestep " << timestep;
-	timestep = 1.0/MAX(3.0*maxeig/h,MAX(0.5*gbl->bd(0),3.0*MAX(4.0*nu/(3.0*h*h),alpha/(h*h))));
+	timestep = MAX(3.0*maxeig/h,MAX(0.5*gbl->bd(0),3.0*MAX(4.0*nu/(3.0*h*h),alpha/(h*h))));
 	//cout << ' ' << timestep << endl;;
 
-	//timestep = 0.5*h/maxeig;
-	//cout << ' ' << timestep << endl;;
 
 	/*  LU factorization  */
 	int info,ipiv[NV];

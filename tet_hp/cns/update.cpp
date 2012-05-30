@@ -18,9 +18,7 @@
 void tet_hp_cns::update() {
 	
 	//tet_hp::update();return;
-	
-	//tet_hp::bicgstab();return;
-	
+		
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
 	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
 	if (basis::tet(log2p).em) {
@@ -43,32 +41,37 @@ void tet_hp_cns::update() {
 		hp_vbdry(i)->update(-1);
 	
 	helper->update(-1);
-	
+
 	for (int stage = 0; stage < gbl->nstage; ++stage) {
 		
 		tet_hp::rsdl(stage);	
 		
-//		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->vdirichlet();
-//		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->edirichlet();
-//		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->fdirichlet();
 		
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->vdirichlet();		
+//		for(int i=0;i<nebd;++i)
+//			hp_ebdry(i)->vdirichlet3d();	
+//		for(int i=0;i<nvbd;++i)
+//			hp_vbdry(i)->vdirichlet3d();		
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->edirichlet();		
+//		for (int i=0;i<nebd;++i) 
+//			hp_ebdry(i)->edirichlet3d();
 		
-#ifdef JACOBI
-		tet_hp::jacobi_relaxation();
-#else
+
 		minvrt();
-#endif
+
 
 //		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->vdirichlet();
+//			hp_fbdry(i)->vdirichlet();		
+//		for(int i=0;i<nebd;++i)
+//			hp_ebdry(i)->vdirichlet3d();	
+//		for(int i=0;i<nvbd;++i)
+//			hp_vbdry(i)->vdirichlet3d();		
 //		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->edirichlet();
-//		for(int i=0;i<nfbd;++i)
-//			hp_fbdry(i)->fdirichlet();
-
+//			hp_fbdry(i)->edirichlet();		
+//		for (int i=0;i<nebd;++i) 
+//			hp_ebdry(i)->edirichlet3d();
 		
 		
 //		for(int i=0;i<nfbd;++i)
@@ -139,7 +142,6 @@ void tet_hp_cns::update() {
 	return;
 }
 
-//#define lower_tri
 
 void tet_hp_cns::minvrt() {
 	int i,j,k,n,tind,msgn,sgn,sind,v0;
@@ -223,7 +225,7 @@ void tet_hp_cns::minvrt() {
 		last_phase = true;
 		last_phase &= pc0wait_rcv(mp_phase,gbl->res.v.data());
 	}
-	
+
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(i=0;i<nfbd;++i)
 		hp_fbdry(i)->vdirichlet();
@@ -242,28 +244,30 @@ void tet_hp_cns::minvrt() {
 		for(int n = 0; n < NV; ++n)
 			lclres(n) = gbl->res.e(sind,0,n);
 
+		Array<FLT,2> P(NV,NV);
+		for(int j=0;j<NV;++j){
+			for(int k=0;k<NV;++k){
+				P(j,k) = gbl->epreconditioner(sind,j,k);
+				//P(j,k) = 0.5*(gbl->vpreconditioner(seg(sind).pnt(0),j,k)+gbl->vpreconditioner(seg(sind).pnt(1),j,k));
+			}
+		}
 
 		if(gbl->preconditioner == 0 || gbl->preconditioner == 1) {
 			for(int n = 0; n < NV; ++n)
 				uavg(n) = 0.5*(ug.v(seg(sind).pnt(0),n)+ug.v(seg(sind).pnt(1),n));
-			
+				
 			switch_variables(uavg,lclres);
 			
 			for(int j=0;j<NV;++j){
 				FLT lcl0 = lclres(j);
 				for(int k=0;k<j;++k){
-					lcl0 -= gbl->epreconditioner(sind,j,k)*lclres(k);
+					lcl0 -= P(j,k)*lclres(k);
 				}
-				lclres(j) = lcl0/gbl->epreconditioner(sind,j,j);
+				lclres(j) = lcl0/P(j,j);
 			}
 		}
 		else {
 			int info,ipiv[NV];
-			Array<double,2> P(NV,NV);
-			
-			for(int j=0;j<NV;++j)
-				for(int k=0;k<NV;++k)
-					P(j,k) = gbl->epreconditioner(sind,j,k);
 			
 			GETRF(NV, NV, P.data(), NV, ipiv, info);
 			

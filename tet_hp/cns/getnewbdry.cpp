@@ -8,8 +8,8 @@
  */
 #include "tet_hp_cns.h"
 #include "bdry_cns.h"
-#include <input_map.h>
-#include <tet_boundary.h>
+//#include <input_map.h>
+//#include <tet_boundary.h>
 
 using namespace bdry_cns;
 

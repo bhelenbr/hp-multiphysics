@@ -1,5 +1,5 @@
 #include "bdry_cns.h"
-#include <myblas.h>
+//#include <myblas.h>
 #include<blitz/tinyvec-et.h>
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
@@ -212,13 +212,13 @@ void inflow::vdirichlet() {
 }
 
 void inflow::edirichlet() {
-	if (basis::tet(x.log2p).em > 0) {
+	//if (basis::tet(x.log2p).em > 0) {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
 			for (int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
-	}
+	//}
 }		
 
 void inflow::fdirichlet() {
@@ -738,27 +738,52 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, Tin
 
 
 void pure_slip::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
-	Array<FLT,1> v(3);
-	FLT pr = u(0);
-	v(0) = ibc->f(1,xpt,x.gbl->time)-mv(0);
-	v(1) = ibc->f(2,xpt,x.gbl->time)-mv(1);
-	v(2) = ibc->f(3,xpt,x.gbl->time)-mv(2);
-	FLT RT = u(4);
-	FLT rho = (pr+x.gbl->atm_pressure)/RT;
 	
+	//FLT pr = ibc->f(0,xpt,x.gbl->time);
+	FLT pr = u(0);
+
 	/* CONTINUITY */
-	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
+	flx(0) = 0.0;
 	
 	/* XYZ MOMENTUM */
 	for (int n=1;n<tet_mesh::ND+1;++n)
-		flx(n) = flx(0)*v(n-1) + pr*norm(n-1);
+		flx(n) = pr*norm(n-1);
 	
 	/* ENERGY EQUATION */
-	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
-	flx(x.NV-1) = h*flx(0);
+	flx(x.NV-1) = 0.0;
 	
 	return;
 }
+
+
+//void pure_slip::vdirichlet() {			
+//	for(int j=0;j<base.npnt;++j) {
+//		int v0 = base.pnt(j).gindx;		
+//		for (int n=0; n<ndirichlets; ++n) 
+//			x.gbl->res.v(v0,dirichlets(n)) = 0.0;		
+//	}
+//}
+//
+//void pure_slip::edirichlet() {
+//	if (basis::tet(x.log2p).em > 0) {
+//		for(int j=0;j<base.nseg;++j) {
+//			int sind = base.seg(j).gindx;
+//			for (int n=0; n<ndirichlets; ++n) 
+//				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+//		}
+//	}
+//}		
+//
+//void pure_slip::fdirichlet() {
+//	if (basis::tet(x.log2p).fm > 0) {
+//		for(int j=0;j<base.ntri;++j) {
+//			int find = base.tri(j).gindx;
+//			for (int n=0; n<ndirichlets; ++n) 
+//				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
+//		}
+//	}
+//}
+
 
 /* ---------------------- */
 /* edge boundary routines */
@@ -767,7 +792,7 @@ void pure_slip::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVect
 
 void neumann_edge::rsdl(int stage){
 	int sind = -1;
-	
+
 	for(int i=0;i<base.nseg;++i){
 		sind = base.seg(i).gindx;
 		
@@ -906,13 +931,13 @@ void inflow_edge::vdirichlet3d() {
 }
 
 void inflow_edge::edirichlet3d() {
-	if (basis::tet(x.log2p).em > 0) {
+	//if (basis::tet(x.log2p).em > 0) {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
 			for(int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
-	}
+	//}
 }		
 
 

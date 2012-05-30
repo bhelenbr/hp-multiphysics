@@ -8,7 +8,7 @@
  */
 
 #include "tet_hp_cns.h"
-#include "../hp_boundary.h"
+//#include "../hp_boundary.h"
 
 
 void tet_hp_cns::init(input_map& input, void *gin) {
@@ -24,8 +24,8 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	
 	tet_hp::init(input,gin);
 	
-	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
-		
+	if (!input.get(gbl->idprefix + "_dissipation",adis)) input.getwdefault("dissipation",adis,1.0);
+
 	/* no preconditioner = 0, weiss-smith preconditioner = 1, squared preconditioner = 2 */
 	input.getwdefault("preconditioner",gbl->preconditioner,1);
 
@@ -108,7 +108,8 @@ void tet_hp_cns::calculate_unsteady_sources() {
             }
             
             ugtouht(tind,1);
-            for(n=0;n<NV;++n)
+
+			for(n=0;n<NV;++n)
                 basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex,stridey);
 
             for(i=0;i<basis::tet(log2p).gpx;++i) { 

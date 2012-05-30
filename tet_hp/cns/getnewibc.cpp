@@ -8,8 +8,8 @@
  */
 
 #include "tet_hp_cns.h"
-#include "bdry_cns.h"
-#include <tet_boundary.h>
+//#include "bdry_cns.h"
+//#include <tet_boundary.h>
 
 namespace ibc_cns {
 
