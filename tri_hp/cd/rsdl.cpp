@@ -58,8 +58,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	/* CALCULATE MESH VELOCITY */
 	for(i=0;i<lgpx;++i) {
 		for(j=0;j<lgpn;++j) {
-			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
 			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
@@ -107,7 +107,7 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 				pt(0) = crd(0)(i,j);
 				pt(1) = crd(1)(i,j);
 				cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-				res(0)(i,j) = RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
+				res(0)(i,j) = RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p)(tind,0,i,j);
 				res(0)(i,j) -= RAD(crd(0)(i,j))*cjcb(i,j)*gbl->src->f(0,pt,gbl->time);
 			}
 		}			

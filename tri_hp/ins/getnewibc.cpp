@@ -946,7 +946,7 @@ class force_coupling : public tri_hp_helper {
 				/* Hack for quasi-steady drag simulation */
 //				bd0 = 10./(30./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
 //				bd0 = 10./(1000./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
-//				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
+				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
 				
 				/* GET FORCE & TORQUE */
 				TinyVector<FLT,tri_mesh::ND> force = 0.0;

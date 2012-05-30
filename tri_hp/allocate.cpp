@@ -148,38 +148,31 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	helper->init(inmap,gbl->idprefix);
 
 	/* UNSTEADY SOURCE TERMS */
-	dugdt.resize(log2p+1,maxpst,NV);
-	dxdt.resize(log2p+1,maxpst,ND);
-	/// COARSE MESH STOPS HERE */
-
-
-
-	/* Multigrid Storage all except highest order (log2p+1)*/
-	dres.resize(log2p);
-	for(i=0;i<log2p;++i) {
-		dres(i).v.resize(maxpst,NV);
-		dres(i).s.resize(maxpst,basis::tri(i)->sm(),NV);
-		dres(i).i.resize(maxpst,basis::tri(i)->im(),NV);
+	dugdt.resize(log2pmax+1);
+	dxdt.resize(log2pmax+1);
+#ifdef petsc
+	int start = log2pmax;
+#else
+	int start = 0;
+#endif	
+	for(int i=start;i<=log2pmax;++i) {
+		dugdt(i).resize(maxpst,NV,basis::tri(i)->gpx(),basis::tri(i)->gpn());
+		dxdt(i).resize(maxpst,ND,basis::tri(i)->gpx(),basis::tri(i)->gpn());
 	}
-
-	/* Allocate block stuff */
-	gbl->ug0.v.resize(maxpst,NV);
-	gbl->ug0.s.resize(maxpst,sm0,NV);
-	gbl->ug0.i.resize(maxpst,im0,NV);
-
-		/* To make a vector of residuals that is contiguous in memory */
-//	gbl->res1d.resize(maxpst*(1 +sm0 +im0)*NV);
-//	Array<FLT,2> vtoreference(gbl->res1d.data(),shape(npnt,NV),neverDeleteData);
-//	gbl->res.v.reference(vtoreference);
-//	Array<FLT,3> storeference(gbl->res1d.data() +npnt*NV,shape(nseg,sm0,NV),neverDeleteData);
-//	gbl->res.s.reference(storeference);
-//	Array<FLT,3> itoreference(gbl->res1d.data() +npnt*NV +nseg*sm0*NV,shape(ntri,im0,NV),neverDeleteData);
-//	gbl->res.i.reference(itoreference);
+	
+	/* To make a vector of residuals that is contiguous in memory */
+	//	gbl->res1d.resize(maxpst*(1 +sm0 +im0)*NV);
+	//	Array<FLT,2> vtoreference(gbl->res1d.data(),shape(npnt,NV),neverDeleteData);
+	//	gbl->res.v.reference(vtoreference);
+	//	Array<FLT,3> storeference(gbl->res1d.data() +npnt*NV,shape(nseg,sm0,NV),neverDeleteData);
+	//	gbl->res.s.reference(storeference);
+	//	Array<FLT,3> itoreference(gbl->res1d.data() +npnt*NV +nseg*sm0*NV,shape(ntri,im0,NV),neverDeleteData);
+	//	gbl->res.i.reference(itoreference);
 	
 	gbl->res.v.resize(maxpst,NV);
 	gbl->res.s.resize(maxpst,sm0,NV);
 	gbl->res.i.resize(maxpst,im0,NV);
-
+	
 	gbl->res_r.v.resize(maxpst,NV);
 	gbl->res_r.s.resize(maxpst,sm0,NV);
 	gbl->res_r.i.resize(maxpst,im0,NV);
@@ -187,10 +180,27 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	gbl->res_r.s = 0.;
 	gbl->res_r.i = 0.;
 
+	
+#ifndef petsc
+	/* Multigrid Storage all except highest order (log2p+1)*/
+	dres.resize(log2p);
+	
+	for(i=0;i<log2p;++i) {
+		dres(i).v.resize(maxpst,NV);
+		dres(i).s.resize(maxpst,basis::tri(i)->sm(),NV);
+		dres(i).i.resize(maxpst,basis::tri(i)->im(),NV);
+	}
+	
+	/* Allocate block stuff */
+	gbl->ug0.v.resize(maxpst,NV);
+	gbl->ug0.s.resize(maxpst,sm0,NV);
+	gbl->ug0.i.resize(maxpst,im0,NV);
+
 	gbl->res0.v.resize(maxpst,NV);
 	gbl->res0.s.resize(maxpst,basis::tri(log2p)->sm(),NV);
 	gbl->res0.i.resize(maxpst,basis::tri(log2p)->im(),NV); 
-
+#endif
+	
 	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
 	if (gbl->diagonal_preconditioner) {
 		gbl->vprcn.resize(maxpst,NV);
@@ -354,8 +364,10 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 			helper = inmesh.helper->create(*this); 
 
 			/* UNSTEADY SOURCE TERMS */
-			dugdt.resize(log2p+1,maxpst,NV);
-			dxdt.resize(log2p+1,maxpst,ND);
+			dugdt.resize(1);
+			dxdt.resize(1);
+			dugdt(0).resize(maxpst,NV,basis::tri(0)->gpx(),basis::tri(0)->gpn());
+			dxdt(0).resize(maxpst,ND,basis::tri(0)->gpx(),basis::tri(0)->gpn());
 			break;
 		}
 		case adapt_storage: {

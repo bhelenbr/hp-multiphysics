@@ -69,8 +69,8 @@ void tri_hp_cns::setup_preconditioner() {
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					
-					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));  
+					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));  
 #ifdef MESH_REF_VEL
 					mvel(0) += gbl->mesh_ref_vel(0);
 					mvel(1) += gbl->mesh_ref_vel(1);
@@ -125,8 +125,8 @@ void tri_hp_cns::setup_preconditioner() {
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					
-					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 					mvel(0) += gbl->mesh_ref_vel(0);
 					mvel(1) += gbl->mesh_ref_vel(1);

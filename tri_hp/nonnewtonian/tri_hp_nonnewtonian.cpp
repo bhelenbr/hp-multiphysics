@@ -91,8 +91,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	/* CALCULATE MESH VELOCITY */
 	for(i=0;i<lgpx;++i) {
 		for(j=0;j<lgpn;++j) {
-			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
 			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
@@ -184,8 +184,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
+					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef INERTIALESS
 					res(0)(i,j) = 0.0;
@@ -379,8 +379,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
+					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef INERTIALESS
 					res(0)(i,j) = 0.0;
@@ -508,8 +508,8 @@ void tri_hp_nonnewtonian::setup_preconditioner() {
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 				
-				mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-				mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+				mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+				mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 				mvel(0) += gbl->mesh_ref_vel(0);
 				mvel(1) += gbl->mesh_ref_vel(1);

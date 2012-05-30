@@ -64,8 +64,8 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	/* CALCULATE MESH VELOCITY */
 	for(int i = 0; i < lgpx; ++i) {
 		for(int j = 0; j < lgpn; ++j) {
-			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
 			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
@@ -164,11 +164,11 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
 
 					/* UNSTEADY TERMS */
-					res(0)(i,j) = rhorbd0 +dugdt(log2p,tind,0)(i,j);
+					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
 					for(int n = 1; n < NV-1; ++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
-					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
+					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
@@ -353,11 +353,11 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
 					
 					/* UNSTEADY TERMS */
-					res(0)(i,j) = rhorbd0 +dugdt(log2p,tind,0)(i,j);
+					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
 					for(int n = 1; n < NV-1; ++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
-					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
+					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);

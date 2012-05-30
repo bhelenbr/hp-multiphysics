@@ -82,8 +82,8 @@ class tri_hp : public r_tri_mesh  {
 		/** Array for time history information */
 		Array<vsi,1> ugbd;
 		Array<Array<TinyVector<FLT,ND>,1>,1> vrtxbd; //!< Highest level contains pre-summed unsteady mesh velocity source
-		Array<TinyMatrix<FLT,MXGP,MXGP>,3> dugdt; //!< Precalculated unsteady sources at Gauss points
-		Array<TinyMatrix<FLT,MXGP,MXGP>,3> dxdt; //!< Precalculated mesh velocity sources at Gauss points
+		Array<Array<FLT,4>,1> dugdt; //!< Precalculated unsteady sources at Gauss points
+		Array<Array<FLT,4>,1> dxdt; //!< Precalculated mesh velocity sources at Gauss points
 
 		/* Multigrid stuff needed on each mesh */
 		bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH

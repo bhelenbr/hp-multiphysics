@@ -57,8 +57,8 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	/* CALCULATE MESH VELOCITY */
 	for(i=0;i<lgpx;++i) {
 		for(j=0;j<lgpn;++j) {
-			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 			mvel(0)(i,j) += x.gbl->mesh_ref_vel(0);
 			mvel(1)(i,j) += x.gbl->mesh_ref_vel(1);
@@ -192,8 +192,8 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
+					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 #ifdef AXISYMMETRIC
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));
 #endif
@@ -346,7 +346,7 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #elif defined(NONCONSERVATIVE)
 					phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
 					phivel(1)(i,j) = u(1)(i,j) -mvel(1)(i,j);
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
+					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p)(tind,NV-2,i,j)
 						+phivel(0)(i,j)*norm(0) +phivel(1)(i,j)*norm(1));
 #else
 					cv(NV-2,0)(i,j) = u(NV-2)(i,j)*du(NV-1,0)(i,j);
@@ -377,7 +377,7 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					phivel(0)(i,j) = norm(0)/length;
 					phivel(1)(i,j) = norm(1)/length;
 #elif defined(NONCONSERVATIVE)
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
+					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p)(tind,NV-2,i,j)
 						+(u(0)(i,j)-mvel(0)(i,j))*norm(0) +(u(1)(i,j)-mvel(1)(i,j))*norm(1));
 
 					phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
@@ -422,10 +422,10 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					phivel(0)(i,j) = deltw*(u(0)(i,j)-mvel(0)(i,j)) +(1.0-deltw)*signphi*norm(0)/length;
 					phivel(1)(i,j) = deltw*(u(1)(i,j)-mvel(1)(i,j)) +(1.0-deltw)*signphi*norm(1)/length;
 
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(deltw*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)) +
+					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(deltw*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p)(tind,NV-2,i,j)) +
 						-(1.0-deltw)*signphi +(phivel(0)(i,j)*norm(0) +phivel(1)(i,j)*norm(1)));
 #elif defined(NONCONSERVATIVE)
-					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
+					res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd(0)*u(NV-2)(i,j) +dugdt(log2p)(tind,NV-2,i,j)
 						+(u(0)(i,j)-mvel(0)(i,j))*norm(0) +(u(1)(i,j)-mvel(1)(i,j))*norm(1));
 					phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
 					phivel(1)(i,j) = u(1)(i,j) -mvel(1)(i,j);
@@ -490,10 +490,10 @@ void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 
 					/* UNSTEADY TERMS */
 					for(n=0;n<ND;++n)
-						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
+					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 #ifdef CONSERVATIVE
-					res(NV-2)(i,j) = rhorbd0*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j);
+					res(NV-2)(i,j) = rhorbd0*u(NV-2)(i,j) +dugdt(log2p)(tind,NV-2,i,j);
 #endif
 #ifdef AXISYMMETRIC
 					res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));

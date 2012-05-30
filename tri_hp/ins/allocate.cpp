@@ -69,8 +69,13 @@ void tri_hp_ins::init(const multigrid_interface& in, init_purpose why, FLT sizer
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_ins::calculate_unsteady_sources() {
 	int i,j,n,tind;
-
-	for (log2p=0;log2p<=log2pmax;++log2p) {
+#ifdef petsc
+	int start = log2pmax;
+#else
+	int start = 0;
+#endif
+	
+	for (log2p=start;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
 			if (tri(tind).info > -1) {
 				crdtocht(tind,1);
@@ -99,11 +104,11 @@ void tri_hp_ins::calculate_unsteady_sources() {
 				for(j=0;j<basis::tri(log2p)->gpn();++j) {    
 					cjcb(i,j) = -gbl->bd(0)*gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					for(n=0;n<NV-1;++n)
-						dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
-					dugdt(log2p,tind,NV-1)(i,j) = cjcb(i,j);
+						dugdt(log2p)(tind,n,i,j) = u(n)(i,j)*cjcb(i,j);
+					dugdt(log2p)(tind,NV-1,i,j) = cjcb(i,j);
 
 					for(n=0;n<ND;++n)
-						dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);
+						dxdt(log2p)(tind,n,i,j) = crd(n)(i,j);
  				
 				}	
 			}

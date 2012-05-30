@@ -57,8 +57,8 @@ void tri_hp_swe::rsdl(int stage) {
 		/* CALCULATE MESH VELOCITY */
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
-				mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-				mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+				mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
+				mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
 				mvel(0)(i,j) += gbl->mesh_ref_vel(0);
 				mvel(1)(i,j) += gbl->mesh_ref_vel(1);
@@ -127,9 +127,9 @@ void tri_hp_swe::rsdl(int stage) {
 						drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
 
 						/* UNSTEADY TERMS */
-						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
-						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
-						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
+						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
+						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p)(tind,NV-1,i,j);
 
 						/* TO MAINTAIN FREE-STREAM SOLUTION */
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
@@ -244,9 +244,9 @@ void tri_hp_swe::rsdl(int stage) {
 
 						drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
 						/* UNSTEADY TERMS */
-						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
-						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
-						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
+						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
+						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p)(tind,NV-1,i,j);
 
 
 						/* TO MAINTAIN FREE-STREAM SOLUTION */
