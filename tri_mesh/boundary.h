@@ -1102,8 +1102,9 @@ class plane : public geometry<2> {
 #include <blitz/tinyvec-et.h>
 
 class spline_geometry {
+	static const int ND = 2;
 	protected:
-		spline3<tri_mesh::ND> my_spline;
+		spline3<ND> my_spline;
 		FLT smin, smax; // LIMITS FOR BOUNDARY
 	public:
 		void output(std::ostream& fout) {}
@@ -1120,7 +1121,7 @@ class spline_geometry {
 			data.clear();
 		}
 			
-		void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt, FLT time) {
+		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			FLT sloc;
 			
 			my_spline.find(sloc,pt);
@@ -1129,7 +1130,7 @@ class spline_geometry {
 			my_spline.interpolate(sloc,pt);
 			return;
 		}
-		void bdry_normal(TinyVector<FLT,tri_mesh::ND> pt, FLT time, TinyVector<FLT,tri_mesh::ND>& norm) {
+		void bdry_normal(TinyVector<FLT,tri_mesh::ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
 			std::cerr << "bdry_normal not implemented for spline_geoemtry" << std::endl;			
 			return;
 		}
