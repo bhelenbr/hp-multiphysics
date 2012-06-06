@@ -535,6 +535,7 @@ void r_tri_mesh::rsdl() {
 	for(i=0;i<nvbd;++i)
 		r_vbdry(i)->fixdx2();
 
+	/* Communicate */
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
 		pmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
@@ -607,6 +608,7 @@ void r_tri_mesh::rsdl() {
 	for(i=0;i<nvbd;++i)
 		r_vbdry(i)->dirichlet();
 
+	/* Communicate */
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
 		pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);

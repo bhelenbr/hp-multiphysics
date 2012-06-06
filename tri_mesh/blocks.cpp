@@ -23,7 +23,7 @@
 #endif
 #include <blitz/array.h>
 
-#define petsc
+// #define petsc
 
 using namespace std;
 using namespace blitz;
@@ -781,7 +781,7 @@ void block::init(input_map &input) {
 		mystring = stem +"_" +idprefix +".log";
 		std::ofstream *filelog = new std::ofstream;
 		filelog->setf(std::ios::scientific, std::ios::floatfield);
-		filelog->precision(3);
+		filelog->precision(3);	
 		
 		/* Check for pre-existing log file and rotate old log out of the way */
 		
@@ -802,6 +802,13 @@ void block::init(input_map &input) {
 		
 		filelog->open(mystring.c_str());
 		gbl->log = filelog;
+		
+		/* GOING TO MAKE STD::COUT POINT TO FILE AS WELL */
+		streambuf *psbuf, *backup;		
+		backup = cout.rdbuf();     // back up cout's streambuf
+		psbuf = filelog->rdbuf();   // get file's streambuf
+		cout.rdbuf(psbuf);         // assign streambuf to cout
+		cerr.rdbuf(psbuf);				// assing streambuf to cerr as well
 	}
 	else {
 		std::cout.setf(std::ios::scientific, std::ios::floatfield);

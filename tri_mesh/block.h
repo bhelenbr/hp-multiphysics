@@ -124,7 +124,7 @@ class block {
 		*/
 		//@{
 		Array<multigrid_interface *,1> grd;
-		  friend class multigrid_interface;
+		friend class multigrid_interface;
 		int mglvls; /**< Total number of levels of multigrid */
 		int ngrid; /**< Number of grids (could be more or less than mglvls) */
 		int extra_finest_levels; /**< Number of extra levels to included on finest grid */
