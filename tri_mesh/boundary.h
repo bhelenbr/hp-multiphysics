@@ -1130,7 +1130,7 @@ class spline_geometry {
 			my_spline.interpolate(sloc,pt);
 			return;
 		}
-		void bdry_normal(TinyVector<FLT,tri_mesh::ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
+		void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
 			std::cerr << "bdry_normal not implemented for spline_geoemtry" << std::endl;			
 			return;
 		}
