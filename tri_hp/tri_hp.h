@@ -30,7 +30,7 @@
 #define MXGP MAXP+2
 #define MXTM (MAXP+1)*(MAXP+2)/2 
 
-#define MESH_REF_VEL
+// #define MESH_REF_VEL
 
 class hp_vrtx_bdry;
 class hp_edge_bdry;

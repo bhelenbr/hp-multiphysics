@@ -391,7 +391,6 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
 		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 #ifdef DROP
-//		res(1,i) += RAD(crd(0,i))*gbl->vflux*jcb;
 		res(3,i) = +RAD(crd(0,i))*gbl->vflux*jcb;
 #endif 
 

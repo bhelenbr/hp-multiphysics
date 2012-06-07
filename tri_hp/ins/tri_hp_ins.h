@@ -13,7 +13,7 @@
 #include "../tri_hp.h"
 #include <blocks.h>
 
-#define DROP
+// #define DROP
 
 class tri_hp_ins : public tri_hp {
 	public:		
