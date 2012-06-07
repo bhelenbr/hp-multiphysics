@@ -106,7 +106,9 @@ namespace bdry_buoyancy {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
+#ifndef MELT1
 			void rsdl_after(int stage);
+#endif
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void maxres();
 			void setup_preconditioner();

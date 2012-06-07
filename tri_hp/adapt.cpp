@@ -95,44 +95,44 @@ void tri_hp::length() {
 		
 		for (int pind=0;pind<npnt;++pind) {
 			FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
-			if (ri < 2.0 && ri > 0.5)
-				ri = 1.0;
+//			if (ri < 2.0 && ri > 0.5)
+//				ri = 1.0;
 			gbl->res.v(pind,0) = ri;
 		}
 		
-		/* This is to smooth the change to the length function */
-		int iter,sind,i,j,p0,p1;
-		int niter = 0;
-		
-		for(i=0;i<npnt;++i)
-			pnt(i).info = 0;
-		
-		for(i=0;i<nebd;++i) {
-			for(j=0;j<ebdry(i)->nseg;++j) {
-				sind = ebdry(i)->seg(j);
-				pnt(seg(sind).pnt(0)).info = -1;
-				pnt(seg(sind).pnt(1)).info = -1;
-			}
-		}
-		
-		for(iter=0; iter< niter; ++iter) {
-			/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
-			for(i=0;i<npnt;++i)
-				gbl->res_r.v(i,0) = 0.0;
-			
-			for(i=0;i<nseg;++i) {
-				p0 = seg(i).pnt(0);
-				p1 = seg(i).pnt(1);
-				gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
-				gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
-			}
-			
-			for(i=0;i<npnt;++i) {
-				if (pnt(i).info == 0) {
-					gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
-				}
-			}
-		}
+//		/* This is to smooth the change to the length function */
+//		int iter,sind,i,j,p0,p1;
+//		int niter = 0;
+//		
+//		for(i=0;i<npnt;++i)
+//			pnt(i).info = 0;
+//		
+//		for(i=0;i<nebd;++i) {
+//			for(j=0;j<ebdry(i)->nseg;++j) {
+//				sind = ebdry(i)->seg(j);
+//				pnt(seg(sind).pnt(0)).info = -1;
+//				pnt(seg(sind).pnt(1)).info = -1;
+//			}
+//		}
+//		
+//		for(iter=0; iter< niter; ++iter) {
+//			/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
+//			for(i=0;i<npnt;++i)
+//				gbl->res_r.v(i,0) = 0.0;
+//			
+//			for(i=0;i<nseg;++i) {
+//				p0 = seg(i).pnt(0);
+//				p1 = seg(i).pnt(1);
+//				gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
+//				gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
+//			}
+//			
+//			for(i=0;i<npnt;++i) {
+//				if (pnt(i).info == 0) {
+//					gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+//				}
+//			}
+//		}
 		
 		/* NOW RESCALE AT VERTICES */
 		FLT maxlngth = 50.0;

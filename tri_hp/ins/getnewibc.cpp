@@ -362,7 +362,7 @@ namespace ibc_ins {
 				input.getwdefault(keyword,delta_g,0.0);
 				input[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 
-				keyword = "delta_g_factor";
+				keyword = "g_factor";
 				input.getwdefault(keyword,delta_g_factor,1.0);
 				input[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 
@@ -483,65 +483,41 @@ namespace ibc_ins {
 				x.gbl->body(1) = fcn(1).Eval(0,x.gbl->time);
 				return;
 			}
-    };
+	};
 
-    static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
+	static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
 
-    class translating_drop : public parameter_changer {
-			private:
-				Array<FLT,1> avg;
-				FLT penalty1,penalty2;
-
-			public:
-				translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {
-					avg.resize(1+x.ND+x.NV);
-				}
-
-			void init(input_map& input, std::string idnty) {
-				parameter_changer::init(input,idnty);
-
-				std::string keyword;
-				keyword = idnty + "_penalty1_parameter";
-				input.getwdefault(keyword,penalty1,0.5);
-
-				keyword = idnty + "_penalty2_parameter";
-				input.getwdefault(keyword,penalty2,0.5);
-			}
+	class translating_drop : public parameter_changer {
+		public:
+			translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {}
 
 			tri_hp_helper* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
 			void calculate_stuff() {
-				bdry_ins::surface::global *gbl = surf->gbl;
-
-				/* DETRMINE CORRECTION TO CONSERVE AREA */
-				/* IMPORTANT FOR STEADY SOLUTIONS */
-				/* SINCE THERE ARE MULTIPLE STEADY-STATES */
-				/* TO ENSURE GET CORRECT VOLUME */
-				FLT rbar, kc; 
-				kc = gbl->sigma/(x.gbl->mu +gbl->mu2);
-				x.integrated_averages(avg);
-				rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 #ifdef DROP
-				if (!x.coarse_flag) gbl->vflux =  penalty1*kc*(rbar -0.5);
-				if (!x.coarse_flag) gbl->mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);    
+				TinyVector<FLT,2> mesh_vel;
+				mesh_vel = 0;
+				
+				if (surf) {
+					if (!x.coarse_flag) surf->calculate_penalties(surf->gbl->vflux, x.gbl->mesh_ref_vel(1));
+					mesh_vel= x.gbl->mesh_ref_vel;
+				}
+				sim::blks.allreduce(mesh_vel.data(), x.gbl->mesh_ref_vel.data(), 2, blocks::flt_msg,blocks::sum);
+				x.gbl->mesh_ref_vel(0) = 0.0;
 #endif
-
-				/* C_D TO G CONVERSION REMINDER 
-				re = 1.0/gbl->mu2;
-				cd = 24./re*(1 +0.1935*pow(re,0.6305));
-				cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-				g = amp*(avg +avg) +12.*cd/(gbl->rho -gbl->rho2);
-				*/
 				return;
 			}
 
 
 			void rsdl(int stage) {
-				/* if (x.gbl->dti == 0) */ calculate_stuff();
+				calculate_stuff();
 				return;
 			}
 
 			void setup_preconditioner() {
-				/* if (gbl->dti == 0.0) */ calculate_stuff();
+				calculate_stuff();
+#ifdef DROP
+				if (surf && !x.coarse_flag) *x.gbl->log << "# vflux " << surf->gbl->vflux << " mesh_ref_vel(1) " << x.gbl->mesh_ref_vel(1) << std::endl;
+#endif
 				return;
 			}
 
@@ -550,18 +526,22 @@ namespace ibc_ins {
 				if (x.coarse_flag) return;
 
 				calculate_stuff();
-#ifdef DROP
+
 				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-					*x.gbl->log << "#gravity, velocity, height: " << x.gbl->g << ' ' << x.gbl->mesh_ref_vel(1) << ' ';                        
-					int v0 = x.seg(surf->base.seg(0)).pnt(0);
-					int v1 = x.seg(surf->base.seg(surf->base.nseg-1)).pnt(1);
-					FLT height = x.pnts(v0)(1)-x.pnts(v1)(1);
-					*x.gbl->log << height << std::endl;
+#ifdef MESH_REF_VEL
+					*x.gbl->log << "#gravity, velocity, height: " << x.gbl->g << ' ' << x.gbl->mesh_ref_vel(1) << ' ';  
+#endif
+					if (surf) {
+						int v0 = x.seg(surf->base.seg(0)).pnt(0);
+						int v1 = x.seg(surf->base.seg(surf->base.nseg-1)).pnt(1);
+						FLT height = x.pnts(v0)(1)-x.pnts(v1)(1);
+						*x.gbl->log << height << std::endl;
+						surf->findmax(xmax);
+					}
 				}
 
 				parameter_changer::tadvance();
-#endif
-				surf->findmax(xmax);
+				
 				return;
 			}
 	};
@@ -946,7 +926,7 @@ class force_coupling : public tri_hp_helper {
 				/* Hack for quasi-steady drag simulation */
 //				bd0 = 10./(30./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
 //				bd0 = 10./(1000./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
-				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
+//				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
 				
 				/* GET FORCE & TORQUE */
 				TinyVector<FLT,tri_mesh::ND> force = 0.0;

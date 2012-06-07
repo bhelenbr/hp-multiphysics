@@ -76,6 +76,12 @@ void surface::init(input_map& inmap,void* gin) {
 	gbl->sres0.resize(base.maxseg,x.sm0); 
 
 #ifdef DROP        
+		keyword = x.gbl->idprefix + "_penalty1_parameter";
+		inmap.getwdefault(keyword,gbl->penalty1,0.5);
+		
+		keyword = x.gbl->idprefix + "_penalty2_parameter";
+		inmap.getwdefault(keyword,gbl->penalty2,0.5);
+	
 	gbl->vvolumeflux.resize(base.maxseg+1);
 	gbl->svolumeflux.resize(base.maxseg,x.sm0);
 #endif
@@ -111,6 +117,21 @@ void surface::init(input_map& inmap,void* gin) {
 
 	return;
 }
+
+#ifdef DROP
+void surface::calculate_penalties(FLT& vflux, FLT& mvely) {
+	/* DETRMINE CORRECTION TO CONSERVE AREA */
+	/* IMPORTANT FOR STEADY SOLUTIONS */
+	/* SINCE THERE ARE MULTIPLE STEADY-STATES */
+	/* TO ENSURE GET CORRECT VOLUME */
+	Array<FLT,1> avg(5);
+	x.integrated_averages(avg);
+	FLT kc = gbl->sigma/(x.gbl->mu +gbl->mu2) +1.0;
+	FLT rbar  = pow(3.*0.5*avg(0),1.0/3.0);
+	vflux = gbl->penalty1*kc*(rbar -0.5);
+	mvely = gbl->penalty2*kc*avg(2) +avg(4); 
+}
+#endif
 
 void surface_slave::tadvance() {
 	hp_edge_bdry::tadvance();
@@ -212,12 +233,7 @@ void surface::rsdl(int stage) {
 				gbl->sres(indx,m)(n) = lf(x.NV+n)(m+2);
 		}
 		
-#ifdef DROP
-		gbl->vres(indx)(1) += lf(x.NV+2)(0);
-		gbl->vres(indx+1)(1) += lf(x.NV+2)(1);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->sres(indx,m)(1) += lf(x.NV+2)(m+2);        
-
+#ifdef DROP      
 		gbl->vvolumeflux(indx) += lf(x.NV+2)(0);
 		gbl->vvolumeflux(indx+1) = lf(x.NV+2)(1);
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
@@ -336,7 +352,6 @@ int surface::petsc_rsdl(Array<double,1> res) {
 }
 #endif
 
-
 void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
@@ -345,7 +360,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
-		
+
 	sind = base.seg(indx);
 	v0 = x.seg(sind).pnt(0);
 	v1 = x.seg(sind).pnt(1);
@@ -372,10 +387,11 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
-		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
+		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1)); 
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
 		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 #ifdef DROP
+//		res(1,i) += RAD(crd(0,i))*gbl->vflux*jcb;
 		res(3,i) = +RAD(crd(0,i))*gbl->vflux*jcb;
 #endif 
 
@@ -406,7 +422,6 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
 
-#ifndef petsc
 	/* mass flux preconditioning */
 	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
 		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1)(m); 
@@ -421,11 +436,13 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
 	}
 #endif
-#endif
 
 #ifdef DROP
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(3,0));
+	lf(x.NV+1) += lf(x.NV+2);
 #endif
+
+
 
 	return;
 }
@@ -1093,7 +1110,13 @@ void surface::maxres() {
 
 void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
+	
+#ifndef DROP
 	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND),lf(x.NV+tri_mesh::ND);
+#else
+	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND+1),lf(x.NV+tri_mesh::ND+1);
+#endif
+	
 #ifdef BZ_DEBUG
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
@@ -1116,6 +1139,11 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	
 	/* Numerically create Jacobian */
+#ifdef DROP
+	FLT vflux0 = gbl->vflux;
+	FLT mvel0 = x.gbl->mesh_ref_vel(1);
+#endif
+	
 	int kcol = 0;
 	for(int mode = 0; mode < 2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
@@ -1135,6 +1163,10 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			x.pnts(x.seg(sind).pnt(mode))(var) += dx;
 
+#ifdef DROP
+			calculate_penalties(gbl->vflux,x.gbl->mesh_ref_vel(1));
+			x.ugtouht1d(sind);
+#endif
 			element_rsdl(indx,lf);
 
 			int krow = 0;
@@ -1144,6 +1176,10 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 
 			++kcol;
 			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
+#ifdef DROP
+			x.gbl->mesh_ref_vel(1) = mvel0;
+			gbl->vflux = vflux0;			
+#endif
 		}
 	}
 
@@ -1166,6 +1202,10 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			crds(indx,mode-2,var) += dx;
 			
+#ifdef DROP
+			calculate_penalties(gbl->vflux,x.gbl->mesh_ref_vel(1));
+			x.ugtouht1d(sind);
+#endif
 			element_rsdl(indx,lf);
 			
 			int krow = 0;
@@ -1176,6 +1216,10 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 					++kcol;
 			
 			crds(indx,mode-2,var) -= dx;
+#ifdef DROP
+			x.gbl->mesh_ref_vel(1) = mvel0;
+			gbl->vflux = vflux0;			
+#endif
 		}
 	}
 	
@@ -1998,8 +2042,6 @@ void surface::setup_preconditioner() {
 				mvel(n) -= x.gbl->mesh_ref_vel(n);
 #endif    
 			}
-
-
 
 			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
 			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);

@@ -285,12 +285,12 @@ class cartesian_interpolation : public tri_hp_helper {
 			}
 			if (!input.get(idnty+"_bbox1",&bbox(1,0),tri_mesh::ND)) {
 				if (!input.get("bbox1",&bbox(1,0),tri_mesh::ND)) {
-					*x.gbl->log << "couldn't find bbox0" << std::endl;
+					*x.gbl->log << "couldn't find bbox1" << std::endl;
 				}
 			}
 			if (!input.get(idnty+"_divisions",ndiv.data(),tri_mesh::ND)) {
 				if (!input.get("divisions",ndiv.data(),tri_mesh::ND)) {
-					*x.gbl->log << "couldn't find bbox0" << std::endl;
+					*x.gbl->log << "couldn't find #divisions" << std::endl;
 				}
 			}		
 			

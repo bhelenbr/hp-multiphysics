@@ -20,6 +20,9 @@ void tri_hp::petsc_jacobian() {
 	const int sm = basis::tri(log2p)->sm();
 	const int im = basis::tri(log2p)->im();
 	const int tm = basis::tri(log2p)->tm();
+	
+	/* Add Diagonal dominance term? */
+	// gbl->bd(0) = 0.0; // TEMPORARY
 
 	int vdofs = NV;
 	if (mmovement == coupled_deformable) vdofs += ND;
@@ -169,7 +172,10 @@ void tri_hp::petsc_jacobian() {
 	/* This must be uncommented for the melt case to work */
 	for(int i=0;i<nvbd;++i) 
 		hp_vbdry(i)->petsc_jacobian_dirichlet();
-//			
+			
+	
+	// gbl->bd(0) = 0.0;  // TEMPORARY
+	
 	return;
 }
 

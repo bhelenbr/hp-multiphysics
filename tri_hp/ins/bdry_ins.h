@@ -377,6 +377,7 @@ namespace bdry_ins {
 				bool is_loop;
 				/* FLUID PROPERTIES */
 				FLT sigma,rho2,mu2,p_ext;
+				
 
 				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;
@@ -388,6 +389,7 @@ namespace bdry_ins {
 				Array<TinyVector<FLT,tri_mesh::ND>,1> vres0;
 				Array<TinyVector<FLT,tri_mesh::ND>,2> sres0;
 #ifdef DROP
+				FLT penalty1,penalty2;
 				FLT penalty,vflux;
 				Array<FLT,1> vvolumeflux;
 				Array<FLT,2> svolumeflux;
@@ -434,6 +436,10 @@ namespace bdry_ins {
 #ifdef petsc
 			void petsc_jacobian();
 			int petsc_rsdl(Array<FLT,1> res);
+#endif
+		
+#ifdef DROP
+			void calculate_penalties(FLT& vflux, FLT& mvely);
 #endif
 	};
 	
