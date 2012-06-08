@@ -164,10 +164,7 @@ void tri_hp::rsdl(int stage) {
 				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
 		}
 	}
-	
-	for(int i=0;i<nebd;++i)
-		hp_ebdry(i)->rsdl_after(stage);
-	
+
 	return;
 }
 

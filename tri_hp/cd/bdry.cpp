@@ -171,28 +171,6 @@ void melt::rsdl(int stage) {
 	return;
 }
 
-void melt::rsdl_after(int stage) {
-	
-	/* Communicate here */
-	pmatchsolution_snd(0, x.gbl->res.v.data(), 1);
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-	pmatchsolution_rcv(0,x.gbl->res.v.data(),1);
-	
-	smatchsolution_snd(x.gbl->res.s.data(),0,basis::tri(x.log2p)->sm()-1, basis::tri(x.log2p)->sm());
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-	smatchsolution_rcv(x.gbl->res.s.data(),0,basis::tri(x.log2p)->sm()-1, basis::tri(x.log2p)->sm());
-	
-	vdirichlet();
-	for(int m=0;m<basis::tri(x.log2p)->sm();++m) 
-		sdirichlet(m);
-	
-}
-
-
 void melt::update(int stage) {
 	int i,m,n,msgn,count,sind,v0;
 	

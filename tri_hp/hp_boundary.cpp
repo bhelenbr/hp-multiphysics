@@ -1711,16 +1711,24 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	lf = 0.0;
 	sind = base.seg(eind);
 	
+	/* Load coordinates */
 	x.crdtocht1d(sind);
+	
+	/* Project coordinates to Gauss points & coordinate derivates */
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 		
+	/* Project solution to Gauss points */
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 	
+	/* Integrate flux across element boundary times basis functions */
 	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
+		/* Calculate boundary normal */
 		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);                
+		nrm(1) = -x.dcrd(0,0)(0,k);  
+		
+		/* Calculate the mesh velocity */
 		for(n=0;n<tri_mesh::ND;++n) {
 			pt(n) = x.crd(n)(0,k);
 			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
@@ -1733,12 +1741,14 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 		for(n=0;n<x.NV;++n)
 			u(n) = x.u(n)(0,k);
 		
+		/* Call flux function */
 		flux(u,pt,mvel,nrm,flx);
 		
 		for(n=0;n<x.NV;++n)
 			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n);
 		
 	}
+	/* Integrate fluxes * basis */
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->intgrt1d(&lf(n)(0),&x.res(n)(0,0));
 	

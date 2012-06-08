@@ -176,7 +176,6 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void calculate_unsteady_sources();
 		virtual void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 		virtual void rsdl(int stage);
-		virtual void rsdl_after(int stage) {}
 		virtual void element_jacobian(int sind, Array<FLT,2>& K);
 		virtual int dofs(int start) {
 			jacobian_start = start;

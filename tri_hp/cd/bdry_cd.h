@@ -114,7 +114,6 @@ namespace bdry_cd {
 			void init(input_map& inmap,void* gbl_in);
 			void tadvance();
 			void rsdl(int stage);
-			void rsdl_after(int stage);
 			void update(int stage);
 #ifdef petsc
 			void petsc_matchjacobian_snd();
@@ -135,7 +134,6 @@ namespace bdry_cd {
 			
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void init(input_map& inmap,void* gbl_in);
-			void rsdl_after(int stage) {}
 #ifdef petsc
 			void vdirichlet() {
 				/* temperature equality constraint */

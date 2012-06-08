@@ -106,9 +106,6 @@ namespace bdry_buoyancy {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
-#ifndef MELT1
-			void rsdl_after(int stage);
-#endif
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void maxres();
 			void setup_preconditioner();
@@ -124,7 +121,7 @@ namespace bdry_buoyancy {
 			/* and then makes tangential equation residual */
 			/* rsdl also applies b.c. to tangent residual vbdry->rsdl() */
 			/* tangential residual goes in vres(0)/sres(0) */
-			/* rsdl_after moves heat equation residual to vres(1)/sres(1) after it has been made */
+			/* vdirichlet moves heat equation residual to vres(1)/sres(1) after it has been made */
 			/* Then applies dirichlet b.c. to temperature */
 			/* in petsc case vdirichlet rotates residual to be aligned with x,y and puts it in r_mesh rsdl */
 			/* vbdry-vdirchlet zeros residuals for mesh movement in x,y directions in both places (r_gbl and vres */
@@ -173,7 +170,6 @@ namespace bdry_buoyancy {
 			/* SET T TO NOT BE DIRICHLET */
 			void init(input_map& input,void* gbl_in);
 			/* STOP THE MOVEMENT OF THE HEAT EQUATION RESIDUAL */
-			void rsdl_after(int stage) {symbolic::rsdl_after(stage);}
 			void vdirichlet() {symbolic::vdirichlet();}
 #ifdef petsc
 			void petsc_jacobian_dirichlet();  // Set x & y rows to dirichlet conditions (no movement)
@@ -364,11 +360,11 @@ namespace bdry_buoyancy {
 				/* Fix me: Need to do more than this to get a good approximation to new point location */
 				if (surfbdry == 0) {
 					/* SET TANGENT RESIDUAL TO ZERO */
-					surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(0) = 0.0;
+					surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg) = 0.0;
 				}
 				else {
 					/* SET TANGENT RESIDUAL TO ZERO */
-					surf->gbl->vres(0)(0) = 0.0;
+					surf->gbl->vres(0) = 0.0;
 				}
 				return;
 			}

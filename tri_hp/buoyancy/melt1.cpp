@@ -1,4 +1,4 @@
-#include "bdry_buoyancy1.h"
+#include "bdry_buoyancy.h"
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
 
