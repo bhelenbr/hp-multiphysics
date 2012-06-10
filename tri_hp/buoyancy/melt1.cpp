@@ -332,7 +332,7 @@ void melt::rsdl(int stage) {
 
 
 #ifdef petsc
-int melt::petsc_rsdl(Array<double,1> res) {
+int melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
 	int ind = 0;
 	

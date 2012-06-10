@@ -76,14 +76,12 @@ void surface::init(input_map& inmap,void* gin) {
 	gbl->sres0.resize(base.maxseg,x.sm0); 
 
 #ifdef DROP        
-		keyword = x.gbl->idprefix + "_penalty1_parameter";
-		inmap.getwdefault(keyword,gbl->penalty1,0.5);
-		
-		keyword = x.gbl->idprefix + "_penalty2_parameter";
-		inmap.getwdefault(keyword,gbl->penalty2,0.5);
+	keyword = x.gbl->idprefix + "_penalty1_parameter";
+	inmap.getwdefault(keyword,gbl->penalty1,0.5);
 	
-	gbl->vvolumeflux.resize(base.maxseg+1);
-	gbl->svolumeflux.resize(base.maxseg,x.sm0);
+	keyword = x.gbl->idprefix + "_penalty2_parameter";
+	inmap.getwdefault(keyword,gbl->penalty2,0.5);
+	gbl->vflux = 0.0;
 #endif
 
 
@@ -119,17 +117,24 @@ void surface::init(input_map& inmap,void* gin) {
 }
 
 #ifdef DROP
-void surface::calculate_penalties(FLT& vflux, FLT& mvely) {
+void surface::calculate_penalties(FLT& vflux, FLT& yvar) {
 	/* DETRMINE CORRECTION TO CONSERVE AREA */
 	/* IMPORTANT FOR STEADY SOLUTIONS */
 	/* SINCE THERE ARE MULTIPLE STEADY-STATES */
 	/* TO ENSURE GET CORRECT VOLUME */
-	Array<FLT,1> avg(5);
+	Array<FLT,1> avg(6);
 	x.integrated_averages(avg);
 	FLT kc = gbl->sigma/(x.gbl->mu +gbl->mu2) +1.0;
 	FLT rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 	vflux = gbl->penalty1*kc*(rbar -0.5);
-	mvely = gbl->penalty2*kc*avg(2) +avg(4); 
+	gbl->vflux_res = gbl->vflux -vflux;
+#ifdef MESH_REF_VEL
+	yvar = gbl->penalty2*kc*avg(2) +avg(4); 
+	gbl->yvar_res = x.gbl->mesh_ref_vel(1) -yvar;
+#else
+	yvar = gbl->penalty2*kc*avg(2);
+	gbl->yvar_res = x.gbl->g -yvar;
+#endif
 }
 #endif
 
@@ -201,10 +206,6 @@ void surface::rsdl(int stage) {
 	for(n=0;n<tri_mesh::ND;++n)
 		gbl->vres(0)(n) = 0.0;
 
-#ifdef DROP
-	gbl->vvolumeflux(0) = 0.0;
-#endif
-
 	for(indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
 		v0 = x.seg(sind).pnt(0);
@@ -232,13 +233,6 @@ void surface::rsdl(int stage) {
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
 				gbl->sres(indx,m)(n) = lf(x.NV+n)(m+2);
 		}
-		
-#ifdef DROP      
-		gbl->vvolumeflux(indx) += lf(x.NV+2)(0);
-		gbl->vvolumeflux(indx+1) = lf(x.NV+2)(1);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->svolumeflux(indx,m) = lf(x.NV+2)(m+2);                    
-#endif
 	}
 	
 	/* CALL VERTEX RESIDUAL HERE */
@@ -279,23 +273,17 @@ void surface::rsdl(int stage) {
 				gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
 	}
 
-	if (base.is_comm()) { 
+	if (base.is_comm()) {
 		count = 0;
 		for(j=0;j<base.nseg+1;++j) {
 			base.fsndbuf(count++) = gbl->vres(j)(1)*gbl->rho2;
 #ifdef MPDEBUG 
 			*x.gbl->log << gbl->vres(j)(1)*gbl->rho2 << '\n';
 #endif
-#ifdef DROP
-			base.fsndbuf(count-1) -= gbl->vvolumeflux(j)*gbl->rho2;
-#endif
 		}
 		for(j=0;j<base.nseg;++j) {
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				base.fsndbuf(count++) = gbl->sres(j,m)(1)*gbl->rho2;
-#ifdef DROP
-				base.fsndbuf(count-1) -= gbl->svolumeflux(j,m)*gbl->rho2;
-#endif
 			}
 		}
 		base.sndsize() = count;
@@ -319,11 +307,17 @@ void surface::rsdl(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
 	r_gbl->res(v0)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
+	
+#ifdef DROP
+	/* Make residuals for constraints */
+	FLT vflux_target,yvar_target;
+	calculate_penalties(vflux_target,yvar_target);
+#endif
 #endif	
 }
 
 #ifdef petsc
-int surface_slave::petsc_rsdl(Array<double,1> res) {
+int surface_slave::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
 	int ind = 0;
 	
@@ -337,7 +331,7 @@ int surface_slave::petsc_rsdl(Array<double,1> res) {
 	return(ind);
 }
 
-int surface::petsc_rsdl(Array<double,1> res) {
+int surface::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
 	int ind = 0;
 	
@@ -348,7 +342,36 @@ int surface::petsc_rsdl(Array<double,1> res) {
 				res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(1,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(1,1);
 		}
 	}
+#ifdef DROP
+	res(ind++) = gbl->vflux_res;
+	res(ind++) = gbl->yvar_res;
+#endif
 	return(ind);
+}
+
+int surface::petsc_to_ug(PetscScalar *array) {
+	int ind = hp_edge_bdry::petsc_to_ug(array);
+	gbl->vflux = array[ind++];
+#ifdef MESH_REF_VEL
+	x.gbl->mesh_ref_vel(1) = array[ind++];
+#else
+	x.gbl->g = array[ind++];	
+#endif
+	
+	return(ind);
+}
+
+void surface::ug_to_petsc(int& ind) {
+	hp_edge_bdry::ug_to_petsc(ind);
+	VecSetValues(x.petsc_u,1,&ind,&gbl->vflux,INSERT_VALUES);
+	++ind;
+#ifdef MESH_REF_VEL
+	VecSetValues(x.petsc_u,1,&ind,&x.gbl->mesh_ref_vel(1),INSERT_VALUES);
+#else
+	VecSetValues(x.petsc_u,1,&ind,&x.gbl->g,INSERT_VALUES);
+#endif
+	++ind;
+	return;
 }
 #endif
 
@@ -364,7 +387,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	sind = base.seg(indx);
 	v0 = x.seg(sind).pnt(0);
 	v1 = x.seg(sind).pnt(1);
-
+	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
@@ -384,6 +407,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
 #endif    
 		}
+		
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
@@ -423,16 +447,16 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 
 	/* mass flux preconditioning */
 	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1)(m); 
+		lf(x.NV-1)(m) = -x.gbl->rho*lf(x.NV+1)(m); 
 #ifndef INERTIALESS
 	for (n=0;n<x.NV-1;++n) 
 		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
 
 	for (n=0;n<x.NV-1;++n) {
-		lf(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(0);
-		lf(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(1);
+		lf(n)(0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(0);
+		lf(n)(1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(1);
 		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
-			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
+			lf(n)(m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
 	}
 #endif
 
@@ -440,8 +464,6 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(3,0));
 	lf(x.NV+1) += lf(x.NV+2);
 #endif
-
-
 
 	return;
 }
@@ -463,8 +485,8 @@ void surface_slave::rsdl(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = 0.0;
 	r_gbl->res(v0)(1) = 0.0;
-#endif	
-
+#endif
+	
 	base.comm_prepare(boundary::all,0,boundary::master_slave);
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
@@ -1126,6 +1148,14 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sind = base.seg(indx);
 	x.ugtouht1d(sind);
 	element_rsdl(indx,Rbar);
+#ifdef DROP
+	/* Make residuals for constraints */
+	FLT vflux_target,yvar_target;
+	calculate_penalties(vflux_target,yvar_target);
+	x.ugtouht1d(sind);
+	FLT vflux_res0 = gbl->vflux_res;
+	FLT yvar_res0 = gbl->yvar_res;
+#endif
 
 	Array<FLT,1> dw(x.NV);
 	dw = 0.0;
@@ -1138,11 +1168,6 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	
 	/* Numerically create Jacobian */
-#ifdef DROP
-	FLT vflux0 = gbl->vflux;
-	FLT mvel0 = x.gbl->mesh_ref_vel(1);
-#endif
-	
 	int kcol = 0;
 	for(int mode = 0; mode < 2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
@@ -1154,6 +1179,11 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
+			
+#ifdef DROP
+			K(krow++,kcol) = 0.0;
+			K(krow++,kcol) = 0.0;
+#endif
 					
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
@@ -1162,23 +1192,22 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			x.pnts(x.seg(sind).pnt(mode))(var) += dx;
 
-#ifdef DROP
-			calculate_penalties(gbl->vflux,x.gbl->mesh_ref_vel(1));
-			x.ugtouht1d(sind);
-#endif
 			element_rsdl(indx,lf);
 
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+			
+#ifdef DROP
+			calculate_penalties(vflux_target,yvar_target);
+			x.ugtouht1d(sind);
+			K(krow++,kcol) = (gbl->vflux_res-vflux_res0)/dx;
+			K(krow++,kcol) = (gbl->yvar_res -yvar_res0)/dx;
+#endif
 
 			++kcol;
 			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
-#ifdef DROP
-			x.gbl->mesh_ref_vel(1) = mvel0;
-			gbl->vflux = vflux0;			
-#endif
 		}
 	}
 
@@ -1193,7 +1222,11 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
-
+			
+#ifdef DROP
+			K(krow++,kcol) = 0.0;
+			K(krow++,kcol) = 0.0;
+#endif
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
 		}
@@ -1201,27 +1234,65 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			crds(indx,mode-2,var) += dx;
 			
-#ifdef DROP
-			calculate_penalties(gbl->vflux,x.gbl->mesh_ref_vel(1));
-			x.ugtouht1d(sind);
-#endif
 			element_rsdl(indx,lf);
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
-					
-					++kcol;
-			
-			crds(indx,mode-2,var) -= dx;
+
 #ifdef DROP
-			x.gbl->mesh_ref_vel(1) = mvel0;
-			gbl->vflux = vflux0;			
+			calculate_penalties(vflux_target,yvar_target);
+			x.ugtouht1d(sind);
+			K(krow++,kcol) = (gbl->vflux_res-vflux_res0)/dx;
+			K(krow++,kcol) = (gbl->yvar_res -yvar_res0)/dx;
 #endif
+			
+			++kcol;
+			crds(indx,mode-2,var) -= dx;
 		}
 	}
 	
+#ifdef DROP
+	/* Calculate variation of residual with vflux penalty variable */
+	gbl->vflux += dx;
+	element_rsdl(indx,lf);
+	
+	int krow = 0;
+	for(int k=0;k<sm+2;++k)
+		for(int n=0;n<x.NV+tri_mesh::ND;++n)
+			K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+	
+	K(krow++,kcol) = 0.0;
+	K(krow++,kcol) = 0.0;
+	
+	++kcol;
+	gbl->vflux -= dx;
+	
+	/* Calculate variation of residual with vy penalty variable */
+#ifdef MESH_REF_VEL
+	x.gbl->mesh_ref_vel(1) += dw(1);
+#else
+	x.gbl->g += dw(1);
+#endif
+	element_rsdl(indx,lf);
+	
+	krow = 0;
+	for(int k=0;k<sm+2;++k)
+		for(int n=0;n<x.NV+tri_mesh::ND;++n)
+			K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(1);
+	
+	K(krow++,kcol) = 0.0;
+	K(krow++,kcol) = 0.0;
+	
+	++kcol;
+#ifdef MESH_REF_VEL
+	x.gbl->mesh_ref_vel(1) -= dw(1);
+#else
+	x.gbl->g -= dw(1);
+#endif
+#endif
+		
 	return;
 }
 
@@ -1635,10 +1706,16 @@ void surface::petsc_jacobian() {
 		vdofs = x.NV;
 	else
 		vdofs = x.NV+x.ND;
+#ifndef DROP
 	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
 	Array<FLT,1> row_store(vdofs*(sm+2));
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
-	
+#else
+	Array<FLT,2> K(vdofs*(sm+2)+2,vdofs*(sm+2)+2);
+	Array<FLT,1> row_store(vdofs*(sm+2)+2);
+	Array<int,1> loc_to_glo(vdofs*(sm+2)+2);
+#endif
+
 
 	
 	/* ZERO ROWS CREATED BY R_MESH */
@@ -1688,6 +1765,12 @@ void surface::petsc_jacobian() {
 				loc_to_glo(ind++) = gindxND++;
 		}
 		
+#ifdef DROP
+		/* Add entries for two constraint variables */
+		loc_to_glo(ind++) = jacobian_start +tri_mesh::ND*base.nseg*sm;
+		loc_to_glo(ind++) = jacobian_start +tri_mesh::ND*base.nseg*sm +1;
+#endif
+		
 		element_jacobian(j,K);
 				
 		/* Rotate for diagonal dominance */
@@ -1711,7 +1794,11 @@ void surface::petsc_jacobian() {
 			ind += vdofs;
 		}
 #ifdef MY_SPARSE
+#ifndef DROP
 		x.J.add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
+#else
+		x.J.add_values(vdofs*(sm+2)+2,loc_to_glo,vdofs*(sm+2)+2,loc_to_glo,K);
+#endif
 #else
 		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 #endif
@@ -1803,6 +1890,11 @@ void surface::petsc_jacobian() {
 		MatSetValuesLocal(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
 #endif		
 	}
+	
+#ifdef DROP
+	x.J.add_values(jacobian_start +tri_mesh::ND*base.nseg*sm,jacobian_start +tri_mesh::ND*base.nseg*sm,1.0);
+	x.J.add_values(jacobian_start +tri_mesh::ND*base.nseg*sm+1,jacobian_start +tri_mesh::ND*base.nseg*sm+1,1.0);
+#endif
 	
 	/* FIXME: NOT SURE ABOUT THIS TEMPORARY */
 	x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
@@ -1976,6 +2068,45 @@ void surface_slave::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	}
 }
 
+#ifdef DROP
+int surface::dofs(int start) {
+	jacobian_start = start;
+	return(tri_mesh::ND*x.sm0*base.nseg +2);  // 2 extra variables (mesh_ref_vel & vflux)
+}
+void surface::non_sparse(Array<int,1> &nnzero) {
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
+
+	surface_slave::non_sparse(nnzero);
+	/* Add in nonsparse entries for two extra variables */
+	nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) += 2;
+	int sind;
+	for (int i=0;i<base.nseg;++i) {
+		sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0);
+		nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += 2;
+		nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += 2;
+	}
+	int pind = x.seg(sind).pnt(1);
+	nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += 2;
+	nnzero(Range(jacobian_start +base.nseg*x.sm0*tri_mesh::ND,jacobian_start +base.nseg*x.sm0*tri_mesh::ND+1)) = (base.nseg*x.sm0+(base.nseg+1))*vdofs +2;
+};
+
+void surface::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	surface_slave::non_sparse_rcv(nnzero, nnzero_mpi);
+	nnzero_mpi(Range(jacobian_start +base.nseg*x.sm0*tri_mesh::ND,jacobian_start +base.nseg*x.sm0*tri_mesh::ND+1)) = 0;
+}
+#endif
+
 
 #endif
 
@@ -2041,7 +2172,6 @@ void surface::setup_preconditioner() {
 				mvel(n) -= x.gbl->mesh_ref_vel(n);
 #endif    
 			}
-
 			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
 			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
 			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
@@ -2087,7 +2217,7 @@ void surface::setup_preconditioner() {
 		mvel(0) -= x.gbl->mesh_ref_vel(0);
 		mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
-
+		
 		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
 		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
 

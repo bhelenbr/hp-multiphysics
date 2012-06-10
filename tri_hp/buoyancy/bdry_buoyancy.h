@@ -115,7 +115,7 @@ namespace bdry_buoyancy {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 			void vdirichlet();
 #ifdef petsc
-			int petsc_rsdl(Array<FLT,1> res);
+			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			/* This is wickedly complicated (doh! suffering for confusion early on about manifold b.c.'s) */
 			/* element_rsdl/rsdl adds to residual for temperature, mass conservation */
 			/* and then makes tangential equation residual */
@@ -125,7 +125,7 @@ namespace bdry_buoyancy {
 			/* Then applies dirichlet b.c. to temperature */
 			/* in petsc case vdirichlet rotates residual to be aligned with x,y and puts it in r_mesh rsdl */
 			/* vbdry-vdirchlet zeros residuals for mesh movement in x,y directions in both places (r_gbl and vres */
-			/* petsc_rsdl does the rotating instead of sdirichlet for the side modes (called from petsc_rsdl) */
+			/* petsc_make_1D_rsdl_vector does the rotating instead of sdirichlet for the side modes (called from petsc_make_1D_rsdl_vector) */
 
 			
 			/* For jacobian */

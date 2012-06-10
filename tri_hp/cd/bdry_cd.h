@@ -118,7 +118,7 @@ namespace bdry_cd {
 #ifdef petsc
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
-			int petsc_rsdl(Array<FLT,1> res);
+			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			void petsc_jacobian();
 			void non_sparse(Array<int,1> &nnzero);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);

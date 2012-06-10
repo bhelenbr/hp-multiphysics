@@ -192,7 +192,9 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void petsc_matchjacobian_rcv(int phase);
 		virtual void petsc_jacobian();
 		virtual void petsc_jacobian_dirichlet(); 
-		virtual int petsc_rsdl(Array<FLT,1> res) {return(0);}
+		virtual int petsc_to_ug(PetscScalar *array);
+		virtual void ug_to_petsc(int& ind);
+		virtual int petsc_make_1D_rsdl_vector(Array<FLT,1> res) {return(0);}
 #endif
 		virtual void update(int stage) {}
 		virtual void modify_boundary_residual() {}

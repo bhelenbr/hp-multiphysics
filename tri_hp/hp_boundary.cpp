@@ -1291,7 +1291,38 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 }
 
 #ifdef petsc
-// #define MPDEBUG
+int hp_edge_bdry::petsc_to_ug(PetscScalar *array) {
+	int ind = 0;
+
+	if (curved && coupled) {
+		for(int j = 0; j < base.nseg;++j) {
+			for(int m = 0; m < basis::tri(x.log2p)->sm(); ++m) {
+				for(int n = 0; n < x.ND; ++n) { 
+					crds(j,m,n) = array[ind++];
+				}
+			}
+		}
+	}
+	
+	return(ind);
+}
+
+void hp_edge_bdry::ug_to_petsc(int& ind) {
+	if (curved && coupled) {
+	
+		for(int j = 0; j < base.nseg;++j) {
+			for(int m = 0; m < basis::tri(x.log2p)->sm(); ++m) {
+				for(int n = 0; n < x.ND; ++n) {
+					VecSetValues(x.petsc_u,1,&ind,&crds(j,m,n),INSERT_VALUES);
+					++ind;					
+				}
+			}
+		}
+	}
+}
+
+
+	
 void hp_edge_bdry::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 

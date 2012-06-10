@@ -157,6 +157,7 @@ namespace ibc_ins {
 			FLT mu_g, kappa;
 			TinyVector<FLT,2> center;
 			FLT frame_vel;
+			FLT vinitial, dvdt;
 
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
@@ -170,6 +171,10 @@ namespace ibc_ins {
 				cost = -x(1)/r;
 				ur = -(16.0*r*r*r+16.0*r*r*r*kappa-8.0*r*r-12.0*r*r*kappa+kappa)/(r*r*r)/(1.0+kappa)*cost/16.0;
 				ut = sint*(32.0*r*r*r+32.0*r*r*r*kappa-8.0*r*r-12.0*r*r*kappa-kappa)/(r*r*r)/(1.0+kappa)/32.0;
+				
+				FLT speed = vinitial +dvdt*time;
+				ur *= speed;
+				ut *= speed;
 				switch(n) {
 					case(0):
 						if (r < outer_limit)
@@ -183,7 +188,7 @@ namespace ibc_ins {
 							return(1.0 -frame_vel);
 					case(2):
 						if (r < outer_limit)
-							return(mu_g/2*cost*(2+3*kappa)/(2*r*r*(1+kappa))); 
+							return(speed*mu_g/2*cost*(2+3*kappa)/(2*r*r*(1+kappa))); 
 						else
 							return(0.0);
 				}
@@ -201,6 +206,14 @@ namespace ibc_ins {
 				keyword = idnty +"_frame_velocity";
 				if (!blockdata.get(keyword,frame_vel))
 					blockdata.getwdefault("frame_velocity",frame_vel,0.0);
+				
+				keyword = idnty +"_initial_velocity";
+				if (!blockdata.get(keyword,vinitial))
+					blockdata.getwdefault("initial_velocity",vinitial,1.0);
+				
+				keyword = idnty +"_dv/dt";
+				if (!blockdata.get(keyword,dvdt))
+					blockdata.getwdefault("dv/dt",dvdt,0.0);
 
 				keyword = idnty +"_center";
 				center = 0.0;
@@ -236,7 +249,8 @@ namespace ibc_ins {
 			FLT rho_l, mu_l, kappa, sigma;
 			FLT frame_vel;
 			TinyVector<FLT,2> center;
-
+			FLT vinitial, dvdt;
+		
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
 				FLT r,sint,cost;
@@ -250,13 +264,17 @@ namespace ibc_ins {
 				cost = (x(1) > 0.0 ? -1 : 1)*sqrt(1.-sint*sint);
 				ur = -(4.0*r*r-1.0)*cost/(1.0+kappa)/2.0;
 				ut = sint*(8.0*r*r-1.0)/(1.0+kappa)/2.0;
+				FLT speed = vinitial +dvdt*time;
+				ur *= speed;
+				ut *= speed;
+				
 				switch(n) {
 					case(0):
 						return(ur*sint+ut*cost);
 					case(1):
 						return(-ur*cost+ut*sint -frame_vel);
 					case(2):
-						return(4*sigma -5*mu_l*r*cost*4/(1+kappa)); 
+						return(4*sigma -5*mu_l*speed*r*cost*4/(1+kappa)); 
 				}
 				return(0.0);
 			}
@@ -268,6 +286,14 @@ namespace ibc_ins {
 				keyword = idnty +"_frame_velocity";
 				if (!blockdata.get(keyword,frame_vel))
 					blockdata.getwdefault("frame_velocity",frame_vel,0.0);
+
+				keyword = idnty +"_initial_velocity";
+				if (!blockdata.get(keyword,vinitial))
+					blockdata.getwdefault("initial_velocity",vinitial,1.0);
+				
+				keyword = idnty +"_dv/dt";
+				if (!blockdata.get(keyword,dvdt))
+					blockdata.getwdefault("dv/dt",dvdt,0.0);
 
 				keyword = idnty +"_center";
 				center = 0.0;
@@ -493,10 +519,9 @@ namespace ibc_ins {
 
 			tri_hp_helper* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
 			void calculate_stuff() {
-#ifdef DROP
+#ifdef MESH_REF_VEL
 				TinyVector<FLT,2> mesh_vel;
 				mesh_vel = 0;
-				
 				if (surf) {
 					if (!x.coarse_flag) surf->calculate_penalties(surf->gbl->vflux, x.gbl->mesh_ref_vel(1));
 					mesh_vel= x.gbl->mesh_ref_vel;
@@ -516,7 +541,11 @@ namespace ibc_ins {
 			void setup_preconditioner() {
 				calculate_stuff();
 #ifdef DROP
+#ifdef MESH_REF_VEL
 				if (surf && !x.coarse_flag) *x.gbl->log << "# vflux " << surf->gbl->vflux << " mesh_ref_vel(1) " << x.gbl->mesh_ref_vel(1) << std::endl;
+#else
+				if (surf && !x.coarse_flag) *x.gbl->log << "# vflux " << surf->gbl->vflux << " gravity " << x.gbl->g << std::endl;
+#endif
 #endif
 				return;
 			}

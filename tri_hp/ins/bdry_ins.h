@@ -350,7 +350,7 @@ namespace bdry_ins {
 #ifdef petsc
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
-			int petsc_rsdl(Array<FLT,1> res);
+			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			void petsc_jacobian();
 			void non_sparse(Array<int,1> &nnzero);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
@@ -390,9 +390,7 @@ namespace bdry_ins {
 				Array<TinyVector<FLT,tri_mesh::ND>,2> sres0;
 #ifdef DROP
 				FLT penalty1,penalty2;
-				FLT penalty,vflux;
-				Array<FLT,1> vvolumeflux;
-				Array<FLT,2> svolumeflux;
+				FLT vflux,vflux_res,yvar,yvar_res;
 #endif
 
 				/* PRECONDITIONER */
@@ -435,11 +433,18 @@ namespace bdry_ins {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
 			void petsc_jacobian();
-			int petsc_rsdl(Array<FLT,1> res);
+			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 #endif
 		
 #ifdef DROP
-			void calculate_penalties(FLT& vflux, FLT& mvely);
+#ifdef petsc
+			int dofs(int start); // 2 extra variables (mesh_ref_vel & vflux)
+			void non_sparse(Array<int,1> &nnzero);/* Add in nonsparse entries for two extra variables */
+			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			int petsc_to_ug(PetscScalar *array);
+			void ug_to_petsc(int& ind);
+#endif
+			void calculate_penalties(FLT& vflux, FLT& my);
 #endif
 	};
 	
