@@ -18,6 +18,7 @@
 #include <blitz/array.h>
 #include <symbolic_function.h>
 
+#define MELT1
 
 using namespace blitz;
 
@@ -47,7 +48,7 @@ namespace bdry_buoyancy {
 			void init(input_map& input,void* gbl_in); 
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
-	
+		
 	class melt : public symbolic {	
 		protected:
 			tri_hp_buoyancy &x;
@@ -115,7 +116,7 @@ namespace bdry_buoyancy {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 			void vdirichlet();
 #ifdef petsc
-			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			/* This is wickedly complicated (doh! suffering for confusion early on about manifold b.c.'s) */
 			/* element_rsdl/rsdl adds to residual for temperature, mass conservation */
 			/* and then makes tangential equation residual */

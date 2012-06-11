@@ -18,6 +18,7 @@
 
 #include "bdry_cd.h"
 #include "myblas.h"
+#include <blitz/tinyvec-et.h>
 
 //#define MPDEBUG
 
@@ -123,7 +124,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 
 void melt::init(input_map& inmap,void* gbl_in) {
-	std::string keyword;
+	std::string keyword,val;
+	std::istringstream data;
+	std::string filename;
 	
 	keyword = base.idprefix + "_curved";
 	inmap[keyword] = "1";
@@ -132,7 +135,35 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	inmap[keyword] = "1";
 	
 	dirichlet::init(inmap,gbl_in);
-
+	
+#ifdef MELT1
+	gbl = static_cast<global *>(gbl_in);
+	vdres.resize(x.log2pmax,base.maxseg);
+	sdres.resize(x.log2pmax,base.maxseg,x.sm0);
+	
+	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
+	else gbl->is_loop = false;
+	
+	gbl->vug0.resize(base.maxseg+1);
+	gbl->sug0.resize(base.maxseg,x.sm0);
+	
+	gbl->vres.resize(base.maxseg+1);
+	gbl->sres.resize(base.maxseg,x.sm0); 
+	gbl->vres0.resize(base.maxseg+1);
+	gbl->sres0.resize(base.maxseg,x.sm0); 
+	
+	gbl->meshc.resize(base.maxseg);
+		
+	/* Multigrid Storage all except highest order (log2p+1)*/
+	vdres.resize(x.log2p+1,base.maxseg+1);
+	sdres.resize(x.log2p+1,base.maxseg,x.sm0);
+	
+	keyword = base.idprefix + "_fadd";
+	inmap.getwdefault(keyword,gbl->fadd,1.0);
+		
+	inmap.getwdefault(base.idprefix +"_adis",gbl->adis,1.0);
+#endif
+	
 	return;
 }
 
@@ -155,21 +186,116 @@ void melt::rsdl(int stage) {
 #ifdef petsc
 	/* Store 0.0 in vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	int v0,sind,i = 0;
+	int sind,i = 0;
 	do {
 		sind = base.seg(i);
-		v0 = x.seg(sind).pnt(0);
+		int v0 = x.seg(sind).pnt(0);
 		/* Rotate residual for better diagonal dominance */
 		r_gbl->res(v0)(0) = 0.0;
 		r_gbl->res(v0)(1) = 0.0;
 	} while (++i < base.nseg);
-	v0 = x.seg(sind).pnt(1);
+	int v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = 0.0;
 	r_gbl->res(v0)(1) = 0.0;
 #endif	
-		
+	
+#ifdef MELT1
+	int m,indx;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV);
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,8,MXGP> res;
+	
+	Array<TinyVector<FLT,MXTM>,1> lf(1);
+	
+	/**************************************************/
+	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
+	/**************************************************/
+	gbl->vres(0) = 0.0;
+	
+	for(indx=0;indx<base.nseg;++indx) {
+		int sind = base.seg(indx);
+		int tind = x.seg(sind).tri(0); 
+		x.ugtouht(tind);
+		element_rsdl(indx,lf);
+
+		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
+		gbl->vres(indx) += lf(0)(0);
+		gbl->vres(indx+1) = lf(0)(1);
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
+			gbl->sres(indx,m) = lf(0)(m+2);
+	}
+	
+	/* COMMUNICATE RESIDUAL HERE */
+	
+#endif
+
 	return;
 }
+
+#ifdef MELT1
+void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
+	int i,n,sind,seg,tind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV);
+	FLT jcb;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	FLT qdotn;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,2,MXGP> res;
+	FLT lkcond = x.gbl->nu;
+	
+	sind = base.seg(indx);
+	tind = x.seg(sind).tri(0);        
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	for(seg=0;seg<3;++seg)
+		if (x.tri(tind).seg(seg) == sind) break;
+	assert(seg != 3);
+	
+	x.crdtocht(tind);
+	for(int m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
+		for(n=0;n<tri_mesh::ND;++n)
+			x.cht(n,m) = 0.0;
+	
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+	
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));  
+	
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+		norm(0) = x.dcrd(1,0)(0,i);
+		norm(1) = -x.dcrd(0,0)(0,i);    
+		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+		
+		mvel(0,i) = x.gbl->ax -x.gbl->bd(0)*(x.crd(0)(0,i) -dxdt(x.log2p,indx)(0,i));
+		mvel(1,i) = x.gbl->ay -x.gbl->bd(0)*(x.crd(1)(0,i) -dxdt(x.log2p,indx)(1,i));
+#ifdef MESH_REF_VEL
+		mvel(0,i) -= x.gbl->mesh_ref_vel(0);
+		mvel(1,i) -= x.gbl->mesh_ref_vel(1);
+#endif
+
+		/* HEAT FLUX*/
+		/* WITH NORMAL POINTING OUTWARD */
+		x.cjcb(0,i) = lkcond*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+		qdotn = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,0)(0,i);
+		qdotn += x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,1)(0,i);
+		
+		res(0,i) = -qdotn;
+		/* Heat Flux Upwinded? */
+		res(1,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+	}
+	lf = 0.0;
+	
+	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
+	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(0,0)); // surface energy balance
+	basis::tri(x.log2p)->intgrtx1d(&lf(0)(0),&res(1,0)); // surface energy balance upwinded
+	
+	return;
+}
+#endif
 
 void melt::update(int stage) {
 	int i,m,n,msgn,count,sind,v0;
@@ -205,6 +331,148 @@ void melt::update(int stage) {
 	}
 	return;
 }
+
+#ifdef MELT1
+void melt::setup_preconditioner() {
+	int indx,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> nrm;
+	FLT h, hsm;
+	FLT vslp;
+	FLT qmax;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
+	TinyMatrix<FLT,4,MXGP> res;
+	TinyMatrix<FLT,4,MXGP> lf;
+	TinyVector<FLT,2> mvel;
+	
+	/**************************************************/
+	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
+	/**************************************************/	
+	for(indx=0; indx < base.nseg; ++indx) {
+		sind = base.seg(indx);
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+		
+		
+#ifdef DETAILED_DT
+		x.crdtocht1d(sind);
+		for(n=0;n<tri_mesh::ND;++n)
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+		
+		x.ugtouht1d(sind);
+		for(n=0;n<tri_mesh::ND;++n)
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
+		
+		dtnorm = 1.0e99;
+		dttang = 1.0e99;
+		gbl->meshc(indx) = 1.0e99;
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+			nrm(0) =  dcrd(1,i)*2;
+			nrm(1) = -dcrd(0,i)*2;
+			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+			
+			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+			for(n=0;n<tri_mesh::ND;++n) {
+				mvel(0) = x.gbl->ax -(x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); 
+				mvel(1) = x.gbl->ay -(x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+				mvel(0) -= x.gbl->mesh_ref_vel(0);
+				mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+			}
+			
+			vslp = fabs(-x.gbl->ax*nrm(1)/h +x.bl->ay*nrm(0)/h);
+			qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+
+			/* SET UP DISSIPATIVE COEFFICIENT */
+			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+			/* RESIDUAL HAS DX/2 WEIGHTING */
+			/* |a| dx/2 dv/dx  dx/2 dpsi */
+			/* |a| dx/2 2/dx dv/dpsi  dpsi */
+			/* |a| dv/dpsi  dpsi */
+			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+			//gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
+		}
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+#else
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+		h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+		
+		mvel(0) = x.gbl->ax-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+		mvel(1) = x.gbl->ay-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+		mvel -= x.gbl->mesh_ref_vel;
+#endif
+		
+		
+		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
+		
+		mvel(0) = x.gbl->ax-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+		mvel(1) = x.gbl->ay-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+		
+#ifdef MESH_REF_VEL
+		mvel -= x.gbl->mesh_ref_vel;
+#endif
+		
+		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
+		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
+		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+				/* SET UP DISSIPATIVE COEFFICIENT */
+		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+		/* RESIDUAL HAS DX/2 WEIGHTING */
+		/* |a| dx/2 dv/dx  dx/2 dpsi */
+		/* |a| dx/2 2/dx dv/dpsi  dpsi */
+		/* |a| dv/dpsi  dpsi */
+		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+#endif
+	}
+	return;
+}
+
+void melt::mg_restrict() {
+	int i,bnum,indx,tind,v0,snum,sind;
+	
+	if(x.p0 > 1) {
+		/* TRANSFER IS ON FINEST MESH */
+		gbl->vres0(Range(0,base.nseg)) = gbl->vres(Range(0,base.nseg));
+		if (basis::tri(x.log2p)->sm() > 0) gbl->sres0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
+		return;
+	}
+	else {
+		/* TRANSFER IS BETWEEN DIFFERENT MESHES */
+		gbl->vres0(Range(0,base.nseg)) = 0.0;
+		
+		/* CALCULATE COARSE RESIDUALS */
+		/* DO ENDPOINTS FIRST */
+		gbl->vres0(0) = gbl->vres(0);
+		gbl->vres0(base.nseg) = gbl->vres(fine->base.nseg);
+		
+		tri_mesh *fmesh = dynamic_cast<tri_mesh *>(x.fine);
+		for (bnum = 0; x.hp_ebdry(bnum) != this; ++bnum);
+		for(i=1;i<fine->base.nseg;++i) {
+			sind = fine->base.seg(i);
+			v0 = fmesh->seg(sind).pnt(0);
+			tind = fmesh->ccnnct(v0).tri;
+			for(snum=0;snum<3;++snum) 
+				if (x.getbdrynum(x.tri(tind).tri(snum))  == bnum) break;
+			assert(snum != 3);
+			indx = x.getbdryseg(x.tri(tind).tri(snum));
+			gbl->vres0(indx) += fmesh->ccnnct(v0).wt((snum+1)%3)*gbl->vres(i);
+			gbl->vres0(indx+1) += fmesh->ccnnct(v0).wt((snum+2)%3)*gbl->vres(i);
+		}
+	}
+	
+	return;
+}
+#endif
+
+
 
 #ifdef petsc
 void melt::petsc_jacobian() {
@@ -552,9 +820,9 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 }
 
 
-int melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
+void melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
+	int ind = jacobian_start;
 	
 	/* T,x,y continuity constraint */
 	
@@ -566,7 +834,6 @@ int melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			res(ind++) = 0.0;
 		}
 	}
-	return(ind);
 }
 
 

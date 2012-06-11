@@ -273,6 +273,7 @@ void surface::rsdl(int stage) {
 				gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
 	}
 
+#ifndef petsc
 	if (base.is_comm()) {
 		count = 0;
 		for(j=0;j<base.nseg+1;++j) {
@@ -292,6 +293,7 @@ void surface::rsdl(int stage) {
 		base.comm_exchange(boundary::all,0,boundary::master_slave);
 		base.comm_wait(boundary::all,0,boundary::master_slave);
 	}
+#endif
 	
 #ifdef petsc
 	/* Store rotated vertex residual in r_mesh residual vector */
@@ -317,9 +319,9 @@ void surface::rsdl(int stage) {
 }
 
 #ifdef petsc
-int surface_slave::petsc_make_1D_rsdl_vector(Array<double,1> res) {
+void surface_slave::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
+	int ind = jacobian_start;
 	
 	/* Curvature equality constraint */
 	for(int j=0;j<base.nseg;++j) {
@@ -328,12 +330,11 @@ int surface_slave::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			res(ind++) = 0.0;
 		}
 	}
-	return(ind);
 }
 
-int surface::petsc_make_1D_rsdl_vector(Array<double,1> res) {
+void surface::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
+	int ind = jacobian_start;
 	
 	/* Rotated for better diagonal dominance */
 	for(int j=0;j<base.nseg;++j) {
@@ -346,7 +347,6 @@ int surface::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	res(ind++) = gbl->vflux_res;
 	res(ind++) = gbl->yvar_res;
 #endif
-	return(ind);
 }
 
 int surface::petsc_to_ug(PetscScalar *array) {
@@ -471,7 +471,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 void surface_slave::rsdl(int stage) {
 	int i,m,msgn,count,sind,v0;
 	
-#ifdef petsc
+#ifndef petsc
 	/* Store 0.0 in vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	i = 0;
@@ -486,7 +486,8 @@ void surface_slave::rsdl(int stage) {
 	r_gbl->res(v0)(0) = 0.0;
 	r_gbl->res(v0)(1) = 0.0;
 #endif
-	
+
+#ifndef petsc
 	base.comm_prepare(boundary::all,0,boundary::master_slave);
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
@@ -514,6 +515,7 @@ void surface_slave::rsdl(int stage) {
 			msgn *= -1;
 		}
 	}
+#endif
 
 	return;
 }

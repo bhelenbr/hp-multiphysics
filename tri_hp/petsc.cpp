@@ -464,8 +464,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 				rv(ind++) = gbl->res.i(i,m,n);
 	
 	for (int i=0;i<nebd;++i) {
-		if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
-			ind += hp_ebdry(i)->petsc_make_1D_rsdl_vector(rv(Range(ind,jacobian_size-1)));
+		hp_ebdry(i)->petsc_make_1D_rsdl_vector(rv);
 	}
 }
 

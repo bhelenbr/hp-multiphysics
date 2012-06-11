@@ -12,6 +12,7 @@
 #include "myblas.h"
 #include <symbolic_function.h>
 
+#define MELT1
 
 namespace bdry_cd {
 	class generic : public hp_edge_bdry {
@@ -103,27 +104,93 @@ namespace bdry_cd {
 			}
 	};
 	
-	
-	class melt : public dirichlet {
+
+	class melt : public dirichlet {	
+		protected:
+			tri_hp_cd &x;
+#ifdef MELT1
+			Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
+			Array<TinyVector<FLT,tri_mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
+			Array<TinyVector<FLT,tri_mesh::ND>,3> sdres; //!< Driving term for multigrid (log2p, side, order)
+			const melt *fine, *coarse;
+			
 		public:
-			melt(tri_hp_cd &xin, edge_bdry &bin) : dirichlet(xin,bin) {mytype = "melt";}
-			melt(const melt& inbdry, tri_hp_cd &xin, edge_bdry &bin) : dirichlet(inbdry,xin,bin) {}
+			struct global {    
+				bool is_loop;
+				
+				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
+				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;
+				Array<TinyVector<FLT,tri_mesh::ND>,2> sug0;
+				
+				/* RESIDUALS */
+				Array<TinyVector<FLT,tri_mesh::ND>,1> vres;
+				Array<TinyVector<FLT,tri_mesh::ND>,2> sres;
+				Array<TinyVector<FLT,tri_mesh::ND>,1> vres0;
+				Array<TinyVector<FLT,tri_mesh::ND>,2> sres0;
+				
+				/* PRECONDITIONER */
+				Array<FLT,1> meshc;
+				
+				FLT fadd;
+				FLT adis;
+			} *gbl; 
+			void* create_global_structure() {return new global;}
+#endif
+			
+		public:
+			melt(tri_hp_cd &xin, edge_bdry &bin) : dirichlet(xin,bin), x(xin) {mytype = "melt";}
+			melt(const melt& inbdry, tri_hp_cd &xin, edge_bdry &bin) : dirichlet(inbdry,xin,bin), x(xin) {
+#ifdef MELT1
+				gbl = inbdry.gbl;
+				vug_frst.resize(base.maxseg+1);
+				vdres.resize(1,base.maxseg+1);
+				fine = &inbdry;
+#endif
+			}
 			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-						
+			
+			void init(input_map& input,void* gbl_in);
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
-			void init(input_map& inmap,void* gbl_in);
 			void tadvance();
 			void rsdl(int stage);
+#ifdef MELT1
+			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
+			void setup_preconditioner();
+			void mg_restrict(); 
+#endif
 			void update(int stage);
+			// void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
+			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+			/* This is wickedly complicated (doh! suffering for confusion early on about manifold b.c.'s) */
+			/* element_rsdl/rsdl adds to residual for temperature, mass conservation */
+			/* and then makes tangential equation residual */
+			/* rsdl also applies b.c. to tangent residual vbdry->rsdl() */
+			/* tangential residual goes in vres(0)/sres(0) */
+			/* vdirichlet moves heat equation residual to vres(1)/sres(1) after it has been made */
+			/* Then applies dirichlet b.c. to temperature */
+			/* in petsc case vdirichlet rotates residual to be aligned with x,y and puts it in r_mesh rsdl */
+			/* vbdry-vdirchlet zeros residuals for mesh movement in x,y directions in both places (r_gbl and vres */
+			/* petsc_make_1D_rsdl_vector does the rotating instead of sdirichlet for the side modes (called from petsc_make_1D_rsdl_vector) */
+			
+			
+			/* For jacobian */
+			/* petsc_jacobian calculates how residuals change in normal way */
+			/* petsc_matchjacobian_snd()  Sends T, tangent, normal */
+			/* petsc_matchjacobian_rcv()	Receives T */
+			/* petsc_matchjacobian_dirichlet() -> moves heat equation jacobian to normal row */
+			/* then rotates normal and tangential row to x,y directions */
+			
+			void petsc_jacobian();
+#ifdef MELT1
+			// void petsc_jacobian_dirichlet();
+#endif
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
-			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
-			void petsc_jacobian();
 			void non_sparse(Array<int,1> &nnzero);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
-#endif
+	#endif
 	};
 	
 	class kellerman : public melt {
@@ -153,6 +220,7 @@ namespace bdry_cd {
 		
 	
 	
+	/* NOT REALLY A MELT B.C. END POINT?  ANGLE B.C. FOR MOVING EDGE POINT */
 	class melt_end_pt : public hp_vrtx_bdry {
 		/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 		protected:

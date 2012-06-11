@@ -313,7 +313,7 @@ void melt::rsdl(int stage) {
 #ifndef MELT1		
 		x.ugtouht1d(sind);
 #else
-		tind = x.seg(sind).tri(0); 
+		int tind = x.seg(sind).tri(0); 
 		x.ugtouht(tind);
 #endif
 		element_rsdl(indx,lf);
@@ -381,6 +381,7 @@ void melt::rsdl(int stage) {
 void melt::vdirichlet() {
 	int i,sind,v0;
 
+#ifndef MELT1
 	/* Move Heat equation Residual */
 	i = 0;
 	do {
@@ -392,6 +393,7 @@ void melt::vdirichlet() {
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	gbl->vres(i)(1) = x.gbl->res.v(v0,2);
+#endif
 	
 	/* Now apply dirichlet B.C.s */
 	symbolic::vdirichlet();
@@ -423,9 +425,9 @@ void melt::vdirichlet() {
 }
 
 #ifdef petsc
-int melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
+void melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
+	int ind = jacobian_start;
 	
 	for(int j=0;j<base.nseg;++j) {
 		for(int m=0;m<sm;++m) {
@@ -433,7 +435,6 @@ int melt::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			res(ind++) = gbl->sres(j,m)(1);
 		}
 	}
-	return(ind);
 }
 #endif
 
@@ -722,14 +723,25 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 #endif
 	
+#ifdef MELT1
+	const int nvert = 3;
+#else
+	const int nvert = 2;
+#endif
+	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
+#ifdef MELT1
+	int tind = x.seg(sind).tri(0);        
+	x.ugtouht(tind);
+#else
 	x.ugtouht1d(sind);
+#endif
 	element_rsdl(indx,Rbar);
 	
 	Array<FLT,1> dw(x.NV);
 	dw = 0.0;
-	for(int i=0;i<2;++i)
+	for(int i=0;i<nvert;++i)
 		for(int n=0;n<x.NV;++n)
 			dw = dw + fabs(x.uht(n)(i));
 	
@@ -739,7 +751,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	
 	/* Numerically create Jacobian */
 	int kcol = 0;
-	for(int mode = 0; mode < 2; ++mode) {
+	for(int mode = 0; mode < nvert; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
 			x.uht(var)(mode) += dw(var);
 			
@@ -755,7 +767,11 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 		}
 		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
+#ifndef MELT1
 			x.pnts(x.seg(sind).pnt(mode))(var) += dx;
+#else
+			x.pnts(x.tri(tind).pnt(mode))(var) += dx;
+#endif
 			
 			element_rsdl(indx,lf);
 			
@@ -765,12 +781,19 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 			
 			++kcol;
+#ifndef MELT1
 			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
+#else
+			x.pnts(x.tri(tind).pnt(mode))(var) -= dx;
+#endif
 		}
 	}
 	
-	
+#ifndef MELT1
 	for(int mode = 2; mode < sm+2; ++mode) {
+#else
+	for(int mode = 3; mode <  basis::tri(x.log2p)->tm(); ++mode) {
+#endif
 		for(int var = 0; var < x.NV; ++var) {
 			x.uht(var)(mode) += dw(var);
 			
@@ -784,7 +807,10 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			++kcol;
 			x.uht(var)(mode) -= dw(var);
 		}
-		
+#ifdef MELT1
+	}
+	for(int mode = 2; mode < sm+2; ++mode) {	
+#endif
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			crds(indx,mode-2,var) += dx;
 			
@@ -889,17 +915,19 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 
 #ifdef petsc
 void melt::petsc_jacobian() {
-	int sm = basis::tri(x.log2p)->sm();	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
-	Array<FLT,1> row_store(vdofs*(sm+2));
+	const int sm = basis::tri(x.log2p)->sm();	
+	const int vdofs = x.NV+x.ND;
+	
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
-	
-	
+#ifndef MELT1
+	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
+#else
+	const int im = basis::tri(x.log2p)->im();	
+	const int tm = basis::tri(x.log2p)->tm();	
+	Array<FLT,2> K(vdofs*(sm+2),tm*x.NV +(3+sm)*x.ND);
+	Array<int,1> col_index(tm*x.NV +(3+sm)*x.ND);
+#endif
+	Array<FLT,1> row_store(vdofs*(sm+2));
 	
 	/* ZERO ROWS CREATED BY R_MESH */
 	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
@@ -929,6 +957,7 @@ void melt::petsc_jacobian() {
 	/* and x,y mesh movement equations */
 	for (int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
+		int tind = x.seg(sind).tri(0);
 		
 		/* CREATE GLOBAL NUMBERING LIST */
 		int ind = 0;
@@ -948,12 +977,67 @@ void melt::petsc_jacobian() {
 				loc_to_glo(ind++) = gindxND++;
 		}
 		
+#ifdef MELT1
+		/* CREATE GLOBAL COLUMN NUMBERING LIST */
+		ind = 0;
+		for (int m = 0; m < 3; ++m) {
+			int gindx = vdofs*x.tri(tind).pnt(m);
+			for (int n = 0; n < vdofs; ++n)
+				col_index(ind++) = gindx++;
+		}		
+		
+		/* EDGE MODES */
+		if (sm) {
+			for(int i = 0; i < 3; ++i) {
+				int gindx = x.npnt*vdofs +x.tri(tind).seg(i)*sm*x.NV;
+				int sgn = x.tri(tind).sgn(i);
+				int msgn = 1;
+				for (int m = 0; m < sm; ++m) {
+					for(int n = 0; n < x.NV; ++n) {
+						for(int j = 0; j < vdofs*(sm+2); ++j) {
+							K(j,ind) *= msgn;
+						}
+						col_index(ind++) = gindx++;
+					}
+					msgn *= sgn;
+				}
+			}
+		}
+		
+		/* INTERIOR	MODES */
+		if (tm) {
+			int gindx = x.npnt*vdofs +x.nseg*sm*x.NV +tind*im*x.NV;
+			for(int m = 0; m < im; ++m) {
+				for(int n = 0; n < x.NV; ++n){
+					col_index(ind++) = gindx++;
+				}
+			}
+		}
+		
+		/* CURVATURE COEFFICIENTS */
+		if (sm) {
+			int gindxND = jacobian_start +j*tri_mesh::ND*sm;
+			for(int mode = 0; mode < sm; ++mode) {
+				for(int var = 0; var < tri_mesh::ND; ++var)
+					col_index(ind++) = gindxND++;
+			}
+		}
+#endif
+		
 		element_jacobian(j,K);
 		
+#ifndef MELT1
 #ifdef MY_SPARSE
 		x.J.add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
 #else
 		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+#endif
+#else
+#ifdef MY_SPARSE
+		x.J.add_values(vdofs*(sm+2),loc_to_glo,tm*x.NV +(3+sm)*x.ND,col_index,K);
+#else
+		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),tm*x.NV +(3+sm)*x.ND,col_index.data(),K.data(),ADD_VALUES);
+#endif
 #endif
 		
 		if (!sm) continue;
@@ -966,7 +1050,6 @@ void melt::petsc_jacobian() {
 		const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 #endif
 		
-		int tind = x.seg(sind).tri(0);		
 		x.ugtouht(tind);
 		FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 		const int tm = basis::tri(x.log2p)->tm();

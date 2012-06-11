@@ -350,7 +350,7 @@ namespace bdry_ins {
 #ifdef petsc
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
-			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			void petsc_jacobian();
 			void non_sparse(Array<int,1> &nnzero);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
@@ -433,7 +433,7 @@ namespace bdry_ins {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
 			void petsc_jacobian();
-			int petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 #endif
 		
 #ifdef DROP
