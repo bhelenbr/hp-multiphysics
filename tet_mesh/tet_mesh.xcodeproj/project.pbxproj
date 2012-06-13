@@ -940,10 +940,6 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = tet_mesh;
@@ -987,7 +983,6 @@
 					"$(packages)/lib",
 					/Library/DataTank,
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = YES;
@@ -998,7 +993,6 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
-				ZERO_LINK = NO;
 				packages = "$(HOME)/Packages";
 				prefix = "$(HOME)/Codes";
 			};

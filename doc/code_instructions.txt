@@ -13,6 +13,7 @@
 10 MeshAdapt for tetrahedral mesh generation
 11 Gmsh for tetrahedrals
 12 valgrind for debugging
+13 probably need to install cmake (gui installer for OS X & Windows)
 
 ###################################################################
 #### GET BLITZ ####
@@ -175,6 +176,7 @@ save cfortran.h to ${HOME}/Packages/include/
 ###################################################################
 # download valgrind from web
 ./configure --prefix=/share/apps
+./configure --prefix=${HOME}/Packages
 make
 make install
 
@@ -191,7 +193,7 @@ move to Packages, extract
 # To know what packages are available: ./config/configure.py --help
 # with superlu
 # ON LION
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-dir=${HOME}/Packages
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-mpi-dir=${HOME}/Packages --with-valgrind-dir=${HOME}/Packages
 # ON SNOW LEOPARD
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-include=/usr/include --with-mpi-lib=libmpi
 # with out downloading parmetis
@@ -281,7 +283,7 @@ NOW DOWNLOAD MY CODE
 now make all of my stuff:
 ###################################################################	
 #### UNIX ####
-# On cares modify your .bash_profile file in your home directory by 
+# On cares modify your ~/.bash_profile file in your home directory by 
 # adding the location of the packages directory:
 # On cluster:
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/share/apps/lib
@@ -290,12 +292,18 @@ export PACKAGES=/export/apps
 export PACKAGES=/${HOME}/Packages
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PACKAGES/lib
 
-# you may have to monkey with the makefiles to change
-# blasé & lapack libraries, as well as mpic++ location 
-# and directory of mph include.  
+After making these changes 
+type
+". .bash_profile"
+To load the new environment variables
 
-# Other things is that getnewblock in tri_hp and 
+# you may have to monkey with the makefiles to change
+# blas & lapack libraries, as well as mpic++ location 
+# and directory of mpi.h include.  
+
+# Other things is that getnewblock.cpp in tri_hp and 
 # the makefile have to compile the same classes.
+# if you have virtual functions undefined, check this
 
 
 make -j 2 tri_hp (For 2 processor machine)

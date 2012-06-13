@@ -11,7 +11,6 @@
 
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
-#include <blitz/tinyvec-et.h>
 #include <vector>
 
 //#define OPTIMAL_ENERGY_NORM

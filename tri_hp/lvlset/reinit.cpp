@@ -2,7 +2,6 @@
 #include "../tri_hp.h"	
 #include "../hp_boundary.h"
 #include <math.h>
-#include <blitz/tinyvec-et.h>
 
 // #define DEBUG_TOL 1.0e-9
 // #define RSDL_DEBUG

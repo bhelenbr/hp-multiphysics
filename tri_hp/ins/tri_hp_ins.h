@@ -13,8 +13,6 @@
 #include "../tri_hp.h"
 #include <blocks.h>
 
-// #define DROP
-
 class tri_hp_ins : public tri_hp {
 	public:		
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */

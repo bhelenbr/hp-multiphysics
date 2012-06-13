@@ -225,7 +225,6 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 };
 
 #include <spline.h>
-#include <blitz/tinyvec-et.h>
 
 class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 	spline<tri_mesh::ND> my_spline;

@@ -14,7 +14,6 @@
 #include "tri_hp_buoyancy.h"
 #include "../ins/bdry_ins.h"
 #include <myblas.h>
-#include <blitz/tinyvec-et.h>
 #include <blitz/array.h>
 #include <symbolic_function.h>
 

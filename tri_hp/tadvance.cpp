@@ -9,7 +9,6 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
-#include <blitz/tinyvec-et.h>
 
 /* DIRK SCHEMES */
 #ifdef DIRK

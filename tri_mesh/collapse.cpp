@@ -2,7 +2,6 @@
 #include <utilities.h>
 #include <assert.h>
 #include <float.h>
-#include <blitz/tinyvec-et.h>
 
 void tri_mesh::collapse(int sind, int delt) {
 	int ntsrnd, nssrnd, nperim;

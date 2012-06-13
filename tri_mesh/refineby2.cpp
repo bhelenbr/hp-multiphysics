@@ -9,7 +9,6 @@
 #include "tri_mesh.h"
 #include <utilities.h>
 #include <assert.h>
-#include <blitz/tinyvec-et.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {
 	int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber;

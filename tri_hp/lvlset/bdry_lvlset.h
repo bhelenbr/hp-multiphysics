@@ -24,7 +24,6 @@
 #include "../hp_boundary.h"
 #include "../ins/bdry_ins.h"
 #include <myblas.h>
-#include <blitz/tinyvec-et.h>
 
 namespace bdry_lvlset {
 

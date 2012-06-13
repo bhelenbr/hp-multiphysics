@@ -151,10 +151,6 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
 #endif
 	
-#ifdef DROP
-	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(3,0));
-#endif
-	
 	return;
 }
 

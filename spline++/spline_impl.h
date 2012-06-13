@@ -9,7 +9,6 @@
 
 #include "spline.h"
 #include <fstream>
-#include <blitz/tinyvec-et.h>
 #include "myblas.h"
 
 template<int ND> int spline<ND>::read(std::string filename) {

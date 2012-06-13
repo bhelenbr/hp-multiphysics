@@ -10,7 +10,6 @@
 #include "tri_mesh.h"
 #include <utilities.h>
 #include <assert.h>
-#include <blitz/tinyvec-et.h>
 #include <vector>
 
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */

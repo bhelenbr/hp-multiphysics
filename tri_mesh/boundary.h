@@ -15,7 +15,6 @@
 #include <symbolic_function.h>
 #include <float.h>
 #include "blocks.h"
-#include <blitz/tinyvec-et.h>
 
 using namespace blitz;
 
@@ -1099,7 +1098,6 @@ class plane : public geometry<2> {
 };
 
 #include <spline.h>
-#include <blitz/tinyvec-et.h>
 
 class spline_geometry {
 	static const int ND = 2;

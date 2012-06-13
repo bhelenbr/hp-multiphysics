@@ -184,12 +184,6 @@
 		95D4085011A302E2009F34F7 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AF10F67FF400759C42 /* length.cpp */; };
 		95D4085111A302E3009F34F7 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B010F67FF400759C42 /* rsdl.cpp */; };
 		95D4085211A302E4009F34F7 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B210F67FF400759C42 /* tstep.cpp */; };
-		95D4086011A303B0009F34F7 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AD0DCA19B7007A1D26 /* allocate.cpp */; };
-		95D4086111A303B1009F34F7 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */; };
-		95D4086211A303B1009F34F7 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9533379C0DCA18D2007A1D26 /* rsdl.cpp */; };
-		95D4086411A303B2009F34F7 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
-		95D4086511A303B3009F34F7 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B00DCA19B7007A1D26 /* getnewbdry.cpp */; };
-		95D4086611A303B3009F34F7 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B10DCA19B7007A1D26 /* getnewibc.cpp */; };
 		95D4086711A303B4009F34F7 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE280F55C464008788DB /* allocate.cpp */; };
 		95D4086811A303B5009F34F7 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE310F55C464008788DB /* tstep.cpp */; };
 		95D4086911A303B5009F34F7 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2E0F55C464008788DB /* rsdl.cpp */; };
@@ -689,7 +683,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tet_hp" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* spectral_hp */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -724,12 +725,6 @@
 				95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */,
 				6F14BE040FBA8649006DD167 /* copy.cpp in Sources */,
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
-				95D4086011A303B0009F34F7 /* allocate.cpp in Sources */,
-				95D4086111A303B1009F34F7 /* setup_preconditioner.cpp in Sources */,
-				95D4086211A303B1009F34F7 /* rsdl.cpp in Sources */,
-				95D4086411A303B2009F34F7 /* bdry.cpp in Sources */,
-				95D4086511A303B3009F34F7 /* getnewbdry.cpp in Sources */,
-				95D4086611A303B3009F34F7 /* getnewibc.cpp in Sources */,
 				95D4086711A303B4009F34F7 /* allocate.cpp in Sources */,
 				95D4086811A303B5009F34F7 /* tstep.cpp in Sources */,
 				95D4086911A303B5009F34F7 /* rsdl.cpp in Sources */,

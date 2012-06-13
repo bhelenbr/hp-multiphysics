@@ -2,7 +2,6 @@
 #include <math.h>
 #include <utilities.h>
 #include "../hp_boundary.h"
-#include <blitz/tinyvec-et.h>
 
 void tri_hp_explicit::setup_preconditioner() {
 	int side;

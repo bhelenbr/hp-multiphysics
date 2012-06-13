@@ -10,7 +10,6 @@
 		6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
-		9572078610473AD20044E240 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 9572078510473AD20044E240 /* makefile */; };
 		9572078710473AD20044E240 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 9572078510473AD20044E240 /* makefile */; };
 		95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
 		95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */; };
@@ -191,7 +190,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* tri_basis */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -217,7 +223,6 @@
 				B260A5090D3C1623001E15D6 /* proj1d.cpp in Sources */,
 				B260A50A0D3C1623001E15D6 /* ptvalues.cpp in Sources */,
 				95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */,
-				9572078610473AD20044E240 /* makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

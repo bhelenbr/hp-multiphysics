@@ -18,7 +18,6 @@
 
 #include "bdry_cd.h"
 #include "myblas.h"
-#include <blitz/tinyvec-et.h>
 
 //#define MPDEBUG
 

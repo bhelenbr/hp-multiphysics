@@ -10,7 +10,6 @@
 #include <utilities.h>
 #include <assert.h>
 #include <math.h>
-#include <blitz/tinyvec-et.h>
 
 #define REBAY
 // #define DEBUG_ADAPT
@@ -336,7 +335,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 		endpt -= pnts(p0);
 		if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
 			*gbl->log << "first endpoint of boundary " << ebdry(bnum)->idprefix << " does not seem to be on curve\n";
-			*gbl->log << "current" << pnts(p0) << " projected "<< endpt+pnts(p0) << '\n';
+			*gbl->log << "current" << pnts(p0)(0) << ',' << pnts(p0)(1) << " projected "<< (endpt+pnts(p0))(0) << ',' << (endpt+pnts(p0))(1) << '\n';
 		}
 
 		sind = ebdry(bnum)->seg(ebdry(bnum)->nseg-1);
@@ -346,7 +345,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 		endpt -= pnts(p0);
 		if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
 			*gbl->log << "last endpoint of boundary " << ebdry(bnum)->idprefix << " does not seem to be on curve\n";
-			*gbl->log << "current" << pnts(p0) << " projected " << endpt+pnts(p0) << '\n';
+			*gbl->log << "current" << pnts(p0)(0)  << ',' << pnts(p0)(1) << " projected " <<  (endpt+pnts(p0))(0) << ',' << (endpt+pnts(p0))(1) << '\n';
 		}
 
 		gbl->nlst = 0;

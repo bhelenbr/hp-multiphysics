@@ -1,6 +1,5 @@
 #include "bdry_ins.h"
 #include <myblas.h>
-#include <blitz/tinyvec-et.h>
 
 //#define MPDEBUG
 

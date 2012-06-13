@@ -9,7 +9,6 @@
 
 #include "tri_hp_lvlset.h"
 #include "../hp_boundary.h"
-#include <blitz/tinyvec-et.h>
 
 void tri_hp_lvlset::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
 	int i,j,n;
