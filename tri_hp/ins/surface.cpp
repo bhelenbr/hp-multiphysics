@@ -349,6 +349,7 @@ void surface::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 #endif
 }
 
+#ifdef DROP
 int surface::petsc_to_ug(PetscScalar *array) {
 	int ind = hp_edge_bdry::petsc_to_ug(array);
 	gbl->vflux = array[ind++];
@@ -373,6 +374,8 @@ void surface::ug_to_petsc(int& ind) {
 	++ind;
 	return;
 }
+#endif
+
 #endif
 
 void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
