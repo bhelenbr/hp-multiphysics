@@ -557,14 +557,15 @@ namespace ibc_ins {
 				calculate_stuff();
 
 				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
+					*x.gbl->log << "#gravity, " << x.gbl->g << ' ';   
 #ifdef MESH_REF_VEL
-					*x.gbl->log << "#gravity, velocity, height: " << x.gbl->g << ' ' << x.gbl->mesh_ref_vel(1) << ' ';  
+					*x.gbl->log << ", mesh_vel " << x.gbl->mesh_ref_vel(1) << ' ';
 #endif
 					if (surf) {
 						int v0 = x.seg(surf->base.seg(0)).pnt(0);
 						int v1 = x.seg(surf->base.seg(surf->base.nseg-1)).pnt(1);
 						FLT height = x.pnts(v0)(1)-x.pnts(v1)(1);
-						*x.gbl->log << height << std::endl;
+						*x.gbl->log << "height " << height << std::endl;
 						surf->findmax(xmax);
 					}
 				}
