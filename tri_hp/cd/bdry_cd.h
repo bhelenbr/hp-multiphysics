@@ -12,7 +12,7 @@
 #include "myblas.h"
 #include <symbolic_function.h>
 
-#define MELT1
+//#define MELT1
 
 namespace bdry_cd {
 	class generic : public hp_edge_bdry {
@@ -157,9 +157,9 @@ namespace bdry_cd {
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 			void setup_preconditioner();
 			void mg_restrict(); 
+			void element_jacobian(int indx, Array<FLT,2>& K);
 #endif
 			void update(int stage);
-			// void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
 			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 			/* This is wickedly complicated (doh! suffering for confusion early on about manifold b.c.'s) */
@@ -182,9 +182,6 @@ namespace bdry_cd {
 			/* then rotates normal and tangential row to x,y directions */
 			
 			void petsc_jacobian();
-#ifdef MELT1
-			// void petsc_jacobian_dirichlet();
-#endif
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
 			void non_sparse(Array<int,1> &nnzero);

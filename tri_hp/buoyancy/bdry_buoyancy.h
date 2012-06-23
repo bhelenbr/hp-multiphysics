@@ -17,7 +17,7 @@
 #include <blitz/array.h>
 #include <symbolic_function.h>
 
-#define MELT1
+//#define MELT1
 
 using namespace blitz;
 

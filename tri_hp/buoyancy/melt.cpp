@@ -99,36 +99,40 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	
 	inmap.getwdefault(base.idprefix +"_adis",gbl->adis,1.0);
 	
+#ifdef MELT1
+	*x.gbl->log << "#MELT1 is defined\n";
+#endif
+	
 	return;
 }
 
 void melt::tadvance() {
 	int i,j,m,sind;    
-
+	
 	symbolic::tadvance();
-
+	
 	if (x.gbl->substep == 0) {
 		/* SET SPRING CONSTANTS */
 		for(j=0;j<base.nseg;++j) {
 			sind = base.seg(j);
 			ksprg(j) = 1.0/x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1));
 		}
-
+		
 		/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
 		/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */    
 		if (!x.coarse_level) {
 			for(i=0;i<base.nseg+1;++i)
 				vdres(x.log2p,i)(0) = 0.0;
-
+			
 			for(i=0;i<base.nseg;++i) 
 				for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					sdres(x.log2p,i,m)(0) = 0.0;
-
+			
 			rsdl(x.gbl->nstage);
-
+			
 			for(i=0;i<base.nseg+1;++i)
 				vdres(x.log2p,i)(0) = -gbl->vres(i)(0);
-
+			
 			for(i=0;i<base.nseg;++i) 
 				for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					sdres(x.log2p,i,m)(0) = -gbl->sres(i,m)(0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
@@ -210,7 +214,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
 	FLT jcb;
-	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	//Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	FLT qdotn;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
@@ -234,7 +238,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));  
-	
+		
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) = x.dcrd(1,0)(0,i);
 		norm(1) = -x.dcrd(0,0)(0,i);    
@@ -262,7 +266,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* Heat Flux */
 		Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
 		for(n=0;n<x.NV;++n)
-			au(n) = u(n)(i);
+			au(n) = x.u(n)(0,i);
 		axpt(0) = x.crd(0)(0,i); axpt(1) = x.crd(1)(0,i);
 		amv(0) = (x.gbl->bd(0)*(x.crd(0)(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(x.crd(1)(0,i) -dxdt(x.log2p,indx)(1,i)));
 #ifdef MESH_REF_VEL
@@ -338,6 +342,42 @@ void melt::rsdl(int stage) {
 		}
 	}
 	
+#ifdef MELT1
+	if (base.is_comm()) {
+		assert(base.is_frst());
+		
+		/* RECEIVE RESIDUAL HERE */
+		base.comm_prepare(boundary::all,0,boundary::slave_master);
+		base.comm_exchange(boundary::all,0,boundary::slave_master);
+		base.comm_wait(boundary::all,0,boundary::slave_master);  
+		
+		int count = 0;
+		
+#ifdef MPDEBUG
+		*x.gbl->log << base.idprefix << " Receiving in melt1::rsdl"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+		
+		for(i=base.nseg;i>=0;--i) {
+			gbl->vres(i)(1) += base.frcvbuf(0,count++);
+			gbl->vres(i)(1) *= 0.5;
+#ifdef MPDEBUG
+			*x.gbl->log << '\t' << base.frcvbuf(0,count-1) << '\n';
+#endif
+		}
+		
+		
+		
+		for(i=base.nseg-1;i>=0;--i) {
+			int msgn = 1;
+			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+				gbl->sres(i,m)(1) += msgn*base.frcvbuf(0,count++);
+				gbl->sres(i,m)(1) *= 0.5;
+				msgn *= -1;
+			}
+		}
+	}
+#endif
+	
 	/* CALL VERTEX RESIDUAL HERE */
 	for(i=0;i<2;++i)
 		x.hp_vbdry(base.vbdry(i))->rsdl(stage);
@@ -375,11 +415,40 @@ void melt::rsdl(int stage) {
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 				gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
 	}
+	
+#ifdef DEBUG
+	for(i=0;i<base.nseg+1;++i)
+		*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i)(0,0) << ' ' << gbl->vdt(i)(0,1) << ' ' << gbl->vdt(i)(1,0) << ' ' << gbl->vdt(i)(1,1) << '\n';
+	
+	for(i=0;i<base.nseg;++i)
+		*x.gbl->log << "sdt: " << i << ' ' << gbl->sdt(i)(0,0) << ' ' << gbl->sdt(i)(0,1) << ' ' << gbl->sdt(i)(1,0) << ' ' << gbl->sdt(i)(1,1) << '\n';
+	
+	for(i=0;i<base.nseg+1;++i) {
+		*x.gbl->log << "vres: " << i << ' ';
+		for(n=0;n<tri_mesh::ND;++n) {
+			if (fabs(gbl->vres(i)(n)) > 1.0e-9) *x.gbl->log << gbl->vres(i)(n) << ' ';
+			else *x.gbl->log << "0.0 ";
+		}
+		*x.gbl->log << '\n';
+	}
+	
+	for(i=0;i<base.nseg;++i) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+			*x.gbl->log << "sres: " << i << ' ';
+			for(n=0;n<tri_mesh::ND;++n) {
+				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) *x.gbl->log << gbl->sres(i,m)(n) << ' ';
+				else *x.gbl->log << "0.0 ";
+			}
+			*x.gbl->log << '\n';
+		}
+	}
+#endif
+	
 }
 
 void melt::vdirichlet() {
 	int i,sind,v0;
-
+	
 #ifndef MELT1
 	/* Move Heat equation Residual */
 	i = 0;
@@ -411,7 +480,7 @@ void melt::vdirichlet() {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
 	r_gbl->res(v0)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
-
+	
 	/* Rotate side residuals */
 	for(int j=0;j<base.nseg;++j) {
 		for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
@@ -789,10 +858,13 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	}
 	
 #ifndef MELT1
-	for(int mode = 2; mode < sm+2; ++mode) {
+	const int start = 2;
+	const int stop = sm+2;
 #else
-	for(int mode = 3; mode <  basis::tri(x.log2p)->tm(); ++mode) {
+	const int start = 3;
+	const int stop = basis::tri(x.log2p)->tm();
 #endif
+	for(int mode = start; mode < stop; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
 			x.uht(var)(mode) += dw(var);
 			
@@ -835,7 +907,7 @@ void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	if (!base.is_comm()) return;
 	
 #ifdef MPDEBUG
-	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+	*x.gbl->log << base.idprefix << " In melt::smatchsolution_snd"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
 	
 	/* This boundary should always be first so send going up */
@@ -891,7 +963,7 @@ void melt::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 		mtchinv = 1./matches;
 		
 #ifdef MPDEBUG
-		*x.gbl->log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
+		*x.gbl->log << base.idprefix << "melt::smatchsolution_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
 		count = 0;
 		for(j=0;j<base.nseg;++j) {
@@ -929,7 +1001,7 @@ void melt::petsc_jacobian() {
 	Array<FLT,1> row_store(vdofs*(sm+2));
 	
 	/* ZERO ROWS CREATED BY R_MESH */
-	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
+	Array<int,1> indices((base.nseg+1)*tri_mesh::ND +base.nseg*tri_mesh::ND*sm);
 	int j = 0;
 	int cnt = 0;
 	int sind;
@@ -951,13 +1023,136 @@ void melt::petsc_jacobian() {
 	MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
 #endif
 	
+	/* fill in effect of curvature on element resdiuals */
+	if (sm) {
+		for (int j=0;j<base.nseg;++j) {
+			int sind = base.seg(j);
+			int tind = x.seg(sind).tri(0);
+			
+			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
+#ifdef BZ_DEBUG
+			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
+			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
+			
+			x.ugtouht(tind);
+			FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+			const int tm = basis::tri(x.log2p)->tm();
+			const int im = basis::tri(x.log2p)->im();
+			Array<FLT,2> Ke(x.NV*tm,x.ND*sm);
+			Array<int,1> loc_to_glo_e(x.NV*tm);
+			Array<int,1> loc_to_glo_crv(sm*tri_mesh::ND);
+			
+			x.element_rsdl(tind,0,x.uht,lf_re,lf_im);
+			for(int i=0;i<tm;++i) 
+				for(int n=0;n<x.NV;++n) 
+					Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
+			
+			int kcol = 0;
+			for(int mode = 2; mode < sm+2; ++mode) {
+				for(int var = 0; var < tri_mesh::ND; ++var) {
+					crds(j,mode-2,var) += dx;
+					
+					x.element_rsdl(tind,0,x.uht,lf_re,lf_im);
+					
+					int krow = 0;
+					for(int i=0;i<tm;++i)
+						for(int n=0;n<x.NV;++n) 
+							Ke(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dx;	
+					
+					
+					++kcol;
+					crds(j,mode-2,var) -= dx;
+				}
+			}
+			
+			int ind = 0;
+			for (int m = 0; m < 3; ++m) {
+				int gindx = vdofs*x.tri(tind).pnt(m);
+				for (int n = 0; n < x.NV; ++n)
+					loc_to_glo_e(ind++) = gindx++;
+			}		
+			
+			/* EDGE MODES */
+			if (sm) {
+				for(int i = 0; i < 3; ++i) {
+					int gindx = x.npnt*vdofs +x.tri(tind).seg(i)*sm*x.NV;
+					int sgn = x.tri(tind).sgn(i);
+					int msgn = 1;
+					for (int m = 0; m < sm; ++m) {
+						for(int n = 0; n < x.NV; ++n) {
+							for(int j = 0; j < sm*x.ND; ++j) {
+								Ke(ind,j) *= msgn;
+							}
+							loc_to_glo_e(ind++) = gindx++;
+						}
+						msgn *= sgn;
+					}
+				}
+			}
+			
+			/* INTERIOR	MODES */
+			if (tm) {
+				int gindx = x.npnt*vdofs +x.nseg*sm*x.NV +tind*im*x.NV;
+				for(int m = 0; m < im; ++m) {
+					for(int n = 0; n < x.NV; ++n){
+						loc_to_glo_e(ind++) = gindx++;
+					}
+				}
+			}
+			
+			int gindxND = jacobian_start +j*tri_mesh::ND*sm;
+			for(int m=0;m<sm*tri_mesh::ND;++m)
+				loc_to_glo_crv(m) = gindxND++;
+			
+#ifdef MY_SPARSE
+			x.J.add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
+#else
+			MatSetValuesLocal(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
+#endif		
+		}
+	}
+	
+	
 	/* This is effect of variables u,v,p,x,y on */
 	/* source terms added to flow residuals */
 	/* and x,y mesh movement equations */
+	
+#ifdef MELT1
+	/* ZERO ROWS FOR TEMPERATURE */
+	/* Zero rows for Temperature and store new equation there */
+	j = 0;
+	cnt = 0;
+	do {
+		sind = base.seg(j);
+		indices(cnt++) = x.seg(sind).pnt(0)*vdofs +x.NV-2;
+		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
+		for(int mode = 0; mode < sm; ++mode) {
+			indices(cnt++) = gindxNV +x.NV-2;
+			gindxNV += x.NV;
+		}
+	} while (++j < base.nseg);
+	indices(cnt++) = x.seg(sind).pnt(1)*vdofs +x.NV-2;
+	
+#ifdef MY_SPARSE
+	x.J.zero_rows(cnt,indices);
+	x.J_mpi.zero_rows(cnt,indices);
+#else
+	/* Must zero rows of jacobian created by r_mesh */
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
+#endif	
+#endif
+		
 	for (int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
 		int tind = x.seg(sind).tri(0);
 		
+		element_jacobian(j,K);
+
+#ifndef MELT1
 		/* CREATE GLOBAL NUMBERING LIST */
 		int ind = 0;
 		for(int mode = 0; mode < 2; ++mode) {
@@ -975,6 +1170,34 @@ void melt::petsc_jacobian() {
 			for(int var = 0; var < tri_mesh::ND; ++var)
 				loc_to_glo(ind++) = gindxND++;
 		}
+#else
+		/* Let normal equation go into temperature slot and vice-versa */
+		int ind = 0;
+		for(int mode = 0; mode < 2; ++mode) {
+			int gindx = vdofs*x.seg(sind).pnt(mode);
+			loc_to_glo(ind++) = gindx;   // u
+			loc_to_glo(ind++) = gindx+1; // v
+			loc_to_glo(ind++) = gindx+5; // y
+			loc_to_glo(ind++) = gindx+3; // p 
+			loc_to_glo(ind++) = gindx+4; // x
+			loc_to_glo(ind++) = gindx+2; // T
+		}
+		
+		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
+		int gindxND = jacobian_start +j*tri_mesh::ND*sm;
+		for(int mode = 0; mode < sm; ++mode) {
+			
+			loc_to_glo(ind++) = gindxNV;   // u
+			loc_to_glo(ind++) = gindxNV+1; // v
+			loc_to_glo(ind++) = gindxND+1; // y
+			loc_to_glo(ind++) = gindxNV+3; // p 
+			loc_to_glo(ind++) = gindxND; // x
+			loc_to_glo(ind++) = gindxNV+2; // T
+			gindxNV +=x.NV;
+			gindxND +=tri_mesh::ND;
+		}
+#endif
+		
 		
 #ifdef MELT1
 		/* CREATE GLOBAL COLUMN NUMBERING LIST */
@@ -1004,7 +1227,7 @@ void melt::petsc_jacobian() {
 		}
 		
 		/* INTERIOR	MODES */
-		if (tm) {
+		if (im) {
 			int gindx = x.npnt*vdofs +x.nseg*sm*x.NV +tind*im*x.NV;
 			for(int m = 0; m < im; ++m) {
 				for(int n = 0; n < x.NV; ++n){
@@ -1022,9 +1245,7 @@ void melt::petsc_jacobian() {
 			}
 		}
 #endif
-		
-		element_jacobian(j,K);
-		
+				
 #ifndef MELT1
 #ifdef MY_SPARSE
 		x.J.add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
@@ -1038,93 +1259,8 @@ void melt::petsc_jacobian() {
 		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),tm*x.NV +(3+sm)*x.ND,col_index.data(),K.data(),ADD_VALUES);
 #endif
 #endif
-		
-		if (!sm) continue;
-		
-		/* Now fill in effect of curvature on element resdiuals */
-		Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef BZ_DEBUG
-		const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-		const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-		
-		x.ugtouht(tind);
-		FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
-		const int tm = basis::tri(x.log2p)->tm();
-		const int im = basis::tri(x.log2p)->im();
-		Array<FLT,2> Ke(x.NV*tm,x.ND*sm);
-		Array<int,1> loc_to_glo_e(x.NV*tm);
-		Array<int,1> loc_to_glo_crv(sm*tri_mesh::ND);
-		
-		x.element_rsdl(tind,0,x.uht,lf_re,lf_im);
-		for(int i=0;i<tm;++i) 
-			for(int n=0;n<x.NV;++n) 
-				Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
-		
-		int kcol = 0;
-		for(int mode = 2; mode < sm+2; ++mode) {
-			for(int var = 0; var < tri_mesh::ND; ++var) {
-				crds(j,mode-2,var) += dx;
-				
-				x.element_rsdl(tind,0,x.uht,lf_re,lf_im);
-				
-				int krow = 0;
-				for(int i=0;i<tm;++i)
-					for(int n=0;n<x.NV;++n) 
-						Ke(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dx;	
-				
-				
-				++kcol;
-				crds(j,mode-2,var) -= dx;
-			}
-		}
-		
-		ind = 0;
-		for (int m = 0; m < 3; ++m) {
-			int gindx = vdofs*x.tri(tind).pnt(m);
-			for (int n = 0; n < x.NV; ++n)
-				loc_to_glo_e(ind++) = gindx++;
-		}		
-		
-		/* EDGE MODES */
-		if (sm) {
-			for(int i = 0; i < 3; ++i) {
-				int gindx = x.npnt*vdofs +x.tri(tind).seg(i)*sm*x.NV;
-				int sgn = x.tri(tind).sgn(i);
-				int msgn = 1;
-				for (int m = 0; m < sm; ++m) {
-					for(int n = 0; n < x.NV; ++n) {
-						for(int j = 0; j < sm*x.ND; ++j) {
-							Ke(ind,j) *= msgn;
-						}
-						loc_to_glo_e(ind++) = gindx++;
-					}
-					msgn *= sgn;
-				}
-			}
-		}
-		
-		/* INTERIOR	MODES */
-		if (tm) {
-			int gindx = x.npnt*vdofs +x.nseg*sm*x.NV +tind*im*x.NV;
-			for(int m = 0; m < im; ++m) {
-				for(int n = 0; n < x.NV; ++n){
-					loc_to_glo_e(ind++) = gindx++;
-				}
-			}
-		}
-		
-		gindxND = jacobian_start +j*tri_mesh::ND*sm;
-		for(int m=0;m<sm*tri_mesh::ND;++m)
-			loc_to_glo_crv(m) = gindxND++;
-		
-#ifdef MY_SPARSE
-		x.J.add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
-#else
-		MatSetValuesLocal(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
-#endif		
 	}
+
 	
 	/* FIXME: NOT SURE ABOUT THIS TEMPORARY */
 	//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
@@ -1153,6 +1289,10 @@ void melt::petsc_matchjacobian_snd() {
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
 	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+
+#ifdef MPDEBUG
+	*x.gbl->log << base.idprefix << "In melt::petsc_matchjacobian_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
 	
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
@@ -1161,7 +1301,7 @@ void melt::petsc_matchjacobian_snd() {
 		/* attach diagonal column # to allow vertex continuity enforcement */
 		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
 #ifdef MPDEBUG
-		*x.gbl->log << "sending vertex rowbase " << rowbase << std::endl;
+		*x.gbl->log << '\t' << rowbase << std::endl;
 #endif
 		
 		/* Send Side Information */
@@ -1169,7 +1309,7 @@ void melt::petsc_matchjacobian_snd() {
 		/* attach diagonal column # to allow side continuity enforcement */
 		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
 #ifdef MPDEBUG
-		*x.gbl->log << "sending side rowbase " << rowbase << std::endl;
+		*x.gbl->log << '\t'<< rowbase << std::endl;
 #endif
 	}
 	
@@ -1178,13 +1318,13 @@ void melt::petsc_matchjacobian_snd() {
 	/* attach diagonal # to allow continuity enforcement */
 	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
 #ifdef MPDEBUG
-	*x.gbl->log << "sending vertex rowbase " << rowbase << std::endl;
+	*x.gbl->log <<  '\t' << rowbase << std::endl;
 #endif	
 	
 	/* Send index of start of curved modes */
 	base.fsndbuf(base.sndsize()++) = jacobian_start;
 #ifdef MPDEBUG
-	*x.gbl->log << "sending jacobian_start " << jacobian_start << std::endl;
+	*x.gbl->log <<  '\t' << jacobian_start << std::endl;
 #endif	
 	
 }
@@ -1664,16 +1804,16 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 	const int im=basis::tri(x.log2p)->im();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-
+	
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
-	vdofs = NV;
+		vdofs = NV;
 	else
-	vdofs = ND+NV;
-
+		vdofs = ND+NV;
+	
 	int begin_seg = x.npnt*vdofs;
 	int begin_tri = begin_seg+x.nseg*sm*NV;
-
+	
 	if(x.sm0 > 0) {
 		for (int i=0;i<base.nseg;++i) {
 			int sind = base.seg(i);
@@ -1718,7 +1858,7 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 void melt::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
 	if (!base.is_comm()) return;
-    
+	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
@@ -1758,7 +1898,7 @@ void melt::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	/* Last thing to send is nnzero for edges (all the same) */
 	if (sm)
 		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
-    
+	
 	return;
 }
 
@@ -1769,7 +1909,7 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	    
+	
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
 		vdofs = NV;
@@ -1825,7 +1965,7 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 #endif
 
 void melt::setup_preconditioner() {
-
+	
 	int indx,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
@@ -1838,27 +1978,27 @@ void melt::setup_preconditioner() {
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
-
+	
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
 	/**************************************************/
 	gbl->vdt(0) = 0.0;
-
+	
 	for(indx=0; indx < base.nseg; ++indx) {
 		sind = base.seg(indx);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
-
-
+		
+		
 #ifdef DETAILED_DT
 		x.crdtocht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
 			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
+		
 		x.ugtouht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
 			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
-
+		
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
 		gbl->meshc(indx) = 1.0e99;
@@ -1866,7 +2006,7 @@ void melt::setup_preconditioner() {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
 			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
-
+			
 			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 			for(n=0;n<tri_mesh::ND;++n) {
 				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i))); 
@@ -1874,14 +2014,14 @@ void melt::setup_preconditioner() {
 				mvel(n) -= x.gbl->mesh_ref_vel(n);
 #endif
 			}
-
+			
 			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
 			qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
 			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
-
+			
 			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
 			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf;                
-
+			
 			/* SET UP DISSIPATIVE COEFFICIENT */
 			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
 			/* RESIDUAL HAS DX/2 WEIGHTING */
@@ -1898,33 +2038,33 @@ void melt::setup_preconditioner() {
 		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
 		h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
-
+		
 		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 		
 #ifdef MESH_REF_VEL
 		mvel -= x.gbl->mesh_ref_vel;
 #endif
-
-
+		
+		
 		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
 		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
-
+		
 		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 		
 #ifdef MESH_REF_VEL
 		mvel -= x.gbl->mesh_ref_vel;
 #endif
-
+		
 		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
 		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
-
+		
 		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
-
+		
 		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
 		dtnorm = (2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf;  
-
+		
 		/* SET UP DISSIPATIVE COEFFICIENT */
 		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
 		/* RESIDUAL HAS DX/2 WEIGHTING */
@@ -1937,7 +2077,7 @@ void melt::setup_preconditioner() {
 #endif
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		nrm *= 0.5;
-
+		
 		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
@@ -1946,19 +2086,19 @@ void melt::setup_preconditioner() {
 		gbl->vdt(indx+1)(0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx+1)(1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx+1)(1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-
+		
 		if (basis::tri(x.log2p)->sm()) {
 			gbl->sdt(indx)(0,0) = -dttang*nrm(1);
 			gbl->sdt(indx)(0,1) =  dttang*nrm(0);
 			gbl->sdt(indx)(1,0) =  dtnorm*nrm(0);
 			gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);  
-
+			
 #ifdef DETAILED_MINV
 			int lsm = basis::tri(x.log2p)->sm();
 			x.crdtocht1d(sind);
 			for(n=0;n<tri_mesh::ND;++n)
 				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
+			
 			for(int m = 0; m<lsm; ++m) {
 				for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 					nrm(0) =  dcrd(1,i);
@@ -1973,20 +2113,20 @@ void melt::setup_preconditioner() {
 				basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
 				basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(2,0));
 				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
-
+				
 				/* CFL = 0 WON'T WORK THIS WAY */
 				lf(0) /= gbl->cfl(0,x.log2p);
 				lf(1) /= gbl->cfl(0,x.log2p);
 				lf(2) /= gbl->cfl(1,x.log2p);
 				lf(3) /= gbl->cfl(1,x.log2p);                        
-
+				
 				for (n=0;n<lsm;++n) {
 					gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
 					gbl->ms(indx)(2*m,2*n+1) = lf(1,n+2);
 					gbl->ms(indx)(2*m+1,2*n) = lf(2,n+2);
 					gbl->ms(indx)(2*m+1,2*n+1) = lf(3,n+2);
 				}
-
+				
 				/* tang/norm, x/y,  mode,  vert */
 				gbl->vms(indx,0,0,m,0) = lf(0,0);
 				gbl->vms(indx,0,1,m,0) = lf(1,0);
@@ -1997,7 +2137,7 @@ void melt::setup_preconditioner() {
 				gbl->vms(indx,1,0,m,1) = lf(2,1);
 				gbl->vms(indx,1,1,m,1) = lf(3,1);    
 			}
-
+			
 			int info;
 			GETRF(2*lsm,2*lsm,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),info);
 			if (info != 0) {
@@ -2005,54 +2145,54 @@ void melt::setup_preconditioner() {
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			/*
-			\phi_n dx,dy*t = \phi_n Vt
-			\phi_t dx,dy*n = \phi_t Vn
-			*/
+			 \phi_n dx,dy*t = \phi_n Vt
+			 \phi_t dx,dy*n = \phi_t Vn
+			 */
 #endif
 		}
 	}
-
+	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
 		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-
+		
 		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
-
+		
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
 		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
 	}
-
+	
 	if (gbl->is_loop) {
 		for(int m=0;m<tri_mesh::ND;++m)
 			for(int n=0;n<tri_mesh::ND;++n)
 				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
 		gbl->vdt(base.nseg+1) = gbl->vdt(0);
 	}
-
+	
 	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {    
 		/* INVERT VERTEX MATRIX */
 		jcbi = 1.0/(gbl->vdt(indx)(0,0)*gbl->vdt(indx)(1,1) -gbl->vdt(indx)(0,1)*gbl->vdt(indx)(1,0));
-
+		
 		temp = gbl->vdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(0,0) = gbl->vdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
 		gbl->vdt(indx)(1,1) = temp;
 		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
 	}
-
+	
 	/* INVERT SIDE MATRIX */    
 	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT SIDE MVDT MATRIX */
 			jcbi = 1.0/(gbl->sdt(indx)(0,0)*gbl->sdt(indx)(1,1) -gbl->sdt(indx)(0,1)*gbl->sdt(indx)(1,0));
-
+			
 			temp = gbl->sdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
 			gbl->sdt(indx)(0,0) = gbl->sdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
 			gbl->sdt(indx)(1,1) = temp;
@@ -2065,15 +2205,15 @@ void melt::setup_preconditioner() {
 
 #ifdef petsc
 void melt_end_pt::petsc_jacobian_dirichlet() {
-	 	 
+	
 	int indx;
 	if (surfbdry == 0) {
-	 indx = x.ebdry(base.ebdry(0))->nseg;
+		indx = x.ebdry(base.ebdry(0))->nseg;
 	}
 	else {
-	 indx = 0;
+		indx = 0;
 	}
-
+	
 	/* GET X & Y MESH MOVEMENT ROW */
 	/* CONSTRAIN MOTION NORMAL TO BOUNDARY */
 	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV; 
@@ -2081,57 +2221,57 @@ void melt_end_pt::petsc_jacobian_dirichlet() {
 	int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
 	Array<int,1> cols(nnz1);
 	Array<FLT,2> vals(2,nnz1);
-
+	
 	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 	if (nnz1 != nnz2) {
-	 *x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-	 sim::abort(__LINE__,__FILE__,x.gbl->log);
+		*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	int row1 = x.J._cpt(row);
 	int row2 = x.J._cpt(row+1);
 	for(int col=0;col<nnz1;++col) {
-	 if (x.J._col(row1++) != x.J._col(row2++)) {
-		 *x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
-		 sim::abort(__LINE__,__FILE__,x.gbl->log);
-	 }	
+		if (x.J._col(row1++) != x.J._col(row2++)) {
+			*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}	
 	}
-
+	
 	/* Get back unrotated equation for normal direction */
 	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
 	vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*surf->gbl->vdt(indx)(1,0)/J;
 	vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*surf->gbl->vdt(indx)(0,0)/J;
-
+	
 	/* Replace x equation with tangential position equation */
 	/* Replacy y equation with normal displacement equation */
 	/* Normal Equation */
 	vals(1,Range::all()) = 0.0;
 	for(int col=0;col<nnz1;++col) {
-	 if (x.J._col(row1+col) == row) {
-		 vals(1,col) = wall_normal(0);
-		 break;
-	 }
+		if (x.J._col(row1+col) == row) {
+			vals(1,col) = wall_normal(0);
+			break;
+		}
 	}
 	for(int col=0;col<nnz1;++col) {
-	 if (x.J._col(row1+col) == row+1) {
-		 vals(1,col) = wall_normal(1);
-		 break;
-	 }
+		if (x.J._col(row1+col) == row+1) {
+			vals(1,col) = wall_normal(1);
+			break;
+		}
 	}
-	 
+	
 	/* tangent = -sin(theta) i +cos(theta) j */
 	/* normal = cos(theta) i + sin(theta) j */
 	/* Rotate equations for diagonal dominance to match what is done to residual */
 	Array<FLT,2> temp(2,nnz1);
 	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(0,1) +vals(1,Range::all())*wall_normal(0);
 	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
-
+	
 	TinyVector<int,2> rows(row,row+1);
 	x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
 	x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());	 
 }
 #endif
 
-					 
+
 void kellerman::init(input_map& inmap,void* gbl_in) {
 	melt::init(inmap,gbl_in);
 	
@@ -2141,7 +2281,7 @@ void kellerman::init(input_map& inmap,void* gbl_in) {
 		essential_indices.push_back(n);
 	type = natural;
 	type(Range(0,x.ND-1)) = essential;
-
+	
 	return;
 }
 
@@ -2151,7 +2291,7 @@ void kellerman::petsc_jacobian_dirichlet() {
 	
 	int sm=basis::tri(x.log2p)->sm();
 	Array<int,1> indices((base.nseg+1)*x.ND +base.nseg*sm*x.ND);
-
+	
 	int vdofs = x.NV +tri_mesh::ND;
 	
 	int gind,v0,sind;

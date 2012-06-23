@@ -7,15 +7,6 @@
  *
  */
 
-/*
- *  cd_bdry.h
- *  spectral_hp
- *
- *  Created by Brian Helenbrook on 11/7/05.
- *  Copyright 2005 __MyCompanyName__. All rights reserved.
- *
- */
-
 #ifndef _bdry_ins_h_
 #define _bdry_ins_h_
 

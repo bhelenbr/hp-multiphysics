@@ -220,13 +220,37 @@ void melt::rsdl(int stage) {
 		element_rsdl(indx,lf);
 
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
-		gbl->vres(indx) += lf(0)(0);
-		gbl->vres(indx+1) = lf(0)(1);
+		gbl->vres(indx)(0) += lf(0)(0);
+		gbl->vres(indx+1)(0) = lf(0)(1);
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->sres(indx,m) = lf(0)(m+2);
+			gbl->sres(indx,m)(0) = lf(0)(m+2);
 	}
 	
 	/* COMMUNICATE RESIDUAL HERE */
+#ifdef MPDEBUG
+	*x.gbl->log << base.idprefix << "In melt1::rsdl"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+	
+	if (base.is_comm()) {
+		int count = 0;
+		for(int j=0;j<base.nseg+1;++j) {
+			base.fsndbuf(count++) = gbl->vres(j)(0);
+#ifdef MPDEBUG 
+			*x.gbl->log << '\t' << gbl->vres(j)(0) << '\n';
+#endif
+		}
+		for(int j=0;j<base.nseg;++j) {
+			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+				base.fsndbuf(count++) = gbl->sres(j,m)(0);
+			}
+		}
+
+		base.sndsize() = count;
+		base.sndtype() = boundary::flt_msg;
+		base.comm_prepare(boundary::all,0,boundary::slave_master);
+		base.comm_exchange(boundary::all,0,boundary::slave_master);
+		base.comm_wait(boundary::all,0,boundary::slave_master);
+	}
 	
 #endif
 
@@ -279,12 +303,12 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* HEAT FLUX*/
 		/* WITH NORMAL POINTING OUTWARD */
 		x.cjcb(0,i) = lkcond*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-		qdotn = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,0)(0,i);
-		qdotn += x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,1)(0,i);
+		qdotn = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i))*x.du(0,0)(0,i);
+		qdotn += x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i))*x.du(0,1)(0,i);
 		
 		res(0,i) = -qdotn;
 		/* Heat Flux Upwinded? */
-		res(1,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		res(1,i) = -res(0,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 	}
 	lf = 0.0;
 	
@@ -434,6 +458,7 @@ void melt::setup_preconditioner() {
 	return;
 }
 
+/* Only for MELT1 */
 void melt::mg_restrict() {
 	int i,bnum,indx,tind,v0,snum,sind;
 	
@@ -469,6 +494,102 @@ void melt::mg_restrict() {
 	
 	return;
 }
+
+/* Only for MELT1 */
+void melt::element_jacobian(int indx, Array<FLT,2>& K) {
+	int sm = basis::tri(x.log2p)->sm();	
+	Array<TinyVector<FLT,MXTM>,1> Rbar(1),lf(1);
+#ifdef BZ_DEBUG
+	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
+	
+	const int nvert = 3;
+	
+	/* Calculate and store initial residual */
+	int sind = base.seg(indx);
+	int tind = x.seg(sind).tri(0);        
+	x.ugtouht(tind);
+	element_rsdl(indx,Rbar);
+	
+	Array<FLT,1> dw(x.NV);
+	dw = 0.0;
+	for(int i=0;i<nvert;++i)
+		for(int n=0;n<x.NV;++n)
+			dw = dw + fabs(x.uht(n)(i));
+	
+	dw = dw*eps_r;
+	dw += eps_a;
+	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+	
+	/* Numerically create Jacobian */
+	int kcol = 0;
+	for(int mode = 0; mode < nvert; ++mode) {
+		for(int var = 0; var < x.NV; ++var) {
+			x.uht(var)(mode) += dw(var);
+			
+			element_rsdl(indx,lf);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<1;++n)
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
+			
+			++kcol;
+			x.uht(var)(mode) -= dw(var);
+		}
+		
+		for(int var = 0; var < tri_mesh::ND; ++var) {
+			x.pnts(x.tri(tind).pnt(mode))(var) += dx;
+			
+			element_rsdl(indx,lf);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<1;++n)
+					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+			
+			++kcol;
+			x.pnts(x.tri(tind).pnt(mode))(var) -= dx;
+		}
+	}
+
+		for(int mode = 3; mode <  basis::tri(x.log2p)->tm(); ++mode) {
+			for(int var = 0; var < x.NV; ++var) {
+				x.uht(var)(mode) += dw(var);
+				
+				element_rsdl(indx,lf);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<1;++n)
+						K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
+				
+				++kcol;
+				x.uht(var)(mode) -= dw(var);
+			}
+		}
+	
+		for(int mode = 2; mode < sm+2; ++mode) {	
+			for(int var = 0; var < tri_mesh::ND; ++var) {
+				crds(indx,mode-2,var) += dx;
+				
+				element_rsdl(indx,lf);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<1;++n)
+						K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
+				
+				++kcol;
+				
+				crds(indx,mode-2,var) -= dx;
+			}
+		}
+		
+		return;
+	}
 #endif
 
 
@@ -481,12 +602,19 @@ void melt::petsc_jacobian() {
 		vdofs = x.NV;
 	else
 		vdofs = x.NV+x.ND;
-	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
 	Array<FLT,1> row_store(vdofs*(sm+2));
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
-	
+#ifndef MELT1
+	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
+#else
+	const int im = basis::tri(x.log2p)->im();	
+	const int tm = basis::tri(x.log2p)->tm();	
+	Array<FLT,2> K(vdofs*(sm+2),tm*x.NV +(3+sm)*x.ND);
+	Array<int,1> col_index(tm*x.NV +(3+sm)*x.ND);
+#endif
+
 	/* ZERO ROWS CREATED BY R_MESH */
-	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
+	Array<int,1> indices((base.nseg+1)*tri_mesh::ND +base.nseg*tri_mesh::ND*sm);
 	int j = 0;
 	int cnt = 0;
 	int sind;
@@ -598,6 +726,103 @@ void melt::petsc_jacobian() {
 #endif		
 		}
 	}
+	
+#ifdef MELT1
+	/* Zero rows for Temperature and store new equation there */
+	cnt = 0;
+	j = 0;
+	do {
+		sind = base.seg(j);
+		indices(cnt++) = x.seg(sind).pnt(0)*vdofs;
+		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
+		for(int mode = 0; mode < sm; ++mode)
+			for(int var = 0; var < x.NV; ++var)
+				indices(cnt++) = gindxNV++;
+	} while (++j < base.nseg);
+	indices(cnt++) = x.seg(sind).pnt(1)*vdofs;
+	
+#ifdef MY_SPARSE
+	x.J.zero_rows(cnt,indices);
+	x.J_mpi.zero_rows(cnt,indices);
+#else
+	/* Must zero rows of jacobian created by r_mesh */
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
+#endif
+	
+	for (int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
+		int tind = x.seg(sind).tri(0);
+		
+		element_jacobian(j,K);
+		
+		/* CREATE GLOBAL ROW NUMBERING LIST */
+		int ind = 0;
+		for(int mode = 0; mode < 2; ++mode) {
+			int gindx = vdofs*x.seg(sind).pnt(mode);
+			for(int var = 0; var < x.NV; ++var)
+				loc_to_glo(ind++) = gindx++;
+		}
+		
+		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
+		for(int mode = 0; mode < sm; ++mode) {
+			for(int var = 0; var < x.NV; ++var)
+				loc_to_glo(ind++) = gindxNV++;
+		}
+		
+		/* CREATE GLOBAL COLUMN NUMBERING LIST */
+		ind = 0;
+		for (int m = 0; m < 3; ++m) {
+			int gindx = vdofs*x.tri(tind).pnt(m);
+			for (int n = 0; n < vdofs; ++n)
+				col_index(ind++) = gindx++;
+		}		
+		
+		/* EDGE MODES */
+		if (sm) {
+			for(int i = 0; i < 3; ++i) {
+				int gindx = x.npnt*vdofs +x.tri(tind).seg(i)*sm*x.NV;
+				int sgn = x.tri(tind).sgn(i);
+				int msgn = 1;
+				for (int m = 0; m < sm; ++m) {
+					for(int n = 0; n < x.NV; ++n) {
+						for(int j = 0; j < vdofs*(sm+2); ++j) {
+							K(j,ind) *= msgn;
+						}
+						col_index(ind++) = gindx++;
+					}
+					msgn *= sgn;
+				}
+			}
+		}
+		
+		/* INTERIOR	MODES */
+		if (tm) {
+			int gindx = x.npnt*vdofs +x.nseg*sm*x.NV +tind*im*x.NV;
+			for(int m = 0; m < im; ++m) {
+				for(int n = 0; n < x.NV; ++n){
+					col_index(ind++) = gindx++;
+				}
+			}
+		}
+		
+		/* CURVATURE COEFFICIENTS */
+		if (sm) {
+			int gindxND = jacobian_start +j*tri_mesh::ND*sm;
+			for(int mode = 0; mode < sm; ++mode) {
+				for(int var = 0; var < tri_mesh::ND; ++var)
+					col_index(ind++) = gindxND++;
+			}
+		}
+		
+#ifdef MY_SPARSE
+		x.J.add_values(x.NV*(sm+2),loc_to_glo,tm*x.NV +(3+sm)*x.ND,col_index,K);
+#else
+		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),tm*x.NV +(3+sm)*x.ND,col_index.data(),K.data(),ADD_VALUES);
+#endif
+	}
+#endif
 }
 
 void melt::petsc_matchjacobian_snd() {	
