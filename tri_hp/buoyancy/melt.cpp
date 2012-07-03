@@ -1978,6 +1978,10 @@ void melt::setup_preconditioner() {
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
+	const FLT alpha = x.gbl->kcond/(x.gbl->rho*x.gbl->cp);
+	TinyVector<FLT,tri_mesh::ND> aPoint;
+	aPoint = 0.0;
+	const FLT Tm = ibc->f(2, aPoint, 0.0);
 	
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
@@ -2020,8 +2024,8 @@ void melt::setup_preconditioner() {
 			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
 			
 			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
-			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf;                
-			
+			dtnorm = MIN(dtnorm,(2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf*x.gbl->rho +1.5*alpha/(hsm*hsm)*x.gbl->rho*x.gbl->cp*Tm);
+
 			/* SET UP DISSIPATIVE COEFFICIENT */
 			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
 			/* RESIDUAL HAS DX/2 WEIGHTING */
@@ -2063,17 +2067,14 @@ void melt::setup_preconditioner() {
 		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
 		
 		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
-		dtnorm = (2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf;  
-		
+		dtnorm = (2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf*x.gbl->rho +1.5*alpha/(hsm*hsm)*x.gbl->rho*x.gbl->cp*Tm;
 		/* SET UP DISSIPATIVE COEFFICIENT */
 		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
 		/* RESIDUAL HAS DX/2 WEIGHTING */
 		/* |a| dx/2 dv/dx  dx/2 dpsi */
 		/* |a| dx/2 2/dx dv/dpsi  dpsi */
 		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
-		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
-		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)));
 #endif
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		nrm *= 0.5;
