@@ -316,7 +316,7 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			streamsize oldprecision = (*x.gbl->log).precision(10);
 			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
 			/* OUTPUT AUXILIARY FLUXES */
-			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+			*x.gbl->log << base.idprefix << " l2error: " << sqrt(l2error) << std::endl;
 			(*x.gbl->log).precision(oldprecision);
 			
 			break;
