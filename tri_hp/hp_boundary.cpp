@@ -321,24 +321,6 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			
 			break;
 	}
-	
-	case(tri_hp::auxiliary): {
-		if (!report_flag) return;                
-		
-		/* AUXILIARY FLUX METHOD */
-		int v0;
-		Array<FLT,1> total_flux(x.NV);
-		total_flux = 0.0;
-		int ind = 0;
-		int sind;
-		do {
-			sind = base.seg(ind);
-			v0 = x.seg(sind).pnt(0);
-			total_flux += x.gbl->res.v(v0,Range::all());
-		} while (++ind < base.nseg);
-		v0 = x.seg(sind).pnt(1);
-		total_flux += x.gbl->res.v(v0,Range::all());
-	}
 
 		default:
 			break;

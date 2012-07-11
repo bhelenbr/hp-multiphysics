@@ -123,9 +123,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
 
 					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
-					lconv_flux(2) = convect;
-					lconv_flux(0) = x.u(0)(0,i)*convect;
-					lconv_flux(1) = x.u(1)(0,i)*convect;
+					lconv_flux(x.NV-1) = convect;
+					for(int n=0;n<x.NV-1;++n)
+						lconv_flux(n) = x.u(n)(0,i)*convect;
 					
 					conv_flux -= lconv_flux;
 					lconv_flux /= jcb;
@@ -137,7 +137,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 					
 					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
-					for(n=0;n<x.NV;++n)
+					for(int n=0;n<x.NV;++n)
 						file_out << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
 					file_out << std::endl;
 
@@ -146,28 +146,28 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			file_out.close();
 			
 			streamsize oldprecision = fout.precision(10);
-			fout << base.idprefix << " circumference: " << circumference << std::endl;
-			fout << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
-			fout << base.idprefix << " convective flux: " << conv_flux << std::endl;
-			fout << base.idprefix << " circulation: " << circulation << std::endl;
+			fout << "# " << base.idprefix << " circumference: " << circumference << std::endl;
+			fout << "# " << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
+			fout << "# " << base.idprefix << " convective flux: " << conv_flux << std::endl;
+			fout << "# " << base.idprefix << " circulation: " << circulation << std::endl;
 
 			/* OUTPUT AUXILIARY FLUXES */
-			fout << base.idprefix << "total fluxes: " << total_flux << std::endl;
+			fout << "# " << base.idprefix << " total fluxes: " << total_flux << std::endl;
 #ifdef L2_ERROR
-			fout << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+			fout << "# " << base.idprefix << " l2error: " << sqrt(l2error) << std::endl;
 #endif
 			fout.precision(oldprecision);
 			
 			break;
 		}
-
 		case(tri_hp::auxiliary): {
 			if (!report_flag) return;                
-
+			
 			/* AUXILIARY FLUX METHOD */
 			int v0;
 			total_flux = 0.0;
-			ind = 0;
+			int ind = 0;
+			int sind;
 			do {
 				sind = base.seg(ind);
 				v0 = x.seg(sind).pnt(0);
@@ -175,8 +175,11 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			} while (++ind < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			total_flux += x.gbl->res.v(v0,Range::all());
+			
+			break;
 		}
 		default: {
+			hp_edge_bdry::output(fout,typ,tlvl);
 			break;
 		}
 	}

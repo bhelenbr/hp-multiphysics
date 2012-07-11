@@ -127,22 +127,6 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 			break;
 		}
-
-		case(tri_hp::auxiliary): {
-			if (!report_flag) return;                
-
-			/* AUXILIARY FLUX METHOD */
-			int v0;
-			total_flux = 0.0;
-			for(ind=0; ind < base.nseg; ++ind) {
-				sind = base.seg(ind);
-				v0 = x.seg(sind).pnt(0);
-				total_flux += x.gbl->res.v(v0,Range::all());
-			}
-			v0 = x.seg(sind).pnt(1);
-			total_flux += x.gbl->res.v(v0,Range::all());
-			break;
-		}
 			
 		default: {
 			hp_edge_bdry::output(fout,typ,tlvl);
