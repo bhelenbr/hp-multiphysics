@@ -46,7 +46,8 @@ void tri_hp::length() {
 		error_estimator();
 		
 		const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
-
+		const FLT expon = -1./(ND*(1.+alpha));
+		
 		sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
 		FLT energy2 = gbl->eanda_recv(0);
 		FLT e2to_pow = gbl->eanda_recv(1);
@@ -62,7 +63,7 @@ void tri_hp::length() {
 			gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 			for(int tind=0;tind<ntri;++tind) {
 				FLT error2 = gbl->fltwk(tind);
-				FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+				FLT ri = K*pow(error2, expon);				
 				for (int j=0;j<3;++j) {
 					int p0 = tri(tind).pnt(j);
 					/* Calculate average at vertices */
@@ -135,12 +136,10 @@ void tri_hp::length() {
 //		}
 		
 		/* NOW RESCALE AT VERTICES */
-		FLT maxlngth = 50.0;
-		FLT minlngth = 0.0;
 		for (int pind=0;pind<npnt;++pind) {
 			lngth(pind) *= gbl->res.v(pind,0);
-			lngth(pind) = MIN(lngth(pind),maxlngth);
-			lngth(pind) = MAX(lngth(pind),minlngth);
+			lngth(pind) = MIN(lngth(pind),gbl->max_length);
+			lngth(pind) = MAX(lngth(pind),gbl->min_length);
 		}
 		
 		/* LIMIT BOUNDARY CURVATURE */
@@ -165,7 +164,7 @@ void tri_hp::length() {
 				TinyVector<FLT,ND> dx0;
 				dx0(0) = pnts(v2)(0)-pnts(v1)(0);
 				dx0(1) = pnts(v2)(1)-pnts(v1)(1);
-				FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
+				FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1) +10.*EPSILON;  // To make sure we don't exceed 1.0 in acos
 				
 				TinyVector<FLT,ND> dx1;
 				dx1(0) = pnts(v0)(0)-pnts(v2)(0);
@@ -178,17 +177,20 @@ void tri_hp::length() {
 				FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
 				
 				TinyVector<FLT,2> ep, dedpsi;
+				
 				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
 				FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 				
 				FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
 				FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
 				
+
 				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
 				lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 				
 				FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
-				FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
+				FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
+				
 				
 				// FIXME: end points are wrong for periodic boundary or communication boundary
 				FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
