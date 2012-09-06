@@ -36,6 +36,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		}
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
+			hp_edge_bdry::output(fout,typ,tlvl);
+			break;
 			
 			std::ostringstream fname;
 			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";

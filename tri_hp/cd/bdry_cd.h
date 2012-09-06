@@ -12,7 +12,8 @@
 #include "myblas.h"
 #include <symbolic_function.h>
 
-//#define MELT1
+
+// #define MELT1 /* Must be uncommented in two places */
 
 namespace bdry_cd {
 	class generic : public hp_edge_bdry {

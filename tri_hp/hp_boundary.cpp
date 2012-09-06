@@ -263,7 +263,7 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			
 			FLT circumference = 0.0;
 			FLT l2error = 0.0;
-			TinyVector<FLT,tri_mesh::ND> xpt,norm,mvel;
+			TinyVector<FLT,tri_mesh::ND> xpt,norm,mvel,visc;
 
 			int ind = 0;
 			do { 
@@ -288,7 +288,8 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 				
 				for (int i=0;i<basis::tri(x.log2p)->gpx();++i) {
-					FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					FLT arclength = sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*arclength;
 					circumference += jcb;
 	
 					norm(0) = x.dcrd(1,0)(0,i);
@@ -304,10 +305,20 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					xpt(1) = x.crd(1)(0,i);
 					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
 					
+					jcb = 1./(arclength*(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i)));
+									
+					/* For normal derivative */
+					visc[0] =  jcb*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+					visc[1] = -jcb*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+					
 					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
 					
-					for (n=0;n<x.NV;++n)
-						fout << x.u(n)(0,i) << ' ';
+					for (n=0;n<x.NV;++n) {
+						/* Output value, tangent, and normal derivatives */
+						fout << x.u(n)(0,i) << ' ' << x.du(n,0)(0,i)/arclength 
+							<< ' ' << -visc[0]*x.du(n,0)(0,i) -visc[1]*x.du(n,1)(0,i) << ' ';
+
+					}
 					fout << std::endl;
 				}	
 			} while (++ind < base.nseg);
