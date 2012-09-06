@@ -42,10 +42,6 @@ void tri_hp_ins::init(input_map& input, void *gin) {
 		}
 	}
 
-#ifdef DROP
-	*gbl->log << "#DROP is defined" << std::endl;
-#endif
-
 	return;
 }
 

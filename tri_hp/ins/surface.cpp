@@ -81,6 +81,8 @@ void surface::init(input_map& inmap,void* gin) {
 	keyword = x.gbl->idprefix + "_penalty2_parameter";
 	inmap.getwdefault(keyword,gbl->penalty2,0.5);
 	gbl->vflux = 0.0;
+	
+	*gbl->log << "#DROP is defined" << std::endl;
 #endif
 
 
