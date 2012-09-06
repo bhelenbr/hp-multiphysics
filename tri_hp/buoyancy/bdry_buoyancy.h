@@ -17,11 +17,26 @@
 #include <blitz/array.h>
 #include <symbolic_function.h>
 
-//#define MELT1
+// #define MELT1 /* Must be uncommented in two places */
 
 using namespace blitz;
 
 namespace bdry_buoyancy {
+	
+	class solid_fluid : public symbolic {
+		solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
+			mytype = "solid_fluid";
+		}
+		solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
+		solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+		
+		/* For matching with solid phase */
+		void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,x.ND,x.ND,vrtstride*x.NV);}
+		void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,x.ND,x.ND, x.NV*vrtstride);}
+		void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
+		void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
+		
+	};
 	
 	class surface : public bdry_ins::surface {
 		Array<vector_function,1> fluxes;
@@ -51,10 +66,11 @@ namespace bdry_buoyancy {
 	class melt : public symbolic {	
 		protected:
 			tri_hp_buoyancy &x;
+			int neq;
 			Array<FLT,1> ksprg;
-			Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
-			Array<TinyVector<FLT,tri_mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
-			Array<TinyVector<FLT,tri_mesh::ND>,3> sdres; //!< Driving term for multigrid (log2p, side, order)
+			Array<TinyVector<FLT,tri_mesh::ND+1>,1> vug_frst;
+			Array<TinyVector<FLT,tri_mesh::ND+1>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
+			Array<TinyVector<FLT,tri_mesh::ND+1>,3> sdres; //!< Driving term for multigrid (log2p, side, order)
 			const melt *fine, *coarse;
 			
 		public:
@@ -64,18 +80,18 @@ namespace bdry_buoyancy {
 				FLT Lf, rho_s, cp_s;
 				
 				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;
-				Array<TinyVector<FLT,tri_mesh::ND>,2> sug0;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,1> vug0;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,2> sug0;
 				
 				/* RESIDUALS */
-				Array<TinyVector<FLT,tri_mesh::ND>,1> vres;
-				Array<TinyVector<FLT,tri_mesh::ND>,2> sres;
-				Array<TinyVector<FLT,tri_mesh::ND>,1> vres0;
-				Array<TinyVector<FLT,tri_mesh::ND>,2> sres0;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,1> vres;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,2> sres;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,1> vres0;
+				Array<TinyVector<FLT,tri_mesh::ND+1>,2> sres0;
 								
 				/* PRECONDITIONER */
-				Array<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,1> vdt;
-				Array<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,1> sdt;
+				Array<TinyMatrix<FLT,tri_mesh::ND+1,tri_mesh::ND+1>,1> vdt;
+				Array<TinyMatrix<FLT,tri_mesh::ND+1,tri_mesh::ND+1>,1> sdt;
 				Array<FLT,1> meshc;
 				
 #ifdef DETAILED_MINV
@@ -83,17 +99,17 @@ namespace bdry_buoyancy {
 				Array<FLT,5> vms;
 				Array<TinyVector<int,2*MAXP>,1> ipiv;
 #endif
-				TinyVector<FLT,tri_mesh::ND> fadd;
-				TinyMatrix<FLT,tri_mesh::ND,MAXP> cfl;
+				TinyVector<FLT,tri_mesh::ND+1> fadd;
+				TinyMatrix<FLT,tri_mesh::ND+1,MAXP> cfl;
 				FLT adis;
 			} *gbl; 
 			
 		public:
 			void* create_global_structure() {return new global;}
-			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin), x(xin) {
+			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin), x(xin), neq(2) {
 				mytype = "melt";
 			}
-			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin), x(xin) {
+			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin), x(xin), neq(2) {
 				gbl = inbdry.gbl;
 				ksprg.resize(base.maxseg);
 				vug_frst.resize(base.maxseg+1);
@@ -153,6 +169,37 @@ namespace bdry_buoyancy {
 		
 	};
 	
+	
+	class melt_kinetics : public melt {
+		
+		struct global : public melt::global {                
+			/* Kinetic Coefficients */
+			FLT K_sc, K_gt;
+			
+			/* PRECONDITIONER */
+			Array<FLT,1> vdt_kinetic;
+			Array<FLT,1> sdt_kinetic;
+			
+		} *gbl;
+		
+		public:
+			void* create_global_structure() {return new global;}
+			melt_kinetics(tri_hp_buoyancy &xin, edge_bdry &bin) : melt(xin,bin) {
+				mytype = "melt_kinetics";
+				neq = 3;
+			}
+			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
+			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
+			void init(input_map& input,void* gbl_in);
+			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
+			void vdirichlet();
+			void minvrt();
+			void update(int stage);
+			void petsc_jacobian_dirichlet();
+			void setup_preconditioner();
+	};
+	
+
 	class kellerman : public melt {
 		public:
 			kellerman(tri_hp_buoyancy &xin, edge_bdry &bin) : melt(xin,bin) {

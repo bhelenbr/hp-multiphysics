@@ -116,6 +116,8 @@ void tri_hp_buoyancy::error_estimator() {
 	gbl->eanda(0) = totalenergy2;
 	gbl->eanda(1) = e2to_pow;
 	gbl->eanda(2) = totalerror2;
+	
+	tri_hp::error_estimator();
 			
 	return;
 }

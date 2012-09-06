@@ -300,12 +300,12 @@ void melt::rsdl(int stage) {
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 	
-	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+tri_mesh::ND);
+	Array<TinyVector<FLT,MXTM>,1> lf(x.NV+neq);
 	
 	/**************************************************/
 	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
 	/**************************************************/
-	for(n=0;n<tri_mesh::ND;++n)
+	for(n=0;n<neq;++n)
 		gbl->vres(0)(n) = 0.0;
 	
 	for(indx=0;indx<base.nseg;++indx) {
@@ -334,7 +334,7 @@ void melt::rsdl(int stage) {
 		} 
 		
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
-		for(n=0;n<tri_mesh::ND;++n) {  // sets n = 1 to zero for melt case but not for melt1
+		for(n=0;n<neq;++n) {  // sets n = 1 to zero for melt case but not for melt1
 			gbl->vres(indx)(n) += lf(x.NV+n)(0);
 			gbl->vres(indx+1)(n) = lf(x.NV+n)(1);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
@@ -388,22 +388,22 @@ void melt::rsdl(int stage) {
 	if(x.coarse_flag) {
 		if (x.isfrst) {
 			for(i=0;i<base.nseg+1;++i) 
-				for(n=0;n<tri_mesh::ND;++n)
+				for(n=0;n<neq;++n)
 					vdres(x.log2p,i)(n) = gbl->fadd(n)*gbl->vres0(i)(n) -gbl->vres(i)(n);
 			
 			for(i=0;i<base.nseg;++i) 
 				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-					for(n=0;n<tri_mesh::ND;++n)
+					for(n=0;n<neq;++n)
 						sdres(x.log2p,i,m)(n) = gbl->fadd(n)*gbl->sres0(i,m)(n) -gbl->sres(i,m)(n);
 			
 		}
 		for(i=0;i<base.nseg+1;++i) 
-			for(n=0;n<tri_mesh::ND;++n)
+			for(n=0;n<neq;++n)
 				gbl->vres(i)(n) += vdres(x.log2p,i)(n);
 		
 		for(i=0;i<base.nseg;++i) 
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-				for(n=0;n<tri_mesh::ND;++n)
+				for(n=0;n<neq;++n)
 					gbl->sres(i,m)(n) += sdres(x.log2p,i,m)(n);
 	}
 	else {
@@ -425,7 +425,7 @@ void melt::rsdl(int stage) {
 	
 	for(i=0;i<base.nseg+1;++i) {
 		*x.gbl->log << "vres: " << i << ' ';
-		for(n=0;n<tri_mesh::ND;++n) {
+		for(n=0;n<neq;++n) {
 			if (fabs(gbl->vres(i)(n)) > 1.0e-9) *x.gbl->log << gbl->vres(i)(n) << ' ';
 			else *x.gbl->log << "0.0 ";
 		}
@@ -435,7 +435,7 @@ void melt::rsdl(int stage) {
 	for(i=0;i<base.nseg;++i) {
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			*x.gbl->log << "sres: " << i << ' ';
-			for(n=0;n<tri_mesh::ND;++n) {
+			for(n=0;n<neq;++n) {
 				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) *x.gbl->log << gbl->sres(i,m)(n) << ' ';
 				else *x.gbl->log << "0.0 ";
 			}
@@ -772,10 +772,10 @@ void melt::maxres() {
 	mxr = 0.0;
 	
 	for(i=0;i<base.nseg+1;++i)
-		for(n=0;n<tri_mesh::ND;++n)
+		for(n=0;n<neq;++n)
 			mxr(n) = MAX(fabs(gbl->vres(i)(n)),mxr(n));
 	
-	for(n=0;n<tri_mesh::ND;++n)
+	for(n=0;n<neq;++n)
 		*x.gbl->log << ' ' << mxr(n) << ' ';
 	
 	return;
@@ -783,7 +783,7 @@ void melt::maxres() {
 
 
 void melt::element_jacobian(int indx, Array<FLT,2>& K) {
-	int sm = basis::tri(x.log2p)->sm();	
+	int sm = basis::tri(x.log2p)->sm();
 	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND),lf(x.NV+tri_mesh::ND);
 #ifdef BZ_DEBUG
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
@@ -800,7 +800,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
 #ifdef MELT1
-	int tind = x.seg(sind).tri(0);        
+	int tind = x.seg(sind).tri(0);
 	x.ugtouht(tind);
 #else
 	x.ugtouht1d(sind);
@@ -880,7 +880,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 		}
 #ifdef MELT1
 	}
-	for(int mode = 2; mode < sm+2; ++mode) {	
+	for(int mode = 2; mode < sm+2; ++mode) {
 #endif
 		for(int var = 0; var < tri_mesh::ND; ++var) {
 			crds(indx,mode-2,var) += dx;
@@ -900,7 +900,6 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	
 	return;
 }
-
 void melt::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	int j,k,n,countup,offset;
 	
