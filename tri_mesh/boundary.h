@@ -836,12 +836,11 @@ template<int ND> class geometry {
 
 	public:
 		// virtual geometry* create() const {return(new geometry);}
-		virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
+		virtual int mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			int iter,n;
 			FLT mag, delt_dist;
 			TinyVector<FLT,ND> deriv;
-			
-			
+						
 			/* FOR AN ANALYTIC SURFACE */
 			iter = 0;
 			do {
@@ -857,10 +856,11 @@ template<int ND> class geometry {
 								
 				if (++iter > 100) {
 					std::cout << "Warning: curved iterations exceeded for symbolic curved boundary " << pt(0) << ' ' << pt(1) << "Ratio to target error level " << fabs(delt_dist)/(10.*EPSILON) << '\n';  // FIXME:  NEED TO FIX
+					return(1);
 				}
-			} while (fabs(delt_dist) > 20.*EPSILON);
+			} while (fabs(delt_dist) > 200.*EPSILON);
 
-			return;
+			return(0);
 		}
 		virtual void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
 			FLT mag = 0.0;
@@ -904,9 +904,10 @@ template<int ND> class symbolic_point : public geometry<ND> {
 			}
 		}
 
-		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
+		int mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			for(int i = 0; i < ND; ++i)
 				pt(i) = loc(i).Eval(time);
+			return 0;
 		}
 };
 
@@ -1119,14 +1120,14 @@ class spline_geometry {
 			data.clear();
 		}
 			
-		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
+		int mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			FLT sloc;
 			
 			my_spline.find(sloc,pt);
 			if (sloc > smax) sloc = smax;
 			if (sloc < smin) sloc = smin;
 			my_spline.interpolate(sloc,pt);
-			return;
+			return(0);
 		}
 		void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
 			std::cerr << "bdry_normal not implemented for spline_geoemtry" << std::endl;			

@@ -154,7 +154,11 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, pub
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
 			to_geometry_frame(pt);
-			geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
+			if (geometry_object.mvpttobdry(pt,BASE::x.gbl->time)) {
+				*BASE::x.gbl->log << "trouble moving point to geometry for side " <<BASE::idprefix << std::endl;
+				BASE::x.output("error" +BASE::idprefix);
+				sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+			};
 			to_physical_frame(pt);
 			return;
 		}

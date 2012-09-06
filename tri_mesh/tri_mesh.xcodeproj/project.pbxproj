@@ -533,7 +533,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -720,32 +720,33 @@
 		6F2262C208672FD1001017D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					MY_SPARSE,
 				);
 				PRODUCT_NAME = tri_mesh;
-				SKIP_INSTALL = NO;
 			};
 			name = Debug;
 		};
 		6F2262C308672FD1001017D0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					MY_SPARSE,
 				);
 				PRODUCT_NAME = tri_mesh;
-				SKIP_INSTALL = NO;
 			};
 			name = Release;
 		};
 		6F27981008B9FA5A007BECA9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -765,6 +766,7 @@
 		6F27981108B9FA5A007BECA9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -784,6 +786,7 @@
 		6FB91AD90ACCB10300792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(mpi_threads)",
@@ -791,13 +794,13 @@
 					MPISRC,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
-				SKIP_INSTALL = NO;
 			};
 			name = Debug;
 		};
 		6FB91ADA0ACCB10300792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"${mpi_threads}",
@@ -805,7 +808,6 @@
 					MPISRC,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
-				SKIP_INSTALL = NO;
 			};
 			name = Release;
 		};
@@ -815,7 +817,7 @@
 				DSTROOT = "${HOME}";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks\"",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
@@ -823,10 +825,6 @@
 					MPISRC,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../lib\"",
-				);
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
 			name = Debug;
@@ -837,20 +835,14 @@
 				DSTROOT = "${HOME}";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks\"",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
 				);
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"${mpi_threads}",
 					MPISRC,
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../lib\"",
-				);
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
 			name = Release;
@@ -861,22 +853,14 @@
 				DSTROOT = "${HOME}";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks\"",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
 				);
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					METIS,
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(LOCAL_LIBRARY_DIR)/DataTank\"",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-					"\"$(SRCROOT)/../lib\"",
-				);
 				PRODUCT_NAME = tri_mesh;
 			};
 			name = Debug;
@@ -887,22 +871,14 @@
 				DSTROOT = "${HOME}";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks\"",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
 				);
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					METIS,
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(LOCAL_LIBRARY_DIR)/DataTank\"",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-					"\"$(SRCROOT)/../lib\"",
-				);
 				PRODUCT_NAME = tri_mesh;
 			};
 			name = Release;
@@ -911,15 +887,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BZ_DEBUG,
 					f2cFortran,
 				);
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -944,8 +919,6 @@
 					"$(OTHER_CFLAGS)",
 				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SKIP_INSTALL = NO;
-				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";
@@ -957,12 +930,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -984,8 +956,6 @@
 					"${prefix}/lib",
 				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SKIP_INSTALL = NO;
-				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";
