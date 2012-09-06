@@ -303,6 +303,8 @@
 		959539B212D5002E00465DCA /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
 		959539B312D5002F00465DCA /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
 		959539B412D5003000465DCA /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
+		E60D94AB15F84D5A00996697 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
+		E60D94AE15F84D6600996697 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
 		E64C24EE1475E3AC00809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
 		E64C24EF1475E3B000809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
 		E64C24F01475E3B400809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
@@ -533,14 +535,9 @@
 		E6CF700D11D23655001E5DF7 /* bdry_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C3C09818C7100AD7FA3 /* bdry_swirl.h */; };
 		E6CF700E11D23655001E5DF7 /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
 		E6CF700F11D23655001E5DF7 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
-		E6D96F5E147FC55600969C56 /* libopen-pal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F58147FC54300969C56 /* libopen-pal.0.dylib */; };
 		E6D96F5F147FC55900969C56 /* libopen-pal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F58147FC54300969C56 /* libopen-pal.0.dylib */; };
 		E6D96F60147FC55E00969C56 /* libopen-pal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F58147FC54300969C56 /* libopen-pal.0.dylib */; };
 		E6D96F61147FC56000969C56 /* libopen-pal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F58147FC54300969C56 /* libopen-pal.0.dylib */; };
-		E6D96F62147FC56500969C56 /* libopen-rte.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F59147FC54300969C56 /* libopen-rte.0.dylib */; };
-		E6D96F63147FC56600969C56 /* libopen-rte.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F59147FC54300969C56 /* libopen-rte.0.dylib */; };
-		E6D96F64147FC56A00969C56 /* libopen-rte.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F59147FC54300969C56 /* libopen-rte.0.dylib */; };
-		E6D96F65147FC56B00969C56 /* libopen-rte.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6D96F59147FC54300969C56 /* libopen-rte.0.dylib */; };
 		E6EAD3201580FB8E00C3F95A /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
 		E6EAD3211580FB9A00C3F95A /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		E6EAD3221580FB9A00C3F95A /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
@@ -882,6 +879,8 @@
 		95816A361283A56D001F9519 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = length.cpp; sourceTree = "<group>"; };
 		95BD203410B863F40006A896 /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
 		95BD203510B863F40006A896 /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
+		E60D94AA15F84D5A00996697 /* surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = surface.cpp; path = buoyancy/surface.cpp; sourceTree = "<group>"; };
+		E60D94AD15F84D6600996697 /* melt_kinetics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = melt_kinetics.cpp; path = buoyancy/melt_kinetics.cpp; sourceTree = "<group>"; };
 		E62CDC4112B7114C0042211D /* bdry_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy.h; path = buoyancy/bdry_buoyancy.h; sourceTree = "<group>"; };
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
 		E658002813E2CFC400A01E99 /* tri_hp_nonnewtonian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_nonnewtonian.h; path = nonnewtonian/tri_hp_nonnewtonian.h; sourceTree = "<group>"; };
@@ -944,7 +943,6 @@
 				6F53EF0810FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */,
 				6F53EF1210FFBA730076AAFB /* libparmetis.a in Frameworks */,
 				E6D96F61147FC56000969C56 /* libopen-pal.0.dylib in Frameworks */,
-				E6D96F64147FC56A00969C56 /* libopen-rte.0.dylib in Frameworks */,
 				E6F1CDEB1533E7F1009F6A6B /* libspline++.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -969,7 +967,6 @@
 				6F53EF1010FFBA730076AAFB /* libparmetis.a in Frameworks */,
 				6F5ABB541141CE7D00CA83FE /* libpth.a in Frameworks */,
 				E6D96F60147FC55E00969C56 /* libopen-pal.0.dylib in Frameworks */,
-				E6D96F62147FC56500969C56 /* libopen-rte.0.dylib in Frameworks */,
 				E6F1CDE71533E7EF009F6A6B /* libspline++.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1042,8 +1039,6 @@
 				E67EBAE412D603C50011EB69 /* libsuperlu_dist_2.5.a in Frameworks */,
 				E67EBAE512D603C50011EB69 /* libparmetis.a in Frameworks */,
 				E67EBAE612D603C50011EB69 /* libtri_mesh_mpi.a in Frameworks */,
-				E6D96F5E147FC55600969C56 /* libopen-pal.0.dylib in Frameworks */,
-				E6D96F63147FC56600969C56 /* libopen-rte.0.dylib in Frameworks */,
 				E6F1CDE91533E7F0009F6A6B /* libspline++.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1070,7 +1065,6 @@
 				E67EBB2D12D603E10011EB69 /* libparmetis.a in Frameworks */,
 				E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6D96F5F147FC55900969C56 /* libopen-pal.0.dylib in Frameworks */,
-				E6D96F65147FC56B00969C56 /* libopen-rte.0.dylib in Frameworks */,
 				E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1277,6 +1271,8 @@
 				E62CDC4112B7114C0042211D /* bdry_buoyancy.h */,
 				E62CDC4212B7114D0042211D /* bdry.cpp */,
 				E67EBAA612D603BC0011EB69 /* melt.cpp */,
+				E60D94AD15F84D6600996697 /* melt_kinetics.cpp */,
+				E60D94AA15F84D5A00996697 /* surface.cpp */,
 			);
 			name = Buoyancy;
 			sourceTree = "<group>";
@@ -1765,6 +1761,8 @@
 				9504779612D4FC76000CF354 /* bdry.cpp in Sources */,
 				9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */,
 				9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */,
+				E60D94AB15F84D5A00996697 /* surface.cpp in Sources */,
+				E60D94AE15F84D6600996697 /* melt_kinetics.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1916,7 +1914,6 @@
 					AXISYMMETRIC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1934,7 +1931,6 @@
 					"$(threads)",
 					AXISYMMETRIC,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1953,7 +1949,6 @@
 					MPISRC,
 					AXISYMMETRIC,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					/usr/share/include,
@@ -1976,7 +1971,6 @@
 					MPISRC,
 					AXISYMMETRIC,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					/usr/share/include,
@@ -1993,13 +1987,10 @@
 		6FB40AC2091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(threads)",
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2012,13 +2003,10 @@
 		6FB40AC3091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(threads)",
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2031,13 +2019,16 @@
 		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					MY_SPARSE,
 					f2cFortran,
 					BZ_DEBUG,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -2072,12 +2063,15 @@
 		6FB40AC7091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					MY_SPARSE,
 					f2cFortran,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -2098,6 +2092,10 @@
 					"$(packages)/lib",
 					"$(prefix)/lib",
 				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fast",
+				);
 				mpi_threads = NONE;
 				packages = "$(HOME)/packages";
 				prefix = ..;
@@ -2116,7 +2114,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2136,7 +2133,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2157,7 +2153,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2179,7 +2174,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2203,7 +2197,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2226,7 +2219,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2250,7 +2242,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2272,7 +2263,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2294,7 +2284,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2317,7 +2306,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
