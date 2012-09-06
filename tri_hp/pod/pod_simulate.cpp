@@ -533,8 +533,9 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	rsdls_recv += rsdls0;
 #endif
 
-	coeffs -= rsdls_recv;	
+	coeffs -= rsdls_recv;	// update POD coefficients
 
+	/* Now use that to update flow solution */
 	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
 	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
 	BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
