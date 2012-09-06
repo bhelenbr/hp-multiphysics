@@ -62,6 +62,18 @@ void tri_mesh::init(input_map &input, void *gin) {
 		
 		coarse_level = 0;
 		tri_mesh::input(filename.c_str(),static_cast<tri_mesh::filetype>(filetype),grwfac,input);
+
+		if (!input.get(gbl->idprefix+"_maximum_length",gbl->max_length)) {
+			if (!input.get("maximum_length",gbl->max_length)) {
+				gbl->max_length = 0.5*(qtree.xmax(0)-qtree.xmin(0) +qtree.xmax(1)-qtree.xmin(1));
+			}
+		}
+		
+		if (!input.get(gbl->idprefix+"_minimum_length",gbl->min_length)) {
+			if (!input.get("minimum_length",gbl->min_length)) {
+				gbl->min_length = 1e-4*gbl->max_length/maxpst;
+			}
+		}
 	}
 
 	 findmatch(gbl,coarse_level);
