@@ -10,12 +10,12 @@
 		6FD8B0240865BD6D005A8B60 /* quadtree.h in Headers */ = {isa = PBXBuildFile; fileRef = F51211000190489701990B20 /* quadtree.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FD8B0250865BD7D005A8B60 /* quad_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = F5129161033258B801990B69 /* quad_impl.h */; settings = {ATTRIBUTES = (); }; };
 		6FD8B0260865BD7E005A8B60 /* quad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F51210FF0190489701990B20 /* quad.cpp */; };
-		6FD8B0270865BDC7005A8B60 /* liblibquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FD8B0150865BC3F005A8B60 /* liblibquad.a */; };
 		6FFC0D3F05AE0B7900A78095 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512110701904AE101990B20 /* main.cpp */; };
+		E678FD7815F801F50065094C /* quad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F51210FF0190489701990B20 /* quad.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6FD8B0150865BC3F005A8B60 /* liblibquad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblibquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FD8B0150865BC3F005A8B60 /* libquad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FFC0D4605AE0B7900A78095 /* quadtree */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = quadtree; sourceTree = BUILT_PRODUCTS_DIR; };
 		F51210FF0190489701990B20 /* quad.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = quad.cpp; sourceTree = "<group>"; };
 		F51211000190489701990B20 /* quadtree.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = quadtree.h; sourceTree = "<group>"; };
@@ -36,7 +36,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FD8B0270865BDC7005A8B60 /* liblibquad.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,7 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				6FFC0D4605AE0B7900A78095 /* quadtree */,
-				6FD8B0150865BC3F005A8B60 /* liblibquad.a */,
+				6FD8B0150865BC3F005A8B60 /* libquad.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,7 +124,7 @@
 			);
 			name = quad;
 			productName = libquad;
-			productReference = 6FD8B0150865BC3F005A8B60 /* liblibquad.a */;
+			productReference = 6FD8B0150865BC3F005A8B60 /* libquad.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FFC0D3A05AE0B7900A78095 /* quadtree */ = {
@@ -196,6 +195,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FFC0D3F05AE0B7900A78095 /* main.cpp in Sources */,
+				E678FD7815F801F50065094C /* quad.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,64 +205,28 @@
 		6FD8AE7708651561005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = /usr/bin/gcc;
 				COPY_PHASE_STRIP = NO;
-				CPLUSPLUS = "/usr/bin/g++";
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = ../include;
-				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = ../lib;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = quadtree;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
+				HEADER_SEARCH_PATHS = (
+					../include,
+					"$(HOME)/Packages/include",
 				);
-				ZERO_LINK = YES;
+				INSTALL_PATH = "$(HOME)/bin";
+				PRODUCT_NAME = quadtree;
 			};
 			name = Debug;
 		};
 		6FD8AE7808651561005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CC = /usr/bin/gcc;
-				COPY_PHASE_STRIP = YES;
-				CPLUSPLUS = "/usr/bin/g++";
-				DEPLOYMENT_LOCATION = NO;
-				FRAMEWORK_SEARCH_PATHS = "";
+				COPY_PHASE_STRIP = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Packages/include",
 					../include,
+					"$(HOME)/Packages/include",
 				);
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = ../lib;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = quadtree;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -270,6 +234,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				DEPLOYMENT_LOCATION = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Debug;
 		};
@@ -278,6 +245,8 @@
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Release;
 		};
@@ -285,23 +254,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				DSTROOT = "$(HOME)/Codes/";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = libquad;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)/Packages/include",
+					../include,
 				);
+				INSTALL_PATH = /lib;
+				PRODUCT_NAME = quad;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Debug;
 		};
@@ -309,32 +270,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DEPLOYMENT_LOCATION = YES;
-				DEPLOYMENT_POSTPROCESSING = NO;
 				DSTROOT = "$(HOME)/Codes/";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 2;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Packages/include",
 					../include,
 				);
 				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = quad;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Release;
 		};

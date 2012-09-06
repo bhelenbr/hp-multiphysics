@@ -199,40 +199,24 @@
 		6FD651C20922EC5F00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = /usr/local/lib;
-				LIBRARY_STYLE = STATIC;
-				PREBINDING = NO;
+				INSTALL_PATH = /lib;
 				PRODUCT_NAME = input_map;
-				ZERO_LINK = YES;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Debug;
 		};
 		6FD651C30922EC5F00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				INSTALL_PATH = /lib;
-				LIBRARY_STYLE = STATIC;
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -240,6 +224,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				INSTALL_PATH = /lib;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -247,65 +238,33 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				INSTALL_PATH = /lib;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
 		6FD651FA0922EFCF00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = main;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
+				PRODUCT_NAME = mod_map;
 			};
 			name = Debug;
 		};
 		6FD651FB0922EFCF00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = /;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = mod_map;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Release;
 		};

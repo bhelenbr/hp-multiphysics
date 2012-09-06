@@ -188,12 +188,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../lib\"",
-					"\"$(SRCROOT)/../../Packages/lib\"",
+					../lib,
+					"$(HOME)/Packages/lib",
 				);
 				PRODUCT_NAME = symbolic_function;
 				USER_HEADER_SEARCH_PATHS = "${HOME}/Packages/include ${HOME}/Codes/include";
@@ -203,12 +201,10 @@
 		1DEB923308733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../lib\"",
-					"\"$(SRCROOT)/../../Packages/lib\"",
+					../lib,
+					"$(HOME)/Packages/lib",
 				);
 				PRODUCT_NAME = symbolic_function;
 				USER_HEADER_SEARCH_PATHS = "${HOME}/Packages/include ${HOME}/Codes/include";
@@ -219,17 +215,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = BZ_DEBUG;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-fno-inline",
-					"$(OTHER_CFLAGS)",
-				);
-				PREBINDING = YES;
-				SDKROOT = "";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Debug;
 		};
@@ -237,46 +225,32 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				SDKROOT = "";
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Release;
 		};
 		6F8B22220E352EC5005923AA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /lib;
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = install;
-				PUBLIC_HEADERS_FOLDER_PATH = "${HOME}/Codes/include";
-				ZERO_LINK = YES;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Debug;
 		};
 		6F8B22230E352EC5005923AA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /lib;
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = install;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};

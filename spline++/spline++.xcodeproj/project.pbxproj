@@ -192,11 +192,12 @@
 		1DEB91EC08733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				DSTROOT = "$(HOME)/Codes";
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					../include,
 				);
+				INSTALL_PATH = /lib;
 				PRODUCT_NAME = "spline++";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -205,9 +206,7 @@
 		1DEB91ED08733DB70010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					../include,
@@ -222,9 +221,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				DEPLOYMENT_LOCATION = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Debug;
 		};
@@ -232,23 +232,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				DEPLOYMENT_LOCATION = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Release;
 		};
 		6F2EF3810DB780B4001358E1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Packages/include",
 					../include,
 				);
-				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = main;
 			};
 			name = Debug;
@@ -256,14 +255,12 @@
 		6F2EF3820DB780B4001358E1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Packages/include",
 					../include,
 				);
-				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = main;
 			};
 			name = Release;

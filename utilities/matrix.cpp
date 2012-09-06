@@ -579,7 +579,8 @@ void sparse_row_major::set_diag(int nels,const Array<int,1>& rows, FLT val, int 
 
 void sparse_row_major::zero_rows(int nrows,const Array<int,1>& rows) {
 	for(int i=0;i<nrows;++i)
-		_val(Range(_cpt(rows(i)),_cpt(rows(i)+1)-1)) = 0.0;
+		for(int j=_cpt(rows(i));j<_cpt(rows(i)+1);++j)
+			_val(j) = 0.0;
 }
 
 void sparse_row_major::check_for_unused_entries() {

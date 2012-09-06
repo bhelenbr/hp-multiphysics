@@ -14,7 +14,6 @@
 #include "tri_basis.h"
 
 #ifdef DEBUG
-#include <blitz/tinyvec-et.h>
 FLT func(FLT r,FLT s) {return(s*s*s*s);}
 #endif
 
