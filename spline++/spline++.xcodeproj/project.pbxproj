@@ -146,7 +146,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 			};
 			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "spline++" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -192,6 +192,7 @@
 		1DEB91EC08733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = "$(HOME)/Codes";
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
@@ -206,6 +207,7 @@
 		1DEB91ED08733DB70010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = "$(HOME)/Codes";
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
