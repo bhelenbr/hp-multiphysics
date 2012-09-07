@@ -187,7 +187,7 @@ void surface::tadvance() {
 }
 
 void surface::rsdl(int stage) {
-	int i,j,m,n,sind,indx,count,v0,v1;
+	int i,m,n,sind,indx,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
@@ -276,8 +276,8 @@ void surface::rsdl(int stage) {
 
 #ifndef petsc
 	if (base.is_comm()) {
-		count = 0;
-		for(j=0;j<base.nseg+1;++j) {
+		int count = 0;
+		for(int j=0;j<base.nseg+1;++j) {
 			base.fsndbuf(count++) = gbl->vres(j)(1)*gbl->rho2;
 #ifdef MPDEBUG 
 			*x.gbl->log << gbl->vres(j)(1)*gbl->rho2 << '\n';
@@ -473,12 +473,11 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 }
 
 void surface_slave::rsdl(int stage) {
-	int i,m,msgn,count,sind,v0;
 	
 #ifndef petsc
 	/* Store 0.0 in vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	i = 0;
+	int i = 0;
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
@@ -495,7 +494,8 @@ void surface_slave::rsdl(int stage) {
 	base.comm_prepare(boundary::all,0,boundary::master_slave);
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
-	count = 0;
+	int count = 0;
+	int sind,v0;
 	i = base.nseg-1;
 	do {
 		sind = base.seg(i);
@@ -513,8 +513,8 @@ void surface_slave::rsdl(int stage) {
 
 	for(i=base.nseg-1;i>=0;--i) {
 		sind = base.seg(i);
-		msgn = 1;
-		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+		int msgn = 1;
+		for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 			x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
 			msgn *= -1;
 		}

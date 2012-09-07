@@ -305,6 +305,8 @@
 		959539B412D5003000465DCA /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
 		E60D94AB15F84D5A00996697 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
 		E60D94AE15F84D6600996697 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E618840615F98964008348B9 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E618840815F9898B008348B9 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
 		E64C24EE1475E3AC00809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
 		E64C24EF1475E3B000809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
 		E64C24F01475E3B400809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
@@ -1810,6 +1812,8 @@
 				E6EAD3231580FB9A00C3F95A /* rsdl.cpp in Sources */,
 				E6EAD3241580FBA800C3F95A /* bdry.cpp in Sources */,
 				E6ADD682158623DD00790258 /* melt.cpp in Sources */,
+				E618840615F98964008348B9 /* melt_kinetics.cpp in Sources */,
+				E618840815F9898B008348B9 /* surface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

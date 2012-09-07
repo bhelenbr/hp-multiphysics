@@ -611,12 +611,18 @@ void melt::update(int stage) {
 		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
-			gbl->vug0(i) = x.pnts(v0);
+ 			for(n=0;n<tri_mesh::ND;++n)
+				gbl->vug0(i)(n) = x.pnts(v0)(n);
 		} while (++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
-		gbl->vug0(base.nseg) = x.pnts(v0);
+ 		for(n=0;n<tri_mesh::ND;++n)
+			gbl->vug0(base.nseg)(n) = x.pnts(v0)(n);
 		
-		if (basis::tri(x.log2p)->sm() > 0) gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
+		if (basis::tri(x.log2p)->sm() > 0) 
+			for(i=0;i<base.nseg;++i)
+				for(m=0;m<basis::tri(x.log2p)->sm();++m)
+ 					for(n=0;n<tri_mesh::ND;++n)
+						gbl->sug0(i,m)(n) = crv(i,m)(n);
 		return;
 	}
 	
@@ -674,7 +680,11 @@ void melt::update(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	x.pnts(v0) = gbl->vug0(base.nseg) -x.gbl->alpha(stage)*gbl->vres(base.nseg);
 	
-	if (basis::tri(x.log2p)->sm() > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
+	if (basis::tri(x.log2p)->sm() > 0) 
+		for(i=0;i<base.nseg;++i)
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
+ 				for(n=0;n<tri_mesh::ND;++n)
+					crv(i,m)(n) = gbl->sug0(i,m)(n) -x.gbl->alpha(stage)*gbl->sres(i,m)(n);
 	
 	/* FIX POINTS THAT SLIDE ON CURVE */
 	x.hp_vbdry(base.vbdry(1))->mvpttobdry(x.pnts(v0));
@@ -1147,7 +1157,6 @@ void melt::petsc_jacobian() {
 		
 	for (int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
-		int tind = x.seg(sind).tri(0);
 		
 		element_jacobian(j,K);
 
@@ -1170,6 +1179,7 @@ void melt::petsc_jacobian() {
 				loc_to_glo(ind++) = gindxND++;
 		}
 #else
+		int tind = x.seg(sind).tri(0);
 		/* Let normal equation go into temperature slot and vice-versa */
 		int ind = 0;
 		for(int mode = 0; mode < 2; ++mode) {

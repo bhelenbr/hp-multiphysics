@@ -195,8 +195,10 @@ namespace bdry_buoyancy {
 			void vdirichlet();
 			void minvrt();
 			void update(int stage);
-			void petsc_jacobian_dirichlet();
 			void setup_preconditioner();
+#ifdef petsc
+			void petsc_jacobian_dirichlet();
+#endif
 	};
 	
 

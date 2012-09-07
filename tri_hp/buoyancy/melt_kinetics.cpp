@@ -315,7 +315,11 @@ void melt_kinetics::update(int stage) {
 		x.pnts(v0)(n) = gbl->vug0(base.nseg)(n) -x.gbl->alpha(stage)*gbl->vres(base.nseg)(n);
 	x.ug.v(v0,2) = gbl->vug0(base.nseg)(2) -x.gbl->alpha(stage)*gbl->vres(base.nseg)(2);
 		
-	if (basis::tri(x.log2p)->sm() > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
+	if (basis::tri(x.log2p)->sm() > 0) 
+		for(i=0;i<base.nseg;++i)
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
+ 				for(n=0;n<tri_mesh::ND;++n)
+					crv(i,m)(n) = gbl->sug0(i,m)(n) -x.gbl->alpha(stage)*gbl->sres(i,m)(n);
 	
 	/* FIX POINTS THAT SLIDE ON CURVE */
 	x.hp_vbdry(base.vbdry(1))->mvpttobdry(x.pnts(v0));
@@ -373,6 +377,7 @@ void melt_kinetics::update(int stage) {
 }
 
 
+#ifdef petsc
 void melt_kinetics::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
 	int sm=basis::tri(x.log2p)->sm();
@@ -717,6 +722,7 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 		++cpt2;
 	}
 }
+#endif
 
 
 void melt_kinetics::setup_preconditioner() {
@@ -726,20 +732,15 @@ void melt_kinetics::setup_preconditioner() {
 	
 	int indx,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
-	FLT h, hsm;
-	FLT dttang, dtnorm;
-	FLT vslp;
-	FLT qmax;
+	FLT h, dtnorm;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
 	TinyMatrix<FLT,4,MXGP> res;
 	TinyMatrix<FLT,4,MXGP> lf;
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
-	const FLT alpha = x.gbl->kcond/(x.gbl->rho*x.gbl->cp);
 	TinyVector<FLT,tri_mesh::ND> aPoint;
 	aPoint = 0.0;
-	const FLT Tm = ibc->f(2, aPoint, 0.0);
 	
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
@@ -785,7 +786,6 @@ void melt_kinetics::setup_preconditioner() {
 		gbl->vdt_kinetic(base.nseg+1) = gbl->vdt_kinetic(0);
 	}
 	
-	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {    
 		/* INVERT VERTEX MATRIX */
 		gbl->vdt_kinetic(indx) = 1./gbl->vdt_kinetic(indx);
