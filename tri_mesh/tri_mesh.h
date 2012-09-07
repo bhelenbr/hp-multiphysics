@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <blitz/array.h>
+//#include <blitz/tinyvec-et.h>
 
 #ifdef SINGLE
 #define FLT float
