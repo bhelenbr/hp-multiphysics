@@ -54,7 +54,7 @@ void tri_hp::length() {
 		FLT totalerror2 = gbl->eanda_recv(2);
 
 		if (gbl->error_estimator == global::energy_norm) {
-			*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/energy2) << " Target " << gbl->error_target << '\n';
+			*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Energy2 " << energy2 << " Normalized Error " << sqrt(totalerror2/energy2) << " Target " << gbl->error_target << '\n';
 			
 			/* Determine error target (SEE AEA Paper) */
 			FLT etarget2 = gbl->error_target*gbl->error_target*energy2;
