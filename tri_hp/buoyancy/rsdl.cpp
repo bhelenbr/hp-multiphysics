@@ -201,9 +201,26 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
+			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
+
+					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
+					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
+					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT nu = gbl->mu/rho;
+					FLT alpha = gbl->kcond/(rho*gbl->cp);
+
+					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
+					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+					FLT lam2  = sqrt(q2) +1.5*alpha/h +0*h*gbl->bd(0);
+					
+					/* SET UP DISSIPATIVE COEFFICIENTS */
+					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
+					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
 
 					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
 					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
@@ -367,9 +384,27 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
+			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
+
+					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
+					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
+					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT nu = gbl->mu/rho;
+					FLT alpha = gbl->kcond/(rho*gbl->cp);
+
+					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
+					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+					FLT lam2  = sqrt(q2) +1.5*alpha/h +0*h*gbl->bd(0);
+					
+					/* SET UP DISSIPATIVE COEFFICIENTS */
+					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
+					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+
 					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
 					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
 					tres(2) = gbl->tau(tind,2)*res(2)(i,j);
