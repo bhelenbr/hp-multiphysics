@@ -85,7 +85,7 @@ void tri_hp::petsc_jacobian() {
 		/* This mostly does nothing, except for angled boundarys */
 #ifdef MY_SPARSE
 		for(int i=0;i<nebd;++i) 
-			r_sbdry(i)->jacobian(J,J_mpi,vdofs);  // Fixme: parallel jacobian stuff be done here
+			r_sbdry(i)->jacobian(J,J_mpi,vdofs);
 			
 		for(int i=0;i<nvbd;++i) 
 			r_vbdry(i)->jacobian(J,J_mpi,vdofs);
@@ -97,10 +97,10 @@ void tri_hp::petsc_jacobian() {
 			r_vbdry(i)->jacobian_dirichlet(J,J_mpi,vdofs);
 #else
 		for(int i=0;i<nebd;++i) 
-			r_sbdry(i)->jacobian(petsc_J,vdofs);  // Fixme: parallel jacobian stuff be done here
+			r_sbdry(i)->jacobian(petsc_J,vdofs);  
 
 		for(int i=0;i<nvbd;++i) 
-			r_vbdry(i)->jacobian(petsc_J,vdofs);  // Fixme: parallel jacobian stuff be done here
+			r_vbdry(i)->jacobian(petsc_J,vdofs);
 						
 		/* PETSC IS RETARDED */
 		FLT zero = 0.0;
