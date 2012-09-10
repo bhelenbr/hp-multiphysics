@@ -84,7 +84,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
 		/* Kinetic equation for surface temperature */
-		res(2,i) = (u(2)(i) -ibc->f(2, aloc, x.gbl->time) -gbl->K_sc*res(1,i))*jcb;  // -gbl->K_gt*kappa?;
+		res(2,i) = RAD(crd(0,i))*(u(2)(i) -ibc->f(2, aloc, x.gbl->time) -gbl->K_sc*res(1,i))*jcb;  // -gbl->K_gt*kappa?;
 		/* Latent Heat source term and additional heat flux */
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
 	}
@@ -110,7 +110,12 @@ void melt_kinetics::vdirichlet() {
 	/* Do it this way to make it easier to calculate jacobian for petsc*/
 #ifdef petsc
 	gbl->vres(Range(0,base.nseg))(2) = gbl->vres(Range(0,base.nseg))(1);
-	gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1))(2) = gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1))(1);
+	
+	for(int i=0;i<base.nseg;++i) {
+		for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+					gbl->sres(i,m)(2) = gbl->sres(i,m)(1);
+		}
+	}
 #endif
 	
 	melt::vdirichlet();
@@ -410,12 +415,18 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 		int cpt2 = x.J._cpt(row+3);
 		for(int col=0;col<nnz1;++col) {
 			/* swap rows */
-			int tempInd = x.J._col(cpt2);
-			FLT tempVal = x.J._val(cpt2);
-			x.J._col(cpt2) = x.J._col(cpt1);
-			x.J._val(cpt2) = x.J._val(cpt1);
-			x.J._col(cpt1) = tempInd;
-			x.J._val(cpt1) = tempVal;
+			if (x.J._col(cpt1) == x.J._col(cpt2)) {
+				int tempInd = x.J._col(cpt2);
+				FLT tempVal = x.J._val(cpt2);
+				x.J._col(cpt2) = x.J._col(cpt1);
+				x.J._val(cpt2) = x.J._val(cpt1);
+				x.J._col(cpt1) = tempInd;
+				x.J._val(cpt1) = tempVal;
+			}
+			else {
+				x.J.set_values(row+3,x.J._col(cpt1),x.J._val(cpt1));
+				x.J.set_values(row,x.J._col(cpt1),0.0);
+			}
 			++cpt1;
 			++cpt2;
 		}
@@ -433,13 +444,20 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 			cpt1 = x.J._cpt(row1);
 			cpt2 = x.J._cpt(row2);
 			for(int col=0;col<nnz1;++col) {
-				/* Swap rows */
-				int tempInd = x.J._col(cpt2);
-				FLT tempVal = x.J._val(cpt2);
-				x.J._col(cpt2) = x.J._col(cpt1);
-				x.J._val(cpt2) = x.J._val(cpt1);
-				x.J._col(cpt1) = tempInd;
-				x.J._val(cpt1) = tempVal;
+				/* swap rows */
+				if (x.J._col(cpt1) == x.J._col(cpt2)) {
+					int tempInd = x.J._col(cpt2);
+					FLT tempVal = x.J._val(cpt2);
+					x.J._col(cpt2) = x.J._col(cpt1);
+					x.J._val(cpt2) = x.J._val(cpt1);
+					x.J._col(cpt1) = tempInd;
+					x.J._val(cpt1) = tempVal;
+					
+				}
+				else {
+					x.J.set_values(row2,x.J._col(cpt1),x.J._val(cpt1));
+					x.J.set_values(row1,x.J._col(cpt1),0.0);
+				}
 				++cpt1;
 				++cpt2;
 			}
@@ -457,16 +475,23 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 	int cpt1 = x.J._cpt(row);
 	int cpt2 = x.J._cpt(row+3);
 	for(int col=0;col<nnz1;++col) {
-		/* Swap rows */
-		int tempInd = x.J._col(cpt2);
-		FLT tempVal = x.J._val(cpt2);
-		x.J._col(cpt2) = x.J._col(cpt1);
-		x.J._val(cpt2) = x.J._val(cpt1);
-		x.J._col(cpt1) = tempInd;
-		x.J._val(cpt1) = tempVal;
+		/* swap rows */
+		if (x.J._col(cpt1) == x.J._col(cpt2)) {
+			int tempInd = x.J._col(cpt2);
+			FLT tempVal = x.J._val(cpt2);
+			x.J._col(cpt2) = x.J._col(cpt1);
+			x.J._val(cpt2) = x.J._val(cpt1);
+			x.J._col(cpt1) = tempInd;
+			x.J._val(cpt1) = tempVal;
+		}
+		else {
+			x.J.set_values(row+3,x.J._col(cpt1),x.J._val(cpt1));
+			x.J.set_values(row,x.J._col(cpt1),0.0);
+		}
 		++cpt1;
 		++cpt2;
 	}
+
 	
 	/********************************************/
 	/* MOVE HEAT EQUATION IN J_mpi TO LAST ROW  */
@@ -487,13 +512,19 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 		int cpt2 = x.J_mpi._cpt(row+3);
 		
 		for(int col=0;col<nnz1;++col) {
-			/* Swap rows */
-			int tempInd = x.J_mpi._col(cpt2);
-			FLT tempVal = x.J_mpi._val(cpt2);
-			x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
-			x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
-			x.J_mpi._col(cpt1) = tempInd;
-			x.J_mpi._val(cpt1) = tempVal;
+			/* swap rows */
+			if (x.J_mpi._col(cpt1) == x.J_mpi._col(cpt2)) {
+				int tempInd = x.J_mpi._col(cpt2);
+				FLT tempVal = x.J_mpi._val(cpt2);
+				x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
+				x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
+				x.J_mpi._col(cpt1) = tempInd;
+				x.J_mpi._val(cpt1) = tempVal;
+			}
+			else {
+				x.J_mpi.set_values(row+3,x.J_mpi._col(cpt1),x.J_mpi._val(cpt1));
+				x.J_mpi.set_values(row,x.J_mpi._col(cpt1),0.0);
+			}
 			++cpt1;
 			++cpt2;
 		}
@@ -511,13 +542,19 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 			int cpt1 = x.J_mpi._cpt(row1);
 			int cpt2 = x.J_mpi._cpt(row2);
 			for(int col=0;col<nnz1;++col) {
-				/* Swap rows */
-				int tempInd = x.J_mpi._col(cpt2);
-				FLT tempVal = x.J_mpi._val(cpt2);
-				x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
-				x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
-				x.J_mpi._col(cpt1) = tempInd;
-				x.J_mpi._val(cpt1) = tempVal;
+				/* swap rows */
+				if (x.J_mpi._col(cpt1) == x.J_mpi._col(cpt2)) {
+					int tempInd = x.J_mpi._col(cpt2);
+					FLT tempVal = x.J_mpi._val(cpt2);
+					x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
+					x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
+					x.J_mpi._col(cpt1) = tempInd;
+					x.J_mpi._val(cpt1) = tempVal;
+				}
+				else {
+					x.J_mpi.set_values(row2,x.J_mpi._col(cpt1),x.J_mpi._val(cpt1));
+					x.J_mpi.set_values(row1,x.J_mpi._col(cpt1),0.0);
+				}
 				++cpt1;
 				++cpt2;
 			}
@@ -535,13 +572,19 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 	cpt1 = x.J_mpi._cpt(row);
 	cpt2 = x.J_mpi._cpt(row+3);
 	for(int col=0;col<nnz1;++col) {
-		/* Swap rows */
-		int tempInd = x.J_mpi._col(cpt2);
-		FLT tempVal = x.J_mpi._val(cpt2);
-		x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
-		x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
-		x.J_mpi._col(cpt1) = tempInd;
-		x.J_mpi._val(cpt1) = tempVal;
+		/* swap rows */
+		if (x.J_mpi._col(cpt1) == x.J_mpi._col(cpt2)) {
+			int tempInd = x.J_mpi._col(cpt2);
+			FLT tempVal = x.J_mpi._val(cpt2);
+			x.J_mpi._col(cpt2) = x.J_mpi._col(cpt1);
+			x.J_mpi._val(cpt2) = x.J_mpi._val(cpt1);
+			x.J_mpi._col(cpt1) = tempInd;
+			x.J_mpi._val(cpt1) = tempVal;
+		}
+		else {
+			x.J_mpi.set_values(row+3,x.J_mpi._col(cpt1),x.J_mpi._val(cpt1));
+			x.J_mpi.set_values(row,x.J_mpi._col(cpt1),0.0);
+		}
 		++cpt1;
 		++cpt2;
 	}
@@ -721,6 +764,9 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 		++cpt1;
 		++cpt2;
 	}
+	
+	symbolic::petsc_jacobian_dirichlet();  // Sets u,v dirichlet condition
+
 }
 #endif
 
@@ -795,7 +841,7 @@ void melt_kinetics::setup_preconditioner() {
 	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT SIDE MVDT MATRIX */
-			gbl->sdt(indx) = 1./gbl->sdt_kinetic(indx);
+			gbl->sdt_kinetic(indx) = 1./gbl->sdt_kinetic(indx);
 		}
 	}
 	return;
