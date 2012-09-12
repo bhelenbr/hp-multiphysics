@@ -27,8 +27,9 @@ METHOD 1 - using CVS to download
 	[cd blitz]
 	[autoreconf -vif]
 	[./configure -disable-fortran --prefix=$HOME/Packages CXX=c++]
-	[make]
+	[make lib]
 	[make install]
+	[make pdf] (to make pdf instructions in blitz/doc)
 (
 if you get an error after 'make lib' saying " 'labs' is not included in 'std'", do the following:
 	[nano blitz/func.h]
@@ -176,7 +177,14 @@ save cfortran.h to ${HOME}/Packages/include/
 ###################################################################
 # download valgrind from web
 ./configure --prefix=/share/apps
-./configure --prefix=${HOME}/Packages
+./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc
+make
+make install
+
+or from svn
+svn co svn://svn.valgrind.org/valgrind/trunk valgrind
+./autogen.sh
+./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc
 make
 make install
 
