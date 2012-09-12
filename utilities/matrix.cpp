@@ -576,6 +576,11 @@ void sparse_row_major::set_diag(int nels,const Array<int,1>& rows, FLT val, int 
 	return;	
 }
 
+void sparse_row_major::zero_row(int row) {
+		for(int j=_cpt(row);j<_cpt(row+1);++j)
+			_val(j) = 0.0;
+}
+
 
 void sparse_row_major::zero_rows(int nrows,const Array<int,1>& rows) {
 	for(int i=0;i<nrows;++i)

@@ -128,6 +128,7 @@ class sparse_row_major {
 		void set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
 	
 		void set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
+		void zero_row(int row);
 		void zero_rows(int nrows,const Array<int,1>& rows);
 		void multiply_row(int row, FLT val);
 		
