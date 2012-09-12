@@ -106,7 +106,7 @@ namespace bdry_cd {
 	};
 	
 
-	class melt : public dirichlet {	
+	class melt : public generic {
 		protected:
 			tri_hp_cd &x;
 #ifdef MELT1
@@ -139,8 +139,8 @@ namespace bdry_cd {
 #endif
 			
 		public:
-			melt(tri_hp_cd &xin, edge_bdry &bin) : dirichlet(xin,bin), x(xin) {mytype = "melt";}
-			melt(const melt& inbdry, tri_hp_cd &xin, edge_bdry &bin) : dirichlet(inbdry,xin,bin), x(xin) {
+			melt(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "melt";}
+			melt(const melt& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {
 #ifdef MELT1
 				gbl = inbdry.gbl;
 				vug_frst.resize(base.maxseg+1);
@@ -160,6 +160,8 @@ namespace bdry_cd {
 			void mg_restrict(); 
 			void element_jacobian(int indx, Array<FLT,2>& K);
 #endif
+			void vdirichlet();
+			void sdirichlet(int mode);
 			void update(int stage);
 #ifdef petsc
 			void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
@@ -190,33 +192,6 @@ namespace bdry_cd {
 			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 	#endif
 	};
-	
-	class kellerman : public melt {
-		public:
-			kellerman(tri_hp_cd &xin, edge_bdry &bin) : melt(xin,bin) {mytype = "kellerman";}
-			kellerman(const kellerman& inbdry, tri_hp_cd &xin, edge_bdry &bin) : melt(inbdry,xin,bin) {}
-			kellerman* create(tri_hp& xin, edge_bdry &bin) const {return new kellerman(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-			
-			/* FOR COUPLED DYNAMIC BOUNDARIES */
-			void init(input_map& inmap,void* gbl_in);
-#ifdef petsc
-			void vdirichlet() {
-				/* temperature equality constraint */
-				essential_indices.push_back(0);
-				dirichlet::vdirichlet();
-				essential_indices.clear();
-			}
-			
-			void sdirichlet(int m) {
-				/* temperature equality constraint */
-				essential_indices.push_back(0);
-				dirichlet::sdirichlet(m);
-				essential_indices.clear();
-			}
-#endif
-	};
-		
-	
 	
 	/* NOT REALLY A MELT B.C. END POINT?  ANGLE B.C. FOR MOVING EDGE POINT */
 	class melt_end_pt : public hp_vrtx_bdry {

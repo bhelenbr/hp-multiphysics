@@ -84,7 +84,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
 		/* Kinetic equation for surface temperature */
-		res(2,i) = RAD(crd(0,i))*(u(2)(i) -ibc->f(2, aloc, x.gbl->time) -gbl->K_sc*res(1,i))*jcb;  // -gbl->K_gt*kappa?;
+		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(u(2)(i) -ibc->f(2, aloc, x.gbl->time))*jcb +gbl->K_sc*res(1,i);  // -gbl->K_gt*kappa?;
 		/* Latent Heat source term and additional heat flux */
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
 	}
@@ -109,13 +109,13 @@ void melt_kinetics::vdirichlet() {
 	/* Put kinetic equation into slot 2 because heat equation is going into slot 1 */
 	/* Do it this way to make it easier to calculate jacobian for petsc*/
 #ifdef petsc
-	gbl->vres(Range(0,base.nseg))(2) = gbl->vres(Range(0,base.nseg))(1);
-	
 	for(int i=0;i<base.nseg;++i) {
+		gbl->vres(i)(2) = gbl->vres(i)(1);
 		for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 					gbl->sres(i,m)(2) = gbl->sres(i,m)(1);
 		}
 	}
+	gbl->vres(base.nseg)(2) = gbl->vres(base.nseg)(1);
 #endif
 	
 	melt::vdirichlet();
@@ -131,7 +131,7 @@ void melt_kinetics::vdirichlet() {
 			x.gbl->res.s(sind,m,2) = gbl->sres(i,m)(2);
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
-	x.gbl->res.v(v0,2) = gbl->vres(i)(2);
+	x.gbl->res.v(v0,2) = gbl->vres(base.nseg)(2);
 #else
 	/* Put zero in temperature slot */
 	i = 0;

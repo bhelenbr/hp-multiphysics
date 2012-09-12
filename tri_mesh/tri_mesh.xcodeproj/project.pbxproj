@@ -955,6 +955,10 @@
 					"${packages}/lib",
 					"${prefix}/lib",
 				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fast",
+				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				mpi_threads = NONE;
 				packages = "${HOME}/Packages";

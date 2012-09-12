@@ -261,6 +261,11 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			std::ofstream fout;
 			fout.open(fname.str().c_str());
 			
+			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"DXDT\",\"DYDT\",";
+			for(n=0;n<x.NV;++n)
+				fout << "\"V" << n << "\",\"DVTANG" << n << "\",\"DVNORM" << n << "\",";
+			fout << "\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
+			
 			FLT circumference = 0.0;
 			FLT l2error = 0.0;
 			TinyVector<FLT,tri_mesh::ND> xpt,norm,mvel,visc;
@@ -311,7 +316,7 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					visc[0] =  jcb*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 					visc[1] = -jcb*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 					
-					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ' << mvel(0) << ' ' << mvel(1) << ' ';
 					
 					for (n=0;n<x.NV;++n) {
 						/* Output value, tangent, and normal derivatives */

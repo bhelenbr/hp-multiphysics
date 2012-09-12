@@ -135,7 +135,7 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	keyword = base.idprefix + "_coupled";
 	inmap[keyword] = "1";
 	
-	dirichlet::init(inmap,gbl_in);
+	generic::init(inmap,gbl_in);
 	
 #ifdef MELT1
 	gbl = static_cast<global *>(gbl_in);
@@ -170,7 +170,8 @@ void melt::init(input_map& inmap,void* gbl_in) {
 
 
 void melt::tadvance() {
-	dirichlet::tadvance();
+	
+	generic::tadvance();
 	
 	/* THIS IS TO RECEIVE MESSAGES SENT FROM SURFACE DURING TADVANCE RSDL CALL */
 	if (x.gbl->substep == 0) {
@@ -180,6 +181,27 @@ void melt::tadvance() {
 	}
 	
 	return;
+}
+
+void melt::vdirichlet() {
+	int sind,j,v0;
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		x.gbl->res.v(v0,0) = 0.0;
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	x.gbl->res.v(v0,0) = 0.0;
+}
+
+void melt::sdirichlet(int mode) {
+	int sind;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		x.gbl->res.s(sind,mode,0) = 0.0;
+	}
 }
 
 void melt::rsdl(int stage) {
@@ -1355,16 +1377,6 @@ void melt_end_pt::petsc_jacobian() {
 #endif
 }
 #endif
-
-void kellerman::init(input_map& inmap,void* gbl_in) {
-	melt::init(inmap,gbl_in);
-	
-	/* Set u,v fixed, T & P to be free */
-	essential_indices.clear();
-	type = natural;
-	
-	return;
-}
 
 
 

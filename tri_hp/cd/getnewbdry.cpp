@@ -82,7 +82,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_cd_stype::kellerman:  {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new  kellerman(*this,*ebdry(bnum));
+				temp = new  melt(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
 			}
 			else {
