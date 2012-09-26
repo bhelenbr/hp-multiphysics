@@ -174,7 +174,9 @@ namespace bdry_buoyancy {
 		
 		struct global : public melt::global {                
 			/* Kinetic Coefficients */
-			FLT K_sc, K_gt;
+			FLT K_sc, B_facet, B, A; // Coefficients for Weinstein Kinetic model
+			FLT K_gt; // Gibbs Thompson curvature effect
+			TinyVector<FLT,tri_mesh::ND> facetdir; // Diretion of facet
 			
 			/* PRECONDITIONER */
 			Array<FLT,1> vdt_kinetic;

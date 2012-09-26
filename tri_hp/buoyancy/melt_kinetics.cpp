@@ -22,6 +22,13 @@ void melt_kinetics::init(input_map& inmap,void* gbl_in) {
 
 	inmap.getwdefault(base.idprefix + "_K_sc",gbl->K_sc,0.0);
 	inmap.getwdefault(base.idprefix + "_K_gt",gbl->K_gt,0.0);
+	inmap.getwdefault(base.idprefix + "_B_facet",gbl->B_facet,0.0);
+	inmap.getwdefault(base.idprefix + "_A",gbl->A,0.0);
+	inmap.getwdefault(base.idprefix + "_B",gbl->B,0.0);
+	FLT angle;
+	inmap.getwdefault(base.idprefix + "_facet_angle",angle,0.0);
+	gbl->facetdir(0) = cos(M_PI*angle/180.0);
+	gbl->facetdir(1) = sin(M_PI*angle/180.0);
 	
 	gbl->vdt_kinetic.resize(base.maxseg+1);
 	gbl->sdt_kinetic.resize(base.maxseg);
@@ -79,12 +86,20 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		
+		/* This is from Weinstein's hacked expression */
+		FLT cost = anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1);
+		FLT sint = sqrt(1 +EPSILON -cost*cost);
+		FLT beta2D = gbl->B*exp(-gbl->A/(u(2)(i) -ibc->f(2, aloc, x.gbl->time)))*cost;
+		FLT betaSN = gbl->B_facet*sint;
+		FLT beta = max(beta2D,betaSN);
+		FLT K = max(gbl->K_sc,1./beta);
+		
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
 		/* Kinetic equation for surface temperature */
-		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(u(2)(i) -ibc->f(2, aloc, x.gbl->time))*jcb +gbl->K_sc*res(1,i);  // -gbl->K_gt*kappa?;
+		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(u(2)(i) -ibc->f(2, aloc, x.gbl->time))*jcb +K*res(1,i);  // -gbl->K_gt*kappa?;
 		/* Latent Heat source term and additional heat flux */
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
 	}
