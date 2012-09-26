@@ -858,7 +858,7 @@ template<int ND> class geometry {
 					std::cout << "Warning: curved iterations exceeded for symbolic curved boundary " << pt(0) << ' ' << pt(1) << "Ratio to target error level " << fabs(delt_dist)/(10.*EPSILON) << '\n';  // FIXME:  NEED TO FIX
 					return(1);
 				}
-			} while (fabs(delt_dist) > 200.*EPSILON);
+			} while (fabs(delt_dist) > 20.*EPSILON);
 
 			return(0);
 		}

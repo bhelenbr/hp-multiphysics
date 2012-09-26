@@ -283,7 +283,7 @@ void surface::rsdl(int stage) {
 			*x.gbl->log << gbl->vres(j)(1)*gbl->rho2 << '\n';
 #endif
 		}
-		for(j=0;j<base.nseg;++j) {
+		for(int j=0;j<base.nseg;++j) {
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				base.fsndbuf(count++) = gbl->sres(j,m)(1)*gbl->rho2;
 			}
@@ -478,6 +478,7 @@ void surface_slave::rsdl(int stage) {
 	/* Store 0.0 in vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	int i = 0;
+	int sind,v0;
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
@@ -488,14 +489,11 @@ void surface_slave::rsdl(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = 0.0;
 	r_gbl->res(v0)(1) = 0.0;
-#endif
 
-#ifndef petsc
 	base.comm_prepare(boundary::all,0,boundary::master_slave);
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
 	int count = 0;
-	int sind,v0;
 	i = base.nseg-1;
 	do {
 		sind = base.seg(i);

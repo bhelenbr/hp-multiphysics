@@ -99,6 +99,9 @@ For intel compilers had to disable shared library (skip this line)
 	[make install]
 	[cd ..]
 
+libbinio may have an error in it and you will have to add 
+#include <cstdio> to binwrap.cpp
+
 
 ###################################################################
 ######### MESH PARTITIONING LIBRARY #############
@@ -284,11 +287,15 @@ NOW DOWNLOAD MY CODE
 [mkdir include lib] # (if not already there)
 [svn co https://balrog.camp.clarkson.edu/Repository/Codes .]
 
-# hit return when it asks for password then
-# use "guest" as username
-# and hp-cfd as password
+# Need to update this to git repository. svn repository is dead.
+"ssh-keygen" (Hit return twice, i.e. use no passphrase)
+"cd ~/.ssh"
+"cat id_rsa.pub > ~/Desktop/id.txt"
+send id.txt file on desktop to Brian so he can give you access to repository
 
-now make all of my stuff:
+now get all of my stuff:
+git clone ssh://git@balrog.camp.clarkson.edu/~/GitRepo Codes
+
 ###################################################################	
 #### UNIX ####
 # On cares modify your ~/.bash_profile file in your home directory by 
@@ -308,6 +315,12 @@ To load the new environment variables
 # you may have to monkey with the makefiles to change
 # blas & lapack libraries, as well as mpic++ location 
 # and directory of mpi.h include.  
+# This are in the individual directories.  
+# For mpi it is mainly the tri_mesh and tri_hp directories
+# for boas stuff it is the tri_basis makefile and maybe
+# tri_hp as well.
+# Sometimes superLU changes its version number which messes everything up
+# you will have to change the number to match in the tri_hp makefile
 
 # Other things is that getnewblock.cpp in tri_hp and 
 # the makefile have to compile the same classes.
