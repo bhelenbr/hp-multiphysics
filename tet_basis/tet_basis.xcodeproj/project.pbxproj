@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -42,14 +42,13 @@
 		6FBD8A69084C13780057FD8F /* initialize.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initialize.cpp; sourceTree = "<group>"; };
 		6FBD8A6C084C13780057FD8F /* proj.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = proj.cpp; sourceTree = "<group>"; };
 		6FBD8A6E084C13780057FD8F /* ptvalues.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptvalues.cpp; sourceTree = "<group>"; };
-		6FBD8A79084C13AF0057FD8F /* createlib */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.csh; path = createlib; sourceTree = "<group>"; };
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../../Codes/lib/libmyblas.a; sourceTree = "<group>"; };
 		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6FC242850BE65C36003F9828 /* tet_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tet_basis.h; sourceTree = "<group>"; };
-		9572078510473AD20044E240 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = makefile; path = ../../Desktop/makefiles/tet_basis/makefile; sourceTree = SOURCE_ROOT; };
+		9572078510473AD20044E240 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = SOURCE_ROOT; };
 		B2063F0D0AE7D81F00D6577D /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
-		B27150B90AF90B1E002DC550 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		B27150B90AF90B1E002DC550 /* tet_basis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_basis; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt1d.cpp; sourceTree = "<group>"; };
 		B2B1C57F0BF14B8D000E4F20 /* intgrt2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt2d.cpp; sourceTree = "<group>"; };
 		B2B1CA150BF8B213000E4F20 /* proj2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proj2d.cpp; sourceTree = "<group>"; };
@@ -112,7 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				6F33E671086787710029F2D6 /* libtet_basis.a */,
-				B27150B90AF90B1E002DC550 /* main */,
+				B27150B90AF90B1E002DC550 /* tet_basis */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,7 +120,6 @@
 			isa = PBXGroup;
 			children = (
 				9572078510473AD20044E240 /* makefile */,
-				6FBD8A79084C13AF0057FD8F /* createlib */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
@@ -180,7 +178,7 @@
 			);
 			name = main;
 			productName = main;
-			productReference = B27150B90AF90B1E002DC550 /* main */;
+			productReference = B27150B90AF90B1E002DC550 /* tet_basis */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -188,8 +186,11 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -252,34 +253,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COPY_PHASE_STRIP = NO;
-				DEPLOYMENT_LOCATION = NO;
-				DSTROOT = "/tmp/$(PROJECT_NAME).dst";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G4;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "${HOME}/Codes";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
 				);
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Codes/include",
-					"$(HOME)/Packages/include",
-				);
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "";
+				INSTALL_PATH = /lib;
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = tet_basis;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Development;
 		};
@@ -287,98 +273,72 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COPY_PHASE_STRIP = YES;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Codes/include",
-					"$(HOME)/Packages/include",
-				);
 				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = (
-					"-falign-loops=16",
-					"-funroll-loops",
-				);
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = tet_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Deployment;
 		};
 		6FD8AD450864E338005A8B60 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				HEADER_SEARCH_PATHS = (
+					"${HOME}/Packages/include",
+					"${HOME}/Codes/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"${HOME}/Codes/lib",
+					"${HOME}/Packages/lib",
+				);
 			};
 			name = Development;
 		};
 		6FD8AD460864E338005A8B60 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				HEADER_SEARCH_PATHS = (
+					"${HOME}/Packages/include",
+					"${HOME}/Codes/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"${HOME}/Codes/lib",
+					"${HOME}/Packages/lib",
+				);
+				OTHER_CFLAGS = "-fast";
 			};
 			name = Deployment;
 		};
 		B27150DA0AF90B96002DC550 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
 				);
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Packages/lib",
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
-				PREBINDING = NO;
-				PRODUCT_NAME = main;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../include\" $(HOME)/Packages/include";
-				ZERO_LINK = YES;
+				PRODUCT_NAME = tet_basis;
 			};
 			name = Development;
 		};
 		B27150DB0AF90B96002DC550 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Packages/lib",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../lib\"";
-				PREBINDING = NO;
-				PRODUCT_NAME = main;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../include\" $(HOME)/Packages/include";
-				ZERO_LINK = NO;
+				PRODUCT_NAME = tet_basis;
 			};
 			name = Deployment;
 		};
