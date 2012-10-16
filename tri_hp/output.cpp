@@ -332,7 +332,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				out << 5 << endl;
 			
 			out << "POINT_DATA " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << endl;
-			out << "SCALARS u,v,p float " << NV << endl;
+			out << "SCALARS u float " << NV << endl;
 			out << "LOOKUP_TABLE default" << endl;
 			
 			/* VERTEX MODES */
