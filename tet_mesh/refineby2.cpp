@@ -9,7 +9,7 @@
 #include "tet_mesh.h"
 #include <utilities.h>
 #include <assert.h>
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 
 void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	int n,sind,ind,find,p0,p1;

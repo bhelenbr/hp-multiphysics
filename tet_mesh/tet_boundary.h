@@ -262,7 +262,7 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 };
 
 #include <spline.h>
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 
 class spline_bdry : public edge_bdry {
 	spline<3> my_spline;

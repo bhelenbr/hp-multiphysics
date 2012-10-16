@@ -194,6 +194,10 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 		filetype = gmsh;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
+	else if (ending == "FDNEUT") {
+		filetype = gambit;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
 	
 	switch (filetype) { 
 					
@@ -563,7 +567,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 #ifdef USING_MADLIB
 		case(gmsh): {
-			MAdLib_input(filename, grwfac, bdrymap);
+			MAdLib_input(grd_nm, grwfac, bdrymap);
 			break;
 		}
 #endif

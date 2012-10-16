@@ -1,5 +1,5 @@
 #include "tet_mesh.h"
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 #include <cmath>
 
 bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
@@ -78,14 +78,14 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 	}
 	
 	/* SEARCHED EVERY TET AND FAILED: RETURN 0 */
-	*gbl->log << "Error: could not find tet that contains point at " << xp << " with seed vertex " << seedvrtx << std::endl;     
-	for (int i=0;i<ind2;++i) {
-		tind = gbl->i2wk(i);
-		*gbl->log << i << ' ' << gbl->i2wk(i) << ' ' << intet(tind, xp) << std::endl;
-	}
-	output("error",easymesh);
-	output("error");
-	exit(1);
+//	*gbl->log << "Error: could not find tet that contains point at " << xp << " with seed vertex " << seedvrtx << std::endl;     
+//	for (int i=0;i<ind2;++i) {
+//		tind = gbl->i2wk(i);
+//		*gbl->log << i << ' ' << gbl->i2wk(i) << ' ' << intet(tind, xp) << std::endl;
+//	}
+//	output("error",easymesh);
+//	output("error");
+//	exit(1);
 
 	found = false;
 	
