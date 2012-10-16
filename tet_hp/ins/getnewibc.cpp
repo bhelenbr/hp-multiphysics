@@ -22,16 +22,10 @@ namespace ibc_ins {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
 				switch(n) {
 					case(0):
-						//return(speed*cos(alpha) + amp*(0.5-x(0))*(0.5+x(0))*(0.5-x(1))*(0.5+x(1))*(0.5-x(2))*(0.5+x(2)));
-						//return(speed*cos(alpha) + amp*(1.0-x(0))*(x(0))*(1.0-x(1))*(x(1))*(1.0-x(2))*(x(2)));
-
-						//return(speed*cos(alpha) + .25*amp*exp(-x(0)*x(0)*100)*exp(-x(1)*x(1)*100)*exp(-x(2)*x(2)*100));
-						//return(speed*cos(alpha) + .25*amp*exp(-(x(0)-0.5)*(x(0)-0.5)*100)*exp(-(x(1)-0.5)*(x(1)-0.5)*100)*exp(-(x(2)-0.5)*(x(2)-0.5)*100));
-						return(0);
+						return(0*speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
 					case(1):
 						return(speed*sin(alpha));
 					case(2):
-						//return(0.0);
 						return(16/0.08333333333/0.08333333333/0.1875/0.1875*(0.1875/2.0+x(0)-0.375)*(0.1875/2.0-x(0)+0.375)*(0.08333333333/2.0+x(1)-0.104166666665)*(0.08333333333/2.0-x(1)+0.104166666665));
 					case(3):
 						return(0.0);

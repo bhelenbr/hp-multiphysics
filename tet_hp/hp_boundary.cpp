@@ -9,7 +9,7 @@
 
 #include "tet_hp.h"
 #include "hp_boundary.h"
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 #include <libbinio/binwrap.h>
 #include <myblas.h>
 

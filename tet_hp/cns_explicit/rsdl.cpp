@@ -458,7 +458,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 							-u1*u2,	                u2,	        u1,	                  0.0,	      0.0,
 							-u2*u2+gm1*ke,          -gm1*u1,    (2.0-gm1)*u2,         -gm1*u3,    gm1,
 							-u2*u3,                 0.0,        u3,                   u2,         0.0,
-							u2*(-gam*E+2.0*gm1*ke), -u1*gm1*u2, gam*E-gm1*(u1*u1+ke), -u2*gm1*u3, gam*u2;
+							u2*(-gam*E+2.0*gm1*ke), -u1*gm1*u2, gam*E-gm1*(u2*u2+ke), -u2*gm1*u3, gam*u2;
 						
 						C = 0.0,					0.0,		0.0,		1.0,			      0.0,
 							-u1*u3,                 u3,			0.0,		u1,					  0.0,
@@ -822,7 +822,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 							-u1*u2,	                u2,	        u1,	                  0.0,	      0.0,
 						    -u2*u2+gm1*ke,          -gm1*u1,    (2.0-gm1)*u2,         -gm1*u3,    gm1,
 							-u2*u3,                 0.0,        u3,                   u2,         0.0,
-						    u2*(-gam*E+2.0*gm1*ke), -u1*gm1*u2, gam*E-gm1*(u1*u1+ke), -u2*gm1*u3, gam*u2;
+						    u2*(-gam*E+2.0*gm1*ke), -u1*gm1*u2, gam*E-gm1*(u2*u2+ke), -u2*gm1*u3, gam*u2;
 			
 						C = 0.0,					0.0,		0.0,		1.0,			      0.0,
 						    -u1*u3,                 u3,			0.0,		u1,					  0.0,

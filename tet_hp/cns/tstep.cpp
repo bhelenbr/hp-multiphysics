@@ -4,7 +4,7 @@
 #include "tet_hp_cns.h"
 //#include "../hp_boundary.h"
 #include <myblas.h>
-#include<blitz/tinyvec-et.h>
+//#include<blitz/tinyvec-et.h>
 
 //#define TIMEACCURATE
 

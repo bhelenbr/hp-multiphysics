@@ -38,6 +38,7 @@ class init_bdry_cndtn {
 	public:
 		virtual FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) = 0;
 		virtual void input(input_map &blkdata, std::string idnty) {};
+		virtual ~init_bdry_cndtn() {};
 };
 
 class tet_hp_helper;
@@ -119,7 +120,7 @@ class tet_hp : public tet_mesh  {
 			* could be used for ug0 res and res_r as well? 
 			*/
 			tet_hp *pstr;  
-			FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  
+			FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  <**/
 
 			/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 			vefi ug0;
@@ -378,6 +379,7 @@ class tet_hp_helper {
 	public:
 		tet_hp_helper(tet_hp& xin) : x(xin) {}
 		tet_hp_helper(const tet_hp_helper &in_help, tet_hp& xin) : x(xin) {}
+		virtual ~tet_hp_helper() {};
 		virtual tet_hp_helper* create(tet_hp& xin) { return new tet_hp_helper(*this,xin); }
 		virtual void init(input_map& input, std::string idnty) {}
 		virtual void tadvance() {}
@@ -388,5 +390,19 @@ class tet_hp_helper {
 		virtual void output() {};
 };
 
+
+/* Notes from Mike
+ known problems with code:
+ 1) minvrt for 2D code does not work use petsc for now
+ 2) vertex and edge boundaries physics may not work properly... how do you find normal vector to an edge (infinite solutions)
+ 3) when partitioning a mesh it searches for lone communication vertices/edges that touch edge/face boundaries and then makes them inflows. The mesh does not know the physics. So you have to manually go back and check all vertex/edge communications match appropriate boundary conditions.
+ 3b) maybe this could be fixed by specifying BC's in gmsh and then partition could read them. Also for vertex that touch dirichlet and neumann give priority to dirichlet.
+ 4) Only some things work up to p=4 almost everything works for p=2
+ 5) pMG does not work well. Maybe issue with inflow and/or matrix preconditioner
+ 6) Conservative variables work except for BC's... not sure what to make dirichlet
+ 7) hMG does not work in parallel
+ 8) when load a Gmsh mesh it does not delete stand alone entities. need to manually delete them before loading or uncomment in MAdLib_input nvbd=0,nebd=0.
+ 8b) this can be avoided by specifying physical lines/surfaces/volumes. that way it saves only things you want and not all the stand alone vertices/edges.
+*/
 
 #endif

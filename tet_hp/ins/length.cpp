@@ -11,7 +11,7 @@
 
 #include "tet_hp_ins.h"
 #include "../hp_boundary.h"
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 #include <vector>
 
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */

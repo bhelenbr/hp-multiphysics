@@ -1,6 +1,6 @@
 #include "bdry_cns.h"
 //#include <myblas.h>
-#include<blitz/tinyvec-et.h>
+//#include<blitz/tinyvec-et.h>
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
 /* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */

@@ -35,7 +35,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 						fcn(n).init(inmap,nstr.str());
 				}
 				else {
-					std:cerr << "couldn't find initial condition function\n";
+					std::cerr << "couldn't find initial condition function\n";
 					exit(1);
 				}
 			}

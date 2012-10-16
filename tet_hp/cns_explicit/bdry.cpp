@@ -1,6 +1,6 @@
 #include "bdry_cns_explicit.h"
 #include <myblas.h>
-#include<blitz/tinyvec-et.h>
+//#include<blitz/tinyvec-et.h>
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
 /* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
@@ -405,7 +405,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	Roe = 0.5*(Rl+Rr);
 	
 	/* Calculate u,v,c Variables */
-	FLT rho = Roe(0)*Roe(0);
+	// FLT rho = Roe(0)*Roe(0);
 	FLT u = Roe(1)/Roe(0);
 	FLT v = Roe(2)/Roe(0);
 	FLT w = Roe(3)/Roe(0);

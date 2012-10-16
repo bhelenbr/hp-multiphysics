@@ -23,7 +23,7 @@
 #include "tet_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 #include <myblas.h>
-#include <blitz/tinyvec-et.h>
+//#include <blitz/tinyvec-et.h>
 #include <blitz/array.h>
 #include <symbolic_function.h>
 

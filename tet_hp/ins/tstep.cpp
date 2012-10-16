@@ -2,7 +2,7 @@
 
 #include "tet_hp_ins.h"
 #include "../hp_boundary.h"
-#include<blitz/tinyvec-et.h>
+//#include<blitz/tinyvec-et.h>
 
 void tet_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
