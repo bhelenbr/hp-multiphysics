@@ -249,7 +249,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		6F33E673086787BF0029F2D6 /* Development */ = {
+		6F33E673086787BF0029F2D6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -267,9 +267,9 @@
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 			};
-			name = Development;
+			name = Debug;
 		};
-		6F33E674086787BF0029F2D6 /* Deployment */ = {
+		6F33E674086787BF0029F2D6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -284,9 +284,9 @@
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6FD8AD450864E338005A8B60 /* Development */ = {
+		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -301,9 +301,9 @@
 					"${HOME}/Packages/lib",
 				);
 			};
-			name = Development;
+			name = Debug;
 		};
-		6FD8AD460864E338005A8B60 /* Deployment */ = {
+		6FD8AD460864E338005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
@@ -319,9 +319,9 @@
 				);
 				OTHER_CFLAGS = "-fast";
 			};
-			name = Deployment;
+			name = Release;
 		};
-		B27150DA0AF90B96002DC550 /* Development */ = {
+		B27150DA0AF90B96002DC550 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -331,16 +331,16 @@
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tet_basis;
 			};
-			name = Development;
+			name = Debug;
 		};
-		B27150DB0AF90B96002DC550 /* Deployment */ = {
+		B27150DB0AF90B96002DC550 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tet_basis;
 			};
-			name = Deployment;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -348,29 +348,29 @@
 		6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "tet_basis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F33E673086787BF0029F2D6 /* Development */,
-				6F33E674086787BF0029F2D6 /* Deployment */,
+				6F33E673086787BF0029F2D6 /* Debug */,
+				6F33E674086787BF0029F2D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Debug;
 		};
 		6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6FD8AD450864E338005A8B60 /* Development */,
-				6FD8AD460864E338005A8B60 /* Deployment */,
+				6FD8AD450864E338005A8B60 /* Debug */,
+				6FD8AD460864E338005A8B60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Debug;
 		};
 		B27150D90AF90B96002DC550 /* Build configuration list for PBXNativeTarget "main" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B27150DA0AF90B96002DC550 /* Development */,
-				B27150DB0AF90B96002DC550 /* Deployment */,
+				B27150DA0AF90B96002DC550 /* Debug */,
+				B27150DB0AF90B96002DC550 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

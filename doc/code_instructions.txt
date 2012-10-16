@@ -231,22 +231,31 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
-	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/mpich/myrinet/gnu
-	# OR
-	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi
+
 
 	## USE CCMAKE TO CHANGE INSTALL OPTIONS
 	## ON CLUSTER:
+	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi
 	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]
 	Hit t to toggle expert mode.
+
+	## ON MAC
+	export CMAKE_PREFIX_PATH=${HOME}/Packages
         ## ON MAC CAN USE CMAKE GUI TO CHANGE OPTION
-	### CHANGE EXTENDED_API TO YES (find correct checkbox)
+	# Set source directory to Packages/MAdLib
+	# Set build directory to Packages/MAdLib/build
+
+	## CHANGE CMAKE_INSTALL_PREFIX to Packages
+	## CHANGE EXTENDED_API TO YES (find correct checkbox)
+	## Change BUILD DOXYGEN
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 
 	[cmake ..]
 	[make depend]
 	[make -j 2]
 	[make install]
+
+	# Need to move the include_all/MAdLib folder and replace the one in include
 
 
 ###################################################################
