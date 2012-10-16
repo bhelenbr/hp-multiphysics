@@ -257,7 +257,7 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			if (!report_flag) break;
 			
 			std::ostringstream fname;
-			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
+			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
 			std::ofstream fout;
 			fout.open(fname.str().c_str());
 			

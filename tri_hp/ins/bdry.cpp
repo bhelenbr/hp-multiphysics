@@ -25,7 +25,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			if (!report_flag) return;
 			
 			std::ostringstream fname;
-			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
+			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
 			
 			std::ofstream file_out;
 			file_out.open(fname.str().c_str());
