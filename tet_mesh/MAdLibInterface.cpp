@@ -35,79 +35,133 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 		maxvst = (maxvst > M_numVertices(MAdMesh) ? maxvst : M_numVertices(MAdMesh));
 		allocate(static_cast<int>(grwfac*maxvst));	
 
-		/* Now Generate Boundary Structures */
-		int Ntotal = M_numGeomFeatures(MAdMesh);
-		nvbd = 0;
-		nebd = 0;
-		nfbd = 0;
-		for (int i=0;i<Ntotal;) {
-			int thisID = M_geomFeatureId(MAdMesh,i);
-			pPGList list = M_geomFeature(MAdMesh, thisID);
-			void * tmp = NULL;
-			pGEntity pge;
-			while ( ( pge = PGList_next(list,&tmp) ) ) {
-// 			std::vector<pGEntity>::iterator it = list->entities.begin();
-// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-				int gDim = GEN_type(pge);
-// 				int gDim = GEN_type(*it);						
-				switch (gDim) {
-					case(0):
-						++nvbd;
-						break;
-					case(1):
-						++nebd;
-						break;
-					case(2):
-						++nfbd;
-						break;
+		if (GM_physical(MAdModel)) {
+			GVIter vit = GM_vertexIter(MAdModel);
+			while (pGVertex pv = GVIter_next(vit)) {
+				if (pv->pTag()) {
+					++nvbd;
 				}
-				++i;
 			}
-			PGList_delete(list);
-		} 
-		
-		vbdry.resize(nvbd);
-		ebdry.resize(nebd);
-		fbdry.resize(nfbd);
+			
+			GEIter eit = GM_edgeIter(MAdModel);
+			while (pGEdge pe = GEIter_next(eit)) {
+				if (pe->pTag()) {
+					++nebd;
+				}
+			}
+			
+			GFIter fit = GM_faceIter(MAdModel);
+			while (pGFace pf = GFIter_next(fit)) {
+				if (pf->pTag()) {
+					++nfbd;
+				}
+			}
+			
+			vbdry.resize(nvbd);
+			ebdry.resize(nebd);
+			fbdry.resize(nfbd);
+			
+			GVIter_reset(vit);
+			nvbd = 0;
+			while (pGVertex pv = GVIter_next(vit)) {
+				if (pv->pTag()) {
+					vbdry(nvbd) = getnewvrtxobject(pv->tag(),input);
+					vbdry(nvbd)->alloc(4);
+					++nvbd;
+				}
+			}
+			
+			GEIter_reset(eit);
+			nebd = 0;
+			while (pGEdge pe = GEIter_next(eit)) {
+				if (pe->pTag()) {
+					ebdry(nebd) = getnewedgeobject(pe->tag(),input);
+					ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pe));
+					++nebd;
+				}
+			}
+			
+			GFIter_reset(fit);
+			nfbd = 0;
+			while (pGFace pf = GFIter_next(fit)) {
+				if (pf->pTag()) {
+					fbdry(nfbd) = getnewfaceobject(pf->tag(),input);
+					fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pf));
+					++nfbd;
+				}
+			}
+		}
+		else {
+			int Ntotal = M_numGeomFeatures(MAdMesh);
+			nvbd = 0;
+			nebd = 0;
+			nfbd = 0;
+			for (int i=0;i<Ntotal;) {
+				int thisID = M_geomFeatureId(MAdMesh,i);
+				pPGList list = M_geomFeature(MAdMesh, thisID);
+				void * tmp = NULL;
+				pGEntity pge;
+				while ( ( pge = PGList_next(list,&tmp) ) ) {
+	// 			std::vector<pGEntity>::iterator it = list->entities.begin();
+	// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
+					int gDim = GEN_type(pge);
+	// 			int gDim = GEN_type(*it);						
+					switch (gDim) {
+						case(0):
+							++nvbd;
+							break;
+						case(1):
+							++nebd;
+							break;
+						case(2):
+							++nfbd;
+							break;
+					}
+					++i;
+				}
+				PGList_delete(list);
+			}
+			
+			vbdry.resize(nvbd);
+			ebdry.resize(nebd);
+			fbdry.resize(nfbd);
 
-		nvbd = 0;
-		nebd = 0;
-		nfbd = 0;
-		for (int i=0;i<Ntotal;) {
-			int thisID = M_geomFeatureId(MAdMesh,i);
-			pPGList list = M_geomFeature(MAdMesh, thisID);
-			void * tmp = NULL;
-			pGEntity pge;
-			while ( ( pge = PGList_next(list,&tmp) ) ) {
-// 			std::vector<pGEntity>::iterator it = list->entities.begin();
-// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-				int gDim = GEN_type(pge);
-				int gId = GEN_tag(pge);			
-				switch (gDim) {
-					case(0):
-						vbdry(nvbd) = getnewvrtxobject(gId,input);
-						vbdry(nvbd)->alloc(4);
-						++nvbd;
-						break;
-					case(1):
-						ebdry(nebd) = getnewedgeobject(gId,input);
-						ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pge));
-						++nebd;
-						break;
-					case(2):
-						fbdry(nfbd) = getnewfaceobject(gId,input);
-						fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pge));
-						++nfbd;
-						break;
+			nvbd = 0;
+			nebd = 0;
+			nfbd = 0;
+			for (int i=0;i<Ntotal;) {
+				int thisID = M_geomFeatureId(MAdMesh,i);
+				pPGList list = M_geomFeature(MAdMesh, thisID);
+				void * tmp = NULL;
+				pGEntity pge;
+				while ( ( pge = PGList_next(list,&tmp) ) ) {
+	// 			std::vector<pGEntity>::iterator it = list->entities.begin();
+	// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
+					int gDim = GEN_type(pge);
+					int gId = GEN_tag(pge);			
+					switch (gDim) {
+						case(0):
+							vbdry(nvbd) = getnewvrtxobject(gId,input);
+							vbdry(nvbd)->alloc(4);
+							++nvbd;
+							break;
+						case(1):
+							ebdry(nebd) = getnewedgeobject(gId,input);
+							ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pge));
+							++nebd;
+							break;
+						case(2):
+							fbdry(nfbd) = getnewfaceobject(gId,input);
+							fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pge));
+							++nfbd;
+							break;
+					}
+					++i;
 				}
-				++i;
+				PGList_delete(list);
 			}
-			PGList_delete(list);
 		}
 	}
-	
-	/* hack fix me temp need to delete vertex boundaries if stand alone in mesh */
-	//nvbd = 0;
 	
 	MAdLibInterface::importFromMAdMesh(MAdMesh,this);
 }
@@ -144,10 +198,6 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	//									the solver to free memory
 	// solver->deleteData();
 
-
-//	input_map empty;
-//	mesh->input("asdf",tet_mesh::gmsh,1.0,empty);
-
 	
 	// 1.B. Build the MAdLib geometrical model.
 	//			(see note in MAdLibInterface.h about models)
@@ -158,13 +208,12 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 1.C. Build the MadLib mesh and delete the solver mesh.
 	pMesh MAdMesh = M_new(MAdModel);
 	exportToMAdMesh(mesh, MAdMesh);
-	//M_writeMsh(MAdMesh,"starting_mesh.msh",2);
-	//cout << "number of nodes starting mesh: " <<  mesh->npnt << endl;
 	
-	//temp
+	// temporary
+//	M_writeMsh(MAdMesh,"starting_mesh.msh",2);
+//	cout << "number of nodes starting mesh: " <<  mesh->npnt << endl;
 //	importFromMAdMesh(MAdMesh, mesh);
-//	mesh->output("starting_mesh",tet_mesh::grid);
-
+//	mesh->output("starting_mesh_b0",tet_mesh::grid);
 	
 	// solver->deleteMesh();
 
@@ -175,15 +224,14 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	
 	// 1.E. Build the adaptation tool
 	MeshAdapter * adapter = new MeshAdapter(MAdMesh,sizeField);
+	adapter->clearConstraints();
 	adapter->setMaxIterationsNumber(10);
-	//adapter->setCollapseOnBoundary(true,1.0);
 
-	
 	adapter->setSliverPermissionInESplit( true, 10. );
-    adapter->setSliverPermissionInECollapse( true, 0.1 );
+	adapter->setSliverPermissionInECollapse( true, 0.1 );
 	
-    //adapter->setCollapseOnBoundary( true, 1.e-6 );
-    //adapter->setSwapOnBoundary( true, 1.e-6 );
+	adapter->setCollapseOnBoundary( true, 1.e-1 );
+	adapter->setSwapOnBoundary( true, 1.e-1 );
 	
 	// 1.F. Register the callback function(s) of the solver
 	// adapter->addCallback(Solver_CBFunction,(void*)this);
@@ -200,8 +248,10 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 
 	// optional output
 	adapter->printStatistics(std::cout);
-	//M_writeMsh(MAdMesh,"adapted_mesh.msh",2);
-	//cout << "number of nodes adapted mesh: " <<  mesh->npnt << endl;
+	
+	// temporary
+	M_writeMsh(MAdMesh,"adapted_mesh_b0.msh",2);
+	cout << "number of nodes adapted mesh: " <<  mesh->npnt << endl;
 
 	
 	delete adapter;
@@ -214,20 +264,19 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 3.A. Rebuild the solver mesh
 	importFromMAdMesh(MAdMesh, mesh);
 	
-	//temp
-	//mesh->output("adapted_mesh",tet_mesh::grid);
+	// temporary
+	mesh->output("adapted_mesh_b0",tet_mesh::grid);
 
 	// 3.B. get the solution from the MDB mesh
-//	solver->allocateSolution();
-//	getSolutionFromMesh(MAdMesh);
+	//solver->allocateSolution();
+	//getSolutionFromMesh(MAdMesh);
 
 	// 3.C. Clean up MAdLib stuff
 	delete MAdMesh;
 	delete MAdModel;
 
-	// 3.D. (optional with 1.A.) build mesh/solution 
-	//													dependent data in the solver
-//	solver->allocateAndComputeData();
+	// 3.D. (optional with 1.A.) build mesh/solution dependent data in the solver
+	//solver->allocateAndComputeData();
 }
 
 //-----------------------------------------------------------------------------
