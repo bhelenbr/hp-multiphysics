@@ -87,12 +87,12 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		
 		/* This is from Weinstein's hacked expression */
-		FLT cost = anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1);
+		FLT cost = abs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
 		FLT sint = sqrt(1 +EPSILON -cost*cost);
-		FLT beta2D = gbl->B*exp(-gbl->A/(u(2)(i) -ibc->f(2, aloc, x.gbl->time)))*cost;
+		FLT beta2D = gbl->B*exp(-gbl->A/(fabs(ibc->f(2, aloc, x.gbl->time) -u(2)(i)) +EPSILON))*cost;
 		FLT betaSN = gbl->B_facet*sint;
 		FLT beta = max(beta2D,betaSN);
-		FLT K = max(gbl->K_sc,1./beta);
+		FLT K = max(gbl->K_sc,1./beta); 
 		
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
