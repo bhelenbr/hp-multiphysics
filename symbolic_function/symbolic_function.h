@@ -256,7 +256,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 					goto NEXT;
 				}
 				else {
-					std::cout << "couldn't find expression " << item->first << '\n';
+					std::cout << "couldn't find expression " << item->first << std::endl;
 					abort();
 				}
 			}
@@ -295,7 +295,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 					goto NEXT1;
 				}
 				else {
-					std::cout << "couldn't find expression " << item->first << '\n';
+					std::cout << "couldn't find expression " << item->first << std::endl;
 					abort();
 				}
 			}
@@ -629,7 +629,7 @@ public:
 						goto NEXT;
 					}
 					else {
-						std::cout << "couldn't find expression " << item->first << '\n';
+						std::cout << "couldn't find expression " << item->first << std::endl;
 						abort();
 					}
 				}
@@ -669,7 +669,7 @@ public:
 						goto NEXT1;
 					}
 					else {
-						std::cout << "couldn't find expression " << item->first << '\n';
+						std::cout << "couldn't find expression " << item->first << std::endl;
 						abort();
 					}
 				}
