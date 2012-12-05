@@ -1281,7 +1281,7 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 			
 			/* tag partitions with 1's */
 			temp = 0;
-			for(int j = 0; j < 2; ++j){
+			for(int j = 0; j < 2; ++j) {
 				temp(tet(tri(i).tet(j)).info) = 1;
 			}
 			
