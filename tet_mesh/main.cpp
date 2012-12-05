@@ -19,6 +19,7 @@ static GBool Smooth = gFalse;
 static GBool Coarsen_hp = gFalse;
 static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
+static GBool GMSHPartition = gFalse;
 static GBool Format = gFalse;
 static GBool Coarsen_Marks = gFalse;
 static GBool Symmetrize = gFalse;
@@ -29,37 +30,39 @@ GBool printHelp = gFalse;
 
 static ArgDesc argDesc[] = {
   {"-g",        argFlag,        &Generate,      0,
-	"generate mesh from .d file"},
+		"generate mesh from .d file"},
   {"-m",        argFlag,        &Shift,        0,
-	"shift mesh position"},
+		"shift mesh position"},
   {"-s",        argFlag,      &Scale,        0,
-	"scale mesh"},
+		"scale mesh"},
   {"-f",        argFlag,      &Smooth,        0,
-	"smooth mesh"},
+		"smooth mesh"},
   {"-h",        argFlag,      &printHelp,      0,
-	"print usage information"},
+		"print usage information"},
   {"-help",    argFlag,      &printHelp,      0,
-	"print usage information"},
+		"print usage information"},
   {"-c",        argFlag,      &Coarsen_hp,      0,
-	"coarsen substructured mesh"}, 
+		"coarsen substructured mesh"},
   {"-r",        argFlag,      &Refineby2,             0,
-	"refine mesh by 2"},
+		"refine mesh by 2"},
   {"-i",        argInt,      &informat,          0,
-	"input mesh format"},
+		"input mesh format"},
   {"-o", argInt,    &outformat,        0,
-	"output format"},
+		"output format"},
   {"-p"  ,argFlag,     &Partition,            0,
-	"partition mesh"},
+		"partition mesh"},
+	{"-gp"  ,argFlag,     &GMSHPartition,            0,
+		"partition gmsh physical volumes"},
   {"-x"  ,argFlag,     &Format,            0,
-	"change format"},
+		"change format"},
   {"-l"  ,argFlag,     &Coarsen_Marks,            0,
-	"Coarsen vertices based on list of marks"},
+		"Coarsen vertices based on list of marks"},
   {"-y"  ,argFlag,     &Symmetrize,            0,
-	"Make mesh symmetric about y = 0"},
+		"Make mesh symmetric about y = 0"},
   {"-z"  ,argFlag,     &Cut,            0,
-	"Cut mesh using indicator function"},
+		"Cut mesh using indicator function"},
   {"-v"  ,argFlag,     &Vlngth,            0,
-	"Create a mesh resolution file"},
+		"Create a mesh resolution file"},
   {NULL}
 };
 
@@ -69,22 +72,22 @@ int main(int argc, char *argv[]) {
 	
 	// tet_mesh zx;
 	// zx.test();
-
+	
 #ifdef MPISRC
 	int myid;
 	MPI_Init(&argc,&argv);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
-//#ifdef PTH
-//	// For debugging put interrupt here
-//	// On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
-//	// Then continue
-//	int rc = pth_init();
-//	if (!rc) {
-//		std::cerr << "couldn't start pth environment\n";
-//	}
-//#endif
-
+	//#ifdef PTH
+	//	// For debugging put interrupt here
+	//	// On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
+	//	// Then continue
+	//	int rc = pth_init();
+	//	if (!rc) {
+	//		std::cerr << "couldn't start pth environment\n";
+	//	}
+	//#endif
+	
   // parse args
 	ok = parseArgs(argDesc, &argc, argv);
 	if (!ok || printHelp) {
@@ -105,31 +108,31 @@ int main(int argc, char *argv[]) {
 		bdrymap.echo = true;
 		std::cout << "Using " << bdry_nm << std::endl;
 	}
-// 
-//    if (Cut) {    
-//        class tet_mesh zx;
-//        zx.input(argv[1],in,1.0,bdrymap);        
-//        for(int i=0;i<zx.npnt;++i)
-//            zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
-//        
-//        zx.cut();
-//        
-//        return(0);
-//    }
-//        
-//
-//    /* TO SYMMETRIZE A MESH */
-//    if (Symmetrize) {
-//        class tet_mesh zx;
-//        zx.input(argv[1],in,8.0,bdrymap);
-//        zx.symmetrize();
-//        return 0;
-//    }
-//    
-
+	//
+	//    if (Cut) {
+	//        class tet_mesh zx;
+	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        for(int i=0;i<zx.npnt;++i)
+	//            zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
+	//
+	//        zx.cut();
+	//
+	//        return(0);
+	//    }
+	//
+	//
+	//    /* TO SYMMETRIZE A MESH */
+	//    if (Symmetrize) {
+	//        class tet_mesh zx;
+	//        zx.input(argv[1],in,8.0,bdrymap);
+	//        zx.symmetrize();
+	//        return 0;
+	//    }
+	//
+	
 	if (Vlngth) {
 		class tet_mesh zx;
-
+		
 		zx.input(argv[1],in,8.0,bdrymap);
 		std::string name;
 		name = std::string(argv[1]) +".lngth";
@@ -138,17 +141,17 @@ int main(int argc, char *argv[]) {
 		fclose(fp);
 		return 0;
 	}
-//    
-//    if (Smooth) {
-//        class tet_mesh zx;
-//
-//        zx.input(argv[1],in,8.0,bdrymap);
-//        zx.smooth_cofa(2);
-//        zx.output(argv[2],out);
-//        
-//        return 0;
-//    }
-//    
+	//
+	//    if (Smooth) {
+	//        class tet_mesh zx;
+	//
+	//        zx.input(argv[1],in,8.0,bdrymap);
+	//        zx.smooth_cofa(2);
+	//        zx.output(argv[2],out);
+	//
+	//        return 0;
+	//    }
+	//
 	if (Refineby2) {
 		class tet_mesh zx,zy;
 		zx.input(argv[1],in,8.0,bdrymap);
@@ -157,20 +160,20 @@ int main(int argc, char *argv[]) {
 		zy.output(argv[2],out);
 		return 0;
 	}
-//
-//    if (Coarsen_hp) {
-//        class tet_mesh zx,zy;
-//
-//        int p;
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        printf("input p\n");
-//        scanf("%d",&p);
-//        zy.coarsen_substructured(zx,p);
-//        zy.output(argv[2],out);
-//        return 0;
-//    }
-//
-	if (Scale) {     
+	//
+	//    if (Coarsen_hp) {
+	//        class tet_mesh zx,zy;
+	//
+	//        int p;
+	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        printf("input p\n");
+	//        scanf("%d",&p);
+	//        zy.coarsen_substructured(zx,p);
+	//        zy.output(argv[2],out);
+	//        return 0;
+	//    }
+	//
+	if (Scale) {
 		class tet_mesh zx;
 		TinyVector<FLT,tet_mesh::ND> s;
 		printf("Enter x y and z scaling\n");
@@ -181,9 +184,9 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 	
-	if (Shift) {     
+	if (Shift) {
 		class tet_mesh zx;
-
+		
 		TinyVector<FLT,tet_mesh::ND> s;
 		printf("Enter x y and z shift\n");
 		scanf("%le%le%le",&s(0),&s(1),&s(2));
@@ -199,25 +202,30 @@ int main(int argc, char *argv[]) {
 		zx.output(argv[2],out);
 		return(0);
 	}
-    
-    if (Partition) {
-#ifdef METIS
-        class tet_mesh zx;
-        int p;
+
+	
+	if (GMSHPartition) {
+		/* This separates different volumes in a GMSH mesh */
+		/* The volumes must be numbered sequentially starting at 1 */
+		class tet_mesh zx;
+		int p;
 		sscanf(argv[2],"%d",&p);
-        std::string fname;
-        ostringstream nstr;
-        zx.input(argv[1],in,1.0,bdrymap);
+		std::string fname;
+		ostringstream nstr;
+		
+		zx.input(argv[1],in,1.0,bdrymap);
 		
 		/* input calls setinfo but to make sure call it again because partition needs it to work */
 		zx.tet_mesh::setinfo();
 		
-        zx.setpartition(p);
-        Array<tet_mesh,1> zpart(p);
-        
+		for(int i=0;i<zx.ntet;++i)
+			zx.tet(i).info = zx.gbl->fltwk(i)-1;
+		
+		Array<tet_mesh,1> zpart(p);
+		
 		Array<int,2> blist;
 		Array<int,1> bnum;
-	
+		
 		zx.setup_partition(p,blist,bnum);
 		
 		for(int i=0;i<p;++i) {
@@ -226,43 +234,78 @@ int main(int argc, char *argv[]) {
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
 			zpart(i).partition2(zx,i,p,blist,bnum);
-			zpart(i).output(fname,tet_mesh::gmsh);			
-        }
-		
-//        for(int i=0;i<p;++i) {
-//			nstr << "b" << i << std::flush;
-//			fname = "partition_" +nstr.str();
-//			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
-//			nstr.str("");
-//			zpart(i).partition(zx,i,p);			
-//			zpart(i).checkintegrity();
-//			zpart(i).output(fname,out);
-//			zpart(i).output(fname,tet_mesh::gmsh);
-//
-//            //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
-//        }
-#else
-        printf("Need metis package to partition\n");
-#endif
-        return(0);
-    }
-    
-//    if (Coarsen_Marks) {
-//        class tet_mesh zx;
-//        
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        FILE *fp = fopen(argv[3],"r");
-//
-//        for(int i=0;i<zx.npnt;++i) {
-//            fscanf(fp,"%d\n",&zx.pnt(i).info);
-//            zx.pnt(i).info = 1-zx.pnt(i).info;
-//        }
-//        zx.coarsen3();   
-//        zx.output(argv[2],out); 
-//        return(0);      
-//    }
-	
+			zpart(i).output(fname,tet_mesh::gmsh);
+			zpart(i).output(fname);
+		}
+		return(0);
+	}
 
+	
+	
+	if (Partition) {
+#ifdef METIS
+		class tet_mesh zx;
+		int p;
+		sscanf(argv[2],"%d",&p);
+		std::string fname;
+		ostringstream nstr;
+		zx.input(argv[1],in,1.0,bdrymap);
+		
+		/* input calls setinfo but to make sure call it again because partition needs it to work */
+		zx.tet_mesh::setinfo();
+		
+		zx.setpartition(p);
+		Array<tet_mesh,1> zpart(p);
+		
+		Array<int,2> blist;
+		Array<int,1> bnum;
+		
+		zx.setup_partition(p,blist,bnum);
+		
+		for(int i=0;i<p;++i) {
+			nstr << "b" << i << std::flush;
+			fname = "partition_" +nstr.str();
+			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+			nstr.str("");
+			zpart(i).partition2(zx,i,p,blist,bnum);
+			zpart(i).output(fname,tet_mesh::gmsh);
+			zpart(i).output(fname);
+		}
+		
+		//        for(int i=0;i<p;++i) {
+		//			nstr << "b" << i << std::flush;
+		//			fname = "partition_" +nstr.str();
+		//			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+		//			nstr.str("");
+		//			zpart(i).partition(zx,i,p);
+		//			zpart(i).checkintegrity();
+		//			zpart(i).output(fname,out);
+		//			zpart(i).output(fname,tet_mesh::gmsh);
+		//
+		//            //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
+		//        }
+#else
+		printf("Need metis package to partition\n");
+#endif
+		return(0);
+	}
+	
+	//    if (Coarsen_Marks) {
+	//        class tet_mesh zx;
+	//
+	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        FILE *fp = fopen(argv[3],"r");
+	//
+	//        for(int i=0;i<zx.npnt;++i) {
+	//            fscanf(fp,"%d\n",&zx.pnt(i).info);
+	//            zx.pnt(i).info = 1-zx.pnt(i).info;
+	//        }
+	//        zx.coarsen3();
+	//        zx.output(argv[2],out);
+	//        return(0);
+	//    }
+	
+	
 	if (argc == 2) {
 		/* READ INPUT MAP FROM FILE */
 		sim::blks.go(argv[1]);
@@ -271,21 +314,21 @@ int main(int argc, char *argv[]) {
 		/* READ INPUT MAP FROM FILE & OUTPUT TO FILE */
 		sim::blks.go(argv[1],argv[2]);
 	}
-		
+	
 #ifdef PTH
 	pth_kill();
-#endif    
+#endif
 #ifdef MPISRC
 	MPI_Finalize();
 #endif
-
+	
 	return(0);
 }
 
 
 multigrid_interface* block::getnewlevel(input_map& input) {
-	int type;          
-	multigrid_interface *temp;  
+	int type;
+	multigrid_interface *temp;
 	
 	if (!input.get(idprefix+"_type",type)) input.getwdefault("type",type,1);
 	
@@ -295,7 +338,7 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			break;
 		}
 	} 
-		
+	
 	return(temp);
 }
 

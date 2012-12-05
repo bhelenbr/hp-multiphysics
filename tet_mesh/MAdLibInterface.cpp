@@ -426,6 +426,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 
 
 		// add the element to the solver mesh
+		mesh->gbl->fltwk(mesh->ntet) = gId+EPSILON;
 		mesh->tet(mesh->ntet++).pnt = nodes;
 	}
 	RIter_delete(rit);
@@ -466,8 +467,6 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 	
 	mesh->tet_mesh::setinfo();
 	mesh->checkintegrity();
-	
-	
 	
 //	mesh->output("asdf",tet_mesh::grid);
 //	
