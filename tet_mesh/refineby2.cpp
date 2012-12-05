@@ -14,6 +14,7 @@
 void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	int n,sind,ind,find,p0,p1;
 	TinyVector<FLT,ND> xpt;
+	TinyVector<FLT,ND> edge_length;
 	int ijind[3][3][3];
 	
 	/* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
@@ -59,14 +60,70 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 		ijind[0][0][1] = npnt +tet(tind).seg(4);
 		ijind[1][0][1] = npnt +tet(tind).seg(5);
 
+		p0 = npnt +tet(tind).seg(2);
+		p1 = npnt +tet(tind).seg(5);
+		edge_length(0) = sqrt(pow(pnts(p0)(0)-pnts(p1)(0),2)+pow(pnts(p0)(1)-pnts(p1)(1),2)+pow(pnts(p0)(2)-pnts(p1)(2),2));
+		
+		p0 = npnt +tet(tind).seg(1);
+		p1 = npnt +tet(tind).seg(4);
+		edge_length(1) = sqrt(pow(pnts(p0)(0)-pnts(p1)(0),2)+pow(pnts(p0)(1)-pnts(p1)(1),2)+pow(pnts(p0)(2)-pnts(p1)(2),2));
+		
+		p0 = npnt +tet(tind).seg(0);
+		p1 = npnt +tet(tind).seg(3);
+		edge_length(2) = sqrt(pow(pnts(p0)(0)-pnts(p1)(0),2)+pow(pnts(p0)(1)-pnts(p1)(1),2)+pow(pnts(p0)(2)-pnts(p1)(2),2));
+	
+		if(edge_length(0) < edge_length(1)) {
+			sind = 0;
+		}
+		else{
+			sind = 1;
+		}
+		
+		if(edge_length(2) < edge_length(sind)) {
+			sind = 2;
+		}
+		
+		switch(sind) {
+			case(0):
+				// repeated seg2 seg5 010 101 
+				//(e4,e5,e0,e2)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][0];
+				//(e4,e5,e2,e3)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[0][1][0],tet(ind).pnt(3)=ijind[0][1][1];
+				//(e5,e2,e1,e0)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				//(e5,e2,e3,e1)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				
+			case(1):
+				// repeated seg1 seg4 110 001
+				//(e4,e5,e0,e1)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[1][1][0];
+				//(e4,e5,e1,e3)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[0][1][1];
+				//(e5,e4,e1,e0)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				//(e5,e4,e3,e1)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				
+			case(2):
+				// repeated seg0 seg3 100 011
+				//(e4,e5,e0,e3)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][1];
+				//(e4,e5,e0,e3)
+				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][1];
+				//(e5,e3,e1,e0)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				//(e5,e0,e3,e1)
+				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[1][0][0],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				
+		}
+		
 
-		/* five tet */
+		
+		/* single tet */
 		tet(++ind).pnt(0)=ijind[0][0][0],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][0];
-		tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][0];
-		tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[0][1][0],tet(ind).pnt(3)=ijind[0][1][1];
-		tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
-		tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
-
+	
 		/* single tet */
 		tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[0][0][2];
 		
