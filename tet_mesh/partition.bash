@@ -1,5 +1,25 @@
 #!/bin/bash
 
+while getopts ":pt" opt; do
+	case $opt in
+		p)
+			 echo "physical partitions"
+			 PHYSICAL="TRUE"
+       ;;
+		t)
+       echo "threaded"
+			 THREADED="TRUE"
+       ;;
+		\?)
+       echo 'usage: partition.bash -[p,t] <filename.inpt>'
+			 exit 1
+			 ;;
+	esac
+done
+shift $((OPTIND-1))
+
+echo $1
+
 MESH=$(grep ^[^#]*esh $1 | cut -d: -f 2)
 FTYP=$(grep ^[^#]*iletype $1 | cut -d: -f 2)
 BLKS=$(grep ^[^#]*block $1 | cut -d: -f 2)
@@ -13,35 +33,42 @@ cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt
 
 echo "filetype: 4" >> partition.inpt
 
-#echo -n "nblock: ${BLKS}" >> partition.inpt
-echo -n "nblock: " >> partition.inpt
-
-let p=0
-while [ $p -lt $BLKS ]; do
-	echo -n "1 " >> partition.inpt
-	let p=$p+1
-done
-echo "" >> partition.inpt
-
-let p=1
-while [ $p -lt $BLKS ]; do
-	grep b0 $1 | grep -v filetype | grep -v mesh | sed "s/b0/b$p/g" >> partition.inpt
-	let p=$p+1
-done
-
-#echo $FTYP
-#echo $MESH
-#echo $BLKS
-	
-if [ -n "$FTYP" ]; 
-then
-        echo "tet_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
-	tet_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating' >> partition.inpt
+if [ -n "${THREADED}" ]; then
+# Keep number of blocks the same
+	echo "nblock: ${BLKS}" >> partition.inpt
 else
-        echo "tet_mesh -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
-	tet_mesh -p $MESH $BLKS | grep -v '#creating' >> partition.inpt
+# Put 1 block per processor
+	echo -n "nblock: " >> partition.inpt
+	let p=0
+	while [ $p -lt $BLKS ]; do
+		echo -n "1 " >> partition.inpt
+		let p=$p+1
+	done
+	echo "" >> partition.inpt
 fi
 
+if [ -z "${PHYSICAL}" ]; then
+# Copy all boundary information to other blocks
+	let p=1
+	while [ $p -lt $BLKS ]; do
+		grep b0 $1 | grep -v filetype | grep -v mesh | sed "s/b0/b$p/g" >> partition.inpt
+		let p=$p+1
+	done
+
+# partition mesh
+	if [ -n "$FTYP" ];
+	then
+					echo "tet_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
+		tet_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating'  | grep -v "Info:" >> partition.inpt
+	else
+					echo "tet_mesh -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
+		tet_mesh -p $MESH $BLKS | grep -v '#creating'  | grep -v "Info:" >> partition.inpt
+	fi
+else
+# divide up physical partitions
+	echo "tet_mesh -gp $MESH $BLKS | grep -v '#creating' >> partition.inpt"
+	tet_mesh -gp $MESH $BLKS | grep -v '#creating' | grep -v "Info:" >> partition.inpt
+fi
 
 # Remove unnecessary communication endpoints (ones only on 2 blocks)
 # Crazy unix stuff 
