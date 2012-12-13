@@ -7,7 +7,6 @@
 #include <iostream>
 #include <float.h>
 #include <utilities.h>
-#include <iostream>
 #include <input_map.h>
 #include <string>
 #include <sstream>

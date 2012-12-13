@@ -299,7 +299,6 @@
 		953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = setup_preconditioner.cpp; sourceTree = "<group>"; };
 		953FD0AB106AB696002145CC /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
 		95671D860F57074800872173 /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
-		957F5E63109B7AC1006756DD /* blas_mac_x.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = blas_mac_x.a; path = ../../Packages/lib/blas_mac_x.a; sourceTree = SOURCE_ROOT; };
 		957F5E94109B7FA9006756DD /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; };
 		958C01EC12E4B1C200350BEF /* tet_hp_jacobi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp_jacobi; sourceTree = BUILT_PRODUCTS_DIR; };
 		9598AE280F55C464008788DB /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
@@ -499,14 +498,13 @@
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
 				95BE98471086B60E0026238C /* libsuperlu_dist_3.0.a */,
-				6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */,
 				6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */,
 				9529BA14107F99130002670A /* libpetsc.a */,
 				951C181B107A9FDA005403AA /* libmpi.1.dylib */,
 				951C181C107A9FDA005403AA /* libmpi_cxx.1.dylib */,
 				9529B9C5107F8DAA0002670A /* Accelerate.framework */,
 				957F5E94109B7FA9006756DD /* libgfortran.a */,
-				957F5E63109B7AC1006756DD /* blas_mac_x.a */,
+				6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
