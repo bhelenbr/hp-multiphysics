@@ -1,7 +1,7 @@
 #ifndef _symbolic_function_h_
 #define _symbolic_function_h_
 
-#include <muParser/muParser.h>
+#include <muParser.h>
 #include <blitz/array.h>
 #include <input_map.h>
 #include <math.h>
@@ -18,8 +18,12 @@ template<int N> class symbolic_function {
 	symbolic_function() : nchildren(0) {
 		std::ostringstream varname;
 		
-		p.DefineFun("erf", erf, false);
-		p.DefineFun("erfc", erfc, false);
+		// Crazy stuff to avoid weird unresolved overloaded function error
+		typedef double (*double_func_point)(double);
+		double_func_point erf_pointer = erf;
+		double_func_point erfc_pointer = erf;
+		p.DefineFun("erf", erf_pointer, false);
+		p.DefineFun("erfc", erfc_pointer, false);
 		
 		if (N > 1) {
 			for (int n=0;n<N;++n) {
