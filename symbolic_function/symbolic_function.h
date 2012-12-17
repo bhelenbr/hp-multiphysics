@@ -224,8 +224,12 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	
 	/* LOAD CONSTANTS IN FORMULA */
 	mu::Parser ptemp;
-	ptemp.DefineFun("erf", erf, false);
-	ptemp.DefineFun("erfc", erfc, false);
+	// Crazy stuff to avoid weird unresolved overloaded function error
+	typedef double (*double_func_point)(double);
+	double_func_point erf_pointer = erf;
+	double_func_point erfc_pointer = erf;
+	ptemp.DefineFun("erf", erf_pointer, false);
+	ptemp.DefineFun("erfc", erfc_pointer, false);
   
 	if (!input.getline(idprefix,buffer)) {
 	   std::cout << "couldn't find expression" << idprefix << '\n';
@@ -334,8 +338,12 @@ protected:
 	
 public:		
 	vector_function() : p(), nargs(0), nchildren(0) {
-		p.DefineFun("erf", erf, false);
-		p.DefineFun("erfc", erfc, false);
+		// Crazy stuff to avoid weird unresolved overloaded function error
+		typedef double (*double_func_point)(double);
+		double_func_point erf_pointer = erf;
+		double_func_point erfc_pointer = erf;
+		p.DefineFun("erf", erf_pointer, false);
+		p.DefineFun("erfc", erfc_pointer, false);
 		p.DefineVar("t", &time);
 	}
 	vector_function(const vector_function& tgt) : p(tgt.p), nargs(tgt.nargs), dims(tgt.dims), names(tgt.names), xargs(tgt.xargs), nchildren(tgt.nchildren) {
@@ -415,8 +423,12 @@ public:
 		}
 	}
 	vector_function(int nargs_,blitz::Array<int,1> dims_, blitz::Array<std::string,1> names_) {
-		p.DefineFun("erf", erf, false);
-		p.DefineFun("erfc", erfc, false);
+		// Crazy stuff to avoid weird unresolved overloaded function error
+		typedef double (*double_func_point)(double);
+		double_func_point erf_pointer = erf;
+		double_func_point erfc_pointer = erf;
+		p.DefineFun("erf", erf_pointer, false);
+		p.DefineFun("erfc", erfc_pointer, false);
 		p.DefineVar("t", &time);
 		// vector_function(); // Why doesn't this work????
 		set_arguments(nargs_,dims_,names_);
@@ -594,8 +606,12 @@ public:
 		
 		/* LOAD CONSTANTS IN FORMULA */
 		mu::Parser ptemp;
-		ptemp.DefineFun("erf", erf, false);
-		ptemp.DefineFun("erfc", erfc, false);
+		// Crazy stuff to avoid weird unresolved overloaded function error
+		typedef double (*double_func_point)(double);
+		double_func_point erf_pointer = erf;
+		double_func_point erfc_pointer = erf;
+		ptemp.DefineFun("erf", erf_pointer, false);
+		ptemp.DefineFun("erfc", erfc_pointer, false);
 		
 		if (!input.getline(idprefix,buffer)) {
 			std::cout << "couldn't find expression" << idprefix << '\n';
