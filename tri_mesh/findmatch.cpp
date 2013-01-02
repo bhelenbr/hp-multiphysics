@@ -237,7 +237,7 @@ void tri_mesh::matchboundaries() {
 	return;
 }
 
-#ifdef METIS
+#ifdef METIS4
 extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut, int *epart, int *npart);
 
 void tri_mesh::setpartition(int nparts) {
@@ -282,7 +282,7 @@ void tri_mesh::setpartition(int nparts) {
 	
 	return;
 }
-#elif defined(METIS5)
+#else
 #include <metis.h>
 
 void tri_mesh::setpartition(int nparts) {

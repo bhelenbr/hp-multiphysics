@@ -9,7 +9,7 @@
 
 #include "input_map.h"
 #include <fstream>
-#include <muParser/muParser.h>
+#include <muParser.h>
 
 using namespace std;
 
