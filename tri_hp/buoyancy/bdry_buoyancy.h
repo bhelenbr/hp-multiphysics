@@ -193,11 +193,13 @@ namespace bdry_buoyancy {
 			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
 			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
+			void calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
 			void vdirichlet();
 			void minvrt();
 			void update(int stage);
 			void setup_preconditioner();
+			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl);
 #ifdef petsc
 			void petsc_jacobian_dirichlet();
 #endif

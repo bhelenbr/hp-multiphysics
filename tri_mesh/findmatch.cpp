@@ -282,7 +282,9 @@ void tri_mesh::setpartition(int nparts) {
 	
 	return;
 }
-#else
+#endif
+
+#ifdef METIS
 #include <metis.h>
 
 void tri_mesh::setpartition(int nparts) {

@@ -50,6 +50,25 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 	
+//	TinyVector<FLT,tri_mesh::ND> xle;
+//	
+//	/* TEMPORARY */
+//	/* Calculate arc length */
+//	FLT s = 0.0;
+//	for (int ind = base.nseg-1;ind >= indx; --ind) {
+//		sind = base.seg(ind);
+//		x.crdtocht1d(sind);
+//		for(n=0;n<tri_mesh::ND;++n)
+//			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+//		
+//		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+//			norm(0) =  dcrd(1,i);
+//			norm(1) = -dcrd(0,i);
+//			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+//			s += basis::tri(x.log2p)->wtx(i)*jcb;
+//		}
+//	}
+	
 	sind = base.seg(indx);
 	v0 = x.seg(sind).pnt(0);
 	v1 = x.seg(sind).pnt(1);
@@ -66,6 +85,8 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		norm(1) = -dcrd(0,i);
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 		
+//		s -= basis::tri(x.log2p)->wtx(i)*jcb;
+		
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));  
@@ -78,7 +99,10 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		for(n=0;n<x.NV;++n)
 			au(n) = u(n)(i);
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
-		aloc(0) = crd(0,i); aloc(1) = crd(1,i);
+		aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
+//		aloc(0) = s;
+//		aloc(1) = 0.0;
+		
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 #ifdef MESH_REF_VEL
 		amv(0) += x.gbl->mesh_ref_vel(0);
@@ -86,15 +110,13 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		
-		/* This is from Weinstein's hacked expression */
-		FLT cost = abs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
-		FLT sint = sqrt(1 +EPSILON -cost*cost);
-		FLT beta2D = gbl->B*exp(-gbl->A/(fabs(ibc->f(2, aloc, x.gbl->time) -u(2)(i)) +EPSILON))*cost;
-		FLT betaSN = gbl->B_facet*sint;
-		FLT beta = max(beta2D,betaSN);
-		FLT K = max(gbl->K_sc,1./beta); 
-		
-		/* TANGENTIAL SPACING */                
+		/* This is from Weinstein's expression */
+		FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
+		FLT sint = sqrt(1. +EPSILON -cost*cost);
+		FLT beta2D, betaSN, K;
+		calculate_kinetic_coefficients(K,beta2D,betaSN,ibc->f(2, aloc, x.gbl->time) -u(2)(i),sint,cost);
+
+		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
@@ -861,3 +883,101 @@ void melt_kinetics::setup_preconditioner() {
 	}
 	return;
 }
+
+void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+	melt::output(fout,typ,tlvl);
+	
+	int v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp, aloc;
+	Array<FLT,1> ubar(x.NV);
+	FLT jcb;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	
+	switch (typ) {
+		case(tri_hp::tecplot): {
+			if (!report_flag) break;
+			
+			std::ostringstream fname;
+			fname << "data" << x.gbl->tstep << "kinetics_" << base.idprefix << ".dat";
+			std::ofstream fout;
+			fout.open(fname.str().c_str());
+			
+			int indx = 0;
+			FLT s = 0.0;
+			do {
+				int sind = base.seg(indx);
+				
+				v0 = x.seg(sind).pnt(0);
+				v1 = x.seg(sind).pnt(1);
+				
+				x.crdtocht1d(sind);
+				for(int n=0;n<tri_mesh::ND;++n)
+					basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+				
+				for(int n=0;n<x.NV;++n)
+					basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));
+				
+				for(int i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					norm(0) =  dcrd(1,i);
+					norm(1) = -dcrd(0,i);
+					jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+					s += basis::tri(x.log2p)->wtx(i)*jcb;
+					
+					/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+					for(int n=0;n<tri_mesh::ND;++n) {
+						mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef MESH_REF_VEL
+						mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+#endif
+					}
+					
+					Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+					for(int n=0;n<x.NV;++n)
+						au(n) = u(n)(i);
+					axpt(0) = crd(0,i); axpt(1) = crd(1,i);
+					aloc(0) = crd(0,i); aloc(1) = crd(1,i);
+					
+					amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+					amv(0) += x.gbl->mesh_ref_vel(0);
+					amv(1) += x.gbl->mesh_ref_vel(1);
+#endif
+					anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
+					
+					FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
+					FLT sint = sqrt(1. +EPSILON -cost*cost);
+					FLT beta2D, betaSN, K;
+					calculate_kinetic_coefficients(K,beta2D,betaSN,ibc->f(2, aloc, x.gbl->time) -u(2)(i),sint,cost);
+
+					fout << s << ' ' << crd(0,i) << ' ' << crd(1,i) << ' ' << cost << ' ' << sint << ' ' << anorm(0) << ' ' << anorm(1) << ' ' << beta2D << ' ' << betaSN << ' ' << 1./K << std::endl;
+
+				}
+			} while (++indx < base.nseg);
+			fout.close();
+		
+			break;
+		}
+		default:
+			break;
+	}
+}
+																				 
+void melt_kinetics::calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost) {
+ 
+	/* This is from Weinstein's expression */
+	beta2D = gbl->B*exp(-gbl->A/(fabs(DT) +100.*EPSILON))*cost +0.3/gbl->K_sc;
+	betaSN = gbl->B_facet*sint;
+
+	//FLT beta = max(beta2D,betaSN);
+	//FLT K = max(gbl->K_sc,1./beta);
+	// Don't like the max/min stuff makes the problem too non-linear
+	FLT p = 2.;
+	FLT beta = pow(pow(beta2D,p) +pow(betaSN,p),1./p);
+	K = gbl->K_sc +1./beta;
+	
+	return;
+}
+
+
+

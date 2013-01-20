@@ -99,23 +99,6 @@ For intel compilers had to disable shared library (skip this line)
 libbinio may have an error in it and you will have to add 
 #include <cstdio> to binwrap.cpp
 
-
-###################################################################
-######### MESH PARTITIONING LIBRARY #############
-###################################################################
-
-Download PMETIS (5.02 most recent) at
-	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
-move metis-5.0.2.tar to Packages
-	[tar xvf metis-5.0.2.tar]
-	[cd metis-5.0.2]
-## READ Install.txt
-	modify include/metis.h IDXTYPE to 64
-###
-	make config shared=1 prefix=${HOME}/Packages
-	make
-	make install
-
 ###################################################################
 ######## USER SPACE THREADS LIBRARY #############
 ###################################################################
@@ -143,6 +126,22 @@ unpack in packages folder (see index.html file for instructions)
 	[./bootstrap.sh --with-libraries=thread --prefix=${HOME}/Packages]
 	[./b2 install]
 	[cd ..]
+
+###################################################################
+######### MESH PARTITIONING LIBRARY #############
+###################################################################
+# SKIP THIS, INSTALLED BY PETSC ANYWAY
+Download PMETIS (5.02 most recent) at
+	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
+move metis-5.0.2.tar to Packages
+	[tar xvf metis-5.0.2.tar]
+	[cd metis-5.0.2]
+## READ Install.txt
+	modify include/metis.h IDXTYPE to 64
+###
+	make config shared=1 prefix=${HOME}/Packages
+	make
+	make install
 
 
 ###################################################################
@@ -184,6 +183,9 @@ move to Packages, extract
 	[mv petsc-3.0.0-p10 ../Packages]
 	[cd petsc-3.0.0-p10]
 	[tar zxvf petsc-3.0.0-p10]
+
+WARNING: CURRENT BUG BETWEEN MY CODE & NEWEST VERSION
+LAST ONE THAT WORKED WAS 3.2-p7
 
 # To know what packages are available: ./config/configure.py --help
 # with superlu
