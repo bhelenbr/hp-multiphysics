@@ -11,14 +11,15 @@
 #ifndef TESTING
 #include <parseargs.h>
 
-static GBool Delete = gFalse;
 static char NewFile[100] = "";
+static char deleteKeyword[100] = "";
 GBool printHelp = gFalse;
-
 
 static ArgDesc argDesc[] = {
   {"-h",        argFlag,      &printHelp,      0,
     "print usage information"},
+	{"-d", argString,    deleteKeyword,     100,
+    "delete keyword"},
   {"-o", argString,    NewFile,     100,
     "output file name"},
   {NULL}
@@ -26,37 +27,48 @@ static ArgDesc argDesc[] = {
 #endif
 
 int main (int argc, char *argv[]) {
-    input_map mymap;
-    std::string key,value;
-    std::istringstream data;
-    std::string idprefix("prefix");
-    
-	
+	input_map mymap;
+	std::string key,value;
+	std::istringstream data;
+	std::string idprefix("prefix");
 	
 #ifndef TESTING
-    GBool ok;
+	GBool ok;
 
-    // parse args
-    ok = parseArgs(argDesc, &argc, argv);
-    if (!ok || printHelp  || argc != 4) {
-        fprintf(stderr, "mod_map utility ");
-        printUsage("mod_map", "<inputfile> <keyword> <value>]", argDesc);
-        exit(1);
-    }
-    
-    mymap.input(argv[1]);
-    mymap[argv[2]] = argv[3];
-    
-    std::ofstream fout;
-    if (NewFile[0] != '\0') {
-        fout.open(NewFile);
-    }
-    else {
-        fout.open(argv[1]);
-    }
-    fout << mymap;
-    fout.close();
-    return 0;
+	// parse args
+	ok = parseArgs(argDesc, &argc, argv);
+	if (!ok || printHelp) {
+			fprintf(stderr, "mod_map utility ");
+			printUsage("mod_map", "<inputfile> <keyword> <value>]", argDesc);
+			exit(1);
+	}
+	mymap.input(argv[1]);
+
+	
+	std::ofstream fout;
+	if (NewFile[0] != '\0') {
+		fout.open(NewFile);
+	}
+	else {
+		fout.open(argv[1]);
+	}
+	
+	if (deleteKeyword[0] != '\0') {
+		std::map<std::string,std::string>::iterator mi;
+    mi = mymap.find(deleteKeyword);
+		if (mi != mymap.end()) {
+			mymap.erase(mi);
+		}
+	}
+	else {
+		// add or update 
+		mymap[argv[2]] = argv[3];
+	}
+	
+
+	fout << mymap;
+	fout.close();
+	return 0;
 
 #else
     /* INPUT MAP FROM FILE */

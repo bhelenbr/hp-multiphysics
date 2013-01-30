@@ -19,10 +19,10 @@
 template class tri_basis<1,0>;
 template class tri_basis<2,0>;
 template class tri_basis<4,0>;
-template class tri_basis<8,0>;
+//template class tri_basis<8,0>;
 
 template class tri_basis<1,1>;
 template class tri_basis<2,1>;
 template class tri_basis<4,1>;
-template class tri_basis<8,1>;
+//template class tri_basis<8,1>;
 

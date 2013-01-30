@@ -207,6 +207,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	l2norm.init(inmap,base.idprefix+"_norm");
 
 	dxdt.resize(x.log2pmax+1,base.maxseg);
+	dxdt = 0.0;  // Do this to eliminate warning in valgrind when outputting before tadvance is called.
 
 #ifndef petsc
 	base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
@@ -316,7 +317,7 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					visc[0] =  jcb*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 					visc[1] = -jcb*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 					
-					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ' << mvel(0) << ' ' << mvel(1) << ' ';
+					fout << circumference << ' ' << xpt(0) << ' ' << xpt(1) << ' ' << mvel(0) << ' ' << mvel(1) << ' ';
 					
 					for (n=0;n<x.NV;++n) {
 						/* Output value, tangent, and normal derivatives */

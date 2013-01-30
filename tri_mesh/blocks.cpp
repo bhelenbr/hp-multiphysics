@@ -844,6 +844,7 @@ void block::init(input_map &input) {
 	gbl->nhist = 4;
 	gbl->stepsolves = 3;
 	gbl->bd.resize(1);
+	gbl->bd = 0.0;
 	gbl->adirk.resize(DIRK,DIRK);
 	gbl->cdirk.resize(DIRK);
 #endif

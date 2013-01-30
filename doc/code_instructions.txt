@@ -3,8 +3,7 @@
 # Packages to be installed
 1 blitz array library
 2 muParser math parsing library
-3 libbinio platform independent binary input/ouput
-4 metis for mesh partitioning
+3 libbinio platform independent binary input/output
 5 pth for user space threading (multiple blocks running under 1 process)
 6 boost for system space threading (usually not used)
 7 parseargs for command line argument processing
@@ -16,42 +15,19 @@
 13 probably need to install cmake (gui installer for OS X & Windows)
 
 ###################################################################
-#### GET BLITZ ####
+#### GET BLITZ 
 ###################################################################
-METHOD 1 - using CVS to download
-	[mkdir Packages]
-	[cd Packages]
-	[export CVSROOT=:pserver:anonymous@blitz.cvs.sourceforge.net:/cvsroot/blitz]
-	[cvs login]  (hit return for password)
-	[cvs -z3 checkout blitz]
-	[cd blitz]
-	[autoreconf -vif]
-	[./configure -disable-fortran --prefix=$HOME/Packages CXX=c++]
-	[make lib]
-	[make install]
-	[make pdf] (to make pdf instructions in blitz/doc)
-(
-if you get an error after 'make lib' saying " 'labs' is not included in 'std'", do the following:
-	[nano blitz/func.h]
-at the top of the file that has the error
-	[#include <cstdlib>]
-at the line where the error occured in this same file, change
-	"{ return BZ_MATHFN_SCOPE(labs)(a); }"
-to
-	"{ return (labs)(a); }"
-(NOTE: 'labs' may be written as 'abs' or 'fabs'; keep it as whichever version it was originally in, just delete 'BZ_MATHFN_SCOPE')
-)
+METHOD 1 - Download blitz.10 tar.gz file 
+mv blitzXX.tgz to Packages
+unpack & cd into directory
+[./configure -disable-fortran --prefix=$HOME/Packages]
+[make lib]
+[make install]
+[make pdf] (to make pdf instructions in blitz/doc)
 
-( 
-To eliminate warnings:
-change blitz/array/reduce.h 181
-add "return T_numtype();"
-change blitz/indexexpr.h 158
-add "return T_numtype();"
-)
-
-##################################################################
-#### GET OPENMPI IF NOT INSTALLED (LION) ####
+###################################################################
+#### GET OPENMPI IF NOT INSTALLED (ON OS X)
+#### (CAN USE PACKAGE MANGER FOR UBUNTU (SYNAPTIC?)) 
 ###################################################################
 http://www.open-mpi.org/
 Download button, current version openmpi-1.4.4.tar.gz
@@ -61,10 +37,10 @@ tar zxvf openmpi-1.4.4.tar.gz
 make all install
 
 ###################################################################
-######### MATH PARSING LIBRARY ##################
+#### MATH PARSING LIBRARY 
+#### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?)
 ###################################################################
-Download muParser v2_2_2 (most recent) at 
-	http://muparser.sourceforge.net/
+Download muParser v2_2_2 (most recent) at http://muparser.sourceforge.net/
 
 Replace XX with version number in following.
 move it to the Packages folder
@@ -80,17 +56,17 @@ extract, configure
 	[make install]
 
 ###################################################################
-######### PLATFORM INDEPENDENT BINARY I/O LIBRARY #################
+#### PLATFORM INDEPENDENT BINARY I/O LIBRARY
+#### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?)
 ###################################################################
 
-Download libbinio v1.27 (most recent) at
-	http://sourceforge.net/projects/libbinio
+Download libbinio v1.4 (most recent) at http://sourceforge.net/projects/libbinio
 move libbinio-1.4.tar.bz2 to Packages
 unzip, configure
 	[tar --use-compress-program bzip2 -xvf libbinio-1.4.tar.bz2]
 	[cd libbinio-1.4]
 	[./configure --prefix=${HOME}/Packages]
-For intel compilers had to disable shared library (skip this line)
+	For intel compilers had to disable shared library (skip this line)
 	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-fast-install=no] 
 	[make]
 	[make install]
@@ -103,8 +79,7 @@ libbinio may have an error in it and you will have to add
 ######## USER SPACE THREADS LIBRARY #############
 ###################################################################
 
-Download Pth (2.0.7 is most recent) at
-	http://www.gnu.org/software/pth/
+Download Pth (2.0.7 is most recent) at http://www.gnu.org/software/pth/
 move pth-2.0.7.tar.gz to Packages
 	[tar zxvf pth-2.0.7.tar.gz]
 	[cd pth-2.0.7]
@@ -128,23 +103,6 @@ unpack in packages folder (see index.html file for instructions)
 	[cd ..]
 
 ###################################################################
-######### MESH PARTITIONING LIBRARY #############
-###################################################################
-# SKIP THIS, INSTALLED BY PETSC ANYWAY
-Download PMETIS (5.02 most recent) at
-	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
-move metis-5.0.2.tar to Packages
-	[tar xvf metis-5.0.2.tar]
-	[cd metis-5.0.2]
-## READ Install.txt
-	modify include/metis.h IDXTYPE to 64
-###
-	make config shared=1 prefix=${HOME}/Packages
-	make
-	make install
-
-
-###################################################################
 ### COMMAND LINE ARGUMENT PARSING UTILITY ##########
 ###################################################################
 # get parseargs from Brian
@@ -162,12 +120,13 @@ save cfortran.h to ${HOME}/Packages/include/
 #### (VALGRIND ONLY FOR DEBUGGING) ####
 ###################################################################
 # download valgrind from web
-./configure --prefix=/share/apps
-./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc
+./configure --prefix=/share/apps (for cluster)
+./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc (for OS X)
+./configure --prefix=${HOME}/Packages (for ubuntu)
 make
 make install
 
-or from svn
+or from svn (for newest which is sometimes necessary)
 svn co svn://svn.valgrind.org/valgrind/trunk valgrind
 ./autogen.sh
 ./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc
@@ -179,24 +138,20 @@ make install
 ###################################################################
 download current version at
 	http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
-move to Packages, extract
-	[mv petsc-3.0.0-p10 ../Packages]
-	[cd petsc-3.0.0-p10]
-	[tar zxvf petsc-3.0.0-p10]
-
 WARNING: CURRENT BUG BETWEEN MY CODE & NEWEST VERSION
 LAST ONE THAT WORKED WAS 3.2-p7
 
+move to Packages, extract
+	[mv petsc-XX ../Packages]
+	[cd petsc-XX]
+	[tar zxvf petsc-XX]
+
 # To know what packages are available: ./config/configure.py --help
 # with superlu
-# ON LION
+# ON LION (For 3.2-p5 remove --download-metis=1)
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-mpi-dir=${HOME}/Packages --with-valgrind-dir=${HOME}/Packages
-# ON SNOW LEOPARD
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-include=/usr/include --with-mpi-lib=libmpi
-# with out downloading parmetis
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
-# on cluster
-./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/ --with-parmetis-dir=/export/apps
+
+# on cares cluster
 ./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps  --with-valgrind-dir=/share/apps
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
@@ -217,83 +172,50 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
+	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi (on cares)
+	export CMAKE_PREFIX_PATH=/share/apps (on orion)
+	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
 
+	[cmake ..]
 
-	## USE CCMAKE TO CHANGE INSTALL OPTIONS
-	## ON CLUSTER:
-	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi
-	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]
-	Hit t to toggle expert mode.
-
-	## ON MAC
-	export CMAKE_PREFIX_PATH=${HOME}/Packages
-        ## ON MAC CAN USE CMAKE GUI TO CHANGE OPTION
-	# Set source directory to Packages/MAdLib
-	# Set build directory to Packages/MAdLib/build
-
-	## CHANGE CMAKE_INSTALL_PREFIX to Packages
-	## CHANGE EXTENDED_API TO YES (find correct checkbox)
-	## Change BUILD DOXYGEN
+	[ccmake ..] (on linux or OS X)
+	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]  (on cares)
+	 Hit t to toggle expert mode.
+	Change CMAKE_INSTALL_PREFIX to ${HOME}/Packages or /share/apps
+	Change MADLIB_INSTALL_EXTENDED_API TO ON
+	## Change BUILD DOXYGEN if you want documentation and have doxygen installed
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
+	Can ignore this I think
 
 	[cmake ..]
 	[make depend]
 	[make -j 2]
 	[make install]
 
-	# Need to move the include_all/MAdLib folder and replace the one in include
-
-
-###################################################################
-#### (FOR TETS ONLY) FOR GMSH ####
-###################################################################
-Download at http://www.fltk.org/software.php
-move to Packages
-	[tar zxvf fltk-1.1.9-source.tgz]
-	[rm fltk-1.1.9-source.tgz]
-	[cd fltk-1.1.9]
-	[./configure --prefix=${HOME}/Packages]
-	[make]
-	[make install]
-	[cd zlib]
-	[make]
-	[make install]
-	[cd ../..]
-FOR GMSH
-	[svn checkout https://geuz.org/svn/gmsh/trunk gmsh]
-For read-only access, simply use login=gmsh, password=gmsh.
-	[cd gmsh]
-	[svn update]
-
-For commits (me only, login=brianh password=hb4519)
-In CMAKE:
-	[CMAKE_INSTALL_PREFIX ${HOME}/Packages]
-	[CMAKE_PREFIX_PATH ${HOME}/Packages]
-	[FLTK_DIR ${HOME}/Packages/fltk-1.3x...]
-	[ENABLE_GRAPHICS]
+	# Move the include_all/MAdLib folder and replace the one in include
 
 ###################################################################
 NOW DOWNLOAD MY CODE
 ###################################################################
 [cd]
-[mkdir bin] # (if not already there)
-[mkdir Codes]
-[cd Codes]
-[mkdir include lib] # (if not already there)
-[svn co https://balrog.camp.clarkson.edu/Repository/Codes .]
-
 # Need to update this to git repository. svn repository is dead.
 "ssh-keygen" (Hit return twice, i.e. use no passphrase)
 "cd ~/.ssh"
 "cat id_rsa.pub > ~/Desktop/id.txt"
 send id.txt file on desktop to Brian so he can give you access to repository
+[cd]
 
 now get all of my stuff:
 git clone ssh://git@balrog.camp.clarkson.edu/~/GitRepo Codes
 
+[mkdir bin] # (if not already there)
+[cd Codes]
+[mkdir include lib] # (if not already there)
+
+
 ###################################################################	
 #### UNIX ####
-# On cares modify your ~/.bash_profile file in your home directory by 
+# modify your ~/.bash_profile file in your home directory by 
 # adding the location of the packages directory:
 # On cluster:
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/share/apps/lib
@@ -371,4 +293,32 @@ cd ${HOME}/Codes/Cocoa/easymesh
 cd ../inputwfind
 
 xcodebuild -configuration Deployment
+
+###################################################################
+#### FOR GMSH (NOT NECESSARY) ####
+###################################################################
+Download at http://www.fltk.org/software.php
+move to Packages
+	[tar zxvf fltk-1.1.9-source.tgz]
+	[rm fltk-1.1.9-source.tgz]
+	[cd fltk-1.1.9]
+	[./configure --prefix=${HOME}/Packages]
+	[make]
+	[make install]
+	[cd zlib]
+	[make]
+	[make install]
+	[cd ../..]
+FOR GMSH
+	[svn checkout https://geuz.org/svn/gmsh/trunk gmsh]
+For read-only access, simply use login=gmsh, password=gmsh.
+	[cd gmsh]
+	[svn update]
+
+For commits (me only, login=brianh password=hb4519)
+In CMAKE:
+	[CMAKE_INSTALL_PREFIX ${HOME}/Packages]
+	[CMAKE_PREFIX_PATH ${HOME}/Packages]
+	[FLTK_DIR ${HOME}/Packages/fltk-1.3x...]
+	[ENABLE_GRAPHICS]
 

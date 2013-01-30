@@ -201,9 +201,9 @@ class tri_basis_interface {
 		
 		/* 1D SIDE PROBE FUNCTIONS */
 		virtual void ptprobe1d(int nv, FLT *f, const FLT *sin, int stride) const = 0;	 // REUSES OLD VALUES OF X
-		virtual void ptprobe1d(int nv, FLT *f, FLT x, const FLT *sin, int stride) const = 0;
-		virtual void ptprobe1d(int nv, FLT *f, FLT *dx, const FLT *sin, int stride) const = 0;
-		virtual void ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, const FLT *sin, int stride) const = 0;
+		virtual void ptprobe1d(int nv, FLT *f, FLT x, const FLT *sin, int stride) const = 0; // CALCULATES MODES AT X
+		virtual void ptprobe1d(int nv, FLT *f, FLT *dx, const FLT *sin, int stride) const = 0; // REUSES & CALCULATES DERIVATIVE 
+		virtual void ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, const FLT *sin, int stride) const = 0;  // CALCULATES MODES & DERIVS AT X 
 		
 		/* Utility for switching between uniform legendre representation & this basis */
 		virtual void legtobasis(const FLT *data, FLT *coeff) const = 0;
@@ -494,18 +494,18 @@ template<int _p,int ep> class tri_basis : public tri_basis_interface {
 	 The polynomial degree increases by factors of 2 for multigrid */
 template<int EP> class tri_basis_array {
 	private:
-		TinyVector<tri_basis_interface *,4> tri;
+		TinyVector<tri_basis_interface *,3> tri;
 	public: 
 		tri_basis_array() {
 			tri(0) = new tri_basis<1,EP>;
 			tri(1) = new tri_basis<2,EP>;
 			tri(2) = new tri_basis<4,EP>;	
-			tri(3) = new tri_basis<8,EP>;
+			//tri(3) = new tri_basis<8,EP>;
 		
 			tri(0)->initialize();
 			tri(1)->initialize();
 			tri(2)->initialize();
-			tri(3)->initialize();
+			//tri(3)->initialize();
 		}
 		
 		tri_basis_interface* operator()(int i) {
