@@ -18,16 +18,17 @@
 #### GET BLITZ 
 ###################################################################
 METHOD 1 - Download blitz.10 tar.gz file 
-mv blitzXX.tgz to Packages
+mv blitzXX.tgz to Packages (OS X) or /share/apps (orion)
 unpack & cd into directory
-[./configure -disable-fortran --prefix=$HOME/Packages]
+[./configure -disable-fortran --prefix=$HOME/Packages] (OS X)
+[./configure --prefix=/share/apps] (Orion)
 [make lib]
 [make install]
 [make pdf] (to make pdf instructions in blitz/doc)
 
 ###################################################################
 #### GET OPENMPI IF NOT INSTALLED (ON OS X)
-#### (CAN USE PACKAGE MANGER FOR UBUNTU (SYNAPTIC?)) 
+#### (CAN USE PACKAGE MANGER FOR UBUNTU (SYNAPTIC?) OR YUM) 
 ###################################################################
 http://www.open-mpi.org/
 Download button, current version openmpi-1.4.4.tar.gz
@@ -38,7 +39,7 @@ make all install
 
 ###################################################################
 #### MATH PARSING LIBRARY 
-#### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?)
+#### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?) OR YUM
 ###################################################################
 Download muParser v2_2_2 (most recent) at http://muparser.sourceforge.net/
 
@@ -120,6 +121,7 @@ save cfortran.h to ${HOME}/Packages/include/
 #### (VALGRIND ONLY FOR DEBUGGING) ####
 ###################################################################
 # download valgrind from web
+tar --use-compress-program bzip2 valgrindXXX.tar.bz2
 ./configure --prefix=/share/apps (for cluster)
 ./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc (for OS X)
 ./configure --prefix=${HOME}/Packages (for ubuntu)
@@ -154,6 +156,9 @@ move to Packages, extract
 # on cares cluster
 ./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps  --with-valgrind-dir=/share/apps
 
+# on orion
+./config/configure.py --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/share/apps --with-mpi-dir=/share/apps
+
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;
@@ -175,14 +180,15 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi (on cares)
 	export CMAKE_PREFIX_PATH=/share/apps (on orion)
 	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
+       export CMAKE_INSTALL_PREFIX to ${HOME}/Packages or /share/apps
+
 
 	[cmake ..]
 
 	[ccmake ..] (on linux or OS X)
 	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]  (on cares)
 	 Hit t to toggle expert mode.
-	Change CMAKE_INSTALL_PREFIX to ${HOME}/Packages or /share/apps
-	Change MADLIB_INSTALL_EXTENDED_API TO ON
+	Change MADLIB_INSTALL_EXTENDED_API TO ON d
 	## Change BUILD DOXYGEN if you want documentation and have doxygen installed
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 	Can ignore this I think
@@ -198,7 +204,6 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 NOW DOWNLOAD MY CODE
 ###################################################################
 [cd]
-# Need to update this to git repository. svn repository is dead.
 "ssh-keygen" (Hit return twice, i.e. use no passphrase)
 "cd ~/.ssh"
 "cat id_rsa.pub > ~/Desktop/id.txt"
