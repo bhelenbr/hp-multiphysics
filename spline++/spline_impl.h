@@ -37,10 +37,11 @@ template<int ND> int spline<ND>::read(std::string filename) {
 		
 	/* NOW READ DATA */
 	for (int i=0;i<npts;++i) {
+		in >> x(i);
+
 		for(int n=0;n<ND;++n)
 			in >> y(i)(n);
 			
-		in >> x(i);
 	}
 	
 	
@@ -340,10 +341,11 @@ template<int ND> int spline3<ND>::read(std::string filename) {
 	
 	/* NOW READ DATA */
 	for (int i=0;i<npts;++i) {
+		in >> x(i);
+
 		for(int n=0;n<ND;++n)
 			in >> y(i)(n);
 		
-		in >> x(i);
 	}
 	
 	// http://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline
