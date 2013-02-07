@@ -313,15 +313,18 @@ void tri_hp::petsc_update() {
 	VecAssemblyEnd(petsc_f);
 	
 	double resmax;
-	VecNorm(petsc_f, NORM_INFINITY, &resmax );
+	VecNorm(petsc_f, NORM_2, &resmax );
 	
 	PetscGetTime(&time1);
 	err = KSPSolve(ksp,petsc_f,petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-
+	
+	double resmax2;
+	VecNorm(petsc_du, NORM_2, &resmax2 );
+	
 	KSPGetIterationNumber(ksp,&its);
 	PetscGetTime(&time2);
-	*gbl->log << "# iterations " << its << " residual0 " << resmax << " solve time: " << time2-time1 << " seconds" << endl;
+	*gbl->log << "# iterations " << its << " residual0 " << resmax << " du " << resmax2 << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	helper->update(-1);
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
