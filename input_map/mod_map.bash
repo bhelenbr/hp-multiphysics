@@ -20,7 +20,7 @@ case "${Command}" in
 	Delete)
 		sed -i .bak -E "s:^ *$2 *\:.*$::g" $1;;
 	Comment)
-		sed -i .bak -E "s:^ *$2 *\::#$1\::g" $1;;
+		sed -i .bak -E "s:^ *$2 *\::#$2\::g" $1;;
 	Uncomment)
 		sed -i .bak -E "s:^# *$2 *\::$2\::g" $1;;
 	*)
