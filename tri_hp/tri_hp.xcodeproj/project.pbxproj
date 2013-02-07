@@ -23,12 +23,6 @@
 		6F44D3730AF2A444000E8A10 /* tri_hp_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D36B0AF2A444000E8A10 /* tri_hp_swe.h */; };
 		6F48D8690D848AED00514E23 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.1.dylib */; };
 		6F48D86A0D848AED00514E23 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.1.dylib */; };
-		6F53EE8B10FFB7550076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE8D10FFB7560076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE8F10FFB7560076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EF0610FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.5.a */; };
-		6F53EF0710FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.5.a */; };
-		6F53EF0810FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.5.a */; };
 		6F5A2E780CDD57050004BAEC /* bdry_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964E7097F43D6009F4225 /* bdry_ps.h */; };
 		6F5A2E7F0CDD57F20004BAEC /* bdry_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C3C09818C7100AD7FA3 /* bdry_swirl.h */; };
 		6F5A2E800CDD58400004BAEC /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
@@ -379,8 +373,6 @@
 		E6B7481B16169158008409F5 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		E6B7481C1616915D008409F5 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		E6B7481D16169160008409F5 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
-		E6B7FC3C169D910C005C4E6D /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B7FC35169D2D87005C4E6D /* libmetis.a */; };
-		E6B7FC3E169D9112005C4E6D /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B7FC35169D2D87005C4E6D /* libmetis.a */; };
 		E6B7FC3F169D9131005C4E6D /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B7FC33169D2CD1005C4E6D /* libparmetis.a */; };
 		E6B7FC40169D9134005C4E6D /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B7FC33169D2CD1005C4E6D /* libparmetis.a */; };
 		E6B93EA2138A090F005FF1A9 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F004489091FD33A00A6F21E /* allocate.cpp */; };
@@ -408,6 +400,11 @@
 		E6F1CDEA1533E7F1009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
 		E6F1CDEB1533E7F1009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
 		E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
+		E6FB359116B6E99500F60110 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FB358F16B6E97600F60110 /* libmetis.a */; };
+		E6FB359216B6E99600F60110 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FB358F16B6E97600F60110 /* libmetis.a */; };
+		E6FB359316B6E9B900F60110 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
+		E6FB359416B6E9C100F60110 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.1.dylib */; };
+		E6FB359516B6E9C600F60110 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.1.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -694,9 +691,9 @@
 		E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_petsc_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6852BAA121DCA4E00EF7E07 /* reinit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = reinit.cpp; sourceTree = "<group>"; };
 		E6B7FC33169D2CD1005C4E6D /* libparmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparmetis.a; path = ../../Packages/lib/libparmetis.a; sourceTree = "<group>"; };
-		E6B7FC35169D2D87005C4E6D /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = "<group>"; };
 		E6E8E31A14719FA800571FC3 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = ../../Packages/lib/libboost_thread.a; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
+		E6FB358F16B6E97600F60110 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = "<group>"; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -715,8 +712,6 @@
 				6F9853FD0BDE612700D342F6 /* libmuparser.2.2.2.dylib in Frameworks */,
 				6F0077850CCB7027008D3233 /* libpth.a in Frameworks */,
 				6F2F75040DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
-				6F53EE8D10FFB7560076AAFB /* libpetsc.a in Frameworks */,
-				6F53EF0710FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */,
 				6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				E64C24EF1475E3B000809E9F /* libboost_thread.a in Frameworks */,
 				E6F1CDEA1533E7F1009F6A6B /* libspline++.a in Frameworks */,
@@ -739,9 +734,8 @@
 				6F2F75020DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
-				6F53EE8F10FFB7560076AAFB /* libpetsc.a in Frameworks */,
-				6F53EF0810FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */,
 				E6F1CDEB1533E7F1009F6A6B /* libspline++.a in Frameworks */,
+				E6FB359316B6E9B900F60110 /* libpth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -759,10 +753,10 @@
 				6F2F75010DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
-				6F53EE8B10FFB7550076AAFB /* libpetsc.a in Frameworks */,
-				6F53EF0610FFBA5C0076AAFB /* libsuperlu_dist_2.5.a in Frameworks */,
 				6F5ABB541141CE7D00CA83FE /* libpth.a in Frameworks */,
 				E6F1CDE71533E7EF009F6A6B /* libspline++.a in Frameworks */,
+				E6FB359416B6E9C100F60110 /* libmpi.1.dylib in Frameworks */,
+				E6FB359516B6E9C600F60110 /* libmpi_cxx.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -806,8 +800,8 @@
 				E67EBAE412D603C50011EB69 /* libsuperlu_dist_2.5.a in Frameworks */,
 				E67EBAE612D603C50011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6F1CDE91533E7F0009F6A6B /* libspline++.a in Frameworks */,
-				E6B7FC3C169D910C005C4E6D /* libmetis.a in Frameworks */,
 				E6B7FC3F169D9131005C4E6D /* libparmetis.a in Frameworks */,
+				E6FB359116B6E99500F60110 /* libmetis.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -831,8 +825,8 @@
 				E67EBB2C12D603E10011EB69 /* libsuperlu_dist_2.5.a in Frameworks */,
 				E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */,
-				E6B7FC3E169D9112005C4E6D /* libmetis.a in Frameworks */,
 				E6B7FC40169D9134005C4E6D /* libparmetis.a in Frameworks */,
+				E6FB359216B6E99600F60110 /* libmetis.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -957,7 +951,7 @@
 			children = (
 				6F53EE8710FFB7550076AAFB /* libpetsc.a */,
 				6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.5.a */,
-				E6B7FC35169D2D87005C4E6D /* libmetis.a */,
+				E6FB358F16B6E97600F60110 /* libmetis.a */,
 				E6B7FC33169D2CD1005C4E6D /* libparmetis.a */,
 				6F217C5D0CDD88200061AA2E /* libtri_mesh.a */,
 				6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */,
@@ -1640,6 +1634,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1676,6 +1671,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
