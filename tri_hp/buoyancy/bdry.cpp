@@ -52,8 +52,8 @@ void solid_fluid::init(input_map& inmap,void* gbl_in) {
  */
 class tri_hp_buoyancy_vtype {
 public:
-	static const int ntypes = 2;
-	enum ids {unknown=-1,melt_end,melt_inflow};
+	static const int ntypes = 3;
+	enum ids {unknown=-1,melt_end,melt_inflow,melt_facet_pt};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i) 
@@ -62,7 +62,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow"};
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt"};
 
 hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -90,6 +90,10 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_buoyancy_vtype::melt_inflow: {
 			temp = new melt_inflow_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_buoyancy_vtype::melt_facet_pt: {
+			temp = new melt_facet_pt(*this,*vbdry(bnum));
 			break;
 		}
 		default: {

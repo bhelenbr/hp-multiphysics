@@ -172,7 +172,8 @@ namespace bdry_buoyancy {
 	
 	class melt_kinetics : public melt {
 		
-		struct global : public melt::global {                
+		public:
+		struct global : public melt::global {
 			/* Kinetic Coefficients */
 			FLT K_sc, B_facet, B, A; // Coefficients for Weinstein Kinetic model
 			FLT K_gt; // Gibbs Thompson curvature effect
@@ -193,7 +194,7 @@ namespace bdry_buoyancy {
 			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
 			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
-			void calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost);
+			void calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost, TinyVector<FLT,tri_mesh::ND> xpt);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
 			void vdirichlet();
 			void minvrt();
@@ -459,6 +460,22 @@ namespace bdry_buoyancy {
 				
 	#endif
 		};
+	
+	class melt_facet_pt : public melt_end_pt {
+		FLT res; // For storing residual
+	public:
+		melt_facet_pt(tri_hp_buoyancy &xin, vrtx_bdry &bin) : melt_end_pt(xin,bin) {mytype = "melt_facet_pt";}
+		melt_facet_pt(const melt_facet_pt& inbdry, tri_hp_buoyancy &xin, vrtx_bdry &bin) : melt_end_pt(inbdry,xin,bin) {}
+		melt_facet_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
+				
+		void rsdl(int stage);
+		void element_rsdl();
+		
+#ifdef petsc
+		void petsc_jacobian();
+#endif
+	};
+
 	
 }
 #endif

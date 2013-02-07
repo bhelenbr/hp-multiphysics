@@ -113,15 +113,17 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* This is from Weinstein's expression */
 		FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
 		FLT sint = sqrt(1. +EPSILON -cost*cost);
+		FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
 		FLT beta2D, betaSN, K;
-		calculate_kinetic_coefficients(K,beta2D,betaSN,ibc->f(2, aloc, x.gbl->time) -u(2)(i),sint,cost);
+		
+		calculate_kinetic_coefficients(K,beta2D,betaSN,DT,sint,cost,aloc);
 
 		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
 		res(1,i) = RAD(crd(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
 		/* Kinetic equation for surface temperature */
-		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(u(2)(i) -ibc->f(2, aloc, x.gbl->time))*jcb +K*res(1,i);  // -gbl->K_gt*kappa?;
+		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);  // -gbl->K_gt*kappa?;
 		/* Latent Heat source term and additional heat flux */
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
 	}
@@ -948,7 +950,7 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
 					FLT sint = sqrt(1. +EPSILON -cost*cost);
 					FLT beta2D, betaSN, K;
-					calculate_kinetic_coefficients(K,beta2D,betaSN,ibc->f(2, aloc, x.gbl->time) -u(2)(i),sint,cost);
+					calculate_kinetic_coefficients(K,beta2D,betaSN,ibc->f(2, aloc, x.gbl->time) -u(2)(i),sint,cost,aloc);
 
 					fout << s << ' ' << crd(0,i) << ' ' << crd(1,i) << ' ' << cost << ' ' << sint << ' ' << anorm(0) << ' ' << anorm(1) << ' ' << beta2D << ' ' << betaSN << ' ' << 1./K << std::endl;
 
@@ -963,10 +965,10 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	}
 }
 																				 
-void melt_kinetics::calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost) {
+void melt_kinetics::calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost, TinyVector<FLT,tri_mesh::ND> xpt) {
  
 	/* This is from Weinstein's expression */
-	beta2D = gbl->B*exp(-gbl->A/(fabs(DT) +100.*EPSILON))*cost +0.3/gbl->K_sc;
+	beta2D = gbl->B*exp(-gbl->A/(fabs(DT) +100.*EPSILON))*cost +0.05/gbl->K_sc;  // This is a lower limit ad-hoc to make it easier to simulate TEMPORARY
 	betaSN = gbl->B_facet*sint;
 
 	//FLT beta = max(beta2D,betaSN);
@@ -974,10 +976,167 @@ void melt_kinetics::calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& bet
 	// Don't like the max/min stuff makes the problem too non-linear
 	FLT p = 2.;
 	FLT beta = pow(pow(beta2D,p) +pow(betaSN,p),1./p);
-	K = gbl->K_sc +1./beta;
+	K = gbl->K_sc +1./beta;	
+	K = 0; //TEMPO
 	
+//	if (xpt(1) > -0.02) {
+//		K = 1./beta2D*(1. +xpt(1)/0.02) -K*xpt(1)/0.02;
+//	}
+//	
 	return;
 }
 
+void melt_facet_pt::rsdl(int stage) {
+
+	if (surfbdry == 0) {
+		const int bnum = base.ebdry(0);
+		const int seg = x.ebdry(bnum)->nseg-1;
+		const int sind = x.ebdry(bnum)->seg(seg);
+		
+		x.crdtocht1d(sind);
+		x.ugtouht1d(sind);
+		
+		element_rsdl();
+		
+		/* SET TANGENT RESIDUAL TO ZERO */
+		surf->gbl->vres(seg+1)(0) = 0.0;
+#ifdef petsc
+		surf->gbl->vres(seg+1)(1) = res;  // Kinetic Equation
+#else
+		surf->gbl->vres(seg+1)(2) = res;  // Kinetic Equation
+#endif
+	}
+	else {
+		*x.gbl->log << "melt facet_pt only implemented for end point of surface" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	return;
+}
+
+void melt_facet_pt::element_rsdl() {	
+	Array<FLT,1> u(x.NV);
+	TinyVector<FLT, 2> xp, dxpdpsi, mvel;
+	
+	/* Calculate Temperature from velocity of point & 2D nucleation coefficient only */
+	/* Assuming growth at facet angle */
+	int v0 = base.pnt;
+	basis::tri(x.log2p)->ptprobe1d(2,xp.data(),dxpdpsi.data(),1.0,&x.cht(0,0),MXTM);
+	basis::tri(x.log2p)->ptprobe1d(4,u.data(),1.0,&x.uht(0)(0),MXTM);
+	/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+	for(int n=0;n<tri_mesh::ND;++n) {
+		mvel(n) = u(n) -x.gbl->bd(0)*(xp(n) -x.vrtxbd(1)(v0)(n));
+#ifdef MESH_REF_VEL
+		mvel(n) -= x.gbl->mesh_ref_vel(n);
+#endif
+	}
+	
+	FLT jcb = sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
+	FLT K, beta2D, betaSN;
+	FLT DT = surf->ibc->f(2, xp, x.gbl->time) -u(2);
+	melt_kinetics *surf1 = dynamic_cast<melt_kinetics *>(surf);
+	surf1->calculate_kinetic_coefficients(K,beta2D,betaSN,DT,0.0,1.0,xp);
+	FLT res1 = jcb*RAD(crd(0,i))*x.gbl->rho*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
+	/* Kinetic equation for surface temperature */
+	res = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +res1/beta2D*0;  // -gbl->K_gt*kappa?;  //TEMPO
+	
+
+	/* More Complicated Way */
+	// % facet angle
+	// ang = 55*pi/180;
+	// % Temperature gradient along interface =
+	// a = (rho*Lf*sx*cos(ang) +(ql-qs)/sin(ang))/(kl-ks);
+	
+//	Array<FLT,1> u(x.NV),dudpsi(x.NV);
+//	TinyVector<FLT, 2> xp, dxpdpsi, mvel;
+//	basis::tri(x.log2p)->ptprobe1d(2,xp.data(),dxpdpsi.data(),1.0,&x.cht(0,0),MXTM);
+//	basis::tri(x.log2p)->ptprobe1d(4,u.data(),dudpsi.data(),1.0,&x.uht(0)(0),MXTM);
+
+//	FLT a = dudpsi(2)/sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
+//	FLT sx = ((kl-ks)*a +(qs-ql)/sin(ang))/rho*Lf*cos(ang);
+}
+
+
+#ifdef petsc
+void melt_facet_pt::petsc_jacobian() {
+#ifdef BZ_DEBUG
+	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
+	const int sm = basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV+x.ND;
+	int nvars = vdofs*(sm+2); 
+	Array<FLT,1> vals(nvars);
+	Array<int,1> col(nvars);
+	
+	/* Jacobian for row determine x position */
+	/* Variables effecting dT/dx are strictly those on the edge */
+	
+	const int bnum = base.ebdry(0);
+	const int seg = x.ebdry(bnum)->nseg-1;
+	const int sind = x.ebdry(bnum)->seg(seg);
+	
+	x.crdtocht1d(sind);
+	x.ugtouht1d(sind);
+	element_rsdl();
+	FLT res0 = res;
+	
+	FLT dw = 0.0;
+	for(int i=0;i<2;++i)
+		for(int n=0;n<x.NV;++n)
+			dw = dw + fabs(x.uht(n)(i));
+		
+	dw = dw*eps_r;
+	dw += eps_a;
+	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+		
+	/* Numerically create Jacobian */
+	int kcol = 0;
+	for(int mode = 0; mode < sm+2; ++mode) {
+		for(int var = 0; var < x.NV; ++var) {
+			x.uht(var)(mode) += dw;
+			element_rsdl();
+			vals(kcol++) = (res-res0)/dw;
+			x.uht(var)(mode) -= dw;
+		}
+		
+		for(int var = 0; var < tri_mesh::ND; ++var){
+			x.cht(var,mode) += dx;
+			element_rsdl();
+			vals(kcol++) = (res-res0)/dx;
+			x.cht(var,mode) -= dx;
+		}		
+	}
+	
+	/* CREATE GLOBAL NUMBERING LIST */
+	int ind = 0;
+	for(int mode = 0; mode < 2; ++mode) {
+		int gindx = vdofs*x.seg(sind).pnt(mode);
+		for(int var = 0; var < vdofs; ++var)
+			col(ind++) = gindx++;
+	}
+	
+	int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
+	int gindxND = surf->jacobian_start +seg*tri_mesh::ND*sm;
+	for(int mode = 0; mode < sm; ++mode) {
+		for(int var = 0; var < x.NV; ++var)
+			col(ind++) = gindxNV++;
+		
+		for(int var = 0; var < tri_mesh::ND; ++var)
+			col(ind++) = gindxND++;
+	}
+	
+#ifdef MY_SPARSE
+	Array<int,1> rows(1);
+	rows(0) = base.pnt*vdofs+vdofs-1;  // y-row is kinetic equation.  gets moved by melt_kinetic::petsc_jacobian_dirichlet
+	x.J.zero_rows(1,rows);
+	x.J_mpi.zero_rows(1,rows);
+	x.J.add_values(rows(0),nvars,col,vals);
+#else
+	*x.gbl->log << "petsc not working for melt_end_pt\n";
+	MatSetValuesLocal(x.petsc_J,x.NV*(sm+2),rows.data(),vdofs*2 +x.NV*sm,cols.data(),K.data(),ADD_VALUES);
+#endif
+}
+#endif
 
 

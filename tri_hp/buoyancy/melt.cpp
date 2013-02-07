@@ -1521,7 +1521,8 @@ void melt::petsc_jacobian_dirichlet() {
 		int nnz2 = x.J._cpt(row+4) -x.J._cpt(row+3);
 		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 		if (nnz1 != nnz2) {
-			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+			*x.gbl->log << "zeros problem in moving heat equation to mesh movement location " << nnz1 << ' ' << nnz2 << " sind " << sind << " v0 " << v0 << std::endl;
+			x.tri_mesh::output("zeros",tri_mesh::grid);
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		int cpt1 = x.J._cpt(row);
