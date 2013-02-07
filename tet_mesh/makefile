@@ -52,7 +52,7 @@ LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs -lMAdLib
 
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-CXXMPI = ${CXX}
+CXXMPI = mpic++
 
 ### Begin machine dependent
 
@@ -67,8 +67,8 @@ CXXMPI = ${CXX}
 #CXX=g++3 #(shelob)
 #CPPFLAGS += -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
 #LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
+#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
+#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 LIB += -lblas -llapack #(cares)
 
 ## To use openmpi

@@ -6,8 +6,8 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: planar axi
 
-planar: tri_hp tri_hp_mpi tri_hp_petsc tri_hp_petsc_mpi
-axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc tri_hp_axi_petsc_mpi
+planar: tri_hp tri_hp_mpi tri_hp_petsc_mpi
+axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc_mpi
 
 tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -22,13 +22,6 @@ tri_hp_mpi:
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_mpi
-
-tri_hp_petsc:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-Dpetsc'
-	cp _$@/tri_hp_petsc $(HOME)/bin/$@
-
-.PHONY: tri_hp_petsc
 
 tri_hp_petsc_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -50,14 +43,6 @@ tri_hp_axi_mpi:
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_mpi
-
-tri_hp_axi_petsc:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc'
-	cp _$@/tri_hp_petsc $(HOME)/bin/$@
-	
-.PHONY: tri_hp_axi_petsc
-
 
 tri_hp_axi_petsc_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -109,7 +94,7 @@ OBJ += $(OBJBUOY)
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
-CXXMPI = ${CXX}
+CXXMPI = mpic++
 
 ### Begin machine dependent
 
@@ -119,7 +104,7 @@ CXXMPI = ${CXX}
 #LIB += -framework veclib
 
 ## Linux:
-LIB += -L$(HOME)  -llapack -lblas #(cares)
+LIB += -llapack -lblas #(cares)
 #CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 #CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
@@ -127,8 +112,8 @@ LIB += -L$(HOME)  -llapack -lblas #(cares)
 #LIB += -L$(HOME)  -lmkl -lmkl_lapack -lmpi -lmpi++  #(hawk)
 
 ## To use openmpi
-CPPFLAGS += -I/opt/openmpi/include
-CXXMPI = /opt/openmpi/bin/mpic++
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
 
 # (ubuntu) should really make symbolic links to liblapack and libatlas
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
@@ -142,9 +127,6 @@ tri_hp: $(OBJ)
 
 tri_hp_mpi: $(OBJ) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
-	
-tri_hp_petsc: $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh -lpetsc -lsuperlu_dist_2.5 -lparmetis -ldl $(LIB)
 
 tri_hp_petsc_mpi: $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi -lpetsc -lsuperlu_dist_2.5 -lparmetis -ldl $(LIB) 

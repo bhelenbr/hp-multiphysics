@@ -53,7 +53,7 @@ LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_ma
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs
 
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-CXXMPI = ${CXX}
+CXXMPI = mpic++
 
 ### Begin machine dependent
 
@@ -71,8 +71,8 @@ CXXMPI = ${CXX}
 #CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 #CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 ## To use openmpi
-CPPFLAGS += -I/opt/openmpi/include
-CXXMPI = /opt/openmpi/bin/mpic++
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
 LIB += -lblas -llapack #(cares)
 
 ## Intel Cluster
