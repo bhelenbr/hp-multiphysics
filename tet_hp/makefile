@@ -68,8 +68,9 @@ LIB += -L$(HOME)  -llapack -lblas #(cares)
 #CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## To use openmpi
-CPPFLAGS += -I/opt/openmpi/include
-CXXMPI = /opt/openmpi/bin/mpic++
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
+CXXMPI = mpic++
 
 # (ubuntu) should really make symbolic links to liblapack and libatlas
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
