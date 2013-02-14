@@ -175,8 +175,8 @@ namespace bdry_buoyancy {
 		public:
 		struct global : public melt::global {
 			/* Kinetic Coefficients */
-			FLT K_sc, B_facet, B, A; // Coefficients for Weinstein Kinetic model
-			FLT K_gt; // Gibbs Thompson curvature effect
+			FLT Krough, Ksn, A2Dn, K2Dn, K2Dn_max; // Coefficients for Weinstein Kinetic model
+			FLT Kgt; // Gibbs Thompson curvature effect (not working)
 			TinyVector<FLT,tri_mesh::ND> facetdir; // Diretion of facet
 			
 			/* PRECONDITIONER */
@@ -194,7 +194,7 @@ namespace bdry_buoyancy {
 			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
 			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
-			void calculate_kinetic_coefficients(FLT &K, FLT& beta2D, FLT& betaSN, FLT DT, FLT sint, FLT cost, TinyVector<FLT,tri_mesh::ND> xpt);
+			FLT calculate_kinetic_coefficients(FLT DT,FLT cost);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
 			void vdirichlet();
 			void minvrt();

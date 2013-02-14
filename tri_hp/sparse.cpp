@@ -123,9 +123,9 @@ void tri_hp::petsc_jacobian() {
 		hp_ebdry(i)->petsc_jacobian();
 	
 //  /* Typically this is called from within hp_ebdry->petsc_jacobian() */
-//  /* Not sure when this needs to be uncommented */
-//	for(int i=0;i<nvbd;++i) 
-//		hp_vbdry(i)->petsc_jacobian();  // TEMPORARY
+  /* Not sure when this needs to be uncommented */
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->petsc_jacobian();  
 		
 #ifndef MY_SPARSE
 	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
