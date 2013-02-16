@@ -343,30 +343,30 @@ int tri_mesh::smooth_lngth(int niter) {
 	int sind, j;
 
 	/* Smooth distribution along each edge fixing endpoint */
-	for(iter=0; iter< niter; ++iter) {
-		for(i=0;i<nebd;++i) {
-			gbl->fltwk(0) = 0.0;
-			for(j=0;j<ebdry(i)->nseg;++j) {
-				gbl->fltwk(j) += 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(1));
-				gbl->fltwk(j+1) = 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(0));
-			}
-			
-			for(j=1;j<ebdry(i)->nseg;++j) {
-				lngth(seg(ebdry(i)->seg(j)).pnt(0)) = 2.0/gbl->fltwk(j);
-			}
-		}
-	}
-	
-	for(i=0;i<npnt;++i)
-		pnt(i).info = 0;
-
-	for(i=0;i<nebd;++i) {
-		for(j=0;j<ebdry(i)->nseg;++j) {
-			sind = ebdry(i)->seg(j);
-			pnt(seg(sind).pnt(0)).info = -1;
-			pnt(seg(sind).pnt(1)).info = -1;
-		}
-	}
+//	for(iter=0; iter< niter; ++iter) {
+//		for(i=0;i<nebd;++i) {
+//			gbl->fltwk(0) = 0.0;
+//			for(j=0;j<ebdry(i)->nseg;++j) {
+//				gbl->fltwk(j) += 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(1));
+//				gbl->fltwk(j+1) = 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(0));
+//			}
+//			
+//			for(j=1;j<ebdry(i)->nseg;++j) {
+//				lngth(seg(ebdry(i)->seg(j)).pnt(0)) = 2.0/gbl->fltwk(j);
+//			}
+//		}
+//	}
+//	
+//	for(i=0;i<npnt;++i)
+//		pnt(i).info = 0;
+//
+//	for(i=0;i<nebd;++i) {
+//		for(j=0;j<ebdry(i)->nseg;++j) {
+//			sind = ebdry(i)->seg(j);
+//			pnt(seg(sind).pnt(0)).info = -1;
+//			pnt(seg(sind).pnt(1)).info = -1;
+//		}
+//	}
 
 	for(iter=0; iter< niter; ++iter) {
 		/* SMOOTH POINT DISTRIBUTION X*/
@@ -381,9 +381,9 @@ int tri_mesh::smooth_lngth(int niter) {
 			}
 
 			for(i=0;i<npnt;++i) {
-				if (pnt(i).info == 0) {
+//				if (pnt(i).info == 0) {
 					lngth(i) = 1./(gbl->fltwk(i)/pnt(i).nnbor);
-				}
+//				}
 			}
 	}
 
