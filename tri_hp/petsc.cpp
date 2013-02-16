@@ -342,6 +342,9 @@ void tri_hp::petsc_update() {
 	for(int i=0;i<nvbd;++i) {
 		hp_vbdry(i)->update(-1);
 	}
+	
+//	std::cerr << "temporary exit" << std::endl;
+//	sim::finalize(__LINE__,__FILE__,&std::cerr);
 
 	return;
 }
