@@ -10,6 +10,9 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
+// #define CALC_TAU
+// #define BOUSSINESQ
+
 void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	int i,j,n;
 	FLT fluxx,fluxy;
@@ -136,7 +139,11 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef AXISYMMETRIC
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
+#ifdef BOUSSINESQ
+					res(1)(i,j) += u(2)(i,j)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+#else
 					res(1)(i,j) += (rho(i,j)-gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+#endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -201,12 +208,15 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
+#ifdef CALC_TAU
 			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+#endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 
+#ifdef CALC_TAU
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
 					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
@@ -215,13 +225,13 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
 					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
-					FLT lam2  = sqrt(q2) +1.5*alpha/h +0*h*gbl->bd(0);
+					FLT lam2  = sqrt(q2) +1.5*alpha/h +h*gbl->bd(0);
 					
 					/* SET UP DISSIPATIVE COEFFICIENTS */
 					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
 					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
 					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
-
+#endif
 					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
 					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
 					tres(2) = gbl->tau(tind,2)*res(2)(i,j);
@@ -349,7 +359,11 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 
+#ifdef BOUSSINESQ
+					res(1)(i,j) += u(2)(i,j)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+#else
 					res(1)(i,j) += (rho(i,j)-gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+#endif
 
 					df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
 												 +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
@@ -384,12 +398,15 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
+#ifdef CALC_TAU
 			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+#endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 
+#ifdef CALC_TAU
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
 					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
@@ -398,12 +415,13 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
 					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
-					FLT lam2  = sqrt(q2) +1.5*alpha/h +0*h*gbl->bd(0);
+					FLT lam2  = sqrt(q2) +1.5*alpha/h +h*gbl->bd(0);
 					
 					/* SET UP DISSIPATIVE COEFFICIENTS */
 					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
 					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
 					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+#endif
 
 					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
 					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
