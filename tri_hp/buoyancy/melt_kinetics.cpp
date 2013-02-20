@@ -51,25 +51,6 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 	
-//	TinyVector<FLT,tri_mesh::ND> xle;
-//	
-//	/* TEMPORARY */
-//	/* Calculate arc length */
-//	FLT s = 0.0;
-//	for (int ind = base.nseg-1;ind >= indx; --ind) {
-//		sind = base.seg(ind);
-//		x.crdtocht1d(sind);
-//		for(n=0;n<tri_mesh::ND;++n)
-//			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-//		
-//		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
-//			norm(0) =  dcrd(1,i);
-//			norm(1) = -dcrd(0,i);
-//			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-//			s += basis::tri(x.log2p)->wtx(i)*jcb;
-//		}
-//	}
-	
 	sind = base.seg(indx);
 	v0 = x.seg(sind).pnt(0);
 	v1 = x.seg(sind).pnt(1);
@@ -85,9 +66,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-		
-//		s -= basis::tri(x.log2p)->wtx(i)*jcb;
-		
+				
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));  
@@ -101,8 +80,6 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			au(n) = u(n)(i);
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
 		aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
-//		aloc(0) = s;
-//		aloc(1) = 0.0;
 		
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 #ifdef MESH_REF_VEL
@@ -112,9 +89,9 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		
 		/* This is from Weinstein's expression */
-		FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
+		FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
 		FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
-		FLT K = calculate_kinetic_coefficients(DT,cost);
+		FLT K = calculate_kinetic_coefficients(DT,sint);
 
 		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
@@ -941,11 +918,11 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 					anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 					
-					FLT cost = fabs(anorm(0)*gbl->facetdir(0) +anorm(1)*gbl->facetdir(1));
+					FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
 					FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
-					FLT K = calculate_kinetic_coefficients(DT,cost);
+					FLT K = calculate_kinetic_coefficients(DT,sint);
 
-					fout << s << ' ' << crd(0,i) << ' ' << crd(1,i) << ' ' << K << ' ' << DT << ' ' << cost << std::endl;
+					fout << s << ' ' << crd(0,i) << ' ' << crd(1,i) << ' ' << K << ' ' << DT << ' ' << sint << std::endl;
 
 				}
 			} while (++indx < base.nseg);
@@ -958,19 +935,16 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	}
 }
 
-FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT cost) {
+FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 
-	FLT sint = sqrt(1. +EPSILON -cost*cost);
-
-	
 	// K2Dn is the inverse of B and is a ratio relative to Krough
 	// FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
 	FLT K2Dn_exp = 1./(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))/gbl->K2Dn +1./gbl->K2Dn_max);
 	
 	
 	//  K2Dn and Ksn are ratios relative to Krough
-	//FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*abs(sint),2) +pow(gbl->Ksn,2)));
-	FLT K = gbl->Krough*(1. + 1./sqrt(pow(abs(sint)/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
+	FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
+	// FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
 
 	return(K);
 }
@@ -1022,25 +996,10 @@ void melt_facet_pt::element_rsdl() {
 	FLT jcb = sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
 	FLT DT = surf->ibc->f(2, xp, x.gbl->time) -u(2);
 	melt_kinetics *surf1 = dynamic_cast<melt_kinetics *>(surf);
-	FLT K = surf1->calculate_kinetic_coefficients(DT,1.0);
+	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
 	FLT res1 = jcb*RAD(xp(0))*x.gbl->rho*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
 	/* Kinetic equation for surface temperature */
 	res = RAD(xp(0))*x.gbl->rho*(-DT)*jcb +res1*K;  // -gbl->K_gt*kappa?;
-	
-
-	/* More Complicated Way */
-	// % facet angle
-	// ang = 55*pi/180;
-	// % Temperature gradient along interface =
-	// a = (rho*Lf*sx*cos(ang) +(ql-qs)/sin(ang))/(kl-ks);
-	
-//	Array<FLT,1> u(x.NV),dudpsi(x.NV);
-//	TinyVector<FLT, 2> xp, dxpdpsi, mvel;
-//	basis::tri(x.log2p)->ptprobe1d(2,xp.data(),dxpdpsi.data(),1.0,&x.cht(0,0),MXTM);
-//	basis::tri(x.log2p)->ptprobe1d(4,u.data(),dudpsi.data(),1.0,&x.uht(0)(0),MXTM);
-
-//	FLT a = dudpsi(2)/sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
-//	FLT sx = ((kl-ks)*a +(qs-ql)/sin(ang))/rho*Lf*cos(ang);
 }
 
 

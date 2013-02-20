@@ -194,7 +194,7 @@ namespace bdry_buoyancy {
 			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
 			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
-			FLT calculate_kinetic_coefficients(FLT DT,FLT cost);
+			FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
 			void vdirichlet();
 			void minvrt();
