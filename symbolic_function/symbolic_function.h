@@ -14,14 +14,14 @@ template<int N> class symbolic_function {
 		blitz::Array<symbolic_function<N> *, 1> children;
 		mutable blitz::Array<double,1> child_values;
       
-	public:		
+	public:
 	symbolic_function() : nchildren(0) {
 		std::ostringstream varname;
 		
 		// Crazy stuff to avoid weird unresolved overloaded function error
 		typedef double (*double_func_point)(double);
 		double_func_point erf_pointer = erf;
-		double_func_point erfc_pointer = erf;
+		double_func_point erfc_pointer = erfc;
 		p.DefineFun("erf", erf_pointer, false);
 		p.DefineFun("erfc", erfc_pointer, false);
 		
@@ -227,7 +227,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	// Crazy stuff to avoid weird unresolved overloaded function error
 	typedef double (*double_func_point)(double);
 	double_func_point erf_pointer = erf;
-	double_func_point erfc_pointer = erf;
+	double_func_point erfc_pointer = erfc;
 	ptemp.DefineFun("erf", erf_pointer, false);
 	ptemp.DefineFun("erfc", erfc_pointer, false);
   
@@ -341,7 +341,7 @@ public:
 		// Crazy stuff to avoid weird unresolved overloaded function error
 		typedef double (*double_func_point)(double);
 		double_func_point erf_pointer = erf;
-		double_func_point erfc_pointer = erf;
+		double_func_point erfc_pointer = erfc;
 		p.DefineFun("erf", erf_pointer, false);
 		p.DefineFun("erfc", erfc_pointer, false);
 		p.DefineVar("t", &time);
@@ -426,7 +426,7 @@ public:
 		// Crazy stuff to avoid weird unresolved overloaded function error
 		typedef double (*double_func_point)(double);
 		double_func_point erf_pointer = erf;
-		double_func_point erfc_pointer = erf;
+		double_func_point erfc_pointer = erfc;
 		p.DefineFun("erf", erf_pointer, false);
 		p.DefineFun("erfc", erfc_pointer, false);
 		p.DefineVar("t", &time);
@@ -609,7 +609,7 @@ public:
 		// Crazy stuff to avoid weird unresolved overloaded function error
 		typedef double (*double_func_point)(double);
 		double_func_point erf_pointer = erf;
-		double_func_point erfc_pointer = erf;
+		double_func_point erfc_pointer = erfc;
 		ptemp.DefineFun("erf", erf_pointer, false);
 		ptemp.DefineFun("erfc", erfc_pointer, false);
 		
