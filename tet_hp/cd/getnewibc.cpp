@@ -22,7 +22,7 @@ namespace ibc_cd {
 	};
 	
 	class unsteady_spline : public init_bdry_cndtn {
-		spline3<1> time_history;
+		spline<1> time_history;
 		public:
 			FLT f(int n, TinyVector<FLT,tet_mesh::ND> x,FLT time) {
 				TinyVector<FLT,1> source;
@@ -76,7 +76,7 @@ init_bdry_cndtn *tet_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
 			break;
 		}
 		case(ibc_cd::ibc_type::unsteady_spline): {
-			temp = new ibc_cd::zero_src;
+			temp = new ibc_cd::unsteady_spline;
 			break;
 		}
 		default: {
