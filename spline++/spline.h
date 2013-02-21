@@ -33,6 +33,9 @@ template<int ND> class spline {
 		int read(std::string filename);
 		int interpolate(const double spt, TinyVector<double,ND>& loc);
 		int find(double &spt, TinyVector<double,ND>& loc);
+		double start() {return(x(0));}
+		double stop() {return(x(npts-1));}
+	int size() {return(npts);}
 };
 
 template<int ND> class spline3 {
@@ -55,6 +58,9 @@ template<int ND> class spline3 {
 		int read(std::string filename);
 		int interpolate(const double spt, TinyVector<double,ND>& loc);
 		int find(double &spt, TinyVector<double,ND>& loc);
+		double start() {return(x(0));}
+		double stop() {return(x(npts-1));}
+	int size() {return(npts);}
 };
 
 #endif

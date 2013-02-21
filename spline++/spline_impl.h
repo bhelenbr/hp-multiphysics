@@ -23,10 +23,10 @@ template<int ND> int spline<ND>::read(std::string filename) {
     }
 
 	/* READ # OF POINTS AND ALLOCATE */
-	in.ignore(80,'\n');
-	in.ignore(80,':');
+	in.ignore(160,'\n');
+	in.ignore(160,':');
 	in >> npts;
-	
+			
 	c.resize(npts);
 	x.resize(npts);
 	y.resize(npts);
@@ -34,7 +34,7 @@ template<int ND> int spline<ND>::read(std::string filename) {
 	ydd.resize(npts);
 	in.ignore(80,'\n');
 	in.ignore(80,'\n');
-		
+			
 	/* NOW READ DATA */
 	for (int i=0;i<npts;++i) {
 		in >> x(i);
@@ -42,8 +42,7 @@ template<int ND> int spline<ND>::read(std::string filename) {
 		for(int n=0;n<ND;++n)
 			in >> y(i)(n);
 			
-	}
-	
+	}	
 	
 	/* BASIC SPLINE FIRST (NO CUSPS NOT SMOOTH LOOP) */
 	TinyVector<double,ND> d1,d2,d3,d4;
@@ -382,14 +381,14 @@ template<int ND> int spline3<ND>::read(std::string filename) {
 			band_matrix(j,k) = tri_diagonal(j)(k);
 		}
 	}
-	
+
 	int info;
 	char uplo[] = "U";
 	DPBTRF(uplo,npts,1,band_matrix.data(),2,info);
 	if (info != 0) {
 		printf("1:PBTRF FAILED info: %d\n", info);
 		exit(1);
-	}		
+	}
 	
 	for (int n=0;n<ND;++n)
 		DPBTRS(uplo,npts,1,1,band_matrix.data(),2,rhs(n).data(),npts,info);
