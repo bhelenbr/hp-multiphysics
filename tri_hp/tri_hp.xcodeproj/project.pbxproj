@@ -1635,6 +1635,8 @@
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "${HOME}";
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1656,10 +1658,12 @@
 					"$(packages)/include",
 					"$(prefix)/include",
 				);
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					"$(packages)/lib",
 					"$(prefix)/lib",
 				);
+				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				packages = "$(HOME)/packages";
 				prefix = ..;
@@ -1672,6 +1676,8 @@
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "${HOME}";
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1692,6 +1698,7 @@
 					"$(packages)/include",
 					"$(prefix)/include",
 				);
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					"$(packages)/lib",
 					"$(prefix)/lib",
@@ -1700,6 +1707,7 @@
 					"$(OTHER_CFLAGS)",
 					"-fast",
 				);
+				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				packages = "$(HOME)/packages";
 				prefix = ..;
