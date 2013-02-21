@@ -885,6 +885,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "${HOME}";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
@@ -903,10 +906,12 @@
 					../include,
 					"${HOME}/Packages/include",
 				);
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"${HOME}/Packages/lib",
 				);
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -914,6 +919,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "${HOME}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
@@ -929,11 +937,13 @@
 					../include,
 					"${HOME}/Packages/include",
 				);
+				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"${HOME}/Packages/lib",
 				);
 				OTHER_CFLAGS = "-fast";
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
