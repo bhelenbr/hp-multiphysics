@@ -18,14 +18,14 @@ shift $((OPTIND-1))
 # avoids problems with replace strings with a /
 case "${Command}" in 
 	Delete)
-		sed -i .bak -E "s:^ *$2 *\:.*$::g" $1;;
+		sed -i.bak -E "s:^ *$2 *\:.*$::g" $1;;
 	Comment)
-		sed -i .bak -E "s:^ *$2 *\::#$2\::g" $1;;
+		sed -i.bak -E "s:^ *$2 *\::#$2\::g" $1;;
 	Uncomment)
-		sed -i .bak -E "s:^# *$2 *\::$2\::g" $1;;
+		sed -i.bak -E "s:^# *$2 *\::$2\::g" $1;;
 	*)
 		if grep -q "^ *$2 *:.*$" $1; then
-			sed -i .bak -E "s:^ *$2 *\:.*$:$2\: $3:g" $1;
+			sed -i.bak -E "s:^ *$2 *\:.*$:$2\: $3:g" $1;
 		else
 			echo "$2: $3" >> $1
 		fi
