@@ -25,6 +25,7 @@
 		6FD651F10922EF8E00D18689 /* mod_map */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mod_map; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC046055464E500DB518D /* libinput_map.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinput_map.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E601997F167F636000C5C90E /* libmuparser.2.2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.2.dylib; path = ../../Packages/lib/libmuparser.2.2.2.dylib; sourceTree = "<group>"; };
+		E631981016DBA7ED00B5C23C /* mod_map.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = mod_map.bash; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				6FD651CF0922EC6800D18689 /* makefile */,
+				E631981016DBA7ED00B5C23C /* mod_map.bash */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
@@ -123,6 +125,7 @@
 			buildPhases = (
 				6FD651EE0922EF8E00D18689 /* Sources */,
 				6FD651EF0922EF8E00D18689 /* Frameworks */,
+				E631981216DBA84600B5C23C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -174,6 +177,22 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E631981216DBA84600B5C23C /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mv mod_map.bash ${HOME}/bin/mod_map";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6FD651EE0922EF8E00D18689 /* Sources */ = {
@@ -261,8 +280,8 @@
 		6FD651FA0922EFCF00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEPLOYMENT_LOCATION = NO;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
 				PRODUCT_NAME = mod_map;
 			};
@@ -271,8 +290,8 @@
 		6FD651FB0922EFCF00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEPLOYMENT_LOCATION = NO;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
 				PRODUCT_NAME = mod_map;
 			};
