@@ -11,6 +11,8 @@ void tet_hp_cd::setup_preconditioner() {
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
 
+	FLT alpha = gbl->kcond/gbl->rhocv;
+	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
@@ -67,12 +69,12 @@ void tet_hp_cd::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		lam1  = (q +1.5*gbl->nu/h +h*gbl->bd(0)); 
+		lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
 
         /* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind)  = adis*h/(jcb*lam1);
 		
-		jcb *= lam1/h;		
+		jcb *= gbl->rhocv*lam1/h;
 
 
 		/* SET UP DIAGONAL PRECONDITIONER */

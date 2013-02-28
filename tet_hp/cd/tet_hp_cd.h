@@ -21,7 +21,7 @@ class tet_hp_cd : public tet_hp {
 			Array<FLT,1> tau;
 
 			/* PHYSICAL CONSTANTS */
-			FLT ax,ay,az, nu;
+			FLT rhocv,ax,ay,az,kcond;
 			
 			/* SOURCE FUNCTION */
 			init_bdry_cndtn *src;
@@ -42,7 +42,8 @@ class tet_hp_cd : public tet_hp {
 		tet_hp_cd* create() { return new tet_hp_cd(); }
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0);
-//      void length();
+		void calculate_unsteady_sources();
+	//      void length();
 //		void minvrt();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
