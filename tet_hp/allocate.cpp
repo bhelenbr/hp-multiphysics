@@ -287,7 +287,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	/*********************************/
 	/* ALLOCATE ADAPTATION STORAGE   */
 	/*********************************/
-	if (gbl->adapt_flag) {
+	if (gbl->adapt_interval) {
 		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,20.0);
 		gbl->pstr = create();
 		gbl->pstr->init(*this,adapt_storage);
