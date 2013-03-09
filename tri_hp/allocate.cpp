@@ -238,7 +238,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	/*********************************/
 	/* ALLOCATE ADAPTATION STORAGE    */
 	/*********************************/
-	if (gbl->adapt_flag) {
+	if (gbl->adapt_interval) {
 		std::string estring;
 		if (!inmap.get(gbl->idprefix + "_error_estimator",estring)) inmap.getwdefault("error_estimator",estring,std::string("none"));
 		if (estring == "none") 
@@ -461,10 +461,13 @@ FLT tri_hp::maxres() {
 }
 #else
 FLT tri_hp::maxres() {
-	FLT petsc_norm;
-	VecNorm(petsc_f,NORM_2,&petsc_norm);
-	*gbl->log << ' ' << petsc_norm << ' ';
-	return(petsc_norm);
+//	FLT petsc_norm;
+//	VecNorm(petsc_f,NORM_2,&petsc_norm);
+//	*gbl->log << ' ' << petsc_norm << ' ';
+//	return(petsc_norm);
+	
+	*gbl->log << ' ' << max_residual << ' ';
+	return(max_residual);
 }
 #endif
 

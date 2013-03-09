@@ -45,7 +45,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				fnmapp = namewdot +nstr.str();
 				output(fnmapp,output_type(1),i);
 			}
-			if (mmovement != fixed || gbl->adapt_flag) {
+			if (mmovement != fixed || gbl->adapt_interval) {
 				namewdot = fname +".v";
 				if (output_type(1) == tri_hp::binary) {
 					tri_mesh::output(fname,tri_mesh::binary);
