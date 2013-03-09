@@ -839,10 +839,20 @@ void block::init(input_map &input) {
 	gbl->stepsolves = 1;
 #endif
 
-#ifdef DIRK
+#if (DIRK==4)
 	gbl->nadapt = 2;
 	gbl->nhist = 4;
 	gbl->stepsolves = 3;
+	gbl->bd.resize(1);
+	gbl->bd = 0.0;
+	gbl->adirk.resize(DIRK,DIRK);
+	gbl->cdirk.resize(DIRK);
+#endif
+	
+#if (DIRK==1)
+	gbl->nadapt = 1;
+	gbl->nhist = 1;
+	gbl->stepsolves = 1;
 	gbl->bd.resize(1);
 	gbl->bd = 0.0;
 	gbl->adirk.resize(DIRK,DIRK);
@@ -861,7 +871,12 @@ void block::init(input_map &input) {
 	if (gbl->dti_prev < 0.0) {
 		*gbl->log << "Inverse time step must be positive number" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
-	}	
+	}
+	
+	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
+	if (gbl->time_relaxation) {
+		gbl->dti_function.init(input,"dtinv_function");
+	}
 	
 	input.getwdefault("ntstep",ntstep,1);
 	if (ntstep < 0) {
@@ -963,8 +978,8 @@ void block::init(input_map &input) {
 
 	input.getwdefault("adapt_output",gbl->adapt_output,false);
 
-	if (!input.get(idprefix+"_adapt",gbl->adapt_flag)) {
-		input.getwdefault("adapt",gbl->adapt_flag,false);
+	if (!input.get(idprefix+"_adapt",gbl->adapt_interval)) {
+		input.getwdefault("adapt",gbl->adapt_interval,0);
 	}
 
 	if (!input.get(idprefix + "_tolerance",gbl->tolerance)) {
@@ -1111,7 +1126,9 @@ void block::go(input_map input) {
 		}
 
 		/* ADAPT MESH */
-		if (gbl->adapt_flag) adapt();
+		if (gbl->adapt_interval && !(gbl->tstep%gbl->adapt_interval)) {
+			adapt();
+		}
 
 		/* OUTPUT RESTART FILES */
 		if (!((gbl->tstep)%(rstrt_intrvl*out_intrvl))) {
@@ -1138,6 +1155,15 @@ FLT block::maxres(int lvl) {
 void block::tadvance() {
 	int lvl;
 
+	if (gbl->time_relaxation) {
+		FLT error;
+		gbl->dti_prev = gbl->dti;
+		
+		*gbl->log << "# dtinv under relaxation at error ";
+		error=maxres();
+		*gbl->log << " and tstep " << gbl->tstep << ": " << (gbl->dti = gbl->dti_function.Eval(error,static_cast<FLT>(gbl->tstep))) << std::endl;
+	}
+		
 #ifdef BACKDIFF
 	if (gbl->dti > 0.0) 
 		gbl->time += 1./gbl->dti;
@@ -1219,8 +1245,16 @@ void block::tadvance() {
 		}
 		gbl->dti_prev = gbl->dti;
 	}
-	else {
-		gbl->time = gbl->tstep;
+
+#else
+	gbl->time = gbl->tstep;
+	gbl->adirk(0,0) = 1.0;
+	gbl->cdirk(0) = 1.0;
+	gbl->esdirk = false;
+	gbl->bd(0) = gbl->dti;
+	if (gbl->dti > 0.0) {
+		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+		gbl->dti_prev = gbl->dti;
 	}
 #endif
 #endif

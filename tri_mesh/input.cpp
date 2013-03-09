@@ -28,7 +28,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		gbl = new global;
 		gbl->idprefix = std::string("b0");
 		gbl->log = &std::cout;
-		gbl->adapt_flag = true;
+		gbl->adapt_interval	= 1;
 		gbl->tolerance = 1.25;
 	}
 
@@ -36,7 +36,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		FLT grwfac;
 		keyword = gbl->idprefix + "_growth factor";
 		if (!input.get(keyword,grwfac)) {
-			input.getwdefault("growth factor",grwfac,2.0);
+			input.getwdefault("growth factor",grwfac,1.0);
 		}
 		if (grwfac < 1.0) {
 			*gbl->log << "growth factor must be greater than one\n";
@@ -134,7 +134,7 @@ void tri_mesh::allocate(int mxsize) {
 		gbl = new global;
 		gbl->idprefix = "";
 		gbl->log = &std::cout;
-		gbl->adapt_flag = true;
+		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;
 	}
 

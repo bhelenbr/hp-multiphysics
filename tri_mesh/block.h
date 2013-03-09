@@ -6,7 +6,9 @@
 #include <sstream>
 #include <blitz/array.h>
 #include <input_map.h>
+#include <symbolic_function.h>
 
+//#define DIRK 1
 #define DIRK 4
 // #define BACKDIFF 2
 #ifdef SINGLE
@@ -62,6 +64,8 @@ struct block_global {
 	FLT time; /**< Simulation time */
 	int tstep; /**< Simulation time step */
 	int substep; /**< For schemes requiring multiple solves per step */
+	bool time_relaxation; /**< For relaxation schemes with adjustable time implicit term */
+	symbolic_function<2> dti_function;
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
 	std::ostream *log; /**< log file stream */
@@ -94,7 +98,7 @@ struct block_global {
 	*  constants controlling adaptation
 	*/
 	//@{
-	bool adapt_flag; /**< Completely turns adaptation off (can also shut off blocks individiually)  */
+	int adapt_interval; /**< 0 Completely turns adaptation off otherwise adapts every N timesteps)  */
 	bool adapt_output; /**< Flag to tell whether to give detailed adaptation data */
 	FLT tolerance; /**< Tolerance for mesh adaptation scheme */
 	FLT error_target; /**< Error target for mesh adaptation scheme */
@@ -179,7 +183,9 @@ class block {
 		/** Mesh adaptation routines */
 		void adapt();
 
-		virtual ~block() {}
+		virtual ~block() {
+			if (gbl) delete gbl;
+		}
 };
 
 class multigrid_interface {
