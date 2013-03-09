@@ -622,7 +622,10 @@ tet_mesh::~tet_mesh() {
 		delete ebdry(i);
 	for(int i=0;i<nfbd;++i)
 		delete fbdry(i);
-	delete gbl;
+	
+	// FIXME: WHO IS RESPONSIBLE FOR THIS?
+	if (gbl) delete gbl;
+	gbl = 0;
 }
 	
 
