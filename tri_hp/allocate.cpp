@@ -394,8 +394,6 @@ tri_hp::~tri_hp() {
 
 	for(int i=0;i<nebd;++i)
 		delete hp_ebdry(i);
-	
-	delete gbl;
 }
 
 void tri_hp::setinfo() {
