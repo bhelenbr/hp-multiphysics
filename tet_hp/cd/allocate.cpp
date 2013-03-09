@@ -41,11 +41,10 @@ void tet_hp_cd::init(input_map& input, void *gin) {
 	keyword = gbl->idprefix + "_az";
 	if (!input.get(keyword,gbl->ay)) input.getwdefault("az",gbl->az,0.0);
 
-	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
-		if (!input.get("conductivity",gbl->kcond)) {
-			// use old style and find nu
-			if (!input.get(gbl->idprefix + "_nu",gbl->kcond)) {
-				input.getwdefault("nu",gbl->kcond,0.0);
+	if (!input.get(gbl->idprefix + "_nu",gbl->kcond)) {
+		if (!input.get("nu",gbl->kcond)) {
+			if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
+				input.getwdefault("conductivity",gbl->kcond,0.0);
 			}
 		}
 	}
