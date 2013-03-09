@@ -51,9 +51,9 @@ namespace bdry_cd {
 #endif
 
 				if (vel > 0.0)
-					flx(0) = vel*u(0);
+					flx(0) = x.gbl->rhocv*vel*u(0);
 				else
-					flx(0) = ibc->f(0, xpt, x.gbl->time)*vel;
+					flx(0) = x.gbl->rhocv*vel*ibc->f(0, xpt, x.gbl->time);
 			}
 			characteristic(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}

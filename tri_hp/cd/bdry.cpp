@@ -74,7 +74,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
 					
-					x.cjcb(0,i) = x.gbl->nu/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					x.cjcb(0,i) = x.gbl->kcond/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 										
 					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
 					visc[0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
@@ -290,7 +290,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	FLT qdotn;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,2,MXGP> res;
-	FLT lkcond = x.gbl->nu;
+	FLT lkcond = x.gbl->kcond;
 	
 	sind = base.seg(indx);
 	tind = x.seg(sind).tri(0);        

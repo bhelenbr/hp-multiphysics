@@ -10,6 +10,7 @@ void tri_hp_cd::setup_preconditioner() {
 	TinyVector<int,3> v;
 	TinyVector<FLT,ND> mvel;
 
+	FLT alpha = gbl->kcond/gbl->rhocv;
 
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -65,12 +66,12 @@ void tri_hp_cd::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		lam1  = (q +1.5*gbl->nu/h +h*gbl->bd(0));
+		lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind)  = adis*h/(jcb*lam1);
 
-		jcb *= lam1/h;
+		jcb *= gbl->rhocv*lam1/h;
 
 
 		/* SET UP DIAGONAL PRECONDITIONER */

@@ -22,6 +22,15 @@ void tri_hp_cd::init(input_map& input, void *gin) {
 
 	keyword = gbl->idprefix + "_dissipation";
 	input.getwdefault(keyword,adis,1.0);
+	
+	FLT rho;
+	keyword = gbl->idprefix + "_rho";
+	if (!input.get(keyword,rho)) input.getwdefault("rho",rho,1.0);
+	
+	FLT cv;
+	keyword = gbl->idprefix + "_cv";
+	if (!input.get(keyword,cv)) input.getwdefault("cv",cv,1.0);
+	gbl->rhocv = rho*cv;
 
 #ifdef CONST_A
 	keyword = gbl->idprefix + "_ax";
@@ -33,8 +42,13 @@ void tri_hp_cd::init(input_map& input, void *gin) {
 	gbl->a = getnewibc("a",input);
 #endif
 
-	keyword = gbl->idprefix + "_nu";
-	if (!input.get(keyword,gbl->nu)) input.getwdefault("nu",gbl->nu,0.0);
+	if (!input.get(gbl->idprefix + "_nu",gbl->kcond)) {
+		if (!input.get("nu",gbl->kcond)) {
+			if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
+				input.getwdefault("conductivity",gbl->kcond,0.0);
+			}
+		}
+	}
 
 	keyword = gbl->idprefix + "_minlngth";
 	if (!input.get(keyword,gbl->minlngth)) input.getwdefault("minlngth",gbl->minlngth,-1.0);
@@ -66,6 +80,55 @@ void tri_hp_cd::init(const multigrid_interface& in, init_purpose why, FLT sizere
 
 	adis = inmesh.adis;
 
+	return;
+}
+
+/* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
+void tri_hp_cd::calculate_unsteady_sources() {
+	int i,j,n,tind;
+#ifdef petsc
+	int start = log2pmax;
+#else
+	int start = 0;
+#endif
+	
+	for (log2p=start;log2p<=log2pmax;++log2p) {
+		for(tind=0;tind<ntri;++tind) {
+			if (tri(tind).info > -1) {
+				crdtocht(tind,1);
+				for(n=0;n<ND;++n)
+					basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+			}
+			else {
+				for(n=0;n<ND;++n)
+					basis::tri(log2p)->proj(vrtxbd(1)(tri(tind).pnt(0))(n),vrtxbd(1)(tri(tind).pnt(1))(n),vrtxbd(1)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+				
+				for(i=0;i<basis::tri(log2p)->gpx();++i) {
+					for(j=0;j<basis::tri(log2p)->gpn();++j) {
+						for(n=0;n<ND;++n) {
+							dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(1))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
+							dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(2))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
+						}
+					}
+				}
+			}
+			
+			ugtouht(tind,1);
+			basis::tri(log2p)->proj(&uht(0)(0),&u(0)(0,0),MXGP);
+			
+			for(i=0;i<basis::tri(log2p)->gpx();++i) {
+				for(j=0;j<basis::tri(log2p)->gpn();++j) {
+					cjcb(i,j) = -gbl->bd(0)*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+					dugdt(log2p)(tind,0,i,j) = gbl->rhocv*u(0)(i,j)*cjcb(i,j);
+					
+					for(n=0;n<ND;++n)
+						dxdt(log2p)(tind,n,i,j) = crd(n)(i,j);
+				}
+			}
+		}
+	}
+	log2p=log2pmax;
+	
 	return;
 }
 

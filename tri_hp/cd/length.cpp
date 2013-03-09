@@ -79,13 +79,13 @@ void tri_hp_cd::error_estimator() {
 				//				FLT dtdyl = -ldcrd(0,1)*dul(0,0)(i,j) +ldcrd(0,0)*dul(0,1)(i,j);
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-				energy = u(0)(i,j);	
+				energy = gbl->rhocv*u(0)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += (0 /* +gbl->nu*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+				energy += (0 /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				
 				
-				denergy = ul(0)(i,j);
-				denergy += (0 /* +gbl->nu*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+				denergy = gbl->rhocv*ul(0)(i,j);
+				denergy += (0 /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
 				denergy -= energy;
 				

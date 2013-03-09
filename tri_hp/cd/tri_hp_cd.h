@@ -23,7 +23,7 @@ class tri_hp_cd : public tri_hp {
 			Array<FLT,1> tau;
 
 			/* PHYSICAL CONSTANTS */
-			FLT nu,ax,ay;
+			FLT rhocv,kcond,ax,ay;
 
 			/* SOURCE FUNCTION & FLOW FIELDS */
 			init_bdry_cndtn *src, *a;
@@ -46,6 +46,7 @@ class tri_hp_cd : public tri_hp {
 		tri_hp_cd* create() { return new tri_hp_cd(); }
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+		void calculate_unsteady_sources();
 		void error_estimator();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
