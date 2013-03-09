@@ -23,7 +23,7 @@ void tet_mesh::init(input_map &input, void *gin) {
 		gbl = new global;
 		gbl->idprefix = "";
 		gbl->log = &std::cout;
-		gbl->adapt_flag = true;
+		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;
 	}
 	
@@ -133,7 +133,7 @@ void tet_mesh::allocate(int mxsize) {
 		gbl = new global;
 		gbl->idprefix = "";
 		gbl->log = &std::cout;
-		gbl->adapt_flag = true;
+		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;
 	}
 	
@@ -622,6 +622,7 @@ tet_mesh::~tet_mesh() {
 		delete ebdry(i);
 	for(int i=0;i<nfbd;++i)
 		delete fbdry(i);
+	delete gbl;
 }
 	
 

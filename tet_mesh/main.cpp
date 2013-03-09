@@ -220,8 +220,8 @@ int main(int argc, char *argv[]) {
 		
 		for(int i=0;i<zx.ntet;++i)
 			zx.tet(i).info = zx.gbl->fltwk(i)-1;
-		
-		Array<tet_mesh,1> zpart(p);
+				
+		tet_mesh *zpart;
 		
 		Array<int,2> blist;
 		Array<int,1> bnum;
@@ -233,9 +233,11 @@ int main(int argc, char *argv[]) {
 			fname = "partition_" +nstr.str();
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart(i).partition2(zx,i,p,blist,bnum);
-			zpart(i).output(fname,tet_mesh::gmsh);
-			zpart(i).output(fname);
+			zpart = new tet_mesh;
+			zpart->partition2(zx,i,p,blist,bnum);
+			zpart->output(fname,tet_mesh::gmsh);
+			zpart->output(fname);
+			delete zpart;
 		}
 		return(0);
 	}
