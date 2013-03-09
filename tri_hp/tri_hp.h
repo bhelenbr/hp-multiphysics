@@ -213,6 +213,7 @@ class tri_hp : public r_tri_mesh  {
 		void mg_prolongate();
 
 		/** Print errors */
+		FLT max_residual;
 		FLT maxres();
 
 		/* FUNCTIONS FOR ADAPTION */ 
