@@ -16,7 +16,7 @@
 //#define CNS_EXPLICIT
 
 
-//#define POD
+#define POD
 #ifdef MASS
 #include "mass/tet_hp_mass.h"
 #endif

@@ -10,10 +10,16 @@
 #include <myblas.h>
 #include <libbinio/binfile.h>
 
+#define FULL_JACOBIAN
+
+// #define DEBUG
+
+#ifdef POD_BDRY
 struct bd_str {
 	int nmodes;
 	int multiplicity;
 };
+#endif
 
 template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
 	std::string filename,keyword,linebuff;
@@ -22,6 +28,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	int i;
 
 	/* Initialize base class */
+	/* If restart is not equal to 0, this will load DNS data */
 	BASE::init(input,gin);
 
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
@@ -31,7 +38,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	if (!input.get(nstr.str(),nmodes)) input.getwdefault("nmodes",nmodes,5); 
 	nstr.clear();
 
-	vsi ugstore;
+	vefi ugstore;
 	ugstore.v.reference(BASE::ugbd(0).v);
 	ugstore.e.reference(BASE::ugbd(0).e);
 	ugstore.f.reference(BASE::ugbd(0).f);
@@ -58,6 +65,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	BASE::ugbd(0).f.reference(ugstore.f);
 	BASE::ugbd(0).i.reference(ugstore.i);
 
+#ifdef POD_BDRY
 	pod_fbdry.resize(BASE::nfbd);
 	pod_ebdry.resize(BASE::nebd);
 	/* Count how many boundary modes there are so we can size arrays before initializing boundaries */
@@ -160,15 +168,19 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		}
 	}
 	*BASE::gbl->log << "#There are " << tmodes << " total modes on pod block " << pod_id << std::endl;
-
+	multiplicity.resize(tmodes);
+#else
+	tmodes = nmodes;
+#endif
+	
 	coeffs.resize(tmodes);
 	rsdls.resize(tmodes);
 	rsdls0.resize(tmodes);
 	rsdls_recv.resize(tmodes);
-	multiplicity.resize(tmodes);
 	jacobian.resize(tmodes,tmodes);
-    ipiv.resize(tmodes);
+	ipiv.resize(tmodes);
 
+#ifdef POD_BDRY
 	/* Count total number of boundary modes */
 	/* and make map be an accrual of previous modes */
 	multiplicity = 1.0;
@@ -179,7 +191,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		multiplicity(Range(bindex,bindex+n-1)) = mi->second.multiplicity;
 		bindex += n;
 	}
-
+#endif
 
 	int initfile;
 	input.getwdefault("initfile",initfile,1);
@@ -210,6 +222,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 	bin.close();
 
+#ifdef POD_BDRY
 	/* Let boundary conditions load to and from coeff/rsdls vectors */
 	/* Then initialize them */
 	for (int i=0;i<BASE::nfbd;++i) {
@@ -222,8 +235,9 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i)->bindex = pod_bdry_map[pod_ebdry(i)->pod_id].nmodes;
 		pod_ebdry(i)->init(input);
 	}	
-
-	*BASE::gbl->log << multiplicity << std::endl;
+	
+	// *BASE::gbl->log << multiplicity << std::endl;
+#endif
 
 
 	return;
@@ -247,7 +261,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
-		for(int sm=0;sm<basis::tet(BASE::log2p)->em();++sm)
+		for(int sm=0;sm<basis::tet(BASE::log2p).em;++sm)
 			BASE::hp_ebdry(i)->edirichlet();
 
 	for (int k = 0; k < nmodes; ++k) {
@@ -256,23 +270,23 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 				rsdls(k) += modes(k).v(i,n)*BASE::gbl->res.v(i,n);
 
 		for(int i=0; i<BASE::nseg;++i)
-			for(int em=0;em<basis::tet(BASE::log2p)->em();++em)
+			for(int em=0;em<basis::tet(BASE::log2p).em;++em)
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).e(i,em,n)*BASE::gbl->res.e(i,em,n);
 
 		for(int i=0; i<BASE::ntri;++i)
-			for(int fm=0;fm<basis::tet(BASE::log2p)->fm();++fm)
+			for(int fm=0;fm<basis::tet(BASE::log2p).fm;++fm)
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).f(i,fm,n)*BASE::gbl->res.f(i,fm,n);
 	
 		for(int i=0; i<BASE::ntet;++i)
-			for(int im=0;im<basis::tet(BASE::log2p)->im();++im)
+			for(int im=0;im<basis::tet(BASE::log2p).im;++im)
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
 
 	}
 
-	//stopped here fix me temp
+#ifdef POD_BDRY
 	/* FORM RESIDUALS FOR SIDE MODES */
 	for (int i=0;i<BASE::nfbd;++i)
 		pod_fbdry(i)->rsdl();
@@ -313,7 +327,8 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	for(int i=0;i<BASE::nebd;++i) 
 		pod_ebdry(i)->finalrcv(rsdls_recv);
-
+#endif
+	
 	sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),tmodes,blocks::flt_msg,blocks::sum,pod_id);	
 
 	return;
@@ -351,11 +366,9 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 		/* APPLY DIRCHLET B.C.S TO MODE */
 		for(int i=0;i<BASE::nfbd;++i)
-			for(int em=0;em<basis::tet(BASE::log2p)->em();+em)
-				BASE::hp_ebdry(i)->edirichlet(em);
+				BASE::hp_ebdry(i)->edirichlet();
 		for(int i=0;i<BASE::nfbd;++i)
-			for(int fm=0;fm<basis::tet(BASE::log2p)->fm();++fm)
-				BASE::hp_fbdry(i)->fdirichlet(fm);
+				BASE::hp_fbdry(i)->fdirichlet();
 		
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
 		BASE::ug.e(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.e(Range(0,BASE::nseg-1)) +BASE::gbl->res.e(Range(0,BASE::nseg-1));
@@ -377,12 +390,15 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		BASE::gbl->res.f(Range(0,BASE::ntri-1)) = 0.0;
 		BASE::gbl->res.i(Range(0,BASE::ntet-1)) = 0.0;
 
+#ifdef POD_BDRY
 		for (int bind=0;bind<BASE::nfbd;++bind) {		
 			pod_fbdry(bind)->addto2Dsolution(BASE::gbl->res,modeloop,1.0e-4);
 		}
 		for (int bind=0;bind<BASE::nebd;++bind) {		
 			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,modeloop,1.0e-4);
 		}
+#endif
+		
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nfbd;++i)
 			BASE::hp_fbdry(i)->vdirichlet();//fix me temp
@@ -436,6 +452,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	rsdls0 = rsdls_recv;	
 	rsdls = rsdls_recv;
 
+#ifdef POD_BDRY
 	/* COMMUNICATE POD BDRY CORRECTIONS */
 	for(int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->loadbuff(rsdls);
@@ -451,7 +468,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	for(int i=0;i<BASE::nebd;++i) 
 		pod_ebdry(i)->finalrcv(rsdls);
-
+	
 	rsdls -= rsdls0;  // rsdls is now the correction to apply at the boundaries rsdls = rsdls -rsdls0
 
 	/* Send correction to other blocks */
@@ -460,6 +477,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	/* Problem is that for pod boundaries spanning more than 1 blocks, the correction gets added mulitple times */
 	rsdls_recv /= multiplicity;
 	rsdls_recv += rsdls0;
+#endif
 
 	coeffs -= rsdls_recv;
 
@@ -475,11 +493,13 @@ template<class BASE> void pod_simulate<BASE>::update() {
 		BASE::gbl->res.i(Range(0,BASE::ntet-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntet-1));
 	}
 
+#ifdef POD_BDRY
 	for (int m=nmodes;m<tmodes;++m) {
 		for (int bind=0;bind<BASE::nebd;++bind) {		
 			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,m,rsdls_recv(m));
 		}
 	}
+#endif
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nebd;++i)
@@ -488,10 +508,10 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
 
-	/* APPLY DIRCHLET B.C.S TO MODE */
-	for(int i=0;i<BASE::nebd;++i)
-		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
-			BASE::hp_ebdry(i)->sdirichlet(sm);
+//	/* APPLY DIRCHLET B.C.S TO MODE */  FIXME
+//	for(int i=0;i<BASE::nebd;++i)
+//		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+//			BASE::hp_ebdry(i)->edirichlet(sm);
 
 
 	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
@@ -502,6 +522,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	return;
 }
 
+#ifdef POD_BDRY
 template<class BASE>void pod_simulate<BASE>::sc0load() {
 	for(int i=0;i<BASE::nebd;++i)
 		BASE::ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
@@ -515,7 +536,7 @@ template<class BASE> int pod_simulate<BASE>::sc0wait_rcv() {
 	}
 	return(stop);
 }
-
+#endif
 
 template<class BASE> FLT pod_simulate<BASE>::maxres() {
     int i;
@@ -531,6 +552,7 @@ template<class BASE> FLT pod_simulate<BASE>::maxres() {
     return(mxr);
 }
 
+#ifdef POD_BDRY
 template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
     std::string filename,keyword,linebuff;
     std::ostringstream nstr;
@@ -544,7 +566,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
 		filename = "mode" +nstr.str() +"_" +base.idprefix;
 		nstr.clear();
 		modes(i).v.resize(base.maxseg+1,x.NV);
-		modes(i).s.resize(base.maxseg,x.sm0,x.NV);
+		modes(i).e.resize(base.maxseg,x.em0,x.NV);
 
 		/* INPUT 1D MODE */
 		filename = "mode" +nstr.str() + "_" + base.idprefix +".bin";
@@ -564,9 +586,9 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
 			modes(i).v(base.nseg,n) = bin.readFloat(binio::Double);
 
 		for (int bsind=0;bsind<base.nseg;++bsind) {
-			for (int m=0;m<x.sm0;++m)
+			for (int m=0;m<x.em0;++m)
 				for (int n=0;n<x.NV;++n)
-					modes(i).s(bsind,m,n) = bin.readFloat(binio::Double);
+					modes(i).e(bsind,m,n) = bin.readFloat(binio::Double);
 		}
 		bin.close();
     }
@@ -621,7 +643,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::finalrcv(Array<FLT,1>& sdata)
 	return;
 }
 
-template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tri_hp::vsi ug) {
+template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tet_hp::vefi ug) {
 
 	if (!active) return;
 
@@ -644,7 +666,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tri_hp
 	return;
 }
 
-template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tri_hp::vsi ug, int mode, FLT coeff) {
+template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tet_hp::vefi ug, int mode, FLT coeff) {
 
 	if (!active) return;
 
@@ -699,7 +721,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 
     return;
 }
-
+#endif
 
 
 
