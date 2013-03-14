@@ -586,10 +586,10 @@
 		95DE30A2104C28E500F7FA10 /* POD */ = {
 			isa = PBXGroup;
 			children = (
-				95DE30A7104C294F00F7FA10 /* pod_generate.cpp */,
 				95DE30A8104C294F00F7FA10 /* pod_generate.h */,
-				95DE30A9104C294F00F7FA10 /* pod_simulate.cpp */,
+				95DE30A7104C294F00F7FA10 /* pod_generate.cpp */,
 				95DE30AA104C294F00F7FA10 /* pod_simulate.h */,
+				95DE30A9104C294F00F7FA10 /* pod_simulate.cpp */,
 			);
 			name = POD;
 			sourceTree = "<group>";
