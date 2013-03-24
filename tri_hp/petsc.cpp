@@ -312,8 +312,7 @@ void tri_hp::petsc_update() {
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
 	
-	double resmax;
-	VecNorm(petsc_f, NORM_2, &resmax );
+	VecNorm(petsc_f, NORM_2, &max_residual);
 	
 	PetscGetTime(&time1);
 	err = KSPSolve(ksp,petsc_f,petsc_du);
@@ -324,7 +323,7 @@ void tri_hp::petsc_update() {
 	
 	KSPGetIterationNumber(ksp,&its);
 	PetscGetTime(&time2);
-	*gbl->log << "# iterations " << its << " residual0 " << resmax << " du " << resmax2 << " solve time: " << time2-time1 << " seconds" << endl;
+	*gbl->log << "# iterations " << its << " residual0 " << max_residual << " du " << resmax2 << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	helper->update(-1);
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);

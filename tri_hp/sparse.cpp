@@ -213,6 +213,22 @@ void tri_hp::petsc_rsdl() {
 #define DEBUG_TOL 1.0e-4
 #define WBC
 
+//  Rows with dirichlet boundary conditions will not match.  Sparse Jacobian will have a 1 on diagonal only
+//  Diagonal entry of communication rows will not match because of equality constraint
+//  For test jacobian, unknowns on each side are separately changed but residual is matched
+//  For actual jacobian, variables are individual changed as well and rows are added together so this should agree except
+//  diagonal entry is switched between equations as follows
+//	Shift all entries for this vertex */
+//	for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
+//		FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+//		(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
+//		x.J(row+n,row+n_mpi) += dval;
+//	}
+//	Thus, the diagonal entries will not match
+//  The remote diagonal value will be 0 in the sparse representation
+//  and the sparse local diagonal entry will be the sum of the two entries in the test jacobian (remote & local)
+//	For sides, all of the continuous mode entries are moved over for all degrees of freedom so there may be a lot of non-matching modes
+	
 void tri_hp::test_jacobian() {
 	/*************** TESTING ROUTINE ***********************/
 	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
