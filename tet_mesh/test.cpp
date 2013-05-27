@@ -395,6 +395,7 @@ void tet_mesh::checkintegrity() {
 					if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
 						*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
+						output("error",grid);
 						exit(1);
 					}
 				}
@@ -402,6 +403,7 @@ void tet_mesh::checkintegrity() {
 					if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
 						*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
+						output("error",grid);
 						exit(1);
 					}
 				}
@@ -415,6 +417,7 @@ void tet_mesh::checkintegrity() {
 			if(tri(find).sgn(j) == 1){
 				if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
 					*gbl->log << "seg vertex error type 3 "<< find << ' ' << j << ' ' << sind << endl;
+					output("error",grid);
 					output("error",easymesh);
 					exit(1);
 				}
@@ -422,6 +425,7 @@ void tet_mesh::checkintegrity() {
 			else{
 				if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
 					*gbl->log << "seg vertex error type 4 "<< find << ' ' << j << ' ' << sind << endl;
+					output("error",grid);
 					output("error",easymesh);
 					exit(1);
 				}

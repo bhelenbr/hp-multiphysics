@@ -20,9 +20,9 @@ shift $((OPTIND-1))
 
 echo $1
 
-MESH=$(grep ^[^#]*esh $1 | cut -d: -f 2)
-FTYP=$(grep ^[^#]*iletype $1 | cut -d: -f 2)
-BLKS=$(grep ^[^#]*block $1 | cut -d: -f 2)
+MESH=$(grep ^b0_mesh $1 | cut -d: -f 2)
+FTYP=$(grep ^filetype $1 | cut -d: -f 2)
+BLKS=$(grep ^nblock $1 | cut -d: -f 2)
 echo "Partitioning ${MESH} of type ${FTYP} into ${BLKS} parts"
 
 cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt

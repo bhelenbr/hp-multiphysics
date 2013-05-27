@@ -16,6 +16,8 @@
 #include "MAdLibInterface.h"
 #include "tet_mesh.h"
 
+//#define DEBUG
+
 using namespace MAd;
 
 void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& input) {
@@ -67,6 +69,9 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 				if (pv->pTag()) {
 					vbdry(nvbd) = getnewvrtxobject(pv->tag(),input);
 					vbdry(nvbd)->alloc(4);
+#ifdef DEBUG
+					std::cout << "nvbd " << nvbd << " tag " << pv->tag() << std::endl;
+#endif
 					++nvbd;
 				}
 			}
@@ -77,6 +82,9 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 				if (pe->pTag()) {
 					ebdry(nebd) = getnewedgeobject(pe->tag(),input);
 					ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pe));
+#ifdef DEBUG
+					std::cout << "nebd " << nebd << " tag " << pe->tag() << " faces " << M_numClassifiedEdges(MAdMesh,pe) << std::endl;
+#endif
 					++nebd;
 				}
 			}
@@ -87,6 +95,9 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 				if (pf->pTag()) {
 					fbdry(nfbd) = getnewfaceobject(pf->tag(),input);
 					fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pf));
+#ifdef DEBUG
+					std::cout << "nfbd " << nfbd << " tag " << pf->tag() << " faces " << M_numClassifiedFaces(MAdMesh,pf) << std::endl;
+#endif
 					++nfbd;
 				}
 			}
@@ -302,9 +313,15 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 			for (int i=0;i<mesh->nvbd;++i) {
 				if (gId == mesh->vbdry(i)->idnum) {
 					mesh->vbdry(i)->pnt = mesh->npnt;
-					break;
+#ifdef DEBUG
+					std::cout << "vbdry " << i << " point " << mesh->npnt << std::endl;
+#endif
+					goto vsuccess;
 				}
 			}
+			std::cout << "couldn't find vbdry" << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+			vsuccess:;
 		}
 
 		// get coordinates
@@ -338,9 +355,12 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 			for (int i=0;i<mesh->nebd;++i) {
 				if (gId == mesh->ebdry(i)->idnum) {
 					mesh->ebdry(i)->seg(mesh->ebdry(i)->nseg++).gindx = mesh->nseg;
-					break;
+					goto esuccess;
 				}
 			}
+			std::cout << "couldn't find ebdry" << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+			esuccess:;
 		}		
 
 		
@@ -373,9 +393,12 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 			for (int i=0;i<mesh->nfbd;++i) {
 				if (gId == mesh->fbdry(i)->idnum) {
 					mesh->fbdry(i)->tri(mesh->fbdry(i)->ntri++).gindx = mesh->ntri;
-					break;
+					goto fsuccess;
 				}
 			}
+			std::cout << "couldn't find fbdry" << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+			fsuccess:;
 		}
 	
 		// get list of node id's in the solver mesh
@@ -402,7 +425,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 		int gDim = GEN_type(pge);
 		int gId = GEN_tag(pge);
 		
-		if (gDim == 2) {
+		if (gDim <= 2) {
 			cout << "why is this here" << endl;
 			// Edge Boundary */
 			for (int i=0;i<mesh->nfbd;++i) {

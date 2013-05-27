@@ -66,17 +66,29 @@ void tet_mesh::reorient_tets(bool usevinfo){
 		rnz = (pnts(v(1))(0)-pnts(v(0))(0))*(pnts(v(2))(1)-pnts(v(0))(1))-(pnts(v(2))(0)-pnts(v(0))(0))*(pnts(v(1))(1)-pnts(v(0))(1));
 		volume=-rnx*(pnts(v(3))(0)-pnts(v(0))(0))-rny*(pnts(v(3))(1)-pnts(v(0))(1))-rnz*(pnts(v(3))(2)-pnts(v(0))(2));
 		
+		/* Find largest dimension */
+		FLT dx = 0.0;
+		for (int i=1;i<4;++i)	{
+			for (int n=0;n<ND;++n) {
+				dx += fabs(pnts(v(i))(n)-pnts(v(0))(n));
+			}
+		}
+		FLT volL1 = dx*dx*dx;
+				
 		/* if negative flip vertex */
-		if(volume < 0.0){
+		if(volume < -EPSILON*volL1){
 			temp = v(2);
 			v(2) = v(3);
 			v(3) = temp;
 		}
+		else if (volume < EPSILON*volL1) {
+			std::cout << "tet " << tind << " has a zero volume " << volume << ' ' << volL1 << std::endl;
+			exit(1);
+		}
 		tet(tind).pnt = v;
 		
 		/* calculates volume */
-		tet(tind).vol=fabs(volume);            
-			
+		tet(tind).vol=fabs(volume);
 	}
 
 	return;
@@ -358,10 +370,11 @@ void tet_mesh::match_tet_and_tri(void) {
 	TinyMatrix<int,4,3> vf;
 	TinyVector<int,3> v,a;
 
-	vf(0,0)=1, vf(0,2)=2, vf(0,1)=3;
-	vf(1,0)=0, vf(1,2)=3, vf(1,1)=2;
-	vf(2,0)=0, vf(2,2)=1, vf(2,1)=3;
-	vf(3,0)=0, vf(3,2)=2, vf(3,1)=1;  
+	/* Indices of vertices for each face */
+	vf(0,0)=1, vf(0,1)=3, vf(0,2)=2; 
+	vf(1,0)=0, vf(1,1)=2, vf(1,2)=3; 
+	vf(2,0)=0, vf(2,1)=3, vf(2,2)=1; 
+	vf(3,0)=0, vf(3,1)=1, vf(3,2)=2;   
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
@@ -376,7 +389,9 @@ void tet_mesh::match_tet_and_tri(void) {
 			tet(tind).tri(i) = -1;
 		}
 	}
-		
+	
+	/* Make pnt(minv).info be index to tri */
+	/* and tri(find).info be index of next tri connected to minv */
 	for(int j = 0; j < ntri; ++j){
 		v(0) = tri(j).pnt(0);
 		v(1) = tri(j).pnt(1);
@@ -389,17 +404,18 @@ void tet_mesh::match_tet_and_tri(void) {
 		}
 		
 		find = pnt(minv).info;
-		while(find >= 0){
-			findprev = find;
-			find = tri(find).info;        
-		}
-		if(pnt(minv).info < 0)
+		if(find < 0) {
 			pnt(minv).info = j;
-		else
+		}
+		else {
+			do {
+				findprev = find;
+				find = tri(findprev).info;
+			} while(find >= 0);
 			tri(findprev).info = j;
+		}
 		tri(j).info = -1;    
 	}
-
 	
 	for(tind = 0; tind < ntet; ++tind){
 		for(i = 0; i < 4; ++i){
@@ -447,7 +463,7 @@ void tet_mesh::match_tet_and_tri(void) {
 					tet(tind).tri(i) = find;
 					goto NEXTFACE;
 				}            
-				find=tri(find).info;            
+				find=tri(find).info;
 			}
 			*gbl->log << "Error matching tet and tri\n";
 			exit(1);	
@@ -482,13 +498,14 @@ void tet_mesh::match_tri_and_seg(void){
 			cout << " uh oh negative tet index " << endl;
 			exit(3);
 		}
+		
+		if(tind >= ntet){
+			cout << " big error in match_tri_and_seg too many tets " << endl;
+			exit(4);
+		}
 			
 		int findtri = -1;
 		for(i = 0; i < 4; ++i){
-			if(tind >= ntet){
-				cout << " big error in match_tri_and_seg too many tets " << endl;
-				exit(4);
-			}
 			if(tet(tind).tri(i) == -1){
 				cout << " big error in match_tri_and_seg ahh tet.tri = -1 " << endl;
 				exit(5);
@@ -502,6 +519,7 @@ void tet_mesh::match_tri_and_seg(void){
 		for(i = 0; i < 3; ++i){
 			tri(find).seg(i)=tet(tind).seg(sf(findtri,i));    // 3 edges on a face
 		}
+
 		
 		v=tri(find).pnt;
 		for(int i = 0; i < 3; ++i){
@@ -514,6 +532,23 @@ void tet_mesh::match_tri_and_seg(void){
 			else{
 				output("error",easymesh);
 				cout << "Error matching seg and tri: " << i << ' ' << find << ' ' << ' ' << tind << ' ' << findtri << endl;
+				std::cout << findtri << tet(tind).rot(findtri) << std::endl;
+				cout << "Error matching seg and tri: " << find << ' ' << ' ' << tind << ' ' << findtri << endl;
+				cout << "tri(find).seg " << tri(find).seg << std::endl;
+				cout << "tri(find).pnt " << tri(find).pnt << std::endl;
+				
+				cout << "tet(tind).pnt " << tet(tind).pnt << std::endl;
+				cout << "tet(tind).seg " << tet(tind).seg << std::endl;
+				cout << "tet(tind).sgn " << tet(tind).sgn << std::endl;
+				cout << "tet(tind).tri " << tet(tind).tri << std::endl;
+				cout << "tet(tind).rot " << tet(tind).rot << std::endl;
+				
+				for (int i=0;i<6;++i) {
+					cout << "seg(tet(tind).seg(i)).pnt " << seg(tet(tind).seg(i)).pnt << std::endl;
+				}
+				for (int j=0;j<3;++j) {
+					cout << pnts(v(j)) << std::endl;
+				}
 				exit(1);
 			}
 		}

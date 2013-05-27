@@ -205,7 +205,8 @@ void face_bdry::create_seg_from_tri(void) {
 						*x.gbl->log << "Error: side " << sind << " has been matched with Triangle " << tind << " 3 times" << std::endl;  
 						*x.gbl->log << "tets "<< x.tri(tri(tind).gindx).tet(0) << ' ' << x.tri(tri(tind).gindx).tet(1)<< " pnts "<< x.pnts(x.tri(tri(tind).gindx).pnt(0)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(1)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(2))<<std::endl;  
 
-						x.output("error");
+						x.output("error",tet_mesh::easymesh);
+						x.output("error",tet_mesh::grid);
 						exit(1);
 					}
 					else {
