@@ -935,7 +935,7 @@ void block::init(input_map &input) {
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
-	input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
+	input.getwdefault("preconditioner_interval",prcndtn_intrvl,1);
 
 	input.getwdefault("vwcycle",vw,1);
 	if (vw < 1) {
@@ -1021,7 +1021,7 @@ void block::init(input_map &input) {
 
 
 
-void block::cycle(int vw, int lvl) {
+void block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 	int vcount,extra_count = 0;
 	int gridlevel,gridlevelp;
 	FLT error,maxerror = 0.0;
@@ -1033,7 +1033,7 @@ void block::cycle(int vw, int lvl) {
 
 	for (vcount=0;vcount<vw;++vcount) {
 
-		if (!(vcount%abs(prcndtn_intrvl)) && itercrsn) grd(gridlevel)->setup_preconditioner();
+		if (evaluate_preconditioner) grd(gridlevel)->setup_preconditioner();
 
 		for(int iter=0;iter<itercrsn;++iter)
 			grd(gridlevel)->update();
@@ -1065,11 +1065,11 @@ void block::cycle(int vw, int lvl) {
 
 		grd(gridlevelp)->mg_restrict();
 
-		cycle(vw, lvl+1);
+		cycle(vw, lvl+1, evaluate_preconditioner);
 
 		grd(gridlevelp)->mg_prolongate();
 
-		if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) grd(gridlevel)->setup_preconditioner();
+		if (evaluate_preconditioner && iterrfne) grd(gridlevel)->setup_preconditioner();
 
 		for(int iter=0;iter<iterrfne;++iter)
 			grd(gridlevel)->update();
@@ -1100,7 +1100,7 @@ void block::go(input_map input) {
 
 			maxerror = 0.0;
 			for(i=0;i<ncycle;++i) {
-				cycle(vw);
+				cycle(vw,0,!(i%prcndtn_intrvl));
 				*gbl->log << i << ' ';
 				error = maxres();
 				maxerror = MAX(error,maxerror);
@@ -1245,9 +1245,10 @@ void block::tadvance() {
 		}
 		gbl->dti_prev = gbl->dti;
 	}
-
+	else {
+		gbl->time = gbl->tstep;
+	}
 #else
-	gbl->time = gbl->tstep;
 	gbl->adirk(0,0) = 1.0;
 	gbl->cdirk(0) = 1.0;
 	gbl->esdirk = false;
@@ -1255,6 +1256,9 @@ void block::tadvance() {
 	if (gbl->dti > 0.0) {
 		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
 		gbl->dti_prev = gbl->dti;
+	}
+	else {
+		gbl->time = gbl->tstep;
 	}
 #endif
 #endif
