@@ -319,7 +319,6 @@
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				07F2E95000974D3D80990B20 /* tri_mesh.h */,
-				07F2E94600974D3D80990B20 /* input.cpp */,
 				07F2E94800974D3D80990B20 /* output.cpp */,
 				F5BE6B500162B73801000001 /* copy.cpp */,
 				07F2E94700974D3D80990B20 /* setup.cpp */,
@@ -365,10 +364,11 @@
 		6FFD05E20CC3D97F001CE474 /* block */ = {
 			isa = PBXGroup;
 			children = (
+				07F2E94600974D3D80990B20 /* input.cpp */,
 				F5C9C262032CCEAF01990B69 /* block.h */,
+				F53FC7D10343C82E01E186A8 /* blocks.cpp */,
 				07F2E94E00974D3D80990B20 /* blocks.h */,
 				F528820602B1545D012A8EDA /* boundary.h */,
-				F53FC7D10343C82E01E186A8 /* blocks.cpp */,
 				6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */,
 			);
 			name = block;
