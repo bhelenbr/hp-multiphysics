@@ -247,11 +247,9 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	BASE::rsdl(stage);
 
-	rsdls = 0.0;  // Need to do this, because not every block will touch every rsdl
-
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nfbd;++i)
-		BASE::hp_fbdry(i)->vdirichlet();//which one to use? fix me temp
+		BASE::hp_fbdry(i)->vdirichlet();
 	
 	for(int i=0;i<BASE::nebd;++i)
 		BASE::hp_ebdry(i)->vdirichlet();
@@ -259,11 +257,18 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
 
-	/* APPLY DIRCHLET B.C.S TO MODE */
+	/* APPLY DIRCHLET B.C.S TO EDGE MODES */
 	for(int i=0;i<BASE::nebd;++i)
-		for(int sm=0;sm<basis::tet(BASE::log2p).em;++sm)
-			BASE::hp_ebdry(i)->edirichlet();
+		BASE::hp_ebdry(i)->edirichlet();
+	
+	for(int i=0;i<BASE::nfbd;++i)
+		BASE::hp_fbdry(i)->edirichlet();
+	
+	/* APPLY DIRICHLET B.C'S TO FACE MODES */
+	for(int i=0;i<BASE::nfbd;++i)
+		BASE::hp_fbdry(i)->fdirichlet();
 
+	rsdls = 0.0;  // Need to do this, because not every block will touch every rsdl
 	for (int k = 0; k < nmodes; ++k) {
 		for(int i=0; i<BASE::npnt;++i)
 			for(int n=0;n<BASE::NV;++n)
@@ -356,19 +361,24 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nfbd;++i)
-			BASE::hp_fbdry(i)->vdirichlet();//vdirichlet2d? fix me temp
+			BASE::hp_fbdry(i)->vdirichlet();
 		
 		for(int i=0;i<BASE::nebd;++i)
 			BASE::hp_ebdry(i)->vdirichlet();
-
+		
 		for(int i=0;i<BASE::nvbd;++i)
 			BASE::hp_vbdry(i)->vdirichlet2d();
-
-		/* APPLY DIRCHLET B.C.S TO MODE */
+		
+		/* APPLY DIRCHLET B.C.S TO EDGE MODES */
+		for(int i=0;i<BASE::nebd;++i)
+			BASE::hp_ebdry(i)->edirichlet();
+		
 		for(int i=0;i<BASE::nfbd;++i)
-				BASE::hp_ebdry(i)->edirichlet();
+			BASE::hp_fbdry(i)->edirichlet();
+		
+		/* APPLY DIRICHLET B.C'S TO FACE MODES */
 		for(int i=0;i<BASE::nfbd;++i)
-				BASE::hp_fbdry(i)->fdirichlet();
+			BASE::hp_fbdry(i)->fdirichlet();
 		
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
 		BASE::ug.e(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.e(Range(0,BASE::nseg-1)) +BASE::gbl->res.e(Range(0,BASE::nseg-1));
@@ -401,13 +411,24 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nfbd;++i)
-			BASE::hp_fbdry(i)->vdirichlet();//fix me temp
-
+			BASE::hp_fbdry(i)->vdirichlet();
+		
 		for(int i=0;i<BASE::nebd;++i)
 			BASE::hp_ebdry(i)->vdirichlet();
-
+		
 		for(int i=0;i<BASE::nvbd;++i)
 			BASE::hp_vbdry(i)->vdirichlet2d();
+		
+		/* APPLY DIRCHLET B.C.S TO EDGE MODES */
+		for(int i=0;i<BASE::nebd;++i)
+			BASE::hp_ebdry(i)->edirichlet();
+		
+		for(int i=0;i<BASE::nfbd;++i)
+			BASE::hp_fbdry(i)->edirichlet();
+		
+		/* APPLY DIRICHLET B.C'S TO FACE MODES */
+		for(int i=0;i<BASE::nfbd;++i)
+			BASE::hp_fbdry(i)->fdirichlet();
 
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
 		BASE::ug.e(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.e(Range(0,BASE::nseg-1)) +BASE::gbl->res.e(Range(0,BASE::nseg-1));
@@ -478,9 +499,9 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	rsdls_recv /= multiplicity;
 	rsdls_recv += rsdls0;
 #endif
-
+	
 	coeffs -= rsdls_recv;
-
+	
 	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
 	BASE::gbl->res.e(Range(0,BASE::nseg-1)) = 0.0;
 	BASE::gbl->res.f(Range(0,BASE::ntri-1)) = 0.0;
@@ -500,19 +521,27 @@ template<class BASE> void pod_simulate<BASE>::update() {
 		}
 	}
 #endif
-
+	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<BASE::nfbd;++i)
+		BASE::hp_fbdry(i)->vdirichlet();
+	
 	for(int i=0;i<BASE::nebd;++i)
 		BASE::hp_ebdry(i)->vdirichlet();
-
+	
 	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
-
-//	/* APPLY DIRCHLET B.C.S TO MODE */  FIXME
-//	for(int i=0;i<BASE::nebd;++i)
-//		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
-//			BASE::hp_ebdry(i)->edirichlet(sm);
-
+	
+	/* APPLY DIRCHLET B.C.S TO EDGE MODES */
+	for(int i=0;i<BASE::nebd;++i)
+		BASE::hp_ebdry(i)->edirichlet();
+	
+	for(int i=0;i<BASE::nfbd;++i)
+		BASE::hp_fbdry(i)->edirichlet();
+	
+	/* APPLY DIRICHLET B.C'S TO FACE MODES */
+	for(int i=0;i<BASE::nfbd;++i)
+		BASE::hp_fbdry(i)->fdirichlet();
 
 	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
 	BASE::ug.e(Range(0,BASE::nseg-1)) -= BASE::gbl->res.e(Range(0,BASE::nseg-1));

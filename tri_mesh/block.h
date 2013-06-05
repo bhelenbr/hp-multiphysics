@@ -177,7 +177,7 @@ class block {
 		void iterate(int mglvl, int niter);
 
 		/** Multigrid cycle */
-		void cycle(int vw, int lvl = 0);
+		void cycle(int vw, int lvl = 0, bool evaluate_preconditioner=true);
 		FLT maxres(int lvl = 0);
 
 		/** Mesh adaptation routines */
