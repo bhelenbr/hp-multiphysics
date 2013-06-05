@@ -1,8 +1,28 @@
 #!/bin/bash
 
-MESH=$(grep ^[^#]*esh $1 | cut -d: -f 2)
-FTYP=$(grep ^[^#]*iletype $1 | cut -d: -f 2)
-BLKS=$(grep ^[^#]*block $1 | cut -d: -f 2)
+while getopts ":pt" opt; do
+	case $opt in
+		p)
+			 echo "physical partitions"
+			 PHYSICAL="TRUE"
+       ;;
+		t)
+       echo "threaded"
+			 THREADED="TRUE"
+       ;;
+		\?)
+       echo 'usage: partition.bash -[p,t] <filename.inpt>'
+			 exit 1
+			 ;;
+	esac
+done
+shift $((OPTIND-1))
+
+echo $1
+
+MESH=$(grep ^b0_mesh $1 | cut -d: -f 2)
+FTYP=$(grep ^filetype $1 | cut -d: -f 2)
+BLKS=$(grep ^nblock $1 | cut -d: -f 2)
 echo "Partitioning ${MESH} of type ${FTYP} into ${BLKS} parts"
 
 cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt
@@ -12,13 +32,20 @@ cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt
 #echo -n "text "
 
 echo "filetype: 3" >> partition.inpt
-echo -n "nblock: " >> partition.inpt
-let p=0
-while [ $p -lt $BLKS ]; do
-	echo -n "1 " >> partition.inpt
-	let p=$p+1
-done
-echo "" >> partition.inpt
+if [ -n "${THREADED}" ]; then
+# Keep number of blocks the same
+	echo "nblock: ${BLKS}" >> partition.inpt
+else
+# Put 1 block per processor
+	echo -n "nblock: " >> partition.inpt
+	let p=0
+	while [ $p -lt $BLKS ]; do
+		echo -n "1 " >> partition.inpt
+		let p=$p+1
+	done
+	echo "" >> partition.inpt
+fi
+
 
 let p=1
 while [ $p -lt $BLKS ]; do
