@@ -5,6 +5,22 @@
 
 //#define DEBUG
 
+
+// WITH MELT1 DISABLED
+// res(0) = dirichlet
+// res(1) = dirichlet
+// res(2) = heat equation plus source term
+// surfres(0) = tangent equation
+// surfres(1) = 0.0
+
+// WITH MELT1 ENABLED
+// res(0) = dirichlet
+// res(1) = dirichlet
+// res(2) = 0.0
+// surfres(0) = tangent equation
+// surfres(1) = normal heat equation
+
+
 using namespace bdry_buoyancy;
 
 void melt::init(input_map& inmap,void* gbl_in) {
@@ -192,7 +208,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		amv(1) += x.gbl->mesh_ref_vel(1);
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
+		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
 		/* Heat Flux Upwinded NO!!! */
 		// res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);

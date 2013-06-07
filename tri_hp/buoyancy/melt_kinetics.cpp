@@ -100,12 +100,18 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* Kinetic equation for surface temperature */
 		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);  // -gbl->K_gt*kappa?;
 		/* Latent Heat source term and additional heat flux */
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i)/x.gbl->rho;
+		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
+		
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY TEMPO */
+//		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+
 	}
 	lf = 0.0;
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2)(0),&res(3,0)); // heat flux
+//	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2)(0),&res(4,0)); // surface energy balance upwinded  TEMPO
+
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
 #ifdef petsc
@@ -864,8 +870,7 @@ void melt_kinetics::setup_preconditioner() {
 void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	melt::output(fout,typ,tlvl);
 	
-	TinyVector<FLT,tri_mesh::ND> norm, rp, aloc;
-	Array<FLT,1> ubar(x.NV);
+	TinyVector<FLT,tri_mesh::ND> norm, aloc;
 	FLT jcb;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
@@ -897,28 +902,8 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					norm(1) = -dcrd(0,i);
 					jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 					s += basis::tri(x.log2p)->wtx(i)*jcb;
-					
-					/* RELATIVE VELOCITY STORED IN MVEL(N)*/
-					for(int n=0;n<tri_mesh::ND;++n) {
-						mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
-#ifdef MESH_REF_VEL
-						mvel(n,i) -= x.gbl->mesh_ref_vel(n);
-#endif
-					}
-					
-					Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
-					for(int n=0;n<x.NV;++n)
-						au(n) = u(n)(i);
+					FLT sint = (-gbl->facetdir(0)*norm(1) +gbl->facetdir(1)*norm(0))/jcb;
 					aloc(0) = crd(0,i); aloc(1) = crd(1,i);
-					
-					amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
-#ifdef MESH_REF_VEL
-					amv(0) += x.gbl->mesh_ref_vel(0);
-					amv(1) += x.gbl->mesh_ref_vel(1);
-#endif
-					anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-					
-					FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
 					FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
 					FLT K = calculate_kinetic_coefficients(DT,sint);
 
@@ -945,7 +930,15 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	//  K2Dn and Ksn are ratios relative to Krough
 	// FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
 	FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
-
+	
+	
+	if (sint == 0.0) {
+		K = gbl->Krough*K2Dn_exp;
+	}
+	else {
+		K = gbl->Krough*(1. + 2.*gbl->Ksn/(-sint+fabs(sint) +EPSILON));
+	}
+		
 	return(K);
 }
 
