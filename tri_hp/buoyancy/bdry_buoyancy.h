@@ -196,6 +196,9 @@ namespace bdry_buoyancy {
 			void init(input_map& input,void* gbl_in);
 			FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
+#ifdef MELT1
+			void element_jacobian(int indx, Array<FLT,2>& K);  // rearranges jacobian to match non-MELT1 case
+#endif
 			void vdirichlet();
 			void minvrt();
 			void update(int stage);

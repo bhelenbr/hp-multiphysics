@@ -11,7 +11,7 @@
 // res(1) = dirichlet
 // res(2) = heat equation plus source term
 // surfres(0) = tangent equation
-// surfres(1) = 0.0
+// surfres(1) = kinetics
 
 // WITH MELT1 ENABLED
 // res(0) = dirichlet
@@ -19,6 +19,7 @@
 // res(2) = 0.0
 // surfres(0) = tangent equation
 // surfres(1) = normal heat equation
+// surfres(2) = kinetics
 
 
 using namespace bdry_buoyancy;
@@ -810,18 +811,24 @@ void melt::maxres() {
 
 void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();
-	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND),lf(x.NV+tri_mesh::ND);
+	
+#ifdef MELT1
+	const int nvert = 3;
+	const int eqs = x.NV+neq;
+#else
+	const int nvert = 2;
+	const int eqs = x.NV+tri_mesh::ND;
+#endif
+	
+	Array<TinyVector<FLT,MXTM>,1> Rbar(eqs),lf(eqs);
+
 #ifdef BZ_DEBUG
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 #endif
 	
-#ifdef MELT1
-	const int nvert = 3;
-#else
-	const int nvert = 2;
-#endif
+
 	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
@@ -853,7 +860,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+				for(int n=0;n<eqs;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 			
 			++kcol;
@@ -871,7 +878,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+				for(int n=0;n<eqs;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 			
 			++kcol;
@@ -898,7 +905,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+				for(int n=0;n<eqs;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
 			
 			++kcol;
@@ -915,7 +922,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+				for(int n=0;n<eqs;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dx;
 			
 			++kcol;
@@ -1020,7 +1027,7 @@ void melt::petsc_jacobian() {
 #else
 	const int im = basis::tri(x.log2p)->im();	
 	const int tm = basis::tri(x.log2p)->tm();	
-	Array<FLT,2> K(vdofs*(sm+2),tm*x.NV +(3+sm)*x.ND);
+	Array<FLT,2> K((x.NV+neq)*(sm+2),tm*x.NV +(3+sm)*x.ND);
 	Array<int,1> col_index(tm*x.NV +(3+sm)*x.ND);
 #endif
 	Array<FLT,1> row_store(vdofs*(sm+2));
@@ -1134,8 +1141,13 @@ void melt::petsc_jacobian() {
 #ifdef MY_SPARSE
 			x.J.add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
 #else
+#ifdef MELT1
+			if (neq == 3) {
+				std::cerr << "This won't work -- FIXME stride of Ke is wrong" << std::endl;
+			}
+#endif
 			MatSetValuesLocal(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
-#endif		
+#endif
 		}
 	}
 	
@@ -1200,12 +1212,12 @@ void melt::petsc_jacobian() {
 		int ind = 0;
 		for(int mode = 0; mode < 2; ++mode) {
 			int gindx = vdofs*x.seg(sind).pnt(mode);
-			loc_to_glo(ind++) = gindx;   // u
-			loc_to_glo(ind++) = gindx+1; // v
-			loc_to_glo(ind++) = gindx+5; // y
-			loc_to_glo(ind++) = gindx+3; // p 
-			loc_to_glo(ind++) = gindx+4; // x
-			loc_to_glo(ind++) = gindx+2; // T
+			loc_to_glo(ind++) = gindx;   // u -> u
+			loc_to_glo(ind++) = gindx+1; // v -> v
+			loc_to_glo(ind++) = gindx+5; // T -> y  Nothing goes here
+			loc_to_glo(ind++) = gindx+3; // p -> p
+			loc_to_glo(ind++) = gindx+4; // x -> x
+			loc_to_glo(ind++) = gindx+2; // y -> T  Normal equation goes to T spot
 		}
 		
 		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;

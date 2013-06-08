@@ -34,14 +34,10 @@ void melt_kinetics::init(input_map& inmap,void* gbl_in) {
 	gbl->vdt_kinetic.resize(base.maxseg+1);
 	gbl->sdt_kinetic.resize(base.maxseg);
 	
-#ifdef MELT1
-	*x.gbl->log << "Can't use kinetic stuff with MELT1 defined" << std::endl;
-	sim::abort(__LINE__,__FILE__,x.gbl->log);
-#endif
-	
 	return;
 }
 
+#ifndef MELT1
 void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp, aloc;
@@ -122,10 +118,119 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 								
 	return;
 }
+#else
+void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
+	int i,n,sind,seg,tind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp, aloc;
+	Array<FLT,1> ubar(x.NV);
+	FLT jcb;
+	//Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	FLT qdotn;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,8,MXGP> res;
+	FLT lkcond = x.gbl->kcond;
+	
+	sind = base.seg(indx);
+	tind = x.seg(sind).tri(0);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	for(seg=0;seg<3;++seg)
+		if (x.tri(tind).seg(seg) == sind) break;
+	assert(seg != 3);
+	
+	x.crdtocht(tind);
+	for(int m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
+		for(n=0;n<tri_mesh::ND;++n)
+			x.cht(n,m) = 0.0;
+	
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+	
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+	
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+		norm(0) = x.dcrd(1,0)(0,i);
+		norm(1) = -x.dcrd(0,0)(0,i);
+		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+		
+		for(n=0;n<tri_mesh::ND;++n) {
+			mvel(n,i) = x.u(n)(0,i) -x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,indx)(n,i));
+#ifdef MESH_REF_VEL
+			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+#endif
+		}
+		
+		/* HEAT FLUX*/
+		/* WITH NORMAL POINTING OUTWARD */
+		x.cjcb(0,i) = lkcond*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+		qdotn = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,0)(0,i);
+		qdotn += x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i))*x.du(2,1)(0,i);
+		
+		/* TANGENTIAL SPACING */
+		res(0,i) = -ksprg(indx)*jcb;
+		/* NORMAL FLUX */
+		res(1,i) = RAD(x.crd(0)(0,i))*x.gbl->rho*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		/* Heat Flux */
+		Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+		for(n=0;n<x.NV;++n)
+			au(n) = x.u(n)(0,i);
+		axpt(0) = x.crd(0)(0,i); axpt(1) = x.crd(1)(0,i);
+		aloc(0) = axpt(0) ; aloc(1) = axpt(1);
+		amv(0) = (x.gbl->bd(0)*(x.crd(0)(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(x.crd(1)(0,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+		amv(0) += x.gbl->mesh_ref_vel(0);
+		amv(1) += x.gbl->mesh_ref_vel(1);
+#endif
+		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
+		res(3,i) = RAD(x.crd(0)(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
+		/* Heat Flux Upwinded? */
+		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+
+		/* This is from Weinstein's expression */
+		FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
+		FLT DT = ibc->f(2, aloc, x.gbl->time) -x.u(2)(0,i);
+		FLT K = calculate_kinetic_coefficients(DT,sint);
+		
+		/* Kinetic equation for surface temperature */
+		res(5,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);  // -gbl->K_gt*kappa?;
+
+	}
+	lf = 0.0;
+	
+	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
+	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1)(0),&res(2,0)); // mass flux upwinded
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(3,0)); // surface energy balance
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(4,0)); // surface energy balance upwinded
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(5,0)); // kinetic equation
+	
+	return;
+}
+
+void melt_kinetics::element_jacobian(int indx, Array<FLT,2>& K) {
+	melt::element_jacobian(indx, K);
+	
+	/* Move kinetics equations to temperature slots */
+	const int eqs = x.NV+neq;
+	int sm = basis::tri(x.log2p)->sm();
+
+	int krow = 0;
+	for(int k=0;k<sm+2;++k) {
+			K(krow+x.NV-2,Range::all()) = K(krow+x.NV+2,Range::all());
+			krow += eqs;
+	}
+}
+#endif
+
 	
 void melt_kinetics::vdirichlet() {
 	int i,sind,v0;
 	
+#ifndef MELT1
 	/* Put kinetic equation into slot 2 because heat equation is going into slot 1 */
 	/* Do it this way to make it easier to calculate jacobian for petsc*/
 #ifdef petsc
@@ -136,6 +241,7 @@ void melt_kinetics::vdirichlet() {
 		}
 	}
 	gbl->vres(base.nseg)(2) = gbl->vres(base.nseg)(1);
+#endif
 #endif
 	
 	melt::vdirichlet();
