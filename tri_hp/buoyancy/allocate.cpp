@@ -29,6 +29,8 @@ void tri_hp_buoyancy::init(input_map& input, void *gin) {
 		*gbl->log << "couldn't find rho_vs_T equation for density" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
+	
+	if (!input.get(gbl->idprefix + "_energy_scaling",gbl->adapt_energy_scaling)) input.getwdefault("energy_scaling",gbl->adapt_energy_scaling,1.0);
 
 
 	return;

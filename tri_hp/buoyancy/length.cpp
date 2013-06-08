@@ -101,6 +101,22 @@ void tri_hp_buoyancy::error_estimator() {
 				denergy = rhol*(gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
 				denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
+				
+				/* INVISCID PARTS TO ERROR MEASURE */
+				energy = rho*0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);
+				/* VISCOUS PART TO ERROR MEASURE */
+				energy += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+				/* Energy part */
+				energy *= gbl->adapt_energy_scaling; 
+				energy += rho*gbl->cp*u(2)(i,j);
+				
+				/* low order same stuff */
+				denergy = rhol*0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
+				denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+				denergy *= gbl->adapt_energy_scaling;
+				denergy += rhol*gbl->cp*ul(2)(i,j);
+				
+				
 				denergy -= energy;
 				
 				error2 += denergy*denergy*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);

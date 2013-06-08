@@ -19,8 +19,10 @@ class tri_hp_buoyancy : public tri_hp_ins {
 		struct global : public tri_hp_ins::global {
 
 			/* PHYSICAL CONSTANTS */
+			FLT adapt_energy_scaling;
 			FLT kcond,cp;
 			symbolic_function<1> rho_vs_T;
+			
 
 		} *gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
