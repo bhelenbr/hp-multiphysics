@@ -38,13 +38,6 @@ void solid_fluid::init(input_map& inmap,void* gbl_in) {
 	}
 	
 	symbolic::init(inmap,gbl_in);
-	
-	/* Now that we have loaded flux, make pressure neumann */
-	essential_indices.clear();
-	for(int n=0;n<x.ND;++n)
-		essential_indices.push_back(n);
-	type(Range(0,x.ND-1)) = essential;
-	type(Range(x.ND,x.NV-1)) = natural;
 		
 	return;
 }
