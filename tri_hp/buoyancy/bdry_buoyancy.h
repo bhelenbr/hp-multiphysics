@@ -24,26 +24,38 @@ using namespace blitz;
 namespace bdry_buoyancy {
 	
 	class solid_fluid : public symbolic {
-		solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
-			mytype = "solid_fluid";
-		}
-		solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
-		solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-		
-		/* For matching with solid phase */
-		void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,x.ND,x.ND,vrtstride*x.NV);}
-		void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,x.ND,x.ND, x.NV*vrtstride);}
-		void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
-		void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
+		public:
+			solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
+				mytype = "solid_fluid";
+			}
+			solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
+			solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in);
+			
+	#ifdef petsc
+			void petsc_matchjacobian_snd();
+			void petsc_matchjacobian_rcv(int phase);
+			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+	#endif
+			
+			/* For matching with solid phase */
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,x.ND,x.ND,vrtstride*x.NV);}
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,x.ND,x.ND, x.NV*vrtstride);}
+			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride);
+			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 		
 	};
 	
 	class surface : public bdry_ins::surface {
-		Array<vector_function,1> fluxes;
-		symbolic_function<1> sigma_vs_T;
-		
+		protected:
+			Array<vector_function,1> fluxes;
+			symbolic_function<1> sigma_vs_T;
+			
 		public:
-			surface(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {mytype = "surface"; fluxes.resize(x.NV);
+			surface(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {
+				mytype = "surface";
+				fluxes.resize(x.NV);
 				Array<string,1> names(4);
 				Array<int,1> dims(4);
 				dims = x.ND;
@@ -59,11 +71,11 @@ namespace bdry_buoyancy {
 			surface(const surface& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), fluxes(inbdry.fluxes) {}
 			surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
-			void init(input_map& input,void* gbl_in); 
+			void init(input_map& input,void* gbl_in);
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
-		
-	class melt : public symbolic {	
+	
+	class melt : public symbolic {
 		protected:
 			tri_hp_buoyancy &x;
 			int neq;

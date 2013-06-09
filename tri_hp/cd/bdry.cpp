@@ -848,7 +848,11 @@ void melt::petsc_jacobian() {
 #endif
 }
 
-void melt::petsc_matchjacobian_snd() {	
+void melt::petsc_matchjacobian_snd() {
+	// I think this does exactly the same thing, but haven't tested
+	// hp_edge_bdry::petsc_matchjacobian_snd();
+	// base.fsndbuf(base.sndsize()++) = jacobian_start;
+	
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
 		vdofs = x.NV;
