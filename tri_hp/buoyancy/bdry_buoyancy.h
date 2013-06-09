@@ -221,31 +221,6 @@ namespace bdry_buoyancy {
 #endif
 	};
 	
-
-	class kellerman : public melt {
-		public:
-			kellerman(tri_hp_buoyancy &xin, edge_bdry &bin) : melt(xin,bin) {
-				mytype = "kellerman";
-			}
-			kellerman(const kellerman& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) {
-				gbl = inbdry.gbl;
-				ksprg.resize(base.maxseg);
-				vug_frst.resize(base.maxseg+1);
-				vdres.resize(1,base.maxseg+1);
-				fine = &inbdry;
-			}
-			kellerman* create(tri_hp& xin, edge_bdry &bin) const {return new kellerman(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
-
-			/* SET T TO NOT BE DIRICHLET */
-			void init(input_map& input,void* gbl_in);
-			/* STOP THE MOVEMENT OF THE HEAT EQUATION RESIDUAL */
-			void vdirichlet() {symbolic::vdirichlet();}
-#ifdef petsc
-			void petsc_jacobian_dirichlet();  // Set x & y rows to dirichlet conditions (no movement)
-#endif
-	};
-	
-	
 	/*******************************/
 	/* VERTEX BOUNDARY CONDITIONS */
 	/******************************/

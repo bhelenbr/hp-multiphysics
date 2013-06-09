@@ -522,8 +522,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 
 class tri_hp_buoyancy_stype {
 	public:
-		static const int ntypes = 5;
-		enum ids {unknown=-1,surface,melt,melt_kinetics,kellerman,solid_fluid};
+		static const int ntypes = 4;
+		enum ids {unknown=-1,surface,melt,melt_kinetics,solid_fluid};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -532,7 +532,7 @@ class tri_hp_buoyancy_stype {
 		}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","melt_kinetics","kellerman","solid_fluid"};
+const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","melt_kinetics","solid_fluid"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -584,18 +584,6 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 			}
 			else {
 				std::cerr << "use coupled physics for melt_kinetics boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::kellerman: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new kellerman(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for kellerman boundary" << std::endl;
 				sim::abort(__LINE__,__FILE__,&std::cerr);
 				assert(0);
 			}
