@@ -98,10 +98,6 @@ int main(int argc, char **argv) {
 
 void ctrlc(int signal)
 {  
-    /* THIS ALLOWS FILES TO CLOSE */
-    /* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
-//    sim::blks.output("interrupt",block::restart);
-//    sim::blks.output("interrupt",block::display);
 	sim::abort(__LINE__,__FILE__,&std::cerr);
 
 }
