@@ -688,7 +688,7 @@
 		E658002913E2CFC400A01E99 /* tri_hp_nonnewtonian.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tri_hp_nonnewtonian.cpp; path = nonnewtonian/tri_hp_nonnewtonian.cpp; sourceTree = "<group>"; };
 		E67EBAA612D603BC0011EB69 /* melt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = melt.cpp; path = buoyancy/melt.cpp; sourceTree = "<group>"; };
 		E67EBAFA12D603C50011EB69 /* tri_hp_petsc_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_petsc_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
-		E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_petsc_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
+		E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6852BAA121DCA4E00EF7E07 /* reinit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = reinit.cpp; sourceTree = "<group>"; };
 		E6B7FC33169D2CD1005C4E6D /* libparmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparmetis.a; path = ../../Packages/lib/libparmetis.a; sourceTree = "<group>"; };
 		E6E8E31A14719FA800571FC3 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = ../../Packages/lib/libboost_thread.a; sourceTree = "<group>"; };
@@ -893,7 +893,7 @@
 				E67EBAFA12D603C50011EB69 /* tri_hp_petsc_mpi */,
 				6F9854120BDE612700D342F6 /* tri_hp_axi */,
 				6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */,
-				E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc_mpi */,
+				E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1184,9 +1184,9 @@
 			productReference = 8DD76F6C0486A84900D96B5E /* tri_hp */;
 			productType = "com.apple.product-type.tool";
 		};
-		E67EBAAE12D603C50011EB69 /* tri_hp_petsc_mpi */ = {
+		E67EBAAE12D603C50011EB69 /* tri_hp_petsc */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc_mpi" */;
+			buildConfigurationList = E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc" */;
 			buildPhases = (
 				E67EBAAF12D603C50011EB69 /* Sources */,
 				E67EBAD412D603C50011EB69 /* Frameworks */,
@@ -1196,15 +1196,15 @@
 			);
 			dependencies = (
 			);
-			name = tri_hp_petsc_mpi;
+			name = tri_hp_petsc;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
 			productReference = E67EBAFA12D603C50011EB69 /* tri_hp_petsc_mpi */;
 			productType = "com.apple.product-type.tool";
 		};
-		E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc_mpi */ = {
+		E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc_mpi" */;
+			buildConfigurationList = E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc" */;
 			buildPhases = (
 				E67EBAFD12D603E10011EB69 /* Sources */,
 				E67EBB1C12D603E10011EB69 /* Frameworks */,
@@ -1214,10 +1214,10 @@
 			);
 			dependencies = (
 			);
-			name = tri_hp_axi_petsc_mpi;
+			name = tri_hp_axi_petsc;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
-			productReference = E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc_mpi */;
+			productReference = E67EBB4212D603E10011EB69 /* tri_hp_axi_petsc */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -1244,10 +1244,10 @@
 			targets = (
 				8DD76F620486A84900D96B5E /* tri_hp */,
 				6FB91A580ACCB04500792B04 /* tri_hp_mpi */,
-				E67EBAAE12D603C50011EB69 /* tri_hp_petsc_mpi */,
+				E67EBAAE12D603C50011EB69 /* tri_hp_petsc */,
 				6F9853B80BDE612700D342F6 /* tri_hp_axi */,
 				6F98546F0BDE649A00D342F6 /* tri_hp_axi_mpi */,
-				E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc_mpi */,
+				E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc */,
 			);
 		};
 /* End PBXProject section */
@@ -1774,7 +1774,7 @@
 					"\"$(SRCROOT)/../lib\"",
 					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
-				PRODUCT_NAME = tri_hp_petsc_mpi;
+				PRODUCT_NAME = tri_hp_petsc;
 				mpi_threads = "";
 				threads = "";
 			};
@@ -1797,7 +1797,7 @@
 					"\"$(SRCROOT)/../lib\"",
 					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
-				PRODUCT_NAME = tri_hp_petsc_mpi;
+				PRODUCT_NAME = tri_hp_petsc;
 				mpi_threads = "";
 				threads = "";
 			};
@@ -1821,7 +1821,7 @@
 					"\"$(SRCROOT)/../../Packages/lib\"",
 					"\"$(SRCROOT)/../lib\"",
 				);
-				PRODUCT_NAME = tri_hp_axi_petsc_mpi;
+				PRODUCT_NAME = tri_hp_axi_petsc;
 			};
 			name = Debug;
 		};
@@ -1842,7 +1842,7 @@
 					"\"$(SRCROOT)/../../Packages/lib\"",
 					"\"$(SRCROOT)/../lib\"",
 				);
-				PRODUCT_NAME = tri_hp_axi_petsc_mpi;
+				PRODUCT_NAME = tri_hp_axi_petsc;
 			};
 			name = Release;
 		};
@@ -1894,7 +1894,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc_mpi" */ = {
+		E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E67EBAF812D603C50011EB69 /* Debug */,
@@ -1903,7 +1903,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc_mpi" */ = {
+		E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E67EBB4012D603E10011EB69 /* Debug */,
