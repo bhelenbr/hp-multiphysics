@@ -100,6 +100,9 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY TEMPO */
 //		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		
+		/* UPWINDING KINETIC EQUATION BASED ON TANGENTIAL VELOCITY */
+		res(4,i) = -res(2,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 
 	}
 	lf = 0.0;
@@ -112,8 +115,11 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
 #ifdef petsc
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(2,0)); // kinetic equation
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(4,0)); // kinetic equation upwinded
+
 #else
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2)(0),&res(2,0)); // kinetic equation
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+2)(0),&res(4,0)); // kinetic equation upwinded
 #endif
 								
 	return;
