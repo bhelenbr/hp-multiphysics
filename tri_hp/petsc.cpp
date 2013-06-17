@@ -12,7 +12,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 #include <limits.h>
-
+#include <petsctime.h>
 
 // #define DEBUG_JAC
 
@@ -211,7 +211,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
 	PetscErrorCode err;
 	
-	PetscGetTime(&time1);
+	PetscTime(&time1);
 	
 #ifdef MY_SPARSE
 
@@ -278,7 +278,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	 also serves as the preconditioning matrix.
 	 */
 #endif
-	PetscGetTime(&time2);
+	PetscTime(&time2);
 	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 
 #ifdef DEBUG_JAC
@@ -286,13 +286,13 @@ void tri_hp::petsc_setup_preconditioner() {
 	sim::finalize(__LINE__,__FILE__,gbl->log);
 #endif
 
-	PetscGetTime(&time1);	 
+	PetscTime(&time1);	 
 	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);
 	//err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	PetscGetTime(&time2);
+	PetscTime(&time2);
 	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
 
 	return;
@@ -314,7 +314,7 @@ void tri_hp::petsc_update() {
 	
 	VecNorm(petsc_f, NORM_2, &max_residual);
 	
-	PetscGetTime(&time1);
+	PetscTime(&time1);
 	err = KSPSolve(ksp,petsc_f,petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
@@ -322,7 +322,7 @@ void tri_hp::petsc_update() {
 	VecNorm(petsc_du, NORM_2, &resmax2 );
 	
 	KSPGetIterationNumber(ksp,&its);
-	PetscGetTime(&time2);
+	PetscTime(&time2);
 	*gbl->log << "# iterations " << its << " residual0 " << max_residual << " du " << resmax2 << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	helper->update(-1);
