@@ -278,6 +278,10 @@ void sim::finalize(int line,const char *file, std::ostream *log) {
 /* This routine forces everyone to die */
 void sim::abort(int line,const char *file, std::ostream *log) {
 	*log << "Exiting at line " << line << " of file " << file << std::endl;
+	for (int b=0;b<blks.myblock;++b) {
+		sim::blks.blk(b)->output("aborted_solution", block::display);
+		sim::blks.blk(b)->output("aborted_solution", block::restart);
+	}
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD,1);
 #endif
@@ -850,8 +854,20 @@ void block::init(input_map &input) {
 #endif
 	
 #if (DIRK==1)
+	/* This is the BD1 scheme */
 	gbl->nadapt = 1;
 	gbl->nhist = 1;
+	gbl->stepsolves = 1;
+	gbl->bd.resize(1);
+	gbl->bd = 0.0;
+	gbl->adirk.resize(DIRK,DIRK);
+	gbl->cdirk.resize(DIRK);
+#endif
+	
+#if (DIRK==2)
+	/* This is the AM1 scheme */
+	gbl->nadapt = 2;
+	gbl->nhist = 2;
 	gbl->stepsolves = 1;
 	gbl->bd.resize(1);
 	gbl->bd = 0.0;
@@ -1236,6 +1252,49 @@ void block::tadvance() {
 			gbl->esdirk = true;
 		}
 	}
+#elif (DIRK==2)
+	/* STARTUP SEQUENCE */
+	switch(gbl->tstep) {
+		case(1): {
+			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+			gbl->adirk(0,0) = 1.;                 gbl->adirk(0,1) = 0.0;
+			gbl->adirk(1,0) = 0.;									gbl->adirk(1,1) = 0.;
+			gbl->cdirk(0) = 1;
+			gbl->esdirk = false;
+			break;
+		}
+		case(2): {
+#ifdef AM1
+			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
+			gbl->adirk(1,0) = 0.5;						gbl->adirk(1,1) = 2.0;
+#else
+			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
+			gbl->adirk(1,0) = 0.0;						gbl->adirk(1,1) = 1.0;
+#endif
+			gbl->cdirk(0) = 1;
+			gbl->esdirk = true;
+			break;
+		}
+		default : {
+			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+#ifdef AM1
+			gbl->adirk(0,0) = 2.0;						gbl->adirk(0,1) = 0.0;
+			gbl->adirk(1,0) = 0.5;						gbl->adirk(1,1) = 2.0;
+#else
+			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
+			gbl->adirk(1,0) = 0.0;						gbl->adirk(1,1) = 1.0;
+#endif
+			gbl->cdirk(0) = 1;
+			gbl->esdirk = true;
+			break;
+		}
+	}
+#else
+	gbl->adirk(0,0) = 1.0;
+	gbl->cdirk(0) = 1.0;
+	gbl->esdirk = false;
+#endif
+	
 	gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
 	if (gbl->dti > 0.0) {
 		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
@@ -1248,19 +1307,6 @@ void block::tadvance() {
 	else {
 		gbl->time = gbl->tstep;
 	}
-#else
-	gbl->adirk(0,0) = 1.0;
-	gbl->cdirk(0) = 1.0;
-	gbl->esdirk = false;
-	gbl->bd(0) = gbl->dti;
-	if (gbl->dti > 0.0) {
-		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
-		gbl->dti_prev = gbl->dti;
-	}
-	else {
-		gbl->time = gbl->tstep;
-	}
-#endif
 #endif
 
 
