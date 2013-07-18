@@ -781,10 +781,10 @@ void tri_hp::input(const std::string& fname) {
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
-			fnmapp = fname +".v";
 			input_map blank;
 			tri_mesh::input(fname,tri_mesh::binary,1,blank);
 			setinfo();
+			
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
@@ -792,13 +792,15 @@ void tri_hp::input(const std::string& fname) {
 				bin.open(fnmapp.c_str());
 				if (bin.error()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-					sim::abort(__LINE__,__FILE__,gbl->log);
+					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 				}
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-				for (j=0;j<npnt;++j) {
-					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
-					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
+				else {
+					bin.setFlag(binio::BigEndian,bin.readInt(1));
+					bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+					for (j=0;j<npnt;++j) {
+						vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
+						vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
+					}
 				}
 				bin.close();
 			}
