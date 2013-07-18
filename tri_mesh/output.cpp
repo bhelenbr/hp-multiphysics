@@ -417,59 +417,95 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 		}
 
-		case(debug_adapt):
-			/* CREATE EASYMESH OUTPUT FILES */
-			fnmapp = grd_nm +".n";
+//		case(debug_adapt):
+//			/* CREATE EASYMESH OUTPUT FILES */
+//			fnmapp = grd_nm +".n";
+//			out.open(fnmapp.c_str());
+//			if (!out) {
+//				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+//				sim::abort(__LINE__,__FILE__,gbl->log);
+//			}
+//
+//			out << npnt << endl;
+//			for(i=0;i<npnt;++i) {
+//				out << i << ": ";
+//				for(n=0;n<ND;++n)
+//					out << pnts(i)(n) << ' ';
+//				out << (tri(i).info&PDLTE != 0 ? -1 : 0) +(tri(i).info&PTOUC != 0 ? 1 : 0) << endl;
+//			}
+//			out.close();
+//
+//			/* SIDE FILE */
+//			fnmapp = grd_nm +".s";
+//			out.open(fnmapp.c_str());
+//			if (!out) {
+//				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+//				sim::abort(__LINE__,__FILE__,gbl->log);
+//			}
+//			out << nseg << endl;
+//			for(i=0;i<nseg;++i) {
+//				out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ';
+//				out << seg(i).tri(0) << ' ' << seg(i).tri(1) << ' ' << (tri(i).info&SDLTE ? -1 : (tri(i).info&STOUC ? 2 : 0)) << endl;
+//			}
+//			out.close();
+//
+//			fnmapp = grd_nm +".e";
+//			out.open(fnmapp.c_str());
+//			if (!out) {
+//				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+//				sim::abort(__LINE__,__FILE__,gbl->log);
+//			}
+//			out << ntri << endl;
+//			for(i=0;i<ntri;++i) {
+//				out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
+//				out << ' ' << tri(i).tri(0) << ' ' << tri(i).tri(1) << ' ' << tri(i).tri(2);
+//				out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
+//				out << " 0.0 0.0 " << (tri(i).info&TDLTE != 0 ? -1 : 0) +(tri(i).info&TTOUC != 0 ? 1 : 0) << endl;
+//			}
+//			out.close();
+//
+//			break;
+//		case boundary: {
+//			fnmapp = grd_nm +"_bdry.inpt";
+//			out.open(fnmapp.c_str());
+//			for(i=0;i<nvbd;++i) vbdry(i)->output(out);
+//			for(i=0;i<nebd;++i) ebdry(i)->output(out);
+//			out.close();
+//			break;
+//		}
+			
+		case (debug_adapt): {
+			fnmapp = grd_nm +".dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
-			out << npnt << endl;
+			
+			int ntri_not_deleted = 0;
+			for(i=0;i<ntri;++i) {
+				if (!(tri(i).info&TDLTE)) {
+					++ntri_not_deleted;
+				}
+			}
+			
+			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri_not_deleted << endl;
+			
 			for(i=0;i<npnt;++i) {
-				out << i << ": ";
 				for(n=0;n<ND;++n)
 					out << pnts(i)(n) << ' ';
-				out << (tri(i).info&PDLTE != 0 ? -1 : 0) +(tri(i).info&PTOUC != 0 ? 1 : 0) << endl;
+				//out << "0.0";
+				out << endl;
 			}
-			out.close();
+			
+			out << "\n#CONNECTION DATA#\n";
 
-			/* SIDE FILE */
-			fnmapp = grd_nm +".s";
-			out.open(fnmapp.c_str());
-			if (!out) {
-				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			out << nseg << endl;
-			for(i=0;i<nseg;++i) {
-				out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ';
-				out << seg(i).tri(0) << ' ' << seg(i).tri(1) << ' ' << (tri(i).info&SDLTE ? -1 : (tri(i).info&STOUC ? 2 : 0)) << endl;
-			}
-			out.close();
-
-			fnmapp = grd_nm +".e";
-			out.open(fnmapp.c_str());
-			if (!out) {
-				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			out << ntri << endl;
 			for(i=0;i<ntri;++i) {
-				out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
-				out << ' ' << tri(i).tri(0) << ' ' << tri(i).tri(1) << ' ' << tri(i).tri(2);
-				out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
-				out << " 0.0 0.0 " << (tri(i).info&TDLTE != 0 ? -1 : 0) +(tri(i).info&TTOUC != 0 ? 1 : 0) << endl;
+				if (!(tri(i).info&TDLTE)) {
+					out << tri(i).pnt(0)+1 << ' ' << tri(i).pnt(1)+1 << ' ' << tri(i).pnt(2)+1 << endl;
+				}
 			}
-			out.close();
-
-			break;
-		case boundary: {
-			fnmapp = grd_nm +"_bdry.inpt";
-			out.open(fnmapp.c_str());
-			for(i=0;i<nvbd;++i) vbdry(i)->output(out);
-			for(i=0;i<nebd;++i) ebdry(i)->output(out);
+			
 			out.close();
 			break;
 		}

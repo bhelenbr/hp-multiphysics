@@ -12,7 +12,7 @@
 #include <math.h>
 
 #define REBAY
-// #define DEBUG_ADAPT
+//#define DEBUG_ADAPT
 #define VERBOSE
 
 #ifdef DEBUG_ADAPT
@@ -300,7 +300,7 @@ INSRT:
 		nstr << adapt_count++ << std::flush;
 		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
 		nstr.str("");
-		output(adapt_file.c_str(),grid);
+		output(adapt_file.c_str(),debug_adapt);
 #endif
 
 	}
@@ -421,7 +421,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 			nstr << adapt_count++ << std::flush;
 			adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
 			nstr.str("");
-			output(adapt_file.c_str(),grid);
+			output(adapt_file.c_str(),debug_adapt);
 #endif
 		}
 		ebdry(bnum)->isndbuf(0) = ebdry(bnum)->sndsize();

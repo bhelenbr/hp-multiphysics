@@ -12,7 +12,7 @@
 #include<assert.h>
 #include<float.h>
 
-#define NO_DEBUG_ADAPT
+//#define DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
 extern int adapt_count;
@@ -101,7 +101,7 @@ int tri_mesh::swap(int sind, FLT tol) {
 #ifdef DEBUG_ADAPT
 		std::ostringstream nstr;
 		nstr << adapt_count++ << std::flush;
-		adapt_file = idprefix +"_adapt" +nstr.str();
+		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
 		nstr.str("");
 		output(adapt_file.c_str(),debug_adapt);
 #endif
