@@ -179,8 +179,7 @@ tri_hp_helper *tri_hp_lvlset::getnewhelper(input_map& inmap) {
 			return(temp);
 		}
 		default: {
-			tri_hp_helper *temp = new tri_hp_helper(*this);
-			return(temp);
+			return(tri_hp_ins::getnewhelper(inmap));
 		}
 	}
 }
