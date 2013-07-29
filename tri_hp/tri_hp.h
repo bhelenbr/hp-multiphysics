@@ -20,6 +20,8 @@
 #include <petscksp.h>
 #endif
 
+#define DIRK
+
 #ifdef AXISYMMETRIC
 #define RAD(r) (r)
 #else
