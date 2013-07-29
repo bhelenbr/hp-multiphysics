@@ -25,6 +25,11 @@
 
 // #define petsc
 
+//define DIRK 1
+#define DIRK 4
+// #define BACKDIFF 2
+// #define AM1
+
 using namespace std;
 using namespace blitz;
 
@@ -865,7 +870,7 @@ void block::init(input_map &input) {
 #endif
 	
 #if (DIRK==2)
-	/* This is the AM1 scheme */
+	/* This is the AM1 or BD1 with extrapolation scheme */
 	gbl->nadapt = 2;
 	gbl->nhist = 2;
 	gbl->stepsolves = 1;

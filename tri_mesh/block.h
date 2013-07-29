@@ -8,9 +8,6 @@
 #include <input_map.h>
 #include <symbolic_function.h>
 
-//#define DIRK 1
-#define DIRK 4
-// #define BACKDIFF 2
 #ifdef SINGLE
 #define FLT float
 #define EPSILON FLT_EPSILON
