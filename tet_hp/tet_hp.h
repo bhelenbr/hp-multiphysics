@@ -30,6 +30,8 @@
 #include <petscksp.h>
 #endif
 
+#define DIRK
+
 class hp_vrtx_bdry;
 class hp_edge_bdry;
 class hp_face_bdry;
