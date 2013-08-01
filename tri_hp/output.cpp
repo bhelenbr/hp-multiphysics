@@ -791,7 +791,7 @@ void tri_hp::input(const std::string& fname) {
 				fnmapp = fname +".v" +nstr.str() +".bin";
 				bin.open(fnmapp.c_str());
 				if (bin.error()) {
-					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
+					*gbl->log << "#couldn't open input file " << fnmapp << std::endl;
 					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 				}
 				else {
