@@ -813,11 +813,11 @@ void block::init(input_map &input) {
 		gbl->log = filelog;
 		
 		/* GOING TO MAKE STD::COUT POINT TO FILE AS WELL */
-		streambuf *psbuf, *backup;		
-		backup = cout.rdbuf();     // back up cout's streambuf
-		psbuf = filelog->rdbuf();   // get file's streambuf
-		cout.rdbuf(psbuf);         // assign streambuf to cout
-		cerr.rdbuf(psbuf);				// assing streambuf to cerr as well
+//		streambuf *psbuf, *backup;		
+//		backup = cout.rdbuf();     // back up cout's streambuf
+//		psbuf = filelog->rdbuf();   // get file's streambuf
+//		cout.rdbuf(psbuf);         // assign streambuf to cout
+//		cerr.rdbuf(psbuf);				// assing streambuf to cerr as well
 	}
 	else {
 		std::cout.setf(std::ios::scientific, std::ios::floatfield);
