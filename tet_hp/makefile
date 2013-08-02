@@ -4,9 +4,7 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
-all: planar 
-
-planar: tet_hp tet_hp_mpi
+all: tet_hp tet_hp_mpi
 
 tet_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -51,10 +49,10 @@ OBJ += $(OBJCNS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
-LIB += -lMAdLib
+LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
+#CXXMPI = ${CXX}
+CXXMPI = mpic++
 
-CXXMPI = ${CXX}
 ### Begin machine dependent
 
 ## Darwin:
@@ -63,14 +61,14 @@ CXXMPI = ${CXX}
 #LIB += -framework veclib
 
 ## Linux:
-LIB += -L$(HOME)  -llapack -lblas #(cares)
+LIB += -llapack -lblas #(cares)
 #CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 #CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## To use openmpi
 #CPPFLAGS += -I/opt/openmpi/include
 #CXXMPI = /opt/openmpi/bin/mpic++
-CXXMPI = mpic++
+#CXXMPI = mpic++
 
 # (ubuntu) should really make symbolic links to liblapack and libatlas
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
