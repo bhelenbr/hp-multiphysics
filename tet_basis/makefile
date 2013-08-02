@@ -51,7 +51,7 @@ tet_basis: $(OBJ) main.o
 
 libtet_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libtet_basis.a $(HOME)/Codes/lib/
+	cp -f libtet_basis.a $(HOME)/Codes/lib/
 	cp -f tet_basis.h $(HOME)/Codes/include/
 
 $(OBJ): tet_basis.h
