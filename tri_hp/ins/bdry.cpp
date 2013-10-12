@@ -9,6 +9,7 @@
 using namespace bdry_ins;
 
 // #define MPDEBUG
+// #define L2_ERROR
 
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
