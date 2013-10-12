@@ -6,11 +6,12 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#include <blocks.h>
-#include <signal.h>
 #ifdef MPISRC
 #include <mpi.h>
 #endif
+
+#include <blocks.h>
+#include <signal.h>
 #ifdef petsc
 #include <petscksp.h>
 static char help[] = "How am I supposed to know???\n\n";
