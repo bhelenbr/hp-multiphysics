@@ -207,7 +207,7 @@ namespace ibc_cd {
 					}
 				}   
 				
-				icount=icount++;
+				icount++;
 				cycle = current_cycle;
 			}
 			
