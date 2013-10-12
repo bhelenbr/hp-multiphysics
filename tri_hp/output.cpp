@@ -83,6 +83,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 		}
 		case(block::debug): {
 			output(fname,output_type(2));
+			helper->output();
 		}
 	}
 	return;
@@ -903,7 +904,6 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						in >> ugbd(tlvl).s(i,m,n);
 				}
-				indx += p0 -pmin;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)
@@ -951,7 +951,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			fnapp = filename +".bin";
 			in.open(fnapp.c_str());
 			if (!in) {
-				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
+				*gbl->log << "couldn't open binary input file " << fnapp << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			biniwstream bin(&in);
@@ -987,7 +987,6 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						ugbd(tlvl).s(i,m,n) = bin.readFloat(binio::Double);
 				}
-				indx += p0 -pmin;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)
