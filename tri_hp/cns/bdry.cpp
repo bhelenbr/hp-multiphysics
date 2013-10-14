@@ -621,3 +621,33 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	return;
 }
 
+void symmetry::tadvance() {
+	int j,m,v0,sind;
+	TinyVector<FLT,tri_mesh::ND> pt;
+	
+	hp_edge_bdry::tadvance();
+	
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		x.ug.v(v0,dir+1) = 0.0;
+	}	while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	x.ug.v(v0,dir+1) = 0.0;
+	
+	/*******************/
+	/* SET SIDE VALUES */
+	/*******************/
+	for(j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+			x.ug.s(sind,m,dir+1) = 0.0;
+		}
+	}
+	
+	return;
+}
+
+

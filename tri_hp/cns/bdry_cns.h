@@ -103,6 +103,24 @@ namespace bdry_cns {
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
 	};
+	
+	class symmetry : public generic {
+		int dir;
+		
+		public:
+			symmetry(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
+			symmetry(const symmetry& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
+			symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+			void init(input_map& input,void* gbl_in) {
+				generic::init(input,gbl_in);
+				std::string keyword = base.idprefix +"_dir";
+				input.getwdefault(keyword,dir,0);
+				essential_indices.push_back(dir+1);
+				type(dir) = essential;
+			}
+			void tadvance();
+	};
+
 
 
 	class inflow_pt : public hp_vrtx_bdry {
