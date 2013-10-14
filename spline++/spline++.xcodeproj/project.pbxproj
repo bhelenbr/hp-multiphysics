@@ -146,7 +146,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0440;
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "spline++" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -194,6 +194,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = "$(HOME)/Codes";
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					../include,
@@ -209,6 +210,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = "$(HOME)/Codes";
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					../include,
@@ -222,22 +224,21 @@
 		1DEB91F008733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
 		1DEB91F108733DB70010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 			};
 			name = Release;
 		};
@@ -246,6 +247,7 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Packages/include",
 					../include,
@@ -259,6 +261,7 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Packages/include",
 					../include,

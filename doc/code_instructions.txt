@@ -24,7 +24,9 @@ unpack & cd into directory
 [./configure --prefix=/share/apps] (Orion)
 [make lib]
 [make install]
-[make pdf] (to make pdf instructions in blitz/doc)
+(to make pdf instructions in blitz/doc):
+[export PATH=$PATH:/usr/texbin]
+[make pdf] 
 
 ###################################################################
 #### GET OPENMPI IF NOT INSTALLED (ON OS X)
@@ -85,6 +87,7 @@ move pth-2.0.7.tar.gz to Packages
 	[tar zxvf pth-2.0.7.tar.gz]
 	[cd pth-2.0.7]
 	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize]
+	[./configure --prefix=${HOME}/Packages --enable-optimize]
 	[make]
 	[make install]
 	[cd ..]
@@ -158,6 +161,11 @@ move to Packages, extract
 
 # on orion
 ./config/configure.py --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/share/apps --with-mpi-dir=/share/apps
+
+./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=${HOME}/Packages --with-shared-libraries=0  --with-valgrind-dir=/share/apps
+
+./configure --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2-1.9 --with-debugging=0 --with-valgrind-dir=/share/apps
+
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
@@ -258,23 +266,23 @@ make -j 2
 ###################################################################
 #### OS X ####
 ###################################################################
-	[cd ${HOME}/Codes]
-	[cd utilities]
-	[xcodebuild -alltargets -configuration Release]
-	[cd ../quadtree]
-	[xcodebuild -alltargets -configuration Release]
-	[cd ../spline++]
-	[xcodebuild -alltargets  -configuration Release]
-	[cd ../input_map]
-	[xcodebuild -alltargets  -configuration Release]
-	[cd ../symbolic_function]
-	[xcodebuild -alltargets  -configuration Release]
-	[cd ../tri_mesh]
-	[xcodebuild -alltargets -configuration Release]
-	[cd ../tri_basis]
-	[xcodebuild -alltargets -configuration Release]
-	[cd ../tri_hp]
-	[xcodebuild -alltargets -configuration Release]
+cd ${HOME}/Codes
+cd utilities
+xcodebuild -alltargets -configuration Release
+cd ../quadtree
+xcodebuild -alltargets -configuration Release
+cd ../spline++
+xcodebuild -alltargets  -configuration Release
+cd ../input_map
+xcodebuild -alltargets  -configuration Release
+cd ../symbolic_function
+xcodebuild -alltargets  -configuration Release
+cd ../tri_mesh
+xcodebuild -alltargets -configuration Release
+cd ../tri_basis
+xcodebuild -alltargets -configuration Release
+cd ../tri_hp
+xcodebuild -alltargets -configuration Release
 ###################################################################
 
 

@@ -175,7 +175,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tri_basis" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -229,6 +229,7 @@
 					BZ_DEBUG,
 				);
 				GCC_UNROLL_LOOPS = NO;
+				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				OTHER_CFLAGS = "";
 				PRODUCT_NAME = tri_basis;
@@ -244,6 +245,7 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				OTHER_CFLAGS = "-falign-loops=16";
 				PRODUCT_NAME = tri_basis;
@@ -258,6 +260,7 @@
 					f2cFortran,
 					BZ_DEBUG,
 				);
+				GCC_VERSION = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tri_basis;
 			};
@@ -267,6 +270,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_VERSION = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tri_basis;
 			};
@@ -275,9 +279,8 @@
 		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Codes/include",
 					"$(HOME)/Packages/include",
@@ -286,6 +289,7 @@
 					"$(HOME)/Packages/lib/",
 					"$(HOME)/Codes/lib/",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Debug;
@@ -293,9 +297,8 @@
 		6FD8AD460864E338005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Codes/include",
 					"$(HOME)/Packages/include",

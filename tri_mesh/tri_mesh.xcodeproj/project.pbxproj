@@ -157,11 +157,10 @@
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
-		E6019988167F68B100C5C90E /* libmuparser.2.2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.2.dylib */; };
-		E601998A167F68B200C5C90E /* libmuparser.2.2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.2.dylib */; };
+		E6019988167F68B100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */; };
+		E601998A167F68B200C5C90E /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */; };
 		E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
 		E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
-		E6EC8BD31471A24400373638 /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0BD8BD11A69A820013DB0A /* libboost_thread.dylib */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE31533E774009F6A6B /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* vecLib.framework */; };
@@ -206,7 +205,7 @@
 		E6D716EA1206CC15005572EE /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework; sourceTree = "<group>"; };
-		E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.2.dylib; path = ../../Packages/lib/libmuparser.2.2.2.dylib; sourceTree = "<group>"; };
+		E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = "<group>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
 		F515EA5602B7E15B012A8EDA /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = SOURCE_ROOT; };
 		F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_tri_boundary.h; sourceTree = "<group>"; };
@@ -253,7 +252,7 @@
 				6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 				E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */,
 				E6F1CDE41533E774009F6A6B /* vecLib.framework in Frameworks */,
-				E601998A167F68B200C5C90E /* libmuparser.2.2.2.dylib in Frameworks */,
+				E601998A167F68B200C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -268,10 +267,9 @@
 				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
 				6FA883610D868DFB00C8435F /* libpth.a in Frameworks */,
 				6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */,
-				E6EC8BD31471A24400373638 /* libboost_thread.dylib in Frameworks */,
 				E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */,
 				E6F1CDE31533E774009F6A6B /* vecLib.framework in Frameworks */,
-				E6019988167F68B100C5C90E /* libmuparser.2.2.2.dylib in Frameworks */,
+				E6019988167F68B100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -283,7 +281,7 @@
 			isa = PBXGroup;
 			children = (
 				E6A1C0AC176F480400074810 /* libmetis.dylib */,
-				E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.2.dylib */,
+				E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */,
 				6F1616010B974E67006CA043 /* libDT.a */,
 				6F2F749A0DD89553002615F9 /* libbinio.dylib */,
 				6F56D55C09EEE7F900C97501 /* libblitz.a */,
@@ -533,7 +531,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0440;
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -726,11 +724,9 @@
 					"$(threads)",
 					MY_SPARSE,
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh;
+				threads = PTH;
 			};
 			name = Debug;
 		};
@@ -743,11 +739,9 @@
 					"$(threads)",
 					MY_SPARSE,
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh;
+				threads = PTH;
 			};
 			name = Release;
 		};
@@ -833,11 +827,9 @@
 					MPISRC,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh_mpi;
+				threads = PTH;
 			};
 			name = Debug;
 		};
@@ -855,11 +847,9 @@
 					MPISRC,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh_mpi;
+				threads = PTH;
 			};
 			name = Release;
 		};
@@ -882,6 +872,7 @@
 					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				PRODUCT_NAME = tri_mesh;
+				threads = PTH;
 			};
 			name = Debug;
 		};
@@ -904,13 +895,13 @@
 					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				PRODUCT_NAME = tri_mesh;
+				threads = PTH;
 			};
 			name = Release;
 		};
 		6FD540670863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -918,7 +909,7 @@
 					BZ_DEBUG,
 					f2cFortran,
 				);
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -933,6 +924,7 @@
 					"${packages}/lib",
 					"${prefix}/lib",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"-fno-inline",
 					"$(OTHER_CFLAGS)",
@@ -948,12 +940,11 @@
 		6FD540680863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
