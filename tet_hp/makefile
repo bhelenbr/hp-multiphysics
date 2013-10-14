@@ -15,7 +15,7 @@ tet_hp:
 
 tet_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp_mpi EXTRAFLAGS='-DMPISRC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp_mpi EXTRAFLAGS='-DMPISRC' CXX=mpic++
 	cp _$@/tet_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tet_hp_mpi
@@ -47,7 +47,6 @@ OBJ += $(OBJCNS)
 #OBJ += $(OBJCNS_EXPLICIT)
 #OBJ += $(OBJMASS)
 
-CXX=mpic++
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
@@ -68,7 +67,7 @@ tet_hp: $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh -ltet_mesh $(LIB)
 
 tet_hp_mpi: $(OBJ) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi -ltet_mesh_mpi $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi -ltet_mesh_mpi $(LIB)
 	
 dirs:
 	+@[ -d  ins ] || mkdir -p ins

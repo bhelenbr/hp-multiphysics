@@ -20,13 +20,13 @@ tet_mesh:
 
 libtet_mesh_mpi.a:
 	+@[ -d _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
 
 .PHONY: libtet_mesh_mpi.a
 
 tet_mesh_mpi:
 	+@[ -d _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
 
 .PHONY: tet_mesh_mpi
 
@@ -45,43 +45,18 @@ meshutilities.o output.o refineby2.o setup.o setupbdry.o tet_boundary.o\
 tet_prims.o vertexcircle.o test.o MAdLibInterface.o
 
 MAINOBJ = main.o
-DEFINES = -DMETIS -Df2cFortran  $(EXTRAFLAGS)
 DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs -lMAdLib
 
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-CXXMPI = mpic++
 
 ### Begin machine dependent
 
-## Darwin:
-## Machine specific for Darwin
-#AR = libtool
-#ARFLAGS = -o
-
 ## Linux:
 ##  Machine specific for Linux
-#CXX=icpc #(cares)
-#CXX=g++3 #(shelob)
-#CPPFLAGS += -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-#LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 LIB += -lblas -llapack #(cares)
-
-## To use openmpi
-#CPPFLAGS += -I/opt/openmpi/include
-#CXXMPI = /opt/openmpi/bin/mpic++
-
-## IRIX64:
-#CPPFLAGS += -Ofast=IP30  #(sauter)
-#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS += -Ofast=IPrk5 #(origin)
-
-## Aix:
-## Machine specific for Jupiter
 
 ### End machine dependent
 
@@ -102,7 +77,7 @@ libtet_mesh_mpi.a: $(OBJ)
 	cp -f ../*.h $(HOME)/Codes/include/
 
 tet_mesh_mpi: libtet_mesh_mpi.a $(MAINOBJ)
-	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi $(LIB)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi $(LIB)
 	cp tet_mesh_mpi $(HOME)/bin
 
 %.o: %.cpp

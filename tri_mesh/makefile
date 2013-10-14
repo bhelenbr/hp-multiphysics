@@ -20,13 +20,13 @@ tri_mesh:
 
 libtri_mesh_mpi.a:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
 
 .PHONY: libtri_mesh_mpi.a
 
 tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
 
 .PHONY: tri_mesh_mpi
 
@@ -53,39 +53,14 @@ LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_ma
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs
 
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-CXXMPI = mpic++
 
 ### Begin machine dependent
 
-## Darwin:
-## Machine specific for Darwin
-#AR = libtool
-#ARFLAGS = -o
-
 ## Linux:
-##  Machine specific for Linux
-#CXX=icpc #(cares)
-#CXX=g++3 #(shelob)
-#CPPFLAGS += -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-#LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
-## To use openmpi
-#CPPFLAGS += -I/opt/openmpi/include
-#CXXMPI = /opt/openmpi/bin/mpic++
 LIB += -lblas -llapack #(cares)
 
 ## Intel Cluster
-#LIB += -lmkl -lmkl_lapack -lmpi -lmpi++ #(hawk)
-
-
-## IRIX64:
-#CPPFLAGS += -Ofast=IP30  #(sauter)
-#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS += -Ofast=IPrk5 #(origin)
-
-## Aix:
-## Machine specific for Jupiter
+#LIB += -lmkl -lmkl_lapack #(hawk)
 
 ### End machine dependent
 
@@ -106,7 +81,7 @@ libtri_mesh_mpi.a: $(OBJ)
 	cp -f ../*.h $(HOME)/Codes/include/
 
 tri_mesh_mpi: libtri_mesh_mpi.a $(MAINOBJ)
-	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)
 	cp tri_mesh_mpi $(HOME)/bin
 
 %.o: %.cpp
