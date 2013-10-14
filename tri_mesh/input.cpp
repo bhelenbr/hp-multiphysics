@@ -413,7 +413,8 @@ next1a:      continue;
 			for(i=0;i<nebd;++i) {
 				// fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); // FIXME
 				count = 0;
-
+				
+				temp = 2;
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
 				ebdry(i)->alloc(static_cast<int>(count*4*grwfac));
 				ebdry(i)->nseg = count;
