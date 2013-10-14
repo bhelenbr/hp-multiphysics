@@ -47,31 +47,18 @@ OBJ += $(OBJCNS)
 #OBJ += $(OBJCNS_EXPLICIT)
 #OBJ += $(OBJMASS)
 
+CXX=mpic++
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
-#CXXMPI = ${CXX}
-CXXMPI = mpic++
 
 ### Begin machine dependent
 
-## Darwin:
-## Machine specific for OS X
-#CPPFLAGS += -O3 -Wno-long-double 
-#LIB += -framework veclib
-
 ## Linux:
-LIB += -llapack -lblas #(cares)
-#CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-#CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
+LIB += -llapack -lblas 
 
-## To use openmpi
-#CPPFLAGS += -I/opt/openmpi/include
-#CXXMPI = /opt/openmpi/bin/mpic++
-#CXXMPI = mpic++
-
-# (ubuntu) should really make symbolic links to liblapack and libatlas
-#LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
+## Darwin:
+#LIB += -framework veclib
 
 ### End machine dependent
 
