@@ -2,6 +2,7 @@
 #include "tri_boundary.h"
 #include <stdlib.h>
 #include <new>
+#define METIS5
 
 int tri_mesh::comm_entity_size() {
 	int i,tsize,nvcomm,nscomm;
@@ -284,7 +285,7 @@ void tri_mesh::setpartition(int nparts) {
 }
 #endif
 
-#ifdef METIS
+#ifdef METIS5
 #include <metis.h>
 
 void tri_mesh::setpartition(int nparts) {
