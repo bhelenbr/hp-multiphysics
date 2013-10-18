@@ -128,6 +128,8 @@ void tri_mesh::append(const tri_mesh &z) {
 	npnt += z.npnt;
 	nseg += z.nseg;
 	ntri += z.ntri;
+	
+	treeinit();
 
 	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
