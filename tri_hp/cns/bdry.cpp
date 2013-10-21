@@ -70,7 +70,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
-					double mujcbi = lmu*RAD(crd(0)(0,i))/x.cjcb(0,i);
+					double mujcbi = lmu*RAD(x.crd(0)(0,i))/x.cjcb(0,i);
 					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.cjcb(0,i)/x.gbl->R;
 										
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
