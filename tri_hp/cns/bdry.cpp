@@ -68,10 +68,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
 
-					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-
-					double mujcbi = lmu*RAD(x.crd(0)(0,i))/x.cjcb(0,i);
-					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.cjcb(0,i)/x.gbl->R;
+					double mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 										
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -97,11 +95,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #define				viscI1II0II1II0I visc(0,1)(0,1)
 					
 					/* HEAT DIFFUSION TENSOR */
-					kcond(0,0) = -kcjcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
 					kcond(1,1) = -kcjcbi*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 					kcond(0,1) =  kcjcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 #define				kcondI1II0I kcond(0,1)
-
 
 					ldiff_flux(0) = 0.0;
 					ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*(-x.u(0)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i)
@@ -125,10 +122,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					double rho = x.u(0)(0,i)/x.u(NV-1)(0,i);
 					double h = gogm1*x.u(NV-1)(0,i) +0.5*(x.u(1)(0,i)*x.u(1)(0,i)+x.u(2)(0,i)*x.u(2)(0,i));
 					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*rho*((x.u(1)(0,i)-mvel(0))*norm(0) +(x.u(2)(0,i)-mvel(1))*norm(1));
-					lconv_flux(0) -= convect;
-					lconv_flux(1) -= x.u(1)(0,i)*convect;
-					lconv_flux(2) -= x.u(2)(0,i)*convect;
-					lconv_flux(3) -= h*convect;
+					lconv_flux(0) = convect;
+					lconv_flux(1) = x.u(1)(0,i)*convect;
+					lconv_flux(2) = x.u(2)(0,i)*convect;
+					lconv_flux(3) = h*convect;
 					conv_flux -= lconv_flux;
 					lconv_flux /= jcb;
 
