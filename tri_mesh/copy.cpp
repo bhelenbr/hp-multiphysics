@@ -75,7 +75,6 @@ void tri_mesh::append(const tri_mesh &z) {
 	for(i=0;i<z.npnt;++i) {
 		for(n=0;n<ND;++n)
 			pnts(i+npnt)(n) = z.pnts(i)(n);
-		qtree.addpt(i+npnt);
 	}
 
 	for(i=0;i<z.npnt;++i)
