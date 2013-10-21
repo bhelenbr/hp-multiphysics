@@ -10,19 +10,35 @@ using namespace bdry_cns;
 
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
-	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
+	const int NV = 4;
+	TinyMatrix<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,NV-1,NV-1> visc;
+	TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> kcond;
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
+	FLT lkcond = x.gbl->kcond;
+	FLT lmu = x.gbl->mu;
 	FLT convect,jcb;
+	FLT gam = x.gbl->gamma;
+	FLT gm1 = gam-1.0;
+	FLT ogm1 = 1.0/gm1;
+	FLT gogm1 = gam*ogm1;
 
 	switch(typ) {
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
+			
+			Array<FLT,1> lconv_flux(x.NV),ldiff_flux(x.NV);
+			std::ostringstream fname;
+			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
+			
+			std::ofstream file_out;
+			file_out.open(fname.str().c_str());
+			
+			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\"DLUX3\",\"CFLUX3\",\"DLUX3\"\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
 			conv_flux = 0.0;
 			diff_flux = 0.0;
 			moment = 0.0;
 			circumference = 0.0;
-			circulation = 0.0;
 #ifdef L2_ERROR
 			FLT l2error = 0.0;
 			TinyVector<FLT,2> xpt;
@@ -54,43 +70,49 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
+					double mujcbi = lmu*RAD(crd(0)(0,i))/x.cjcb(0,i);
+					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.cjcb(0,i)/x.gbl->R;
+										
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-					visc[0][0][0][0] =  x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-					visc[0][0][1][1] =  x.cjcb(0,i)*(2.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-					visc[0][0][0][1] = -x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-#define             viscI0II0II1II0I visc[0][0][0][1]
+					visc(0,0)(0,0) = -mujcbi*(4./3.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+					visc(0,0)(1,1) = -mujcbi*(4./3.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+					visc(0,0)(0,1) =  mujcbi*(4./3.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+#define                 viscI0II0II1II0I visc(0,0)(0,1)
+					
+					visc(1,1)(0,0) = -mujcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +4./3.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+					visc(1,1)(1,1) = -mujcbi*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +4./3.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+					visc(1,1)(0,1) =  mujcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +4./3.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+#define                 viscI1II1II1II0I visc(1,1)(0,1)
+					
+					visc(0,1)(0,0) =  mujcbi*1./3.*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
+					visc(0,1)(1,1) =  mujcbi*1./3.*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
+					visc(0,1)(0,1) = -mujcbi*(x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i)-2./3.*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i));
+					visc(0,1)(1,0) = -mujcbi*(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i)-2./3.*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i));
+					
+					/* OTHER SYMMETRIES     */
+#define				viscI1II0II0II0I visc(0,1)(0,0)
+#define				viscI1II0II1II1I visc(0,1)(1,1)
+#define				viscI1II0II0II1I visc(0,1)(1,0)
+#define				viscI1II0II1II0I visc(0,1)(0,1)
+					
+					/* HEAT DIFFUSION TENSOR */
+					kcond(0,0) = -kcjcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+					kcond(1,1) = -kcjcbi*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+					kcond(0,1) =  kcjcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+#define				kcondI1II0I kcond(0,1)
 
-					visc[1][1][0][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-					visc[1][1][1][1] =  x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-					visc[1][1][0][1] = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-#define             viscI1II1II1II0I visc[1][1][0][1]
 
-					visc[0][1][0][0] = -x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
-					visc[0][1][1][1] = -x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
-					visc[0][1][0][1] =  x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i);
-					visc[0][1][1][0] =  x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i);
-
-					/* OTHER SYMMETRIES     */                
-#define             viscI1II0II0II0I visc[0][1][0][0]
-#define             viscI1II0II1II1I visc[0][1][1][1]
-#define             viscI1II0II0II1I visc[0][1][1][0]
-#define             viscI1II0II1II0I visc[0][1][0][1]
-
-					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
-					visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-					visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-
-					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						diff_flux(n) -= x.gbl->D(n)/x.gbl->mu*basis::tri(x.log2p)->wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
-
-					diff_flux(0) -=    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
-									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
-									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-					diff_flux(1) -=    basis::tri(x.log2p)->wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
-									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
-									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
-
+					ldiff_flux(0) = 0.0;
+					ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*(-x.u(0)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i)
+									-viscI0II0II1II0I*x.du(1,0)(0,i) -visc(0,1)(1,0)*x.du(2,0)(0,i)
+									-visc(0,0)(1,1)*x.du(1,1)(0,i) -visc(0,1)(1,1)*x.du(2,1)(0,i));
+					ldiff_flux(2) =    basis::tri(x.log2p)->wtx(i)*( x.u(0)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+									-viscI1II0II1II0I*x.du(1,0)(0,i) -viscI1II1II1II0I*x.du(2,0)(0,i)
+									-viscI1II0II1II1I*x.du(1,1)(0,i) -visc(1,1)(1,1)*x.du(2,1)(0,i));
+					ldiff_flux(3) = basis::tri(x.log2p)->wtx(i)*(-kcond(1,0)*x.du(3,0)(0,i) -kcond(1,1)*x.du(3,1)(0,i));
+					diff_flux -= ldiff_flux;
+					ldiff_flux /= jcb;
 
 					norm(0) = x.dcrd(1,0)(0,i);
 					norm(1) = -x.dcrd(0,0)(0,i);                
@@ -100,21 +122,30 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 						mvel(n) += x.gbl->mesh_ref_vel(n);
 #endif
 					}
-
-					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
-
-					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
-					conv_flux(2) -= convect;
-					conv_flux(0) -= x.u(0)(0,i)*convect;
-					conv_flux(1) -= x.u(1)(0,i)*convect;
+					double rho = x.u(0)(0,i)/x.u(NV-1)(0,i);
+					double h = gogm1*x.u(NV-1)(0,i) +0.5*(x.u(1)(0,i)*x.u(1)(0,i)+x.u(2)(0,i)*x.u(2)(0,i));
+					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*rho*((x.u(1)(0,i)-mvel(0))*norm(0) +(x.u(2)(0,i)-mvel(1))*norm(1));
+					lconv_flux(0) -= convect;
+					lconv_flux(1) -= x.u(1)(0,i)*convect;
+					lconv_flux(2) -= x.u(2)(0,i)*convect;
+					lconv_flux(3) -= h*convect;
+					conv_flux -= lconv_flux;
+					lconv_flux /= jcb;
 
 #ifdef L2_ERROR
 					xpt(0) = x.crd(0)(0,i);
 					xpt(1) = x.crd(1)(0,i);
 					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
 #endif
+					
+					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					for(int n=0;n<x.NV;++n)
+						file_out << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
+					file_out << std::endl;
 				}				
 			}
+			file_out.close();
+
 			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
 			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
 			*x.gbl->log << base.idprefix << " convective flux: " << conv_flux << std::endl;
@@ -443,7 +474,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 //	
 //	for(int i = 0; i < x.NV; ++i)
 //		for(int j = 0; j < x.NV; ++j)
-//			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+pvu(j));
+//			fluxtemp(i) += 0.5*A(0,i)*(ub(j)+pvu(j));
 	
 //	/* or this way */
 //	fluxtemp(0) = rho*u;
@@ -506,14 +537,14 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 //	for(int i=0; i<x.NV; ++i)
 //		for(int j=0; j<x.NV; ++j)
 //			for(int k=0; k<x.NV; ++k)
-//				temp(i,j)+=dpdc(i,k)*A(k,j);
+//				temp(0,i)+=dpdc(i,k)*A(k,j);
 //	A = temp;
 //	
 //	temp = 0.0;
 //	for(int i=0; i<x.NV; ++i)
 //		for(int j=0; j<x.NV; ++j)
 //			for(int k=0; k<x.NV; ++k)
-//				temp(i,j)+=P(i,k)*A(k,j);
+//				temp(0,i)+=P(i,k)*A(k,j);
 //	
 //	A = temp;
 //	matrix_absolute_value(A);
@@ -538,19 +569,19 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	for(int i=0; i < x.NV; ++i)
 		for(int j=0; j < x.NV; ++j)
-			VINV(i,j) = Aeigs(i)*VINV(i,j);
+			VINV(0,i) = Aeigs(i)*VINV(0,i);
 	
 	A = 0.0;
 	for(int i=0; i<x.NV; ++i)
 		for(int j=0; j<x.NV; ++j)
 			for(int k=0; k<x.NV; ++k)
-				A(i,j)+=V(i,k)*VINV(k,j);
+				A(0,i)+=V(i,k)*VINV(k,j);
 	
 	temp = 0.0;
 	for(int i=0; i<x.NV; ++i)
 		for(int j=0; j<x.NV; ++j)
 			for(int k=0; k<x.NV; ++k)
-				temp(i,j)+=Pinv(i,k)*A(k,j);
+				temp(0,i)+=Pinv(i,k)*A(k,j);
 	
 	A = temp;
 	
@@ -558,12 +589,12 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	for(int i=0; i<x.NV; ++i)
 		for(int j=0; j<x.NV; ++j)
 			for(int k=0; k<x.NV; ++k)
-				temp(i,j)+=dcdp(i,k)*A(k,j);
+				temp(0,i)+=dcdp(i,k)*A(k,j);
 	A = temp;
 	
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
-			fluxtemp(i) -= 0.5*A(i,j)*(ub(j)-pvu(j));
+			fluxtemp(i) -= 0.5*A(0,i)*(ub(j)-pvu(j));
 	
 	/* CHANGE BACK TO X,Y COORDINATES */
 	flx(0) = fluxtemp(0);
