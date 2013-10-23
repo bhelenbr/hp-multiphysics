@@ -1048,7 +1048,7 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		K = gbl->Krough*K2Dn_exp;
 	}
 	else {
-		K = gbl->Krough*(1. + 2.*gbl->Ksn/(-sint+fabs(sint) +EPSILON));
+		K = gbl->Krough*(1. + 2.*gbl->Ksn/(2*fabs(sint) +EPSILON));
 	}
 		
 	return(K);
@@ -1083,7 +1083,7 @@ void melt_facet_pt::rsdl(int stage) {
 
 void melt_facet_pt::element_rsdl() {	
 	Array<FLT,1> u(x.NV);
-	TinyVector<FLT, 2> xp, dxpdpsi, mvel;
+	TinyVector<FLT, 2> xp, dxpdpsi, mvel, anorm;
 	
 	/* Calculate Temperature from velocity of point & 2D nucleation coefficient only */
 	/* Assuming growth at facet angle */
@@ -1097,10 +1097,18 @@ void melt_facet_pt::element_rsdl() {
 		mvel(n) -= x.gbl->mesh_ref_vel(n);
 #endif
 	}
+
 	
 	FLT jcb = sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
+
 	FLT DT = surf->ibc->f(2, xp, x.gbl->time) -u(2);
 	melt_kinetics *surf1 = dynamic_cast<melt_kinetics *>(surf);
+
+	/* This is to allow the general expression at the triple point */
+//     anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
+//     FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
+//     FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
+	
 	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
 	FLT res1 = jcb*RAD(xp(0))*x.gbl->rho*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
 	/* Kinetic equation for surface temperature */
