@@ -125,12 +125,28 @@ bool input_map::get(const std::string &keyword, double &vout) {
     return(false);
 }
 
+bool input_map::get(const std::string &keyword, int &vout) {
+
+	/* try to get a normal int */
+	if (get<int>(keyword,vout))
+		return(true);
+	
+	/* try to get a double and convert */
+	double vdouble;
+	if (get("keyword",vdouble)) {
+		vout = vdouble;
+		return(true);
+	}
+	
+	return(false);
+}
+
 bool input_map::get(const std::string &keyword, double *array, int nentry) {
     double value;
     std::string expression;
     std::istringstream data;
     std::map<std::string,std::string>::const_iterator mi;
-    
+  
     mi = find(keyword);
     if (mi != end()) {
         data.str((*this)[keyword]);
