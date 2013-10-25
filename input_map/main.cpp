@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "input_map.h"
 
-#define NO_TESTING
+#define TESTING
 
 #ifndef TESTING
 #include <parseargs.h>
@@ -71,62 +71,65 @@ int main (int argc, char *argv[]) {
 	return 0;
 
 #else
-    /* INPUT MAP FROM FILE */
-    mymap.input(argv[1]);
-    
+	/* INPUT MAP FROM FILE */
+	mymap.input(argv[1]);
+	
 
-    /* SET MAP VALUE FROM FLOAT */
-    std::ostringstream myout;
-    myout.str("");
-    myout << 3.72569 << std::flush;
-    mymap["a"]  = myout.str();
-    
-    mymap["formula"] = "a + 3.0";
-    
-    std::cout << std::endl << std::endl << "OUTPUTING MAP AT BEGINNING" << std::endl;
-    std::cout << mymap;
-    mymap.echo = true;
-    mymap.echoprefix = "#";
-    std::cout << std::endl << std::endl;
+	/* SET MAP VALUE FROM FLOAT */
+	std::ostringstream myout;
+	myout.str("");
+	myout << 3.72569 << std::flush;
+	mymap["a"]  = myout.str();
+	mymap["formula"] = "a + 3.0";
 
-        
-    /* LOAD DOUBLE USING FORMULA */
-    double b;
-    mymap.get("formula",b);    
-    
-    /* ERASE ENTRY */
-    std::map<std::string,std::string>::iterator mi;
-    mi = mymap.find("formula");
-    mymap.erase(mi);
-        
-    /* LOAD INTEGER */
-    int itercrsn;
-    mymap.getwdefault("itercrsn",itercrsn,1);
-        
-    /* LOAD INTEGER WITH DEFAULT VALUE */
-    int log2p;
-    if (!mymap.get(idprefix + ".log2p",log2p)) mymap.getwdefault("log2p",log2p,0);
-    
-    /* LOAD STRING */
-    std::string filename;
-    if (!mymap.get("mesh",filename)) {std::cout << "no mesh name\n"; exit(1);}
-    
-    /* LOAD ARRAY OF FLOATS */
-    double dx[3], dflt[3] = {0.0, 1.0, 4.0};
-    mymap.getwdefault("dx",dx,3,dflt);
-    
-    /* USE ONE KEYWORD TO FIND ANOTHER */
-    std::string val;
-    if (mymap.get(idprefix+".matching_block",val)) {
-        if (!mymap.get(val,log2p)) {
-            std::cout << "couldn't find matching blocks log2p" << std::endl;
-            exit(1);
-        }
-    }
-      
-    /* OUTPUT MAP */
-    std::cout << std::endl << std::endl << "OUTPUTING MAP AT END" << std::endl;
-    std::cout << mymap;
+	std::cout << std::endl << std::endl << "OUTPUTING MAP AT BEGINNING" << std::endl;
+	std::cout << mymap;
+	mymap.echo = true;
+	mymap.echoprefix = "#";
+	std::cout << std::endl << std::endl;
+
+			
+	/* LOAD DOUBLE USING FORMULA */
+	double b;
+	mymap.get("formula",b);
+
+	/* LOAD INT USING FORMULA */
+	int c;
+	std::cout << mymap.get("formula",c) << ' ' << c << std::endl;
+
+	/* ERASE ENTRY */
+	std::map<std::string,std::string>::iterator mi;
+	mi = mymap.find("formula");
+	mymap.erase(mi);
+			
+	/* LOAD INTEGER */
+	int itercrsn;
+	mymap.getwdefault("itercrsn",itercrsn,1);
+			
+	/* LOAD INTEGER WITH DEFAULT VALUE */
+	int log2p;
+	if (!mymap.get(idprefix + ".log2p",log2p)) mymap.getwdefault("log2p",log2p,0);
+	
+	/* LOAD STRING */
+	std::string filename;
+	if (!mymap.get("mesh",filename)) {std::cout << "no mesh name\n"; exit(1);}
+	
+	/* LOAD ARRAY OF FLOATS */
+	double dx[3], dflt[3] = {0.0, 1.0, 4.0};
+	mymap.getwdefault("dx",dx,3,dflt);
+	
+	/* USE ONE KEYWORD TO FIND ANOTHER */
+	std::string val;
+	if (mymap.get(idprefix+".matching_block",val)) {
+			if (!mymap.get(val,log2p)) {
+					std::cout << "couldn't find matching blocks log2p" << std::endl;
+					exit(1);
+			}
+	}
+		
+	/* OUTPUT MAP */
+	std::cout << std::endl << std::endl << "OUTPUTING MAP AT END" << std::endl;
+	std::cout << mymap;
 #endif
 
 }

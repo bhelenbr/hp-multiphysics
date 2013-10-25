@@ -86,7 +86,7 @@ bool input_map::get(const std::string &keyword, double &vout) {
         data.str((*this)[keyword]);
         if (data >> vout && data.eof()) {
             if (echo) *log << echoprefix << keyword << ": " << vout << std::endl;
-            return true;
+            return(true);
         }
         else {
             /* TRY TO PARSE MATHEMATICAL EXPRESSION */
@@ -128,14 +128,23 @@ bool input_map::get(const std::string &keyword, double &vout) {
 bool input_map::get(const std::string &keyword, int &vout) {
 
 	/* try to get a normal int */
-	if (get<int>(keyword,vout))
-		return(true);
+	std::istringstream data;
+	std::map<std::string,std::string>::const_iterator mi;
 	
-	/* try to get a double and convert */
-	double vdouble;
-	if (get("keyword",vdouble)) {
-		vout = vdouble;
-		return(true);
+	mi = find(keyword);
+	if (mi != end()) {
+		data.str((*this)[keyword]);
+		if (data >> vout && data.eof()) {
+			if (echo) *log << echoprefix << keyword << ": " << vout << std::endl;
+			return(true);
+		}
+	
+		/* try to get a double and convert */
+		double vdouble;
+		if (get(keyword,vdouble)) {
+			vout = vdouble;
+			return(true);
+		}
 	}
 	
 	return(false);
