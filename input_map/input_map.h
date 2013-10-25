@@ -23,7 +23,9 @@ class input_map : public std::map<std::string,std::string> {
         bool input(const std::string &filename);
         friend std::istream& operator >>(std::istream &is,input_map &obj);
         friend std::ostream& operator <<(std::ostream &os,const input_map &obj);
-        template<class T> bool get(const std::string &keyword, T &vout) {
+  
+				/* Generic get template routine */
+				template<class T> bool get(const std::string &keyword, T &vout) {
             std::istringstream data;
             std::map<std::string,std::string>::const_iterator mi;
             mi = find(keyword);
@@ -36,19 +38,15 @@ class input_map : public std::map<std::string,std::string> {
             }
             return(false);
         }
-        
-        /* SPECIAL CASE FOR DOUBLES SO CAN LOAD FROM FORMULA */
+	 
+        /* Special case for doubles so can load from formula */
         bool get(const std::string &keyword, double &vout);
-         
-        template<class T> void getwdefault(const std::string &keyword, T &vout,const T dflt) {
-            if (!get(keyword,vout)) {
-                vout = dflt;
-                if (echo) *log << echoprefix << keyword << ": " << dflt << std::endl;
-            }
-            return;
-        }
-        
-        /* LIST OF VALUES ON ONE LINE */
+	
+				/* Special case for ints so can load from formula for double and then convert */
+				bool get(const std::string &keyword, int &vout);
+  
+
+        /* Special case for list of values on one line */
         template<class T> bool get(const std::string &keyword, T *array, int nentry) {
             std::istringstream data;
             std::map<std::string,std::string>::const_iterator mi;
@@ -69,9 +67,33 @@ class input_map : public std::map<std::string,std::string> {
             return(false);
         }
         
-        /* SPECIAL CASE FOR DOUBLES SO CAN LOAD FROM LIST OF FORMULAS */
+        /* Special case for doubles so can load from list of formulas */
         bool get(const std::string &keyword, double *array, int nentry);
-        
+	
+				/* Function to get entire line as a string */
+				bool getline(const std::string &keyword, std::string& vout) {
+					std::map<std::string,std::string>::const_iterator mi;
+					
+					mi = find(keyword);
+					if (mi != end()) {
+						vout = (*this)[keyword];
+						if (echo) *log << echoprefix << keyword << ": " << vout << std::endl;
+						return(true);
+					}
+					return(false);
+				}
+	
+	
+				/* Get w/default function */
+				template<class T> void getwdefault(const std::string &keyword, T &vout,const T dflt) {
+					if (!get(keyword,vout)) {
+						vout = dflt;
+						if (echo) *log << echoprefix << keyword << ": " << dflt << std::endl;
+					}
+					return;
+				}
+  
+				/* Get w/default function for a list on a single line */
         template<class T> void getwdefault(const std::string &keyword, T *array, int nentry, const T *dflt) {
             if (!get(keyword,array,nentry)) {
                 for (int n=0;n<nentry;++n) array[n] = dflt[n];
@@ -84,19 +106,8 @@ class input_map : public std::map<std::string,std::string> {
             }
             return;
         }
-        
-        bool getline(const std::string &keyword, std::string& vout) {
-            std::map<std::string,std::string>::const_iterator mi;
-            
-            mi = find(keyword);
-            if (mi != end()) {
-                vout = (*this)[keyword];
-                if (echo) *log << echoprefix << keyword << ": " << vout << std::endl;
-                return(true);
-            }
-            return(false);
-        }
-        
+  
+				/* Get w/default for getting an entire line */
         void getlinewdefault(const std::string &keyword, std::string& vout, const std::string& dflt) {            
             if (!getline(keyword,vout)) {
                 vout = dflt;
