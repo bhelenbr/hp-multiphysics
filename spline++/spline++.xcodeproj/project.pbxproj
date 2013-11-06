@@ -12,7 +12,8 @@
 		6F2EF3830DB780C6001358E1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC91D8C0DB71A5E00274CF9 /* main.cpp */; };
 		6F2EF3840DB780C7001358E1 /* spline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F2EF3270DB77B2D001358E1 /* spline.cpp */; };
 		6FC91D330DB6EFF700274CF9 /* spline.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FC91D310DB6EFF700274CF9 /* spline.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E6F1CDD61533D846009F6A6B /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDD51533D846009F6A6B /* vecLib.framework */; };
+		E67D1EC7182AA7E300376912 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E67D1EC6182AA7E300376912 /* Accelerate.framework */; };
+		E67D1EC8182AA7E300376912 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E67D1EC6182AA7E300376912 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,7 +24,7 @@
 		6FC91D320DB6EFF700274CF9 /* spline_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spline_impl.h; sourceTree = "<group>"; };
 		6FC91D8C0DB71A5E00274CF9 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libspline++.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libspline++.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E6F1CDD51533D846009F6A6B /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = ../../../../System/Library/Frameworks/vecLib.framework; sourceTree = "<group>"; };
+		E67D1EC6182AA7E300376912 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,7 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E6F1CDD61533D846009F6A6B /* vecLib.framework in Frameworks */,
+				E67D1EC8182AA7E300376912 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -39,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E67D1EC7182AA7E300376912 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,7 +89,7 @@
 		E6F1CDD41533D7F4009F6A6B /* Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				E6F1CDD51533D846009F6A6B /* vecLib.framework */,
+				E67D1EC6182AA7E300376912 /* Accelerate.framework */,
 			);
 			name = "Frameworks and Libraries";
 			sourceTree = "<group>";
