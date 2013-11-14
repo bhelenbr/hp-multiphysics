@@ -20,6 +20,7 @@ static GBool Coarsen_hp = gFalse;
 static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
 static GBool GMSHPartition = gFalse;
+static GBool GMSHLabel = gFalse;
 static GBool Format = gFalse;
 static GBool Coarsen_Marks = gFalse;
 static GBool Symmetrize = gFalse;
@@ -53,6 +54,8 @@ static ArgDesc argDesc[] = {
 		"partition mesh"},
 	{"-gp"  ,argFlag,     &GMSHPartition,            0,
 		"partition gmsh physical volumes"},
+	{"-gl"  ,argFlag,     &GMSHLabel,            0,
+		"create label of gmsh physical volumes"},
   {"-x"  ,argFlag,     &Format,            0,
 		"change format"},
   {"-l"  ,argFlag,     &Coarsen_Marks,            0,
@@ -241,15 +244,30 @@ int main(int argc, char *argv[]) {
 		}
 		return(0);
 	}
-
 	
+	if (GMSHLabel) {
+		/* This creates a file containing labels of the elements in different volumes in a GMSH mesh */
+		class tet_mesh zx;
+		zx.input(argv[1],in,1.0,bdrymap);
+
+		string filename(argv[1]);
+		ofstream fout;
+		fout.open("marks.txt");
+		
+		for(int i=0;i<zx.ntet;++i)
+			fout << i << ": " << static_cast<int>(zx.gbl->fltwk(i)-1) << '\n';
+		
+		fout.close();
+		
+		return(0);
+	}
 	
 	if (Partition) {
 #ifdef METIS
 		class tet_mesh zx;
 		int p;
 		sscanf(argv[2],"%d",&p);
-		std::string fname;
+		std::string fname,mname;
 		ostringstream nstr;
 		zx.input(argv[1],in,1.0,bdrymap);
 		
@@ -263,15 +281,38 @@ int main(int argc, char *argv[]) {
 		Array<int,1> bnum;
 		
 		zx.setup_partition(p,blist,bnum);
-		
+		ifstream fin;
+		bool marks_flag = false;
+		Array<int,1> marks;
+
+		fin.open("marks.txt");
+		if (fin.good()) {
+			marks.resize(zx.ntet);
+			for (int i=0;i<zx.ntet;++i) {
+				fin.ignore(80,':');
+				fin >> marks(i);
+				marks_flag = true;
+			}
+		}
+			
 		for(int i=0;i<p;++i) {
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
+			mname = "marks_" +nstr.str() +".txt";
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
 			zpart(i).partition2(zx,i,p,blist,bnum);
 			zpart(i).output(fname,tet_mesh::gmsh);
 			zpart(i).output(fname);
+			
+			if (marks_flag) {
+				ofstream fout;
+				fout.open(mname.c_str());
+				for (int t=0;t<zpart(i).ntet;++t) {
+					fout << t << ": " << marks(zpart(i).tet(t).info);
+				}
+				fout.close();
+			}
 		}
 		
 		//        for(int i=0;i<p;++i) {

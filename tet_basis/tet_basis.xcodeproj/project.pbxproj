@@ -10,8 +10,6 @@
 		6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
-		9572078710473AD20044E240 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 9572078510473AD20044E240 /* makefile */; };
-		95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
 		95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */; };
 		B21BBC590CB2E45F0056D083 /* tet_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FC242850BE65C36003F9828 /* tet_basis.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B21BBC5A0CB2E4600056D083 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2063F0D0AE7D81F00D6577D /* intgrt.cpp */; };
@@ -33,6 +31,8 @@
 		B26FE2210B7D62E20070C569 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		B27150D20AF90B54002DC550 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
 		B27150D30AF90B54002DC550 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
+		E6FA5FCB182B3D0900568351 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCA182B3D0900568351 /* Accelerate.framework */; };
+		E6FA5FCC182B3D1500568351 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCA182B3D0900568351 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,7 +44,6 @@
 		6FBD8A6E084C13780057FD8F /* ptvalues.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptvalues.cpp; sourceTree = "<group>"; };
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../../Codes/lib/libmyblas.a; sourceTree = "<group>"; };
-		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6FC242850BE65C36003F9828 /* tet_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tet_basis.h; sourceTree = "<group>"; };
 		9572078510473AD20044E240 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = SOURCE_ROOT; };
 		B2063F0D0AE7D81F00D6577D /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
@@ -54,6 +53,7 @@
 		B2B1CA150BF8B213000E4F20 /* proj2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proj2d.cpp; sourceTree = "<group>"; };
 		B2B1CA190BF8B21D000E4F20 /* proj1d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proj1d.cpp; sourceTree = "<group>"; };
 		B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = outputstuff.cpp; sourceTree = "<group>"; };
+		E6FA5FCA182B3D0900568351 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6FA5FCB182B3D0900568351 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,9 +69,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6FA5FCC182B3D1500568351 /* Accelerate.framework in Frameworks */,
 				B27150D20AF90B54002DC550 /* libmyblas.a in Frameworks */,
 				B27150D30AF90B54002DC550 /* libblitz.a in Frameworks */,
-				95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,7 +128,7 @@
 		6FBD8A89084C14550057FD8F /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6FBD8A85084C14470057FD8F /* vecLib.framework */,
+				E6FA5FCA182B3D0900568351 /* Accelerate.framework */,
 				6FBD8A81084C14040057FD8F /* libmyblas.a */,
 				6FBD8A7F084C13F20057FD8F /* libblitz.a */,
 			);
@@ -242,7 +243,6 @@
 				B260A54D0D3D0D75001E15D6 /* proj2d.cpp in Sources */,
 				B260A54E0D3D0D76001E15D6 /* ptvalues.cpp in Sources */,
 				B260A54F0D3D0D77001E15D6 /* outputstuff.cpp in Sources */,
-				9572078710473AD20044E240 /* makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,8 +252,6 @@
 		6F33E673086787BF0029F2D6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -262,36 +260,29 @@
 					BZ_DEBUG,
 				);
 				INSTALL_PATH = /lib;
-				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = tet_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
 			};
 			name = Debug;
 		};
 		6F33E674086787BF0029F2D6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = /lib;
-				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = tet_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
 			};
 			name = Release;
 		};
 		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					"${HOME}/Codes/include",
@@ -306,9 +297,8 @@
 		6FD8AD460864E338005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = (
 					"${HOME}/Packages/include",
 					"${HOME}/Codes/include",

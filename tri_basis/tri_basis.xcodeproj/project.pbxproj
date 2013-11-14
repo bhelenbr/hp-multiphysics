@@ -10,11 +10,12 @@
 		6F09762C0F20A70800E94A8E /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
 		6F4CCC4C0CDAC316009F79DE /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; };
 		6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
-		6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
 		6FEB5D4710172444000E6287 /* instances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEB5D4610172444000E6287 /* instances.cpp */; };
 		6FEB5D4810172444000E6287 /* instances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEB5D4610172444000E6287 /* instances.cpp */; };
 		6FF1B1D60CDBCC9E00A4F68E /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		E6FA5FC8182B377300568351 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FC7182B377300568351 /* Accelerate.framework */; };
+		E6FA5FC9182B386C00568351 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FC7182B377300568351 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,9 +32,9 @@
 		6FBD8A7A084C13AF0057FD8F /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
-		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6FEB5D4610172444000E6287 /* instances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = instances.cpp; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* tri_basis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_basis; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6FA5FC7182B377300568351 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6FA5FC8182B377300568351 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -48,8 +50,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6FA5FC9182B386C00568351 /* Accelerate.framework in Frameworks */,
 				6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */,
-				6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */,
 				6F09762C0F20A70800E94A8E /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -105,7 +107,7 @@
 		6FBD8A89084C14550057FD8F /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6FBD8A85084C14470057FD8F /* vecLib.framework */,
+				E6FA5FC7182B377300568351 /* Accelerate.framework */,
 				6FBD8A81084C14040057FD8F /* libmyblas.a */,
 				6FBD8A7F084C13F20057FD8F /* libblitz.a */,
 			);
@@ -221,17 +223,13 @@
 		6F33E673086787BF0029F2D6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
 				);
-				GCC_UNROLL_LOOPS = NO;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
-				OTHER_CFLAGS = "";
 				PRODUCT_NAME = tri_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -240,14 +238,10 @@
 		6F33E674086787BF0029F2D6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_UNROLL_LOOPS = YES;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
-				OTHER_CFLAGS = "-falign-loops=16";
 				PRODUCT_NAME = tri_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -260,7 +254,6 @@
 					f2cFortran,
 					BZ_DEBUG,
 				);
-				GCC_VERSION = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tri_basis;
 			};
@@ -270,7 +263,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_VERSION = "";
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = tri_basis;
 			};
@@ -279,8 +271,8 @@
 		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Codes/include",
 					"$(HOME)/Packages/include",
@@ -289,16 +281,16 @@
 					"$(HOME)/Packages/lib/",
 					"$(HOME)/Codes/lib/",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Debug;
 		};
 		6FD8AD460864E338005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Codes/include",
 					"$(HOME)/Packages/include",
@@ -307,6 +299,8 @@
 					"$(HOME)/Packages/lib/",
 					"$(HOME)/Codes/lib/",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-fast",
