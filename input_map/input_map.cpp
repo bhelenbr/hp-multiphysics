@@ -10,6 +10,7 @@
 #include "input_map.h"
 #include <fstream>
 #include <muParser.h>
+#include <tgmath.h>
 
 using namespace std;
 
@@ -89,12 +90,17 @@ bool input_map::get(const std::string &keyword, double &vout) {
             return(true);
         }
         else {
+					double (*my_erf)(double) = erf;
+					double (*my_erfc)(double) = erfc;
+					
+					double x = (*my_erf)(1.0);
+					
             /* TRY TO PARSE MATHEMATICAL EXPRESSION */
             mu::Parser P,P1;
-						P.DefineFun("erf", erf, false);
-						P.DefineFun("erfc", erfc, false);
-						P1.DefineFun("erf", erf, false);
-						P1.DefineFun("erfc", erfc, false);
+						P.DefineFun("erf", my_erf, false);
+						P.DefineFun("erfc", my_erfc, false);
+						P1.DefineFun("erf", my_erf, false);
+						P1.DefineFun("erfc", my_erfc, false);
 					
             try {
                 P.SetExpr((*this)[keyword]);
