@@ -611,28 +611,50 @@ void tet_mesh::match_bdry_numbering() {
 
 #ifdef METIS
 
-extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
-									int *epart, int *npart);
+#include <metis.h>
 
 void tet_mesh::setpartition(int nparts) {
-	int i,n;
-	int etype = 2; /* 1 = triangle, 2 = tetrahedral*/
-	int numflag = 0; /* C-style numbering */
-	int edgecut;
+	idx_t edgecut;
+	idx_t ncommon = 2;
+	idx_t ntet_idx = ntet;
+ 	idx_t npnt_idx = npnt;
+	idx_t nparts_idx = nparts;
+	Array<idx_t,1> iwk1(maxvst), iwk2(maxvst), eptr(maxvst), eind(4*maxvst);
 	
-	/* CREATE ISOLATED TVRTX ARRAY */
-	Array<TinyVector<int,4>,1> tvrtx(maxvst);
-	for(i=0;i<ntet;++i)
-		for(n=0;n<4;++n)
-			tvrtx(i)(n) = tet(i).pnt(n);
+	for(int i=0;i<ntet;++i) {
+		eptr(i) = 4*i;
+		for(int n=0;n<4;++n)
+			eind(eptr(i)+n)   = tet(i).pnt(n);
+	}
+	eptr(ntet) = 4*ntet;
 	
-	METIS_PartMeshDual(&ntet, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->i1wk(0)),&(gbl->i2wk(0)));
+	int err = METIS_PartMeshDual(&ntet_idx, &npnt_idx, eptr.data(), eind.data(), NULL, NULL, &ncommon, &nparts_idx, NULL, NULL, &edgecut,iwk1.data(),iwk2.data());
+	if (err != METIS_OK) {
+		*gbl->log << "METIS partitioning error" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	for(int i=0;i<ntri;++i)
+		tet(i).info = iwk1(i);
 	
-	for(i=0;i<ntet;++i)
-		tet(i).info = gbl->i1wk(i);
-	
-	gbl->i1wk = -1;
-	
+	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
+	for(int i=0;i<ntet;++i) {
+		for(int j=0;j<4;++j) {
+			int tind = tet(i).tet(j);
+			if (tind > -1)
+				if (tet(i).info == tet(tind).info) goto next;
+		}
+		
+		std::cout << "#reassigning problem tet " << i << '\n';
+		for(int j=0;j<4;++j) {
+			int tind = tet(i).tet(j);
+			if (tind > -1) {
+				tet(i).info = tet(tind).info;
+				break;
+			}
+		}
+		
+	next:;
+	}
 	return;
 }
 #endif
