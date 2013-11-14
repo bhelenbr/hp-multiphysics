@@ -615,7 +615,7 @@ void tet_mesh::match_bdry_numbering() {
 
 void tet_mesh::setpartition(int nparts) {
 	idx_t edgecut;
-	idx_t ncommon = 2;
+	idx_t ncommon = 3;
 	idx_t ntet_idx = ntet;
  	idx_t npnt_idx = npnt;
 	idx_t nparts_idx = nparts;
@@ -633,7 +633,7 @@ void tet_mesh::setpartition(int nparts) {
 		*gbl->log << "METIS partitioning error" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
-	for(int i=0;i<ntri;++i)
+	for(int i=0;i<ntet;++i)
 		tet(i).info = iwk1(i);
 	
 	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
