@@ -186,19 +186,27 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 	dotloc = grd_nm.find_last_of('.');
 	string ending;
 	ending = grd_nm.substr(dotloc+1);
-	if (ending == "grd") {
-		filetype = grid;
+	if (ending == "d") {
+		filetype = baker;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
-	else if (ending == "msh") {
-		filetype = gmsh;
+	else if (ending == "grd") {
+		filetype = grid;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
 	else if (ending == "FDNEUT") {
 		filetype = gambit;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
-	
+	else if (ending == "dat") {
+		filetype = tecplot;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "msh") {
+		filetype = gmsh;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+
 	switch (filetype) { 
 					
 		case(baker):
