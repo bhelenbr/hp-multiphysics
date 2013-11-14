@@ -1021,7 +1021,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 		p1 = xin.pnt(xin.seg(seg(sind).info).pnt(1)).info;
 		if (p0 == seg(sind).pnt(0) && p1 == seg(sind).pnt(1)) pointsmatch = true;		
 		if (p1 == seg(sind).pnt(0) && p0 == seg(sind).pnt(1)) pointsmatch = true;
-		if (pointsmatch=false) {
+		if (pointsmatch==false) {
 			*gbl->log << "points dont match for edge" << endl;
 			exit(2);
 		}
