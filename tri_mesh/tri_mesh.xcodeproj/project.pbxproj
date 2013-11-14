@@ -317,6 +317,7 @@
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				07F2E95000974D3D80990B20 /* tri_mesh.h */,
+				07F2E94600974D3D80990B20 /* input.cpp */,
 				07F2E94800974D3D80990B20 /* output.cpp */,
 				F5BE6B500162B73801000001 /* copy.cpp */,
 				07F2E94700974D3D80990B20 /* setup.cpp */,
@@ -362,7 +363,6 @@
 		6FFD05E20CC3D97F001CE474 /* block */ = {
 			isa = PBXGroup;
 			children = (
-				07F2E94600974D3D80990B20 /* input.cpp */,
 				F5C9C262032CCEAF01990B69 /* block.h */,
 				F53FC7D10343C82E01E186A8 /* blocks.cpp */,
 				07F2E94E00974D3D80990B20 /* blocks.h */,
@@ -718,13 +718,11 @@
 		6F2262C208672FD1001017D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					MY_SPARSE,
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};
@@ -733,13 +731,11 @@
 		6F2262C308672FD1001017D0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					MY_SPARSE,
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};
@@ -788,7 +784,6 @@
 		6FB91AD90ACCB10300792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(mpi_threads)",
@@ -802,7 +797,6 @@
 		6FB91ADA0ACCB10300792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"${mpi_threads}",
@@ -902,6 +896,7 @@
 		6FD540670863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -909,12 +904,6 @@
 					BZ_DEBUG,
 					f2cFortran,
 				);
-				GCC_VERSION = "";
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = (
 					"${prefix}/include",
 					"${packages}/include",
@@ -924,6 +913,7 @@
 					"${packages}/lib",
 					"${prefix}/lib",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"-fno-inline",
@@ -940,17 +930,11 @@
 		6FD540680863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_VERSION = "";
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					"${prefix}/include",
 					"${packages}/include",
@@ -960,6 +944,8 @@
 					"${packages}/lib",
 					"${prefix}/lib",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-fast",

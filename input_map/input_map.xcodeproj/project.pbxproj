@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -159,9 +159,10 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -221,9 +222,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = /lib;
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -233,9 +232,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = /lib;
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -244,13 +241,14 @@
 		6FD651C60922EC5F00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
+				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -258,13 +256,14 @@
 		6FD651C70922EC5F00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
+				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
@@ -285,6 +284,7 @@
 				DEPLOYMENT_LOCATION = NO;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = mod_map;
 			};
 			name = Release;
