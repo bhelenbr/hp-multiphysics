@@ -22,10 +22,48 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 	
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
+
+	
+	std::string grd_nm = filename;
+	
+	/* Override filetype based on ending? */
+	size_t dotloc;
+	dotloc = grd_nm.find_last_of('.');
+	string ending;
+	ending = grd_nm.substr(dotloc+1);
+	if (ending == "grd") {
+		filetype = grid;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "dat") {
+		filetype = tecplot;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "txt") {
+		filetype = text;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "dt") {
+		filetype = datatank;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "msh") {
+		filetype = gmsh;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "lngth") {
+		filetype = vlength;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "vtu") {
+		filetype = vtu;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+
 			
 	switch (filetype) {    
 		case (easymesh): 
-			fnmapp = filename +".p";
+			fnmapp = grd_nm +".p";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -42,7 +80,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.close();
 
 			/* SIDE FILE */
-			fnmapp = filename +".s";
+			fnmapp = grd_nm +".s";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -54,7 +92,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			}
 			out.close();
 
-			fnmapp = filename +".f";
+			fnmapp = grd_nm +".f";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -69,7 +107,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			}
 			out.close();
 
-			fnmapp = filename +".t";
+			fnmapp = grd_nm +".t";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -84,15 +122,83 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 				out << ' ' << tet(i).rot(0) << ' ' << tet(i).rot(1) << ' ' << tet(i).rot(2) << ' ' << tet(i).rot(3);				
 				out << ' ' << tet(i).tet(0) << ' ' << tet(i).tet(1) << ' ' << tet(i).tet(2) << ' ' << tet(i).tet(3) << ' ' << tet(i).info << endl;
 			}
-			out.close();			
+			out.close();
+			break;
+			
+		case (grid):
+			fnmapp = grd_nm +".grd";
+			out.open(fnmapp.c_str());
+			
+			out << "npnt:" << ' ' << npnt << "  nseg:" << ' ' << nseg << "  ntri:" << ' ' << ntri << "  ntet:" << ' ' << ntet << endl;
+			
+			// output vertices
+			for(int i = 0; i < npnt; ++i)
+				out << i << ": " << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) << endl;
+			
+			// output seg connection data
+			for(int i = 0; i < nseg; ++i){
+				out << i << ": ";
+				for(int j = 0; j < 2; ++j)
+					out << seg(i).pnt(j) << ' ' ;
+				out << endl;
+			}
+			
+			// output face connection data
+			for(int i = 0; i < ntri; ++i){
+				out << i << ": ";
+				for(int j = 0; j < 3; ++j)
+					out << tri(i).pnt(j) << ' ' ;
+				out << endl;
+			}
+			
+			// output tet connection data
+			for(int i = 0; i < ntet; ++i){
+				out << i << ": ";
+				for(int j = 0; j < 4; ++j)
+					out << tet(i).pnt(j) << ' ' ;
+				out << endl;
+			}
 			
 			
+			/* VERTEX BOUNDARY INFO HEADER */
+			out << "nvbd: " << nvbd << endl;
+			for(int i=0;i<nvbd;++i) {
+				out << "idnum: " << vbdry(i)->idnum << endl;
+				out << "point: " << vbdry(i)->pnt << endl;
+			}
 			
+			/* SIDE BOUNDARY INFO HEADER */
+			out << "nebd: " << nebd << endl;
+			for(int i=0;i<nebd;++i) {
+				out << "idnum: " << ebdry(i)->idnum << endl;
+				out << "number: " << ebdry(i)->nseg << endl;
+				for(int j=0;j<ebdry(i)->nseg;++j)
+					out << j << ": " << ebdry(i)->seg(j).gindx << std::endl;
+			}
+			
+			/* FACE BOUNDARY INFO HEADER */
+			out << "nfbd: " << nfbd << endl ;
+			for(int i = 0; i < nfbd; ++i){
+				out << "idnum: " << fbdry(i)->idnum << endl;
+				out << "npnt: " << fbdry(i)->npnt << " nseg: " << fbdry(i)->nseg<< " ntri: " << fbdry(i)->ntri << endl;
+				//out << fbdry(i)->type
+				for(int j = 0; j < fbdry(i)->npnt; ++j){
+					out << j << ": " << fbdry(i)->pnt(j).gindx << endl;
+				}
+				for(int j = 0; j < fbdry(i)->nseg; ++j){
+					out << j << ": " << fbdry(i)->seg(j).gindx << endl;
+				}
+				for(int j = 0; j < fbdry(i)->ntri; ++j){
+					out << j << ": " << fbdry(i)->tri(j).gindx << endl;
+				}
+			}
+			
+			
+			out.close();
 			break;
 
-
 		case (tecplot):
-			fnmapp = filename +".dat";
+			fnmapp = grd_nm +".dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -122,7 +228,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 
 		case(text):
 			/* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
-			fnmapp = filename +".txt";
+			fnmapp = grd_nm +".txt";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -136,79 +242,6 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 				out << "\n";
 			}
 				
-			out.close();
-			break;
-			
-		case (grid):
-		
-			fnmapp = filename +".grd";
-			out.open(fnmapp.c_str());
-
-			out << "npnt:" << ' ' << npnt << "  nseg:" << ' ' << nseg << "  ntri:" << ' ' << ntri << "  ntet:" << ' ' << ntet << endl;
-			
-			// output vertices
-			for(int i = 0; i < npnt; ++i)
-				out << i << ": " << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) << endl;
-			
-			// output seg connection data 
-			for(int i = 0; i < nseg; ++i){
-				out << i << ": ";
-				for(int j = 0; j < 2; ++j)
-					out << seg(i).pnt(j) << ' ' ;
-				out << endl;
-			}			
-			
-			// output face connection data
-			for(int i = 0; i < ntri; ++i){
-				out << i << ": ";
-				for(int j = 0; j < 3; ++j)
-					out << tri(i).pnt(j) << ' ' ;
-				out << endl;
-			}
-
-			// output tet connection data
-			for(int i = 0; i < ntet; ++i){
-				out << i << ": ";
-				for(int j = 0; j < 4; ++j)
-					out << tet(i).pnt(j) << ' ' ;
-				out << endl;
-			}
-				
-						
-			/* VERTEX BOUNDARY INFO HEADER */
-			out << "nvbd: " << nvbd << endl;
-			for(int i=0;i<nvbd;++i) {
-				out << "idnum: " << vbdry(i)->idnum << endl;
-				out << "point: " << vbdry(i)->pnt << endl;
-			}
-			
-			/* SIDE BOUNDARY INFO HEADER */
-			out << "nebd: " << nebd << endl;
-			for(int i=0;i<nebd;++i) {
-				out << "idnum: " << ebdry(i)->idnum << endl;
-				out << "number: " << ebdry(i)->nseg << endl;
-				for(int j=0;j<ebdry(i)->nseg;++j)
-					out << j << ": " << ebdry(i)->seg(j).gindx << std::endl;
-			}    
-			
-			/* FACE BOUNDARY INFO HEADER */
-			out << "nfbd: " << nfbd << endl ;
-			for(int i = 0; i < nfbd; ++i){
-				out << "idnum: " << fbdry(i)->idnum << endl;
-				out << "npnt: " << fbdry(i)->npnt << " nseg: " << fbdry(i)->nseg<< " ntri: " << fbdry(i)->ntri << endl;
-				//out << fbdry(i)->type
-				for(int j = 0; j < fbdry(i)->npnt; ++j){
-					out << j << ": " << fbdry(i)->pnt(j).gindx << endl;
-				}
-				for(int j = 0; j < fbdry(i)->nseg; ++j){
-					out << j << ": " << fbdry(i)->seg(j).gindx << endl;
-				}
-				for(int j = 0; j < fbdry(i)->ntri; ++j){
-					out << j << ": " << fbdry(i)->tri(j).gindx << endl; 
-				}
-			}
-
-			
 			out.close();
 			break;
 
@@ -227,7 +260,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			// find out what to put here        
 			DTTriangularGrid2D dt_grid(dt_tvrtx,dt_vrtx);
 			
-			std::string outputFilename(filename +".dt");
+			std::string outputFilename(grd_nm +".dt");
 			DTDataFile outputFile(outputFilename.c_str(),DTFile::NewReadWrite);
 			// Output from computation
 			Write(outputFile,"grid",dt_grid);
@@ -241,7 +274,8 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			
 		case (gmsh): {
 #ifdef USING_MADLIB
-			MAdLib_output(filename);
+			fnmapp = grd_nm +".msh";
+			MAdLib_output(fnmapp);
 #else
 			*gbl->log << "gmsh Not supported on this platform\n";
 #endif
@@ -249,7 +283,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 		}
 			
 		case(vlength): {
-			fnmapp = filename +".lngth";
+			fnmapp = grd_nm +".lngth";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -264,7 +298,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 
 		case (vtu): {
 			
-			fnmapp = filename +".vtu";
+			fnmapp = grd_nm +".vtu";
 			out.open(fnmapp.c_str());
 			out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
 			out << "	<UnstructuredGrid>" << endl;
