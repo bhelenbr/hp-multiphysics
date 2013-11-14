@@ -2,7 +2,6 @@
 #include "tri_boundary.h"
 #include <stdlib.h>
 #include <new>
-#define METIS5
 
 int tri_mesh::comm_entity_size() {
 	int i,tsize,nvcomm,nscomm;
@@ -238,54 +237,8 @@ void tri_mesh::matchboundaries() {
 	return;
 }
 
-#ifdef METIS4
-extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut, int *epart, int *npart);
+#ifdef METIS
 
-void tri_mesh::setpartition(int nparts) {
-	int i,n;
-	int etype = 1;
-	int numflag = 0;
-	int edgecut;
-	
-	/* CREATE ISOLATED TVRTX ARRAY */
-	Array<TinyVector<int,3>,1> tvrtx(maxpst);
-	for(i=0;i<ntri;++i)
-		for(n=0;n<3;++n)
-			tvrtx(i)(n) = tri(i).pnt(n);
-	
-	METIS_PartMeshDual(&ntri, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->intwk(0)),&(gbl->i2wk(0)));
-	
-	for(i=0;i<ntri;++i)
-		tri(i).info = gbl->intwk(i);
-	
-	gbl->intwk = -1;
-	
-	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
-	for(int i=0;i<ntri;++i) {
-		for(int j=0;j<3;++j) {
-			int tind = tri(i).tri(j);
-			if (tind > -1) 
-				if (tri(i).info == tri(tind).info) goto next;
-		}
-		
-		std::cout << "#reassigning problem triangle " << i << '\n';
-		for(int j=0;j<3;++j) {
-			int tind = tri(i).tri(j);
-			if (tind > -1) {
-				tri(i).info = tri(tind).info;
-				break;
-			}
-		}	
-		
-	next:;
-	}
-	
-	
-	return;
-}
-#endif
-
-#ifdef METIS5
 #include <metis.h>
 
 void tri_mesh::setpartition(int nparts) {
