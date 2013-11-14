@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
 				ofstream fout;
 				fout.open(mname.c_str());
 				for (int t=0;t<zpart(i).ntet;++t) {
-					fout << t << ": " << marks(zpart(i).tet(t).info);
+					fout << t << ": " << marks(zpart(i).tet(t).info) << '\n';
 				}
 				fout.close();
 			}
