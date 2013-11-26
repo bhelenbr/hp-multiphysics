@@ -98,7 +98,7 @@ move pth-2.0.7.tar.gz to Packages
 ###################################################################
 # SKIP THIS
 Download Boost at
-	http://www.boost.org/
+	the
 unpack in packages folder (see index.html file for instructions)
 	[tar zxvf boost_1_48_0.tar.gz]
 	[cd boost_1_48_0]
@@ -123,6 +123,34 @@ save cfortran.h to ${HOME}/Packages/include/
 ###################################################################
 #### (VALGRIND ONLY FOR DEBUGGING) ####
 ###################################################################
+##############################################################
+# auto tools for OS X ########################################
+# needed to build from svn repository ########################
+##############################################################
+curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-2.68.tar.gz
+tar xzf autoconf-2.68.tar.gz
+cd autoconf-2.68
+./configure --prefix=$build
+make
+make install
+
+cd $build
+curl -OL http://ftpmirror.gnu.org/automake/automake-1.11.tar.gz
+tar xzf automake-1.11.tar.gz
+cd automake-1.11
+./configure --prefix=$build
+make install
+
+cd $build
+curl -OL http://ftpmirror.gnu.org/libtool/libtool-2.4.tar.gz
+tar xzf libtool-2.4.tar.gz
+cd libtool-2.4
+./configure --prefix=$build
+make
+make install
+###############################################
+
+
 # download valgrind from web
 tar --use-compress-program bzip2 valgrindXXX.tar.bz2
 ./configure --prefix=/share/apps (for cluster)
@@ -188,7 +216,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi (on cares)
 	export CMAKE_PREFIX_PATH=/share/apps (on orion)
 	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
-       export CMAKE_INSTALL_PREFIX to ${HOME}/Packages or /share/apps
+       export CMAKE_INSTALL_PREFIX=${HOME}/Packages or /share/apps
 
 
 	[cmake ..]

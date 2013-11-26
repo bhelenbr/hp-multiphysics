@@ -238,10 +238,8 @@
 		6FD8AE7B08651561005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = "";
 				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
@@ -249,10 +247,9 @@
 		6FD8AE7C08651561005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = "";
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Release;
 		};

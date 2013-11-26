@@ -241,12 +241,10 @@
 		6FD651C60922EC5F00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -256,12 +254,10 @@
 		6FD651C70922EC5F00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
