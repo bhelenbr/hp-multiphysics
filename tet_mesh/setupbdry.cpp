@@ -11,12 +11,12 @@
 #include <float.h>
 
 /* only run once else it gets screwed up */
+/* this assumes that the global vertex numbers are in tri.pnt */
 void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
 	int nvrt,vrt;    
 	Array<int,1> vinfo(x.npnt);
 	
-	for(int i = 0; i < x.npnt; ++i)
-		vinfo(i) = -1;
+	vinfo = -1;
 		
 	nvrt = 0;
 	for(int i = 0; i < ntri; ++i){

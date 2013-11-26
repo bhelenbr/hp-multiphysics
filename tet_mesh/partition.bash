@@ -111,4 +111,15 @@ mv temp.inpt partition.inpt
 
 #grep -v 'Info' partition.inpt
 
-sed 's/partition$/comm/g' partition.inpt > comm.inpt
+# For isolated boundary points copy type from face boundary
+# "# isolated boundary point: copy type for " << vbdry(tagpnt(p0))->idprefix << ": from " << xin.fbdry(i)->idprefix << endl;
+OIFS=${IFS}
+IFS=$'\n'
+RMV=$(grep '# isolated boundary point:' partition.inpt)
+for line in ${RMV}; do
+FACE=$(echo ${line} | cut -d \  -f 10)
+VRTX=$(echo ${line} | cut -d \  -f 8)
+STRING=$(grep "${FACE}" partition.inpt | grep _type | uniq | sed "s/${FACE}/${VRTX}/g")
+echo ${STRING} >> partition.inpt
+done
+IFS=${OIFS}

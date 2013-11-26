@@ -1550,6 +1550,8 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		}
 	}
 	
+	
+	
 	/**********************************/
 	/*             FACES              */
 	/**********************************/
@@ -1559,7 +1561,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 
 	/* find all face boundaries */
 	for(int i = 0; i < xin.ntri; ++i) {
-		if(xin.tri(i).info != -1){
+		if(xin.tri(i).info != -1) {
 			
 			/* find out if boundary tri is connected to this partition */
 			bool partitionfound = false;
@@ -1661,7 +1663,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		int seginfo = xin.seg(i).info;
 		
 		/* boundary edge */
-		if(seginfo != -1){
+		if(seginfo != -1) {
 			
 			bool partitionfound = false;
 
@@ -1963,20 +1965,20 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			if(p0 == -1) continue;
 
 			if(tagpnt(p0) > -1) {
+				// isolated boundary point (BTH)
 				vbdry(tagpnt(p0))->mytype = "plain";
-				std::cout << "# found lone point type 1 on face boundary: " <<  xin.fbdry(i)->idnum << endl;
-				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
-				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
+				std::cout << "# isolated boundary point: copy type for " << vbdry(tagpnt(p0))->idprefix << " from " << "b0" << xin.fbdry(i)->idprefix << endl;
 				tagpnt(p0) = -1;
 			}	
 			else if(tagpnt(p0) < -1) {
+				// Non preexisting boundary point (BTH)
 				cout <<"# found lone point point type 2 on face boundary: " << xin.fbdry(i)->idnum << endl;
 				vbdry.resizeAndPreserve(nvbd+1);
 				vbdry(nvbd)->mytype = "plain";
 				vbdry(nvbd) = new vcomm(xin.fbdry(i)->pnt(j).gindx+maxvnum,*this);
 				vbdry(nvbd)->alloc(4);
 				vbdry(nvbd)->pnt = p0;
-				std::cout << vbdry(nvbd)->idprefix << "_type: plain\n";
+				std::cout << vbdry(nvbd)->idprefix << "_type: plain\n";  // Should this be comm??? (BTH)
 				std::cout << vbdry(nvbd)->idprefix << "_cns_type: inflow\n";
 				tagpnt(p0) = -1;
 				++nvbd;
@@ -2087,9 +2089,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			
 			if(tagpnt(p0) > -1) {
 				vbdry(tagpnt(p0))->mytype = "plain";				
-				std::cout << "# found lone point type 3 on face boundary: " <<  xin.fbdry(i)->idnum << endl;
-				std::cout << vbdry(tagpnt(p0))->idprefix << "_type: plain" << endl;
-				std::cout << vbdry(tagpnt(p0))->idprefix << "_cns_type: inflow" << endl;
+				std::cout << "# isolated boundary point: copy type for " << vbdry(tagpnt(p0))->idprefix << " from " << "b0" << xin.fbdry(i)->idprefix << endl;
 				tagpnt(p0) = -1;
 			}	
 		}
@@ -2102,15 +2102,14 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 
 		}
 	}
-			
 	
 	MAd::pGModel MAdModel = NULL;
 	GM_create(&MAdModel,"theModel");
 	MAdLibInterface::exportToMAdModel(this, MAdModel);
 	MAd::pMesh MAdMesh = M_new(MAdModel);
-	MAdLibInterface::exportToMAdMesh(this, MAdMesh);	
+	MAdLibInterface::exportToMAdMesh(this, MAdMesh);
 	MAdLibInterface::importFromMAdMesh(MAdMesh,this);
-
+	
 	delete MAdMesh;
 	delete MAdModel;
 	
