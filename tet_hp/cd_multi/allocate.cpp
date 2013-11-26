@@ -7,73 +7,96 @@
  *
  */
 
-#include "tet_hp_cd.h"
+#include "tet_hp_cd_multi.h"
 
-void tet_hp_cd::init(input_map& input, void *gin) {
-	std::string keyword;
-	std::istringstream data;
-	std::string filename;
-	
+void tet_hp_cd_multi::init(input_map& input, void *gin) {
+
 	gbl = static_cast<global *>(gin);
-	keyword = gbl->idprefix + "_nvariable";
-	input[keyword] = "1";
+	tet_hp_cd::init(input,gin);
 	
-	tet_hp::init(input,gin);
 	
-	keyword = gbl->idprefix + "_dissipation";
-	input.getwdefault(keyword,adis,1.0);
+	marks.resize(maxvst);
 	
-	FLT rho;
-	keyword = gbl->idprefix + "_rho";
-	if (!input.get(keyword,rho)) input.getwdefault("rho",rho,1.0);
-	
-	FLT cv;
-	keyword = gbl->idprefix + "_cv";
-	if (!input.get(keyword,cv)) input.getwdefault("cv",cv,1.0);
-	gbl->rhocv = rho*cv;
-	
-	keyword = gbl->idprefix + "_ax";
-	if (!input.get(keyword,gbl->ax)) input.getwdefault("ax",gbl->ax,1.0);
+	std::string gridname, filename;
+	if (!input.get(gbl->idprefix + "_mesh",gridname)) {
+		if (input.get("mesh",gridname)) {
+			gridname = gridname +"_" +gbl->idprefix;
+		}
+		else {
+			*gbl->log << "no mesh name" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+	}
 
-	keyword = gbl->idprefix + "_ay";
-	if (!input.get(keyword,gbl->ay)) input.getwdefault("ay",gbl->ay,0.0);
+	size_t dotloc;
+	dotloc = gridname.find_last_of('.');
 	
-	keyword = gbl->idprefix + "_az";
-	if (!input.get(keyword,gbl->ay)) input.getwdefault("az",gbl->az,0.0);
-
-	if (!input.get(gbl->idprefix + "_nu",gbl->kcond)) {
-		if (!input.get("nu",gbl->kcond)) {
-			if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
-				input.getwdefault("conductivity",gbl->kcond,0.0);
-			}
+	if (dotloc != string::npos) {
+		/* Found and ending */
+		filename = gridname.substr(0,dotloc) +".marks";
+	}
+	else {
+		filename = gridname +".marks";
+	}
+	
+	ifstream marks_file;
+	marks_file.open(filename);
+	if (marks_file.good()) {
+		for (int i=0;i<ntet;++i) {
+			marks_file.ignore(80,':');
+			marks_file >> marks(i);
 		}
 	}
 	
-	gbl->tau.resize(maxvst);
+	std::ostringstream nstr;
+	for(gbl->nmaterials=0, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush; input.find(nstr.str()) != input.end(); ++gbl->nmaterials, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush);
 	
-	gbl->src = getnewibc("src",input);
+	gbl->kcond.resize(gbl->nmaterials);
+	gbl->rhocv.resize(gbl->nmaterials);
 	
+	for(int n=0;n<gbl->nmaterials;++n) {
+		nstr.str("");
+		nstr << "Material" << n << "_conductivity";
+		if (!input.get(nstr.str(),gbl->kcond(n))) {
+			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		nstr.str("");
+		nstr << "Material" << n << "_rho";
+		FLT rho;
+		if (!input.get(nstr.str(),rho)) {
+			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		nstr << "Material" << n << "_cv";
+		FLT cv;
+		if (!input.get(nstr.str(),cv)) {
+			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		gbl->rhocv(n) = rho*cv;
+	}
+
 	return;
 }
 
-void tet_hp_cd::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-	std::string keyword;
-	std::istringstream data;
-	std::string filename;
-	
-	const tet_hp_cd& inmesh = dynamic_cast<const tet_hp_cd &>(in);
+void tet_hp_cd_multi::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
+
+	const tet_hp_cd_multi& inmesh = dynamic_cast<const tet_hp_cd_multi &>(in);
 	gbl = inmesh.gbl;
 
-	tet_hp::init(in,why,sizereduce1d);
+	tet_hp_cd::init(in,why,sizereduce1d);
+	marks.resize(maxvst);
 	
-	adis = inmesh.adis;
-		
 	return;
 }
 
 /* A GENERIC CALCULATION OF SOURCES FOR AN AUTONOMOUS SYSTEM IN STANDARD FORM */
 /* WILL NEED TO BE OVERRIDDEN FOR SPECIAL CASES */
-void tet_hp_cd::calculate_unsteady_sources() {
+void tet_hp_cd_multi::calculate_unsteady_sources() {
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int i,j,k,n,tind;
 	int stridey = MXGP;
@@ -82,6 +105,7 @@ void tet_hp_cd::calculate_unsteady_sources() {
 	
 	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntet;++tind) {
+			FLT rhocv = gbl->rhocv(marks(tind));
 			v = tet(tind).pnt;
 			
 			if (tet(tind).info > -1) {
@@ -114,7 +138,7 @@ void tet_hp_cd::calculate_unsteady_sources() {
 					for(k=0;k<lgpz;++k) {
 						cjcb(i)(j)(k) = -gbl->bd(0)*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						
-						dugdt(log2p,tind,0)(i)(j)(k) = gbl->rhocv*u(0)(i)(j)(k)*cjcb(i)(j)(k);
+						dugdt(log2p,tind,0)(i)(j)(k) = rhocv*u(0)(i)(j)(k)*cjcb(i)(j)(k);
 						for(n=0;n<ND;++n)
 							dxdt(log2p,tind,n)(i)(j)(k) = crd(n)(i)(j)(k);
 					}

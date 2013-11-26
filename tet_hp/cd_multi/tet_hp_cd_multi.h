@@ -7,57 +7,29 @@
  *
  */
 
-#ifndef _tet_hp_cd_h_
-#define _tet_hp_cd_h_
+#ifndef _tet_hp_cd_multi_h_
+#define _tet_hp_cd__multi_h_
 
-#include "../tet_hp.h"
-#include <blocks.h>
+#include "../cd/tet_hp_cd.h"
 
-class tet_hp_cd : public tet_hp {
+class tet_hp_cd_multi : public tet_hp_cd {
 	public:
-		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-		struct global : public tet_hp::global {
-			/* STABILIZATION */
-			Array<FLT,1> tau;
 
-			/* PHYSICAL CONSTANTS */
-			FLT rhocv,ax,ay,az,kcond;
-			
-			/* SOURCE FUNCTION */
-			init_bdry_cndtn *src;
-
-		} *gbl;
-		
-		FLT adis; // DISSIPATION CONSTANT
-
-		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-		hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata);
-		hp_face_bdry* getnewfaceobject(int bnum, input_map &bdrydata);
-
+		Array<int,1> marks;  // Integer identifying material for each element
 	
-		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-		
-	public:
+		/* THINGS SHARED BY ALL tet_hp_cd_multi in same multigrid block */
+		struct global : public tet_hp_cd::global {
+			int nmaterials;
+			Array<FLT,1> kcond, rhocv;
+		} *gbl;
+	
 		void* create_global_structure() {return new global;}
-		tet_hp_cd* create() { return new tet_hp_cd(); }
-		void init(input_map& input, void *gin); 
-		void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0);
-		void calculate_unsteady_sources();
-//    void length();
-//		void minvrt();
-		void setup_preconditioner();
-		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
-
-};
-
-class tet_hp_cd_multimaterial : public tet_hp_cd {
-	public:
-		Array<FLT,1> kcond, rhocv;  
-		Array<int,1> marks;
+		tet_hp_cd_multi* create() { return new tet_hp_cd_multi(); }
 		void init(input_map& input, void *gin);
 		void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void calculate_unsteady_sources();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
+		void connect(multigrid_interface& in);
 };
 #endif

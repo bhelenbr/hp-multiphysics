@@ -7,9 +7,9 @@
  *
  */
 
-#include "tet_hp_cd.h"
-#include "../hp_boundary.h"
-void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
+#include "tet_hp_cd_multi.h"
+
+void tet_hp_cd_multi::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	
 	int i,j,k,n;
 	FLT fluxx,fluxy,fluxz,jcb;
@@ -21,7 +21,10 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	TinyVector<int,4> v;
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
-	int stridex = MXGP*MXGP; 
+	int stridex = MXGP*MXGP;
+	
+	const FLT rhocv = gbl->rhocv(marks(tind));
+	const FLT kcond = gbl->kcond(marks(tind));
 	
 
 	/* LOAD INDICES OF VERTEX POINTS */
@@ -87,9 +90,9 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 				d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 				d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 				
-				fluxx = gbl->rhocv*(gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxy = gbl->rhocv*(gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxz = gbl->rhocv*(gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxx = rhocv*(gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxy = rhocv*(gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxz = rhocv*(gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
 
 				cv00(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
 				cv01(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;
@@ -111,7 +114,7 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 					pt(1) = crd(1)(i)(j)(k);
 					pt(2) = crd(2)(i)(j)(k);
 					cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
-					res(0)(i)(j)(k) = gbl->rhocv*gbl->bd(0)*cjcb(i)(j)(k)*u(0)(i)(j)(k)+dugdt(log2p,tind,0)(i)(j)(k);
+					res(0)(i)(j)(k) = rhocv*gbl->bd(0)*cjcb(i)(j)(k)*u(0)(i)(j)(k)+dugdt(log2p,tind,0)(i)(j)(k);
 					res(0)(i)(j)(k) -= cjcb(i)(j)(k)*gbl->src->f(0,pt,gbl->time);
 				}
 			}
@@ -123,7 +126,7 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpy;++j) {
 				for(k=0;k<lgpz;++k) {
-					jcb = gbl->kcond/cjcb(i)(j)(k);
+					jcb = kcond/cjcb(i)(j)(k);
 					
 					/* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/

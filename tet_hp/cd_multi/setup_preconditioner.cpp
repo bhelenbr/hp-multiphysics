@@ -1,17 +1,16 @@
-#include "tet_hp_cd.h"
+#include "tet_hp_cd_multi.h"
 #include <math.h>
 #include <utilities.h>
 #include "../hp_boundary.h"
 
 //#define TIMEACCURATE
 
-void tet_hp_cd::setup_preconditioner() {
+void tet_hp_cd_multi::setup_preconditioner() {
 	int tind,find,i,j,side,p0,p1,p2,v0;
 	FLT jcb,a,h,amax,lam1,q,qmax,dtcheck;
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
 
-	FLT alpha = gbl->kcond/gbl->rhocv;
 	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -34,6 +33,12 @@ void tet_hp_cd::setup_preconditioner() {
 //	hmin = 1000000;
 	dtcheck = 0.0;
 	for(tind = 0; tind < ntet; ++tind) {
+		
+		const FLT rhocv = gbl->rhocv(marks(tind));
+		const FLT kcond = gbl->kcond(marks(tind));
+		const FLT alpha = kcond/rhocv;
+
+		
 		jcb = 0.125*tet(tind).vol; 
 		v = tet(tind).pnt;
 		amax = 0.0;
@@ -74,7 +79,7 @@ void tet_hp_cd::setup_preconditioner() {
         /* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind)  = adis*h/(jcb*lam1);
 		
-		jcb *= gbl->rhocv*lam1/h;
+		jcb *= rhocv*lam1/h;
 
 
 		/* SET UP DIAGONAL PRECONDITIONER */
@@ -116,3 +121,24 @@ void tet_hp_cd::setup_preconditioner() {
 	
 	return; 
 }
+
+void tet_hp_cd_multi::connect(multigrid_interface& in) {
+	tet_hp_cd_multi &tgt = dynamic_cast<tet_hp_cd_multi&>(in);
+	tet_hp_cd::connect(in);
+	
+	/* To fill in material marks for multigrid mesh */
+	/* This just picks the matarial located at the center of the coarse element on the fine grid */
+	TinyVector<FLT,ND> center;
+	/* Fill in Marks in some way */
+	for (int tind=0;tind<ntet;++tind) {
+		center = 0.25*(pnts(tet(tind).pnt(0)) +pnts(tet(tind).pnt(1)) +pnts(tet(tind).pnt(2)) +pnts(tet(tind).pnt(3)));
+		int ttgt = fcnnct(tet(tind).pnt(0)).tet;
+		tgt.findtet(center,ttgt);
+		marks(tind) = tgt.marks(ttgt);
+	}
+}
+
+
+
+
+
