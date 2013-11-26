@@ -1564,6 +1564,7 @@
 					"$(threads)",
 					AXISYMMETRIC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi;
@@ -1578,6 +1579,7 @@
 					"$(threads)",
 					AXISYMMETRIC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi;
@@ -1593,6 +1595,7 @@
 					MPISRC,
 					AXISYMMETRIC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					/usr/share/include,
@@ -1611,6 +1614,7 @@
 					MPISRC,
 					AXISYMMETRIC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					/usr/share/include,
@@ -1627,6 +1631,7 @@
 					"$(inherited)",
 					"$(threads)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp;
@@ -1640,6 +1645,7 @@
 					"$(inherited)",
 					"$(threads)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp;
@@ -1649,7 +1655,6 @@
 		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}";
@@ -1668,7 +1673,6 @@
 					"$(packages)/lib",
 					"$(prefix)/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
@@ -1681,7 +1685,6 @@
 		6FB40AC7091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}";
@@ -1699,7 +1702,6 @@
 					"$(packages)/lib",
 					"$(prefix)/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -1721,6 +1723,7 @@
 					"$(mpi_threads)",
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_mpi;
@@ -1736,6 +1739,7 @@
 					"${mpi_threads}",
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_mpi;
@@ -1752,6 +1756,7 @@
 					MPISRC,
 					petsc,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_petsc;
@@ -1768,6 +1773,7 @@
 					MPISRC,
 					petsc,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_petsc;
@@ -1785,6 +1791,7 @@
 					AXISYMMETRIC,
 					petsc,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi_petsc;
@@ -1801,6 +1808,7 @@
 					AXISYMMETRIC,
 					petsc,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi_petsc;

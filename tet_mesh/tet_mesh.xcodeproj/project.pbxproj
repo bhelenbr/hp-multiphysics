@@ -629,7 +629,6 @@
 					METIS,
 					PTH,
 				);
-				"OTHER_CFLAGS[arch=*]" = "-fast";
 				PRODUCT_NAME = tet_mesh;
 				packages = "$(HOME)/Packages";
 				prefix = "$(HOME)/Codes";
@@ -653,7 +652,6 @@
 		6FB91AD90ACCB10300792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -665,7 +663,6 @@
 		6FB91ADA0ACCB10300792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -682,6 +679,7 @@
 					"${inherited}",
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tet_mesh_mpi;
 			};
@@ -695,6 +693,7 @@
 					"${inherited}",
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tet_mesh_mpi;
 			};
@@ -708,6 +707,7 @@
 					"${inherited}",
 					PTH,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tet_mesh;
 			};
@@ -721,6 +721,7 @@
 					"${inherited}",
 					PTH,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tet_mesh;
 			};
@@ -729,7 +730,6 @@
 		6FD540670863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -756,7 +756,6 @@
 		6FD540680863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LIBRARY = "libstdc++";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;

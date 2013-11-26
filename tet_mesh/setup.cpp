@@ -279,7 +279,17 @@ void tet_mesh::match_tet_and_seg(void) {
 				eind=seg(eind).info;            
 			}  
 			*gbl->log << "Error matching tet and seg\n";
-			exit(1);      
+			*gbl->log << "Target side was " << v(0) << ' ' << v(1) << std::endl;
+			*gbl->log << "Minv is " << minv << ' ' << pnt(minv).info << std::endl;
+			eind=pnt(minv).info;
+			while(eind >= 0){
+				a(0)=seg(eind).pnt(0);
+				a(1)=seg(eind).pnt(1);
+				*gbl->log << "Candidates were  " << a(0) << ' ' << a(1) << std::endl;
+				eind=seg(eind).info;
+			}
+
+			exit(1);
 
 NEXTEDGE:;
 

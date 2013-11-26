@@ -250,9 +250,21 @@ int main(int argc, char *argv[]) {
 		class tet_mesh zx;
 		zx.input(argv[1],in,1.0,bdrymap);
 
-		string filename(argv[1]);
+		string gridname(argv[1]), filename;
+		size_t dotloc;
+		dotloc = gridname.find_last_of('.');
+		
+		if (dotloc != string::npos) {
+			/* Found and ending */
+			filename = gridname.substr(0,dotloc) +".marks";
+		}
+		else {
+			filename = gridname +".marks";
+		}
+		
+		
 		ofstream fout;
-		fout.open("marks.txt");
+		fout.open(filename.c_str());
 		
 		for(int i=0;i<zx.ntet;++i)
 			fout << i << ": " << static_cast<int>(zx.gbl->fltwk(i)-1) << '\n';
@@ -281,11 +293,25 @@ int main(int argc, char *argv[]) {
 		Array<int,1> bnum;
 		
 		zx.setup_partition(p,blist,bnum);
+		
+		
+		/* The following is to load a marker file if it exists */
 		ifstream fin;
 		bool marks_flag = false;
 		Array<int,1> marks;
 
-		fin.open("marks.txt");
+		string gridname(argv[1]), filename;
+		size_t dotloc;
+		dotloc = gridname.find_last_of('.');
+		
+		if (dotloc != string::npos) {
+			/* Found and ending */
+			filename = gridname.substr(0,dotloc) +".marks";
+		}
+		else {
+			filename = gridname +".marks";
+		}
+		fin.open(filename.c_str());
 		if (fin.good()) {
 			marks.resize(zx.ntet);
 			for (int i=0;i<zx.ntet;++i) {
@@ -295,24 +321,34 @@ int main(int argc, char *argv[]) {
 			}
 		}
 			
+		/* now partition mesh and marks if found */
 		for(int i=0;i<p;++i) {
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
-			mname = "marks_" +nstr.str() +".txt";
+			mname = fname +".marks";
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
 			zpart(i).partition2(zx,i,p,blist,bnum);
-			zpart(i).output(fname,tet_mesh::gmsh);
-			zpart(i).output(fname);
 			
 			if (marks_flag) {
 				ofstream fout;
 				fout.open(mname.c_str());
-				for (int t=0;t<zpart(i).ntet;++t) {
-					fout << t << ": " << marks(zpart(i).tet(t).info) << '\n';
+				
+				/* tet.info gets whiped out so have to redo it */
+				int ntet = 0;
+				for(int tind=0;tind<zx.ntet;++tind) {
+					if (zx.tet(tind).info == i) {
+						fout << ntet << ": " << marks(tind) << '\n';
+						++ntet;
+					}
 				}
 				fout.close();
 			}
+			
+			// zpart(i).output(fname,tet_mesh::gmsh);
+			zpart(i).output(fname);
+
+
 		}
 		
 		//        for(int i=0;i<p;++i) {
