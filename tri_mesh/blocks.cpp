@@ -25,7 +25,7 @@
 
 // #define petsc
 
-//define DIRK 1
+//#define DIRK 1
 #define DIRK 4
 // #define BACKDIFF 2
 // #define AM1

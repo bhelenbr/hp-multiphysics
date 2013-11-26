@@ -78,9 +78,9 @@ ostream& operator <<(ostream &outfile,const input_map &mapout)  {
 
 bool input_map::get(const std::string &keyword, double &vout) {
 
-    std::istringstream data;
+		std::istringstream data;
     std::map<std::string,std::string>::const_iterator mi;
-    double value;
+		double value;
     
     mi = find(keyword);
     if (mi != end()) {
@@ -92,9 +92,7 @@ bool input_map::get(const std::string &keyword, double &vout) {
         else {
 					double (*my_erf)(double) = erf;
 					double (*my_erfc)(double) = erfc;
-					
-					double x = (*my_erf)(1.0);
-					
+                    
             /* TRY TO PARSE MATHEMATICAL EXPRESSION */
             mu::Parser P,P1;
 						P.DefineFun("erf", my_erf, false);
