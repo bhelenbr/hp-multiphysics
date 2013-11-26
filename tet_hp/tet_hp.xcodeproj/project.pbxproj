@@ -258,7 +258,7 @@
 		6FB40ADA091AF516002BAA09 /* hp_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = hp_boundary.h; sourceTree = "<group>"; };
 		6FB40ADB091AF516002BAA09 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = l2error.cpp; sourceTree = "<group>"; };
-		6FB40ADF091AF516002BAA09 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		6FB40ADF091AF516002BAA09 /* makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 30; path = makefile; sourceTree = "<group>"; };
 		6FB40AE0091AF516002BAA09 /* minvrt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = minvrt.cpp; sourceTree = "<group>"; };
 		6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = mg_restrict.cpp; sourceTree = "<group>"; };
 		6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = mg_prolongate.cpp; sourceTree = "<group>"; };
@@ -323,7 +323,6 @@
 		95C278B210F67FF400759C42 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = cns/tstep.cpp; sourceTree = "<group>"; };
 		95C73E1F105EA89D00637BEE /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
 		95D4083A11A3024A009F34F7 /* tet_hp_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
-		95DE303F104864E800F7FA10 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		95DE30A7104C294F00F7FA10 /* pod_generate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_generate.cpp; path = pod/pod_generate.cpp; sourceTree = "<group>"; };
 		95DE30A8104C294F00F7FA10 /* pod_generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pod_generate.h; path = pod/pod_generate.h; sourceTree = "<group>"; };
 		95DE30A9104C294F00F7FA10 /* pod_simulate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_simulate.cpp; path = pod/pod_simulate.cpp; sourceTree = "<group>"; };
@@ -428,7 +427,6 @@
 				95C2789810F67F6300759C42 /* Compressible */,
 				95050D931325420900282834 /* cns explicit */,
 				95DE30A2104C28E500F7FA10 /* POD */,
-				9572077510473A580044E240 /* scripts */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				6F661FF3091AFADC00FB5D82 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -541,14 +539,6 @@
 				953337B10DCA19B7007A1D26 /* getnewibc.cpp */,
 			);
 			path = cd;
-			sourceTree = "<group>";
-		};
-		9572077510473A580044E240 /* scripts */ = {
-			isa = PBXGroup;
-			children = (
-				95DE303F104864E800F7FA10 /* makefile */,
-			);
-			name = scripts;
 			sourceTree = "<group>";
 		};
 		9598AE270F55C3E0008788DB /* Incompressible */ = {

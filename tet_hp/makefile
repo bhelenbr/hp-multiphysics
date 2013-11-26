@@ -36,12 +36,14 @@ tadvance.o output.o ptprobe.o particle.o tobasis.o update.o test.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o 
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o 
 #cd/minvrt.o
+OBJCD_MULTI = cd_multi/allocate.o cd_multi/rsdl.o cd_multi/setup_preconditioner.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/tstep.o 
 OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/tstep.o 
 OBJMASS = mass/allocate.o mass/bdry.o mass/getnewbdry.o mass/getnewibc.o mass/rsdl.o mass/setup_preconditioner.o
 
 OBJ = $(BASE)
 OBJ += $(OBJCD) 
+OBJ += $(OBJCD_MULTI) 
 OBJ += $(OBJINS) 
 OBJ += $(OBJCNS)
 #OBJ += $(OBJCNS_EXPLICIT)
