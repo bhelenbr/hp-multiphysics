@@ -8,6 +8,7 @@
  */
 
 #include "tet_hp_cd_multi.h"
+#include <iostream> 
 
 void tet_hp_cd_multi::init(input_map& input, void *gin) {
 
@@ -40,7 +41,7 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 	}
 	
 	ifstream marks_file;
-	marks_file.open(filename);
+	marks_file.open(filename.c_str());
 	if (marks_file.good()) {
 		for (int i=0;i<ntet;++i) {
 			marks_file.ignore(80,':');

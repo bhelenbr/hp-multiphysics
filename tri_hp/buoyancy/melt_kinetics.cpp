@@ -1048,7 +1048,7 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		K = gbl->Krough*K2Dn_exp;
 	}
 	else {
-		K = gbl->Krough*(1. + 2.*gbl->Ksn/(2*fabs(sint) +EPSILON));
+		K = gbl->Krough*(1. + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
 	}
 		
 	return(K);
