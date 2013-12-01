@@ -76,6 +76,7 @@ dirs:
 	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
+	+@[ -d  cd_multi ] || mkdir -p cd_multi
 	+@[ -d  mass ] || mkdir -p mass
 	touch dirs
 	
