@@ -16,14 +16,14 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 	/* SEARCH FOR POINT IN VERTEX BALL FIRST */
 	for(int i = 0; i < nbor; ++i) {	
 		tind = gbl->i2wk(i);
-		if(intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
+		if (intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
 			goto FOUNDTET;
 				
 		/* FIND NEXT TETS */
 		for(int j = 0; j < 4; ++j) {			
 			tind = tet(gbl->i2wk(i)).tet(j);
 			if (tind > -1 && gbl->i1wk(tind) == -1) {			
-				if((tet(tind).pnt(0)-seedvrtx)*(tet(tind).pnt(1)-seedvrtx)*(tet(tind).pnt(2)-seedvrtx)*(tet(tind).pnt(3)-seedvrtx)  == 0) {
+				if ((tet(tind).pnt(0)-seedvrtx)*(tet(tind).pnt(1)-seedvrtx)*(tet(tind).pnt(2)-seedvrtx)*(tet(tind).pnt(3)-seedvrtx)  == 0) {
 					gbl->i2wk(ind++) = tind;
 				}
 				else {
@@ -64,13 +64,13 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 	/* SEARCH SURROUNDING TETS */
 	for(int i = nbor; i < ntet; ++i) {
 		tind = gbl->i2wk(i);
-		if(intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
+		if (intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
 			goto FOUNDTET;
 		
 		/* ADD NEIGHBORS */
 		for(int j = 0; j < 4; ++j) {
 			tind = tet(gbl->i2wk(i)).tet(j);
-			if(tind > -1 && gbl->i1wk(tind) == -1) {
+			if (tind > -1 && gbl->i1wk(tind) == -1) {
 				gbl->i2wk(ind2++) = tind;
 				gbl->i1wk(tind) = 0;
 			}
@@ -98,7 +98,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 	return(found);
 }
 
-bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int &tind){
+bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int &tind) {
 	bool found = 1;
 	int ind = 0;
 	
@@ -108,13 +108,13 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int &tind){
 	/* SEARCH TET */
 	for(int i = 0; i < ntet; ++i) {
 		tind = gbl->i2wk(i);
-		if(intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
+		if (intet(tind, xp) < 10.*EPSILON*tet(tind).vol)
 			goto FOUNDTET;
 		
 		/* ADD NEIGHBORS */
 		for(int j = 0; j < 4; ++j) {
 			tind = tet(gbl->i2wk(i)).tet(j);
-			if(tind > -1 && gbl->i1wk(tind) == -1) {
+			if (tind > -1 && gbl->i1wk(tind) == -1) {
 				gbl->i2wk(ind++) = tind;
 				gbl->i1wk(tind) = 0;
 			}
@@ -136,7 +136,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int &tind){
 FLT tet_mesh::intet(int tind, const TinyVector<FLT,3> &xp) {
 	
 	/* FIND VOLUME OF TET CREATED FROM A FACE OF ORIGINAL TET AND A POINT */
-	for(int i = 0; i < 4; ++i){
+	for(int i = 0; i < 4; ++i) {
 		/* CALCULATE VOLUME */
 		tet_wgt(i) = -tet(tind).rot(i)*volume(xp,tet(tind).tri(i)); 
 	}
@@ -204,7 +204,7 @@ FLT tet_mesh::volume(TinyVector<FLT,ND> xp, int tind) {
 }
 
 
-void tet_mesh::vertexball(int vind){
+void tet_mesh::vertexball(int vind) {
 	int i,j,k,ind,tind,tind2;
 	int nbor = pnt(vind).nnbor;        
 
@@ -221,7 +221,7 @@ void tet_mesh::vertexball(int vind){
 				goto NEXTFACE;
 			if (gbl->i1wk(tind2) < 0) { 
 				for(k = 0; k < 4; ++k) {
-					if(tet(tind2).pnt(k) == vind) {
+					if (tet(tind2).pnt(k) == vind) {
 						gbl->i2wk(++ind) = tind2; // connected tet found
 						gbl->i1wk(tind2) = 0;
 						goto NEXTFACE;                            
@@ -239,17 +239,17 @@ void tet_mesh::vertexball(int vind){
 	return;
 }
 
-//void tet_mesh::spokes(int vind){
+//void tet_mesh::spokes(int vind) {
 //    int tind,sind;
 //    int ind = 0;
 //    
-//    for(int i=0; i < pnt(vind).nnbor; ++i){
+//    for(int i=0; i < pnt(vind).nnbor; ++i) {
 //        tind = gbl->i2wk(i);
-//        for(int j=0; j < 6; ++j){
+//        for(int j=0; j < 6; ++j) {
 //            sind=tet(tind).seg(j);
-//            if(gbl->i1wk(sind) < 0){
-//                for(int k=0; k < 2; ++k){
-//                    if(vind == seg(sind).pnt(k)){
+//            if (gbl->i1wk(sind) < 0) {
+//                for(int k=0; k < 2; ++k) {
+//                    if (vind == seg(sind).pnt(k)) {
 //                        gbl->i3wk(ind++)=sind;
 //                        gbl->i1wk(sind) = 1;
 //                    }
@@ -270,7 +270,7 @@ void tet_mesh::vertexball(int vind){
 //    return;
 //}
 
-void tet_mesh::ring(int eind){
+void tet_mesh::ring(int eind) {
 	int i,j,k,ind,tind,tind2;
 	int nbor = seg(eind).nnbor;        
 
@@ -287,7 +287,7 @@ void tet_mesh::ring(int eind){
 				goto NEXTFACE;
 			if (gbl->i1wk(tind2) < 0) {            
 				for(k = 0; k < 6; ++k) {
-					if(tet(tind2).seg(k) == eind) {
+					if (tet(tind2).seg(k) == eind) {
 						gbl->i2wk(++ind) = tind2; // connected tet found
 						gbl->i1wk(tind2) = 0;
 						goto NEXTFACE;                            
@@ -305,26 +305,26 @@ void tet_mesh::ring(int eind){
 }
 
 
-void tet_mesh::switch_edge_sign(int eind){
+void tet_mesh::switch_edge_sign(int eind) {
 	int i,j,k,tind,find,sind;
 	int nbor = seg(eind).nnbor; 
 	
 	ring(eind);
 	
-	for(i = 0; i < nbor; ++i){
+	for(i = 0; i < nbor; ++i) {
 		tind = gbl->i2wk(i);
-		for(j=0;j<6;++j){
+		for(j=0;j<6;++j) {
 			sind=tet(tind).seg(j);
-			if(eind == sind){
+			if (eind == sind) {
 				tet(tind).sgn(j) *= -1;
 				//break;
 			}
 		}
-		for(j=0;j<4;++j){
+		for(j=0;j<4;++j) {
 			find = tet(tind).tri(j);
-			for(k=0;k<3;++k){
+			for(k=0;k<3;++k) {
 				sind = tri(find).seg(k);
-				if(eind == sind){
+				if (eind == sind) {
 					tri(find).sgn(k) *= -1;
 					//break;
 				}	

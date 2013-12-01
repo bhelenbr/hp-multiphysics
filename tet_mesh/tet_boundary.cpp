@@ -317,7 +317,7 @@ void edge_bdry::reorder() {
 	}
 	 
 	/* insert -1 so while loop exits for an edge loop */
-	if(loop == true) seg(seg(first).prev).next = -1;
+	if (loop == true) seg(seg(first).prev).next = -1;
 	
 	/* now reorder */
 	count = 0;

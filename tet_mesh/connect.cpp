@@ -77,7 +77,7 @@ void tet_mesh::mgconnect(tet_mesh &tgt, Array<transfer,1> &cnnct) {
 	/* REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
 	for(bnum=0;bnum<nfbd;++bnum) {
 		/* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
-		if(fbdry(bnum)->idnum != tgt.fbdry(bnum)->idnum) {
+		if (fbdry(bnum)->idnum != tgt.fbdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
 			exit(1);
 		}
@@ -90,7 +90,7 @@ void tet_mesh::mgconnect(tet_mesh &tgt, Array<transfer,1> &cnnct) {
 	
 	for(bnum=0;bnum<nebd;++bnum) {
 		/* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
-		if(ebdry(bnum)->idnum != tgt.ebdry(bnum)->idnum) {
+		if (ebdry(bnum)->idnum != tgt.ebdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
 			exit(1);
 		}

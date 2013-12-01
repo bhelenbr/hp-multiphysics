@@ -258,7 +258,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			/* LOAD TETRAHEDRAL CONNECTION DATA (ntet,4) */            
 			in.ignore(160,'\n'); 
 			in.ignore(160,'\n');
-			for(int i = 0; i < ntet; ++i){
+			for(int i = 0; i < ntet; ++i) {
 				in >> tet(i).pnt(0) >> tet(i).pnt(1) >> tet(i).pnt(2) >> tet(i).pnt(3);
 				--tet(i).pnt(0);
 				--tet(i).pnt(1);
@@ -269,7 +269,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 			/* LOAD seg CONNECTION DATA (nedg,2) */
 			in.ignore(160,'\n'); 
-			for(int i = 0; i < nseg; ++i){
+			for(int i = 0; i < nseg; ++i) {
 				in >> seg(i).pnt(0) >> seg(i).pnt(1);
 				--seg(i).pnt(0);
 				--seg(i).pnt(1);
@@ -277,7 +277,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			/* LOAD TETRAHEDRAL seg DATA (ntet,6) */
 			in.ignore(160,'\n'); 
-			for(int i = 0; i < ntet; ++i){
+			for(int i = 0; i < ntet; ++i) {
 				in >> tet(i).seg(0) >> tet(i).seg(1) >> tet(i).seg(2) >> tet(i).seg(3)>> tet(i).seg(4)>> tet(i).seg(5);
 				--tet(i).seg(0);
 				--tet(i).seg(1);
@@ -326,12 +326,12 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				in >> seg(i).pnt(0)>> seg(i).pnt(1);
 			}
 	
-			for(int i = 0; i < ntri; ++i){   
+			for(int i = 0; i < ntri; ++i) {   
 				in.ignore(80,':');
 				in >> tri(i).pnt(0) >> tri(i).pnt(1)>> tri(i).pnt(2);                                
 			}
 					
-			for(int i = 0; i < ntet; ++i){
+			for(int i = 0; i < ntet; ++i) {
 				in.ignore(80,':');
 				for(int j = 0; j < 4; ++j)
 					in >> tet(i).pnt(j) ;
@@ -373,7 +373,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in >> nfbd;
 			fbdry.resize(nfbd);
 				
-			for(int i = 0; i < nfbd; ++i){
+			for(int i = 0; i < nfbd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
 				fbdry(i) = getnewfaceobject(temp,bdrymap);
@@ -386,15 +386,15 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				
 				fbdry(i)->alloc(static_cast<int>(grwfac*10*(fbdry(i)->ntri)));//temporary fix        
 
-				for(int j = 0; j < fbdry(i)->npnt; ++j){
+				for(int j = 0; j < fbdry(i)->npnt; ++j) {
 					in.ignore(80,':');
 					in >> fbdry(i)->pnt(j).gindx;
 				}
-				for(int j = 0; j < fbdry(i)->nseg; ++j){
+				for(int j = 0; j < fbdry(i)->nseg; ++j) {
 					in.ignore(80,':');
 					in >> fbdry(i)->seg(j).gindx;
 				}
-				for(int j = 0; j < fbdry(i)->ntri; ++j){
+				for(int j = 0; j < fbdry(i)->ntri; ++j) {
 					in.ignore(80,':');
 					in >> fbdry(i)->tri(j).gindx;
 				}
@@ -404,7 +404,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			match_all();
 			
-			for(int i = 0; i < nfbd; ++i){
+			for(int i = 0; i < nfbd; ++i) {
 				fbdry(i)->match_all(); 
 			}
 			
@@ -465,7 +465,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 							
 			in.ignore(160,'\n');    
 
-			for(int i = 0; i < nfbd; ++i){
+			for(int i = 0; i < nfbd; ++i) {
 				fbdry(i) = getnewfaceobject(i,bdrymap);
 				in.ignore(20,':');
 				in >> intskip;
@@ -475,7 +475,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				fbdry(i)->alloc(static_cast<int>(grwfac*3*(fbdry(i)->ntri)));    //temporary fix
 				in.ignore(160,'\n');
 				in.ignore(160,'\n');
-				for(int j = 0; j < fbdry(i)->ntri; ++j){
+				for(int j = 0; j < fbdry(i)->ntri; ++j) {
 					in >> intskip >> fbdry(i)->tri(j).pnt(0) >> fbdry(i)->tri(j).pnt(1) >> fbdry(i)->tri(j).pnt(2);
 					--fbdry(i)->tri(j).pnt(0);
 					--fbdry(i)->tri(j).pnt(1);

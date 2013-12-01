@@ -41,7 +41,7 @@ void tet_mesh::test() {
 //        cout << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) << "  tet = " << pnt(i).tet << "  nnbor = " << pnt(i).nnbor <<  endl;
 //        
 //    cout << endl<< endl << "seg = "<< nseg << endl << endl;    
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 2; ++j)
 //            cout << seg(i).pnt(j) << ' ' ;
 //        cout << "  tet = " << seg(i).tet << "  nnbor = " << seg(i).nnbor<< endl;
@@ -50,25 +50,25 @@ void tet_mesh::test() {
 //    cout << endl <<endl<< "tri = "<< ntri << endl<< endl;
 //    
 //    cout << "vertex data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << tri(i).pnt(j) << ' ' ;
 //        cout << endl;
 //    }
 //    cout << "seg data " << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << tri(i).seg(j) << ' ' ;
 //        cout << endl;
 //    }
 //    cout << "tet data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 2; ++j)
 //            cout << tri(i).tet(j) << ' ' ;
 //        cout << endl;
 //    }
 //    cout << "sgn data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << tri(i).sgn(j) << ' ' ;
 //        cout << endl;
@@ -77,7 +77,7 @@ void tet_mesh::test() {
 //    cout << endl <<endl<< "tet's = "<< ntet << endl<< endl;
 //    
 //    cout << "vertex data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 4; ++j)
 //            cout << tet(i).pnt(j) << ' ' ;
 //        cout << endl;
@@ -86,33 +86,33 @@ void tet_mesh::test() {
 //
 //    
 //    cout << "seg data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 6; ++j)
 //            cout << tet(i).seg(j) << ' ' ;
 //        cout << endl;
 //    }
 //    cout << "face data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 4; ++j)
 //            cout << tet(i).tri(j) << ' ' ;
 //        cout << endl;
 //    }
 //
 //    cout << "tet data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 4; ++j)
 //            cout << tet(i).tet(j) << ' ' ;
 //        cout << endl;
 //    }
 //    cout << "sgn data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 6; ++j)
 //            cout << tet(i).sgn(j) << ' ' ;
 //        cout << endl;
 //    }    
 //    
 //    cout << endl << "face bdry data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << fbdry(0)->tri(i).pnt(j) << ' ' ;
 //        cout << endl;
@@ -121,8 +121,8 @@ void tet_mesh::test() {
 //    cout << endl << "max nnbor pnt = " ;
 //    int maxnnbor = 0;
 //    int vfind;
-//    for( int i = 0 ; i < npnt; ++i){
-//        if(pnt(i).nnbor > maxnnbor){
+//    for( int i = 0 ; i < npnt; ++i) {
+//        if (pnt(i).nnbor > maxnnbor) {
 //            maxnnbor = pnt(i).nnbor;
 //             vfind = i;
 //        }
@@ -131,7 +131,7 @@ void tet_mesh::test() {
 //    cout << maxnnbor << ' ' << vfind;
 //    
 //    cout << endl << "face bdry data re-indexed" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << fbdry(0)->tri(i).pnt(j) << ' ' ;
 //        cout << endl;
@@ -143,28 +143,28 @@ void tet_mesh::test() {
 //    
 //    
 //    cout << endl << "bdry side data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 2; ++j)
 //            cout << fbdry(0)->seg(i).pnt(j) << ' ' ;
 //        cout << endl;
 //    }
 //    
 //    cout << endl << "bdry side tri data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 2; ++j)
 //            cout << fbdry(0)->seg(i).tri(j) << ' ' ;
 //        cout << endl;
 //    }
 //    
 //    cout << endl << "bdry tri side data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << fbdry(0)->tri(i).seg(j) << ' ' ;
 //        cout << endl;
 //    }
 //    
 //    cout << endl << "bdry tri tri data" << endl;
-//    for(int i = 0; i < n; ++i){
+//    for(int i = 0; i < n; ++i) {
 //        for(int j = 0; j < 3; ++j)
 //            cout << fbdry(0)->tri(i).tri(j) << ' ' ;
 //        cout << endl;
@@ -233,17 +233,17 @@ void tet_mesh::test() {
 //
 //    int sign;
 //    
-//    for(int i = 0; i < ntri; ++i){
+//    for(int i = 0; i < ntri; ++i) {
 //        v3=tri(i).pnt;
-//        for(int j = 0; j < 3; ++j){
+//        for(int j = 0; j < 3; ++j) {
 //            sign = tri(i).sgn(j);
 //            v2 = seg(tri(i).seg(j)).pnt;
-//            if (sign == 1){
-//                if(v3(vf(j,0)) != v2(0) || v3(vf(j,1)) != v2(1))
+//            if (sign == 1) {
+//                if (v3(vf(j,0)) != v2(0) || v3(vf(j,1)) != v2(1))
 //                    cout << "bad segment on tri: " << i << endl;
 //            }
 //            else{
-//                if(v3(vf(j,0)) != v2(1) || v3(vf(j,1)) != v2(0))
+//                if (v3(vf(j,0)) != v2(1) || v3(vf(j,1)) != v2(0))
 //                    cout << "bad segment on tri: " << i << endl;
 //            }        
 //        }
@@ -251,14 +251,14 @@ void tet_mesh::test() {
 
 //    int tet1,tet2,fac1,fac2;
 //    
-//    for(find = 0; find < ntri; ++find){
+//    for(find = 0; find < ntri; ++find) {
 //        tet1=tri(find).tet(0);
 //        tet2=tri(find).tet(1);
-//        if(tet2 > -1){
-//            for(int i = 0; i < 4; ++i){
-//                if(tet(tet1).tri(i)=find)
+//        if (tet2 > -1) {
+//            for(int i = 0; i < 4; ++i) {
+//                if (tet(tet1).tri(i)=find)
 //                    fac1=i;
-//                if(tet(tet2).tri(i)=find)
+//                if (tet(tet2).tri(i)=find)
 //                    fac2=i;                                    
 //            }
 //            
@@ -318,22 +318,22 @@ void tet_mesh::checkintegrity() {
 		}
 	}
 		
-	for(tind=0;tind<ntet;++tind){
-		if(tet(tind).vol < 0){
+	for(tind=0;tind<ntet;++tind) {
+		if (tet(tind).vol < 0) {
 			*gbl->log << "negative tet volume on tet: " << tind << endl;
 			exit(1);
 		}
 		
-		for(i = 0; i < 6; ++i){
+		for(i = 0; i < 6; ++i) {
 			sind = tet(tind).seg(i);
-			if(tet(tind).sgn(i) == 1){
-				if(seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))){
+			if (tet(tind).sgn(i) == 1) {
+				if (seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))) {
 					*gbl->log << "tet seg vertex error type 1"<< endl;
 					exit(1);
 				}
 			}
 			else{
-				if(seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))){
+				if (seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))) {
 					*gbl->log << "tet seg vertex error type 2 " << sind << ' ' << tind << ' ' << i << endl;
 					exit(1);
 				}
@@ -341,58 +341,58 @@ void tet_mesh::checkintegrity() {
 		}
 		
 		/* Test Tri Data */
-		for(i = 0; i < 4; ++i){
+		for(i = 0; i < 4; ++i) {
 			find = tet(tind).tri(i);
-			if(tri(find).tet(1) > -1){
-				if(tet(tind).tet(i) < 0){
+			if (tri(find).tet(1) > -1) {
+				if (tet(tind).tet(i) < 0) {
 					*gbl->log << "tet neighbor data error type 1"<< endl;
 					exit(1);
 				}
-				if(tri(find).tet(1) != tet(tind).tet(i) && tri(find).tet(0) != tet(tind).tet(i)){
+				if (tri(find).tet(1) != tet(tind).tet(i) && tri(find).tet(0) != tet(tind).tet(i)) {
 					*gbl->log << "tet neighbor data error type 2"<< endl;
 					exit(1);
 				}
 			}
 
-			if(tet(tind).rot(i) == 1){
-				for(j = 0; j < 3; ++j){
-					if(tet(tind).pnt(vf1(i,j)) != tri(find).pnt(j)){
+			if (tet(tind).rot(i) == 1) {
+				for(j = 0; j < 3; ++j) {
+					if (tet(tind).pnt(vf1(i,j)) != tri(find).pnt(j)) {
 						*gbl->log << "face vertex error type 1"<< endl;
 						exit(1);
 					}
-					if(tet(tind).seg(sf1(i,j)) != tri(find).seg(j)){
+					if (tet(tind).seg(sf1(i,j)) != tri(find).seg(j)) {
 						*gbl->log << "face seg error type 1"<< endl;
 						exit(1);
 					}
 				}
-				if(tind != tri(find).tet(0)){
+				if (tind != tri(find).tet(0)) {
 					*gbl->log << "tet rot error type 1"<< endl;
 					exit(1);
 				}
 			}
 			else{
-				for(j = 0; j < 3; ++j){
-					if(tet(tind).pnt(vf2(i,j)) != tri(find).pnt(j)){
+				for(j = 0; j < 3; ++j) {
+					if (tet(tind).pnt(vf2(i,j)) != tri(find).pnt(j)) {
 						*gbl->log << "face vertex error type 2"<< endl;
 						exit(1);
 					}
-					if(tet(tind).seg(sf2(i,j)) != tri(find).seg(j)){
+					if (tet(tind).seg(sf2(i,j)) != tri(find).seg(j)) {
 						*gbl->log << "face seg error type 2"<< endl;
 						exit(1);
 					}
 				}
-//                if(tri(find).tet(1) != -1){
-//                    if(tet(tind).tet(i) != tri(find).tet(1)){
+//                if (tri(find).tet(1) != -1) {
+//                    if (tet(tind).tet(i) != tri(find).tet(1)) {
 //                        *gbl->log << "tet rot error type 2 "<< tri(find).tet(1)<<' '<<tet(tind).tet(i)<< ' '<< tri(find).tet(1)<< ' ' << tet(tind).rot(i) << endl;                        
 //                        exit(1);
 //                    }
 //                }
 			}
 							
-			for(j = 0; j < 3; ++j){
+			for(j = 0; j < 3; ++j) {
 				sind = tri(find).seg(j);
-				if(tri(find).sgn(j) == 1){
-					if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
+				if (tri(find).sgn(j) == 1) {
+					if (tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)) {
 						*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
 						output("error",grid);
@@ -400,7 +400,7 @@ void tet_mesh::checkintegrity() {
 					}
 				}
 				else{
-					if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
+					if (tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)) {
 						*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
 						output("error",grid);
@@ -412,10 +412,10 @@ void tet_mesh::checkintegrity() {
 	}
 	
 	for(find=0;find<ntri;++find) {
-		for(j = 0; j < 3; ++j){
+		for(j = 0; j < 3; ++j) {
 			sind = tri(find).seg(j);
-			if(tri(find).sgn(j) == 1){
-				if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
+			if (tri(find).sgn(j) == 1) {
+				if (tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)) {
 					*gbl->log << "seg vertex error type 3 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",grid);
 					output("error",easymesh);
@@ -423,7 +423,7 @@ void tet_mesh::checkintegrity() {
 				}
 			}
 			else{
-				if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
+				if (tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)) {
 					*gbl->log << "seg vertex error type 4 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",grid);
 					output("error",easymesh);

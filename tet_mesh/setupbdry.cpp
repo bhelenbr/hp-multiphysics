@@ -19,10 +19,10 @@ void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
 	vinfo = -1;
 		
 	nvrt = 0;
-	for(int i = 0; i < ntri; ++i){
-		for(int j = 0; j < 3; ++j){
+	for(int i = 0; i < ntri; ++i) {
+		for(int j = 0; j < 3; ++j) {
 			vrt = tri(i).pnt(j);
-			if(vinfo(vrt) < 0){
+			if (vinfo(vrt) < 0) {
 				vinfo(vrt) = nvrt;
 				tri(i).pnt(j) = nvrt;
 				pnt(nvrt).gindx = vrt;
@@ -41,25 +41,25 @@ void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
 	return;
 }
 
-void face_bdry::create_seg_gindx(void){
+void face_bdry::create_seg_gindx(void) {
 	int i,j,lcl2,eind,sind;    
 	long lcl0,lcl1;
 	TinyVector<int,2> v,a;
 	
-	for(sind=0;sind<nseg; ++sind){
+	for(sind=0;sind<nseg; ++sind) {
 		v(0)=pnt(seg(sind).pnt(0)).gindx;
 		v(1)=pnt(seg(sind).pnt(1)).gindx;
 		lcl0=v(0)+v(1);
 		lcl1=(v(0)+1)*(v(1)+1);
 		x.vertexball(v(0));
-		for(i=0; i < x.pnt(v(0)).nnbor; ++i){
-			for(j = 0; j < 6; ++j){
+		for(i=0; i < x.pnt(v(0)).nnbor; ++i) {
+			for(j = 0; j < 6; ++j) {
 				eind=x.tet(x.gbl->i2wk(i)).seg(j);        
 				a(0)=x.seg(eind).pnt(0);    
 				a(1)=x.seg(eind).pnt(1);
 				lcl2=abs(lcl0-a(0)-a(1));
 				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1));
-				if(lcl2 == 0){
+				if (lcl2 == 0) {
 					seg(sind).gindx=eind;
 					goto NEXTSIDE;
 				}
@@ -71,27 +71,27 @@ NEXTSIDE:;
 	return;
 }
 
-void face_bdry::create_tri_gindx(void){
+void face_bdry::create_tri_gindx(void) {
 	int i,j,tind,lcl2,find;    
 	long lcl0,lcl1;
 	TinyVector<int,3> v,a;
 	
-	for(tind=0;tind<ntri; ++tind){
+	for(tind=0;tind<ntri; ++tind) {
 		v(0)=pnt(tri(tind).pnt(0)).gindx;
 		v(1)=pnt(tri(tind).pnt(1)).gindx;
 		v(2)=pnt(tri(tind).pnt(2)).gindx;
 		lcl0=v(0)+v(1)+v(2);
 		lcl1=(v(0)+1)*(v(1)+1)*(v(2)+1);
 		x.vertexball(v(0));
-		for(i = 0; i < x.pnt(v(0)).nnbor; ++i){
-			for(j = 0; j < 4; ++j){
+		for(i = 0; i < x.pnt(v(0)).nnbor; ++i) {
+			for(j = 0; j < 4; ++j) {
 				find=x.tet(x.gbl->i2wk(i)).tri(j);        
 				a(0)=x.tri(find).pnt(0);    
 				a(1)=x.tri(find).pnt(1);
 				a(2)=x.tri(find).pnt(2);
 				lcl2=abs(lcl0-a(0)-a(1)-a(2));
 				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
-				if(lcl2 == 0){
+				if (lcl2 == 0) {
 					tri(tind).gindx=find;
 					goto NEXTTRI;
 				}
@@ -104,30 +104,30 @@ NEXTTRI:;
 }
 
 /* fills in all info after loading minimal mesh data (grid) */
-void face_bdry::convert_gbl_to_lcl(void){
+void face_bdry::convert_gbl_to_lcl(void) {
 	int ind;
 		
-	for(int i = 0; i < npnt; ++i){
+	for(int i = 0; i < npnt; ++i) {
 		x.gbl->i2wk(pnt(i).gindx)=i;
 	}
 	
-	for(int i = 0; i < nseg; ++i){
+	for(int i = 0; i < nseg; ++i) {
 		ind = seg(i).gindx;
 		seg(i).pnt(0)=x.gbl->i2wk(x.seg(ind).pnt(0));    
 		seg(i).pnt(1)=x.gbl->i2wk(x.seg(ind).pnt(1));    
 	}
 	
-	for(int i = 0; i < ntri; ++i){
+	for(int i = 0; i < ntri; ++i) {
 		ind = tri(i).gindx;
 		tri(i).pnt(0)=x.gbl->i2wk(x.tri(ind).pnt(0));    
 		tri(i).pnt(1)=x.gbl->i2wk(x.tri(ind).pnt(1));    
 		tri(i).pnt(2)=x.gbl->i2wk(x.tri(ind).pnt(2));
 	}
 	
-	for(int i = 0; i < nseg; ++i){
+	for(int i = 0; i < nseg; ++i) {
 		x.gbl->i2wk(seg(i).gindx)=i;
 	}
-	for(int i = 0; i < ntri; ++i){
+	for(int i = 0; i < ntri; ++i) {
 		ind = tri(i).gindx;
 		tri(i).seg(0)=x.gbl->i2wk(x.tri(ind).seg(0));
 		tri(i).seg(1)=x.gbl->i2wk(x.tri(ind).seg(1));
@@ -141,10 +141,10 @@ void face_bdry::convert_gbl_to_lcl(void){
 		seg(i).tri = -1;
 		
 	/* tri's sharing a side */
-	for(int i = 0; i < ntri; ++i){
-		for(int j = 0; j < 3; ++j){
+	for(int i = 0; i < ntri; ++i) {
+		for(int j = 0; j < 3; ++j) {
 			ind = tri(i).seg(j);
-			if(seg(ind).tri(0) < 0) {
+			if (seg(ind).tri(0) < 0) {
 				seg(ind).tri(0) = i;
 			}
 			else {
@@ -154,13 +154,13 @@ void face_bdry::convert_gbl_to_lcl(void){
 	}
 	
 	/* 3 tri's connected to each tri */
-	for(int i = 0; i < ntri; ++i){
-		for(int j = 0; j < 3; ++j){
+	for(int i = 0; i < ntri; ++i) {
+		for(int j = 0; j < 3; ++j) {
 			ind = tri(i).seg(j);
-			if(seg(ind).tri(0) == i) {
+			if (seg(ind).tri(0) == i) {
 				tri(i).tri(j) = seg(ind).tri(1);
 			}
-			else if(seg(ind).tri(1) == i) {
+			else if (seg(ind).tri(1) == i) {
 				tri(i).tri(j) = seg(ind).tri(0);
 			}
 		}

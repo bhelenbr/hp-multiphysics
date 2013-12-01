@@ -136,7 +136,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 				out << i << ": " << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) << endl;
 			
 			// output seg connection data
-			for(int i = 0; i < nseg; ++i){
+			for(int i = 0; i < nseg; ++i) {
 				out << i << ": ";
 				for(int j = 0; j < 2; ++j)
 					out << seg(i).pnt(j) << ' ' ;
@@ -144,7 +144,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			}
 			
 			// output face connection data
-			for(int i = 0; i < ntri; ++i){
+			for(int i = 0; i < ntri; ++i) {
 				out << i << ": ";
 				for(int j = 0; j < 3; ++j)
 					out << tri(i).pnt(j) << ' ' ;
@@ -152,7 +152,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			}
 			
 			// output tet connection data
-			for(int i = 0; i < ntet; ++i){
+			for(int i = 0; i < ntet; ++i) {
 				out << i << ": ";
 				for(int j = 0; j < 4; ++j)
 					out << tet(i).pnt(j) << ' ' ;
@@ -178,17 +178,17 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			
 			/* FACE BOUNDARY INFO HEADER */
 			out << "nfbd: " << nfbd << endl ;
-			for(int i = 0; i < nfbd; ++i){
+			for(int i = 0; i < nfbd; ++i) {
 				out << "idnum: " << fbdry(i)->idnum << endl;
 				out << "npnt: " << fbdry(i)->npnt << " nseg: " << fbdry(i)->nseg<< " ntri: " << fbdry(i)->ntri << endl;
 				//out << fbdry(i)->type
-				for(int j = 0; j < fbdry(i)->npnt; ++j){
+				for(int j = 0; j < fbdry(i)->npnt; ++j) {
 					out << j << ": " << fbdry(i)->pnt(j).gindx << endl;
 				}
-				for(int j = 0; j < fbdry(i)->nseg; ++j){
+				for(int j = 0; j < fbdry(i)->nseg; ++j) {
 					out << j << ": " << fbdry(i)->seg(j).gindx << endl;
 				}
-				for(int j = 0; j < fbdry(i)->ntri; ++j){
+				for(int j = 0; j < fbdry(i)->ntri; ++j) {
 					out << j << ": " << fbdry(i)->tri(j).gindx << endl;
 				}
 			}
@@ -216,7 +216,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out << "\n#CONNECTION DATA#\n";
 			
 			//tet_mesh::vertexball(50);
-//            for(i=0;i<pnt(50).nnbor;++i){
+//            for(i=0;i<pnt(50).nnbor;++i) {
 //                tind = i2wk(i);
 //                out << tet(tind).pnt(0)+1 << ' ' << tet(tind).pnt(1)+1 << ' ' << tet(tind).pnt(2)+1 << ' ' << tet(tind).pnt(3)+1 << endl;
 //            }
@@ -319,7 +319,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out << "			<Cells>" << endl;
 			out << "				<DataArray type=\"Int32\" Name=\"connectivity\" Format=\"ascii\">" << endl;
 				// output tet connection data
-				for(int i = 0; i < ntet; ++i){
+				for(int i = 0; i < ntet; ++i) {
 					for(int j = 0; j < 4; ++j)
 						out << tet(i).pnt(j) << ' ' ;
 					out << endl;

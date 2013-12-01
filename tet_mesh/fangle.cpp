@@ -10,7 +10,7 @@
  #include <math.h>
  #include "tet_mesh.h"
 
-void tet_mesh::fangle(int i, double Q){
+void tet_mesh::fangle(int i, double Q) {
 
 	int N1, N2, N3;
 	double RAD, PROD, D1, D2, D3, C, CHALF, T, ANGL1, ANGL2, ANGL3, S1, S2, S3 
@@ -25,7 +25,7 @@ void tet_mesh::fangle(int i, double Q){
 	D2 = sqrt(pow(pnts(N3)(0)-pnts(N1)(0),2)+pow(pnts(N3)(1)-pnts(N1)(1),2)+pow(pnts(N3)(2)-pnts(N1)(2),2)); 
 	C = PROD1/D1/D2;
 	CHALF = 0.5*(1.0+C);
-	if(CHALF <= 1.0e-6){
+	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
 		exit(1);
@@ -39,7 +39,7 @@ void tet_mesh::fangle(int i, double Q){
 	D3 = sqrt(pow(pnts(N3)(0)-pnts(N2)(0),2)+pow(pnts(N3)(1)-pnts(N2)(1),2)+pow(pnts(N3)(2)-pnts(N2)(2),2)); 
 	C = PROD/D3/D1;
 	CHALF = 0.5*(1.0 +C);
-	if(CHALF <= 1.0e-6){
+	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
 		exit(1);
@@ -51,7 +51,7 @@ void tet_mesh::fangle(int i, double Q){
 	PROD = (pnts(N1)(0)-pnts(N3)(0))*(pnts(N2)(0)-pnts(N3)(0))+(pnts(N1)(1)-pnts(N3)(1))*(pnts(N2)(1)-pnts(N3)(1))+(pnts(N1)(2)-pnts(N3)(2))*(pnts(N2)(2)-pnts(N3)(2));
 	C = PROD/D2/D3;
 	CHALF = 0.5*(1.0+C);
-	if(CHALF <= 1.0e-6){
+	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
 		exit(1);

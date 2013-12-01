@@ -15,7 +15,7 @@
 
 
 
-void face_bdry::vertexcircle(int vind){
+void face_bdry::vertexcircle(int vind) {
 	int i,j,k,ind,tind,tind2;
 	int nbor = pnt(vind).nnbor;
 			
@@ -32,7 +32,7 @@ void face_bdry::vertexcircle(int vind){
 				goto NEXTSIDE;
 			if (x.gbl->i1wk(tind2) < 0) {            
 				for(k = 0; k < 3; ++k) {
-					if(tri(tind2).pnt(k) == vind) {
+					if (tri(tind2).pnt(k) == vind) {
 						x.gbl->i2wk(++ind) = tind2; // connected tri found
 						x.gbl->i1wk(tind2) = 0;
 						goto NEXTSIDE;                            

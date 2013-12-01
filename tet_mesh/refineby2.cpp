@@ -45,7 +45,7 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 
 	/* ADD NEW TETS TO MESH */
 	ind=ntet;
-	for(int tind=0;tind<ntet;++tind){                
+	for(int tind=0;tind<ntet;++tind) {                
 		 /* VERTICES */
 		ijind[0][0][2] = tet(tind).pnt(0);
 		ijind[0][2][0] = tet(tind).pnt(1);
@@ -72,14 +72,14 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 		p1 = npnt +tet(tind).seg(3);
 		edge_length(2) = sqrt(pow(pnts(p0)(0)-pnts(p1)(0),2)+pow(pnts(p0)(1)-pnts(p1)(1),2)+pow(pnts(p0)(2)-pnts(p1)(2),2));
 	
-		if(edge_length(0) < edge_length(1)) {
+		if (edge_length(0) < edge_length(1)) {
 			sind = 0;
 		}
 		else{
 			sind = 1;
 		}
 		
-		if(edge_length(2) < edge_length(sind)) {
+		if (edge_length(2) < edge_length(sind)) {
 			sind = 2;
 		}
 		
@@ -136,9 +136,9 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	
 	
 		/* REFINE BY 2 FACE BOUNDARIES */
-	for(int i = 0; i < nfbd; ++i){
+	for(int i = 0; i < nfbd; ++i) {
 		ind=fbdry(i)->ntri;
-		for(int j = 0; j < fbdry(i)->ntri; ++j){
+		for(int j = 0; j < fbdry(i)->ntri; ++j) {
 			find = fbdry(i)->tri(j).gindx;
 			fbdry(i)->tri(j).pnt(0)=npnt+tri(find).seg(0),fbdry(i)->tri(j).pnt(1)=npnt+tri(find).seg(1),fbdry(i)->tri(j).pnt(2)=npnt+tri(find).seg(2);
 			fbdry(i)->tri(++ind).pnt(0)=tri(find).pnt(0),fbdry(i)->tri(ind).pnt(1)=npnt+tri(find).seg(2),fbdry(i)->tri(ind).pnt(2)=npnt+tri(find).seg(1);
@@ -163,7 +163,7 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	reorient_tets();
 	create_from_tet();
 	
-	for(int i = 0; i < nfbd; ++i){
+	for(int i = 0; i < nfbd; ++i) {
 		fbdry(i)->create_from_tri();
 	}
 	

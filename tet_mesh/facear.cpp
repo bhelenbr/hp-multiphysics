@@ -10,7 +10,7 @@
  #include <math.h>
  #include "mesh.h"
 
-void tet_mesh::facear(int N1, int N2, int N3){
+void tet_mesh::facear(int N1, int N2, int N3) {
 	double AX, AY, AZ, AREA
 	
 	AX = (pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(2)-pnts(N1)(2))-(pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(1)-pnts(N1)(1));
