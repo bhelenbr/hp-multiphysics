@@ -54,12 +54,12 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 	
 	gbl->kcond.resize(gbl->nmaterials);
 	gbl->rhocv.resize(gbl->nmaterials);
-	
+
 	for(int n=0;n<gbl->nmaterials;++n) {
 		nstr.str("");
 		nstr << "Material" << n << "_conductivity";
 		if (!input.get(nstr.str(),gbl->kcond(n))) {
-			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
@@ -67,14 +67,15 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 		nstr << "Material" << n << "_rho";
 		FLT rho;
 		if (!input.get(nstr.str(),rho)) {
-			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
+		nstr.str("");
 		nstr << "Material" << n << "_cv";
 		FLT cv;
 		if (!input.get(nstr.str(),cv)) {
-			*gbl->log << "Couldn't load" << nstr.str() << std::endl;
+			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		

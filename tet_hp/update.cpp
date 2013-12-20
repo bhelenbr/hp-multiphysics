@@ -1,7 +1,9 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 
-//#define DEBUG
+// #define DEBUG
+#define DEBUG_TOL 1.0e-9
+
 // #define MGRID_TEST
 
 void tet_hp::rsdl(int stage) {  
@@ -244,134 +246,99 @@ void tet_hp::update() {
 #endif
 		
 		
-#ifdef DEBUG   
-//		if (coarse_level) {
-		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
-
+#ifdef DEBUG
+		// if (coarse_level || log2p != log2pmax) {
 		for(i=0;i<npnt;++i) {
-			printf("%s vprcn nstage: %d ",gbl->idprefix.c_str(),i);
+			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->vprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->vprcn(i,n));
-				else printf("%8.5e ",0.0);
+				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*gbl->log << '\n';
 		}
 		
 		for(i=0;i<nseg;++i) {
-			printf("%s eprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->eprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->eprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
-		for(i=0;i<ntri;++i) {
-			printf("%s fprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->fprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->fprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}		
-		for(i=0;i<ntet;++i) {
-			printf("%s iprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->iprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->iprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
-
-		for(i=0;i<npnt;++i) {
-			printf("%s res v: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.v(i,n)) > 1.0e-14) printf("%8.5e ",gbl->res.v(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
-
-		for(i=0;i<nseg;++i) {
 			for(m=0;m<basis::tet(log2p).em;++m) {
-			printf("%s res e: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.e(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.e(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " s: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(gbl->res.e(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.e(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
 		
 		
 		for(i=0;i<ntri;++i) {
 			for(m=0;m<basis::tet(log2p).fm;++m) {
-			printf("%s res f: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.f(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.f(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " i: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(gbl->res.f(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.f(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
 		
 		for(i=0;i<ntet;++i) {
 			for(m=0;m<basis::tet(log2p).im;++m) {
-			printf("%s res i: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.i(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.i(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " i: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
 		
+		
+		
 		for(i=0;i<npnt;++i) {
-			printf("%s ug.v: %d ",gbl->idprefix.c_str(),i);
+			*gbl->log << gbl->idprefix << " ug.v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
-				else printf("%8.5e ",0.0);
+				if (fabs(ug.v(i,n)) > DEBUG_TOL) *gbl->log << ug.v(i,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*gbl->log << '\n';
 		}
-
+		
 		for(i=0;i<nseg;++i) {
 			for(m=0;m<basis::tet(log2p).em;++m) {
-			printf("%s ug.e: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(ug.e(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.e(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " ug.e: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(ug.e(i,m,n)) > DEBUG_TOL) *gbl->log << ug.e(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
 		
 		
 		for(i=0;i<ntri;++i) {
 			for(m=0;m<basis::tet(log2p).fm;++m) {
-			printf("%s ug.f: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(ug.f(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.f(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " ug.f: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(ug.f(i,m,n)) > DEBUG_TOL) *gbl->log << ug.f(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
 		
 		for(i=0;i<ntet;++i) {
 			for(m=0;m<basis::tet(log2p).im;++m) {
-			printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
+				*gbl->log << gbl->idprefix << " ug.i: " << i << ' ';
+				for(n=0;n<NV;++n) {
+					if (fabs(ug.i(i,m,n)) > DEBUG_TOL) *gbl->log << ug.i(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
 		}
-		
-		
-//	}
+		sim::finalize(__LINE__, __FILE__, gbl->log);
+
+		//  }
 #endif
-		
 
 		
 #ifdef MGRID_TEST

@@ -82,12 +82,13 @@ namespace ibc_cd {
 				time_history(r).read(filename);
 				
 				string bbox_string;
-				inmap.getline(idnty+"_region" +nstr.str() +"_bbox1",bbox_string);
+				inmap.getline(idnty+"_region" +nstr.str() +"_bbox0",bbox_string);
 				istringstream bbox_stream(bbox_string);
 				for (int n=0;n<tet_mesh::ND;++n)
 					bbox_stream >> bbox(r,0,n);
 	
-				inmap.getline(idnty+"_region" +nstr.str() +"_bbox2",bbox_string);
+				bbox_string.clear();
+				inmap.getline(idnty+"_region" +nstr.str() +"_bbox1",bbox_string);
 				bbox_stream.str(bbox_string);
 				for (int n=0;n<tet_mesh::ND;++n)
 					bbox_stream >> bbox(r,1,n);

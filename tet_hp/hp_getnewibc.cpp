@@ -207,7 +207,7 @@ tet_hp_helper *tet_hp::getnewhelper(input_map& inmap) {
 	
 	/* FIND INITIAL CONDITION TYPE */
 	if (!inmap.get(gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("tet_hp_helper",movername,std::string("default"));
+		inmap.getwdefault("helper",movername,std::string("default"));
 
 	type = helper_type::getid(movername.c_str());
 		
