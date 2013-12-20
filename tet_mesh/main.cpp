@@ -292,8 +292,8 @@ int main(int argc, char *argv[]) {
 		Array<int,2> blist;
 		Array<int,1> bnum;
 		
-		zx.setup_partition(p,blist,bnum);
-		
+		// zx.setup_partition(p,blist,bnum);
+		zx.setup_partition2(p);
 		
 		/* The following is to load a marker file if it exists */
 		ifstream fin;
@@ -326,10 +326,11 @@ int main(int argc, char *argv[]) {
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
 			mname = fname +".marks";
-			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+			// std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart(i).partition2(zx,i,p,blist,bnum);
-			
+			// zpart(i).partition2(zx,i,p,blist,bnum);
+			zpart(i).partition3(zx,i);
+
 			if (marks_flag) {
 				ofstream fout;
 				fout.open(mname.c_str());

@@ -243,8 +243,10 @@ class tet_mesh : public multigrid_interface {
 #endif 
 		void setup_partition(int nparts, Array<int,2> & boundary_partitions, Array<int,1> & commbdrys);
 		void setup_partition2(int nparts);
+
 		void partition(class tet_mesh& xmesh, int npart, int nparts); /**< Creates a partition from xmesh */
 		void partition2(class tet_mesh& xmesh, int npart, int nparts, Array<int,2> boundary_list, Array<int,1> commbdrys); /**< Creates a partition from xmesh */
+		void partition3(class tet_mesh& xin, int npart);
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */
 		int comm_entity_list(Array<int,1>& list);  /**< Returns list of communication entities */
 		class boundary* getvbdry(int num); /**< Returns pointer to vertex boundary (for blocks.h) */
@@ -318,9 +320,9 @@ class tet_mesh : public multigrid_interface {
 		}
 		
 		void match_all() {
-			match_tet_and_seg();
-			match_tet_and_tri();
-			match_tri_and_seg();
+			match_tet_and_seg(); // Requires tet.pnt and seg.pnt
+			match_tet_and_tri(); // Requires tet.pnt and tri.pnt
+			match_tri_and_seg(); // 
 			create_pnt_nnbor();
 			create_tet_tet();
 		}
@@ -590,6 +592,7 @@ class face_bdry : public boundary {
 		void vertexcircle(int vind);
 		void create_seg_from_tri(void);
 		void match_tri_and_seg(void);
+		void create_gbl_pnt_from_tri(void);
 		void create_tri_pnt_and_pnt_gindx_from_gbltris(void);
 		void create_seg_gindx(void);
 		void create_tri_gindx(void);

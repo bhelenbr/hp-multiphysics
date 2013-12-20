@@ -12,6 +12,19 @@
 
 /* only run once else it gets screwed up */
 /* this assumes that the global vertex numbers are in tri.pnt */
+void face_bdry::create_gbl_pnt_from_tri(void) {
+
+	for(int i = 0; i < ntri; ++i) {
+		int tind = tri(i).gindx;
+		for(int j = 0; j < 3; ++j) {
+			tri(i).pnt(j) = x.tri(tind).pnt(j);
+		}
+	}
+
+	return;
+}
+
+
 void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
 	int nvrt,vrt;    
 	Array<int,1> vinfo(x.npnt);

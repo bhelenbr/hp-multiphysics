@@ -1485,289 +1485,6 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 }
 
 
-
-void tet_mesh::setup_partition2(int nparts) {
-	
-	/* Need to classify every face, edge, and vertex */
-	
-	/* Start by classifying faces */
-	int combinations = (nparts+nfbd)*(nparts+nfbd);  /* The most there can be is nparts*nparts combinations */
-	Array<int,2> fbdry_marks(combinations,nparts+nfbd);  /* Marks for each face boundary */
-	Array<std::vector<int>,1> fbdry_partitions(combinations);  /* list of triangles for each face boundary */
-	int nfbdry_partitions; /* number of face boundary partitions */
-		
-	/* Array to store marks for comparisons */
-	Array<int,1> face_marks(nparts+nfbd);
-
-	for(int i = 0; i < ntri; ++i)
-		tri(i).info = -1;
-	
-	for(int i = 0; i < nfbd; ++i) {
-		for(int j = 0; j < fbdry(i)->ntri; ++j) {
-			tri(fbdry(i)->tri(j).gindx).info = i;
-		}
-	}
-
-	/* find communication face boundaries & domain boundaries by partition */
-	for (int i = 0; i < ntri; ++i) {
-		
-		if (tri(i).tet(1) > -1) {
-			
-			/* tag partitions with 1's in face_marks array*/
-			face_marks = 0;
-			for(int j = 0; j < 2; ++j) {
-				face_marks(tet(tri(i).tet(j)).info) = 1;
-			}
-			
-			/* if sum is greater than one then it is a communication boundary */
-			int sum = 0;
-			for(int j = 0; j < nparts; ++j)
-				sum += face_marks(j);
-			
-			if (sum > 1) {
-				
-				/* check if boundary already defined */
-				int match = -1;
-				for(int j = 0; j < nfbdry_partitions; ++j) {
-					match = 0;
-					for(int k = 0; k < nparts; ++k)
-						match += abs(face_marks(k)-fbdry_marks(j,k));
-					
-					/* boundary found tag with unique number */
-					if (match == 0) {
-						tri(i).info = j;
-						fbdry_partitions(j).push_back(i);
-						break;
-					}
-				}
-				
-				/* new face boundary */
-				if (match != 0) {
-					/* tag with unique number */
-					tri(i).info = nfbdry_partitions;
-					fbdry_partitions(nfbdry_partitions).push_back(i);
-
-					/* store 0,1's */
-					for(int k = 0; k < nparts+nfbd; ++k)
-						fbdry_marks(nfbdry_partitions,k) = face_marks(k);
-					
-					++nfbdry_partitions;
-				}
-			}
-		}
-		else {
-			/* Boundary of domain */
-			
-			/* tag partitions with 1's in face_marks array*/
-			face_marks = 0;
-			face_marks(tet(tri(i).tet(0)).info) = 1;  /* partition number */
-			face_marks(tri(i).info+nparts) = 1; /* face boundary number */
-			
-			
-			/* check if boundary already defined */
-			int match = -1;
-			for(int j = 0; j < nfbdry_partitions; ++j) {
-				match = 0;
-				for(int k = 0; k < nparts+nfbd; ++k)
-					match += abs(face_marks(k)-fbdry_marks(j,k));
-				
-				/* boundary found tag with unique number */
-				if (match == 0) {
-					tri(i).info = j;
-					fbdry_partitions(j).push_back(i);
-					break;
-				}
-			}
-			
-			/* new face boundary */
-			if (match != 0) {
-				/* tag with unique number */
-				tri(i).info = nfbdry_partitions;
-				fbdry_partitions(nfbdry_partitions).push_back(i);
-				
-				/* store 0,1's */
-				for(int k = 0; k < nparts+nfbd; ++k)
-					fbdry_marks(nfbdry_partitions,k) = face_marks(k);
-				
-				++nfbdry_partitions;
-			}
-		}
-	}
-	
-	
-	/* Now need to classify all edges */
-	/* Make lists of face memberships for each edge in mesh */
-	Array<std::vector<int>,1> fbdry_memberships(nseg);  /* for each edge list of faces it belongs to */
-	for(int i = 0; i < nfbdry_partitions; ++i) {
-		for(std::vector<int>::iterator j = fbdry_partitions(i).begin(); j != fbdry_partitions(i).end(); ++j) {
-			int tind = *j;
-			
-			for (int ls = 0; ls < 3; ++ls) {
-				int sind = tri(tind).seg(ls);
-				
-				for(std::vector<int>::iterator f = fbdry_memberships(sind).begin(); f != fbdry_memberships(sind).end(); ++f) {
-					if (*f == i) {
-						goto nextside;
-					}
-				}
-				fbdry_memberships(sind).push_back(i);
-				nextside: continue;
-			}
-		}
-	}
-	
-	Array<int,1> edge_marks(nfbdry_partitions);
-	
-	/* mark boundary edges */
-	for(int i = 0; i < nseg; ++i)
-		seg(i).info = -1;
-	
-	for(int i = 0; i < nebd; ++i)
-		for(int j = 0; j < ebdry(i)->nseg; ++j)
-			seg(ebdry(i)->seg(j).gindx).info = i;
-	
-	/* classify edges */
-	combinations = nfbdry_partitions*nfbdry_partitions;  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
-	Array<int,2> ebdry_marks(combinations,nfbdry_partitions);  /* Marks for each edge boundary */
-	Array<std::vector<int>,1> ebdry_partitions(combinations);  /* list of edges for each edge boundary */
-	int nebdry_partitions; /* number of edge boundary partitions */
-
-	/* find communication edge boundaries */
-	for(int i = 0; i < nseg; ++i) {
-		
-		for(std::vector<int>::iterator f = fbdry_memberships(i).begin(); f != fbdry_memberships(i).end(); ++f) {
-			edge_marks(*f) = 1;
-		}
-
-		if (seg(i).info > -1) {
-			edge_marks(nfbdry_partitions+seg(i).info) = 1;
-		}
-		
-		/* if sum is greater than one then it is an edge boundary */
-		int sum = 0;
-		for(int j = 0; j < nfbdry_partitions+nebd; ++j)
-			sum += edge_marks(j);
-		
-		if (sum > 1) {
-			/* check if boundary already defined */
-			int match = -1;
-			for(int j = 0; j < nebdry_partitions; ++j) {
-				match = 0;
-				for(int k = 0; k < nfbdry_partitions+nebd; ++k)
-					match += abs(edge_marks(k)-ebdry_marks(j,k));
-				
-				/* boundary found tag with unique number */
-				if (match == 0) {
-					seg(i).info = j;
-					ebdry_partitions(j).push_back(i);
-					break;
-				}
-			}
-			
-			/* new edge boundary */
-			if (match != 0) {
-				/* tag with unique number */
-				seg(i).info = nebdry_partitions;
-				ebdry_partitions(nebdry_partitions).push_back(i);
-				
-				/* store 0,1's */
-				for(int k = 0; k < nfbdry_partitions+nebd; ++k)
-					ebdry_marks(nebdry_partitions,k) = edge_marks(k);
-				
-				++nebdry_partitions;
-			}
-		}
-	}
-	~fbdry_memberships;  // delete this
-	
-	/* Now need to classify all vertices */
-	/* Make lists of edge memberships for each edge in mesh */
-	Array<std::vector<int>,1> ebdry_memberships(npnt);  /* for each edge list of faces it belongs to */
-	for(int i = 0; i < nebdry_partitions; ++i) {
-		for(std::vector<int>::iterator j = ebdry_partitions(i).begin(); j != ebdry_partitions(i).end(); ++j) {
-			int eind = *j;
-			
-			for (int ls = 0; ls < 2; ++ls) {
-				int pnt = seg(eind).pnt(ls);
-				
-				for(std::vector<int>::iterator e = ebdry_memberships(eind).begin(); e != ebdry_memberships(eind).end(); ++e) {
-					if (*e == i) {
-						goto nextedge;
-					}
-				}
-				ebdry_memberships(eind).push_back(i);
-				nextedge: continue;
-			}
-		}
-	}
-	
-	Array<int,1> pnt_marks(nebdry_partitions);
-	
-	/* mark boundary edges */
-	for(int i = 0; i < npnt; ++i)
-		pnt(i).info = -1;
-	
-	for(int i = 0; i < nvbd; ++i)
-			pnt(vbdry(i)->pnt).info = i;
-	
-	/* classify edges */
-	combinations = nebdry_partitions*nebdry_partitions;  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
-	Array<int,2> vbdry_marks(combinations,nebdry_partitions);  /* Marks for each edge boundary */
-	Array<std::vector<int>,1> vbdry_partitions(combinations);  /* list of edges for each edge boundary */
-	int nvbdry_partitions; /* number of edge boundary partitions */
-	
-	/* find communication edge boundaries */
-	for(int i = 0; i < npnt; ++i) {
-		
-		for(std::vector<int>::iterator e = ebdry_memberships(i).begin(); e != ebdry_memberships(i).end(); ++e) {
-			pnt_marks(*e) = 1;
-		}
-		
-		if (pnt(i).info > -1) {
-			pnt_marks(nebdry_partitions+pnt(i).info) = 1;
-		}
-		
-		/* if sum is greater than one then it is an edge boundary */
-		int sum = 0;
-		for(int j = 0; j < nebdry_partitions+nvbd; ++j)
-			sum += pnt_marks(j);
-		
-		if (sum > 1) {
-			/* check if boundary already defined */
-			int match = -1;
-			for(int j = 0; j < nebdry_partitions; ++j) {
-				match = 0;
-				for(int k = 0; k < nebdry_partitions+nvbd; ++k)
-					match += abs(pnt_marks(k)-vbdry_marks(j,k));
-				
-				/* boundary found tag with unique number */
-				if (match == 0) {
-					pnt(i).info = j;
-					vbdry_partitions(j).push_back(i);
-					break;
-				}
-			}
-			
-			/* new edge boundary */
-			if (match != 0) {
-				/* tag with unique number */
-				pnt(i).info = nvbdry_partitions;
-				vbdry_partitions(nvbdry_partitions).push_back(i);
-				
-				/* store 0,1's */
-				for(int k = 0; k < nebdry_partitions+nvbd; ++k)
-					vbdry_marks(nvbdry_partitions,k) = pnt_marks(k);
-				
-				++nvbdry_partitions;
-			}
-		}
-	}
-	~ebdry_memberships;  // delete this
-
-	return;
-}
-
-
 void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,2> boundary_list, Array<int,1> commbdrys) {
 	
 	/* TO CREATE UNIQUE FACE NUMBERS */
@@ -2406,3 +2123,570 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 
 	return;
 }
+
+
+
+void tet_mesh::setup_partition2(int nparts) {
+	
+	/* Need to classify every face, edge, and vertex */
+	
+	/* Start by classifying faces */
+	int combinations = (nparts+nfbd)*(nparts+nfbd);  /* The most there can be is nparts*nparts combinations */
+	Array<int,2> fbdry_marks(combinations,nparts+nfbd);  /* Marks for each face boundary */
+	Array<std::vector<int>,1> fbdry_partitions(combinations);  /* list of triangles for each face boundary */
+	int nfbdry_partitions = 0; /* number of face boundary partitions */
+	vector<int> fidnum;
+	
+	/* Array to store marks for comparisons */
+	Array<int,1> face_marks(nparts+nfbd);
+	
+	for(int i = 0; i < ntri; ++i)
+		tri(i).info = -1;
+	
+	/* find communication face boundaries */
+	for (int i = 0; i < ntri; ++i) {
+		
+		if (tri(i).tet(1) > -1) {
+			
+			/* tag partitions with 1's in face_marks array*/
+			face_marks = 0;
+			for(int j = 0; j < 2; ++j) {
+				face_marks(tet(tri(i).tet(j)).info) = 1;
+			}
+			
+			/* if sum is greater than one then it is a communication boundary */
+			int sum = 0;
+			for(int j = 0; j < nparts; ++j)
+				sum += face_marks(j);
+			
+			if (sum > 1) {
+				
+				/* check if boundary already defined */
+				int match = -1;
+				for(int j = 0; j < nfbdry_partitions; ++j) {
+					match = 0;
+					for(int k = 0; k < nparts; ++k)
+						match += abs(face_marks(k)-fbdry_marks(j,k));
+					
+					/* boundary found tag with unique number */
+					if (match == 0) {
+						tri(i).info = j;
+						fbdry_partitions(j).push_back(i);
+						break;
+					}
+				}
+				
+				/* new face boundary */
+				if (match != 0) {
+					std::cout << "b0_f" << nfbdry_partitions << "_type: partition" << std::endl;
+					fidnum.push_back(-1);
+
+					/* tag with unique number */
+					tri(i).info = nfbdry_partitions;
+					fbdry_partitions(nfbdry_partitions).push_back(i);
+					
+					/* store 0,1's */
+					for(int k = 0; k < nparts+nfbd; ++k)
+						fbdry_marks(nfbdry_partitions,k) = face_marks(k);
+					
+					++nfbdry_partitions;
+				}
+			}
+		}
+	}
+	
+	int nfpartitions = nfbdry_partitions;
+	
+	/* Now create physical face boundaries */
+	for(int b = 0; b < nfbd; ++b) {
+		for(int j = 0; j < fbdry(b)->ntri; ++j) {
+			int i = fbdry(b)->tri(j).gindx;
+			
+			/* Boundary of domain */
+			/* tag partitions with 1's in face_marks array*/
+			face_marks = 0;
+			face_marks(tet(tri(i).tet(0)).info) = 1;  /* partition number */
+			face_marks(b+nparts) = 1; /* face boundary number */
+			
+			
+			/* check if boundary already defined */
+			int match = -1;
+			for(int j = 0; j < nfbdry_partitions; ++j) {
+				match = 0;
+				for(int k = 0; k < nparts+nfbd; ++k)
+					match += abs(face_marks(k)-fbdry_marks(j,k));
+				
+				/* boundary found tag with unique number */
+				if (match == 0) {
+					tri(i).info = j;
+					fbdry_partitions(j).push_back(i);
+					break;
+				}
+			}
+			
+			/* new face boundary */
+			if (match != 0) {
+				
+				std::cout << "b0_f" << nfbdry_partitions << " b0" << fbdry(b)->idprefix << "" << std::endl;
+				fidnum.push_back(b);
+				/* tag with unique number */
+				tri(i).info = nfbdry_partitions;
+				fbdry_partitions(nfbdry_partitions).push_back(i);
+				
+				/* store 0,1's */
+				for(int k = 0; k < nparts+nfbd; ++k)
+					fbdry_marks(nfbdry_partitions,k) = face_marks(k);
+				
+				++nfbdry_partitions;
+			}
+		}
+	}
+	
+
+	
+	/* Now need to classify all edges */
+	/* Make lists of face memberships for each edge in mesh */
+	Array<std::vector<int>,1> fbdry_memberships(nseg);  /* for each edge list of faces it belongs to */
+	for(int i = 0; i < nfbdry_partitions; ++i) {
+		for(std::vector<int>::iterator j = fbdry_partitions(i).begin(); j != fbdry_partitions(i).end(); ++j) {
+			int tind = *j;
+			
+			for (int ls = 0; ls < 3; ++ls) {
+				int sind = tri(tind).seg(ls);
+				
+				for(std::vector<int>::iterator f = fbdry_memberships(sind).begin(); f != fbdry_memberships(sind).end(); ++f) {
+					if (*f == i) {
+						goto nextside;
+					}
+				}
+				fbdry_memberships(sind).push_back(i);
+			nextside: continue;
+			}
+		}
+	}
+	
+	Array<int,1> edge_marks(nfbdry_partitions+nebd);
+	
+	/* mark boundary edges */
+	for(int i = 0; i < nseg; ++i)
+		seg(i).info = -1;
+	
+	for(int i = 0; i < nebd; ++i)
+		for(int j = 0; j < ebdry(i)->nseg; ++j)
+			seg(ebdry(i)->seg(j).gindx).info = i;
+	
+	/* classify edges */
+	combinations = (nfbdry_partitions +nebd)*(nfbdry_partitions+nebd);  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
+	Array<int,2> ebdry_marks(combinations,nfbdry_partitions+nebd);  /* Marks for each edge boundary */
+	Array<std::vector<int>,1> ebdry_partitions(combinations);  /* list of edges for each edge boundary */
+	int nebdry_partitions = 0; /* number of edge boundary partitions */
+	vector<bool> partition_edge;
+	vector<bool> physical_edge;
+	vector<string> edge_types;
+	
+	/* find communication edge boundaries */
+	for(int i = 0; i < nseg; ++i) {
+		
+		edge_marks = 0;
+		for(std::vector<int>::iterator f = fbdry_memberships(i).begin(); f != fbdry_memberships(i).end(); ++f) {
+			edge_marks(*f) = 1;
+		}
+		
+		if (seg(i).info > -1) {
+			edge_marks(nfbdry_partitions+seg(i).info) = 1;
+		}
+		
+		/* if sum is greater than one then it is an edge boundary */
+		int sum = 0;
+		for(int j = 0; j < nfbdry_partitions+nebd; ++j)
+			sum += edge_marks(j);
+		
+		if (sum > 1) {
+			/* check if boundary already defined */
+			int match = -1;
+			for(int j = 0; j < nebdry_partitions; ++j) {
+				match = 0;
+				for(int k = 0; k < nfbdry_partitions+nebd; ++k)
+					match += abs(edge_marks(k)-ebdry_marks(j,k));
+				
+				/* boundary found tag with unique number */
+				if (match == 0) {
+					seg(i).info = j;
+					ebdry_partitions(j).push_back(i);
+					break;
+				}
+			}
+			
+			/* new edge boundary */
+			if (match != 0) {
+				/* Determine type of edge */
+				int sum2 = 0;
+				for(int j = 0; j < nfpartitions; ++j)
+					sum2 += edge_marks(j);
+				
+				if (sum2 > 1) {
+					/* More than one communication face touches edge */
+					std::cout << "b0_e" << nebdry_partitions << "_type: partition" << std::endl;
+					partition_edge.push_back(true);
+				}
+				else {
+					partition_edge.push_back(false);
+				}
+				
+				if (seg(i).info > -1) {
+					std::cout << "b0_e" << nebdry_partitions << " b0" << ebdry(seg(i).info)->idprefix << std::endl;
+					edge_types.push_back(" b0" +ebdry(seg(i).info)->idprefix);
+					physical_edge.push_back(true);
+					if (sum2 > 1) {
+						std::cerr << "Warning: physical boundary edge b0_e" << nebdry_partitions << " is also partition edge" << std::endl;
+						std::cerr << "Make sure correct edge type is defined" << std::endl;
+					}
+				}
+				else if (sum -sum2 > 0 && sum2 > 1) {
+					/* New edge on physical boundary of domain between communication partitions */
+					for(int k = nfpartitions; k<nfbdry_partitions;++k) {
+						if (edge_marks(k)) {
+							std::cout << "b0_e" << nebdry_partitions << " b0 " << fbdry(fidnum[k])->idprefix << std::endl;
+							physical_edge.push_back(true);
+							edge_types.push_back("b0 " + fbdry(fidnum[k])->idprefix);
+
+							break;
+						}
+					}
+				}
+				else {
+					physical_edge.push_back(false);
+					edge_types.push_back("");
+				}
+					
+				
+				
+				/* tag with unique number */
+				seg(i).info = nebdry_partitions;
+				ebdry_partitions(nebdry_partitions).push_back(i);
+				
+				/* store 0,1's */
+				for(int k = 0; k < nfbdry_partitions+nebd; ++k)
+					ebdry_marks(nebdry_partitions,k) = edge_marks(k);
+				
+				++nebdry_partitions;
+			}
+		}
+	}
+	~fbdry_memberships;  // delete this
+	
+	/* Now need to classify all vertices */
+	/* Make lists of edge memberships for each edge in mesh */
+	Array<std::vector<int>,1> ebdry_memberships(npnt);  /* for each edge list of faces it belongs to */
+	for(int i = 0; i < nebdry_partitions; ++i) {
+		for(std::vector<int>::iterator j = ebdry_partitions(i).begin(); j != ebdry_partitions(i).end(); ++j) {
+			int eind = *j;
+			
+			for (int ls = 0; ls < 2; ++ls) {
+				int pnt = seg(eind).pnt(ls);
+				
+				for(std::vector<int>::iterator e = ebdry_memberships(pnt).begin(); e != ebdry_memberships(pnt).end(); ++e) {
+					if (*e == i) {
+						goto nextedge;
+					}
+				}
+				ebdry_memberships(pnt).push_back(i);
+			nextedge: continue;
+			}
+		}
+	}
+	
+	Array<int,1> pnt_marks(nebdry_partitions+nvbd);
+	
+	/* mark boundary edges */
+	for(int i = 0; i < npnt; ++i)
+		pnt(i).info = -1;
+	
+	for(int i = 0; i < nvbd; ++i)
+		pnt(vbdry(i)->pnt).info = i;
+	
+	/* classify edges */
+	combinations = (nebdry_partitions+nvbd)*(nebdry_partitions+nvbd);  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
+	Array<int,2> vbdry_marks(combinations,nebdry_partitions+nvbd);  /* Marks for each edge boundary */
+	Array<std::vector<int>,1> vbdry_partitions(combinations);  /* list of edges for each edge boundary */
+	int nvbdry_partitions = 0; /* number of edge boundary partitions */
+	
+	/* find communication point boundaries */
+	for(int i = 0; i < npnt; ++i) {
+		
+		pnt_marks = 0;
+		for(std::vector<int>::iterator e = ebdry_memberships(i).begin(); e != ebdry_memberships(i).end(); ++e) {
+			pnt_marks(*e) = 1;
+		}
+		
+		if (pnt(i).info > -1) {
+			pnt_marks(nebdry_partitions+pnt(i).info) = 1;
+		}
+		
+		/* if sum is greater than one then it is an vertex boundary */
+		int sum = 0;
+		for(int j = 0; j < nebdry_partitions+nvbd; ++j)
+			sum += pnt_marks(j);
+		
+		if (sum > 1) {
+			/* new vertex boundary */
+			int sum2 = 0;
+			for(int j = 0; j < nebdry_partitions; ++j)
+				sum2 += partition_edge[j]*pnt_marks(j);
+
+			if (sum2 > 1) {
+				std::cout << "b0_v" << nvbdry_partitions << "_type: partition" << std::endl;
+			}
+			
+			if (pnt(i).info > -1) {
+				std::cout << "b0_v" << nvbdry_partitions << " b0" << vbdry(pnt(i).info)->idprefix << std::endl;
+				if (sum2 > 1) {
+					std::cerr << "Warning: physical boundary vertex b0_v" << nvbdry_partitions << " is also partition vertex" << std::endl;
+					std::cerr << "Make sure correct vertex type is defined" << std::endl;
+				}
+			}
+			else {
+				if (sum2 > 1) {
+					for(int j = 0; j < nebdry_partitions; ++j) {
+						if (physical_edge[j]*pnt_marks(j) ) {
+							std::cout << "b0_v" << nvbdry_partitions << ' ' << edge_types[j] << std::endl;
+							break;
+						}
+					}
+				}
+			}
+			
+			/* tag with unique number */
+			pnt(i).info = nvbdry_partitions;
+			vbdry_partitions(nvbdry_partitions).push_back(i);
+			
+			/* store 0,1's */
+			for(int k = 0; k < nebdry_partitions+nvbd; ++k)
+				vbdry_marks(nvbdry_partitions,k) = pnt_marks(k);
+			
+			++nvbdry_partitions;
+		}
+	}
+	~ebdry_memberships;  // delete this
+	
+	return;
+}
+
+
+void tet_mesh::partition3(class tet_mesh& xin, int npart) {
+	
+	/* work array intwk(xin pnt index) = local pnt index */
+	Array<int,1> intwk(xin.npnt);
+	intwk = -1;
+	
+	/* count tets in partition and tag vertex */
+	ntet = 0;
+	for(int i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			++ntet;
+			for(int n=0;n<4;++n) {
+				intwk(xin.tet(i).pnt(n)) = npart;
+			}
+		}
+	}
+	
+	/* allocate mesh */
+	if (!initialized) {
+		maxvst = static_cast<int> (static_cast<FLT> (ntet) * static_cast<FLT> (xin.maxvst) / static_cast<FLT> (xin.ntet));
+		allocate(maxvst*2);
+	}
+	else if (4*ntet > maxvst) {//FIX ME 3->4??
+		*gbl->log << "mesh is too small" << std::endl;
+		exit(1);
+	}
+	
+	ostringstream nstr;
+	nstr << "b" << npart << std::flush;
+	gbl->idprefix = nstr.str();
+	gbl->idnum = npart;
+	nstr.clear();
+	
+	
+	
+	/*********************/
+	/* FILL IN PNT ARRAY */
+	/*********************/
+	map<int,int> vrtx_boundaries;
+	npnt = 0;
+	for(int i=0;i<xin.npnt;++i) {
+		if (intwk(i) == npart) {
+			for(int n=0;n<ND;++n)
+				pnts(npnt)(n) = xin.pnts(i)(n);
+			intwk(i) = npnt;
+			
+			if (xin.pnt(i).info > -1) {
+				vrtx_boundaries[xin.pnt(i).info] = npnt;
+			}
+			
+			++npnt;
+		}
+	}
+	
+	/* Make new vrtx boundaries and print boundary information */
+	nvbd = vrtx_boundaries.size();
+	vbdry.resize(nvbd);
+	nvbd = 0;
+	for(map<int,int>::iterator i=vrtx_boundaries.begin(); i != vrtx_boundaries.end(); ++i) {
+		vbdry(nvbd) = new vcomm(i->first,*this);
+		vbdry(nvbd)->alloc(4);
+		vbdry(nvbd)->pnt = i->second;
+		// std::cout << "b" << npart << "_v" << i->first << "_type:" << endl;
+		++nvbd;
+	}
+	
+	/*********************/
+	/* FILL IN TET ARRAY */
+	/*********************/
+	ntet = 0;
+	for(int i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			for(int n=0;n<4;++n)
+				tet(ntet).pnt(n) = intwk(xin.tet(i).pnt(n));
+			tet(ntet).info = i;
+			++ntet;
+		}
+	}
+
+	/**********************************/
+	/*             FACES              */
+	/**********************************/
+	/* Lots of ways to do this */
+	/* Can also loop through tets and mark faces */
+	/* or could loop through new tets and mark faces */
+	/* Both of these require more memory though */
+	ntri = 0;
+	map<int,vector<int> > face_boundaries;
+	
+	/* find all face boundaries */
+	for(int i = 0; i < xin.ntri; ++i) {
+		
+		if (xin.tet(xin.tri(i).tet(0)).info == npart) {
+			/* triangle vertex points */
+			for(int n = 0; n < 3; ++n)
+				tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
+			
+			tri(ntri).info = i;
+			
+			/* count boundary faces */
+			if (xin.tri(i).info > -1) {
+				face_boundaries[xin.tri(i).info].push_back(ntri);
+			}
+			
+			++ntri;
+		}
+		else if (xin.tri(i).tet(1) > -1) {
+			if (xin.tet(xin.tri(i).tet(1)).info == npart) {
+				/* triangle vertex points */
+				for(int n = 0; n < 3; ++n)
+					tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
+				
+				tri(ntri).info = i;
+				
+				/* count boundary faces */
+				if (xin.tri(i).info > -1) {
+					face_boundaries[xin.tri(i).info].push_back(ntri);
+				}
+				
+				++ntri;
+			}
+		}
+	}
+		
+	
+	/* Make new face boundaries and print boundary information */
+	nfbd = face_boundaries.size();
+	fbdry.resize(nfbd);
+	nfbd = 0;
+	for(map<int,vector<int> >::iterator i=face_boundaries.begin(); i != face_boundaries.end(); ++i) {
+		
+		fbdry(nfbd) = new fpartition(i->first,*this);
+		fbdry(nfbd)->alloc(i->second.size()*4);
+		
+		fbdry(nfbd)->ntri = 0;
+		for(vector<int>::iterator j = i->second.begin(); j != i->second.end(); ++j) {
+			fbdry(nfbd)->tri(fbdry(nfbd)->ntri++).gindx = *j;
+		}
+		// std::cout << "b" << npart << "_f" << i->first << "_type:" << endl;
+		++nfbd;
+	}
+	
+	/**********************************/
+	/*             EDGES              */
+	/**********************************/	
+	nseg = 0;
+	map<int,vector<int> > edge_boundaries;
+	
+	/* find all face boundaries */
+	for(int i = 0; i < xin.nseg; ++i) {
+		
+		/* search if on partition */
+		int nbor = xin.seg(i).nnbor;
+		xin.ring(i);
+		
+		for(int j = 0; j < nbor; ++j) {
+			if (npart == xin.tet(xin.gbl->i2wk(j)).info) {
+				goto edge_found;
+			}
+		}
+		continue;
+		
+		edge_found:
+		
+		/* fill in seg.pnt info */
+		for(int n = 0; n < 2; ++n)
+			seg(nseg).pnt(n) = intwk(xin.seg(i).pnt(n));
+		
+		/* store index from xin mesh */
+		seg(nseg).info = i;
+		
+		/* count boundary edges */
+		if (xin.seg(i).info > -1) {
+			edge_boundaries[xin.seg(i).info].push_back(nseg);
+		}
+			
+		++nseg;
+	}
+	
+	
+	/* Make new edge boundaries and print boundary information */
+	nebd = edge_boundaries.size();
+	ebdry.resize(nebd);
+	nebd = 0;
+	for(map<int,vector<int> >::iterator i=edge_boundaries.begin(); i != edge_boundaries.end(); ++i) {
+		
+		ebdry(nebd) = new epartition(i->first,*this);
+		ebdry(nebd)->alloc(i->second.size()*4);
+		
+		ebdry(nebd)->nseg = 0;
+		for(vector<int>::iterator j = i->second.begin(); j != i->second.end(); ++j) {
+			ebdry(nebd)->seg(ebdry(nebd)->nseg++).gindx = *j;
+		}
+		// std::cout << "b" << npart << "_e" << i->first << "_type:" << endl;
+		++nebd;
+	}
+	
+	/* call match_all because reorder doesnt account for sign change */
+	match_all();
+	for(int i = 0; i < nfbd; ++i) {
+		/* Load global vertex indices */
+		fbdry(i)->create_gbl_pnt_from_tri();
+		fbdry(i)->create_from_tri();
+	}
+	
+	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */
+	/* don't mess with predifined plain edges because gmsh will recombine them*/
+	for(int i=0;i<nebd;++i) {
+		ebdry(i)->setup_next_prev();
+		ebdry(i)->reorder();
+	}
+	
+	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+		
+	return;
+}
+

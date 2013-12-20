@@ -505,7 +505,7 @@ void tet_mesh::match_tri_and_seg(void) {
 		tind = tri(find).tet(0);
 		
 		if (tind < 0) {
-			cout << " uh oh negative tet index " << endl;
+			cout << " uh oh negative tet index " << tind << ' ' << find << endl;
 			exit(3);
 		}
 		

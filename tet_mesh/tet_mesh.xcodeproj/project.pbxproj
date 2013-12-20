@@ -166,6 +166,7 @@
 		B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewbdry.cpp; sourceTree = "<group>"; };
 		B24119840C623C2300EA7B1A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
+		E61FBFEE186248CC0035181D /* partition2.bash */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = partition2.bash; sourceTree = "<group>"; };
 		E642B18814437A1700F3CDC9 /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6FA5FCD182B435B00568351 /* libMAdLib.1.3.svn-head.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libMAdLib.1.3.svn-head.dylib"; path = "../../Packages/lib/libMAdLib.1.3.svn-head.dylib"; sourceTree = "<group>"; };
 		E6FA5FCF182B437800568351 /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../Packages/lib/libmetis.dylib; sourceTree = "<group>"; };
@@ -326,6 +327,7 @@
 			isa = PBXGroup;
 			children = (
 				E642B18814437A1700F3CDC9 /* partition.bash */,
+				E61FBFEE186248CC0035181D /* partition2.bash */,
 				6F9D57311047327300216CB3 /* makefile */,
 			);
 			name = Scripts;
