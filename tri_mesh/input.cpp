@@ -210,7 +210,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			/* LOAD SIDE INFORMATION */
 			grd_app = grd_nm + ".s";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 					  *gbl->log << "error: couldn't open file: " << grd_app << std::endl;
 					  sim::abort(__LINE__,__FILE__,gbl->log);
 			}
@@ -287,7 +287,7 @@ next1a:      continue;
 			/* LOAD VERTEX INFORMATION                    */
 			grd_app = grd_nm + ".n";
 			in.open(grd_app.c_str());
-			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
+			if (!in) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
 
 			if(!(in >> npnt)) {
 				*gbl->log << "1: error in grid: " << grd_app << std::endl;
@@ -324,7 +324,7 @@ next1a:      continue;
 			/* LOAD ELEMENT INFORMATION */
 			grd_app = grd_nm + ".e";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "trouble opening " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
@@ -359,7 +359,7 @@ next1a:      continue;
 		case(gambit): {
 			grd_app = grd_nm +".FDNEUT";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 					  *gbl->log << "trouble opening " << grd_nm << std::endl;
 					  sim::abort(__LINE__,__FILE__,gbl->log);
 			}
@@ -476,7 +476,7 @@ next1a:      continue;
 		case(grid): {
 			grd_app = grd_nm + ".grd";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "couldn't open grid file: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
@@ -681,7 +681,7 @@ next1a:      continue;
 			/* LOAD VERTEX POSITIONS                    */
 			grd_app = grd_nm + ".txt";
 			in.open(grd_app.c_str());
-			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
+			if (!in) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
 
 			if(!(in >> temp)) {
 				*gbl->log << "1: error in grid " << grd_app << std::endl;
@@ -832,7 +832,7 @@ next1c:      continue;
 		case(tecplot): {
 			grd_app = grd_nm +".dat";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "couldn't open tecplot file: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
@@ -903,7 +903,7 @@ next1c:      continue;
 			/* LOAD BOUNDARY INFORMATION */
 			grd_app = grd_nm +".d";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "couldn't open " << grd_app << "for reading\n";
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}

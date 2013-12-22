@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 	ifstream intest;
 	input_map bdrymap;
 	intest.open(bdry_nm.c_str());
-	if (intest.good()) {
+	if (intest) {
 		intest.close();
 		bdrymap.input(bdry_nm);
 		bdrymap.echo = true;
