@@ -160,7 +160,7 @@ namespace ibc_cd {
 						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
 					//making sure the file is open
-					if (!infile.good()) {
+					if (!infile) {
 						
 						*x.gbl->log << "Not in file "<< std::endl;
 						sim::abort(__LINE__,__FILE__,&std::cerr);
