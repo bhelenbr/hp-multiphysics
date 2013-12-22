@@ -213,7 +213,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			/* LOAD TETRAHEDRAL MESH DATA (BAKER FORMAT) */            
 			grd_app = grd_nm +".d";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "error loading" << grd_nm << ".d" << std::endl;
 				exit(1);
 			}                    
@@ -299,7 +299,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			/* LOAD TETRAHEDRAL ALL MESH DATA */            
 			grd_app = grd_nm +".grd";
 			in.open(grd_app.c_str());    
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "error loading" << grd_nm << ".grd" << std::endl;
 				exit(1);
 			}			
@@ -414,7 +414,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 		case(gambit):
 			grd_app = grd_nm +".FDNEUT";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 					  *gbl->log << "trouble opening " << grd_nm << std::endl;
 					  exit(1);
 			}
@@ -497,7 +497,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 		case(tecplot): {
 			grd_app = grd_nm +".dat";
 			in.open(grd_app.c_str());
-			if (!in.good()) {
+			if (!in) {
 				*gbl->log << "couldn't open tecplot file: " << grd_app<< std::endl;
 				exit(1);
 			}

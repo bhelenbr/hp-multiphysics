@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 	ifstream intest;
 	input_map bdrymap;
 	intest.open(bdry_nm.c_str());
-	if (intest.good()) {
+	if (intest) {
 		intest.close();
 		bdrymap.input(bdry_nm);
 		bdrymap.echo = true;
@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
 			filename = gridname +".marks";
 		}
 		fin.open(filename.c_str());
-		if (fin.good()) {
+		if (fin) {
 			marks.resize(zx.ntet);
 			for (int i=0;i<zx.ntet;++i) {
 				fin.ignore(80,':');
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
 				ofstream fout;
 				fout.open(mname.c_str());
 				
-				/* tet.info gets whiped out so have to redo it */
+				/* tet.info gets wiped out so have to redo it */
 				int ntet = 0;
 				for(int tind=0;tind<zx.ntet;++tind) {
 					if (zx.tet(tind).info == i) {
