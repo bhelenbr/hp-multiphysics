@@ -311,6 +311,12 @@ cd ../tri_basis
 xcodebuild -alltargets -configuration Release
 cd ../tri_hp
 xcodebuild -alltargets -configuration Release
+cd ../tet_mesh
+xcodebuild -alltargets -configuration Release
+cd ../tet_basis
+xcodebuild -alltargets -configuration Release
+cd ../tet_hp
+xcodebuild -alltargets -configuration Release
 ###################################################################
 
 
