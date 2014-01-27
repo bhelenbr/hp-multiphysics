@@ -51,8 +51,9 @@ namespace ibc_cd {
 			source(0) = 0.0;
 			for(int r=0;r<nregion;++r) {
 				int sign_sum = 0;
-				for (int n=0;n<tet_mesh::ND;++n)
-					sign_sum += SIGN((x(n)-bbox(r,0,n))*(x(n)-bbox(r,1,n)));
+				for (int n=0;n<tet_mesh::ND;++n) {
+					sign_sum += ((x(n)-bbox(r,0,n))*(x(n)-bbox(r,1,n)) < 0.0 ? -1 : 1);
+				}
 				if (sign_sum == -3) {
 					time_history(r).interpolate(time, source);
 				}
@@ -87,11 +88,12 @@ namespace ibc_cd {
 				for (int n=0;n<tet_mesh::ND;++n)
 					bbox_stream >> bbox(r,0,n);
 	
-				bbox_string.clear();
 				inmap.getline(idnty+"_region" +nstr.str() +"_bbox1",bbox_string);
+				bbox_stream.clear();
 				bbox_stream.str(bbox_string);
-				for (int n=0;n<tet_mesh::ND;++n)
+				for (int n=0;n<tet_mesh::ND;++n) {
 					bbox_stream >> bbox(r,1,n);
+				}
 			}
 		}
 	};
