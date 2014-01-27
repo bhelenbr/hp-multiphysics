@@ -1046,6 +1046,12 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
 	if (sint == 0.0) {
 		K = gbl->Krough*K2Dn_exp;
+		
+//		/* For an unsteady perturbation */
+//		const FLT T = 1.5e-3;
+//		if (x.gbl->time < T) {
+//			K = K*(1.0+0.1*sin(2*M_PI*x.gbl->time/T));
+//		}
 	}
 	else {
 		K = gbl->Krough*(1. + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
