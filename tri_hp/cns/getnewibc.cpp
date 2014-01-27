@@ -643,7 +643,7 @@ namespace ibc_cns {
 //
 //				/* EXTRAPOLATE */
 //				if (stage  && x.gbl->dti > 0.0) {
-//					FLT constant =  x.gbl->cdirk(x.gbl->substep);
+//					FLT constant =  x.gbl->cdirk(x.gbl->substep)*gbl->extrapolate;
 //					w_a += constant*k_a[stage-1]; 
 //					w_b += constant*k_b[stage-1];
 //					w_c += constant*k_c[stage-1];

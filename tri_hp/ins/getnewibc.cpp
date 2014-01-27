@@ -812,7 +812,7 @@ class force_coupling : public tri_hp_helper {
 
 //				/* EXTRAPOLATE */
 //				if (stage  && x.gbl->dti > 0.0) {
-//					FLT constant =  x.gbl->cdirk(x.gbl->substep);
+//					FLT constant =  x.gbl->cdirk(x.gbl->substep)*gbl->extrapolate;
 //					w += constant*ki(stage-1); 
 //					
 //					/* FIX POSITIONS */

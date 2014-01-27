@@ -600,7 +600,7 @@ void hp_edge_bdry::tadvance() {
 
 		/* EXTRAPOLATE GUESS? */
 		if (stage && x.gbl->dti > 0.0) {
-			FLT constant =  x.gbl->cdirk(x.gbl->substep);
+			FLT constant =  x.gbl->cdirk(x.gbl->substep)*x.gbl->extrapolate;
 			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) += constant*crvbd(stage+1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 		}
 	}
