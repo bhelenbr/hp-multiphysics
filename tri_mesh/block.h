@@ -72,6 +72,7 @@ struct block_global {
 	int nadapt; /**< number of solutions that require adaptation */
 	int stepsolves; /**< Number of implicit solutions required per timestep */
 	Array<FLT,1> bd;  /**< backwards difference or diagonal DIRK constants */
+	double extrapolate; /**< Extrapolate guess for next time step (0,1) */
 
 	/** @name DIRK variables
 	*  These are arrays for diagonally implicit RK Timestepping
