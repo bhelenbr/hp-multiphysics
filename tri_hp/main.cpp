@@ -8,6 +8,7 @@
  */
 #ifdef MPISRC
 #include <mpi.h>
+#include <unistd.h>
 #endif
 
 #include <blocks.h>
