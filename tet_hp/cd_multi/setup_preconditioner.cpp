@@ -4,13 +4,14 @@
 #include "../hp_boundary.h"
 
 //#define TIMEACCURATE
+#define NEWWAY
 
 void tet_hp_cd_multi::setup_preconditioner() {
 	int tind,find,i,j,side,p0,p1,p2,v0;
 	FLT jcb,a,h,amax,lam1,q,qmax,dtcheck;
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
-
+	FLT cflmin = 1e99;
 	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -38,9 +39,37 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		const FLT kcond = gbl->kcond(marks(tind));
 		const FLT alpha = kcond/rhocv;
 
-		
-		jcb = 0.125*tet(tind).vol; 
+		jcb = 0.125*tet(tind).vol;
 		v = tet(tind).pnt;
+		
+#ifdef NEWWAY
+		TinyVector<TinyVector<FLT,3>,3> d, dcrd;
+		
+		for(int n=0;n<ND;++n) {
+			dcrd(n)(0) = 0.5*(pnts(v(3))(n) -pnts(v(2))(n));
+			dcrd(n)(1) = 0.5*(pnts(v(1))(n) -pnts(v(2))(n));
+			dcrd(n)(2) = 0.5*(pnts(v(0))(n) -pnts(v(2))(n));
+		}
+		
+		d(0)(0) =  dcrd(1)(1)*dcrd(2)(2)-dcrd(1)(2)*dcrd(2)(1);
+		d(0)(1) = -dcrd(0)(1)*dcrd(2)(2)+dcrd(0)(2)*dcrd(2)(1);
+		d(0)(2) =  dcrd(0)(1)*dcrd(1)(2)-dcrd(0)(2)*dcrd(1)(1);
+		d(1)(0) = -dcrd(1)(0)*dcrd(2)(2)+dcrd(1)(2)*dcrd(2)(0);
+		d(1)(1) =  dcrd(0)(0)*dcrd(2)(2)-dcrd(0)(2)*dcrd(2)(0);
+		d(1)(2) = -dcrd(0)(0)*dcrd(1)(2)+dcrd(0)(2)*dcrd(1)(0);
+		d(2)(0) =  dcrd(1)(0)*dcrd(2)(1)-dcrd(1)(1)*dcrd(2)(0);
+		d(2)(1) = -dcrd(0)(0)*dcrd(2)(1)+dcrd(0)(1)*dcrd(2)(0);
+		d(2)(2) =  dcrd(0)(0)*dcrd(1)(1)-dcrd(0)(1)*dcrd(1)(0);
+		
+		double jcbi = kcond*0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)/jcb;
+		jcb *= gbl->bd(0)*rhocv;
+		FLT diff_dti = jcbi*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
+		diff_dti += jcbi*(d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
+		diff_dti += jcbi*(d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
+		
+		cflmin = MIN(cflmin,jcb/diff_dti);
+		jcb += diff_dti;
+#else
 		amax = 0.0;
 		for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
 			find = tet(tind).tri(j);
@@ -96,6 +125,7 @@ void tet_hp_cd_multi::setup_preconditioner() {
 #endif
 		/* explicit */
 		//jcb = 0.125*tet(tind).vol*12000.0;
+#endif
 		
 		gbl->iprcn(tind,0) = jcb; 
 			
@@ -116,6 +146,8 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		}	
 
 	}
+	 
+	*gbl->log << "# min cfl inverse " << cflmin << '\n';
 
 	tet_hp::setup_preconditioner();
 	

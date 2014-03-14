@@ -124,6 +124,7 @@ bool input_map::get(const std::string &keyword, double &vout) {
                 std::cout << "Errc:      " << e.GetCode() << std::endl;
                 return(false);
             }
+						catch (...) { cout << "default exception"; }
         }
     }
     return(false);
