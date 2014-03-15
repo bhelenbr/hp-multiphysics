@@ -1036,17 +1036,27 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 }
 
 FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
+	FLT K;
 
 	// K2Dn is the inverse of B and is a ratio relative to Krough
 	// FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
 	FLT K2Dn_exp = 1./(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))/gbl->K2Dn +1./gbl->K2Dn_max);
 	
 	
-	//  K2Dn and Ksn are ratios relative to Krough
+	// Hack to get other facet angle
+	
+	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
+	// This inconsistency makes counterclockwise rotations negative
+	
+//	FLT theta = asin(sint);
+//	theta -= 70.0*M_PI/180.0;
+//	FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(fabs(sin(theta))/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
+//	return(K);
+
+	// K2Dn and Ksn are ratios relative to Krough
 	// FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
 	// FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
 	
-	FLT K;
 	if (sint == 0.0) {
 		K = gbl->Krough*K2Dn_exp;
 		
