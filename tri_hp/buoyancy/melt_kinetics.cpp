@@ -1044,15 +1044,14 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	
 	
 	// Hack to get other facet angle
-	
 	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
 	// This inconsistency makes counterclockwise rotations negative
-	
 //	FLT theta = asin(sint);
 //	theta -= 70.0*M_PI/180.0;
-//	FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(fabs(sin(theta))/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
+//	K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)) +1./sqrt(pow(fabs(sin(theta))/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
 //	return(K);
-
+	
+	
 	// K2Dn and Ksn are ratios relative to Krough
 	// FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
 	// FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
