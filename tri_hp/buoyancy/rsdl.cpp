@@ -10,7 +10,8 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
-// #define CALC_TAU
+// #define CALC_TAU1
+// #define CALC_TAU2
 // #define BOUSSINESQ
 
 void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
@@ -86,6 +87,16 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		}
 	}
 
+#ifdef CALC_TAU1
+	FLT qmax = 0.0;
+	FLT qmax2 = 0.0;
+	FLT hmax = 0.0;
+	FLT rhoav = 0.0;
+	FLT jcb = 0.25*area(tind);
+	FLT jcbmin = jcb;
+	FLT h;
+#endif
+	
 	if (tri(tind).info > -1) {
 		/* CURVED ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
@@ -120,7 +131,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		for(n=0;n<NV-1;++n)
 			basis::tri(log2p)->intgrtrs(&lf_im(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
 		basis::tri(log2p)->intgrtrs(&lf_im(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
-
+		
 		/* NEGATIVE REAL TERMS */
 		if (gbl->beta(stage) > 0.0) {
 			/* TIME DERIVATIVE TERMS */ 
@@ -195,6 +206,34 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
 					}
+					
+#ifdef CALC_TAU1
+					jcbmin = MIN(jcbmin,cjcb);
+					/* CALCULATE CURVED SIDE LENGTHS */
+					h = 0.0;
+					for (int n=0;n<ND;++n)
+						h += dcrd(n,0)(i,j)*dcrd(n,0)(i,j);
+					hmax = MAX(h,hmax);
+					
+					h = 0.0;
+					for (int n=0;n<ND;++n)
+						h += dcrd(n,1)(i,j)*dcrd(n,1)(i,j);
+					hmax = MAX(h,hmax);
+					
+					h = 0.0;
+					for (int n=0;n<ND;++n)
+						h += (dcrd(n,1)(i,j) -dcrd(n,0)(i,j))*(dcrd(n,1)(i,j) -dcrd(n,0)(i,j));
+					hmax = MAX(h,hmax);
+					
+					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
+					qmax = MAX(qmax,q);
+					
+					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
+					qmax2 = MAX(qmax2,q2);
+					
+					rhoav = MAX(rhoav,rho(i,j));
+#endif
+
 				}
 			}
 			for(n=0;n<NV;++n)
@@ -208,15 +247,37 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
-#ifdef CALC_TAU
-			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+#ifdef CALC_TAU2
+						FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 #endif
+			
+#ifdef CALC_TAU1
+			hmax = 2.*sqrt(hmax);
+			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			
+			FLT nu = gbl->mu/rhoav;
+			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
+			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+
+			FLT q = sqrt(qmax);
+			FLT lam1 = q + sqrt(qmax +gam);
+			FLT q2 = sqrt(qmax2);
+			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
+			
+			/* SET UP DISSIPATIVE COEFFICIENTS */
+			gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			gbl->tau(tind,2)  = adis*h/(jcb*lam2);
+			gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+#endif
+			
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 
-#ifdef CALC_TAU
+#ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
 					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
@@ -344,8 +405,27 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			visc(2,2)(1,1) = -cjcbi2*(ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
 			visc(2,2)(0,1) =  cjcbi2*(ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
 #define         viscI2II2II1II0I visc(2,2)(0,1)
+			
+#ifdef CALC_TAU1
+			jcbmin = MIN(jcbmin,cjcb);
+			/* CALCULATE CURVED SIDE LENGTHS */
+			h = 0.0;
+			for (int n=0;n<ND;++n)
+				h += ldcrd(n,0)*ldcrd(n,0);
+			hmax = MAX(h,hmax);
+			
+			h = 0.0;
+			for (int n=0;n<ND;++n)
+				h += ldcrd(n,1)*ldcrd(n,1);
+			hmax = MAX(h,hmax);
+			
+			h = 0.0;
+			for (int n=0;n<ND;++n)
+				h += (ldcrd(n,1) -ldcrd(n,0))*(ldcrd(n,1) -ldcrd(n,0));
+			hmax = MAX(h,hmax);
+#endif
 
-			/* TIME DERIVATIVE TERMS */ 
+			/* TIME DERIVATIVE TERMS */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					rhorbd0 = rho(i,j)*RAD(crd(0)(i,j))*lbd0;
@@ -385,6 +465,16 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
 					}
+					
+#ifdef CALC_TAU1
+					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
+					qmax = MAX(qmax,q);
+					
+					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
+					qmax2 = MAX(qmax2,q2);
+					
+					rhoav = MAX(rhoav,rho(i,j));
+#endif
 				}
 			}
 			for(n=0;n<NV;++n)
@@ -398,15 +488,36 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
-#ifdef CALC_TAU
+#ifdef CALC_TAU2
 			FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+#endif
+			
+#ifdef CALC_TAU1
+			hmax = 2.*sqrt(hmax);
+			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			
+			FLT nu = gbl->mu/rhoav;
+			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
+			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+			
+			FLT q = sqrt(qmax);
+			FLT lam1 = q + sqrt(qmax +gam);
+			FLT q2 = sqrt(qmax2);
+			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
+			
+			/* SET UP DISSIPATIVE COEFFICIENTS */
+			gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			gbl->tau(tind,2)  = adis*h/(jcb*lam2);
+			gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
 #endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 
-#ifdef CALC_TAU
+#ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
 					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));

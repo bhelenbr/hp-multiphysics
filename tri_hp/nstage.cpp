@@ -171,7 +171,7 @@ void tri_hp::rsdl(int stage) {
 void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
 	Array<FLT,1> dw(NV);
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */

@@ -522,7 +522,7 @@ void melt::mg_restrict() {
 void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<TinyVector<FLT,MXTM>,1> Rbar(1),lf(1);
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
@@ -665,7 +665,7 @@ void melt::petsc_jacobian() {
 			
 			/* Now fill in effect of curvature on element resdiuals */
 			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
@@ -1295,7 +1295,7 @@ void melt_end_pt::update(int stage) {
 
 #ifdef petsc
 void melt_end_pt::petsc_jacobian() {
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */

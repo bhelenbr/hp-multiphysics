@@ -822,7 +822,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	
 	Array<TinyVector<FLT,MXTM>,1> Rbar(eqs),lf(eqs);
 
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
@@ -1062,7 +1062,7 @@ void melt::petsc_jacobian() {
 			int tind = x.seg(sind).tri(0);
 			
 			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef BZ_DEBUG
+#ifdef DEBUG_JAC
 			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
 			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
