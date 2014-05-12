@@ -189,6 +189,10 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	keyword = base.idprefix + "_coupled";
 	coupled = false;
 	inmap.get(keyword,coupled);
+	
+	keyword = base.idprefix + "_frozen";
+	frozen = false;
+	inmap.get(keyword,frozen);
 
 	if (curved && !x.coarse_level) {
 		crvbd.resize(x.gbl->nhist+1);
@@ -610,7 +614,7 @@ void hp_edge_bdry::tadvance() {
 	/* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
 	if (!coupled) curv_init();
 	
-	setvalues(ibc,essential_indices);
+	if (!frozen) setvalues(ibc,essential_indices);
 
 	return;
 }

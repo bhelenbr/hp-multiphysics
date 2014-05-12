@@ -107,7 +107,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		edge_bdry &base;
 		const hp_edge_bdry *adapt_storage;
 		init_bdry_cndtn *ibc;
-		bool curved, coupled;
+		bool curved, coupled, frozen;
 		int jacobian_start;
 		bool report_flag;
 		symbolic_function<2> l2norm;
