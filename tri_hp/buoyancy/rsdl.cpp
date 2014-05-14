@@ -10,7 +10,7 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
-// #define CALC_TAU1
+#define CALC_TAU1
 // #define CALC_TAU2
 // #define BOUSSINESQ
 

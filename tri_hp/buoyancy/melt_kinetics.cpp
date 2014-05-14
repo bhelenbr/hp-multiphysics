@@ -62,6 +62,15 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+
+		Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
+		aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
+		u(0)(i) = ibc->f(0, aloc, x.gbl->time);
+		u(1)(i) = ibc->f(1, aloc, x.gbl->time);
+		
+		for(n=0;n<x.NV;++n)
+			au(n) = u(n)(i);
 				
 		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
 		for(n=0;n<tri_mesh::ND;++n) {
@@ -70,12 +79,6 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
 #endif
 		}
-		
-		Array<FLT,1> au(x.NV), axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
-		for(n=0;n<x.NV;++n)
-			au(n) = u(n)(i);
-		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
-		aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
 		
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 #ifdef MESH_REF_VEL
