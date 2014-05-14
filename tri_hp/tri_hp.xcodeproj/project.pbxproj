@@ -42,8 +42,6 @@
 		6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
 		6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
 		6F77C4460B4D63ED006A4504 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
-		6F77C5110B4D8959006A4504 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
-		6F77C5120B4D8959006A4504 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
 		6F83ECC50CDC14FD00760919 /* tri_hp_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964EC097F43D6009F4225 /* tri_hp_ps.h */; };
 		6F83ECC70CDC150000760919 /* tri_hp_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C4109818C7100AD7FA3 /* tri_hp_swirl.h */; };
 		6F83ECC90CDC150A00760919 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
@@ -87,7 +85,6 @@
 		6F9853F80BDE612700D342F6 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		6F9853F90BDE612700D342F6 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6F9853FA0BDE612700D342F6 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
-		6F9853FD0BDE612700D342F6 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
 		6F9853FF0BDE612700D342F6 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6F9854000BDE612700D342F6 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
 		6F9854010BDE612700D342F6 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
@@ -141,7 +138,6 @@
 		6F9854AF0BDE649A00D342F6 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		6F9854B00BDE649A00D342F6 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6F9854B10BDE649A00D342F6 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
-		6F9854B70BDE649A00D342F6 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
 		6F9854B90BDE649A00D342F6 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6F9854BA0BDE649A00D342F6 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
 		6F9854BB0BDE649A00D342F6 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
@@ -299,7 +295,6 @@
 		E67EBAD812D603C50011EB69 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		E67EBAD912D603C50011EB69 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		E67EBADA12D603C50011EB69 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
-		E67EBADC12D603C50011EB69 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
 		E67EBADD12D603C50011EB69 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
 		E67EBADF12D603C50011EB69 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F75000DD8A7EA002615F9 /* libbinio.dylib */; };
 		E67EBAE012D603C50011EB69 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
@@ -354,7 +349,6 @@
 		E67EBB2012D603E10011EB69 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		E67EBB2112D603E10011EB69 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		E67EBB2212D603E10011EB69 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
-		E67EBB2412D603E10011EB69 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */; };
 		E67EBB2512D603E10011EB69 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
 		E67EBB2712D603E10011EB69 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F75000DD8A7EA002615F9 /* libbinio.dylib */; };
 		E67EBB2812D603E10011EB69 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
@@ -411,6 +405,12 @@
 		E6BCC9941575C4FB00C10502 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		E6BCC9951575C4FB00C10502 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
 		E6BCC9961575C4FB00C10502 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E6C1E58619222C42008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
+		E6C1E587192230E5008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
+		E6C1E588192230E6008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
+		E6C1E589192230E6008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
+		E6C1E58A192230E7008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
+		E6C1E58B192230E8008D6411 /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */; };
 		E6EAD3201580FB8E00C3F95A /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
 		E6EAD3211580FB9A00C3F95A /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		E6EAD3221580FB9A00C3F95A /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
@@ -643,7 +643,6 @@
 		6F77C4410B4D63ED006A4504 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = rsdl.cpp; path = buoyancy/rsdl.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tri_hp_buoyancy.h; path = buoyancy/tri_hp_buoyancy.h; sourceTree = "<group>"; };
 		6F77C4430B4D63ED006A4504 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = buoyancy/tstep.cpp; sourceTree = "<group>"; };
-		6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = SOURCE_ROOT; };
 		6F9854120BDE612700D342F6 /* tri_hp_axi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB40AC9091AF516002BAA09 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
@@ -712,6 +711,7 @@
 		E6A1C0A5176F47AD00074810 /* libparmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libparmetis.dylib; path = ../../Packages/lib/libparmetis.dylib; sourceTree = "<group>"; };
 		E6A1C0A6176F47AD00074810 /* libpetsc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpetsc.dylib; path = ../../Packages/lib/libpetsc.dylib; sourceTree = "<group>"; };
 		E6A1C0A7176F47AD00074810 /* libsuperlu_dist_3.3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuperlu_dist_3.3.a; path = ../../Packages/lib/libsuperlu_dist_3.3.a; sourceTree = "<group>"; };
+		E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = "<group>"; };
 		E6E8E31A14719FA800571FC3 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = ../../Packages/lib/libboost_thread.a; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
@@ -723,13 +723,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F9853F40BDE612700D342F6 /* libtri_basis.a in Frameworks */,
+				E6C1E58A192230E7008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F217C5F0CDD88200061AA2E /* libtri_mesh.a in Frameworks */,
 				6F9853F60BDE612700D342F6 /* libinput_map.a in Frameworks */,
 				6F9853F70BDE612700D342F6 /* libmyblas.a in Frameworks */,
 				6F9853F80BDE612700D342F6 /* libquad.a in Frameworks */,
 				6F9853F90BDE612700D342F6 /* libutil.a in Frameworks */,
 				6F9853FA0BDE612700D342F6 /* libblitz.a in Frameworks */,
-				6F9853FD0BDE612700D342F6 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F0077850CCB7027008D3233 /* libpth.a in Frameworks */,
 				6F2F75040DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
@@ -748,9 +748,9 @@
 				6F9854AF0BDE649A00D342F6 /* libquad.a in Frameworks */,
 				6F9854B00BDE649A00D342F6 /* libutil.a in Frameworks */,
 				6F9854B10BDE649A00D342F6 /* libblitz.a in Frameworks */,
-				6F9854B70BDE649A00D342F6 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F48D8690D848AED00514E23 /* libmpi.1.dylib in Frameworks */,
 				6F48D86A0D848AED00514E23 /* libmpi_cxx.1.dylib in Frameworks */,
+				E6C1E589192230E6008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F2F75020DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
@@ -769,9 +769,9 @@
 				6FB91A900ACCB04500792B04 /* libquad.a in Frameworks */,
 				6FB91A910ACCB04500792B04 /* libutil.a in Frameworks */,
 				6FB91A920ACCB04500792B04 /* libblitz.a in Frameworks */,
-				6F77C5110B4D8959006A4504 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F2F75010DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
+				E6C1E587192230E5008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F5ABB541141CE7D00CA83FE /* libpth.a in Frameworks */,
 				E6F1CDE71533E7EF009F6A6B /* libspline++.a in Frameworks */,
@@ -791,8 +791,8 @@
 				6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */,
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
 				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
-				6F77C5120B4D8959006A4504 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F0077830CCB7027008D3233 /* libpth.a in Frameworks */,
+				E6C1E58619222C42008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				6F2F75030DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				E6F1CDE61533E79E009F6A6B /* libspline++.a in Frameworks */,
@@ -809,7 +809,6 @@
 				E67EBAD812D603C50011EB69 /* libquad.a in Frameworks */,
 				E67EBAD912D603C50011EB69 /* libutil.a in Frameworks */,
 				E67EBADA12D603C50011EB69 /* libblitz.a in Frameworks */,
-				E67EBADC12D603C50011EB69 /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67EBADD12D603C50011EB69 /* libpth.a in Frameworks */,
 				E67EBADF12D603C50011EB69 /* libbinio.dylib in Frameworks */,
 				E67EBAE012D603C50011EB69 /* Accelerate.framework in Frameworks */,
@@ -818,6 +817,7 @@
 				E67EBAE612D603C50011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6F1CDE91533E7F0009F6A6B /* libspline++.a in Frameworks */,
 				E6A1C0B1176F488100074810 /* libmetis.dylib in Frameworks */,
+				E6C1E588192230E6008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				E6A1C0B2176F488900074810 /* libparmetis.dylib in Frameworks */,
 				E6A1C0B4176F488E00074810 /* libpetsc.dylib in Frameworks */,
 				E6A1C0B6176F489300074810 /* libsuperlu_dist_3.3.a in Frameworks */,
@@ -834,7 +834,6 @@
 				E67EBB2012D603E10011EB69 /* libquad.a in Frameworks */,
 				E67EBB2112D603E10011EB69 /* libutil.a in Frameworks */,
 				E67EBB2212D603E10011EB69 /* libblitz.a in Frameworks */,
-				E67EBB2412D603E10011EB69 /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67EBB2512D603E10011EB69 /* libpth.a in Frameworks */,
 				E67EBB2712D603E10011EB69 /* libbinio.dylib in Frameworks */,
 				E67EBB2812D603E10011EB69 /* Accelerate.framework in Frameworks */,
@@ -843,6 +842,7 @@
 				E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */,
 				E6A1C0B0176F487B00074810 /* libmetis.dylib in Frameworks */,
+				E6C1E58B192230E8008D6411 /* libmuparser.2.2.3.dylib in Frameworks */,
 				E6A1C0B3176F488900074810 /* libparmetis.dylib in Frameworks */,
 				E6A1C0B5176F488F00074810 /* libpetsc.dylib in Frameworks */,
 				E6A1C0B7176F489400074810 /* libsuperlu_dist_3.3.a in Frameworks */,
@@ -980,7 +980,6 @@
 				6F661FF9091AFB3500FB5D82 /* libquad.a */,
 				6F662036091AFC8D00FB5D82 /* libutil.a */,
 				E6F1CDE51533E79E009F6A6B /* libspline++.a */,
-				6F77C5100B4D8959006A4504 /* libmuparser.2.2.3.dylib */,
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F2F75000DD8A7EA002615F9 /* libbinio.dylib */,
 				6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */,
@@ -988,6 +987,7 @@
 				6F48D8650D848AED00514E23 /* libmpi.1.dylib */,
 				6F48D8660D848AED00514E23 /* libmpi_cxx.1.dylib */,
 				E6E8E31A14719FA800571FC3 /* libboost_thread.a */,
+				E6C1E58519222C42008D6411 /* libmuparser.2.2.3.dylib */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -1565,8 +1565,6 @@
 					AXISYMMETRIC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi;
 			};
 			name = Debug;
@@ -1580,8 +1578,6 @@
 					AXISYMMETRIC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi;
 			};
 			name = Release;
@@ -1596,11 +1592,6 @@
 					AXISYMMETRIC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"${inherited}",
-					/usr/share/include,
-				);
-				LIBRARY_SEARCH_PATHS = "${inherited}";
 				PRODUCT_NAME = tri_hp_axi_mpi;
 			};
 			name = Debug;
@@ -1615,11 +1606,6 @@
 					AXISYMMETRIC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"${inherited}",
-					/usr/share/include,
-				);
-				LIBRARY_SEARCH_PATHS = "${inherited}";
 				PRODUCT_NAME = tri_hp_axi_mpi;
 			};
 			name = Release;
@@ -1632,8 +1618,6 @@
 					"$(threads)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp;
 			};
 			name = Debug;
@@ -1646,8 +1630,6 @@
 					"$(threads)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp;
 			};
 			name = Release;
@@ -1724,8 +1706,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_mpi;
 				threads = "";
 			};
@@ -1740,8 +1720,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_mpi;
 				threads = "";
 			};
@@ -1757,8 +1735,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
 			};
@@ -1774,8 +1750,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
 			};
@@ -1792,8 +1766,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi_petsc;
 			};
 			name = Debug;
@@ -1809,8 +1781,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_axi_petsc;
 			};
 			name = Release;
