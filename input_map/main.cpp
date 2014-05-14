@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include "input_map.h"
+#include <muParser.h>
 
 #define TESTING
 
@@ -71,9 +72,40 @@ int main (int argc, char *argv[]) {
 	return 0;
 
 #else
+	
+	mu::Parser P;
+	
+	try {
+		P.SetExpr("23685*3");
+		std::cout <<  P.Eval() << std::endl;
+//		mu::varmap_type variables = P.GetUsedVar();
+//		mu::varmap_type::const_iterator item = variables.begin();
+//		for (; item!=variables.end(); ++item) {
+//			std::cout << item->first << std::endl;
+//		}
+	}
+	catch (mu::Parser::exception_type &e) {
+		std::cout << "Message:  " << e.GetMsg() << std::endl;
+		std::cout << "Formula:  " << e.GetExpr() << std::endl;
+		std::cout << "Token:     " << e.GetToken() << std::endl;
+		std::cout << "Position: " << e.GetPos() << std::endl;
+		std::cout << "Errc:      " << e.GetCode() << std::endl;
+		return(false);
+	}
+	catch(std::exception &e) {
+		std::cout << e.what() << std::endl;
+	}
+	catch(...) {
+		std::cout << "I am confused" << std::endl;
+	}
+	return;
+	
+	
+	
 	/* INPUT MAP FROM FILE */
 	mymap.input(argv[1]);
 	
+
 
 	/* SET MAP VALUE FROM FLOAT */
 	std::ostringstream myout;
