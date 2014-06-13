@@ -254,6 +254,32 @@
 		E61ED83B1794DFFD0021A21D /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098C0A8AC9D100BD5ADB /* tstep.cpp */; };
 		E61ED83C1794E0010021A21D /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098A0A8AC9D100BD5ADB /* rsdl.cpp */; };
 		E61ED83D1794E0050021A21D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FE412F00B7A77D500FFA5CC /* bdry.cpp */; };
+		E63566C41949D84000AB8511 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
+		E63566C51949D84300AB8511 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
+		E63566C61949D84400AB8511 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
+		E63566C71949D84800AB8511 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
+		E63566C81949D84800AB8511 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
+		E63566C91949D84A00AB8511 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
+		E63566CA1949D85600AB8511 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
+		E63566CB1949D85600AB8511 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
+		E63566CC1949D85600AB8511 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E63566CD1949D85600AB8511 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E63566CE1949D85600AB8511 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E63566CF1949D85600AB8511 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
+		E63566D01949D85700AB8511 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
+		E63566D11949D85700AB8511 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
+		E63566D21949D85700AB8511 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E63566D31949D85700AB8511 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E63566D41949D85700AB8511 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E63566D51949D85700AB8511 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
+		E63566D61949D85800AB8511 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
+		E63566D71949D85800AB8511 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
+		E63566D81949D85800AB8511 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E63566D91949D85800AB8511 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E63566DA1949D85800AB8511 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E63566DB1949D85800AB8511 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
+		E63566DC1949D85900AB8511 /* melt_kinetics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AD15F84D6600996697 /* melt_kinetics.cpp */; };
+		E63566DD1949D85900AB8511 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60D94AA15F84D5A00996697 /* surface.cpp */; };
 		E64C24EF1475E3B000809E9F /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6E8E31A14719FA800571FC3 /* libboost_thread.a */; };
 		E67EBAB012D603C50011EB69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
@@ -1278,6 +1304,8 @@
 			files = (
 				6F9853BA0BDE612700D342F6 /* main.cpp in Sources */,
 				6F9853BB0BDE612700D342F6 /* adapt.cpp in Sources */,
+				E63566D11949D85700AB8511 /* rsdl.cpp in Sources */,
+				E63566D41949D85700AB8511 /* melt_kinetics.cpp in Sources */,
 				6F9853BC0BDE612700D342F6 /* copy.cpp in Sources */,
 				6F9853BD0BDE612700D342F6 /* gtol.cpp in Sources */,
 				6F9853BE0BDE612700D342F6 /* hp_boundary.cpp in Sources */,
@@ -1288,10 +1316,13 @@
 				6F9853C30BDE612700D342F6 /* nstage.cpp in Sources */,
 				6F9853C40BDE612700D342F6 /* output.cpp in Sources */,
 				6F9853C50BDE612700D342F6 /* ptprobe.cpp in Sources */,
+				E63566D31949D85700AB8511 /* melt.cpp in Sources */,
 				6F9853C60BDE612700D342F6 /* tobasis.cpp in Sources */,
 				6F9853C70BDE612700D342F6 /* tadvance.cpp in Sources */,
 				6F9853C80BDE612700D342F6 /* allocate.cpp in Sources */,
 				6F9853C90BDE612700D342F6 /* tstep.cpp in Sources */,
+				E63566D01949D85700AB8511 /* length.cpp in Sources */,
+				E63566C81949D84800AB8511 /* tstep.cpp in Sources */,
 				6F9853CA0BDE612700D342F6 /* rsdl.cpp in Sources */,
 				6F9853CB0BDE612700D342F6 /* length.cpp in Sources */,
 				6F9853CC0BDE612700D342F6 /* getnewblock.cpp in Sources */,
@@ -1300,12 +1331,15 @@
 				6F9853CF0BDE612700D342F6 /* rsdl.cpp in Sources */,
 				6F9853D00BDE612700D342F6 /* length.cpp in Sources */,
 				6F9853D10BDE612700D342F6 /* allocate.cpp in Sources */,
+				E63566D21949D85700AB8511 /* bdry.cpp in Sources */,
 				6F9853D20BDE612700D342F6 /* bdry.cpp in Sources */,
 				6F9853D30BDE612700D342F6 /* getnewbdry.cpp in Sources */,
 				6F9853E00BDE612700D342F6 /* hp_getnewibc.cpp in Sources */,
 				6F9853E10BDE612700D342F6 /* getnewibc.cpp in Sources */,
 				6F9853E20BDE612700D342F6 /* getnewibc.cpp in Sources */,
+				E63566C51949D84300AB8511 /* allocate.cpp in Sources */,
 				6F9853E40BDE612700D342F6 /* surface.cpp in Sources */,
+				E63566D51949D85700AB8511 /* surface.cpp in Sources */,
 				6F9853E50BDE612700D342F6 /* allocate.cpp in Sources */,
 				6F9853F10BDE612700D342F6 /* bdry.cpp in Sources */,
 			);
@@ -1317,6 +1351,8 @@
 			files = (
 				6F9854710BDE649A00D342F6 /* main.cpp in Sources */,
 				6F9854720BDE649A00D342F6 /* adapt.cpp in Sources */,
+				E63566D71949D85800AB8511 /* rsdl.cpp in Sources */,
+				E63566DA1949D85800AB8511 /* melt_kinetics.cpp in Sources */,
 				6F9854730BDE649A00D342F6 /* copy.cpp in Sources */,
 				6F9854740BDE649A00D342F6 /* gtol.cpp in Sources */,
 				6F9854750BDE649A00D342F6 /* hp_boundary.cpp in Sources */,
@@ -1327,10 +1363,13 @@
 				6F98547A0BDE649A00D342F6 /* nstage.cpp in Sources */,
 				6F98547B0BDE649A00D342F6 /* output.cpp in Sources */,
 				6F98547C0BDE649A00D342F6 /* ptprobe.cpp in Sources */,
+				E63566D91949D85800AB8511 /* melt.cpp in Sources */,
 				6F98547D0BDE649A00D342F6 /* tobasis.cpp in Sources */,
 				6F98547E0BDE649A00D342F6 /* tadvance.cpp in Sources */,
 				6F98547F0BDE649A00D342F6 /* allocate.cpp in Sources */,
 				6F9854800BDE649A00D342F6 /* tstep.cpp in Sources */,
+				E63566D61949D85800AB8511 /* length.cpp in Sources */,
+				E63566C91949D84A00AB8511 /* tstep.cpp in Sources */,
 				6F9854810BDE649A00D342F6 /* rsdl.cpp in Sources */,
 				6F9854820BDE649A00D342F6 /* length.cpp in Sources */,
 				6F9854830BDE649A00D342F6 /* getnewblock.cpp in Sources */,
@@ -1339,12 +1378,15 @@
 				6F9854860BDE649A00D342F6 /* rsdl.cpp in Sources */,
 				6F9854870BDE649A00D342F6 /* length.cpp in Sources */,
 				6F9854880BDE649A00D342F6 /* allocate.cpp in Sources */,
+				E63566D81949D85800AB8511 /* bdry.cpp in Sources */,
 				6F9854890BDE649A00D342F6 /* bdry.cpp in Sources */,
 				6F98548A0BDE649A00D342F6 /* bdry.cpp in Sources */,
 				6F98548B0BDE649A00D342F6 /* getnewbdry.cpp in Sources */,
 				6F9854980BDE649A00D342F6 /* hp_getnewibc.cpp in Sources */,
 				6F9854990BDE649A00D342F6 /* getnewibc.cpp in Sources */,
+				E63566C61949D84400AB8511 /* allocate.cpp in Sources */,
 				6F98549A0BDE649A00D342F6 /* getnewibc.cpp in Sources */,
+				E63566DB1949D85800AB8511 /* surface.cpp in Sources */,
 				6F98549C0BDE649A00D342F6 /* surface.cpp in Sources */,
 				6F98549D0BDE649A00D342F6 /* allocate.cpp in Sources */,
 			);
@@ -1356,6 +1398,8 @@
 			files = (
 				6FB91A5A0ACCB04500792B04 /* main.cpp in Sources */,
 				6FB91A5B0ACCB04500792B04 /* adapt.cpp in Sources */,
+				E63566CB1949D85600AB8511 /* rsdl.cpp in Sources */,
+				E63566CE1949D85600AB8511 /* melt_kinetics.cpp in Sources */,
 				6FB91A5C0ACCB04500792B04 /* copy.cpp in Sources */,
 				6FB91A5D0ACCB04500792B04 /* gtol.cpp in Sources */,
 				6FB91A5F0ACCB04500792B04 /* l2error.cpp in Sources */,
@@ -1366,10 +1410,13 @@
 				6FB91A640ACCB04500792B04 /* output.cpp in Sources */,
 				6FB91A650ACCB04500792B04 /* ptprobe.cpp in Sources */,
 				6FB91A660ACCB04500792B04 /* tobasis.cpp in Sources */,
+				E63566CD1949D85600AB8511 /* melt.cpp in Sources */,
 				6FB91A670ACCB04500792B04 /* tadvance.cpp in Sources */,
 				6FB91A6C0ACCB04500792B04 /* getnewblock.cpp in Sources */,
 				6FB91A6E0ACCB04500792B04 /* tstep.cpp in Sources */,
 				6FB91A6F0ACCB04500792B04 /* rsdl.cpp in Sources */,
+				E63566CA1949D85600AB8511 /* length.cpp in Sources */,
+				E63566C71949D84800AB8511 /* tstep.cpp in Sources */,
 				6FB91A700ACCB04500792B04 /* length.cpp in Sources */,
 				6FB91A710ACCB04500792B04 /* allocate.cpp in Sources */,
 				6FB91A730ACCB04500792B04 /* bdry.cpp in Sources */,
@@ -1378,12 +1425,15 @@
 				6FB91A820ACCB04500792B04 /* getnewibc.cpp in Sources */,
 				6FB91A850ACCB04500792B04 /* surface.cpp in Sources */,
 				6FB91A860ACCB04500792B04 /* allocate.cpp in Sources */,
+				E63566CC1949D85600AB8511 /* bdry.cpp in Sources */,
 				E6B93EA2138A090F005FF1A9 /* allocate.cpp in Sources */,
 				E6B93EA4138A0911005FF1A9 /* tstep.cpp in Sources */,
 				E6B93EA5138A0912005FF1A9 /* rsdl.cpp in Sources */,
 				E60C8EBB17FCCB950089DB31 /* hp_boundary.cpp in Sources */,
 				E6B93EA6138A0913005FF1A9 /* length.cpp in Sources */,
+				E63566C41949D84000AB8511 /* allocate.cpp in Sources */,
 				E6B93EA7138A0914005FF1A9 /* bdry.cpp in Sources */,
+				E63566CF1949D85600AB8511 /* surface.cpp in Sources */,
 				E6B93EA8138A0915005FF1A9 /* getnewbdry.cpp in Sources */,
 				E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */,
 			);
@@ -1521,6 +1571,7 @@
 				E67EBB0612D603E10011EB69 /* output.cpp in Sources */,
 				E67EBB0712D603E10011EB69 /* ptprobe.cpp in Sources */,
 				E67EBB0812D603E10011EB69 /* tobasis.cpp in Sources */,
+				E63566DD1949D85900AB8511 /* surface.cpp in Sources */,
 				E67EBB0912D603E10011EB69 /* getnewblock.cpp in Sources */,
 				E67EBB0A12D603E10011EB69 /* hp_getnewibc.cpp in Sources */,
 				E67EBB0B12D603E10011EB69 /* allocate.cpp in Sources */,
@@ -1540,6 +1591,7 @@
 				E697938D153CBF65008D750F /* allocate.cpp in Sources */,
 				E6979390153CBF6E008D750F /* tstep.cpp in Sources */,
 				E6979392153CBF75008D750F /* rsdl.cpp in Sources */,
+				E63566DC1949D85900AB8511 /* melt_kinetics.cpp in Sources */,
 				E6979394153CBF79008D750F /* length.cpp in Sources */,
 				E6979396153CBF7E008D750F /* bdry.cpp in Sources */,
 				E6979398153CBF82008D750F /* getnewbdry.cpp in Sources */,

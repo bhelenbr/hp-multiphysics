@@ -302,7 +302,8 @@ class cartesian_interpolation : public tri_hp_helper {
 			post_process = true;
 			std::ofstream out;
 			std::ostringstream filename;
-			
+			int oldmax = x.gbl->maxsrch;
+			x.gbl->maxsrch = 100;
 			
 			TinyVector<FLT,tri_mesh::ND> xmin, xmax;
 			for(int n=0;n<tri_mesh::ND;++n) {
@@ -337,7 +338,10 @@ class cartesian_interpolation : public tri_hp_helper {
 					
 					if ((xpt(0)-xmin(0))*(xmax(0)-xpt(0)) > 0.0) {
 						bool found = x.ptprobe(xpt,u,tind);
-						if (!found) u = 0.0;
+						if (!found) {
+							u = 0.0;
+							tind = -1;
+						}
 					}
 					else {
 						u = 0.0;
@@ -353,6 +357,8 @@ class cartesian_interpolation : public tri_hp_helper {
 				tind = -1;
 			}
 			out.close();
+			
+			x.gbl->maxsrch = oldmax;
 			return;
 		}
 };

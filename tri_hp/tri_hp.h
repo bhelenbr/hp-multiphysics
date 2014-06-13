@@ -303,7 +303,7 @@ class tri_hp_helper {
 			}
 		}
 		virtual void tadvance() {
-			if (post_process) {
+			if (post_process && x.gbl->substep == 0) {
 				std::ostringstream nstr;
 				std::string fname;
 				nstr << x.gbl->tstep << std::flush;

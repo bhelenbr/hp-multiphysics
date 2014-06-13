@@ -52,6 +52,7 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	TinyVector<FLT,ND> x,dxmax,ddr,dds;
 	int n,iter,v0;
 	bool found = true;
+	const FLT ubound = 1.0+10.0*FLT_EPSILON;
 
 	if (tind < 0) {
 		qtree.nearpt(xp,v0);
@@ -91,18 +92,20 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 				s = wgt(0)*2 -1.0;
 				r = wgt(2)*2 -1.0;
 				*gbl->log  << "#Warning: this was the first guess " << r << ' ' << s << ' ' << '\n';
-				found = false;
-				break;
+				basis::tri(log2p)->ptvalues_rs(r,s);
+				return(false);
 			}
 		} while (fabs(dr) +fabs(ds) > roundoff);
-	
-		if (r < -(1.0+10.0*FLT_EPSILON) || r > (1.0+10.0*FLT_EPSILON) || s < -(1.0+10.0*FLT_EPSILON) || s > (1.0+10.0*FLT_EPSILON)) {
+			
+		
+		if (fabs(r+1.0) +fabs(s+1.0) +fabs(-r-s) -2.0 < roundoff ) {
+			found = true;
+		}
+		else {
 			*gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << found << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
 			found = false;
 		}
-		else {
-			found = true;
-		}
+
 		/* need to do this because ptprobe_bdry only calculates boundary function */
 		basis::tri(log2p)->ptvalues_rs(r,s);
 
