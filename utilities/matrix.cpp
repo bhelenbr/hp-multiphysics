@@ -627,6 +627,16 @@ void sparse_row_major::output_row(ostream &stream,int row) {
 	return;
 }
 
+void sparse_row_major::mmult(Array<FLT,1>& x,Array<FLT,1>& ax) {
+	
+	for (int i=_offset;i<_offset+_nrow;++i) {
+		FLT lclax = 0.0;
+		for (int j=_cpt(i);j<_cpt(i+1);++j)
+			lclax += _val(j)*x(_col(j));
+		ax(i-_offset) = lclax;
+	}
+	return;
+}
 
 
 
