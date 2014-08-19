@@ -90,7 +90,7 @@ int main (int argc, char *argv[]) {
 		std::cout << "Token:     " << e.GetToken() << std::endl;
 		std::cout << "Position: " << e.GetPos() << std::endl;
 		std::cout << "Errc:      " << e.GetCode() << std::endl;
-		return(false);
+		return 0;
 	}
 	catch(std::exception &e) {
 		std::cout << e.what() << std::endl;
@@ -98,7 +98,7 @@ int main (int argc, char *argv[]) {
 	catch(...) {
 		std::cout << "I am confused" << std::endl;
 	}
-	return;
+	return 0;
 	
 	
 	
