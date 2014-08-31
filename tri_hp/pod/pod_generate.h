@@ -10,7 +10,8 @@
 #ifndef _POD_GENERATE_H_
 #define _POD_GENERATE_H_
 
-#define LOWNOISE
+#define USING_MASS_MATRIX
+//#define POD_BDRY
 
 #ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry;
@@ -19,28 +20,56 @@ template<class BASE> class pod_gen_vrtx_bdry;
 
 template<class BASE> class pod_generate : public BASE {
 	public:
-		int nsnapshots;
-		int restart_interval;
-		int nmodes;
-		int restartfile;
+		int nsnapshots; // number of snapshots used to make modes
+		int nmodes;  // nmodes to output
+		int restartfile; // number of first snapshot
+		int restart_interval; // interval between numbering of snapshots
+		int coefficient_start,coefficient_interval,coefficient_end; // restart numbering to output coefficient files
+		int pod_id;  // For problems with separate PODs on groups of blocks
+		int ndeflation, nmodes_per_deflation;  // To use the deflation method
+		int nsets, nsnapshots_per_set; // For combining modes each with their own vector of eigenvalue weights
+		
+		Array<double,1> set_eigenvalues;
 		Array<FLT,1> scaling;
-#ifdef LOWNOISE
-		int pod_id;
-#else
+#ifdef USING_MASS_MATRIX
+		sparse_row_major mass;
+		Array<FLT,1> mass_times_snapshot;
+#endif
 		typedef typename BASE::vsi vsi;
 		Array<vsi,1> modes;
 		Array<FLT,1> psimatrix,psimatrix_recv;
-#endif
+	
+
 #ifdef POD_BDRY
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
 #endif
-	
+
 	public:
 		void init(input_map& input, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
+		void create_mass_matrix(sparse_row_major& mass);
+		void project_to_gauss(vsi& target);
+		FLT inner_product_with_projection(vsi& target);
+		FLT norm2(vsi& target);
+		void test_orthogonality();
+		void output(vsi& target, std::string filename);
+		void output(vsi& target,int filenumber);
 };
+/*template<class BASE> class wdpod_generate : public pod_generate<BASE>{
+	public:
+		int nsets;
+		int ntruncation;
+		Array<double,1> set_eigenvalues ;
+}*/
+
+template<class BASE> class gram_schmidt : public pod_generate<BASE> {
+	public:
+		gram_schmidt<BASE>* create() { return new gram_schmidt<BASE>();}
+		void tadvance();
+};
+
 
 template<class BASE> class pod_generate_with_r_mesh : public pod_generate<BASE> {
 	public:
@@ -62,7 +91,7 @@ template<class BASE> class pod_gen_edge_bdry {
 	public:
 		pod_gen_edge_bdry(pod_generate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
 		void init(input_map& input);
-		void zero_bdry(tri_hp::vsi ug);
+		void zero_bdry(tri_hp::vsi& ug);
 		void calculate_modes();
 		void output();
 };
