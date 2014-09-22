@@ -261,8 +261,6 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
 			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 
-			FLT q = sqrt(qmax);
-			FLT lam1 = q + sqrt(qmax +gam);
 			FLT q2 = sqrt(qmax2);
 			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
 			
@@ -502,8 +500,6 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
 			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 			
-			FLT q = sqrt(qmax);
-			FLT lam1 = q + sqrt(qmax +gam);
 			FLT q2 = sqrt(qmax2);
 			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
 			

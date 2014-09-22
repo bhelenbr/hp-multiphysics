@@ -614,8 +614,8 @@
 		6F016C4009818C7100AD7FA3 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = rsdl.cpp; path = swirl/rsdl.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		6F016C4109818C7100AD7FA3 /* tri_hp_swirl.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tri_hp_swirl.h; path = swirl/tri_hp_swirl.h; sourceTree = "<group>"; };
 		6F016C4209818C7100AD7FA3 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = swirl/tstep.cpp; sourceTree = "<group>"; };
-		6F07D65F0F23BE6B0041BAA6 /* pod_generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pod_generate.h; path = pod/pod_generate.h; sourceTree = "<group>"; };
-		6F07D6600F23BE6B0041BAA6 /* pod_generate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_generate.cpp; path = pod/pod_generate.cpp; sourceTree = "<group>"; };
+		6F07D65F0F23BE6B0041BAA6 /* pod_generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = pod_generate.h; path = pod/pod_generate.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		6F07D6600F23BE6B0041BAA6 /* pod_generate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = pod_generate.cpp; path = pod/pod_generate.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		6F1F0B17113E051900F200CC /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
 		6F1F0B18113E051900F200CC /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bdry.cpp; sourceTree = "<group>"; };
 		6F1F0B19113E051900F200CC /* bdry_cns_explicit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bdry_cns_explicit.h; sourceTree = "<group>"; };
@@ -1041,8 +1041,8 @@
 				6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */,
 				6F77C4400B4D63ED006A4504 /* allocate.cpp */,
 				6F77C4430B4D63ED006A4504 /* tstep.cpp */,
-				6FFFB67411777A9300EFEB3C /* length.cpp */,
 				6F77C4410B4D63ED006A4504 /* rsdl.cpp */,
+				6FFFB67411777A9300EFEB3C /* length.cpp */,
 				E62CDC4112B7114C0042211D /* bdry_buoyancy.h */,
 				E62CDC4212B7114D0042211D /* bdry.cpp */,
 				E67EBAA612D603BC0011EB69 /* melt.cpp */,
@@ -1698,6 +1698,7 @@
 					f2cFortran,
 					BZ_DEBUG,
 				);
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(packages)/include",
 					"$(prefix)/include",
@@ -1727,6 +1728,7 @@
 					MY_SPARSE,
 					f2cFortran,
 				);
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(packages)/include",
 					"$(prefix)/include",

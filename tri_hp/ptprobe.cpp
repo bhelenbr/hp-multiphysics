@@ -52,7 +52,6 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	TinyVector<FLT,ND> x,dxmax,ddr,dds;
 	int n,iter,v0;
 	bool found = true;
-	const FLT ubound = 1.0+10.0*FLT_EPSILON;
 
 	if (tind < 0) {
 		qtree.nearpt(xp,v0);
