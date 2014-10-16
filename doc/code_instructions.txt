@@ -121,7 +121,7 @@ http://www-zeus.desy.de/~burow/cfortran/
 save cfortran.h to ${HOME}/Packages/include/
 
 ###################################################################
-#### (VALGRIND ONLY FOR DEBUGGING) ####
+#### (VALGRIND ONLY FOR DEBUGGING  SKIP THIS) ####
 ###################################################################
 ##############################################################
 # auto tools for OS X ########################################
@@ -171,9 +171,6 @@ make install
 ###################################################################
 download current version at
 	http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
-WARNING: CURRENT BUG BETWEEN MY CODE & NEWEST VERSION
-LAST ONE THAT WORKED WAS 3.2-p7
-
 move to Packages, extract
 	[mv petsc-XX ../Packages]
 	[cd petsc-XX]

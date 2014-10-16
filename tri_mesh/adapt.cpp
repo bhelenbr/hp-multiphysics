@@ -251,6 +251,7 @@ void tri_mesh::calculate_halo() {
 }
 
 
+#ifdef USE_PRIORITY_QUEUE
 void tri_mesh::putinlst(int sind) {
 	int i, temp, top, bot, mid;
 
@@ -288,6 +289,20 @@ void tri_mesh::putinlst(int sind) {
 
 	return;
 }
+#else
+// This is to test whether the priority queue is necessary */
+void tri_mesh::putinlst(int sind) {
+	int i, temp, top, bot, mid;
+	
+	seg(gbl->nlst).info= sind;
+	pnt(sind).info = gbl->nlst;
+	++gbl->nlst;
+	
+	assert(gbl->nlst < maxpst -1);
+	
+	return;
+}
+#endif
 
 void tri_mesh::tkoutlst(int sind) {
 	int bgn,temp,i;
