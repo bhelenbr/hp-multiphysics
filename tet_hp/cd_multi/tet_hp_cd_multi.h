@@ -8,7 +8,7 @@
  */
 
 #ifndef _tet_hp_cd_multi_h_
-#define _tet_hp_cd__multi_h_
+#define _tet_hp_cd_multi_h_
 
 #include "../cd/tet_hp_cd.h"
 
