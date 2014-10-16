@@ -11,9 +11,6 @@ void tet_hp_cd_multi::setup_preconditioner() {
 	FLT jcb,a,h,amax,lam1,q,qmax,dtcheck;
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
-	FLT cflmin = 1e99;
-//	Array<FLT,2> K(basis::tet(log2p).tm,basis::tet(log2p).tm);
-	
 	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -63,20 +60,27 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		d(2)(1) = -dcrd(0)(0)*dcrd(2)(1)+dcrd(0)(1)*dcrd(2)(0);
 		d(2)(2) =  dcrd(0)(0)*dcrd(1)(1)-dcrd(0)(1)*dcrd(1)(0);
 		
+		
 		double jcbi = kcond*0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)/jcb;
+		FLT diff_dti0 = d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2);
+		FLT diff_dti1 =	d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2);
+		FLT diff_dti2 =	d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2);
+		/* This is to make matrix norm = 1 */
 		jcb *= gbl->bd(0)*rhocv;
-		FLT diff_dti = jcbi*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2)+
-												 d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2)+
-												 d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
-		
-		cflmin = MIN(cflmin,jcb/diff_dti);
-		jcb += diff_dti;
-		
+		jcb += 2*jcbi*MAX(MAX(diff_dti0,diff_dti1),diff_dti2);
+
+		/* This is for testing. For p=1, the largest diagonal entry should match */ 
+//		Array<FLT,2> K(basis::tet(log2p).tm,basis::tet(log2p).tm);
 //		element_jacobian(tind,K);
-//		
-//		std::cout << K << std::endl;
-//		std::cout << jcb << std::endl;
-//		exit(1);
+//		*gbl->log << K << std::endl;
+//		for(int k=0;k<basis::tet(log2p).tm;++k) {
+//			FLT columnsum = 0; 
+//			for(int l=0;l<basis::tet(log2p).tm;++l) {
+//				columnsum += fabs(K(k,l));
+//			}
+//			*gbl->log << columnsum*basis::tet(log2p).vdiag/jcb << std::endl;
+//		}
+//		sim::finalize(__LINE__, __FILE__, gbl->log);
 #else
 		amax = 0.0;
 		for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
@@ -155,8 +159,6 @@ void tet_hp_cd_multi::setup_preconditioner() {
 
 	}
 	 
-	*gbl->log << "# min cfl inverse " << cflmin << '\n';
-
 	tet_hp::setup_preconditioner();
 	
 	return; 
