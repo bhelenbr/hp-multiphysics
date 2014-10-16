@@ -12,6 +12,8 @@ void tet_hp_cd_multi::setup_preconditioner() {
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
 	FLT cflmin = 1e99;
+//	Array<FLT,2> K(basis::tet(log2p).tm,basis::tet(log2p).tm);
+	
 	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -63,12 +65,18 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		
 		double jcbi = kcond*0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)/jcb;
 		jcb *= gbl->bd(0)*rhocv;
-		FLT diff_dti = jcbi*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
-		diff_dti += jcbi*(d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
-		diff_dti += jcbi*(d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
+		FLT diff_dti = jcbi*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2)+
+												 d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2)+
+												 d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
 		
 		cflmin = MIN(cflmin,jcb/diff_dti);
 		jcb += diff_dti;
+		
+//		element_jacobian(tind,K);
+//		
+//		std::cout << K << std::endl;
+//		std::cout << jcb << std::endl;
+//		exit(1);
 #else
 		amax = 0.0;
 		for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
