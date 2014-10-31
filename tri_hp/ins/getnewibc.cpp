@@ -227,19 +227,19 @@ namespace ibc_ins {
 					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
+                FLT mu_l;
 				keyword = blkname +"_liquid";
 				if (!blockdata.get(keyword,val)) { 
-					std::cerr << "couldn't find identity of liquid block" << std::endl;
-					sim::abort(__LINE__,__FILE__,&std::cerr);
+                    kappa = 1e6;
 				}
-
-				FLT mu_l;
-				keyword = val +"_mu";
-				if (!blockdata.get(keyword,mu_l)) {
-					std::cerr << "couldn't find mu of liquid" << std::endl;
-					sim::abort(__LINE__,__FILE__,&std::cerr);
-				}
-				kappa = mu_l/mu_g;
+                else {
+                    keyword = val +"_mu";
+                    if (!blockdata.get(keyword,mu_l)) {
+                        std::cerr << "couldn't find mu of liquid" << std::endl;
+                        sim::abort(__LINE__,__FILE__,&std::cerr);
+                    }
+                    kappa = mu_l/mu_g;
+                }
 			}
 	};
 
