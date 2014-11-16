@@ -15,6 +15,13 @@
 #ifdef petsc
 
 void tri_hp::petsc_jacobian() {
+	
+#ifdef MY_SPARSE
+	J._val = 0.0;
+	J_mpi._val = 0.0;
+	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
+#endif
+	
 	int gindx;
 
 	const int sm = basis::tri(log2p)->sm();

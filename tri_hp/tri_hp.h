@@ -194,6 +194,7 @@ class tri_hp : public r_tri_mesh  {
 		void matchboundaries();
 
 		/** Setup preconditioner */
+		virtual void setup_stabilization_constants() {setup_preconditioner();}  // default
 		void setup_preconditioner();
 
 		/** Calculate residuals */

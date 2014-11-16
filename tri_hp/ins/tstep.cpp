@@ -6,7 +6,7 @@
 // #define TIMEACCURATE
 #define REFINED_WAY
 
-void tri_hp_ins::setup_preconditioner() {
+void tri_hp_ins::setup_stabilization_constants() {
 	TinyVector<FLT,ND> mvel;
 
 	if (gbl->diagonal_preconditioner) {
@@ -305,6 +305,9 @@ void tri_hp_ins::setup_preconditioner() {
 			}
 		}
 	}
+}
 
+void tri_hp_ins::setup_preconditioner() {
+	setup_stabilization_constants();
 	tri_hp::setup_preconditioner();
 }

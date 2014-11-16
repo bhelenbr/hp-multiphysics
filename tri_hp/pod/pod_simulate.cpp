@@ -363,9 +363,10 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 }
 
 
+#ifndef petsc
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
-	BASE::setup_preconditioner();
+	BASE::setup_stabilization_constants();
 		
 	rsdl(BASE::gbl->nstage);
 
@@ -440,6 +441,8 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
 	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
 
+//	*BASE::gbl->log << jacobian << std::endl;
+//	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
 	
 #ifdef FULL_JACOBIAN
 	/* FACTORIZE PRECONDITIONER */
@@ -453,6 +456,146 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	return;
 }
+
+#else
+
+template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
+	const int sm=basis::tri(BASE::log2p)->sm();
+	const int im=basis::tri(BASE::log2p)->im();
+	const int ndofs = (BASE::npnt +BASE::nseg*sm +BASE::ntri*im)*BASE::NV;
+	Array<FLT,2> jacobian_send(tmodes,tmodes);
+	Array<FLT,1> phi1D(ndofs), JPhi(ndofs);
+
+	/* Calculate Full Jacobian */
+	BASE::setup_stabilization_constants();
+	BASE::petsc_jacobian();
+		
+	/* Now compress it using phi^T J phi */
+	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
+		/* MAKE 1D Vector of Mode with B.C.'s */
+		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop).v(Range(0,BASE::npnt-1));
+		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop).s(Range(0,BASE::nseg-1));
+		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop).i(Range(0,BASE::ntri-1));
+		
+		/* APPLY VERTEX DIRICHLET B.C.'S */
+		for(int i=0;i<BASE::nebd;++i)
+			BASE::hp_ebdry(i)->vdirichlet();
+		
+		for(int i=0;i<BASE::nvbd;++i)
+			BASE::hp_vbdry(i)->vdirichlet2d();
+		
+		/* APPLY DIRCHLET B.C.S TO MODE */
+		for(int i=0;i<BASE::nebd;++i)
+			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+				BASE::hp_ebdry(i)->sdirichlet(sm);
+	
+		int ind = 0;
+		/* Make 1D vector */
+		for (int i=0;i<BASE::npnt;++i)
+			for(int n=0;n<BASE::NV;++n)
+				phi1D(ind++) = BASE::gbl->res.v(i,n);
+		
+		for (int i=0;i<BASE::nseg;++i)
+			for(int m=0;m<sm;++m)
+				for(int n=0;n<BASE::NV;++n)
+					phi1D(ind++) = BASE::gbl->res.s(i,m,n);
+		
+		for (int i=0;i<BASE::ntri;++i)
+			for(int m=0;m<im;++m)
+				for(int n=0;n<BASE::NV;++n)
+					phi1D(ind++) = BASE::gbl->res.i(i,m,n);
+		
+		/* J times mode */
+		BASE::J.mmult(phi1D,JPhi);
+		
+		for (int modeloop1 = 0; modeloop1 < nmodes; ++modeloop1) {
+			/* PERTURB EACH COEFFICIENT */
+			BASE::gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop1).v(Range(0,BASE::npnt-1));
+			BASE::gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop1).s(Range(0,BASE::nseg-1));
+			BASE::gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop1).i(Range(0,BASE::ntri-1));
+			
+			/* APPLY VERTEX DIRICHLET B.C.'S */
+			for(int i=0;i<BASE::nebd;++i)
+				BASE::hp_ebdry(i)->vdirichlet();
+			
+			for(int i=0;i<BASE::nvbd;++i)
+				BASE::hp_vbdry(i)->vdirichlet2d();
+			
+			/* APPLY DIRCHLET B.C.S TO MODE */
+			for(int i=0;i<BASE::nebd;++i)
+				for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+					BASE::hp_ebdry(i)->sdirichlet(sm);
+			
+			int ind = 0;
+			/* Make 1D vector */
+			for (int i=0;i<BASE::npnt;++i)
+				for(int n=0;n<BASE::NV;++n)
+					phi1D(ind++) = BASE::gbl->res.v(i,n);
+			
+			for (int i=0;i<BASE::nseg;++i)
+				for(int m=0;m<sm;++m)
+					for(int n=0;n<BASE::NV;++n)
+						phi1D(ind++) = BASE::gbl->res.s(i,m,n);
+			
+			for (int i=0;i<BASE::ntri;++i)
+				for(int m=0;m<im;++m)
+					for(int n=0;n<BASE::NV;++n)
+						phi1D(ind++) = BASE::gbl->res.i(i,m,n);
+			
+			jacobian_send(modeloop1,modeloop) = dot(phi1D,JPhi);
+		}
+	}
+	sim::blks.allreduce(jacobian_send.data(),jacobian.data(),tmodes*tmodes,blocks::flt_msg,blocks::sum,pod_id);
+
+#ifdef POD_BDRY
+	/* CREATE JACOBIAN FOR BOUNDARY MODES */
+	for (int modeloop = nmodes; modeloop < tmodes; ++modeloop) {
+		
+		/* ZERO COEFFICIENT */
+		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+		
+		for (int bind=0;bind<BASE::nebd;++bind) {
+			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,modeloop,1.0e-4);
+		}
+		
+		/* APPLY VERTEX DIRICHLET B.C.'S */
+		for(int i=0;i<BASE::nebd;++i)
+			BASE::hp_ebdry(i)->vdirichlet();
+		
+		for(int i=0;i<BASE::nvbd;++i)
+			BASE::hp_vbdry(i)->vdirichlet2d();
+		
+		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
+		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
+		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
+		
+		rsdl(BASE::gbl->nstage);
+		
+		/* STORE IN ROW */
+		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
+	}
+#endif
+	
+//	*BASE::gbl->log << jacobian << std::endl;
+//	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
+	
+#ifdef FULL_JACOBIAN
+	/* FACTORIZE PRECONDITIONER */
+	int info;
+	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
+	if (info != 0) {
+		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+	}
+#endif
+	
+	return;
+}
+#endif
+
+
 
 template<class BASE> void pod_simulate<BASE>::update() {
 

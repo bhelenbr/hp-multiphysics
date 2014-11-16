@@ -218,10 +218,6 @@ void tri_hp::petsc_setup_preconditioner() {
 	/* Not sure if I have to delete it each time or not */
 	err = MatDestroy(&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	J._val = 0.0;
-	J_mpi._val = 0.0;
-	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
 	petsc_jacobian();
 	J.check_for_unused_entries();
 	J_mpi.check_for_unused_entries();	
@@ -287,8 +283,8 @@ void tri_hp::petsc_setup_preconditioner() {
 #endif
 
 	PetscTime(&time1);	 
-	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);
-	//err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
+	//err = KSPSetOperators(ksp,petsc_J,petsc_J);
+	err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
