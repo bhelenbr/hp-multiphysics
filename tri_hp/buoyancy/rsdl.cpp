@@ -429,7 +429,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					rhorbd0 = rho(i,j)*RAD(crd(0)(i,j))*lbd0;
 
 					/* UNSTEADY TERMS */
-					for(n=0;n<NV-1;++n)
+					for(int n=0;n<NV-1;++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 
