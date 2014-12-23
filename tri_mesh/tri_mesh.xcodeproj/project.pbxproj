@@ -194,7 +194,7 @@
 		6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
-		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../../Packages/lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
+		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FC7DF0305B30C6E001FE736 /* tri_mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* tri_boundary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tri_boundary.h; sourceTree = "<group>"; };
 		6FEFFC550C60191700352ED3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
