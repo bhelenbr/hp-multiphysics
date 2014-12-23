@@ -31,7 +31,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			std::ofstream file_out;
 			file_out.open(fname.str().c_str());
 			
-			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
+			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"U0\",\"CFLUX0\",\"DLUX0\",\"U1\",\"CFLUX1\",\"DLUX1\",\"U2\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
 			conv_flux = 0.0;
 			diff_flux = 0.0;

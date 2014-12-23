@@ -9,3 +9,7 @@ libparseargs.a: $(OBJ)
 	ar rv $@ $(OBJ)
 	ranlib $@
 	cp $@ ../lib
+	
+clean:
+	rm *.o
+	rm libparseargs.a

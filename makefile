@@ -1,4 +1,4 @@
-DIRS = utilities input_map quadtree spline++ symbolic_function
+DIRS = parseargs utilities input_map quadtree spline++ symbolic_function
 TRI_DIRS = tri_basis tri_mesh tri_hp
 TET_DIRS = tet_basis tet_mesh tet_hp
 
@@ -35,6 +35,9 @@ input_map: utilities force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
 utilities: force_look
+	cd $@; $(MAKE) $(MFLAGS)
+	
+parseargs: force_look
 	cd $@; $(MAKE) $(MFLAGS)
 	
 dirs: 

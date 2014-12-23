@@ -283,8 +283,8 @@ void tri_hp::petsc_setup_preconditioner() {
 #endif
 
 	PetscTime(&time1);	 
-	//err = KSPSetOperators(ksp,petsc_J,petsc_J);
-	err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
+	err = KSPSetOperators(ksp,petsc_J,petsc_J);
+	//err = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);

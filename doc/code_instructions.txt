@@ -1,18 +1,17 @@
 # See HowTo for basis unix stuff
 
 # Packages to be installed
-1 blitz array library
-2 muParser math parsing library
-3 libbinio platform independent binary input/output
-5 pth for user space threading (multiple blocks running under 1 process)
-6 boost for system space threading (usually not used)
-7 parseargs for command line argument processing
-8 cfortran for c calls to fortran
-9 petsc for parallel matrix inversion and iteration
-10 MeshAdapt for tetrahedral mesh generation
-11 Gmsh for tetrahedrals
-12 valgrind for debugging
-13 probably need to install cmake (gui installer for OS X & Windows)
+1 blitz array library (necessary)
+2 muParser math parsing library (necessary)
+3 libbinio platform independent binary input/output (necessary)
+5 pth for user space threading (multiple blocks running under 1 process) (necessary)
+6 boost for system space threading (skip!)
+8 cfortran for c calls to fortran (necessary)
+9 petsc for parallel matrix inversion and iteration (necessary)
+10 MeshAdapt for tetrahedral mesh generation (3D Only)
+11 Gmsh for tetrahedrals (3D Only)
+12 valgrind for debugging (skip!)
+13 probably need to install cmake (gui installer for OS X & Windows) (3D Only)
 
 ###################################################################
 #### GET BLITZ 
@@ -104,14 +103,6 @@ unpack in packages folder (see index.html file for instructions)
 	[cd boost_1_48_0]
 	[./bootstrap.sh --with-libraries=thread --prefix=${HOME}/Packages]
 	[./b2 install]
-	[cd ..]
-
-###################################################################
-### COMMAND LINE ARGUMENT PARSING UTILITY ##########
-###################################################################
-# get parseargs from Brian
-	[cd parseargs]
-	[make]
 	[cd ..]
 
 ###################################################################
@@ -295,6 +286,9 @@ make -j 2
 #### OS X ####
 ###################################################################
 cd ${HOME}/Codes
+cd parseargs
+make
+cd ..
 cd utilities
 xcodebuild -alltargets -configuration Release
 cd ../quadtree
@@ -317,6 +311,32 @@ cd ../tet_basis
 xcodebuild -alltargets -configuration Release
 cd ../tet_hp
 xcodebuild -alltargets -configuration Release
+
+###################################################################
+# TO CLEAN
+cd ${HOME}/Codes
+cd utilities
+xcodebuild -alltargets -configuration Release clean
+cd ../quadtree
+xcodebuild -alltargets -configuration Release clean
+cd ../spline++
+xcodebuild -alltargets  -configuration Release clean
+cd ../input_map
+xcodebuild -alltargets  -configuration Release clean
+cd ../symbolic_function
+xcodebuild -alltargets  -configuration Release clean
+cd ../tri_mesh
+xcodebuild -alltargets -configuration Release clean
+cd ../tri_basis
+xcodebuild -alltargets -configuration Release clean
+cd ../tri_hp
+xcodebuild -alltargets -configuration Release clean
+cd ../tet_mesh
+xcodebuild -alltargets -configuration Release clean
+cd ../tet_basis
+xcodebuild -alltargets -configuration Release clean
+cd ../tet_hp
+xcodebuild -alltargets -configuration Release clean
 ###################################################################
 
 
