@@ -16,7 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6F99D04D0B5DE0FA00628456 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../../Packages/lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
+		6F99D04D0B5DE0FA00628456 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FD651CB0922EC6800D18689 /* input */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = input; sourceTree = "<group>"; };
 		6FD651CC0922EC6800D18689 /* input_map.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = input_map.cpp; sourceTree = "<group>"; };
 		6FD651CD0922EC6800D18689 /* input_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = input_map.h; sourceTree = "<group>"; };
