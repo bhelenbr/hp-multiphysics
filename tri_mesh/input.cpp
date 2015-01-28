@@ -909,12 +909,29 @@ next1c:      continue;
 			maxpst = static_cast<int>(grwfac*npnt*npnt);
 			allocate(maxpst);
 			initialized = 1;
-
+			std::string symbolic_string;
+            istringstream data;
 			for(i=0;i<npnt;++i) {
 				in.ignore(80,':');
-				for(n=0;n<ND;++n)
-					in >> pnts(i)(n);
-				in >> lngth(i) >> pnt(i).info;
+				for(n=0;n<ND;++n) {
+                    in >> symbolic_string;
+                    data.str(symbolic_string);
+                    if (data >> pnts(i)(n) && data.eof()) continue;
+                    bdrymap["temp_formula"] = symbolic_string;
+                    if (!bdrymap.get("temp_formula",pnts(i)(n))) {
+                        *gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
+                        sim::abort(__LINE__,__FILE__,gbl->log);
+                    }
+				}
+                in >> symbolic_string;
+                data.str(symbolic_string);
+                if (data >> lngth(i) && data.eof()) continue;
+                bdrymap["temp_formula"] = symbolic_string;
+                if (!bdrymap.get("temp_formula",lngth(i))) {
+                    *gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
+                    sim::abort(__LINE__,__FILE__,gbl->log);
+                }
+				in >> pnt(i).info;
 			}
 
 			/* COUNT VERTEX BOUNDARY GROUPS  */
