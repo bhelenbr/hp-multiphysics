@@ -43,7 +43,10 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 	
-	input.getwdefault("snapshots",nsnapshots,10);
+    if (!input.get("snapshots",nsnapshots)) {
+        *BASE::gbl->log << "# Couldn't find number of snapshots" << std::endl;
+        sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+    }
 	input.getwdefault("restart_interval",restart_interval,1);
 	input.getwdefault("restart",restartfile,1);
 	
@@ -66,8 +69,8 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	nmodes = MAX(nmodes,2);
 	
 	input.getwdefault("ndeflation",ndeflation,1);  // This is if you want to use the recursive method (1 means no, was LOW_NOISE)
-	if ( nsnapshots % ndeflation != 0 ) {
-		*BASE::gbl->log << "# Number of snapshots and number of deflations are not compatible." << std::endl;
+	if ( nmodes % ndeflation != 0 ) {
+		*BASE::gbl->log << "# Number of modes and number of deflations are not compatible." << std::endl;
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 	nmodes_per_deflation = nmodes/ndeflation;
@@ -148,21 +151,145 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	BASE::tadvance();
 	
 	int psi1dcounter;
-	psimatrix.resize(nsnapshots*nsnapshots);
-	psimatrix_recv.resize(nsnapshots*nsnapshots);
+    Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
 	
 #ifdef USING_MASS_MATRIX
-	const int sm=basis::tri(BASE::log2p)->sm();
-	const int im=basis::tri(BASE::log2p)->im();
-	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+    sparse_row_major mass;
 	create_mass_matrix(mass);
-	mass_times_snapshot.resize(BASE::NV*ndofs);
+	const int sm = basis::tri(BASE::log2p)->sm();
+	const int im = basis::tri(BASE::log2p)->im();
+	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+    int ntotal = ndofs*BASE::NV;
+    mass_times_snapshot.resize(ntotal);
+#endif
+	
+#ifdef DIRECT_METHOD
+    Array<FLT,2> mass_times_timeaverage(ntotal,ntotal);
+    Array<FLT,1> packed_mass_times_timeaverage((ntotal+1)*ntotal/2),packed_mass((ntotal+1)*ntotal/2);
 #endif
 	
 	Array<FLT,1> eigenvalues(nmodes);
-	
 	for (int deflation_count=0; deflation_count<ndeflation;++deflation_count) {
+        int start = nmodes_per_deflation*deflation_count;
 		/* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
+#ifdef DIRECT_METHOD
+		/////////////////////
+		// DIRECT METHOD //
+		/////////////////////
+        
+        /* Make packed storage version of block mass matrix for Lapack routine */
+        for(int n=0;n<BASE::NV;++n) {
+            for(int m=0;m<BASE::NV;++m) {
+                Array<FLT,2> mass_block = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),Range(m*ndofs,(m+1)*ndofs-1));  // Reference to data, not a copy
+                mass.unpack(mass_block);
+            }
+        }
+        
+        // Store block mass matrix in packed format
+        psi1dcounter = 0;
+        for (int k=0;k<ntotal;++k) {
+            for(int l=k;l<ntotal;++l) {
+                packed_mass(psi1dcounter++) = mass_times_timeaverage(k,l);
+            }
+        }
+        
+		mass_times_timeaverage = 0;
+		for (int k=0;k<nsnapshots;++k) {
+			nstr.str("");
+			nstr << k << std::flush;
+			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			BASE::input(filename, BASE::binary); // Loads into ug
+			time_average(BASE::ug,mass_times_timeaverage);
+		}
+		mass_times_timeaverage /= static_cast<FLT>(nsnapshots);
+				
+		/* Left multiply time average blocks by mass matrix */
+		Array<FLT,1> subarray(ndofs);
+		for(int n=0;n<BASE::NV;++n){
+			for(int i=0;i<ndofs*BASE::NV;++i) {
+				// Copies data for this section of time average so it can be repeatedly multiplied
+				subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+				// Makes reference to data so can be stored in correct location
+				Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+				mass.mmult(subarray,mass_times_timeaverage_subarray);
+			}
+		}
+        
+        /* Right multiply time average blocks by mass matrix (done by transposing as M is symmetric) */
+        mass_times_timeaverage.transposeSelf(secondDim, firstDim);
+        for(int n=0;n<BASE::NV;++n){
+            for(int i=0;i<ndofs*BASE::NV;++i) {
+                // Copies data for this section of time average so it can be repeatedly multiplied
+                subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+                // Makes reference to data so can be stored in correct location
+                Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+                mass.mmult(subarray,mass_times_timeaverage_subarray);
+            }
+        }
+		
+		// Fixme:  not sure how this is going to work in parallel
+		// *BASE::gbl->log << "mass_times_timeaverage" << std::endl;
+		// sim::blks.allreduce(psimatrix2.data(),psimatrix_recv2.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
+				
+		// Store in packed format
+		psi1dcounter = 0;
+		for (int k=0;k<ndofs*BASE::NV;++k) {
+			for(int l=k;l<ndofs*BASE::NV;++l) {
+				packed_mass_times_timeaverage(psi1dcounter++) = mass_times_timeaverage(k,l);
+			}
+		}
+
+        // generalized eigenvalue problem
+		int info;
+        int ITYPE = 1;
+		char jobz[2] = "V", uplo[2] = "L";
+		Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
+		Array<FLT,2> eigenvectors(ntotal,nmodes_per_deflation,ColumnMajorArray<2>());
+		// Compute only some eigenvectors
+		char range[2] = "I";
+		int il=ntotal-nmodes_per_deflation+1, iu=ntotal;
+		double vl=0, vu=1e18;
+		int neig;
+		Array<int,1> iwork(5*ntotal);
+		Array<double,1> work(8*ntotal);
+		Array<int,1> ifail(ntotal);
+		double abstol = 2.*dlamch_("Safe minimum");
+        
+        dspgvx_(&ITYPE, jobz, range, uplo, &ntotal, packed_mass_times_timeaverage.data(), packed_mass.data(), &vl, &vu, &il, &iu, &abstol,
+                &neig, eigenvalues_subarray.data(), eigenvectors.data(), &ntotal, work.data(), iwork.data(), ifail.data(), &info);
+
+		if (info != 0) {
+			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+		}
+        		
+		/* Reorder largest to smallest */
+		if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
+			eigenvalues_subarray.reverseSelf(firstDim);
+			eigenvectors.reverseSelf(secondDim);
+		}
+		
+		// Put eigenvector back into modes */
+		for(int k=0;k<nmodes_per_deflation;++k)	{
+			eigenvalues(start+k) = eigenvalues_subarray(k);
+            int ind = 0;
+			for(int n=0;n<BASE::NV;++n) {
+				for (int i=0;i<BASE::npnt;++i)
+					modes(start+k).v(i,n) = eigenvectors(ind++,k);
+				
+				for (int i=0;i<BASE::nseg;++i)
+					for(int m=0;m<sm;++m)
+						modes(start+k).s(i,m,n) = eigenvectors(ind++,k);
+				
+				for (int i=0;i<BASE::ntri;++i)
+					for(int m=0;m<im;++m)
+						modes(start+k).i(i,m,n) = eigenvectors(ind++,k);
+			}
+		}
+#else
+		/////////////////////
+		// SNAPSHOT METHOD //
+		/////////////////////
 		psi1dcounter = 0;
 		for (int k=0;k<nsnapshots;++k) {
 			nstr.str("");
@@ -271,7 +398,6 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
 			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 		}
-		
 		/* Reorder largest to smallest */
 		if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
 			eigenvalues_subarray.reverseSelf(firstDim);
@@ -279,7 +405,6 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 		
 		/* construct POD MODES */
-		int start = nmodes_per_deflation*deflation_count;
 		for(int k=0;k<nmodes_per_deflation;++k)	{
 			eigenvalues(start+k) = eigenvalues_subarray(k);
 			modes(start+k).v(Range(0,BASE::npnt-1)) = 0.0;
@@ -303,6 +428,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 #endif
 			}
 		}
+#endif
 		
 		/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
 		for(int k=0;k<nmodes_per_deflation;++k) {
@@ -455,6 +581,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	return;
 }
 
+
 template<class BASE> void pod_generate<BASE>::create_mass_matrix(sparse_row_major& mass) {
 	
 	/* Calculate Storage for Sparse Mass Matrix */
@@ -564,8 +691,8 @@ template<class BASE> void pod_generate<BASE>::create_mass_matrix(sparse_row_majo
 
 template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 	/* CALCULATE POD MODES ORTHOGONALITY */
-	psimatrix.resize(nmodes*nmodes);
-	psimatrix_recv.resize(nmodes*nmodes);
+	Array<FLT,1> psimatrix(nmodes*nmodes);
+	Array<FLT,1> psimatrix_recv(nmodes*nmodes);
 	
 	psimatrix = 0.0;
 	psimatrix_recv = 0.0;
@@ -727,6 +854,36 @@ template<class BASE> void pod_generate<BASE>::project_to_gauss(vsi& target) {
 		Array<FLT,1> subarray = mass_times_snapshot(Range(n*ndofs,(n+1)*ndofs-1));
 		mass.mmult(snapshot,subarray);
 		subarray *= scaling(n);
+	}
+	return;
+}
+
+template<class BASE> void pod_generate<BASE>::time_average(vsi& target, Array<FLT,2> average_matrix) {
+	const int sm=basis::tri(BASE::log2p)->sm();
+	const int im=basis::tri(BASE::log2p)->im();
+	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+	
+	/* Make 1D Vector */
+	Array<FLT,1> snapshot(ndofs*BASE::NV);
+	int ind = 0;
+	for(int n=0;n<BASE::NV;++n) {
+		for (int i=0;i<BASE::npnt;++i)
+			snapshot(ind++) = target.v(i,n);
+		
+		for (int i=0;i<BASE::nseg;++i)
+			for(int m=0;m<sm;++m)
+				snapshot(ind++) = target.s(i,m,n);
+		
+		for (int i=0;i<BASE::ntri;++i)
+			for(int m=0;m<im;++m)
+				snapshot(ind++) = target.i(i,m,n);
+	}
+	
+	for (int i=0;i<ndofs*BASE::NV;++i){
+		for (int j=0;j<ndofs*BASE::NV;++j){
+			average_matrix(i,j) += snapshot(i)*snapshot(j);
+		}
+		
 	}
 	return;
 }

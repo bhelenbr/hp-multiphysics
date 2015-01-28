@@ -9,9 +9,13 @@
 
 #ifndef _POD_GENERATE_H_
 #define _POD_GENERATE_H_
-
+#define DIRECT_METHOD
 #define USING_MASS_MATRIX
 //#define POD_BDRY
+
+#if (defined(DIRECT_METHOD)  && !defined(USING_MASS_MATRIX))
+error: DIRECT_METHOD only works with USING_MASS_MATRIX defined.
+#endif
 
 #ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry;
@@ -31,15 +35,14 @@ template<class BASE> class pod_generate : public BASE {
 		
 		Array<double,1> set_eigenvalues;
 		Array<FLT,1> scaling;
+    
 #ifdef USING_MASS_MATRIX
 		sparse_row_major mass;
 		Array<FLT,1> mass_times_snapshot;
 #endif
 		typedef typename BASE::vsi vsi;
 		Array<vsi,1> modes;
-		Array<FLT,1> psimatrix,psimatrix_recv;
-	
-
+		
 #ifdef POD_BDRY
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
@@ -51,6 +54,7 @@ template<class BASE> class pod_generate : public BASE {
 		void tadvance();
 		void create_mass_matrix(sparse_row_major& mass);
 		void project_to_gauss(vsi& target);
+        void time_average(vsi& target, Array<FLT,2> correlation_matrix);
 		FLT inner_product_with_projection(vsi& target);
 		FLT norm2(vsi& target);
 		void test_orthogonality();
