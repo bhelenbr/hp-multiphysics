@@ -121,12 +121,12 @@ void sparse_row_major::resize(int nrow, Array<int,1>& nnzero, int offset) {
 	int number_elements = _cpt(nrow);
 	_val.resize(number_elements);
 	_col.resize(number_elements);
-	_col = INT_MAX;
+	_col = INT_MAX-1;
 	_cpt.reindexSelf(shape(offset));
 }
 
 void sparse_row_major::reset_columns() {
-	_col = INT_MAX;
+	_col = INT_MAX-1;
 }
 
 
@@ -592,7 +592,7 @@ void sparse_row_major::check_for_unused_entries() {
 	
 	for(int i=_offset;i<_offset+_nrow;++i) {
 		for (int j=_cpt(i);j<_cpt(i+1);++j) {
-			if (_col(j) == INT_MAX) {
+			if (_col(j) == INT_MAX-1) {
 				std::cerr << "unused entry for row " << i << " allocated " << _cpt(i+1) -_cpt(i) << std::endl;
 				Array<int,1> used(_col(Range(_cpt(i),j-1)));
 				std::cerr << "used " << used << " unused " << _col(j) << std::endl;
@@ -637,6 +637,18 @@ void sparse_row_major::mmult(Array<FLT,1>& x,Array<FLT,1>& ax) {
 	}
 	return;
 }
+
+void sparse_row_major::unpack(Array<FLT,2>& tgt) {
+    
+    tgt = 0.0;
+    for (int i=_offset;i<_offset+_nrow;++i) {
+        FLT lclax = 0.0;
+        for (int j=_cpt(i);j<_cpt(i+1);++j)
+            tgt(i,_col(j)) = _val(j);
+    }
+    return;
+}
+
 
 
 

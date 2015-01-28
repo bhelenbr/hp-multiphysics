@@ -132,6 +132,7 @@ class sparse_row_major {
 		void zero_rows(int nrows,const Array<int,1>& rows);
 		void multiply_row(int row, FLT val);
 		void mmult(Array<FLT,1>& x,Array<FLT,1>& rslt);
+        void unpack(Array<FLT,2>& tgt);
 
 		// Array<FLT,1>& operator*(Array<FLT,1>&);
 		
