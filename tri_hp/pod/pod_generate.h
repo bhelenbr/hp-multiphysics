@@ -9,7 +9,7 @@
 
 #ifndef _POD_GENERATE_H_
 #define _POD_GENERATE_H_
-#define DIRECT_METHOD
+//#define DIRECT_METHOD
 #define USING_MASS_MATRIX
 //#define POD_BDRY
 

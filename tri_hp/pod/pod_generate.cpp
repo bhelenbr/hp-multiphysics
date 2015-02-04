@@ -154,7 +154,6 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
 	
 #ifdef USING_MASS_MATRIX
-    sparse_row_major mass;
 	create_mass_matrix(mass);
 	const int sm = basis::tri(BASE::log2p)->sm();
 	const int im = basis::tri(BASE::log2p)->im();
