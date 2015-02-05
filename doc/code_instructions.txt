@@ -238,7 +238,7 @@ send id.txt file on desktop to Brian so he can give you access to repository
 [cd]
 
 now get all of my stuff:
-git clone ssh://git@balrog.camp.clarkson.edu/~/GitRepo Codes
+git clone ssh://git@balin.camp.clarkson.edu/~/GitRepo Codes
 
 [mkdir bin] # (if not already there)
 [cd Codes]
