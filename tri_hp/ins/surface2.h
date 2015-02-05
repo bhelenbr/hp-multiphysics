@@ -10,7 +10,7 @@
 #define __tri_hp__surface2__
 
 #include <iostream>
-#include "hp_coupled_boundary.h"
+#include "../hp_coupled_boundary.h"
 #include "tri_hp_ins.h"
 
 //#define MPDEBUG
