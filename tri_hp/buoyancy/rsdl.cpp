@@ -15,13 +15,12 @@
 // #define BOUSSINESQ
 
 void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
-	int i,j,n;
 	FLT fluxx,fluxy;
 	const int NV = 4;
 	TinyVector<int,3> v;
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+	const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi;
 	FLT lkcond = gbl->kcond, cjcbi2;
 	TinyMatrix<FLT,MXGP,MXGP> rho;
@@ -39,24 +38,24 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		crdtocht(tind);
 
 		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(n=0;n<ND;++n)
+		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 	}
 	else {
 		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(n=0;n<ND;++n)
+		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 
 		/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
-		for(n=0;n<ND;++n) {
+		for(int n=0;n<ND;++n) {
 			ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
 			ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 		}
 	}
 
 	/* CALCULATE MESH VELOCITY */
-	for(i=0;i<lgpx;++i) {
-		for(j=0;j<lgpn;++j) {
+	for(int i=0;i<lgpx;++i) {
+		for(int j=0;j<lgpn;++j) {
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
@@ -70,18 +69,18 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
 	//ugtouht(tind);
 	if (gbl->beta(stage) > 0.0) {
-		for(n=0;n<NV-1;++n)
+		for(int n=0;n<NV-1;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);  
 		basis::tri(log2p)->proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
 	}
 	else {
-		for(n=0;n<NV;++n)
+		for(int n=0;n<NV;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 	}
 
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
-	for(n=0;n<NV;++n){
-		for(i=0;i<basis::tri(log2p)->tm();++i){
+	for(int n=0;n<NV;++n){
+		for(int i=0;i<basis::tri(log2p)->tm();++i){
 			lf_re(n)(i) = 0.0;
 			lf_im(n)(i) = 0.0;	
 		}
@@ -100,8 +99,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	if (tri(tind).info > -1) {
 		/* CURVED ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
-		for(i=0;i<lgpx;++i) {
-			for(j=0;j<lgpn;++j) {
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
 				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
 				u(2)(i,j) *= gbl->cp;
@@ -114,7 +113,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				du(NV-1,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
 
 				/* CONVECTIVE FLUXES */
-				for(n=0;n<NV-1;++n) {
+				for(int n=0;n<NV-1;++n) {
 					cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
 					cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
 				}
@@ -128,15 +127,15 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				cv(1,1)(i,j) +=  dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
 			}
 		}
-		for(n=0;n<NV-1;++n)
+		for(int n=0;n<NV-1;++n)
 			basis::tri(log2p)->intgrtrs(&lf_im(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
 		basis::tri(log2p)->intgrtrs(&lf_im(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 		
 		/* NEGATIVE REAL TERMS */
 		if (gbl->beta(stage) > 0.0) {
 			/* TIME DERIVATIVE TERMS */ 
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpn;++j) {
+			for(int i=0;i<lgpx;++i) {
+				for(int j=0;j<lgpn;++j) {
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					rhorbd0 = rho(i,j)*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
@@ -144,7 +143,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					// cjcbi2 *= 2.0 +erf((1.0 -u(2)(i,j))/1.e-3); 
 					
 					/* UNSTEADY TERMS */
-					for(n=0;n<NV-1;++n)
+					for(int n=0;n<NV-1;++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 #ifdef AXISYMMETRIC
@@ -202,7 +201,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					df(2,0)(i,j) = +visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j);
 					df(2,1)(i,j) = +viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j);
 
-					for(n=0;n<NV-1;++n) {
+					for(int n=0;n<NV-1;++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
 					}
@@ -236,11 +235,11 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 				}
 			}
-			for(n=0;n<NV;++n)
+			for(int n=0;n<NV;++n)
 				basis::tri(log2p)->intgrt(&lf_re(n)(0),&res(n)(0,0),MXGP);
 
 			/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
-			for(n=0;n<NV-1;++n) {
+			for(int n=0;n<NV-1;++n) {
 				basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
@@ -272,8 +271,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpn;++j) {
+			for(int i=0;i<lgpx;++i) {
+				for(int j=0;j<lgpn;++j) {
 
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
@@ -323,12 +322,12 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					du(NV-1,1)(i,j) = -(-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1));
 				}
 			}
-			for(n=0;n<NV-1;++n)
+			for(int n=0;n<NV-1;++n)
 				basis::tri(log2p)->intgrtrs(&lf_re(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
 			basis::tri(log2p)->intgrtrs(&lf_re(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
-			for(n=0;n<NV;++n)
-				for(i=0;i<basis::tri(log2p)->tm();++i)
+			for(int n=0;n<NV;++n)
+				for(int i=0;i<basis::tri(log2p)->tm();++i)
 					lf_re(n)(i) *= gbl->beta(stage);
 
 		}
@@ -336,8 +335,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	else {
 		/* LINEAR ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
-		for(i=0;i<lgpx;++i) {
-			for(j=0;j<lgpn;++j) {
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
 				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
 				u(2)(i,j) *= gbl->cp;
@@ -349,7 +348,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				du(NV-1,1)(i,j) = -ldcrd(1,0)*fluxx +ldcrd(0,0)*fluxy;
 
 				/* CONVECTIVE FLUXES */
-				for(n=0;n<NV-1;++n) {
+				for(int n=0;n<NV-1;++n) {
 					cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
 					cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
 				}
@@ -363,7 +362,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				cv(1,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
 			}
 		}
-		for(n=0;n<NV-1;++n)
+		for(int n=0;n<NV-1;++n)
 			basis::tri(log2p)->intgrtrs(&lf_im(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
 		basis::tri(log2p)->intgrtrs(&lf_im(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
@@ -424,8 +423,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #endif
 
 			/* TIME DERIVATIVE TERMS */
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpn;++j) {
+			for(int i=0;i<lgpx;++i) {
+				for(int j=0;j<lgpn;++j) {
 					rhorbd0 = rho(i,j)*RAD(crd(0)(i,j))*lbd0;
 
 					/* UNSTEADY TERMS */
@@ -459,7 +458,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					df(2,0)(i,j) = +RAD(crd(0)(i,j))*(visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j));
 					df(2,1)(i,j) = +RAD(crd(0)(i,j))*(viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j));
 
-					for(n=0;n<NV-1;++n) {
+					for(int n=0;n<NV-1;++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
 					}
@@ -475,11 +474,11 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #endif
 				}
 			}
-			for(n=0;n<NV;++n)
+			for(int n=0;n<NV;++n)
 				basis::tri(log2p)->intgrt(&lf_re(n)(0),&res(n)(0,0),MXGP);
 
 			/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
-			for(n=0;n<NV-1;++n) {
+			for(int n=0;n<NV-1;++n) {
 				basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
@@ -510,8 +509,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpn;++j) {
+			for(int i=0;i<lgpx;++i) {
+				for(int j=0;j<lgpn;++j) {
 
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
@@ -562,12 +561,12 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					du(NV-1,1)(i,j) = -(-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1));
 				}
 			}
-			for(n=0;n<NV-1;++n)
+			for(int n=0;n<NV-1;++n)
 				basis::tri(log2p)->intgrtrs(&lf_re(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
 			basis::tri(log2p)->intgrtrs(&lf_re(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
-			for(n=0;n<NV;++n)
-				for(i=0;i<basis::tri(log2p)->tm();++i)
+			for(int n=0;n<NV;++n)
+				for(int i=0;i<basis::tri(log2p)->tm();++i)
 					lf_re(n)(i) *= gbl->beta(stage);
 
 		}
