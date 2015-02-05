@@ -14,6 +14,11 @@
 
 #ifdef petsc
 
+// #define RSDL_DEBUG
+// #define DEBUG_TOL 1.0e-9
+#define DEBUG_TOL 1.0e-4
+#define WBC
+
 void tri_hp::petsc_jacobian() {
 	
 #ifdef MY_SPARSE
@@ -207,6 +212,42 @@ void tri_hp::petsc_rsdl() {
 		for(int i=0;i<nebd;++i)
 			hp_ebdry(i)->sdirichlet(m);
 	
+#ifdef RSDL_DEBUG
+	for(int i=0;i<npnt;++i) {
+		*gbl->log << gbl->idprefix << " v: " << i << ' ';
+		for(int n=0;n<NV;++n) {
+			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+			else *gbl->log << "0.0 ";
+		}
+		*gbl->log << '\n';
+	}
+	
+	for(int i=0;i<nseg;++i) {
+		for(int m=0;m<basis::tri(log2p)->sm();++m) {
+			*gbl->log << gbl->idprefix << " s: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			*gbl->log << '\n';
+		}
+	}
+	
+	
+	for(int i=0;i<ntri;++i) {
+		for(int m=0;m<basis::tri(log2p)->im();++m) {
+			*gbl->log << gbl->idprefix << " i: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			*gbl->log << '\n';
+		}
+	}
+	sim::finalize(__LINE__,__FILE__,gbl->log);
+#endif
+
+	
 	PetscScalar *array;
 	VecGetArray(petsc_f,&array);
 	Array<FLT,1> res(array, shape(jacobian_size), neverDeleteData);
@@ -215,10 +256,6 @@ void tri_hp::petsc_rsdl() {
 		
 	return;
 }
-
-
-#define DEBUG_TOL 1.0e-4
-#define WBC
 
 //  Rows with dirichlet boundary conditions will not match.  Sparse Jacobian will have a 1 on diagonal only
 //  Diagonal entry of communication rows will not match because of equality constraint

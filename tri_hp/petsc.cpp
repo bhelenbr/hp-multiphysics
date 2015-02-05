@@ -14,18 +14,14 @@
 #include <limits.h>
 #include <petsctime.h>
 
-// #define DEBUG_JAC
+//#define DEBUG_JAC
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
 	int im=basis::tri(log2p)->im();
 	int tm=basis::tri(log2p)->tm();
-	int vdofs;
-	
-	if (mmovement != coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
+	const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
+
 
 	/* Internal degrees of freedom */
 	jacobian_size = npnt*vdofs +(nseg*sm +ntri*im)*NV;
