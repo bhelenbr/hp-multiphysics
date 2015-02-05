@@ -1303,12 +1303,9 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 #ifdef petsc
 //#define MPDEBUG
 void surface_slave::petsc_jacobian() {
-	int sm = basis::tri(x.log2p)->sm();	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
+	const int sm = basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
 	Array<FLT,1> row_store(vdofs*(sm+2));
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
@@ -1429,12 +1426,8 @@ void surface_slave::petsc_jacobian() {
 }
 
 void surface_slave::petsc_matchjacobian_snd() {	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-		
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	if (!base.is_comm()) return;
 
 	/* Now do stuff for communication boundaries */
@@ -1553,13 +1546,8 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 		pJ_mpi = &x.J_mpi;
 	}
 	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-		
-	int sm = basis::tri(x.log2p)->sm();	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	const int sm = basis::tri(x.log2p)->sm();
 
 	
 	/* Now do stuff for communication boundaries */
@@ -1687,6 +1675,8 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 		/* Equality of curved mode constraint */
 		int ind = jacobian_start;
 		int ind_mpi = static_cast<int>(base.frcvbuf(0,count++)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
+		*x.gbl->log << ind_mpi << ' ' << count << std::endl;
+
 		for(int i=0;i<base.nseg;++i) {
 			int sgn = 1;
 			for(int mode=0;mode<x.sm0;++mode) {
@@ -1704,12 +1694,9 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 }
 
 void surface::petsc_jacobian() {
-	int sm = basis::tri(x.log2p)->sm();	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
+	const int sm = basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 #ifndef DROP
 	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
 	Array<FLT,1> row_store(vdofs*(sm+2));
@@ -1913,12 +1900,7 @@ void surface_slave::non_sparse(Array<int,1> &nnzero) {
 	const int im=basis::tri(x.log2p)->im();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-	vdofs = NV;
-	else
-	vdofs = ND+NV;
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 
 	int begin_seg = x.npnt*vdofs;
 	int begin_tri = begin_seg+x.nseg*sm*NV;
@@ -1977,14 +1959,8 @@ void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
-	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;	
 	
 	Array<int,1> c0vars(x.NV+x.ND-1);
@@ -2023,16 +1999,11 @@ void surface_slave::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
-	const int ND = tri_mesh::ND;
 	
 	if (!base.is_frst() && sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	Array<int,1> c0vars(x.NV+x.ND-1);
@@ -2081,13 +2052,8 @@ void surface::non_sparse(Array<int,1> &nnzero) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
 	int begin_seg = x.npnt*vdofs;
 
 	surface_slave::non_sparse(nnzero);

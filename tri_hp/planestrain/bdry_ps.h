@@ -47,7 +47,7 @@ namespace bdry_ps {
 				mytype = "dirichlet";
 				for(int n=0;n<x.ND;++n) {
 					essential_indices.push_back(n);
-					type(n) = essential;
+					type[n] = essential;
 				}
 			}
 			dirichlet(const dirichlet& inbdry, tri_hp_ps &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}

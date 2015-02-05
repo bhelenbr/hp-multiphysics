@@ -32,9 +32,9 @@ namespace bdry_swirl {
 		public:
 			symmetry(tri_hp_swirl &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "symmetry"; 
-				type(0) = essential;
+				type[0] = essential;
 				essential_indices.push_back(0);
-				type(2) = essential;essential_indices.push_back(2);
+				type[2] = essential;essential_indices.push_back(2);
 			}
 			symmetry(const symmetry& inbdry, tri_hp_swirl &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_swirl&>(xin),bin);}

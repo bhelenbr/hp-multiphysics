@@ -8,6 +8,7 @@
  */
 #include "tri_hp_ins.h"
 #include "bdry_ins.h"
+#include "surface2.h"
 #include <input_map.h>
 #include <tri_boundary.h>
 
@@ -22,8 +23,8 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
 	public:
-		static const int ntypes = 6;
-		enum ids {unknown=-1,surface_inflow,surface_outflow,inflow,pressure,hybrid_slave_point,hybrid_point};
+		static const int ntypes = 8;
+		enum ids {unknown=-1,surface_inflow,surface_outflow,surface_inflow2,surface_outflow2,inflow,pressure,hybrid_slave_point,hybrid_point};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -32,7 +33,7 @@ class tri_hp_ins_vtype {
 		}
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","inflow","pressure","hybrid_slave_point","hybrid_point"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","surface_inflow2","surface_outflow2","inflow","pressure","hybrid_slave_point","hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -60,6 +61,14 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_ins_vtype::surface_outflow: {
 			temp = new surface_outflow(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_ins_vtype::surface_inflow2: {
+			temp = new surface_fixed_pt2(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_ins_vtype::surface_outflow2: {
+			temp = new surface_outflow2(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_ins_vtype::inflow: {
@@ -96,9 +105,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
 	public:
-		static const int ntypes = 12;
+		static const int ntypes = 13;
 		enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-			symmetry,applied_stress,surface,surface_slave,force_coupling,friction_slip,actuator_disc};
+			symmetry,applied_stress,surface,surface_slave,surface2,force_coupling,friction_slip,actuator_disc};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -108,7 +117,7 @@ class tri_hp_ins_stype {
 };
 
 const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","force_coupling","friction_slip","actuator_disc"};
+    "symmetry","applied_stress","surface","surface_slave","surface2","force_coupling","friction_slip","actuator_disc"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -174,6 +183,18 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 		case tri_hp_ins_stype::surface_slave: {
 			temp = new surface_slave(*this,*ebdry(bnum));
 			dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			break;
+		}
+		case tri_hp_ins_stype::surface2: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new surface2(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for surface boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
+			}
 			break;
 		}
 		case tri_hp_ins_stype::force_coupling: {

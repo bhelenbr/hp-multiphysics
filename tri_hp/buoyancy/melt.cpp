@@ -43,10 +43,11 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	/* Now that we have loaded flux, make temperature a dirichlet bc */
 	/* And make pressure neumann */
 	essential_indices.clear();
-	for(int n=0;n<x.NV-1;++n)
+    for(int n=0;n<x.NV-1;++n) {
 		essential_indices.push_back(n);
-	type(Range(0,x.NV-2)) = essential;
-	type(x.NV-1) = natural;
+        type[n] = essential;
+    }
+	type[x.NV-1] = natural;
 	
 	gbl = static_cast<global *>(gbl_in);
 	ksprg.resize(base.maxseg);
@@ -1310,12 +1311,8 @@ void melt::petsc_matchjacobian_snd() {
 	
 	/* Now do stuff for communication boundaries */
 	/* Just sending indices of x & y vertices for equality constraint */
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	if (!base.is_comm()) return;
 	
 	int sind=-2;
@@ -1383,13 +1380,8 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 		pJ_mpi = &x.J_mpi;
 	}
 	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-	
-	int sm = basis::tri(x.log2p)->sm();	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	const int sm = basis::tri(x.log2p)->sm();
 	
 	
 	/* Now do stuff for communication boundaries */
@@ -1526,15 +1518,11 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 
 void melt::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
-	int sm=basis::tri(x.log2p)->sm();
+	const int sm=basis::tri(x.log2p)->sm();
 	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
 	
-	int vdofs;
-	if (x.mmovement == x.coupled_deformable)
-		vdofs = x.NV +tri_mesh::ND;
-	else
-		vdofs = x.NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	/****************************************/
@@ -1842,13 +1830,8 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 	const int im=basis::tri(x.log2p)->im();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	int begin_tri = begin_seg+x.nseg*sm*NV;
 	
@@ -1900,13 +1883,8 @@ void melt::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;	
 	
 	
@@ -1947,13 +1925,8 @@ void melt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	std::vector<int> c0vars;

@@ -74,8 +74,10 @@ namespace bdry_ins {
 		public:
 			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "inflow";
-				for (int n=0;n<x.NV-1;++n)
+				for (int n=0;n<x.NV-1;++n) {
 					essential_indices.push_back(n);
+					type[n] = essential;
+				}
 			}
 			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
@@ -290,7 +292,7 @@ namespace bdry_ins {
 				std::string keyword = base.idprefix +"_dir";
 				input.getwdefault(keyword,dir,0);
 				essential_indices.push_back(dir);
-				type(dir) = essential;
+				type[dir] = essential;
 			}
 			void tadvance();
 	};
@@ -738,12 +740,8 @@ namespace bdry_ins {
 			
 			Array<int,1> indices(x.NV-1);
 			
-			int vdofs;
-			if (x.mmovement == x.coupled_deformable)
-				vdofs = x.NV +tri_mesh::ND;
-			else
-				vdofs = x.NV;
-			
+			const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 			int gind,v0;
 			int counter = 0;
 			
@@ -788,12 +786,8 @@ namespace bdry_ins {
 			
 			Array<int,1> indices(1);
 			
-			int vdofs;
-			if (x.mmovement == x.coupled_deformable)
-				vdofs = x.NV +tri_mesh::ND;
-			else
-				vdofs = x.NV;
-			
+			const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 			int v0,counter=0;
 			
 			v0 = base.pnt;

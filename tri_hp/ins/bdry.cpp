@@ -600,14 +600,8 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
-	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 		
 	Array<int,1> c0vars(vdofs-1);
@@ -649,14 +643,8 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
-	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	Array<int,1> c0vars(vdofs-1);
@@ -757,11 +745,7 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 }
 
 void actuator_disc::petsc_matchjacobian_snd() {	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
 	if (!base.is_comm()) return;
 	
@@ -880,11 +864,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		pJ_mpi = &x.J_mpi;
 	}
 	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
 	/* Now do stuff for communication boundaries */
 	int row;

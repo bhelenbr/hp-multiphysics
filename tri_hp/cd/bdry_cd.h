@@ -32,7 +32,7 @@ namespace bdry_cd {
 		public:
 			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "dirichlet";
-				type(0) = essential;
+				type[0] = essential;
 				essential_indices.push_back(0);
 			}
 			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}

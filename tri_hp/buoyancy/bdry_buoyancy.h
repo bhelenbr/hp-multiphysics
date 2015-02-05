@@ -18,11 +18,12 @@
 #include <symbolic_function.h>
 
 // #define MELT1 /* Must be uncommented in two places */
+// #define OLDWAY_SF
 
 using namespace blitz;
-
 namespace bdry_buoyancy {
-	
+
+#ifdef OLDWAY_SF
 	class solid_fluid : public symbolic {
 		public:
 			solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
@@ -45,6 +46,36 @@ namespace bdry_buoyancy {
 			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride);
 			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 		
+	};
+#else
+	class solid_fluid : public symbolic {
+	public:
+		solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
+			mytype = "solid_fluid";
+		}
+		solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
+		solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+		void init(input_map& inmap,void* gbl_in);
+	};
+#endif
+	
+	
+	/* Same thing as incompressible characteristic B.C. except adjusted for variable density */
+	class characteristic : public bdry_ins::characteristic {
+		protected:
+			tri_hp_buoyancy& x;
+
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+				FLT store_rho = x.gbl->rho;
+				x.gbl->rho = x.gbl->rho_vs_T.Eval(u(2));
+				bdry_ins::characteristic::flux(u,xpt,mv,norm,flx);
+				flx(2) *= x.gbl->cp;
+				x.gbl->rho = store_rho;
+			}
+		public:
+			characteristic(tri_hp_buoyancy &xin, edge_bdry &bin) : x(xin), bdry_ins::characteristic(xin,bin) {mytype = "characteristic";}
+			characteristic(const characteristic& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin) : x(xin), bdry_ins::characteristic(inbdry,xin,bin) {}
+			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 	};
 	
 	class surface : public bdry_ins::surface {
@@ -190,6 +221,7 @@ namespace bdry_buoyancy {
 			FLT Krough, Ksn, A2Dn, K2Dn, K2Dn_max; // Coefficients for Weinstein Kinetic model
 			FLT Kgt; // Gibbs Thompson curvature effect (not working)
 			TinyVector<FLT,tri_mesh::ND> facetdir; // Diretion of facet
+			FLT surge_time;
 			
 			/* PRECONDITIONER */
 			Array<FLT,1> vdt_kinetic;

@@ -15,7 +15,6 @@ using namespace bdry_buoyancy;
 #include <myblas.h>
 
 //#define MPDEBUG
-
 //#define DEBUG
 
 using namespace bdry_buoyancy;
@@ -37,11 +36,13 @@ void solid_fluid::init(input_map& inmap,void* gbl_in) {
 		inmap[base.idprefix+"_flux3"] = "rho*(u0*n0 +u1*n1)";
 	}
 	
+	inmap[base.idprefix+"_c0_indices"] = "2";
 	symbolic::init(inmap,gbl_in);
-		
+	
 	return;
 }
 
+#ifdef OLDWAY_SF
 void solid_fluid::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	int j,k,n,countup,offset;
 	
@@ -127,12 +128,7 @@ void solid_fluid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 #ifdef petsc
 void solid_fluid::petsc_matchjacobian_snd() {
 	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	int row,sind=-2;
 	
 	/* I am cheating here and sending floats and int's together */
@@ -151,7 +147,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 		/* Send Temperature Equation */
 		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
-		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
+		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
 		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
@@ -171,7 +167,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 		for(int mode=0;mode<x.sm0;++mode) {
 			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
-			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
+			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
 			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
@@ -194,7 +190,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 	base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
 	base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
-	*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
+	*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
 	for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
@@ -226,13 +222,7 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 		pJ_mpi = &x.J_mpi;
 	}
 	
-	int vdofs;
-	if (x.mmovement != x.coupled_deformable)
-		vdofs = x.NV;
-	else
-		vdofs = x.NV+x.ND;
-	
-	int sm = basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
 	
 	/* Now do stuff for communication boundaries */
@@ -350,13 +340,8 @@ void solid_fluid::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi)
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable)
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	
@@ -403,13 +388,8 @@ void solid_fluid::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi)
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
-	int vdofs;
-	if (x.mmovement != tri_hp::coupled_deformable)
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	std::vector<int> c0vars;
@@ -455,7 +435,7 @@ void solid_fluid::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi)
 }
 
 #endif
-
+#endif
 
 /** \brief Helper object for vrtx_bdry 
  *
@@ -522,8 +502,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 
 class tri_hp_buoyancy_stype {
 	public:
-		static const int ntypes = 4;
-		enum ids {unknown=-1,surface,melt,melt_kinetics,solid_fluid};
+		static const int ntypes = 5;
+		enum ids {unknown=-1,surface,melt,melt_kinetics,solid_fluid,characteristic};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -532,7 +512,7 @@ class tri_hp_buoyancy_stype {
 		}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","melt_kinetics","solid_fluid"};
+const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","melt_kinetics","solid_fluid","characteristic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -600,6 +580,11 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 			}
 			break;
 		}
+		case tri_hp_buoyancy_stype::characteristic: {
+			temp = new characteristic(*this,*ebdry(bnum));
+			break;
+		}
+
 		default: {
 			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
 			break;

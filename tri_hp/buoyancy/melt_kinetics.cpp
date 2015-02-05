@@ -13,11 +13,11 @@ void melt_kinetics::init(input_map& inmap,void* gbl_in) {
 	
 	/* Don't make Temperature a dirichlet B.C. */
 	essential_indices.clear();
-	for(int n=0;n<tri_mesh::ND;++n)
+    type.assign(x.NV,natural);
+    for(int n=0;n<tri_mesh::ND;++n) {
 		essential_indices.push_back(n);
-	type = natural;
-	type(Range(0,tri_mesh::ND-1)) = essential;
-	
+        type[n] = essential;
+    }
 	gbl = static_cast<global *>(gbl_in);
 
 	inmap.getwdefault(base.idprefix + "_Krough",gbl->Krough,0.0);
@@ -26,6 +26,7 @@ void melt_kinetics::init(input_map& inmap,void* gbl_in) {
 	inmap.getwdefault(base.idprefix + "_K2Dn",gbl->K2Dn,3.0);
 	inmap.getwdefault(base.idprefix + "_K2Dn_max",gbl->K2Dn_max,3.0);
 	inmap.getwdefault(base.idprefix + "_A2Dn",gbl->A2Dn,1.0);
+	inmap.getwdefault(base.idprefix + "_surge_time",gbl->surge_time,1.0);
 	FLT angle;
 	inmap.getwdefault(base.idprefix + "_facet_angle",angle,0.0);
 	gbl->facetdir(0) = cos(M_PI*angle/180.0);
@@ -525,13 +526,8 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 	int sind, v0, row;
 	int sm=basis::tri(x.log2p)->sm();
 	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-	
-	int vdofs;
-	if (x.mmovement == x.coupled_deformable)
-		vdofs = x.NV +tri_mesh::ND;
-	else
-		vdofs = x.NV;
-	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 	int begin_seg = x.npnt*vdofs;
 	
 	/****************************************/
@@ -1029,8 +1025,18 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 				}
 			} while (++indx < base.nseg);
-			fout.close();
-		
+            
+            /* Calculate exactly what is happening at triple junction */
+            const int seg = base.nseg-1;
+            const int sind = base.seg(seg);
+            const int v0 = x.seg(sind).pnt(1);
+            TinyVector<FLT,4> up;
+            basis::tri(x.log2p)->ptprobe1d(4,up.data(),1.0,&x.uht(0)(0),MXTM);
+            FLT DT = ibc->f(2, x.pnts(v0), x.gbl->time) -up(2);
+            FLT K = calculate_kinetic_coefficients(DT,0.0);
+            fout << s << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' << K << ' ' << DT << ' ' << 0.0 << std::endl;
+            fout.close();
+
 			break;
 		}
 		default:
@@ -1059,9 +1065,23 @@ FLT melt_kinetics::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	// FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
 	// FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
 	
+
 	if (sint == 0.0) {
 		K = gbl->Krough*K2Dn_exp;
 		
+		
+		// Step Oscillation */
+		// FLT K1 = gbl->Krough*(1.); // + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
+		// K = 0.5*(K1-K)*erfc(cos(M_PI*x.gbl->time/gbl->surge_time)*4.0) +K;
+		
+//        /* Step Change */
+//        if (M_PI*x.gbl->time/gbl->surge_time < 1.0) {
+//            K = 0.5*(K1-K)*erfc(cos(M_PI*x.gbl->time/gbl->surge_time)*4.0) +K;
+//        }
+//        else {
+//            K = K1;
+//        }
+//		
 //		/* For an unsteady perturbation */
 //		const FLT T = 1.5e-3;
 //		if (x.gbl->time < T) {
