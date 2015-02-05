@@ -63,8 +63,8 @@ else
 VPATH = ../
 
 BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o minvrt.o movco.o movfin.o \
-nstage.o output.o ptprobe.o tadvance.o tobasis.o
-OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o
+nstage.o output.o ptprobe.o tadvance.o tobasis.o hp_coupled_boundary.o
+OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o ins/surface2.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/tstep.o cns/update.o
 OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns_explicit/rsdl.o cns_explicit/tstep.o cns/minvrt.o
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/tstep.o # cd/minvrt.o
