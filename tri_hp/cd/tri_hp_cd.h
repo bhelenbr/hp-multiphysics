@@ -38,7 +38,6 @@ class tri_hp_cd : public tri_hp {
 		FLT adis; // DISSIPATION CONSTANT
 
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 
     public:
