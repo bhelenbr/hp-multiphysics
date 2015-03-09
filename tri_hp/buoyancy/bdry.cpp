@@ -12,6 +12,7 @@
 
 using namespace bdry_buoyancy;
 #include "bdry_buoyancy.h"
+#include "melt2.h"
 #include <myblas.h>
 
 //#define MPDEBUG
@@ -502,8 +503,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 
 class tri_hp_buoyancy_stype {
 	public:
-		static const int ntypes = 5;
-		enum ids {unknown=-1,surface,melt,melt_kinetics,solid_fluid,characteristic};
+		static const int ntypes = 6;
+		enum ids {unknown=-1,surface,surface_marangoni,melt,melt_kinetics,solid_fluid,characteristic};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -512,7 +513,7 @@ class tri_hp_buoyancy_stype {
 		}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt","melt_kinetics","solid_fluid","characteristic"};
+const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -535,7 +536,19 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 	switch(type) {
 		case tri_hp_buoyancy_stype::surface: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new surface(*this,*ebdry(bnum));
+				temp = new surface9(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for surface boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
+			}
+			break;
+		}
+		case tri_hp_buoyancy_stype::surface_marangoni: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new surface_marangoni(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
 			}
 			else {

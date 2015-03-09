@@ -21,6 +21,7 @@
 // #define OLDWAY_SF
 
 using namespace blitz;
+
 namespace bdry_buoyancy {
 
 #ifdef OLDWAY_SF
@@ -78,13 +79,13 @@ namespace bdry_buoyancy {
 			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 	};
 	
-	class surface : public bdry_ins::surface {
+	class surface9 : public bdry_ins::surface {
 		protected:
 			Array<vector_function,1> fluxes;
 			symbolic_function<1> sigma_vs_T;
 			
 		public:
-			surface(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {
+			surface9(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {
 				mytype = "surface";
 				fluxes.resize(x.NV);
 				Array<string,1> names(4);
@@ -99,8 +100,8 @@ namespace bdry_buoyancy {
 					fluxes(n).set_arguments(4,dims,names);
 				}
 			}
-			surface(const surface& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), fluxes(inbdry.fluxes) {}
-			surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			surface9(const surface9& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), fluxes(inbdry.fluxes), sigma_vs_T(inbdry.sigma_vs_T) {}
+			surface9* create(tri_hp& xin, edge_bdry &bin) const {return new surface9(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			void init(input_map& input,void* gbl_in);
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
