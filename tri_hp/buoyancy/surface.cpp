@@ -12,7 +12,7 @@
 
 using namespace bdry_buoyancy;
 
-void surface::init(input_map& input,void* gbl_in) {
+void surface9::init(input_map& input,void* gbl_in) {
 	bdry_ins::surface::init(input,gbl_in);
 	
 	input_map zeromap;
@@ -47,7 +47,7 @@ void surface::init(input_map& input,void* gbl_in) {
 
 
 /* Free-Surface that Allows Radiative Heat Flux & Marangoni Effects */
-void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
+void surface9::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV),flx(x.NV);
