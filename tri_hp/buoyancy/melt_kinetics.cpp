@@ -1182,10 +1182,11 @@ void melt_facet_pt::petsc_jacobian() {
 	element_rsdl();
 	FLT res0 = res;
 	
-	FLT dw = 0.0;
+	Array<FLT,1> dw(x.NV);
+	dw = 0.0;
 	for(int i=0;i<2;++i)
 		for(int n=0;n<x.NV;++n)
-			dw = dw + fabs(x.uht(n)(i));
+			dw(n) = dw(n) + fabs(x.uht(n)(i));
 		
 	dw = dw*eps_r;
 	dw += eps_a;
@@ -1195,10 +1196,10 @@ void melt_facet_pt::petsc_jacobian() {
 	int kcol = 0;
 	for(int mode = 0; mode < sm+2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
-			x.uht(var)(mode) += dw;
+			x.uht(var)(mode) += dw(var);
 			element_rsdl();
-			vals(kcol++) = (res-res0)/dw;
-			x.uht(var)(mode) -= dw;
+			vals(kcol++) = (res-res0)/dw(var);
+			x.uht(var)(mode) -= dw(var);
 		}
 		
 		for(int var = 0; var < tri_mesh::ND; ++var){
