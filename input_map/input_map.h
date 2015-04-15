@@ -13,6 +13,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 class input_map : public std::map<std::string,std::string> {
     public:
@@ -115,7 +116,21 @@ class input_map : public std::map<std::string,std::string> {
             }
             return;
         }
-     
+	
+				bool keys_with_ending(std::string const &ending,std::vector<std::string>& keywords) {
+					bool found = false;
+					std::map<std::string,std::string>::const_iterator mi;
+					for (mi = this->begin();mi != this->end();++mi) {
+						if (mi->first.length() >= ending.length()) {
+							if (!(mi->first.compare(mi->first.length() - ending.length(), ending.length(), ending))) {
+								found = true;
+								keywords.push_back(mi->first);
+							}
+						}
+					}
+					return(found);
+				}
+	
 };
 
 #endif

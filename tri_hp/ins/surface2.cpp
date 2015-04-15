@@ -24,22 +24,48 @@ using namespace bdry_ins;
 
 
 void surface2::init(input_map& inmap,void* gin) {
-	std::string keyword,val;
+	std::string keyword,matching_block,side_id,master_block,master_id;
 	std::istringstream data;
 	std::string filename;
-
+	
+	find_matching_boundary_name(inmap, matching_block, side_id);
+	
+	gbl = static_cast<global *>(gin);
+	gbl->mu2 = 0.0;
+	gbl->rho2 = 0.0;
+	master_block = x.gbl->idprefix;
+	is_master = true;
 	if (base.is_comm()) {
-		keyword = base.idprefix + "_matching_block";
-		if (!inmap.get(keyword,val)) {
-			is_master = false;
+		keyword = matching_block +"_mu";
+		if (!inmap.get(keyword,gbl->mu2)) {
+			*x.gbl->log << "couldn't find matching blocks viscosity " << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		
+		keyword = matching_block +"_rho";
+		if (!inmap.get(keyword,gbl->rho2)) {
+			*x.gbl->log << "couldn't find matching blocks density" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		
+		// Decide who is the master
+		if (fabs(x.gbl->rho - gbl->rho2) < 100.*FLT_EPSILON) {
+			if (x.gbl->idprefix < matching_block) {
+				is_master = true;
+				master_block = x.gbl->idprefix;
+			}
+		}
+		else if (x.gbl->rho > gbl->rho2) {
+			is_master = true;
+			master_block = x.gbl->idprefix;
 		}
 		else {
-			is_master = true;
+			is_master = false;
+			master_block = matching_block;
 		}
 	}
-	else {
-		is_master = true;
-	}
+	master_id = master_block +"_" +side_id;
+	
 	
 	/* Let pressure be discontinuous */
 	ostringstream vars;
@@ -48,97 +74,16 @@ void surface2::init(input_map& inmap,void* gin) {
 	}
 	inmap[base.idprefix +"_c0_indices"] = vars.str();
 	hp_deformable_bdry::init(inmap,gin);
-	gbl = static_cast<global *>(gin);
 	
-	if (!is_master) return;
-	
-	keyword = base.idprefix + "_sigma";
-	inmap.getwdefault(keyword,gbl->sigma,0.0);
-	
-	inmap.getwdefault(base.idprefix +"_p_ext",gbl->p_ext,0.0);
-	
-	gbl->mu2 = 0.0;
-	gbl->rho2 = 0.0;
-	if (base.is_comm()) {
-		keyword = val +"_mu";
-		if (!inmap.get(keyword,gbl->mu2)) {
-			*x.gbl->log << "couldn't find matching blocks viscosity" << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-		
-		keyword = val +"_rho";
-		if (!inmap.get(keyword,gbl->rho2)) {
-			*x.gbl->log << "couldn't find matching blocks density" << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-	}
+	inmap.getwdefault(master_id +"_sigma",gbl->sigma,0.0);
+	inmap.getwdefault(master_id +"_p_ext",gbl->p_ext,0.0);
 	
 	return;
 }
-
-#ifndef petsc
-void surface2::rsdl(int stage) {
-	hp_deformable_bdry::rsdl(stage);
-	
-    if (is_master) {
-        /* Communicate mass flux residual for better preconditioning */
-        if (base.is_comm()) {
-            int count = 0;
-            for(int j=0;j<base.nseg+1;++j) {
-                base.fsndbuf(count++) = gbl->vres(j,1)*gbl->rho2;
-#ifdef MPDEBUG
-                *x.gbl->log << gbl->vres(j,1)*gbl->rho2 << '\n';
-#endif
-            }
-            for(int j=0;j<base.nseg;++j) {
-                for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-                    base.fsndbuf(count++) = gbl->sres(j,m,1)*gbl->rho2;
-                }
-            }
-            base.sndsize() = count;
-            base.sndtype() = boundary::flt_msg;
-            base.comm_prepare(boundary::all,0,boundary::master_slave);
-            base.comm_exchange(boundary::all,0,boundary::master_slave);
-            base.comm_wait(boundary::all,0,boundary::master_slave);
-        }
-    }
-    else {
-        int v0,sind;
-        base.comm_prepare(boundary::all,0,boundary::master_slave);
-        base.comm_exchange(boundary::all,0,boundary::master_slave);
-        base.comm_wait(boundary::all,0,boundary::master_slave);
-        int count = 0;
-        int i = base.nseg-1;
-        do {
-            sind = base.seg(i);
-            v0 = x.seg(sind).pnt(1);
-#ifdef MPDEBUG
-            *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
-#endif
-            x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
-        } while(--i >= 0);
-        v0 = x.seg(sind).pnt(0);
-#ifdef MPDEBUG
-        *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
-#endif
-        x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
-        
-        for(i=base.nseg-1;i>=0;--i) {
-            sind = base.seg(i);
-            int msgn = 1;
-            for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-                x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
-                msgn *= -1;
-            }
-        }
-    }
-}
-#endif
-
 void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
-    
+	
 	if (!is_master) return;
-    
+	
 	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
@@ -204,30 +149,11 @@ void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
-	
-	/* mass flux preconditioning */
-	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-		lf(x.NV-1)(m) = -x.gbl->rho*lf(x.NV+1)(m);
-#ifndef INERTIALESS
-	for (n=0;n<x.NV-1;++n)
-		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
-	
-	for (n=0;n<x.NV-1;++n) {
-		lf(n)(0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(0);
-		lf(n)(1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(1);
-		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
-			lf(n)(m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1)(m+2);
-	}
-#endif
 
 	return;
 }
 
-/* Remember that vertex jacobians need to be written */
 void surface2::setup_preconditioner() {
-	
-	if (!is_master) return;
-	
 	int indx,m,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
@@ -488,7 +414,7 @@ void surface2::setup_preconditioner() {
 		gbl->vdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
 		gbl->vdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
 		
-		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
+		/* DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
 		//		FLT theta =  100.0*M_PI/180.0;
 		//		gbl->vdt(indx,0,0) = -sin(theta);
 		//		gbl->vdt(indx,1,1) =  sin(theta);
@@ -512,214 +438,68 @@ void surface2::setup_preconditioner() {
 	return;
 }
 
-void surface_outflow2::rsdl(int stage) {
-	int bnum,sind;
-	TinyVector<FLT,tri_mesh::ND> ubar, tangent, rp;
-	FLT jcb;
+void surface_outflow2::init(input_map& inmap,void* gbl_in) {
+	hp_deformable_free_pnt::init(inmap,gbl_in);
+	surface = dynamic_cast<surface2 *>(hp_deformable_free_pnt::surface);
 	
-	/* SET TANGENT RESDIUAL TO 0 */
-	surface_fixed_pt2::rsdl(stage);
+	if (surface->is_master) {
+		inmap.getwdefault(base.idprefix +"_contact_angle",contact_angle,90.0);
+		contact_angle *= M_PI/180.0;
+		
+		/* Find tangent to wall and use to constrain motion */
+		int bnumwall = base.ebdry(1-surfbdry);
+		TinyVector<FLT,tri_mesh::ND> rp;
+		if (surfbdry == 0) {
+			int sindwall = x.ebdry(bnumwall)->seg(0);
+			x.crdtocht1d(sindwall);
+			basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
+		}
+		else {
+			int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
+			x.crdtocht1d(sindwall);
+			basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
+		}
+		FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
+		wall_normal /= length;
+		FLT temp = wall_normal(0);
+		wall_normal(0) = wall_normal(1);
+		wall_normal(1) = -temp;
+	}
+}
+
+void surface_outflow2::element_rsdl(Array<FLT,1> lf) {
+	TinyVector<FLT,tri_mesh::ND> tangent;
 	
-	switch(contact_type) {
-		case(free_angle): {
-			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-			bnum = base.ebdry(surfbdry);
+	lf = 0.0;
+	hp_deformable_free_pnt::element_rsdl(lf);
+	
+	if (surface->is_master) {
+		/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+		/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+		if (wall_type == curved) {
 			if (surfbdry == 0) {
-				sind = x.ebdry(bnum)->seg(x.ebdry(bnum)->nseg-1);
-				x.crdtocht1d(sind);
-				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
-				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-				x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-				x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+				x.ebdry(base.ebdry(1))->bdry_normal(0,-1.0,wall_normal);
 			}
 			else {
-				sind = x.ebdry(bnum)->seg(0);
-				x.crdtocht1d(sind);
-				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
-				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-				x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-				x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
-			}
-			break;
-		}
-		case(fixed_angle): {
-			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-			if (wall_type == curved) {
-				if (surfbdry == 0) {
-					x.ebdry(base.ebdry(1))->bdry_normal(0,-1.0,wall_normal);
-				}
-				else {
-					x.ebdry(base.ebdry(0))->bdry_normal(x.ebdry(base.ebdry(0))->nseg-1,1.0,wall_normal);
-				}
-			}
-			TinyVector<FLT,tri_mesh::ND> tangent;
-			if (surfbdry == 0) {
-				/* Surf-boundary then point then wall (in ccw sense) */
-				tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
-				tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-				x.gbl->res.v(base.pnt,0) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
-				x.gbl->res.v(base.pnt,1) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);
-			}
-			else {
-				/* Wall then point then Surf-boundary (in ccw sense) */
-				tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
-				tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-				x.gbl->res.v(base.pnt,0) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
-				x.gbl->res.v(base.pnt,1) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);
+				x.ebdry(base.ebdry(0))->bdry_normal(x.ebdry(base.ebdry(0))->nseg-1,1.0,wall_normal);
 			}
 		}
-		case(prdc): {
-			break;
+		
+		if (surfbdry == 0) {
+			/* Surf-boundary then point then wall (in ccw sense) */
+			tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
+			tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(1);
+		}
+		else {
+			/* Wall then point then Surf-boundary (in ccw sense) */
+			tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
+			tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(1);
 		}
 	}
 	
 	return;
 }
-
-#ifdef petsc
-//void surface_outflow::petsc_jacobian_dirichlet() {
-//				/* Replace tangential residual equation with equation that fixes wall position */
-//				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-//				MatZeroRows(x.petsc_J,1,&row,PETSC_NULL);
-//				TinyVector<int,2> col(row,row+1);
-//				MatSetValuesLocal(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
-//				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
-//				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
-//			}
-
-
-void surface_outflow2::petsc_jacobian() {
-	
-	if (contact_type == free_angle)
-		*x.gbl->log << "Haven't added jacobian of surfacetension free contact add\n";
-	
-	int indx;
-	if (surfbdry == 0) {
-		indx = x.ebdry(base.ebdry(0))->nseg;
-	}
-	else {
-		indx = 0;
-	}
-	
-#ifdef MY_SPARSE
-	
-	/* GET X & Y MESH MOVEMENT ROW */
-	/* CONSTRAIN MOTION NORMAL TO BOUNDARY */
-	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-	int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
-	int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
-	Array<int,1> cols(nnz1);
-	Array<FLT,2> vals(2,nnz1);
-	
-	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
-	if (nnz1 != nnz2) {
-		*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-		sim::abort(__LINE__,__FILE__,x.gbl->log);
-	}
-	int row1 = x.J._cpt(row);
-	int row2 = x.J._cpt(row+1);
-	for(int col=0;col<nnz1;++col) {
-		if (x.J._col(row1++) != x.J._col(row2++)) {
-			*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-	}
-	
-	
-	FLT J = surf->gbl->vdt(indx,0,0)*surf->gbl->vdt(indx,1,1) -surf->gbl->vdt(indx,1,0)*surf->gbl->vdt(indx,0,1);
-	
-	vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*surf->gbl->vdt(indx,1,0)/J;
-	vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*surf->gbl->vdt(indx,0,0)/J;
-	
-	/* Replace x equation with tangential position equation */
-	/* Replacy y equation with normal displacement equation */
-	/* Normal Equation */
-	vals(1,Range::all()) = 0.0;
-	for(int col=0;col<nnz1;++col) {
-		if (x.J._col(row1+col) == row) {
-			vals(1,col) = wall_normal(0);
-			break;
-		}
-	}
-	for(int col=0;col<nnz1;++col) {
-		if (x.J._col(row1+col) == row+1) {
-			vals(1,col) = wall_normal(1);
-			break;
-		}
-	}
-	
-	/* tangent = -sin(theta) i +cos(theta) j */
-	/* normal = cos(theta) i + sin(theta) j */
-	/* Rotate equations for diagonal dominance to match what is done to residual */
-	Array<FLT,2> temp(2,nnz1);
-	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx,0,1) +vals(1,Range::all())*wall_normal(0);
-	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx,1,1) +vals(1,Range::all())*wall_normal(1);
-	
-	TinyVector<int,2> rows(row,row+1);
-	x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
-	x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());
-#else
-	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
-	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
-	
-	int nnz1, nnz2;
-	const PetscInt *cols1, *cols2;
-	const PetscScalar *vals1, *vals2;
-	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-	
-	MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
-	MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
-	if (nnz1 != nnz2) {
-		*x.gbl->log << "zeros problem in surface_outflow\n";
-	}
-	
-	
-	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx,1,1) -surf->gbl->vdt(indx,1,0)*surf->gbl->vdt(indx,0,1);
-	Array<int,1> cols(nnz1);
-	Array<FLT,2> vals(2,nnz1);
-	for (int col=0;col<nnz1;++col) {
-		cols(col) = cols1[col];
-		vals(0,col) = -vals1[col]*surf->gbl->vdt(indx,1,0)/J;
-	}
-	for (int col=0;col<nnz1;++col) {
-		if (cols(col) != cols2[col]) {
-			*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-			*x.gbl->log << cols << ' ' << col << ' ' << cols2[col] << std::endl;
-		}
-		vals(0,col) += vals2[col]*surf->gbl->vdt(indx,0,0)/J;
-	}
-	MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
-	MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
-	
-	/* Replace x equation with tangential position equation */
-	/* Replacy y equation with normal displacement equation */
-	/* Normal Equation */
-	vals(1,Range::all()) = 0.0;
-	for(int col=0;col<nnz1;++col) {
-		if (cols(col) == row) {
-			vals(1,col) = wall_normal(0);
-			break;
-		}
-	}
-	for(int col=0;col<nnz1;++col) {
-		if (cols(col) == row+1) {
-			vals(1,col) = wall_normal(1);
-			break;
-		}
-	}
-	
-	/* tangent = -sin(theta) i +cos(theta) j */
-	/* normal = cos(theta) i + sin(theta) j */
-	/* Rotate equations for diagonal dominance to match what is done to residual */
-	Array<FLT,2> temp(2,nnz1);
-	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx,0,1) +vals(1,Range::all())*wall_normal(0);
-	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx,1,1) +vals(1,Range::all())*wall_normal(1);
-	
-	TinyVector<int,2> rows(row,row+1);
-	MatSetValuesLocal(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
-#endif
-	
-}
-#endif

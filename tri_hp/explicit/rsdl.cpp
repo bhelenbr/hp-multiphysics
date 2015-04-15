@@ -17,6 +17,8 @@ void tri_hp_explicit::rsdl(int stage) {
 	TinyVector<FLT,ND> pt;
 	TinyVector<int,3> v;
 
+	
+	//FIXME: THIS IS OUT OF DATE
 	tri_hp::rsdl(stage);
 
 	oneminusbeta = 1.0-gbl->beta(stage);

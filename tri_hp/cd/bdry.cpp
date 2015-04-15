@@ -522,12 +522,6 @@ void melt::mg_restrict() {
 void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<TinyVector<FLT,MXTM>,1> Rbar(1),lf(1);
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-	
 	const int nvert = 3;
 	
 	/* Calculate and store initial residual */
@@ -661,13 +655,7 @@ void melt::petsc_jacobian() {
 			int sind = base.seg(j);
 			
 			/* Now fill in effect of curvature on element resdiuals */
-			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef DEBUG_JAC
-			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-			
+			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);			
 			int tind = x.seg(sind).tri(0);		
 			x.ugtouht(tind);
 			FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
@@ -865,18 +853,18 @@ void melt::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries for u,v but not p */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 	
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(0)*vdofs; 
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
+		base.fsndbuf(base.sndsize()++) = rowbase +0.1;;
 		
 		for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
 			row = rowbase + *it;
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
 #endif
@@ -884,7 +872,7 @@ void melt::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -896,10 +884,10 @@ void melt::petsc_matchjacobian_snd() {
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		
 		for(int mode=0;mode<x.sm0;++mode) {
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << 0 << std::endl;
 #endif
@@ -907,7 +895,7 @@ void melt::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 			
@@ -922,11 +910,11 @@ void melt::petsc_matchjacobian_snd() {
 	int rowbase = x.seg(sind).pnt(1)*vdofs; 
 	
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = rowbase +0.1;
 	
 	for(std::vector<int>::iterator it=c0vars.begin();it!=c0vars.end();++it) {
 		row = rowbase + *it;
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *it << std::endl;
 #endif
@@ -934,7 +922,7 @@ void melt::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 		

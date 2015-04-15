@@ -92,6 +92,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
 		FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
 		FLT K = calculate_kinetic_coefficients(DT,sint);
+		
 
 		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
@@ -103,7 +104,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* Latent Heat source term and additional heat flux */
 		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
-		/* UPWINDING BASED ON TANGENTIAL VELOCITY TEMPO */
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */
 //		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 		
 		/* UPWINDING KINETIC EQUATION BASED ON TANGENTIAL VELOCITY */
@@ -116,7 +117,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2)(0),&res(3,0)); // heat flux
-//	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2)(0),&res(4,0)); // surface energy balance upwinded  TEMPO
+//	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2)(0),&res(4,0)); // surface energy balance upwinded  (not used)
 
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
@@ -1159,11 +1160,6 @@ void melt_facet_pt::element_rsdl() {
 
 #ifdef petsc
 void melt_facet_pt::petsc_jacobian() {
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
 	const int sm = basis::tri(x.log2p)->sm();
 	const int vdofs = x.NV+x.ND;
 	int nvars = vdofs*(sm+2); 

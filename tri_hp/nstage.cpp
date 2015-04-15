@@ -1,14 +1,15 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-//#define RSDL_DEBUG
 //#define DEBUG
 #define DEBUG_TOL 1.0e-9
-// #define OP_COUNT
 
+// #define OP_COUNT
 #ifdef OP_COUNT
 #include <CHUD/CHUD.h>
 #endif
+
+#define OLDWAY
 
 void tri_hp::rsdl(int stage) {    
 
@@ -33,14 +34,16 @@ void tri_hp::rsdl(int stage) {
 			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
 		}
 	}
-
-//	for(int i=0;i<nvbd;++i)
-//		hp_vbdry(i)->rsdl(stage);  // CONFLICT BETWEEN ebdry's calling rsdl and vbdry's having their own rsdl (melt_end_pt)
-
-	for(int i=0;i<nebd;++i)
-		hp_ebdry(i)->rsdl(stage);
-	
-	helper->rsdl(stage);
+    
+#ifdef OLDWAY
+    //	for(int i=0;i<nvbd;++i)
+    //		hp_vbdry(i)->rsdl(stage);  // CONFLICT BETWEEN ebdry's calling rsdl and vbdry's having their own rsdl (melt_end_pt)
+    
+    for(int i=0;i<nebd;++i)
+        hp_ebdry(i)->rsdl(stage);
+    
+    helper->rsdl(stage);
+#endif
 
 	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
 	
@@ -75,114 +78,66 @@ void tri_hp::rsdl(int stage) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
 		}
 	}
+
+#ifndef OLDWAY
+	helper->rsdl(stage);
 	
-	
-	
-#ifdef RSDL_DEBUG
-	int last_phase, mp_phase;
-	int i,m,n;
-	
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		vc0load(mp_phase,gbl->res.v.data());
-		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-		last_phase = true;
-		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
-	}
-	
-	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
-		hp_ebdry(i)->vdirichlet();
+		hp_ebdry(i)->rsdl(stage);
 	
 	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
-			
-	sc0load(gbl->res.s.data(),0,basis::tri(log2p)->sm()-1,gbl->res.s.extent(secondDim));
-	smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(gbl->res.s.data(),0,basis::tri(log2p)->sm()-1,gbl->res.s.extent(secondDim));
-	
-	/* APPLY DIRCHLET B.C.S TO MODE */
-	for(int i=0;i<nebd;++i)
-		for(int sm=0;sm<basis::tri(log2p)->sm();++sm)
-			hp_ebdry(i)->sdirichlet(sm);
-	
-	// if (coarse_level || log2p != log2pmax) {	
-	for(i=0;i<npnt;++i) {
-		*gbl->log << gbl->idprefix << " v: " << i << ' ';
-		for(n=0;n<NV;++n) {
-			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
-			else *gbl->log << "0.0 ";
-		}
-		*gbl->log << '\n';
-	}
-	
-	for(i=0;i<nseg;++i) {
-		for(m=0;m<basis::tri(log2p)->sm();++m) {
-			*gbl->log << gbl->idprefix << " s: " << i << ' ';
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
-				else *gbl->log << "0.0 ";
-			}
-			*gbl->log << '\n';
-		}
-	}
-	
-	
-	for(i=0;i<ntri;++i) {
-		for(m=0;m<basis::tri(log2p)->im();++m) {
-			*gbl->log << gbl->idprefix << " i: " << i << ' ';
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
-				else *gbl->log << "0.0 ";
-			}
-			*gbl->log << '\n';
-		}
-	}
-	sim::finalize(__LINE__,__FILE__,gbl->log);		
-
-//	}
+		hp_vbdry(i)->rsdl(stage);
 #endif
 	
-	/*********************************************/
-	/* MODIFY RESIDUALS ON COARSER MESHES            */
-	/*********************************************/    
-	if(coarse_flag) {
-		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
-			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
-			isfrst = false;
-		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
-		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
-	}
-	else {
+	if (!coarse_flag) {
 		if (stage == gbl->nstage) {
 			/* HACK FOR AUXILIARY FLUXES */
 			for (int i=0;i<nebd;++i)
 				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
 		}
 	}
-
+	else {
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->mg_source();
+		
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->mg_source();
+		
+		mg_source();
+	}
+	
 	return;
+}
+
+
+void tri_hp::mg_source() {
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/
+	if(coarse_flag) {
+		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+		if(isfrst) {
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+			isfrst = false;
+		}
+		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all());
+		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+	}
 }
 
 void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
 	Array<FLT,1> dw(NV);
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
 
 	ugtouht(tind);
 	
 	dw = 0.0;
 	for(int i=0;i<3;++i)
 		for(int n=0;n<NV;++n)
-			dw = dw + fabs(uht(n)(i));
+			dw(n) = dw(n) + fabs(uht(n)(i));
 	
 	dw = dw*eps_r;
 	dw = dw +eps_a;

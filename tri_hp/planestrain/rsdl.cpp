@@ -24,6 +24,7 @@ void tri_hp_ps::rsdl(int stage) {
 	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 	FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
+	// FIXME: THIS IS OUT OF DATE
 	tri_hp::rsdl(stage);    
 	oneminusbeta = 1.0-gbl->beta(stage);
 

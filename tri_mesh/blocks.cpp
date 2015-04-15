@@ -1118,7 +1118,11 @@ void block::go(input_map input) {
 	begin_time = clock();
 
 	/* OUTPUT INITIAL CONDITION */
-	if (nstart == 0) output("data0",block::display);
+	if (nstart == 0) {
+		// TEMPORARY FIX FOR INCONSITENCY BETWEEN BOUNDARY OUTPUT (BY NUMBER) & BLOCK OUTPUT (BY STRING)
+		gbl->tstep = 0;
+		output("data0",block::display);
+	}
 
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
 		for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {

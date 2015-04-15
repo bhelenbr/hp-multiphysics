@@ -510,17 +510,23 @@ void r_tri_mesh::rsdl() {
 	Array<TinyVector<FLT,ND>,1> res1;
 	res1.reference(gbl->res1);
 
+	/* loop through points and set S residual to 0 */
+	/* npnt is number of pnts and ND is number of dimensions (2) */
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
 			res1(i)(n) = 0.0;
 
+	/* Loop through sides to calculate the laplacian of x positions (i.e. S) */
 	for (int sind = 0; sind < nseg; ++sind) {
+		/* endpoint indices of side */
 		p0 = seg(sind).pnt(0);
 		p1 = seg(sind).pnt(1);
 
+		/* ksprg is laplacian constant from page 1012 of paper */
 		dx = ksprg(sind)*(pnts(p1)(0)-pnts(p0)(0));
 		dy = ksprg(sind)*(pnts(p1)(1)-pnts(p0)(1));
 
+		/* calculate term for laplacian of x,y */
 		res1(p0)(0) -= dx;
 		res1(p0)(1) -= dy;
 
@@ -529,13 +535,14 @@ void r_tri_mesh::rsdl() {
 	}
 
 	/* APPLY DIRICHLET BOUNDARY CONDITIONS */
+	/* This sets S to zero on specified boundaries */
 	for(i=0;i<nebd;++i)
 		r_sbdry(i)->fixdx2();
 
 	for(i=0;i<nvbd;++i)
 		r_vbdry(i)->fixdx2();
 
-	/* Communicate */
+	/* Communicate for parallel or periodic */
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
 		pmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
@@ -548,6 +555,7 @@ void r_tri_mesh::rsdl() {
 		for(n=0;n<ND;++n)
 			res1(i)(n) *= kvol(i);
 
+	/* Now calulate laplacian of S in same way */
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
 			res(i)(n) = 0.0;
@@ -586,7 +594,7 @@ void r_tri_mesh::rsdl() {
 	}
 #endif
 
-	/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+	/* CALCULATE SOURCE TERM ON FIRST TIME THROUGH */
 	if (isfrst) {
 		for(i=0;i<npnt;++i)
 			for(n=0;n<ND;++n)
@@ -595,12 +603,12 @@ void r_tri_mesh::rsdl() {
 		isfrst = false;
 	}
 
-	/* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
+	/* ADD IN SOURCE */
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
 			res(i)(n) += src(i)(n);
 
-	/* APPLY DIRICHLET BOUNDARY CONDITIONS */
+	/* APPLY DIRICHLET BOUNDARY CONDITIONS FOR FIXING POSITION */
 	for(i=0;i<nebd;++i)
 		r_sbdry(i)->dirichlet();
 

@@ -822,14 +822,6 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 #endif
 	
 	Array<TinyVector<FLT,MXTM>,1> Rbar(eqs),lf(eqs);
-
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-	
-
 	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
@@ -1063,12 +1055,7 @@ void melt::petsc_jacobian() {
 			int tind = x.seg(sind).tri(0);
 			
 			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef DEBUG_JAC
-			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-			
+		
 			x.ugtouht(tind);
 			FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 			const int tm = basis::tri(x.log2p)->tm();
@@ -1322,7 +1309,7 @@ void melt::petsc_matchjacobian_snd() {
 	/* I am cheating here and sending floats and int's together */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 
 #ifdef MPDEBUG
 	*x.gbl->log << base.idprefix << "In melt::petsc_matchjacobian_snd"  << base.idnum << " " << base.is_frst() << std::endl;
@@ -1333,7 +1320,7 @@ void melt::petsc_matchjacobian_snd() {
 		
 		int rowbase = x.seg(sind).pnt(0)*vdofs;  // Base index		
 		/* attach diagonal column # to allow vertex continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
+		base.fsndbuf(base.sndsize()++) = rowbase +0.1;;
 #ifdef MPDEBUG
 		*x.gbl->log << '\t' << rowbase << std::endl;
 #endif
@@ -1341,7 +1328,7 @@ void melt::petsc_matchjacobian_snd() {
 		/* Send Side Information */
 		rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;  // Base index
 		/* attach diagonal column # to allow side continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = rowbase +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << '\t'<< rowbase << std::endl;
 #endif
@@ -1350,7 +1337,7 @@ void melt::petsc_matchjacobian_snd() {
 	/* LAST POINT */
 	int rowbase = x.seg(sind).pnt(1)*vdofs; 
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = rowbase +0.1;
 #ifdef MPDEBUG
 	*x.gbl->log <<  '\t' << rowbase << std::endl;
 #endif	
@@ -1415,9 +1402,11 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 #endif
 			/* Shift all entries for this vertex.  Remote variables on solid are T */
 			for(int n=0;n<1;++n) {
+#ifndef DEBUG_JAC
 				FLT dval = x.J_mpi(row,row_mpi +n);
 				(*pJ_mpi)(row,row_mpi +n) = 0.0;				
 				x.J(row,rowbase +c0vars[n]) += dval;
+#endif
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -1450,9 +1439,11 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 			int mcnt_mpi = 0;
 			int sgn_mpi = 1;
 			for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+#ifndef DEBUG_JAC
 				FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
 				(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 				x.J(row+mcnt,row+x.ND+mode_mpi*x.NV) += sgn_mpi*dval;
+#endif
 				sgn_mpi *= -1;
 				mcnt_mpi += 1; // Only temperature on solid block
 			}
@@ -1486,9 +1477,11 @@ void melt::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex.  Remote variables on solid are T, x, y */
 		for(int n=0;n<1;++n) {
+#ifndef DEBUG_JAC
 			FLT dval = x.J_mpi(row,row_mpi +n);
 			(*pJ_mpi)(row,row_mpi +n) = 0.0;				
 			x.J(row,rowbase +c0vars[n]) += dval;
+#endif
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);
@@ -2079,6 +2072,7 @@ void melt::setup_preconditioner() {
 		
 		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
 		dtnorm = (2.*vslp/hsm +x.gbl->bd(0))*gbl->Lf*x.gbl->rho +1.5*alpha/(hsm*hsm)*x.gbl->rho*x.gbl->cp*Tm;
+		
 		/* SET UP DISSIPATIVE COEFFICIENT */
 		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
 		/* RESIDUAL HAS DX/2 WEIGHTING */
@@ -2089,7 +2083,8 @@ void melt::setup_preconditioner() {
 #endif
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		nrm *= 0.5;
-		
+//		*x.gbl->log << dttang << ' ' << dtnorm << std::endl;
+
 		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
 		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
@@ -2197,6 +2192,12 @@ void melt::setup_preconditioner() {
 		gbl->vdt(indx)(1,1) = temp;
 		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+		
+		// FOR TESTING
+//		*x.gbl->log << indx << ' ' << gbl->vdt(indx)(0,0) << ' ' << gbl->vdt(indx)(0,1) << ' ' << gbl->vdt(indx)(1,0) << ' ' << gbl->vdt(indx)(1,1) << ' ' << std::endl;
+//		gbl->vdt(indx) = 0.0;
+//		gbl->vdt(indx)(0,0) = 1.0;
+//		gbl->vdt(indx)(1,1) = 1.0;
 	}
 	
 	/* INVERT SIDE MATRIX */    
@@ -2210,6 +2211,14 @@ void melt::setup_preconditioner() {
 			gbl->sdt(indx)(1,1) = temp;
 			gbl->sdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 			gbl->sdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+			
+
+			
+			// FOR TESTING
+//			*x.gbl->log << indx << ' ' << gbl->sdt(indx)(0,0) << ' ' << gbl->sdt(indx)(0,1) << ' ' << gbl->sdt(indx)(1,0) << ' ' << gbl->sdt(indx)(1,1) << ' ' << std::endl;
+//			gbl->sdt(indx) = 0.0;
+//			gbl->sdt(indx)(0,0) = 1.0;
+//			gbl->sdt(indx)(1,1) = 1.0;
 		}
 	}
 	return;

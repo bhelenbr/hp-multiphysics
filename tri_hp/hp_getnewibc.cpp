@@ -449,7 +449,7 @@ class output_contour : public tri_hp_helper {
 					/* Have intersection */
 					psi = -1. +2*(c -x.ug.v(v0,var))/(x.ug.v(v1,var)-x.ug.v(v0,var));
 					x.ugtouht1d(sind);
-					for (iter = 0, dpsi = 1.0; iter < 100 && fabs(dpsi) > 10*FLT_EPSILON; ++iter) {
+					for (iter = 0, dpsi = 1.0; iter < 100 && fabs(dpsi) > 10.*FLT_EPSILON; ++iter) {
 						basis::tri(x.log2p)->ptprobe1d(x.NV,u.data(),du.data(),psi,&x.uht(0)(0),MXTM);
 						dpsi = -(u(var)-c)/du(var);
 						psi += dpsi;

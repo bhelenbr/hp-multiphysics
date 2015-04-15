@@ -1,5 +1,14 @@
 
-/* 
+/*
+ *  petsc.cpp
+ *  tri_hp
+ *
+ *  Created by michael brazell on 9/14/09.
+ *  Copyright 2009 Clarkson University. All rights reserved.
+ *
+ */
+
+/*
  Include "petscksp.h" so that we can use KSP solvers.  Note that this file
  automatically includes:
  petsc.h       - base PETSc routines   petscvec.h - vectors
@@ -7,14 +16,23 @@
  petscis.h     - index sets            petscksp.h - Krylov subspace methods
  petscviewer.h - viewers               petscpc.h  - preconditioners
  */
+
 #ifdef petsc
 
-#include "tri_hp.h"
-#include "hp_boundary.h"
 #include <limits.h>
 #include <petsctime.h>
 
-//#define DEBUG_JAC
+#include "tri_hp.h"
+#include "hp_boundary.h"
+#include <r_tri_boundary.h>
+
+//#define RSDL_DEBUG
+//#define PETSC_RSDL_DEBUG
+#define DEBUG_TOL 1.0e-9
+#define DEBUG_ABS_TOL 1.0e-5
+#define DEBUG_REL_TOL 1.0e-1
+#define WBC
+
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
@@ -203,6 +221,33 @@ void tri_hp::petsc_initialize(){
 	return;
 }
 
+void tri_hp::petsc_finalize(){
+	
+	/*
+	 Free work space.  All PETSc objects should be destroyed when they
+	 are no longer needed.
+	 */
+	
+	PetscErrorCode err;
+	err = KSPDestroy(&ksp);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = VecDestroy(&petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = VecDestroy(&petsc_u);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = VecDestroy(&petsc_du);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = MatDestroy(&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	return;
+}
+
+
 void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
 	PetscErrorCode err;
@@ -215,16 +260,17 @@ void tri_hp::petsc_setup_preconditioner() {
 	err = MatDestroy(&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	petsc_jacobian();
+	petsc_premultiply_jacobian();
+
 	J.check_for_unused_entries();
-	J_mpi.check_for_unused_entries();	
+	J_mpi.check_for_unused_entries();
 
 #ifdef DEBUG_JAC
+	streamsize oldprecision = (*gbl->log).precision(2);
 	*gbl->log << J << std::endl;
 	*gbl->log << J_mpi << std::endl;
-//	for(int n=0;n<3;++n) {
-//		J.output_row(*gbl->log,n);
-//		J_mpi.output_row(*gbl->log,n);
-//	}
+	(*gbl->log).precision(oldprecision);
+	// sim::finalize(__LINE__,__FILE__,gbl->log);
 #endif
 
 #ifndef MPISRC
@@ -291,6 +337,181 @@ void tri_hp::petsc_setup_preconditioner() {
 	
 }
 
+
+void tri_hp::petsc_jacobian() {
+	
+#ifdef MY_SPARSE
+	J._val = 0.0;
+	J_mpi._val = 0.0;
+	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
+#endif
+	
+	int gindx;
+	
+	const int sm = basis::tri(log2p)->sm();
+	const int im = basis::tri(log2p)->im();
+	const int tm = basis::tri(log2p)->tm();
+	
+	int vdofs = NV;
+	if (mmovement == coupled_deformable) vdofs += ND;
+	int kn = 3*vdofs +(tm-3)*NV;
+	Array<int,1> loc_to_glo(kn);
+	Array<FLT,2> K(kn,kn);
+	FLT sgn,msgn;
+	Array<FLT,2> Rbar(NV,tm);
+	
+	/* DO ELEMENTS */
+	for(int tind = 0; tind < ntri; ++tind) {
+		
+		int ind = 0;
+		element_jacobian(tind, K);
+		
+		for (int m = 0; m < 3; ++m) {
+			gindx = vdofs*tri(tind).pnt(m);
+			for (int n = 0; n < vdofs; ++n)
+				loc_to_glo(ind++) = gindx++;
+		}
+		
+		/* EDGE MODES */
+		if (sm) {
+			for(int i = 0; i < 3; ++i) {
+				gindx = npnt*vdofs +tri(tind).seg(i)*sm*NV;
+				sgn = tri(tind).sgn(i);
+				msgn = 1;
+				for (int m = 0; m < sm; ++m) {
+					for(int n = 0; n < NV; ++n) {
+						for(int j = 0; j < kn; ++j) {
+							K(ind,j) *= msgn;
+							K(j,ind) *= msgn;
+						}
+						loc_to_glo(ind++) = gindx++;
+					}
+					msgn *= sgn;
+				}
+			}
+		}
+		
+		/* INTERIOR	MODES */
+		if (tm) {
+			gindx = npnt*vdofs +nseg*sm*NV +tind*im*NV;
+			for(int m = 0; m < im; ++m) {
+				for(int n = 0; n < NV; ++n){
+					loc_to_glo(ind++) = gindx++;
+				}
+			}
+		}
+		
+#ifdef MY_SPARSE
+		J.add_values(kn,loc_to_glo,kn,loc_to_glo,K);
+#else
+		MatSetValuesLocal(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
+#endif
+	}
+	
+	/* APPLY ALL MOVING MESH B.C.'s FIRST */
+	if (mmovement == coupled_deformable) {
+		/* This mostly does nothing, except for angled boundarys */
+#ifdef MY_SPARSE
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian(J,J_mpi,vdofs);
+		
+		for(int i=0;i<nvbd;++i)
+			r_vbdry(i)->jacobian(J,J_mpi,vdofs);
+		
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian_dirichlet(J,J_mpi,vdofs);
+		
+		for(int i=0;i<nvbd;++i)
+			r_vbdry(i)->jacobian_dirichlet(J,J_mpi,vdofs);
+#else
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian(petsc_J,vdofs);
+		
+		for(int i=0;i<nvbd;++i)
+			r_vbdry(i)->jacobian(petsc_J,vdofs);
+		
+		/* PETSC IS RETARDED */
+		FLT zero = 0.0;
+		for (int i=jacobian_start +npnt*(NV+ND)+sm*NV*nseg+ntri*im*NV;i<jacobian_start +jacobian_size;++i)
+			MatSetValuesLocal(petsc_J,1,&i,1,&i,&zero,ADD_VALUES);
+		
+		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);
+		
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian_dirichlet(petsc_J);
+		
+		for(int i=0;i<nvbd;++i)
+			r_vbdry(i)->jacobian_dirichlet(petsc_J);
+#endif
+	}
+	
+	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->petsc_jacobian();
+	
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->petsc_jacobian();
+	
+#ifndef MY_SPARSE
+	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);
+#endif
+	
+	
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */
+	for(int last_phase = false, phase = 0; !last_phase; ++phase) {
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->petsc_matchjacobian_snd();
+		
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->petsc_matchjacobian_snd();
+		
+		for(int i=0;i<nebd;++i)
+			ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+		
+		for(int i=0;i<nvbd;++i)
+			vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+		
+		pmsgpass(boundary::all_phased,phase,boundary::symmetric);
+		
+		last_phase = true;
+		for(int i=0;i<nebd;++i) {
+			last_phase &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+		}
+		for(int i=0;i<nvbd;++i) {
+			last_phase &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+		}
+		
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->petsc_matchjacobian_rcv(phase);
+		
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->petsc_matchjacobian_rcv(phase);
+		
+	}
+	
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->petsc_jacobian_dirichlet();
+	
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->petsc_jacobian_dirichlet();
+	
+	return;
+}
+
+void tri_hp::petsc_premultiply_jacobian() {
+	
+	for(int i=0;i<nebd;++i) {
+		hp_ebdry(i)->petsc_premultiply_jacobian();
+	}
+	
+	for(int i=0;i<nvbd;++i) {
+		hp_vbdry(i)->petsc_premultiply_jacobian();
+	}
+}
+
+
 void tri_hp::petsc_update() {
 	PetscInt its;
 	PetscErrorCode err;
@@ -340,97 +561,70 @@ void tri_hp::petsc_update() {
 	return;
 }
 
-/* temp fix can I input petsc vectors ? */
-void tri_hp::petsc_to_ug(){
+void tri_hp::petsc_rsdl() {
+	
+	rsdl();
+	
+	enforce_continuity(gbl->res, r_tri_mesh::gbl->res);
+	
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->vdirichlet();
+	
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->vdirichlet();
+	
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->vdirichlet2d();
+	
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int m=0;m<basis::tri(log2p)->sm();++m)
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->sdirichlet(m);
+	
+#ifdef RSDL_DEBUG
+	for(int i=0;i<npnt;++i) {
+		*gbl->log << gbl->idprefix << " v: " << i << ' ';
+		for(int n=0;n<NV;++n) {
+			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+			else *gbl->log << "0.0 ";
+		}
+		*gbl->log << '\n';
+	}
+	
+	for(int i=0;i<nseg;++i) {
+		for(int m=0;m<basis::tri(log2p)->sm();++m) {
+			*gbl->log << gbl->idprefix << " s: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			*gbl->log << '\n';
+		}
+	}
+	
+	
+	for(int i=0;i<ntri;++i) {
+		for(int m=0;m<basis::tri(log2p)->im();++m) {
+			*gbl->log << gbl->idprefix << " i: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			*gbl->log << '\n';
+		}
+	}
+	//sim::finalize(__LINE__,__FILE__,gbl->log);
+#endif
+	
+	
 	PetscScalar *array;
-	PetscErrorCode err;
-	int ind = 0;
+	VecGetArray(petsc_f,&array);
+	Array<FLT,1> res(array, shape(jacobian_size), neverDeleteData);
+	petsc_make_1D_rsdl_vector(res);
+	VecRestoreArray(petsc_f, &array);
 	
-	err = VecGetArray(petsc_u,&array);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	if (mmovement != coupled_deformable) {
-		for(int i = 0; i < npnt; ++i)
-			for(int n = 0; n < NV; ++n)
-				ug.v(i,n) = array[ind++];
-	}
-	else {
-		for(int i = 0; i < npnt; ++i) {
-			for(int n = 0; n < NV; ++n)
-				ug.v(i,n) = array[ind++];
-			for(int n = 0; n < ND; ++n)
-				pnts(i)(n) = array[ind++];
-		}
-	}
-
-	for(int i = 0; i < nseg; ++i)
-		for(int m = 0; m < basis::tri(log2p)->sm(); ++m)
-			for(int n = 0; n < NV; ++n)
-				ug.s(i,m,n) = array[ind++];
-	
-	for(int i = 0; i < ntri; ++i)
-		for(int m = 0; m < basis::tri(log2p)->im(); ++m)
-			for(int n = 0; n < NV; ++n)
-				ug.i(i,m,n) = array[ind++];		
-	
-	for (int i=0;i<nebd;++i) {
-		ind += hp_ebdry(i)->petsc_to_ug(&array[ind]);
-	}
-	
-	err = VecRestoreArray(petsc_u,&array);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	return;	
-}
-
-/* temp fix can I input petsc vectors ? */
-void tri_hp::ug_to_petsc(){
-	int ind = jacobian_start;
-	
-	if (mmovement != coupled_deformable) {
-		for(int i = 0; i < npnt; ++i){
-			for(int n = 0; n < NV; ++n){
-				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
-				++ind;
-			}
-		}	
-	}
-	else {
-		for(int i = 0; i < npnt; ++i){
-			for(int n = 0; n < NV; ++n){
-				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
-				++ind;
-			}
-			for(int n = 0; n < ND; ++n){
-				VecSetValues(petsc_u,1,&ind,&pnts(i)(n),INSERT_VALUES);
-				++ind;
-			}			
-		}
-	}
-		
-	
-	for(int i = 0; i < nseg; ++i){
-		for(int m = 0; m < basis::tri(log2p)->sm(); ++m){
-			for(int n = 0; n < NV; ++n){
-				VecSetValues(petsc_u,1,&ind,&ug.s(i,m,n),INSERT_VALUES);
-				++ind;
-			}
-		}
-	}
-	
-	for(int i = 0; i < ntri; ++i){
-		for(int m = 0; m < basis::tri(log2p)->im(); ++m){
-			for(int n = 0; n < NV; ++n){
-				VecSetValues(petsc_u,1,&ind,&ug.i(i,m,n),INSERT_VALUES);
-				++ind;
-			}
-		}
-	}
-	
-	for(int i = 0; i < nebd; ++i) 
-		hp_ebdry(i)->ug_to_petsc(ind);
-	
-	return;	
+	return;
 }
 
 
@@ -463,32 +657,538 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 	for (int i=0;i<nebd;++i) {
 		hp_ebdry(i)->petsc_make_1D_rsdl_vector(rv);
 	}
+	
+	for (int i=0;i<nvbd;++i) {
+		hp_vbdry(i)->petsc_make_1D_rsdl_vector(rv);
+	}
+	
+	
+#ifdef PETSC_RSDL_DEBUG
+	const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
+	ind = 0;
+	for(int i=0;i<npnt;++i) {
+		*gbl->log << gbl->idprefix << " v: " << i << ' ';
+		for(int n=0;n<vdofs;++n) {
+			if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+			else *gbl->log << "0.0 ";
+			++ind;
+		}
+		*gbl->log << '\n';
+	}
+	
+	for(int i=0;i<nseg;++i) {
+		for(int m=0;m<basis::tri(log2p)->sm();++m) {
+			*gbl->log << gbl->idprefix << " s: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+				else *gbl->log << "0.0 ";
+				++ind;
+			}
+			*gbl->log << '\n';
+		}
+	}
+	
+	
+	for(int i=0;i<ntri;++i) {
+		for(int m=0;m<basis::tri(log2p)->im();++m) {
+			*gbl->log << gbl->idprefix << " i: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+				else *gbl->log << "0.0 ";
+				++ind;
+			}
+			*gbl->log << '\n';
+		}
+	}
+	
+	for (int i = ind; i< rv.extent(firstDim); ++i) {
+		if (fabs(rv(i)) > DEBUG_TOL) *gbl->log << rv(i) << ' ';
+		else *gbl->log << "0.0 ";
+	}
+	
+	sim::finalize(__LINE__,__FILE__,gbl->log);
+
+#endif
+
+	
 }
 
-void tri_hp::petsc_finalize(){
-
-	/* 
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-	 */
-
+/* temp fix can I input petsc vectors ? */
+void tri_hp::petsc_to_ug(){
+	PetscScalar *array;
 	PetscErrorCode err;
-	err = KSPDestroy(&ksp);
+	int ind = 0;
+	
+	err = VecGetArray(petsc_u,&array);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = VecDestroy(&petsc_f);
+	if (mmovement != coupled_deformable) {
+		for(int i = 0; i < npnt; ++i)
+			for(int n = 0; n < NV; ++n)
+				ug.v(i,n) = array[ind++];
+	}
+	else {
+		for(int i = 0; i < npnt; ++i) {
+			for(int n = 0; n < NV; ++n)
+				ug.v(i,n) = array[ind++];
+			for(int n = 0; n < ND; ++n)
+				pnts(i)(n) = array[ind++];
+		}
+	}
+	
+	for(int i = 0; i < nseg; ++i)
+		for(int m = 0; m < basis::tri(log2p)->sm(); ++m)
+			for(int n = 0; n < NV; ++n)
+				ug.s(i,m,n) = array[ind++];
+	
+	for(int i = 0; i < ntri; ++i)
+		for(int m = 0; m < basis::tri(log2p)->im(); ++m)
+			for(int n = 0; n < NV; ++n)
+				ug.i(i,m,n) = array[ind++];
+	
+	for (int i=0;i<nebd;++i) {
+		ind += hp_ebdry(i)->petsc_to_ug(&array[ind]);
+	}
+	
+	for (int i=0;i<nvbd;++i) {
+		ind += hp_vbdry(i)->petsc_to_ug(&array[ind]);
+	}
+	
+	err = VecRestoreArray(petsc_u,&array);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = VecDestroy(&petsc_u);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	err = VecDestroy(&petsc_du);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	err = MatDestroy(&petsc_J);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-		
 	return;
+}
+
+/* temp fix can I input petsc vectors ? */
+void tri_hp::ug_to_petsc(){
+	int ind = jacobian_start;
+	
+	if (mmovement != coupled_deformable) {
+		for(int i = 0; i < npnt; ++i){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
+				++ind;
+			}
+		}
+	}
+	else {
+		for(int i = 0; i < npnt; ++i){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
+				++ind;
+			}
+			for(int n = 0; n < ND; ++n){
+				VecSetValues(petsc_u,1,&ind,&pnts(i)(n),INSERT_VALUES);
+				++ind;
+			}
+		}
+	}
+	
+	
+	for(int i = 0; i < nseg; ++i){
+		for(int m = 0; m < basis::tri(log2p)->sm(); ++m){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.s(i,m,n),INSERT_VALUES);
+				++ind;
+			}
+		}
+	}
+	
+	for(int i = 0; i < ntri; ++i){
+		for(int m = 0; m < basis::tri(log2p)->im(); ++m){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.i(i,m,n),INSERT_VALUES);
+				++ind;
+			}
+		}
+	}
+	
+	for(int i = 0; i < nebd; ++i)
+		hp_ebdry(i)->ug_to_petsc(ind);
+	
+	for(int i = 0; i < nvbd; ++i)
+		hp_vbdry(i)->ug_to_petsc(ind);
+	
+	return;
+}
+
+
+void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
+	int last_phase, mp_phase;
+	
+	if (mmovement == coupled_deformable) {
+		/* Residual for r_mesh vertices */
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			r_tri_mesh::pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) pnts.data(),0,1,2);
+			r_tri_mesh::pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+			last_phase = true;
+			last_phase &= r_tri_mesh::pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,(FLT *) pnts.data(),0,1,2);
+		}
+	}
+	
+	/* Do flow communication */
+	/* Vertices */
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,ug.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,ug.v.data());
+	}
+	
+	/* Sides */
+	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(gbl->res.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	
+	return;
+}
+
+//  Rows with dirichlet boundary conditions will not match.  Sparse Jacobian will have a 1 on diagonal only
+//  Diagonal entry of communication rows will not match because of equality constraint
+//  For test jacobian, unknowns on each side are separately changed but residual is matched
+//  For actual jacobian, variables are individual changed as well and rows are added together so this should agree except
+//  diagonal entry is switched between equations as follows
+//	Shift all entries for this vertex */
+//	for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
+//		FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+//		(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
+//		x.J(row+n,row+n_mpi) += dval;
+//	}
+//	Thus, the diagonal entries will not match
+//  The remote diagonal value will be 0 in the sparse representation
+//  and the sparse local diagonal entry will be the sum of the two entries in the test jacobian (remote & local)
+//	For sides, all of the continuous mode entries are moved over for all degrees of freedom so there may be a lot of non-matching modes
+
+void tri_hp::test_jacobian() {
+	/*************** TESTING ROUTINE ***********************/
+	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
+	/*******************************************************/
+	Array<FLT,1> dw(NV);
+	dw = eps_a;
+	FLT dx = eps_a;
+	int dof = jacobian_size;
+	PetscScalar *array;
+	
+#ifdef WBC
+	petsc_rsdl();
+	VecGetArray(petsc_f,&array);
+	Array<FLT,1> rbar(array, shape(jacobian_size), duplicateData);
+	VecRestoreArray(petsc_f, &array);
+#else
+	rsdl();
+	petsc_make_1D_rsdl_vector(rbar);
+#endif
+	
+	const PetscInt *ranges;
+	VecGetOwnershipRanges(petsc_f,&ranges);
+	for(int proc=0;proc < sim::blks.nproc;++proc) {
+		if (proc == sim::blks.myid) {
+			
+			*gbl->log << "ON PROCESSOR COMPONENTS FOR PROCESSOR " << proc << std::endl;
+			*gbl->log << "COLUMN NUMBERS ARE LOCAL INDICES" << std::endl;
+			IS Irows;
+			IS Icols;
+			ISCreateStride(MPI_COMM_WORLD,jacobian_size,jacobian_start,1,&Irows);
+			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
+			Mat *submat;
+			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
+			ISDestroy(&Irows);
+			ISDestroy(&Icols);
+			MatDestroyMatrices(1,&submat);
+			
+			Array<FLT,2> testJ(dof,dof);
+			testJ = 0.0;
+			
+			int ind = 0;
+			if (mmovement != coupled_deformable) {
+				for (int pind=0;pind<npnt;++pind) {
+					for(int n=0;n<NV;++n) {
+						FLT stored_value = ug.v(pind,n);
+						ug.v(pind,n) += dw(n);
+						// enforce_continuity(ug,pnts);
+						
+#ifdef WBC
+						petsc_rsdl();
+						VecGetArray(petsc_f,&array);
+						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.v(pind,n)-stored_value);
+						VecRestoreArray(petsc_f, &array);
+#else
+						rsdl();
+						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.v(pind,n)-stored_value);
+#endif
+						
+						
+						++ind;
+						ug.v(pind,n) = stored_value;
+					}
+				}
+			}
+			else {
+				for (int pind=0;pind<npnt;++pind) {
+					for(int n=0;n<NV;++n) {
+						FLT stored_value = ug.v(pind,n);
+						ug.v(pind,n) += dw(n);
+						// enforce_continuity(ug,pnts);
+						
+#ifdef WBC
+						petsc_rsdl();
+						VecGetArray(petsc_f,&array);
+						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.v(pind,n)-stored_value);
+						VecRestoreArray(petsc_f, &array);
+#else
+						rsdl();
+						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.v(pind,n)-stored_value);
+#endif
+						++ind;
+						ug.v(pind,n) = stored_value;
+					}
+					
+					for(int n=0;n<ND;++n) {
+						FLT stored_value = pnts(pind)(n);
+						pnts(pind)(n) += dx;
+						// enforce_continuity(ug,pnts);
+						
+#ifdef WBC
+						petsc_rsdl();
+						VecGetArray(petsc_f,&array);
+						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+						testJ(Range::all(),ind) = (rtemp-rbar)/(pnts(pind)(n)-stored_value);
+						VecRestoreArray(petsc_f, &array);
+#else
+						rsdl();
+						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(pnts(pind)(n)-stored_value);
+#endif
+						++ind;
+						pnts(pind)(n) = stored_value;
+					}
+				}
+			}
+			
+			for (int sind=0;sind<nseg;++sind) {
+				for (int m=0;m<sm0;++m) {
+					for(int n=0;n<NV;++n) {
+						FLT stored_value = ug.s(sind,m,n);
+						ug.s(sind,m,n) += dw(n);
+						// enforce_continuity(ug,pnts);
+						
+#ifdef WBC
+						petsc_rsdl();
+						VecGetArray(petsc_f,&array);
+						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.s(sind,m,n) -stored_value);
+						VecRestoreArray(petsc_f, &array);
+#else
+						rsdl();
+						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.s(sind,m,n) -stored_value);
+#endif
+						++ind;
+						ug.s(sind,m,n) = stored_value;
+					}
+				}
+			}
+			
+			for (int tind=0;tind<ntri;++tind) {
+				for (int m=0;m<im0;++m) {
+					for(int n=0;n<NV;++n) {
+						FLT stored_value = ug.i(tind,m,n);
+						ug.i(tind,m,n) += dw(n);
+						// enforce_continuity(ug,pnts);
+						
+#ifdef WBC
+						petsc_rsdl();
+						VecGetArray(petsc_f,&array);
+						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.i(tind,m,n)-stored_value);
+						VecRestoreArray(petsc_f, &array);
+#else
+						rsdl();
+						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.i(tind,m,n)-stored_value);
+#endif
+						++ind;
+						ug.i(tind,m,n) = stored_value;
+					}
+				}
+			}
+			
+			/* How to perturb extra unknowns? */
+			for(int i=0;i<nebd;++i) {
+				if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
+				for(int j=0;j<ebdry(i)->nseg;++j) {
+					for(int m=0;m<sm0;++m) {
+						for(int n=0;n<ND;++n) {
+							FLT stored_value = hp_ebdry(i)->crds(j,m,n);
+							hp_ebdry(i)->crds(j,m,n) += dx;
+							// enforce_continuity(ug, pnts);
+#ifdef WBC
+							petsc_rsdl();
+							VecGetArray(petsc_f,&array);
+							Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+							testJ(Range::all(),ind) = (rtemp-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
+							VecRestoreArray(petsc_f, &array);
+#else
+							rsdl();
+							petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+							testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
+#endif
+							++ind;
+							hp_ebdry(i)->crds(j,m,n) = stored_value;
+						}
+					}
+				}
+			}
+			assert(ind == jacobian_size);
+			
+			const PetscScalar *vals;
+			const PetscInt *cols;
+			int nnz;
+			
+			for(int i=0;i<jacobian_size;++i) {
+				MatGetRow(petsc_J,i+jacobian_start,&nnz,&cols,&vals);
+				*gbl->log << "lrow " << i << " grow " << i+jacobian_start << ": ";
+				int cnt = 0;
+				/* Skip things on previous processors */
+				while (cols[cnt] < jacobian_start) {
+					++cnt;
+				}
+				
+				for(int j=0;j<jacobian_size;++j) {
+					if (!(fabs(testJ(i,j)) < DEBUG_ABS_TOL)) {
+						if (cnt >= nnz) {
+							*gbl->log << " (F " <<  j << ' ' << testJ(i,j) << ") ";
+							continue;
+						}
+						if (cols[cnt] == j+jacobian_start) {
+							if (!(fabs(testJ(i,j) -vals[cnt])/(fabs(testJ(i,j)) +fabs(vals[cnt])) < DEBUG_REL_TOL))
+								*gbl->log << " (FS " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+							++cnt;
+						}
+						else if (cols[cnt] < j+jacobian_start) {
+							do {
+								if (!(fabs(vals[cnt]) < DEBUG_ABS_TOL) && cols[cnt] >= jacobian_start)
+									*gbl->log << " (S " << cols[cnt] -jacobian_start << ' ' << vals[cnt] << ") ";
+								++cnt;
+							} while (cols[cnt] < j+jacobian_start);
+							--j;
+						}
+						else {
+							*gbl->log << " (F " <<  j  << ' ' << testJ(i,j) << ") ";
+						}
+					}
+				}
+				if (cnt < nnz) {
+					do {
+						if (!(fabs(vals[cnt]) < DEBUG_ABS_TOL) && cols[cnt] < jacobian_start+jacobian_size)
+							*gbl->log << " (S " << cols[cnt] -jacobian_start << ' ' << vals[cnt] << ") ";
+					} while (++cnt < nnz);
+				}
+				
+				*gbl->log << std::endl;
+				MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
+			}
+		}
+		else {
+			IS Irows;
+			IS Icols;
+			ISCreateStride(MPI_COMM_WORLD,jacobian_size,jacobian_start,1,&Irows);
+			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
+			Mat *submat;
+			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
+			ISDestroy(&Irows);
+			ISDestroy(&Icols);
+			
+			Array<FLT,2> testJ(jacobian_size,ranges[proc+1]-ranges[proc]);
+			testJ = 0.0;
+			vsi ugtemp;
+			ugtemp.v.resize(ug.v.extent(firstDim),ug.v.extent(secondDim));
+			ugtemp.s.resize(ug.s.extent(firstDim),ug.s.extent(secondDim),ug.s.extent(thirdDim));
+			ugtemp.i.resize(ug.i.extent(firstDim),ug.i.extent(secondDim),ug.i.extent(thirdDim));
+			ugtemp.v = ug.v;
+			ugtemp.s = ug.s;
+			ugtemp.i = ug.i;
+			
+			
+			Array<TinyVector<FLT,ND>,1> pntstemp;
+			if (coupled_deformable) {
+				pntstemp.resize(pnts.extent(firstDim));
+				pntstemp = pnts;
+			}
+			
+			
+			/* calculate residual enough times */
+			for(int i=0;i<ranges[proc+1]-ranges[proc];++i) {
+				// enforce_continuity(ug, pnts);
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
+				testJ(Range::all(),i) = (rtemp-rbar)/eps_a;
+				VecRestoreArray(petsc_f, &array);
+				ug = ugtemp;
+				if (coupled_deformable) pnts = pntstemp;
+			}
+			
+			const PetscScalar *vals;
+			const PetscInt *cols;
+			int nnz;
+
+			*gbl->log << "OFF PROCESSOR COMPONENTS FROM PROCESSOR " << sim::blks.myid << " TO PROCESSOR " << proc << std::endl;
+			*gbl->log << "COLUMN NUMBERS ARE GLOBAL INDICES" << std::endl;
+
+			for(int i=0;i<jacobian_size;++i) {
+				MatGetRow(*submat,i,&nnz,&cols,&vals);
+				*gbl->log << "lrow " << i << " grow " << i+jacobian_start << ": ";
+				
+				int cnt = 0;
+				for(int j=0;j<ranges[proc+1]-ranges[proc];++j){
+					if (fabs(testJ(i,j)) > DEBUG_ABS_TOL) {
+						if (cnt >= nnz) {
+							*gbl->log << " (F " <<  j+ranges[proc] << ' ' << testJ(i,j) << ") ";
+							continue;
+						}
+						if (cols[cnt] == j) {
+							if (fabs(testJ(i,j) -vals[cnt])/(fabs(testJ(i,j)) +fabs(vals[cnt])) > DEBUG_REL_TOL)
+								*gbl->log << " (FS " << j+ranges[proc] << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+							++cnt;
+						}
+						else if (cols[cnt] < j) {
+							do {
+								if (fabs(vals[cnt]) > DEBUG_ABS_TOL && cols[cnt] >= ranges[proc])
+									*gbl->log << " (S " << cols[cnt] << ' ' << vals[cnt] << ") ";
+								++cnt;
+							} while (cols[cnt] < j);
+							--j;
+						}
+						else {
+							*gbl->log << " (F " <<  j+ranges[proc]  << ' ' << testJ(i,j) << ") ";
+						}
+					}
+				}
+				if (cnt < nnz) {
+					do {
+						if (fabs(vals[cnt]) > DEBUG_ABS_TOL && cols[cnt] < ranges[proc+1])
+							*gbl->log << " (S " << cols[cnt] +ranges[proc] << ' ' << vals[cnt] << ") ";
+					} while (++cnt < nnz);
+				}
+				
+				*gbl->log << std::endl;
+				MatRestoreRow(*submat,i,&nnz,&cols,&vals);
+			}
+			
+			
+			
+			MatDestroyMatrices(1,&submat);
+			
+		}
+	}
+	
+	MatView(petsc_J,0);
 }
 
 #endif

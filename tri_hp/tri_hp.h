@@ -49,7 +49,7 @@ class tri_hp_helper;
 /** This class is just the data storage and nothing for multigrid */
 class tri_hp : public r_tri_mesh  {
 	public:
-		int NV;
+		int NV; /**> Number of vector variables */
 		int p0, sm0, im0;  /**> Initialization values */
 		int log2p; /**> index of basis to use in global basis::tri array */
 		int log2pmax; /**> Initialization value of log2p */
@@ -67,9 +67,9 @@ class tri_hp : public r_tri_mesh  {
 
 		/** Stores vertex, side and interior coefficients of solution */
 		struct vsi {
-			Array<FLT,2> v;
-			Array<FLT,3> s;
-			Array<FLT,3> i;
+			Array<FLT,2> v; /**> vertex coefficients (npnt,NV) */
+			Array<FLT,3> s; /**> side coefficient (nseg, NV) */
+			Array<FLT,3> i; /**> interior coefficients (ntri,NV) */
 		} ug;
 
 		/** vertex boundary information */
@@ -148,20 +148,20 @@ class tri_hp : public r_tri_mesh  {
 		virtual tri_hp_helper* getnewhelper(input_map& inmap);
 
 		/* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
-		void ugtouht(int tind);
-		void ugtouht(int tind,int nhist);
-		void ugtouht_bdry(int tind);
+		void ugtouht(int tind); /**< Gathers globl u vector and stores it in uht */
+		void ugtouht(int tind,int nhist); /**< Gathers for previous time steps */
+		void ugtouht_bdry(int tind); /**< Gathers only boundary modes */
 		void ugtouht_bdry(int tind, int nhist);
 		void ugtouht1d(int sind);
 		void ugtouht1d(int sind, int nhist);
-		void crdtocht(int tind);
+		void crdtocht(int tind); /**< Gathers global coordinate vector and stores it in cht */
 		void crdtocht(int tind, int nhist);
 		void crdtocht1d(int sind);
 		void crdtocht1d(int sind, int nhist);
 		void restouht_bdry(int tind); // USED IN MINVRT
 
 		/* THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
-		void lftog(int tind, vsi gvect);
+		void lftog(int tind, vsi gvect); /**< gather local to global vector */
 
 		/* SETUP V/S/T INFO */
 		void setinfo();
@@ -212,8 +212,12 @@ class tri_hp : public r_tri_mesh  {
 		void minvrt_test();
 
 		/** Multigrid cycle */
+        void mg_setup_preconditioner();
+        void mg_preconditioner_snd();
+        void mg_preconditioner_rcv();
 		void mg_restrict();
 		void mg_prolongate();
+		void mg_source();
 
 		/** Print errors */
 		FLT max_residual;
@@ -255,9 +259,9 @@ class tri_hp : public r_tri_mesh  {
 		
 #ifdef petsc
 		/* Sparse stuff */
-		bool petsc_on;
 		FLT under_relax;
 		void petsc_jacobian();
+		void petsc_premultiply_jacobian();
 		void test_jacobian();
 		void enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts);
 		void petsc_rsdl();

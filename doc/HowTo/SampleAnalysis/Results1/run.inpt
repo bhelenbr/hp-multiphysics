@@ -60,11 +60,11 @@ b0_mesh: ../Meshgen1/data2_b0
 #force_boundaries: 5 6
 #dydt0: 0.1
 # Boundary geometry types: 
-b0_s1_ins_type: inflow
-b0_s2_ins_type: inflow
-b0_s3_ins_type: outflow
-b0_s4_ins_type: outflow
-b0_s5_ins_type: inflow
-b0_s6_ins_type: inflow
-b0_s7_ins_type: inflow
-b0_s8_ins_type: inflow
+b0_s1_hp_type: inflow
+b0_s2_hp_type: inflow
+b0_s3_hp_type: outflow
+b0_s4_hp_type: outflow
+b0_s5_hp_type: inflow
+b0_s6_hp_type: inflow
+b0_s7_hp_type: inflow
+b0_s8_hp_type: inflow

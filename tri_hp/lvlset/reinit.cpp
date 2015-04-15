@@ -652,7 +652,7 @@ void tri_hp_lvlset::reinit_bc::init() {
 	//		active = false;
 	//	}
 		
-	// This is a complete hack and is totally not general TEMPORARY
+	// This is a complete hack and is totally not general FIXME
 	if (v0 == 0 || v0 == 3) {
 		active = true;
 	}

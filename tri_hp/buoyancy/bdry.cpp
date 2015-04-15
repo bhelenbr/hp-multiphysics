@@ -12,7 +12,7 @@
 
 using namespace bdry_buoyancy;
 #include "bdry_buoyancy.h"
-#include "melt2.h"
+#include "melt_buoyancy.h"
 #include <myblas.h>
 
 //#define MPDEBUG
@@ -136,7 +136,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 	
 	/* First send number of entries for each vertex row */
 	/* then append column numbers & values */
@@ -144,9 +144,9 @@ void solid_fluid::petsc_matchjacobian_snd() {
 		sind = base.seg(i);
 		row = x.seg(sind).pnt(0)*vdofs+2;
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		/* Send Temperature Equation */
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
@@ -154,7 +154,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 #ifdef MPDEBUG
@@ -164,9 +164,9 @@ void solid_fluid::petsc_matchjacobian_snd() {
 		/* Send Side Information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0 +2; // TEMPERATURE ROW
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		for(int mode=0;mode<x.sm0;++mode) {
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
@@ -174,7 +174,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 			
@@ -188,8 +188,8 @@ void solid_fluid::petsc_matchjacobian_snd() {
 	/* LAST POINT */
 	row = x.seg(sind).pnt(1)*vdofs+2;
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
-	base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = row +0.1;
+	base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 	*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << 2 << std::endl;
 #endif
@@ -197,7 +197,7 @@ void solid_fluid::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 		*x.gbl->log << x.J._col(col) << ' ';
 #endif
-		base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 		base.fsndbuf(base.sndsize()++) = x.J._val(col);
 	}
 #ifdef MPDEBUG
@@ -256,10 +256,12 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 			*x.gbl->log << std::endl;
 #endif
 			/* Shift all entries for this vertex.  Remote variables on solid are T */
+#ifndef DEBUG_JAC
 			for(int n=0;n<1;++n) {
 				FLT dval = x.J_mpi(row,row_mpi +n);
 				(*pJ_mpi)(row,row_mpi +n) = 0.0;
 				x.J(row,rowbase +c0vars[n]) += dval;
+#endif
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -292,9 +294,11 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 			int mcnt_mpi = 0;
 			int sgn_mpi = 1;
 			for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+#ifndef DEBUG_JAC
 				FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
 				(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;
 				x.J(row+mcnt,row+x.ND+mode_mpi*x.NV) += sgn_mpi*dval;
+#endif
 				sgn_mpi *= -1;
 				mcnt_mpi += 1; // Only temperature on solid block
 			}
@@ -328,9 +332,11 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex.  Remote variables on solid are T, x, y */
 		for(int n=0;n<1;++n) {
+#ifndef DEBUG_JAC
 			FLT dval = x.J_mpi(row,row_mpi +n);
 			(*pJ_mpi)(row,row_mpi +n) = 0.0;
 			x.J(row,rowbase +c0vars[n]) += dval;
+#endif
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);
@@ -438,173 +444,4 @@ void solid_fluid::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi)
 #endif
 #endif
 
-/** \brief Helper object for vrtx_bdry 
- *
- * \ingroup boundary
- * Contains list of all vrtx_bdys's by name 
- * and has routine to return integer so can
- * allocate by name rather than by number
- */
-class tri_hp_buoyancy_vtype {
-public:
-	static const int ntypes = 3;
-	enum ids {unknown=-1,melt_end,melt_inflow,melt_facet_pt};
-	const static char names[ntypes][40];
-	static int getid(const char *nin) {
-		for(int i=0;i<ntypes;++i) 
-			if (!strcmp(nin,names[i])) return(i);
-		return(unknown);
-	}
-};
-
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt"};
-
-hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
-	std::string keyword,val;
-	std::istringstream data;
-	int type;          
-	hp_vrtx_bdry *temp;  
-	
-	keyword = vbdry(bnum)->idprefix + "_buoyancy_type";
-	if (bdrydata.get(keyword,val)) {
-		type = tri_hp_buoyancy_vtype::getid(val.c_str());
-		if (type == tri_hp_buoyancy_vtype::unknown)  {
-			*gbl->log << "unknown vertex type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-	}
-	else {
-		type = tri_hp_buoyancy_vtype::unknown;
-	}
-	
-	
-	switch(type) {
-		case tri_hp_buoyancy_vtype::melt_end: {
-			temp = new melt_end_pt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_buoyancy_vtype::melt_inflow: {
-			temp = new melt_inflow_pt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_buoyancy_vtype::melt_facet_pt: {
-			temp = new melt_facet_pt(*this,*vbdry(bnum));
-			break;
-		}
-		default: {
-			return(tri_hp_ins::getnewvrtxobject(bnum,bdrydata));
-		}
-	} 
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-	return(temp);
-}
-
-
-
-class tri_hp_buoyancy_stype {
-	public:
-		static const int ntypes = 6;
-		enum ids {unknown=-1,surface,surface_marangoni,melt,melt_kinetics,solid_fluid,characteristic};
-		static const char names[ntypes][40];
-		static int getid(const char *nin) {
-			for(int i=0;i<ntypes;++i)
-				if (!strcmp(nin,names[i])) return(i);
-			return(-1);
-		}
-};
-
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic"};
-
-/* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
-	std::string keyword,val;
-	std::istringstream data;
-	int type;          
-	hp_edge_bdry *temp;  
-	
-	if (bdrydata.get(ebdry(bnum)->idprefix + "_buoyancy_type",val)) {
-		type = tri_hp_buoyancy_stype::getid(val.c_str());
-		if (type == tri_hp_buoyancy_stype::unknown)  {
-			*gbl->log << "unknown side type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-	}
-	else {
-		type = tri_hp_buoyancy_stype::unknown;
-	}
-	
-	switch(type) {
-		case tri_hp_buoyancy_stype::surface: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new surface9(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for surface boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::surface_marangoni: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new surface_marangoni(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for surface boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::melt: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new melt(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for melt boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::melt_kinetics: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new melt_kinetics(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for melt_kinetics boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::solid_fluid: {
-			if (dynamic_cast<eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> > *>(ebdry(bnum))) {
-				temp = new solid_fluid(*this,*ebdry(bnum));
-			}
-			else {
-				std::cerr << "use symbolic_comm for solid_liquid boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_stype::characteristic: {
-			temp = new characteristic(*this,*ebdry(bnum));
-			break;
-		}
-
-		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
-			break;
-		}
-	}    
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
-
-	return(temp);
-}
 

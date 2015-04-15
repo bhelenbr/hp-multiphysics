@@ -13,6 +13,14 @@
 #include "tri_hp.h"
 #include <symbolic_function.h>
 
+//#define DEBUG_JAC
+
+#ifdef DEBUG_JAC
+const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
+const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
+
 class hp_edge_bdry;
 
 class hp_vrtx_bdry : public vgeometry_interface<2> {
@@ -30,7 +38,7 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
         virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;} //FIXME: Never been finished
     
 	public:
-        hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false) {mytype = "plain"; type.resize(x.NV,natural);}
+        hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain"; type.resize(x.NV,natural);}
 		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), coupled(inbdry.coupled), frozen(inbdry.frozen),report_flag(inbdry.report_flag),
             type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy) {
 #ifdef petsc
@@ -101,20 +109,26 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
 			}
 		}
 		virtual void calculate_unsteady_sources() {}
-		virtual void rsdl(int stage) {}  // FIXME: POINT FLUXES COULD BE ADDED HERE
+		virtual void element_rsdl(Array<FLT,1> lf) {lf = 0.0;}
+		virtual void rsdl(int stage);
 		virtual void update(int stage) {}
 		virtual void mg_restrict() {} 
 		virtual void mg_prolongate() {}
-		virtual void element_jacobian(Array<FLT,2>& K) {K=0.0;} // FIXME: NEED JACOBIAN OF POINT FLUXES
+		virtual void mg_source() {}
+		virtual void element_jacobian(Array<FLT,2>& K);
 
 #ifdef petsc
 		virtual void non_sparse(Array<int,1> &nnzero) {}
 		virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+		virtual void petsc_jacobian();
 		virtual void petsc_matchjacobian_snd();
 		virtual void petsc_matchjacobian_rcv(int phase);
-		virtual void petsc_jacobian();
 		virtual void petsc_jacobian_dirichlet();
+		virtual void petsc_premultiply_jacobian() {}
+		virtual int petsc_to_ug(PetscScalar *array) {return 0;}
+		virtual void ug_to_petsc(int& ind) {}
+		virtual void petsc_make_1D_rsdl_vector(Array<FLT,1> res) {}
 #endif
 };
 
@@ -160,14 +174,15 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		}
 		virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 		virtual void* create_global_structure() {return 0;}
-		virtual void init(input_map& input,void* gbl_in); 
+		virtual void init(input_map& input,void* gbl_in);
+		void find_matching_boundary_name(input_map& input, std::string& blockname, std::string& sidename);
 		virtual void copy(const hp_edge_bdry& tgt);
 		virtual ~hp_edge_bdry() {}
 
 		/* input output functions */
 		virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 		/** This is to read solution data **/
-		virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0); 
+		virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);
 		void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
 
 		/* CURVATURE FUNCTIONS */
@@ -205,10 +220,11 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void non_sparse(Array<int,1> &nnzero) {}
 		virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+		virtual void petsc_jacobian();
 		virtual void petsc_matchjacobian_snd();
 		virtual void petsc_matchjacobian_rcv(int phase);
-		virtual void petsc_jacobian();
-		virtual void petsc_jacobian_dirichlet(); 
+		virtual void petsc_jacobian_dirichlet();
+		virtual void petsc_premultiply_jacobian() {}
 		virtual int petsc_to_ug(PetscScalar *array);
 		virtual void ug_to_petsc(int& ind);
 		virtual void petsc_make_1D_rsdl_vector(Array<FLT,1> res) {}
@@ -216,7 +232,9 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void update(int stage) {}
 		virtual void modify_boundary_residual() {}
 		virtual void mg_restrict() {} 
-		virtual void mg_prolongate() {} 
+		virtual void mg_prolongate() {}
+		virtual void mg_source() {}
+
 
 		/* ADAPTATION FUNCTIONS */
 		virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}

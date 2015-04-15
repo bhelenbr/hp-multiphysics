@@ -131,6 +131,11 @@ class sparse_row_major {
 		void zero_row(int row);
 		void zero_rows(int nrows,const Array<int,1>& rows);
 		void multiply_row(int row, FLT val);
+		void match_patterns(int row1, int row2);
+		void swap_rows(int row1, int row2);  // Rows must have same sparseness pattern
+		void add_rows(int row1, int row2); // Rows must have same sparseness pattern
+		void combine_rows(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M); // Rows must have same sparseness pattern
+
 		void mmult(Array<FLT,1>& x,Array<FLT,1>& rslt);
 		void unpack(Array<FLT,2>& tgt);
 

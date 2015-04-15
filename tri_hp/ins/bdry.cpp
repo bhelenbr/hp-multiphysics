@@ -360,7 +360,7 @@ void hybrid_slave_pt::update(int stage) {
 		x.pnts(base.pnt)(1) = base.fsndbuf(5);
 		
 		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
-		x.pnts(base.pnt)(0) = 0.0;  // TEMPORARY
+		x.pnts(base.pnt)(0) = 0.0;  // FIXME
 	}
 }
 
@@ -445,7 +445,7 @@ void hybrid_pt::update(int stage) {
 		x.pnts(base.pnt)(1) = base.fsndbuf(5);
 		
 		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
-		x.pnts(base.pnt)(0) = 0.0;  // TEMPORARY
+		x.pnts(base.pnt)(0) = 0.0;  // FIXME
 	}
 }
 
@@ -765,7 +765,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries for u,v but not p */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 	
 	int sind = -2;
 	for(int i=0;i<base.nseg;++i) {
@@ -773,11 +773,11 @@ void actuator_disc::petsc_matchjacobian_snd() {
 		int rowbase = x.seg(sind).pnt(0)*vdofs; 
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
+		base.fsndbuf(base.sndsize()++) = rowbase +0.1;;
 		
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
@@ -785,7 +785,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -797,11 +797,11 @@ void actuator_disc::petsc_matchjacobian_snd() {
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		
 		for(int mode=0;mode<x.sm0;++mode) {
 			for (int n=0;n<x.NV-1;++n) {
-				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
@@ -809,7 +809,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 				
@@ -826,11 +826,11 @@ void actuator_disc::petsc_matchjacobian_snd() {
 	int rowbase = x.seg(sind).pnt(1)*vdofs; 
 	
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = rowbase +0.1;
 	
 	for (int n = 0; n <c0vars.extent(firstDim);++n) {
 		row = rowbase + c0vars(n);
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
@@ -838,7 +838,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 		
@@ -905,9 +905,11 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 #endif
 			/* Shift all entries for this vertex */
 			for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+#ifndef DEBUG_JAC
 				FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
 				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 				x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#endif
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -945,9 +947,11 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 				int sgn_mpi = 1;
 				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
 					for(int n_mpi = 0;n_mpi<x.NV-1;++n_mpi) {
+#ifndef DEBUG_JAC
 						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
 						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+#endif
 						++mcnt_mpi;
 					}
 					sgn_mpi *= -1;
@@ -987,9 +991,11 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex */
 		for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+#ifndef DEBUG_JAC
 			FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
 			(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 			x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#endif
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);

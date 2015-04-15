@@ -276,6 +276,7 @@ void surface::rsdl(int stage) {
 
 #ifndef petsc
 	if (base.is_comm()) {
+		/* mass flux preconditioning */
 		int count = 0;
 		for(int j=0;j<base.nseg+1;++j) {
 			base.fsndbuf(count++) = gbl->vres(j)(1)*gbl->rho2;
@@ -490,6 +491,7 @@ void surface_slave::rsdl(int stage) {
 	r_gbl->res(v0)(0) = 0.0;
 	r_gbl->res(v0)(1) = 0.0;
 
+	/* mass flux preconditioning */
 	base.comm_prepare(boundary::all,0,boundary::master_slave);
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
@@ -1142,12 +1144,6 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	Array<TinyVector<FLT,MXTM>,1> Rbar(x.NV+tri_mesh::ND+1),lf(x.NV+tri_mesh::ND+1);
 #endif
 	
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
 	x.ugtouht1d(sind);
@@ -1339,12 +1335,7 @@ void surface_slave::petsc_jacobian() {
 
 			/* Now fill in effect of curvature on element resdiuals */
 			Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef DEBUG_JAC
-			const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-			const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
-		
+			
 			int tind = x.seg(sind).tri(0);		
 			x.ugtouht(tind);
 			FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
@@ -1446,18 +1437,18 @@ void surface_slave::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries for u,v but not p */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(0)*vdofs; 
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
+		base.fsndbuf(base.sndsize()++) = rowbase +0.1;;
 		
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
@@ -1465,7 +1456,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -1477,11 +1468,11 @@ void surface_slave::petsc_matchjacobian_snd() {
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		
 		for(int mode=0;mode<x.sm0;++mode) {
 			for (int n=0;n<x.NV-1;++n) {
-				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
@@ -1489,7 +1480,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 
@@ -1506,11 +1497,11 @@ void surface_slave::petsc_matchjacobian_snd() {
 	int rowbase = x.seg(sind).pnt(1)*vdofs; 
 	
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = rowbase +0.1;
 	
 	for (int n = 0; n <c0vars.extent(firstDim);++n) {
 		row = rowbase + c0vars(n);
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
@@ -1518,7 +1509,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 
@@ -1586,9 +1577,11 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 #endif
 			/* Shift all entries for this vertex */
 			for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+#ifndef DEBUG_JAC
 				FLT dval = x.J_mpi(row,row_mpi+c0vars(n_mpi));
 				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 				x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#endif
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -1623,9 +1616,11 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 				int sgn_mpi = 1;
 				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
 					for(int n_mpi = 0;n_mpi<x.NV-1;++n_mpi) {
+#ifndef DEBUG_JAC
 						FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
 						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+#endif
 						++mcnt_mpi;
 					}
 					sgn_mpi *= -1;
@@ -1662,9 +1657,11 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex */
 		for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+#ifndef DEBUG_JAC
 			FLT dval = x.J_mpi(row,row_mpi+c0vars(n_mpi));
 			(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 			x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#endif
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);
@@ -1798,11 +1795,6 @@ void surface::petsc_jacobian() {
 		
 		/* Now fill in effect of curvature on element resdiuals */
 		Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
-#ifdef DEBUG_JAC
-		const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-		const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
 
 		int tind = x.seg(sind).tri(0);		
 		x.ugtouht(tind);
@@ -2343,7 +2335,7 @@ void surface::setup_preconditioner() {
 		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
 		
-		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
+		/* DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
 //		FLT theta =  100.0*M_PI/180.0;
 //		gbl->vdt(indx)(0,0) = -sin(theta);
 //		gbl->vdt(indx)(1,1) =  sin(theta);

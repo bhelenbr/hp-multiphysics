@@ -17,65 +17,6 @@
 //#define OLDWAY2
 //#define OLDWAY3
 
-hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
-	hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));  
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-	return(temp);
-}
-
-
-class tri_hp_stype {
-	public:
-		static const int ntypes = 3;
-		enum ids {unknown=-1,plain,symbolic,symbolic_with_integration_by_parts};
-		static const char names[ntypes][40];
-		static int getid(const char *nin) {
-			for(int i=0;i<ntypes;++i)
-				if (!strcmp(nin,names[i])) return(i);
-			return(-1);
-		}
-};
-
-const char tri_hp_stype::names[ntypes][40] = {"plain","symbolic","symbolic_ibp"};
-
-/* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
-	std::string keyword,val;
-	std::istringstream data;
-	int type;          
-	hp_edge_bdry *temp;  
-	
-	
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (bdrydata.get(keyword,val)) {
-		type = tri_hp_stype::getid(val.c_str());
-		if (type == tri_hp_stype::unknown)  {
-			*gbl->log << "unknown side type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-	}
-	else {
-		type = tri_hp_stype::unknown;
-	}
-	
-	switch(type) {
-		case tri_hp_stype::symbolic: {
-			temp = new symbolic(*this,*ebdry(bnum));
-			break;
-		}
-		case tri_hp_stype::symbolic_with_integration_by_parts: {
-			temp = new symbolic_with_integration_by_parts(*this,*ebdry(bnum));
-			break;
-		}
-		default: {
-			temp = new hp_edge_bdry(*this,*ebdry(bnum));
-		}
-	}    
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
-	
-	return(temp);
-}
-
 #ifdef OLDWAY1
 void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
@@ -511,6 +452,30 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	return;
 }
 
+void hp_edge_bdry::find_matching_boundary_name(input_map& inmap, std::string& matching_block, std::string& side_id) {
+	
+	if (!base.is_comm()) return;
+	
+	std::ostringstream nstr;
+	nstr << base.idnum << std::flush;
+	side_id = "s" +nstr.str();
+
+	std::vector<std::string> blocks;
+	if (!inmap.keys_with_ending(side_id+"_hp_type",blocks)) {
+		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	}
+
+	if (blocks.size() != 2) {
+		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	}
+	matching_block = blocks[0].substr(0,blocks[0].length()-9-side_id.length());
+	if (matching_block == x.gbl->idprefix)
+		matching_block = blocks[1].substr(0,blocks[1].length()-9-side_id.length());
+}
+
+
 void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 	int j,m,n,pmin;
 	std::string idin, mytypein;    
@@ -629,7 +594,6 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	TinyVector<FLT,2> pt;
 	char uplo[] = "U";
 
-	/* SKIP END VERTICES TEMPORARY */
 	j = 0;
 	do {
 		sind = base.seg(j);
@@ -1135,6 +1099,17 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 	return;
 }
 
+void hp_vrtx_bdry::rsdl(int stage) {
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
+	Array<FLT,1> lf(vdofs);
+	element_rsdl(lf);
+
+	for(int n=0;n<x.NV;++n)
+		x.gbl->res.v(base.pnt,n) += lf(n);
+	
+}
+
 void hp_edge_bdry::rsdl(int stage) {
 
 	for(int j=0;j<base.nseg;++j) {
@@ -1459,15 +1434,65 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 
 #endif
 
+void hp_vrtx_bdry::element_jacobian(Array<FLT,2>& K) {
+	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	Array<FLT,1> Rbar(vdofs),lf(vdofs);;
+	
+	/* Calculate and store initial residual */
+	lf = 0.0;
+	element_rsdl(lf);
+	Rbar = lf;
+	
+	Array<FLT,1> dw(x.NV);
+	dw = 0.0;
+	for(int i=0;i<2;++i)
+		for(int n=0;n<x.NV;++n)
+			dw(n) = dw(n) + fabs(x.ug.v(base.pnt,n));
+	
+	dw = dw*eps_r;
+	dw += eps_a;
+	
+	int kcol = 0;
+	for(int var = 0; var < x.NV; ++var){
+		x.ug.v(base.pnt,var) += dw(var);
+		
+		lf = 0.0;
+		element_rsdl(lf);
+		
+		int krow = 0;
+		for(int n=0;n<vdofs;++n)
+			K(krow++,kcol) = (lf(n)-Rbar(n))/dw(var);
+		
+		++kcol;
+		
+		x.ug.v(base.pnt,var) -= dw(var);
+	}
+
+	int sind = x.ebdry(base.ebdry(1))->seg(0);
+	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+
+	for(int var = 0; var < vdofs -x.NV; ++var){
+		x.pnts(base.pnt)(var) += dx;
+		
+		lf = 0.0;
+		element_rsdl(lf);
+		
+		int krow = 0;
+		for(int n=0;n<vdofs;++n)
+			K(krow++,kcol) = (lf(n)-Rbar(n))/dx;
+		
+		++kcol;
+		
+		x.pnts(base.pnt)(var) -= dx;
+	}
+}
+
+
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<FLT,2> Rbar(x.NV,sm+2);
 	Array<int,1> loc_to_glo(x.NV*(sm+2));
-#ifdef DEBUG_JAC
-	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-#else
-	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
-#endif
 	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
@@ -1486,7 +1511,7 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	dw = 0.0;
 	for(int i=0;i<2;++i)
 		for(int n=0;n<x.NV;++n)
-			dw = dw + fabs(x.uht(n)(i));
+			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
 	dw = dw*eps_r;
 	dw += eps_a;
@@ -1604,10 +1629,8 @@ void hp_vrtx_bdry::petsc_jacobian() {
 	
 	/* Generic method for adding Jacobian terms */
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	
-	/* If moving mesh, but not coupled, then vertices could slide along side */
-	Array<FLT,2> K(x.NV,vdofs);
-	Array<int,1> rows(x.NV);
+	Array<FLT,2> K(vdofs,vdofs);
+	Array<int,1> rows(vdofs);
 	Array<int,1> cols(vdofs);
 	
 	const int v0 = base.pnt;
@@ -1615,19 +1638,17 @@ void hp_vrtx_bdry::petsc_jacobian() {
 	int rind = 0;
 	int cind = 0;
 	int gindx = vdofs*v0;
-	for(int n=0;n<x.NV;++n) {
+	for(int n=0;n<vdofs;++n) {
 		rows(rind++) = gindx;
-		cols(cind++) = gindx++;
-	}
-	for(int n=x.NV;n<vdofs;++n) {
 		cols(cind++) = gindx++;
 	}
 
 	element_jacobian(K);
+
 #ifdef MY_SPARSE
-	x.J.add_values(x.NV,rows,vdofs,cols,K);
+	x.J.add_values(vdofs,rows,vdofs,cols,K);
 #else
-	MatSetValuesLocal(x.petsc_J,x.NV,rows.data(),vdofs,cols.data(),K.data(),ADD_VALUES);
+	MatSetValuesLocal(x.petsc_J,vdofs,rows.data(),vdofs,cols.data(),K.data(),ADD_VALUES);
 #endif
 }
 	
@@ -1704,7 +1725,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 	base.fsndbuf(base.sndsize()++) = row;
 	base.fsndbuf(base.sndsize()++) = x.jacobian_start;
 	for (int n=0;n<vdofs;++n) {
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
@@ -1712,7 +1733,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 #ifdef MPDEBUG
@@ -1790,9 +1811,11 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #endif
 			/* Shift all entries for this vertex */
 			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
+#ifndef DEBUG_JAC
 				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
+#endif
 			}
 		}  
 	}
@@ -1820,7 +1843,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 	
 	/* First send number of entries for each vertex row */
 	/* then append column numbers & values */
@@ -1828,9 +1851,9 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 		sind = base.seg(i);
 		row = x.seg(sind).pnt(0)*vdofs; 
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;;
+		base.fsndbuf(base.sndsize()++) = row +0.1;;
 		for (int n=0;n<vdofs;++n) {
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
@@ -1838,7 +1861,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -1850,10 +1873,10 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 		/* Send Side Information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
 		for(int mode=0;mode<x.sm0;++mode) {
 			for (int n=0;n<x.NV;++n) {
-				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
@@ -1861,7 +1884,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 
@@ -1876,9 +1899,9 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	/* LAST POINT */
 	row = x.seg(sind).pnt(1)*vdofs; 
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = row +0.1;
 	for (int n=0;n<vdofs;++n) {
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
@@ -1886,7 +1909,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 #ifdef MPDEBUG
@@ -1943,9 +1966,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
+#endif
 			}
 			x.J.multiply_row(row+n,0.5);
 			x.J_mpi.multiply_row(row+n,0.5);
@@ -1984,9 +2009,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row+mcnt << ',' << row_mpi+mcnt_mpi << " for " << row+mcnt << ',' << row +mcnt_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
 						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+#endif
 						++mcnt_mpi;
 					}
 					sgn_mpi *= -1;
@@ -2025,9 +2052,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 			FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 			(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
 			x.J(row+n,row+n_mpi) += dval;
+#endif
 		}
 		x.J.multiply_row(row+n,0.5);
 		x.J_mpi.multiply_row(row+n,0.5);
@@ -2049,17 +2078,17 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
     base.sndsize() = 0;
     base.sndtype() = boundary::flt_msg;
     /* Send index of start of jacobian */
-    base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+    base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
     /* Send index of start of surface unknowns (if they exist) */
-    base.fsndbuf(base.sndsize()++) = jacobian_start+FLT_EPSILON;
+    base.fsndbuf(base.sndsize()++) = jacobian_start+0.1;
     
     int rowbase = base.pnt*vdofs;
     /* Send continuous variables */
     for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
         int row = rowbase + *n;
         /* attach diagonal column # to allow continuity enforcement */
-        base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
-        base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+        base.fsndbuf(base.sndsize()++) = row +0.1;
+        base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
         *x.gbl->log << "vertex sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
 #endif
@@ -2067,7 +2096,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
             *x.gbl->log << x.J._col(col) << ' ';
 #endif
-            base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+            base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
             base.fsndbuf(base.sndsize()++) = x.J._val(col);
         }
 #ifdef MPDEBUG
@@ -2147,9 +2176,11 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 				FLT dval = (*pJ_mpi)(row,*row_mpi);
 				(*pJ_mpi)(row,*row_mpi) = 0.0;
 				x.J(row,rowbase+*n_mpi) += dval;
+#endif
 				++row_mpi;
 			}
 		}
@@ -2181,9 +2212,9 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
 	/* Send index of start of jacobian */
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
 	/* Send index of start of surface unknowns (if they exist) */
-	base.fsndbuf(base.sndsize()++) = jacobian_start+FLT_EPSILON;
+	base.fsndbuf(base.sndsize()++) = jacobian_start+0.1;
 	
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
@@ -2193,8 +2224,8 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 			row = rowbase + *n;
 			/* attach diagonal column # to allow continuity enforcement */
-			base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
-			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = row +0.1;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
 #endif
@@ -2202,7 +2233,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -2216,8 +2247,8 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 				row = rowbase + *n;
 				/* attach diagonal column # to allow continuity enforcement */
-				base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
-				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+				base.fsndbuf(base.sndsize()++) = row +0.1;
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << *n << std::endl;
 #endif
@@ -2225,7 +2256,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 				
@@ -2242,8 +2273,8 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 		row = rowbase + *n;
 		/* attach diagonal # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+		base.fsndbuf(base.sndsize()++) = row +0.1;
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
 #ifdef MPDEBUG
 		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
 #endif
@@ -2251,7 +2282,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 		
@@ -2320,9 +2351,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 				FLT dval = (*pJ_mpi)(row,*row_mpi);
 				(*pJ_mpi)(row,*row_mpi) = 0.0;
 				x.J(row,rowbase+*n_mpi) += dval;
+#endif
 				++row_mpi;
 			}
 			x.J.multiply_row(row,0.5);
@@ -2373,9 +2406,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*x.NV +*n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 						FLT dval = (*pJ_mpi)(row,*row_mpi);
 						(*pJ_mpi)(row,*row_mpi) = 0.0;
 						x.J(row,rowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+#endif
 						++row_mpi;
 					}
 					sgn_mpi *= -1;
@@ -2421,9 +2456,11 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
+#ifndef DEBUG_JAC
 			FLT dval = (*pJ_mpi)(row,*row_mpi);
 			(*pJ_mpi)(row,*row_mpi) = 0.0;
 			x.J(row,rowbase+*n_mpi) += dval;
+#endif
 			++row_mpi;
 		}
 		x.J.multiply_row(row,0.5);

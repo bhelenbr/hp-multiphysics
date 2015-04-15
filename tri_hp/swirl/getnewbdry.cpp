@@ -41,16 +41,13 @@ hp_edge_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
 	int type;          
 	hp_edge_bdry *temp;  
 
-	keyword =  ebdry(bnum)->idprefix + "_swirl_type";    
-	if (bdrydata.get(keyword,val)) {
-		type = tri_hp_swirl_stype::getid(val.c_str());
-		if (type == tri_hp_swirl_stype::unknown)  {
-			*gbl->log << "unknown side type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+	keyword =  ebdry(bnum)->idprefix + "_hp_type";
+	if (!bdrydata.get(keyword,val)) {
+		*gbl->log << "missing side type:" << keyword << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	else {
-		type = tri_hp_swirl_stype::unknown;
+		type = tri_hp_swirl_stype::getid(val.c_str());
 	}
 
 	switch(type) {

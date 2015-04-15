@@ -926,7 +926,7 @@ class force_coupling : public tri_hp_helper {
 					FLT cost = -cos(-ebdry_rigid(i)->theta);
 					FLT sint = -sin(-ebdry_rigid(i)->theta);
 					ebdry_rigid(i)->theta -= dtheta; 
-					/* FIX ME HACK FOR 1/4 CHORD */
+					/* FIXME HACK FOR 1/4 CHORD */
 					ebdry_rigid(i)->pos(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
 					ebdry_rigid(i)->pos(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);	
 
@@ -954,9 +954,9 @@ class force_coupling : public tri_hp_helper {
 				FLT bd0 = x.gbl->dti*x.gbl->adirk(stage,stage);
 				
 				/* Hack for quasi-steady drag simulation */
-//				bd0 = 10./(30./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
-//				bd0 = 10./(1000./12.)*x.gbl->adirk(stage,stage); // TEMPORARY!!!!
-//				bd0 = 100.0*x.gbl->adirk(stage,stage); // TEMPORARY!!!!				
+//				bd0 = 10./(30./12.)*x.gbl->adirk(stage,stage);
+//				bd0 = 10./(1000./12.)*x.gbl->adirk(stage,stage);
+//				bd0 = 100.0*x.gbl->adirk(stage,stage);
 				
 				/* GET FORCE & TORQUE */
 				TinyVector<FLT,tri_mesh::ND> force = 0.0;

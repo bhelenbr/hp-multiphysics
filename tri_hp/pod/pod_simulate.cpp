@@ -206,10 +206,6 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		/* This is the new way */
 		calc_coeffs();
 	
-//		// TEMPORARY
-//		coeffs = 0.0;
-//		coeffs(0) = 1.0;
-
 		/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 		BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
 		BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;

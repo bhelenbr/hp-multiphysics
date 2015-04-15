@@ -17,6 +17,8 @@
 		6FB150A0086781DE00EAF2E5 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150A1086781E400EAF2E5 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
 		8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		E6B8F1A71AC81FBD00143766 /* matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F53EDE410FFA5160076AAFB /* matrix.cpp */; };
+		E6B8F1AB1AC8205500143766 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B8F1A81AC8202300143766 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,7 @@
 		6FB1507F0867810C00EAF2E5 /* libmyblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmyblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB150960867814600EAF2E5 /* libutil.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libutil.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD76FB20486AB0100D96B5E /* utilities */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = utilities; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6B8F1A81AC8202300143766 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6B8F1AB1AC8205500143766 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,6 +66,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				6F4949D2084C099300C7F857 /* Scripts */,
+				E6B8F1AA1AC8203500143766 /* External Libraries & Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
 			name = utilities;
@@ -96,6 +101,14 @@
 				6F4949D4084C09A500C7F857 /* makefile */,
 			);
 			name = Scripts;
+			sourceTree = "<group>";
+		};
+		E6B8F1AA1AC8203500143766 /* External Libraries & Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E6B8F1A81AC8202300143766 /* Accelerate.framework */,
+			);
+			name = "External Libraries & Frameworks";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -232,6 +245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6B8F1A71AC81FBD00143766 /* matrix.cpp in Sources */,
 				8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */,
 				6F16C6F80D82062100F03F54 /* myblas.c in Sources */,
 				6F16C6FA0D82062200F03F54 /* utilities.c in Sources */,
@@ -264,6 +278,15 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(HOME)/Packages/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
@@ -274,6 +297,12 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(HOME)/Packages/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};

@@ -40,19 +40,16 @@ hp_vrtx_bdry* tet_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
     int type;          
     hp_vrtx_bdry *temp;  
     
-    keyword = vbdry(bnum)->idprefix + "_cns_type";
-    if (bdrydata.get(keyword,val)) {
-        type = tet_hp_cns_vtype::getid(val.c_str());
-        if (type == tet_hp_cns_vtype::unknown)  {
-            *gbl->log << "unknown vertex type:" << val << std::endl;
-            exit(1);
-        }
-    }
-    else {
-        type = tet_hp_cns_vtype::unknown;
-    }
-    
-    
+		keyword =  vbdry(bnum)->idprefix + "_hp_type";
+		if (!bdrydata.get(keyword,val)) {
+			*gbl->log << "missing vertex type:" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		else {
+			type = tet_hp_cns_vtype::getid(val.c_str());
+		}
+	
+	
     switch(type) {
 		case tet_hp_cns_vtype::inflow: {
 			temp = new inflow_pt(*this,*vbdry(bnum));
@@ -105,17 +102,14 @@ hp_edge_bdry* tet_hp_cns::getnewedgeobject(int bnum, input_map &bdrydata) {
     hp_edge_bdry *temp;  
     
 
-    keyword =  ebdry(bnum)->idprefix + "_cns_type";
-    if (bdrydata.get(keyword,val)) {
-        type = tet_hp_cns_etype::getid(val.c_str());
-        if (type == tet_hp_cns_etype::unknown)  {
-            *gbl->log << "unknown edge type:" << val << std::endl;
-            exit(1);
-        }
-    }
-    else {
-        type = tet_hp_cns_etype::unknown;
-    }
+		keyword =  ebdry(bnum)->idprefix + "_hp_type";
+		if (!bdrydata.get(keyword,val)) {
+			*gbl->log << "missing edge type:" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		else {
+			type = tet_hp_cns_etype::getid(val.c_str());
+		}
 
     switch(type) {
 		case tet_hp_cns_etype::plain: {
@@ -174,16 +168,13 @@ hp_face_bdry* tet_hp_cns::getnewfaceobject(int bnum, input_map &bdrydata) {
 	hp_face_bdry *temp;  
 	
 
-	keyword =  fbdry(bnum)->idprefix + "_cns_type";
-	if (bdrydata.get(keyword,val)) {
-		type = tet_hp_cns_ftype::getid(val.c_str());
-		if (type == tet_hp_cns_ftype::unknown)  {
-			*gbl->log << "unknown face type:" << val << std::endl;
-			exit(1);
-		}
+	keyword =  fbdry(bnum)->idprefix + "_hp_type";
+	if (!bdrydata.get(keyword,val)) {
+		*gbl->log << "missing face type:" << keyword << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	else {
-		type = tet_hp_cns_ftype::unknown;
+		type = tet_hp_cns_ftype::getid(val.c_str());
 	}
 
 	switch(type) {

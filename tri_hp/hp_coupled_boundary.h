@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __tri_hp__hp_coupled_boundary__
-#define __tri_hp__hp_coupled_boundary__
+#ifndef _hp_coupled_boundary_h_
+#define _hp_coupled_boundary_h_
 
 #include "hp_boundary.h"
 #include <iostream>
@@ -15,10 +15,12 @@
 //#define MPDEBUG
 //#define DEBUG
 //#define DETAILED_MINV
+#define ROTATE_RESIDUALS
+#define ONE_SIDED
 
 /* Non-deforming coupled boundary with variables on boundary */
 class hp_coupled_bdry : public hp_edge_bdry {
-    protected:
+    public:
         int NV; //!< number of manifold variables
         bool is_master; //!< master slave relationship for b.c. pairs
 
@@ -37,7 +39,6 @@ class hp_coupled_bdry : public hp_edge_bdry {
 		Array<FLT,4> sdres; //!< Driving term for multigrid (log2p, side, order, NV)
 		const hp_coupled_bdry *fine, *coarse;  //!< Pointers to coarse and fine mesh objects for multigrid transfers
 		
-	public:
 		struct global {
 			
 			bool is_loop;  //!< true if boundary is a loop
@@ -84,9 +85,10 @@ class hp_coupled_bdry : public hp_edge_bdry {
 		// void tadvance();
 		void rsdl(int stage);
 		void maxres();
-		void minvrt();  // TEMPO: NOT GENERAL YET
+		void minvrt();  //FIXME: NOT GENERAL YET
 		// void update(int stage);
 		void mg_restrict();
+		void mg_source();
 #ifdef petsc
 		//void non_sparse(Array<int,1> &nnzero);
 		//void petsc_jacobian();
@@ -105,6 +107,7 @@ class hp_deformable_bdry : public hp_coupled_bdry {
 		void init(input_map& inmap,void* gbl_in);
 		void tadvance();
 		void rsdl(int stage);
+		void element_jacobian(int indx, Array<FLT,2>& K);
 		void update(int stage);
 
 #ifdef petsc
@@ -113,9 +116,61 @@ class hp_deformable_bdry : public hp_coupled_bdry {
 		void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 		void petsc_jacobian();
 		void petsc_matchjacobian_rcv(int phase);
-		void element_jacobian(int indx, Array<FLT,2>& K);
+#ifdef ROTATE_RESIDUALS
+		void petsc_premultiply_jacobian();
+#endif
 #endif
 };
-#endif /* defined(__tri_hp__hp_coupled_boundary__) */
+
+class hp_deformable_fixed_pnt : public hp_vrtx_bdry {
+	/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
+protected:
+	hp_deformable_bdry *surface;
+	int surfbdry;
+	
+public:
+	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
+	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
+		if (!(surface = dynamic_cast<hp_deformable_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
+			*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+	}
+	hp_deformable_fixed_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_fixed_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
+	
+	void init(input_map& inmap,void* gbl_in);
+	void vdirichlet();
+#ifdef petsc
+	void petsc_jacobian_dirichlet();
+#endif
+};
+
+
+
+class hp_deformable_free_pnt : public hp_deformable_fixed_pnt {
+	/* For a surface point sliding on a vertical or horizontal surface */
+	/* For periodic wall have tri_mesh vertex type be comm */
+protected:
+	FLT position;
+	enum {vertical, horizontal, curved} wall_type;
+	
+public:
+	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "surface_outflow2";}
+	hp_deformable_free_pnt(const hp_deformable_free_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(inbdry,xin,bin), position(inbdry.position) {}
+	hp_deformable_free_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_free_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
+	
+	void init(input_map& inmap,void* gbl_in);
+	/* Routine to add surface tension stress */
+	/* also zero's tangent residual in no petsc */
+	void element_rsdl(Array<FLT,1> lf);
+	void rsdl(int stage);
+	void vdirichlet() {hp_vrtx_bdry::vdirichlet();}
+#ifdef petsc
+	void petsc_jacobian();
+	void petsc_jacobian_dirichlet() {hp_vrtx_bdry::petsc_jacobian_dirichlet();}
+#endif
+};
+
+#endif /* defined(__hp_coupled_boundary__) */
 
 

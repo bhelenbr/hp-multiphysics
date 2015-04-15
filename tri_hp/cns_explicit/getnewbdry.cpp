@@ -40,16 +40,13 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
 	int type;          
 	hp_vrtx_bdry *temp;  
 
-	keyword = vbdry(bnum)->idprefix + "_cns_explicit_type";
-	if (bdrydata.get(keyword,val)) {
-		type = tri_hp_cns_explicit_vtype::getid(val.c_str());
-		if (type == tri_hp_cns_explicit_vtype::unknown)  {
-			*gbl->log << "unknown vertex type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+	keyword =  vbdry(bnum)->idprefix + "_hp_type";
+	if (!bdrydata.get(keyword,val)) {
+		*gbl->log << "missing vertex type:" << keyword << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	else {
-		type = tri_hp_cns_explicit_vtype::unknown;
+		type = tri_hp_cns_explicity_vtype::getid(val.c_str());
 	}
 
 
@@ -59,7 +56,7 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
 			temp = new inflow_pt(*this,*vbdry(bnum));
 			break;
 		}
-		default: {
+		case tri_hp_cns_explicit_vtype::unknown: {
 			return(tri_hp::getnewvrtxobject(bnum,bdrydata));
 		}
 	} 
@@ -97,16 +94,13 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 	hp_edge_bdry *temp;  
 
 
-	keyword =  ebdry(bnum)->idprefix + "_cns_explicit_type";
-	if (bdrydata.get(keyword,val)) {
-		type = tri_hp_cns_explicit_stype::getid(val.c_str());
-		if (type == tri_hp_cns_explicit_stype::unknown)  {
-			*gbl->log << "unknown side type:" << val << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+	keyword =  ebdry(bnum)->idprefix + "_hp_type";
+	if (!bdrydata.get(keyword,val)) {
+		*gbl->log << "missing side type:" << keyword << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	else {
-		type = tri_hp_cns_explicit_stype::unknown;
+		type = tri_hp_cns_explicit_stype::getid(val.c_str());
 	}
 
 	switch(type) {

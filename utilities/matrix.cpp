@@ -620,6 +620,130 @@ void sparse_row_major::multiply_row(int row, FLT val) {
 	return;
 }
 
+void sparse_row_major::swap_rows(int row1, int row2) {
+    
+    const int nentries1 = _cpt(row1+1)-_cpt(row1);
+    const int nentries2 = _cpt(row2+1)-_cpt(row2);
+    if (nentries1 != nentries2) {
+        std::cerr << "can't swap rows with different numbers of entries\n" << row1 << " allocated " <<   nentries1 << '\n' << row2 << " allocated " <<   nentries2 << std::endl;
+        assert(0);
+    }
+    
+    int j1 = _cpt(row1);
+    int j2 = _cpt(row2);
+    for (int j=0;j<nentries1;++j) {
+        int col = _col(j2);
+        _col(j2) = _col(j1);
+        _col(j1) = col;
+        
+        FLT val = _val(j2);
+        _val(j2) = _val(j1);
+        _val(j1) = val;
+        ++j1;
+        ++j2;
+    }
+    
+    return;
+}
+
+void sparse_row_major::combine_rows(int nrows, const Array<int, 1> &rows, int ncols, const Array<int, 1> &cols, const Array<double, 2> &M) {
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	
+	int row0 = cols(0);
+	int nnz0 = _cpt(row0+1) -_cpt(row0);
+	if (nnz0) {
+		Array<FLT,2> _val_store(ncols,nnz0);
+		_val_store(0,Range::all()) = _val(Range(_cpt(row0),_cpt(row0+1)-1));
+		for(int i=1;i<ncols;++i) {
+			int row = cols(i);
+			int nnz = _cpt(row+1) -_cpt(row);
+			if (nnz != nnz0) {
+				std::cerr << "sparseness problem combine rows" << std::endl;
+				assert(0);
+			}
+			
+			int col0 = _cpt(row0);
+			int col1 = _cpt(row);
+			for(int col=0;col<nnz0;++col) {
+				if (_col(col0++) != _col(col1++)) {
+					std::cerr << "zeros indexing problem in combine rows" << std::endl;
+					assert(0);
+				}
+				_val_store(i,Range::all()) = _val(Range(_cpt(row),_cpt(row+1)-1));
+			}
+		}
+		
+		Array<FLT,1> temp(nnz0);
+		for(int i=0;i<nrows;++i) {
+			temp = 0.0;
+			for(int j=0;j<ncols;++j) {
+				temp(Range::all()) += M(i,j)*_val_store(j,Range::all());
+			}
+			int row = rows(i);
+			int nnz = _cpt(row+1) -_cpt(row);
+			if (nnz != nnz0) {
+				std::cerr << "sparseness problem combine rows" << std::endl;
+				assert(0);
+			}
+			_val(Range(_cpt(row),_cpt(row+1)-1)) = temp(Range::all());
+			_col(Range(_cpt(row),_cpt(row+1)-1)) = _col(Range(_cpt(row0),_cpt(row0+1)-1));
+		}
+	}
+}
+
+void sparse_row_major::match_patterns(int row1, int row2) {
+	
+	int nnz1 = _cpt(row1+1) -_cpt(row1);
+	int nnz2 = _cpt(row2+1) -_cpt(row2);
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	if (nnz1 != nnz2) {
+		std::cerr << "sparseness problem in match patterns" << nnz1 << ' ' << nnz2 << std::endl;
+		assert(0);
+	}
+	
+	int cpt1 = _cpt(row1);
+	int cpt2 = _cpt(row2);
+	for(int col=0;col<nnz1;++col) {
+		/* swap rows */
+		if (_col(cpt1) < _col(cpt2)) {
+			set_values(row2, _col(cpt1), 0.0);
+		}
+		else if (_col(cpt1) > _col(cpt2)) {
+			set_values(row1,_col(cpt2),0.0);
+		}
+		++cpt1;
+		++cpt2;
+	}
+}
+
+void sparse_row_major::add_rows(int row1, int row2) {
+	
+    const int nentries1 = _cpt(row1+1)-_cpt(row1);
+    const int nentries2 = _cpt(row2+1)-_cpt(row2);
+    if (nentries1 != nentries2) {
+        std::cerr << "can't swap rows with different numbers of entries\n" << row1 << " allocated " <<   nentries1 << '\n' << row2 << " allocated " <<   nentries2 << std::endl;
+        assert(0);
+    }
+    
+    int j1 = _cpt(row1);
+    int j2 = _cpt(row2);
+    int col_check_sum = 0;
+    for (int j=0;j<nentries1;++j) {
+        col_check_sum += _col(j1)-_col(j2);
+         _val(j1) += _val(j2);
+        ++j1;
+        ++j2;
+    }
+    
+    if (col_check_sum) {
+        std::cerr << "can't add rows with different sparseness patter\n" << row1 << " allocated " <<   nentries1 << '\n' << row2 << " allocated " <<   nentries2 << std::endl;
+        assert(0);
+    }
+    
+    return;
+}
+
+
 void sparse_row_major::output_row(ostream &stream,int row) {
 	for (int j=_cpt(row);j<_cpt(row+1);++j)
 		stream << '(' << _col(j) << ',' << _val(j) << ") ";
