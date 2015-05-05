@@ -75,7 +75,7 @@ OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o sw
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlset/reinit.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
 OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
-OBJPETSC = petsc.o sparse.o
+OBJPETSC = petsc.o
 
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
