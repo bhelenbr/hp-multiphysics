@@ -15,13 +15,11 @@ void tri_hp_explicit::init(input_map& input, void *gin) {
 	std::string filename;
 
 	gbl = static_cast<global *>(gin);
-	keyword = gbl->idprefix + "_nvariable";
-	input[keyword] = "1";
 
-	tri_hp::init(input,gin);
-	gbl->src = getnewibc("src",input);
-
+	tri_hp_cd::init(input,gin);
+	sprcn2.resize(maxpst,sm0,NV);
 	gbl->sprcn2.resize(maxpst,sm0,NV);
+
 
 	int tm0 = basis::tri(log2pmax)->tm();
 	for (int tind=0; tind < ntri;++tind) {
@@ -37,11 +35,10 @@ void tri_hp_explicit::init(const multigrid_interface& in, init_purpose why, FLT 
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
-
+	
 	const tri_hp_explicit& inmesh = dynamic_cast<const tri_hp_explicit &>(in);
 	gbl = inmesh.gbl;
-	tri_hp::init(in,why,sizereduce1d);
-
+	tri_hp_cd::init(in,why,sizereduce1d);
+	
 	return;
 }
-

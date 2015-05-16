@@ -15,8 +15,8 @@
 //#define MPDEBUG
 //#define DEBUG
 //#define DETAILED_MINV
-#define ROTATE_RESIDUALS
-#define ONE_SIDED
+//#define ROTATE_RESIDUALS
+//#define ONE_SIDED
 
 /* Non-deforming coupled boundary with variables on boundary */
 class hp_coupled_bdry : public hp_edge_bdry {
@@ -155,19 +155,46 @@ protected:
 	enum {vertical, horizontal, curved} wall_type;
 	
 public:
-	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "surface_outflow2";}
+	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "hp_deformable_free_pnt";}
 	hp_deformable_free_pnt(const hp_deformable_free_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(inbdry,xin,bin), position(inbdry.position) {}
 	hp_deformable_free_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_free_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
 	
 	void init(input_map& inmap,void* gbl_in);
-	/* Routine to add surface tension stress */
-	/* also zero's tangent residual in no petsc */
 	void element_rsdl(Array<FLT,1> lf);
 	void rsdl(int stage);
 	void vdirichlet() {hp_vrtx_bdry::vdirichlet();}
 #ifdef petsc
 	void petsc_jacobian();
 	void petsc_jacobian_dirichlet() {hp_vrtx_bdry::petsc_jacobian_dirichlet();}
+#endif
+};
+
+
+class translating_surface : public hp_deformable_bdry {
+protected:
+	TinyVector<FLT,tri_mesh::ND> vel;
+	
+public:
+	translating_surface(tri_hp &xin, edge_bdry &bin) : hp_deformable_bdry(xin,bin) {mytype = "translating_surface";}
+	translating_surface(const translating_surface& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_deformable_bdry(inbdry,xin,bin), vel(inbdry.vel) {};
+	translating_surface* create(tri_hp& xin, edge_bdry &bin) const {return new translating_surface(*this,xin,bin);}
+	
+	void init(input_map& inmap,void* gbl_in);
+	void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
+	void setup_preconditioner();
+};
+
+class hp_deformable_follower_pnt : public hp_deformable_free_pnt {
+public:
+	hp_deformable_follower_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin) {mytype = "hp_deformable_follower_pnt";}
+	hp_deformable_follower_pnt(const hp_deformable_follower_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
+	hp_deformable_follower_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_follower_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
+	
+	/** This routine zeros residual so it can just follow */
+	void element_rsdl(Array<FLT,1> lf) { hp_vrtx_bdry::element_rsdl(lf);}
+	void rsdl(int stage);
+#ifdef petsc
+	void petsc_jacobian(); 
 #endif
 };
 

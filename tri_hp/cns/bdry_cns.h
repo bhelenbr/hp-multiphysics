@@ -52,7 +52,7 @@ namespace bdry_cns {
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);            
 			}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	};
 
 	class inflow : public generic {  
@@ -138,7 +138,7 @@ namespace bdry_cns {
 				return;
 			}
 			
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
 			}
 		};

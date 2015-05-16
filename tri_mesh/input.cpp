@@ -539,7 +539,11 @@ next1a:      continue;
 				in >> ebdry(i)->nseg;
 				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
 				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
-				ebdry(i)->input(in,grid);
+				for(int j=0;j<ebdry(i)->nseg;++j) {
+					in.ignore(80,':');
+					in >> ebdry(i)->seg(j);
+					in.ignore(80,'\n');
+				}
 			}
 
 			/* VERTEX BOUNDARY INFO HEADER */

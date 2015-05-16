@@ -38,7 +38,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			return;
 		}
 		case(block::restart): {
-			namewdot = fname +".d";
+			namewdot = fname +"_d";
 			for(i=0;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
@@ -46,14 +46,14 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				output(fnmapp,output_type(1),i);
 			}
 			if (mmovement != fixed || gbl->adapt_interval) {
-				namewdot = fname +".v";
+				namewdot = fname +"_v";
 				if (output_type(1) == tri_hp::binary) {
 					tri_mesh::output(fname,tri_mesh::binary);
 					binofstream bout;
 					for(i=1;i<gbl->nadapt;++i) {
 						nstr.str("");
 						nstr << i << std::flush;
-						fnmapp = namewdot +nstr.str() +".bin";
+						fnmapp = namewdot +nstr.str() +"_" +gbl->idprefix +".bin";
 						bout.open(fnmapp.c_str());
 						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -70,7 +70,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					for(i=1;i<gbl->nadapt;++i) {
 						nstr.str("");
 						nstr << i << std::flush;
-						fnmapp = namewdot +nstr.str() +".txt";
+						fnmapp = namewdot +nstr.str() +"_" +gbl->idprefix +".txt";
 						out.open(fnmapp.c_str());
 						out << npnt << std::endl;
 						for (j=0;j<npnt;++j) 
@@ -89,14 +89,16 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 	return;
 }
 
- void tri_hp::output(const std::string& fname, filetype typ, int tlvl) {
+ void tri_hp::output(const std::string& filename, filetype typ, int tlvl) {
 	ofstream out;
-	std::string fnmapp;
+	std::string fname, fnmapp;
 	int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
 	int ijind[MXTM][MXTM];
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(8);
+	 
+	fname = filename +"_" +gbl->idprefix;
 
 	switch (typ) {
 		case (text):
@@ -133,17 +135,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					out << std::endl;
 				}
 			}
-
-			/* BOUNDARY INFO */
-			for(i=0;i<nebd;++i) {
-				hp_ebdry(i)->output(out,typ,tlvl);
-			}
-
-			for(i=0;i<nvbd;++i) {
-				hp_vbdry(i)->output(out,typ,tlvl);
-			}
-
 			out.close();
+
 			break;
 
 		case (binary): {
@@ -181,17 +174,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						bout.writeFloat(ugbd(tlvl).i(i,m,n),binio::Double);
 				}
 			}
-
-			/* BOUNDARY INFO */
-			for(i=0;i<nebd;++i) {
-				hp_ebdry(i)->output(out,typ,tlvl);
-			}
-
-			for(i=0;i<nvbd;++i) {
-				hp_vbdry(i)->output(out,typ,tlvl);
-			}
-
 			out.close();
+
 			break;
 		}
 
@@ -518,13 +502,6 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					out << ijind[i][basis::tri(log2p)->sm()-i]+1 << ' ' << ijind[i+1][basis::tri(log2p)->sm()-i]+1 << ' ' << ijind[i][basis::tri(log2p)->sm()+1-i]+1 << std::endl;
 				}
 			}
-
-			for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
-				hp_ebdry(i)->output(out, typ);
-				
-			for(i=0;i<nvbd;++i)
-				hp_vbdry(i)->output(out,typ);			
-
 			out.close();
 
 			break; 
@@ -700,9 +677,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			DTTriangularMesh2D dt_mesh(dt_grid,dt_vals);
 			Write(outputFile,"Var_var1",dt_mesh,Info_DTTriangularGrid2D);
 			Write(outputFile,"Var_var2",dt_mesh,Info_DTTriangularGrid2D);
-			Write(outputFile,"Var",DTDoubleArray()); // So that DataTank can see the variable.			
-		//	for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
-//				hp_ebdry(i)->output(out, typ);
+			Write(outputFile,"Var",DTDoubleArray()); // So that DataTank can see the variable.
 #else
 			*gbl->log << "Not supported on this platform" << std::endl;
 #endif
@@ -760,22 +735,32 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 		}
 
-
 		default:
 			*gbl->log << "can't output a tri_hp to that filetype" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 			break;
 	}
+	 
+	 /* BOUNDARY INFO */
+	 for(i=0;i<nebd;++i) {
+		 hp_ebdry(i)->output(filename,typ,tlvl);
+	 }
+	 
+	 for(i=0;i<nvbd;++i) {
+		 hp_vbdry(i)->output(filename,typ,tlvl);
+	 }
 
 	return;
 }
 
-void tri_hp::input(const std::string& fname) {
+void tri_hp::input(const std::string& filename) {
 	int i,j;
-	std::string fnmapp;
+	std::string fname,fnmapp;
 	std::ostringstream nstr;
 	ifstream fin;
 	binifstream bin;
+	
+	fname = filename +"_" +gbl->idprefix;
 
 	if (reload_type == tri_hp::binary) {
 		fnmapp = fname +".bin";
@@ -783,13 +768,13 @@ void tri_hp::input(const std::string& fname) {
 		if(fin.is_open()) {
 			fin.close();
 			input_map blank;
-			tri_mesh::input(fname,tri_mesh::binary,1,blank);
+			tri_mesh::input(fnmapp,tri_mesh::binary,1,blank);
 			setinfo();
 			
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
-				fnmapp = fname +".v" +nstr.str() +".bin";
+				fnmapp = filename +"_v" +nstr.str() +"_" +gbl->idprefix +".bin";
 				bin.open(fnmapp.c_str());
 				if (bin.error()) {
 					*gbl->log << "#couldn't open input file " << fnmapp << std::endl;
@@ -811,27 +796,25 @@ void tri_hp::input(const std::string& fname) {
 				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 		}
 
-
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
-			fnmapp = fname +".d" +nstr.str();
+			fnmapp = filename +"_d" +nstr.str();
 			input(fnmapp,reload_type,i);
 		}
 	}
 	else {
-		fnmapp = fname +".grd";
+		fnmapp = fname +"_" +gbl->idprefix +".grd";
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
-			fnmapp = fname +".v";
 			input_map blank;
-			tri_mesh::input(fname,tri_mesh::grid,1,blank);
+			tri_mesh::input(fnmapp,tri_mesh::grid,1,blank);
 			setinfo();
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
-				fnmapp = fname +".v" +nstr.str() +".txt";
+				fnmapp = filename +"_v" +nstr.str() +"_" +gbl->idprefix +".txt";
 				fin.open(fnmapp.c_str());
 				if (!fin.is_open()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
@@ -854,7 +837,7 @@ void tri_hp::input(const std::string& fname) {
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
-			fnmapp = fname +".d" +nstr.str();
+			fnmapp = filename +"_d" +nstr.str();
 			input(fnmapp,reload_type,i);
 		}
 	}
@@ -871,11 +854,14 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 	char trans[] = "T";
 	ifstream in;
 	FLT fltskip;
+	
+	std::string fname;
+	fname = filename +"_" +gbl->idprefix;
 
 	switch(typ) {
 
 		case (text):
-			fnapp = filename +".txt";
+			fnapp = fname +".txt";
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
@@ -948,7 +934,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			break;
 
 		case (binary): {
-			fnapp = filename +".bin";
+			fnapp = fname +".bin";
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open binary input file " << fnapp << std::endl;
@@ -1031,7 +1017,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 		case(tecplot):
 			/* CAN ONLY DO THIS IF HAVE MESH FILE */
-			fnapp = filename +".dat";
+			fnapp = fname +".dat";
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open tecplot input file " << fnapp << std::endl;

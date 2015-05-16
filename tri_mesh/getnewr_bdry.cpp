@@ -94,7 +94,7 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
 		}
 	}
 
-	temp->input(in_map);
+	temp->init(in_map);
 
 	return(temp);
 }
@@ -146,7 +146,7 @@ r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& in_map) {
 		}
 	}
 
-	temp->input(in_map);
+	temp->init(in_map);
 
 	return(temp);
 }

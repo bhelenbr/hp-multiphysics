@@ -9,7 +9,7 @@
 #include <CHUD/CHUD.h>
 #endif
 
-#define OLDWAY
+//#define OLDWAY
 
 void tri_hp::rsdl(int stage) {    
 
@@ -93,7 +93,7 @@ void tri_hp::rsdl(int stage) {
 		if (stage == gbl->nstage) {
 			/* HACK FOR AUXILIARY FLUXES */
 			for (int i=0;i<nebd;++i)
-				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
+				hp_ebdry(i)->output("dump", tri_hp::auxiliary);
 		}
 	}
 	else {
@@ -139,7 +139,7 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 		for(int n=0;n<NV;++n)
 			dw(n) = dw(n) + fabs(uht(n)(i));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw = dw +eps_a;
 	
 	element_rsdl(tind,0,uht,lf_re,lf_im);

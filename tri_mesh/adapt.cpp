@@ -130,9 +130,9 @@ void tri_mesh::cleanup_after_adapt() {
 		std::string adapt_file;
 		std::ostringstream nstr;
 		nstr << gbl->tstep << std::flush;
-		adapt_file = "adapt" +nstr.str() +"_" +gbl->idprefix;
+		adapt_file = "adapt" +nstr.str();
 		nstr.str("");
-		output(adapt_file.c_str(),debug_adapt);
+		output(adapt_file,debug_adapt);
 	}
 
 	/* DELETE SIDES FROM BOUNDARY CONDITIONS */

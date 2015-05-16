@@ -15,8 +15,8 @@ using namespace bdry_cd;
  */
 class tri_hp_cd_stype {
     public:
-		static const int ntypes = 7;
-		enum ids {unknown=-1,plain,dirichlet,adiabatic,characteristic,mixed,melt,melt2};
+		static const int ntypes = 5;
+		enum ids {unknown=-1,dirichlet,adiabatic,characteristic,melt,melt2};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -25,7 +25,7 @@ class tri_hp_cd_stype {
 		}
 };
 
-const char tri_hp_cd_stype::names[ntypes][40] = {"plain","dirichlet","adiabatic","characteristic","mixed","melt","melt2"};
+const char tri_hp_cd_stype::names[ntypes][40] = {"dirichlet","adiabatic","characteristic","melt","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -46,10 +46,6 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 
 
 	switch(type) {
-		case tri_hp_cd_stype::plain: {
-			temp = new generic(*this,*ebdry(bnum));
-			break;
-		}
 		case tri_hp_cd_stype::dirichlet: {
 			temp = new dirichlet(*this,*ebdry(bnum));
 			break;
@@ -60,10 +56,6 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_cd_stype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
-			break;
-		}
-		case tri_hp_cd_stype::mixed: {
-			temp = new mixed(*this,*ebdry(bnum));
 			break;
 		}
 		case tri_hp_cd_stype::melt:  {

@@ -298,9 +298,9 @@ INSRT:
 #ifdef DEBUG_ADAPT
 		std::ostringstream nstr;
 		nstr << adapt_count++ << std::flush;
-		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+		adapt_file = "adapt" +nstr.str();
 		nstr.str("");
-		output(adapt_file.c_str(),debug_adapt);
+		output(adapt_file,debug_adapt);
 #endif
 
 	}
@@ -419,9 +419,9 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
 			nstr << adapt_count++ << std::flush;
-			adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+			adapt_file = "adapt" +nstr.str();
 			nstr.str("");
-			output(adapt_file.c_str(),debug_adapt);
+			output(adapt_file,debug_adapt);
 #endif
 		}
 		ebdry(bnum)->isndbuf(0) = ebdry(bnum)->sndsize();
@@ -477,9 +477,9 @@ void tri_mesh::bdry_rebay1() {
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
 			nstr << adapt_count++ << std::flush;
-			adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+			adapt_file = "adapt" +nstr.str();
 			nstr.str("");
-			output(adapt_file.c_str(),grid);
+			output(adapt_file,grid);
 #endif
 		}
 		*gbl->log << "#Slave boundary refinement finished, " << ebdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;

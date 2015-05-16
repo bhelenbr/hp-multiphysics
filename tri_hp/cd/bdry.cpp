@@ -23,26 +23,28 @@
 
 using namespace bdry_cd;
 
-void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND];
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
 	FLT l,conv,diff,jcb;
 	
+	std::string fname;
+	fname = filename +"_" +base.idprefix;
+	
 	switch(typ) {
 		case(tri_hp::text): case(tri_hp::binary): {
-			hp_edge_bdry::output(fout,typ,tlvl);
+			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
-			hp_edge_bdry::output(fout,typ,tlvl);
+			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 			
-			std::ostringstream fname;
-			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";			
+			fname += ".dat";
 			std::ofstream fout;
-			fout.open(fname.str().c_str());
+			fout.open(fname);
 			
 			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX\",\"DFLUX\"\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 			
@@ -536,7 +538,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	

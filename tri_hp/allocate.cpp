@@ -223,7 +223,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		std::ostringstream nstr;
 		std::string fname;
 		nstr << restartfile << std::flush;
-		fname = "rstrt" +nstr.str() +"_" +gbl->idprefix;
+		fname = "rstrt" +nstr.str();
 		input(fname);
 	} 
 	else {

@@ -96,10 +96,6 @@ template<class BASE> class prdc_template : public BASE {
 		prdc_template<BASE>* create(tri_mesh& xin) const {return(new prdc_template<BASE>(*this,xin));}
 
 		int& setdir() {return(dir);}
-		void output(std::ostream& fout) {
-			BASE::output(fout);
-			fout << BASE::idprefix << "_dir" << ": " << dir << std::endl;
-		}
 		void init(input_map& inmap) {
 			std::string keyword;
 			std::map<std::string,std::string>::const_iterator mi;
@@ -142,10 +138,6 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, pub
 		eboundary_with_geometry(const eboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), rigid_movement_interface2D(inbdry), geometry_object(inbdry.geometry_object) {}
 		eboundary_with_geometry* create(tri_mesh& xin) const {return(new eboundary_with_geometry<BASE,GEOM>(*this,xin));}
 
-		void output(std::ostream& fout) {
-			BASE::output(fout);
-			geometry_object.output(fout,BASE::idprefix);
-		}
 		void init(input_map& inmap) {
 			BASE::init(inmap);
 			rigid_movement_interface2D::init(inmap,BASE::idprefix);
@@ -156,7 +148,7 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, pub
 			to_geometry_frame(pt);
 			if (geometry_object.mvpttobdry(pt,BASE::x.gbl->time)) {
 				*BASE::x.gbl->log << "trouble moving point to geometry for side " <<BASE::idprefix << std::endl;
-				BASE::x.output("error" +BASE::idprefix);
+				BASE::x.output("error");
 				sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 			};
 			to_physical_frame(pt);
@@ -183,10 +175,6 @@ template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {
 		vboundary_with_geometry(const vboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
 		vboundary_with_geometry* create(tri_mesh& xin) const {return(new vboundary_with_geometry<BASE,GEOM>(*this,xin));}
 
-		void output(std::ostream& fout) {
-			BASE::output(fout);
-			geometry_object.output(fout,BASE::idprefix);
-		}
 		void init(input_map& inmap) {
 			BASE::init(inmap);
 			geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
@@ -242,10 +230,6 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 
 		/* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
 		void alloc(int n) {edge_bdry::alloc(n); s.resize(n+1);}
-		void output(std::ostream& fout) {
-			edge_bdry::output(fout);
-			// fout << s(Range(0,edge_bdry::nseg-1)) << std::endl;
-		}
 		void init(input_map& inmap) {
 			edge_bdry::init(inmap);
 			rigid_movement_interface2D::init(inmap,idprefix);
@@ -260,13 +244,6 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			std::istringstream data(line);
 			data >> smin >> smax;
 			data.clear();
-		}
-
-		void input(std::istream& fin, tri_mesh::filetype type) {
-			edge_bdry::input(fin,type);
-			//for(int i=0;i<nseg+1;++i) {
-//				fin >> s(i);
-//			}
 		}
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {

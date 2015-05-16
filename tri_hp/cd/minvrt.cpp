@@ -42,7 +42,7 @@ void tri_hp_cd::minvrt() {
 			for(int n=0;n<NV;++n)
 				dw(n) = dw(n) + fabs(uht(n)(i));
 
-		dw = dw*eps_r;
+		dw = blitz::sum(dw)*eps_r;
 		dw = dw+eps_a;
 		
 		element_rsdl(tind,0,uht,lf_re,lf_im);
@@ -101,7 +101,7 @@ void tri_hp_cd::minvrt() {
 		hp_ebdry(i)->vdirichlet();
 	
 	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
+		hp_vbdry(i)->vdirichlet();
 	
 	for(int mode=0;mode<sm;++mode)
 		for(int i=0;i<nebd;++i)

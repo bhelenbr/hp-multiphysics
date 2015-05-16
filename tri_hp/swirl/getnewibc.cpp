@@ -30,7 +30,7 @@ namespace ibc_swirl {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -58,7 +58,7 @@ namespace ibc_swirl {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -105,7 +105,7 @@ namespace ibc_swirl {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -140,7 +140,7 @@ namespace ibc_swirl {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 

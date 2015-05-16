@@ -346,8 +346,8 @@ public:
 		p.DefineFun("erfc", erfc_pointer, false);
 		p.DefineVar("t", &time);
 	}
+	
 	vector_function(const vector_function& tgt) : p(tgt.p), nargs(tgt.nargs), dims(tgt.dims), names(tgt.names), xargs(tgt.xargs), nchildren(tgt.nchildren) {
-
 		/* Reasociate Variables */
 		std::ostringstream varname;
 		for (int n=0;n<nargs;++n) {

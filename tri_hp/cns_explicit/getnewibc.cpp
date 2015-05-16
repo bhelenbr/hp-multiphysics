@@ -36,7 +36,7 @@ namespace ibc_cns_explicit {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -95,7 +95,7 @@ namespace ibc_cns_explicit {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -154,7 +154,7 @@ namespace ibc_cns_explicit {
 				return(val(n));
 			}
 		
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 				

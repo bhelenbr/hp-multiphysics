@@ -205,6 +205,8 @@ void tri_mesh::yaber(FLT tolsize) {
 				l1 = dx*dx +dy*dy;
 
 				endpt = (l0 > l1 ? 0 : 1);
+				// endpt = (l0 < l1 ? 0 : 1); // TEMPORARY
+
 			}
 		}
 
@@ -231,7 +233,7 @@ void tri_mesh::yaber(FLT tolsize) {
 #ifdef DEBUG_ADAPT
 		std::ostringstream nstr;
 		nstr << adapt_count++ << std::flush;
-		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+		adapt_file = "adapt" +nstr.str();
 		nstr.str("");
 		output(adapt_file.c_str(),debug_adapt);
 #endif
@@ -434,9 +436,9 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
 			nstr << adapt_count++ << std::flush;
-			adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+			adapt_file = "adapt" +nstr.str();
 			nstr.str("");
-			output(adapt_file.c_str(),debug_adapt);
+			output(adapt_file,debug_adapt);
 #endif
 		}
 		ebdry(bnum)->isndbuf(0) = ebdry(bnum)->sndsize();
@@ -509,9 +511,9 @@ void tri_mesh::bdry_yaber1() {
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
 			nstr << adapt_count++ << std::flush;
-			adapt_file = gbl->idprefix +"_adapt" +nstr.str();
+			adapt_file = "adapt" +nstr.str();
 			nstr.str("");
-			output(adapt_file.c_str(),debug_adapt);
+			output(adapt_file,debug_adapt);
 #endif
 		}
 		*gbl->log << "#Slave Boundary coarsening finished, " << ebdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;

@@ -77,7 +77,7 @@ void tri_hp_explicit::minvrt() {
 		hp_ebdry(i)->vdirichlet();
 
 	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
+		hp_vbdry(i)->vdirichlet();
 
 
 

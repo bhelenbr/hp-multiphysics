@@ -17,6 +17,10 @@
 //#define OLDWAY2
 //#define OLDWAY3
 
+#ifdef DEBUG_JAC
+#define SKIP_EXCHANGE
+#endif
+
 #ifdef OLDWAY1
 void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
@@ -322,14 +326,52 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
 #endif
 	
+	/* Set-up boundary flux functions */
+	fluxes.resize(x.NV);
+	Array<string,1> names(4);
+	Array<int,1> dims(4);
+	dims = x.ND;
+	names(0) = "u";
+	dims(0) = x.NV;
+	names(1) = "x";
+	names(2) = "xt";
+	names(3) = "n";
+	for(int n=0;n<x.NV;++n) {
+		fluxes[n].set_arguments(4,dims,names);
+	}
+	
+	input_map zeromap;
+	zeromap["zero"] = "0.0";
+	std::ostringstream nstr;
+	for (int n=0;n<x.NV;++n) {
+		if (type[n] == natural) {
+			nstr.str("");
+			nstr << base.idprefix << "_flux" << n << std::flush;
+			if (inmap.find(nstr.str()) != inmap.end()) {
+				fluxes[n].init(inmap,nstr.str());
+			}
+			else {
+				fluxes[n].init(zeromap,"zero");
+			}
+		}
+		else {
+			fluxes[n].init(zeromap,"zero");
+		}
+	}
+	
 	return;
 }
 
-void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int j,m,n;
-
+	
 	switch(typ) {
-		case(tri_hp::text):
+		case(tri_hp::text): {
+			std::string fname;
+			fname = filename +"_" +x.gbl->idprefix +".txt";
+			ofstream fout;
+			fout.open(fname,std::ofstream::out | std::ofstream::app);
+			
 			fout << base.idprefix << " " << mytype << std::endl;
 			if (curved) {
 				fout << "p0: " << x.p0 << std::endl;
@@ -342,10 +384,18 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					}
 				}
 			}
+			fout.close();
+			
 			break;
+		}
 
-		case(tri_hp::binary):
+		case(tri_hp::binary): {
 			if (curved) {
+				std::string fname;
+				fname = filename +"_" +x.gbl->idprefix +".bin";
+				ofstream fout;
+				fout.open(fname,std::ofstream::out | std::ofstream::app);
+				
 				binowstream bout(&fout);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -358,16 +408,18 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 						}
 					}
 				}
+				fout.close();
 			}
 			break;
+		}
 		
 		case(tri_hp::tecplot): {
 			if (!report_flag) break;
 			
-			std::ostringstream fname;
-			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
+			std::string fname;
+			fname = filename +"_" +base.idprefix +".dat";
 			std::ofstream fout;
-			fout.open(fname.str().c_str());
+			fout.open(fname);
 			
 			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"DXDT\",\"DYDT\",";
 			for(n=0;n<x.NV;++n)
@@ -453,12 +505,12 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 }
 
 void hp_edge_bdry::find_matching_boundary_name(input_map& inmap, std::string& matching_block, std::string& side_id) {
-	
-	if (!base.is_comm()) return;
-	
+
 	std::ostringstream nstr;
 	nstr << base.idnum << std::flush;
 	side_id = "s" +nstr.str();
+	
+	if (!base.is_comm()) return;
 
 	std::vector<std::string> blocks;
 	if (!inmap.keys_with_ending(side_id+"_hp_type",blocks)) {
@@ -1450,7 +1502,7 @@ void hp_vrtx_bdry::element_jacobian(Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.ug.v(base.pnt,n));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	
 	int kcol = 0;
@@ -1513,7 +1565,7 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	
 	
@@ -1811,7 +1863,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #endif
 			/* Shift all entries for this vertex */
 			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
@@ -1966,7 +2018,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
@@ -2009,7 +2061,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row+mcnt << ',' << row_mpi+mcnt_mpi << " for " << row+mcnt << ',' << row +mcnt_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
 						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
@@ -2052,7 +2104,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 			FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
 			(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
 			x.J(row+n,row+n_mpi) += dval;
@@ -2176,7 +2228,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 				FLT dval = (*pJ_mpi)(row,*row_mpi);
 				(*pJ_mpi)(row,*row_mpi) = 0.0;
 				x.J(row,rowbase+*n_mpi) += dval;
@@ -2351,7 +2403,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 				FLT dval = (*pJ_mpi)(row,*row_mpi);
 				(*pJ_mpi)(row,*row_mpi) = 0.0;
 				x.J(row,rowbase+*n_mpi) += dval;
@@ -2406,7 +2458,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*x.NV +*n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 						FLT dval = (*pJ_mpi)(row,*row_mpi);
 						(*pJ_mpi)(row,*row_mpi) = 0.0;
 						x.J(row,rowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
@@ -2456,7 +2508,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef DEBUG_JAC
+#ifndef SKIP_EXCHANGE
 			FLT dval = (*pJ_mpi)(row,*row_mpi);
 			(*pJ_mpi)(row,*row_mpi) = 0.0;
 			x.J(row,rowbase+*n_mpi) += dval;
@@ -2497,8 +2549,11 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
 		/* Calculate boundary normal */
 		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);  
-		
+		nrm(1) = -x.dcrd(0,0)(0,k);
+		FLT jcb = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+		nrm(0) /= jcb;
+		nrm(1) /= jcb;
+
 		/* Calculate the mesh velocity */
 		for(n=0;n<tri_mesh::ND;++n) {
 			pt(n) = x.crd(n)(0,k);
@@ -2516,8 +2571,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 		flux(u,pt,mvel,nrm,flx);
 		
 		for(n=0;n<x.NV;++n)
-			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n);
-		
+			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n)*jcb;
 	}
 	/* Integrate fluxes * basis */
 	for(n=0;n<x.NV;++n)
@@ -2525,6 +2579,30 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	return;
 }
+
+void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+	
+	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+	axpt(0) = xpt(0); axpt(1) = xpt(1);
+	amv(0) = mv(0); amv(1) = mv(1);
+	anorm(0)= norm(0); anorm(1) = norm(1);
+	
+	for (int n=0;n<x.NV;++n) {
+		switch(type[n]) {
+			case(essential): {
+				flx(n) = 0.0;
+				break;
+			}
+			case(natural): {
+				flx(n) = fluxes[n].Eval(u,axpt,amv,anorm,x.gbl->time);
+				break;
+			}
+		}
+	}
+	
+	return;
+}
+
 
 
 
@@ -2622,45 +2700,22 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 #endif
 
 
-void symbolic::init(input_map& inmap,void* gbl_in) {
-	std::string keyword;
-	std::ostringstream nstr;
-	
-	hp_edge_bdry::init(inmap,gbl_in);
-	
-	for (int n=0;n<x.NV;++n) {
-		if (type[n] == natural) {
-			nstr.str("");
-			nstr << base.idprefix << "_flux" << n << std::flush;
-			if (inmap.find(nstr.str()) != inmap.end()) {
-				fluxes(n).init(inmap,nstr.str());
-			}
-			else {
-				*x.gbl->log << "couldn't find flux function " << nstr.str() << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
-			}
-		}
-	}
-
-	return;
-}
-
 void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	std::ostringstream nstr;
 	input_map zeromap;
 	zeromap["zero"] = "0.0";
 	
-	symbolic::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap,gbl_in);
 	for (int n=0;n<x.NV;++n) {
 		if (type[n] == natural) {
 			nstr.str("");
 			nstr << base.idprefix << "_dflux" << n << std::flush;
 			if (inmap.find(nstr.str()) != inmap.end()) {
-				derivative_fluxes(n).init(inmap,nstr.str());
+				derivative_fluxes[n].init(inmap,nstr.str());
 			}
 			else {
-				derivative_fluxes(n).init(zeromap,"zero");
+				derivative_fluxes[n].init(zeromap,"zero");
 			}
 		}
 	}
@@ -2719,8 +2774,8 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 					break;
 				}
 				case(natural): {
-					cflux(n,i) = RAD(crd(0,i))*fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
-					dflux(n,i) = RAD(crd(0,i))*derivative_fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
+					cflux(n,i) = RAD(crd(0,i))*fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
+					dflux(n,i) = RAD(crd(0,i))*derivative_fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time);
 					break;
 				}
 			}

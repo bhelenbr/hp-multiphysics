@@ -25,11 +25,7 @@ class r_side_bdry {
 		r_side_bdry(r_tri_mesh &xin, edge_bdry &bin) : x(xin), base(bin) {mytype="plain";}
 		r_side_bdry(const r_side_bdry &inbdry, r_tri_mesh &xin, edge_bdry &bin) : x(xin), base(bin) {mytype="plain";}
 		virtual r_side_bdry* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
-		/* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-		virtual void output(std::ostream& fout) {
-			fout << base.idprefix << "_r_type: " << mytype << std::endl;
-		}
-		virtual void input(input_map& bdrydata) {}
+		virtual void init(input_map& bdrydata) {}
 		virtual void tadvance() {}
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
@@ -51,19 +47,14 @@ class r_fixed : public r_side_bdry {
 		r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
 		r_fixed* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed(*this,xin,bin);}
 
-		void input(input_map& inmap) {
-			r_side_bdry::input(inmap);
+		void init(input_map& inmap) {
+			r_side_bdry::init(inmap);
 
 			std::string line;
 			inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
 			std::istringstream data(line);
 			data >> dstart >> dstop;
 			data.clear();
-		}
-
-		void output(std::ostream& fout) {
-			r_side_bdry::output(fout);
-			fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
 		}
 
 		void dirichlet() {
@@ -112,16 +103,11 @@ class r_fixed_angled : public r_side_bdry {
 		r_fixed_angled(const r_fixed_angled &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), theta(inbdry.theta) {mytype = "fixed_angled";}
 		r_fixed_angled* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed_angled(*this,xin,bin);}
 
-		void input(input_map& inmap) {
-			r_side_bdry::input(inmap);
+		void init(input_map& inmap) {
+			r_side_bdry::init(inmap);
 
 			inmap.get(base.idprefix+"_r_theta",theta);
 			theta *= M_PI/180.0;
-		}
-
-		void output(std::ostream& fout) {
-			r_side_bdry::output(fout);
-			fout << base.idprefix << "_r_theta: " << theta*180.0/M_PI << std::endl;
 		}
 
 		void dirichlet() {
@@ -332,17 +318,13 @@ class r_translating : public r_fixed {
 		}
 		r_translating* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_translating(*this,xin,bin);}
 
-		void input(input_map& inmap) {
-			r_fixed::input(inmap);
+		void init(input_map& inmap) {
+			r_fixed::init(inmap);
 
 			FLT dx_dflt[2] = {0.0, 1.0};
 			inmap.getwdefault(base.idprefix+"_r_translate",dx,2,dx_dflt);
 		}
 
-		void output(std::ostream& fout) {
-			r_fixed::output(fout);
-			fout << base.idprefix << "_r_translate: " << dx[0] << '\t' << dx[1] << std::endl;
-		}
 		void tadvance() {
 			int n,p0;
 			for(int j=1;j<base.nseg;++j) {
@@ -372,19 +354,14 @@ class r_oscillating : public r_fixed {
 		r_oscillating* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_oscillating(*this,xin,bin);}
 
 
-		void input(input_map& inmap) {
-			r_fixed::input(inmap);
+		void init(input_map& inmap) {
+			r_fixed::init(inmap);
 
 			std::string line;
 			inmap.getlinewdefault(base.idprefix+"_r_oscillate",line,std::string("0.0 0.0 0.0"));
 			std::istringstream data(line);
 			data >> p0 >> amp >> omega;
 			data.clear();
-		}
-
-		void output(std::ostream& fout) {
-			r_fixed::output(fout);
-			fout << base.idprefix << "_r_oscillate: " << p0 << '\t' << amp << '\t' << omega << std::endl;
 		}
 
 		void tadvance() {
@@ -421,8 +398,8 @@ class r_deforming : public r_fixed {
 		r_deforming(const r_deforming &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin), do_left(inbdry.do_left), do_right(inbdry.do_right) {mytype="deforming";}
 		r_deforming* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_deforming(*this,xin,bin);}
 
-		void input(input_map& inmap) {
-			r_fixed::input(inmap);
+		void init(input_map& inmap) {
+			r_fixed::init(inmap);
 			inmap.get(base.idprefix+"_r_do_left",do_left);
 			inmap.get(base.idprefix+"_r_do_right",do_right);
 		}
@@ -450,11 +427,7 @@ class r_vrtx_bdry {
 		r_vrtx_bdry(r_tri_mesh &xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype="plain";}
 		r_vrtx_bdry(const r_vrtx_bdry &inbdry, r_tri_mesh &xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype="plain";}
 		virtual r_vrtx_bdry* create(r_tri_mesh &xin, vrtx_bdry &bin) const {return new r_vrtx_bdry(*this,xin,bin);}
-		/* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-		virtual void output(std::ostream& fout) {
-			fout << base.idprefix << "_r_vtype: " << mytype << std::endl;
-		}
-		virtual void input(input_map& bdrydata) {}
+		virtual void init(input_map& bdrydata) {}
 		virtual void tadvance() {}
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
@@ -477,19 +450,14 @@ class r_vfixed : public r_vrtx_bdry {
 		r_vfixed(const r_vfixed &inbdry, r_tri_mesh &xin, vrtx_bdry &bin) : r_vrtx_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "vfixed";}
 		r_vfixed* create(r_tri_mesh &xin, vrtx_bdry &bin) const {return new r_vfixed(*this,xin,bin);}
 
-		void input(input_map& inmap) {
-			r_vrtx_bdry::input(inmap);
+		void init(input_map& inmap) {
+			r_vrtx_bdry::init(inmap);
 
 			std::string line;
 			inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
 			std::istringstream data(line);
 			data >> dstart >> dstop;
 			data.clear();
-		}
-
-		void output(std::ostream& fout) {
-			r_vrtx_bdry::output(fout);
-			fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
 		}
 
 		void dirichlet() {

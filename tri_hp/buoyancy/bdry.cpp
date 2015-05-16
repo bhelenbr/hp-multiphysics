@@ -38,7 +38,7 @@ void solid_fluid::init(input_map& inmap,void* gbl_in) {
 	}
 	
 	inmap[base.idprefix+"_c0_indices"] = "2";
-	symbolic::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap,gbl_in);
 	
 	return;
 }

@@ -256,11 +256,7 @@ class boundary {
 		}
 		virtual void init(input_map& bdrydata) {}
 		virtual void alloc(int n) {}
-		virtual void output(std::ostream& fout) const {
-			fout << idprefix << "_type: " << mytype << std::endl;
-		}
-		virtual void input(std::istream& fin) {}
-
+	
 		/* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
 		enum msg_type {flt_msg, int_msg};
 		enum groups {all,all_phased,partitions,manifolds};

@@ -18,7 +18,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 			return(fcn(n).Eval(x,time));
 		}
-		void input(input_map &inmap,std::string idnty) {
+		void init(input_map &inmap,std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
@@ -58,7 +58,7 @@ class temporal_spline : public init_bdry_cndtn {
 			return(loc(0));
 		}
 	
-		void input(input_map &inmap,std::string idnty) {
+		void init(input_map &inmap,std::string idnty) {
 			std::string filename;
 			std::string keyword,val;
 			std::istringstream data;
@@ -150,7 +150,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 			assert(0);
 		}
 	}
-	temp->input(inmap,keyword);
+	temp->init(inmap,keyword);
 	return(temp);
 
 }

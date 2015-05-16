@@ -86,9 +86,7 @@ void tri_hp::minvrt() {
 		hp_ebdry(i)->vdirichlet();
 
 	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
-
-
+		hp_vbdry(i)->vdirichlet();
 
 	if(basis::tri(log2p)->sm() == 0) return;
 

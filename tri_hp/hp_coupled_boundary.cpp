@@ -53,33 +53,32 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
     gbl->meshc.resize(base.maxseg,NV);
 
     
-    gbl->cfl.resize(x.log2p+1,NV);
-    double CFLdflt[3] = {2.5, 1.5, 1.0};
-    for (int n=0;n<NV;++n) {
-        stringstream nstr;
-        nstr << n;
-        if (inmap.getline(base.idprefix+"_cfl"+nstr.str(),val)) {
-            data.str(val);
-            for (int m=0;m<x.log2p+1;++m) {
-                data >> gbl->cfl(m,n);
-            }
-            data.clear();
-        }
-        else {
-            for (int m=0;m<x.log2p+1;++m) {
-                gbl->cfl(m,n) = CFLdflt[m];
-            }
-        }
-    }
+	gbl->cfl.resize(x.log2p+1,NV);
+	double CFLdflt[3] = {2.5, 1.5, 1.0};
+	for (int n=0;n<NV;++n) {
+			stringstream nstr;
+			nstr << n;
+			if (inmap.getline(base.idprefix+"_cfl"+nstr.str(),val)) {
+					data.str(val);
+					for (int m=0;m<x.log2p+1;++m) {
+							data >> gbl->cfl(m,n);
+					}
+					data.clear();
+			}
+			else {
+					for (int m=0;m<x.log2p+1;++m) {
+							gbl->cfl(m,n) = CFLdflt[m];
+					}
+			}
+	}
+	
+	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
+	else gbl->is_loop = false;
 	
 	if (!is_master) return;   /* This is all that is necessary for a slave boundary */
 
 	vdres.resize(x.log2pmax,base.maxseg,NV);
 	sdres.resize(x.log2pmax,base.maxseg,x.sm0,NV);
-
-	
-	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
-	else gbl->is_loop = false;
 	
 	gbl->vug0.resize(base.maxseg+1,NV);
 	gbl->sug0.resize(base.maxseg,x.sm0,NV);
@@ -437,14 +436,13 @@ void hp_deformable_bdry::rsdl(int stage) {
 		}
 		
 		
-		/* Store rotated vertex residual in r_mesh residual vector */
+		/* Store vertex residual in r_mesh residual vector */
 		r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 		int i = 0;
 		int sind;
 		do {
 			sind = base.seg(i);
 			int v0 = x.seg(sind).pnt(0);
-			/* Rotate residual for better diagonal dominance */
 			r_gbl->res(v0)(0) = gbl->vres(i,0);
 			r_gbl->res(v0)(1) = gbl->vres(i,1);
 		} while (++i < base.nseg);
@@ -648,7 +646,8 @@ void hp_deformable_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
-	dw = dw*eps_r;
+		FLT sum_var = blitz::sum(dw);
+dw = sum_var*eps_r;
 	dw += eps_a;
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	
@@ -729,7 +728,7 @@ void hp_deformable_bdry::petsc_jacobian() {
     Array<int,1> loc_to_glo(vdofs*(sm+2));
     
     
-    /* ZERO ROWS CREATED BY R_MESH */
+    /* ZERO ROWS CREATED BY R_MESH (REMOVES DIAGONAL ENTRY FOR FIXED B.C.'s) */
     Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
     int j = 0;
     int cnt = 0;
@@ -1260,40 +1259,46 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 }
 
 void hp_deformable_fixed_pnt::vdirichlet() {
+	const int nfix = tri_mesh::ND;
 	
 	// APPLY FLOW B.C.'S
 	hp_vrtx_bdry::vdirichlet();
 	
 	if (surface->is_master) {
 		if (surfbdry == 0) {
-			for(int n=0;n<tri_mesh::ND;++n) {
-				surface->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;  // FIXME: This should be deleted eventually
+			for(int n=0;n<nfix;++n) {
+				surface->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;  
 			}
 		}
 		else {
-			for(int n=0;n<tri_mesh::ND;++n) {
-				surface->gbl->vres(0,n) = 0.0; // FIXME: This should be deleted eventually
+			for(int n=0;n<nfix;++n) {
+				surface->gbl->vres(0,n) = 0.0;
 			}
 		}
 	}
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	for(int n=0;n<tri_mesh::ND;++n) {
+	for(int n=0;n<nfix;++n) {
 		r_gbl->res(base.pnt)(n) = 0.0;
 	}
 }
 
 #ifdef petsc
 void hp_deformable_fixed_pnt::petsc_jacobian_dirichlet() {
+	const int nfix = tri_mesh::ND;
+
 	/* BOTH X & Y ARE FIXED */
 	Array<int,1> rows(tri_mesh::ND);
-	for(int n=0;n<tri_mesh::ND;++n)
+	for(int n=0;n<nfix;++n)
 		rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n;
+	
+	
+	
 #ifdef MY_SPARSE
-	x.J.zero_rows(tri_mesh::ND,rows);
-	x.J_mpi.zero_rows(tri_mesh::ND,rows);
-	x.J.set_diag(tri_mesh::ND,rows,1.0);
+	x.J.zero_rows(nfix,rows);
+	x.J_mpi.zero_rows(nfix,rows);
+	x.J.set_diag(nfix,rows,1.0);
 #else
-	MatZeroRows(x.petsc_J,tri_mesh::ND,rows.data(),1.0);
+	MatZeroRows(x.petsc_J,nfix,rows.data(),1.0);
 #endif
 }
 #endif
@@ -1373,19 +1378,10 @@ void hp_deformable_free_pnt::rsdl(int stage) {
 	
 	// FIXME: This should be deleted eventually
 	surface->gbl->vres(endpt,0) = lf(x.NV);
-
 }
 
 #ifdef petsc
 void hp_deformable_free_pnt::petsc_jacobian() {
-	
-	int indx;
-	if (surfbdry == 0) {
-		indx = x.ebdry(base.ebdry(0))->nseg;
-	}
-	else {
-		indx = 0;
-	}
 	
 	/* ZERO TANGENT MESH MOVEMENT ROW */
 	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
@@ -1402,4 +1398,341 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 	hp_vrtx_bdry::petsc_jacobian();
 }
 #endif
+
+
+void translating_surface::init(input_map& input, void *gin) {
+	hp_deformable_bdry::init(input,gin);
+	if (!input.get(base.idprefix + "_velx",vel(0))) input.getwdefault("velx",vel(0),1.0);
+	if (!input.get(base.idprefix + "_vely",vel(0))) input.getwdefault("vely",vel(1),0.0);
+}
+	
+void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
+	
+	if (!is_master) return;
+	
+	lf = 0.0;
+
+	/* Calculate any specified fluxes to be added */
+	hp_edge_bdry::element_rsdl(indx, lf);
+	
+	int i,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	FLT jcb;
+	TinyVector<FLT,tri_mesh::ND> u;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,8,MXGP> res;
+	
+	sind = base.seg(indx);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	
+	x.crdtocht1d(sind);
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+	
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+		norm(0) =  dcrd(1,i);
+		norm(1) = -dcrd(0,i);
+		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+		
+		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+		for(n=0;n<tri_mesh::ND;++n) {
+			mvel(n,i) =  vel(n) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef MESH_REF_VEL
+			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+#endif
+		}
+		
+		/* TANGENTIAL SPACING */
+		res(0,i) = -ksprg(indx)*jcb;
+		/* NORMAL FLUX */
+		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+	}
+	
+	
+	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
+	
+	return;
+}
+
+void translating_surface::setup_preconditioner() {
+	int indx,m,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> nrm;
+	FLT h, hsm;
+	FLT dttang, dtnorm;
+	FLT vslp;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
+	TinyMatrix<FLT,4,MXGP> res;
+	TinyMatrix<FLT,4,MXGP> lf;
+	TinyVector<FLT,2> mvel;
+	int last_phase, mp_phase;
+	
+	/**************************************************/
+	/* DETERMINE MOVEMENT TIME STEP              */
+	/**************************************************/
+	gbl->vdt(0,Range::all(),Range::all()) = 0.0;
+	
+	for(indx=0; indx < base.nseg; ++indx) {
+		sind = base.seg(indx);
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+		
+		
+#ifdef DETAILED_DT
+		x.crdtocht1d(sind);
+		for(n=0;n<tri_mesh::ND;++n)
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+		
+		dtnorm = 1.0e99;
+		dttang = 1.0e99;
+		gbl->meshc(indx) = 1.0e99;
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+			nrm(0) =  dcrd(1,i)*2;
+			nrm(1) = -dcrd(0,i)*2;
+			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+			
+			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+			for(n=0;n<tri_mesh::ND;++n) {
+				mvel(n) = vel(n) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef MESH_REF_VEL
+				mvel(n) -= x.gbl->mesh_ref_vel(n);
+#endif
+			}
+			vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
+			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+			
+			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
+			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0));
+			
+			/* SET UP DISSIPATIVE COEFFICIENT */
+			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+			/* RESIDUAL HAS DX/2 WEIGHTING */
+			/* |a| dx/2 dv/dx  dx/2 dpsi */
+			/* |a| dx/2 2/dx dv/dpsi  dpsi */
+			/* |a| dv/dpsi  dpsi */
+			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+		}
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+#else
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+		h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+		
+		mvel(0) = vel(0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+		mvel(1) = vel(1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+		mvel(0) -= x.gbl->mesh_ref_vel(0);
+		mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
+		
+		mvel(0) = vel(0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+		mvel(1) = vel(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+#ifdef MESH_REF_VEL
+		mvel(0) -= x.gbl->mesh_ref_vel(0);
+		mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
+		
+		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+		
+		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
+		dtnorm = 2.*vslp/hsm +x.gbl->bd(0);
+		
+		/* SET UP DISSIPATIVE COEFFICIENT */
+		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+		/* RESIDUAL HAS DX/2 WEIGHTING */
+		/* |a| dx/2 dv/dx  dx/2 dpsi */
+		/* |a| dx/2 2/dx dv/dpsi  dpsi */
+		/* |a| dv/dpsi  dpsi */
+		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+		gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+#endif
+		
+		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
+		
+		nrm *= 0.5;
+		
+		gbl->vdt(indx,0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx,0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx,1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx,1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1,0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1,0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1,1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1,1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		
+		if (basis::tri(x.log2p)->sm()) {
+			gbl->sdt(indx,0,0) = -dttang*nrm(1);
+			gbl->sdt(indx,0,1) =  dttang*nrm(0);
+			gbl->sdt(indx,1,0) =  dtnorm*nrm(0);
+			gbl->sdt(indx,1,1) =  dtnorm*nrm(1);
+			
+#ifdef DETAILED_MINV
+			int lsm = basis::tri(x.log2p)->sm();
+			x.crdtocht1d(sind);
+			for(n=0;n<tri_mesh::ND;++n)
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+			
+			for(int m = 0; m<lsm; ++m) {
+				for(int i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					nrm(0) =  dcrd(1,i);
+					nrm(1) = -dcrd(0,i);
+					res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p)->gx(i,m+3);
+					res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p)->gx(i,m+3);
+				}
+				lf = 0;
+				basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(0,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(2,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
+				
+				/* CFL = 0 WON'T WORK THIS WAY */
+				lf(0) /= gbl->cfl(x.log2p,0);
+				lf(1) /= gbl->cfl(x.log2p,0);
+				lf(2) /= gbl->cfl(x.log2p,1);
+				lf(3) /= gbl->cfl(x.log2p,1);
+				
+				for (n=0;n<lsm;++n) {
+					gbl->ms(indx,2*m,2*n) = lf(0,n+2);
+					gbl->ms(indx,2*m,2*n+1) = lf(1,n+2);
+					gbl->ms(indx,2*m+1,2*n) = lf(2,n+2);
+					gbl->ms(indx,2*m+1,2*n+1) = lf(3,n+2);
+				}
+				
+				/* tang/norm, x/y,  mode,  vert */
+				gbl->vms(indx,0,0,m,0) = lf(0,0);
+				gbl->vms(indx,0,1,m,0) = lf(1,0);
+				gbl->vms(indx,0,0,m,1) = lf(0,1);
+				gbl->vms(indx,0,1,m,1) = lf(1,1);
+				gbl->vms(indx,1,0,m,0) = lf(2,0);
+				gbl->vms(indx,1,1,m,0) = lf(3,0);
+				gbl->vms(indx,1,0,m,1) = lf(2,1);
+				gbl->vms(indx,1,1,m,1) = lf(3,1);
+			}
+			
+			int info;
+			GETRF(2*lsm,2*lsm,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),info);
+			if (info != 0) {
+				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			/*
+			 \phi_n dx,dy*t = \phi_n Vt
+			 \phi_t dx,dy*n = \phi_t Vn
+			 */
+#endif
+		}
+	}
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		
+		last_phase = true;
+		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,3,0);
+	}
+	
+	if (gbl->is_loop) {
+		for(m=0;m<tri_mesh::ND;++m)
+			for(n=0;n<tri_mesh::ND;++n)
+				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
+		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+	}
+	
+	FLT jcbi,temp;
+	for(indx=0;indx<base.nseg+1;++indx) {
+		/* INVERT VERTEX MATRIX */
+		jcbi = 1.0/(gbl->vdt(indx,0,0)*gbl->vdt(indx,1,1) -gbl->vdt(indx,0,1)*gbl->vdt(indx,1,0));
+		
+		temp = gbl->vdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
+		gbl->vdt(indx,0,0) = gbl->vdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
+		gbl->vdt(indx,1,1) = temp;
+		gbl->vdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
+		gbl->vdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+		
+		/* DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
+		//		FLT theta =  100.0*M_PI/180.0;
+		//		gbl->vdt(indx,0,0) = -sin(theta);
+		//		gbl->vdt(indx,1,1) =  sin(theta);
+		//		gbl->vdt(indx,0,1) = cos(theta);
+		//		gbl->vdt(indx,1,0) = cos(theta);
+	}
+	
+	/* INVERT SIDE MATRIX */
+	if (basis::tri(x.log2p)->sm() > 0) {
+		for(indx=0;indx<base.nseg;++indx) {
+			/* INVERT SIDE MVDT MATRIX */
+			jcbi = 1.0/(gbl->sdt(indx,0,0)*gbl->sdt(indx,1,1) -gbl->sdt(indx,0,1)*gbl->sdt(indx,1,0));
+			
+			temp = gbl->sdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
+			gbl->sdt(indx,0,0) = gbl->sdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
+			gbl->sdt(indx,1,1) = temp;
+			gbl->sdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
+			gbl->sdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+		}
+	}
+	return;
+}
+
+/* Routine to make sure r_gbl residual doesn't get screwed up at triple junction */
+void hp_deformable_follower_pnt::rsdl(int stage) {
+	
+	if (!surface->is_master) return;
+		
+	int endpt;
+	if (surfbdry == 0)
+		endpt = x.ebdry(base.ebdry(0))->nseg;
+	else
+		endpt = 0;
+	
+	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
+	/* equation for tangential poistion */
+	r_gbl->res(base.pnt)(0) = 0.0;
+	r_gbl->res(base.pnt)(1) = 0.0;
+	
+	// FIXME: This should be deleted eventually
+	surface->gbl->vres(endpt,0) = 0.0;
+	surface->gbl->vres(endpt,1) = 0.0;
+}
+
+#ifdef petsc
+void hp_deformable_follower_pnt::petsc_jacobian() {
+	/* ZERO TANGENT AND NORMAL MESH MOVEMENT ROW BEFORE COMMUNICATION */
+	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+#ifdef MY_SPARSE
+	x.J.zero_row(row);
+	x.J_mpi.zero_row(row++);
+	x.J.zero_row(row);
+	x.J_mpi.zero_row(row++);
+#else
+	/* Must zero rows of jacobian created by r_mesh */
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
+	MatZeroRow(x.petsc_J,row,PETSC_NULL);
+	MatZeroRow(x.petsc_J,row+1,PETSC_NULL);
+#endif
+	
+	hp_vrtx_bdry::petsc_jacobian();
+}
+#endif
+
+
 

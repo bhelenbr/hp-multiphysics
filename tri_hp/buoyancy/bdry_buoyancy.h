@@ -25,12 +25,12 @@ using namespace blitz;
 namespace bdry_buoyancy {
 
 #ifdef OLDWAY_SF
-	class solid_fluid : public symbolic {
+	class solid_fluid : public hp_edge_bdry {
 		public:
-			solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
+			solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {
 				mytype = "solid_fluid";
 			}
-			solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
+			solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin) {}
 			solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
 			
@@ -49,12 +49,12 @@ namespace bdry_buoyancy {
 		
 	};
 #else
-	class solid_fluid : public symbolic {
+	class solid_fluid : public hp_edge_bdry {
 	public:
-		solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin) {
+		solid_fluid(tri_hp_buoyancy &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {
 			mytype = "solid_fluid";
 		}
-		solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin) {}
+		solid_fluid(const solid_fluid& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin) {}
 		solid_fluid* create(tri_hp& xin, edge_bdry &bin) const {return new solid_fluid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 		void init(input_map& inmap,void* gbl_in);
 	};
@@ -81,33 +81,18 @@ namespace bdry_buoyancy {
 	
 	class surface9 : public bdry_ins::surface {
 		protected:
-			Array<vector_function,1> fluxes;
 			symbolic_function<1> sigma_vs_T;
 			
 		public:
-			surface9(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {
-				mytype = "surface";
-				fluxes.resize(x.NV);
-				Array<string,1> names(4);
-				Array<int,1> dims(4);
-				dims = x.ND;
-				names(0) = "u";
-				dims(0) = x.NV;
-				names(1) = "x";
-				names(2) = "xt";
-				names(3) = "n";
-				for(int n=0;n<x.NV;++n) {
-					fluxes(n).set_arguments(4,dims,names);
-				}
-			}
-			surface9(const surface9& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), fluxes(inbdry.fluxes), sigma_vs_T(inbdry.sigma_vs_T) {}
+			surface9(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {mytype = "surface";}
+			surface9(const surface9& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), sigma_vs_T(inbdry.sigma_vs_T) {}
 			surface9* create(tri_hp& xin, edge_bdry &bin) const {return new surface9(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			void init(input_map& input,void* gbl_in);
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	
-	class melt : public symbolic {
+	class melt : public hp_edge_bdry {
 		protected:
 			tri_hp_buoyancy &x;
 			int neq;
@@ -150,10 +135,10 @@ namespace bdry_buoyancy {
 			
 		public:
 			void* create_global_structure() {return new global;}
-			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : symbolic(xin,bin), x(xin), neq(2) {
+			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), neq(2) {
 				mytype = "melt";
 			}
-			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : symbolic(inbdry,xin,bin), x(xin), neq(2) {
+			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), x(xin), neq(2) {
 				gbl = inbdry.gbl;
 				ksprg.resize(base.maxseg);
 				vug_frst.resize(base.maxseg+1);
@@ -248,7 +233,7 @@ namespace bdry_buoyancy {
 			void minvrt();
 			void update(int stage);
 			void setup_preconditioner();
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl);
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl);
 #ifdef petsc
 			void petsc_jacobian_dirichlet();
 #endif

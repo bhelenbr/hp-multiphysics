@@ -52,7 +52,7 @@ void tri_hp_lvlset::reinitialize() {
 		/* To output during reinitialization */
 		s.str("");
 		s<<ii;
-		fname = "reinit" + nstr.str() + "_" + s.str() +"_" +gbl->idprefix;
+		fname = "reinit" + nstr.str() + "_" + s.str();
 		output(fname,tecplot);
 #endif
 	}
@@ -359,7 +359,7 @@ void tri_hp_lvlset::reinit_setup_preconditioner() {
 			if (!(jcb > 0.0)) {  // this catches nan's too
 				*gbl->log << "negative triangle area caught in tstep. problem triangle is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-				tri_mesh::output("negative_"+gbl->idprefix+gbl->idprefix,grid);
+				tri_mesh::output("negative_",grid);
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);

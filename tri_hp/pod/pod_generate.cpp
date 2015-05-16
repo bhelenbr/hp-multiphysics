@@ -111,7 +111,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for(int k=0;k<nsnapshots;++k) {
 		nstr.str("");
 		nstr << k*restart_interval +restartfile << std::flush;
-		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+		filename = "rstrt" +nstr.str() +"_d0";
 		BASE::input(filename, BASE::binary);
 		
 #ifdef POD_BDRY
@@ -122,7 +122,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		
 		nstr.str("");
 		nstr << k << std::flush;
-		filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+		filename = "temp" +nstr.str();
 		BASE::output(filename, BASE::binary);
 	}
 	
@@ -196,7 +196,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		for (int k=0;k<nsnapshots;++k) {
 			nstr.str("");
 			nstr << k << std::flush;
-			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			filename = "temp" +nstr.str();
 			BASE::input(filename, BASE::binary); // Loads into ug
 			time_average(BASE::ug,mass_times_timeaverage);
 		}
@@ -293,7 +293,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		for (int k=0;k<nsnapshots;++k) {
 			nstr.str("");
 			nstr << k << std::flush;
-			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			filename = "temp" +nstr.str();
 			BASE::input(filename, BASE::binary); // Loads into ug
 #ifdef WEIGHTED_DPOD
 			BASE::ug.v *= sqrt ( set_eigenvalues(k) );
@@ -305,7 +305,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			for(int l=k;l<nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
-				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				filename = "temp" +nstr.str();
 				BASE::input(filename, BASE::binary);
 #ifdef WEIGHTED_DPOD
 				BASE::ug.v *= sqrt ( set_eigenvalues(l) );
@@ -414,7 +414,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			for(int l=0;l<nsnapshots;++l)	{
 				nstr.str("");
 				nstr << l << std::flush;
-				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				filename = "temp" +nstr.str();
 				BASE::input(filename, BASE::binary);
 #ifdef WEIGHTED_DPOD
 				modes(start+k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,k)*BASE::ug.v(Range(0,BASE::npnt-1)) * sqrt ( set_eigenvalues(l) );
@@ -464,7 +464,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				/* LOAD SNAPSHOT */
 				nstr.str("");
 				nstr << k << std::flush;
-				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				filename = "temp" +nstr.str();
 				BASE::input(filename, BASE::binary);
 				project_to_gauss(BASE::ug);
 				
@@ -479,7 +479,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				/* LOAD SNAPSHOT */
 				nstr.str("");
 				nstr << k << std::flush;
-				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				filename = "temp" +nstr.str();
 				BASE::input(filename, BASE::binary);
 				
 				for(int l=start;l<nmodes_per_deflation+start;++l) {
@@ -530,7 +530,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/* LOAD SNAPSHOT */
 		nstr.str("");
 		nstr << k << std::flush;
-		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+		filename = "rstrt" +nstr.str() +"_d0";
 		BASE::input(filename, BASE::binary);
 		project_to_gauss(BASE::ug);
 		for(int l=0;l<nmodes;++l) {
@@ -704,7 +704,7 @@ template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 		/* LOAD MODE k */
 		nstr.str("");
 		nstr << k << std::flush;
-		filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+		filename = "mode" +nstr.str();
 		BASE::input(filename, BASE::binary);
 		project_to_gauss(BASE::ug);
 		
@@ -712,7 +712,7 @@ template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 			/* LOAD MODE l */
 			nstr.str("");
 			nstr << l << std::flush;
-			filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+			filename = "mode" +nstr.str();
 			BASE::input(filename, BASE::binary);
 			psimatrix(psi1dcounter) = inner_product_with_projection(BASE::ug);
 			++psi1dcounter;
@@ -984,7 +984,7 @@ template<class BASE> void pod_generate<BASE>::output(vsi& target,int filenumber)
 	
 	nstr.str("");
 	nstr << filenumber << std::flush;
-	filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+	filename = "mode" +nstr.str();
 	output(target,filename);
 	return;
 }
@@ -1010,7 +1010,7 @@ template<class BASE> void gram_schmidt<BASE>::tadvance() {
 		for(int l=1;l<nsets-1;++l) {
 			nstr.str("");
 			nstr << l*nsnapshots_per_set + eig_ct << std::flush;
-			filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+			filename = "mode" +nstr.str();
 			BASE::input(filename, BASE::binary);
 			project_to_gauss(BASE::ug);
 			
@@ -1018,7 +1018,7 @@ template<class BASE> void gram_schmidt<BASE>::tadvance() {
 			for (int k=0;k<l;++k) {
 				nstr.str("");
 				nstr << k*nsnapshots_per_set + eig_ct << std::flush;
-				filename2 = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+				filename2 = "mode" +nstr.str();
 				BASE::input(filename2, BASE::binary, 1);
 				dotp = inner_product_with_projection(BASE::ugbd(1));
 				sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
@@ -1132,11 +1132,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	for(k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
 		nstr << k*x.restart_interval +x.restartfile << std::flush;
-		filename = "rstrt" +nstr.str() + "_" + x.gbl->idprefix +".d0";
+		filename = "rstrt" +nstr.str() +"_d0";
 		x.input(filename, BASE::binary);
 		nstr.str("");
 		nstr << k << std::flush;
-		filename = "temp" +nstr.str() + "_" + base.idprefix;
+		filename = "temp" +nstr.str();
 		x.BASE::output(filename, BASE::binary);
 	}
 	
@@ -1151,13 +1151,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		for (k=0;k<x.nsnapshots;++k) {
 			nstr.str("");
 			nstr << k << std::flush;
-			filename = "temp" +nstr.str() + "_" + base.idprefix;
+			filename = "temp" +nstr.str();
 			x.input(filename, x.binary);
 			
 			for(l=k;l<x.nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
-				filename = "temp" +nstr.str() + "_" + base.idprefix;
+				filename = "temp" +nstr.str();
 				x.input(filename, x.binary, 1);
 				
 				/* PERFORM 1D INTEGRATION */
@@ -1228,7 +1228,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		for(l=0;l<x.nsnapshots;++l)	{
 			nstr.str("");
 			nstr << l << std::flush;
-			filename = "temp" +nstr.str() + "_" + base.idprefix;
+			filename = "temp" +nstr.str();
 			x.input(filename, x.binary, 1);
 			
 			int bsind = 0;
@@ -1289,7 +1289,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		/* 2D OUTPUT RENORMALIZED MODE */
 		nstr.str("");
 		nstr << eig_ct << std::flush;
-		filename = "mode" +nstr.str() + "_" + base.idprefix;
+		filename = "mode" +nstr.str();
 		x.BASE::output(filename, x.tecplot);
 		
 		/* 1D OUTPUT RENORMALIZED MODE */
@@ -1331,7 +1331,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			/* LOAD SNAPSHOT */
 			nstr.str("");
 			nstr << k << std::flush;
-			filename = "temp" +nstr.str() + "_" + base.idprefix;
+			filename = "temp" +nstr.str();
 			x.input(filename, x.binary, 1);
 			
 			/* PERFORM 1D INTEGRATION */

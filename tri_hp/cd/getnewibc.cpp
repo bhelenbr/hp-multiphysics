@@ -71,7 +71,7 @@ namespace ibc_cd {
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
 			return(0.0);
 		}
-		void input(input_map &inmap,std::string idnty) {}
+		void init(input_map &inmap,std::string idnty) {}
 	};
 	
 	
@@ -84,7 +84,7 @@ namespace ibc_cd {
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 			return(c(n)*pow(x(0)-spd(n,0)*time,a(n,0))*pow(x(1)-spd(n,1)*time,a(n,1)));
 		}
-		void input(input_map &inmap,std::string idnty) {
+		void init(input_map &inmap,std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
@@ -216,7 +216,7 @@ namespace ibc_cd {
 			
 		}
 		soi_src(tri_hp_cd& xin) : x(xin), cycle(-1),icount(0) {}
-		void input(input_map &blockdata,std::string idnty) {
+		void init(input_map &blockdata,std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			
@@ -293,7 +293,7 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
 			return(tri_hp::getnewibc(suffix,inmap));
 		}
 	}
-	temp->input(inmap,keyword);
+	temp->init(inmap,keyword);
 	return(temp);
 }
 

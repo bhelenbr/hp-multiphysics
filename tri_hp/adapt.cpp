@@ -26,9 +26,9 @@ void tri_hp::adapt() {
 
 	if (gbl->adapt_output) {
 		std::ostringstream fname;
-		fname << "adapted_solution" << gbl->tstep << '_' << gbl->idprefix;
-		tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-		tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+		fname << "adapted_solution" << gbl->tstep;
+		tri_mesh::output(fname.str(),tri_mesh::grid);
+		tri_hp::output(fname.str(),tri_hp::tecplot);
 	}
 	
 	*gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
@@ -237,7 +237,7 @@ void tri_hp::length() {
 	
 	if (gbl->adapt_output) {
 		ostringstream fname;
-		fname << "adapt_diagnostic" << gbl->tstep << '_' << gbl->idprefix;
+		fname << "adapt_diagnostic" << gbl->tstep;
 		output(fname.str(),tri_hp::adapt_diagnostic);
 	}
 	
@@ -257,9 +257,9 @@ void tri_hp::updatepdata(int v0) {
 	if (!found) {
 		*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatepdata for " << v0 << ' ' << pnts(v0) << std::endl;
 		//			std::ostringstream fname;
-		//			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
-		//			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-		//			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+		//			fname << "current_solution" << error_count++;
+		//			tri_mesh::output(fname.str(),tri_mesh::grid);
+		//			tri_hp::output(fname.str(),tri_hp::tecplot);
 	}
 	
 	
@@ -368,9 +368,9 @@ void tri_hp::updatesdata(int sind) {
 		if (!found) {
 			*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatesdata for " << sind << ' ' << pt << std::endl;
 //			std::ostringstream fname;
-//			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
-//			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-//			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+//			fname << "current_solution" << error_count++;
+//			tri_mesh::output(fname.str(),tri_mesh::grid);
+//			tri_hp::output(fname.str(),tri_hp::tecplot);
 		}
 
 		for(step=0;step<gbl->nadapt;++step) {
@@ -533,9 +533,9 @@ void tri_hp::updatetdata(int tind) {
 				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
 				*gbl->log << "Using triangle " << ttgt << " with (r,s) = (" << r << ',' << s << ')' << std::endl;
 //				std::ostringstream fname;
-//				fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
-//				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-//				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+//				fname << "current_solution" << error_count++;
+//				tri_mesh::output(fname.str(),tri_mesh::grid);
+//				tri_hp::output(fname.str(),tri_hp::tecplot);
 			}            
 			for(step=0;step<gbl->nadapt;++step) {
 				gbl->pstr->ugtouht(ttgt,step);

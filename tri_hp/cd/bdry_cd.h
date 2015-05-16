@@ -28,7 +28,7 @@ namespace bdry_cd {
 			generic(tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
 			generic(const generic& inbdry, tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	};
 
 	class dirichlet : public generic {
@@ -62,52 +62,6 @@ namespace bdry_cd {
 			characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 	};
-
-	class mixed : public generic {
-		public:
-			vector_function flux_eq;
-
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-				Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND), au(1);
-				axpt(0) = xpt(0); axpt(1) = xpt(1);
-				amv(0) = mv(0); amv(1) = mv(1);
-				anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
-				flx(0) = flux_eq.Eval(u,axpt,amv,anorm,x.gbl->time)*length;
-			}
-		
-			mixed(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "mixed";
-				Array<string,1> names(4);
-				Array<int,1> dims(4);
-				dims = x.ND;
-				names(0) = "u";
-				dims(0) = x.NV;
-				names(1) = "x";
-				names(2) = "xt";
-				names(3) = "n";
-				flux_eq.set_arguments(4,dims,names);
-			}
-			mixed(const mixed& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), flux_eq(inbdry.flux_eq) {}
-			mixed* create(tri_hp& xin, edge_bdry &bin) const {return new mixed(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-
-			void init(input_map& inmap, void* gbl_in) {
-				std::string keyword;
-				std::istringstream data;
-				std::string val;
-
-				generic::init(inmap,gbl_in);
-				
-				if (inmap.find(base.idprefix +"_flux") != inmap.end()) {
-					flux_eq.init(inmap,base.idprefix +"_flux");
-				}
-				else {
-					*x.gbl->log << "couldn't find flux function " << base.idprefix +"_flux" << std::endl;
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
-				}
-				return;
-			}
-	};
-	
 
 	class melt : public generic {
 		protected:

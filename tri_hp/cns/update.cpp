@@ -52,7 +52,7 @@ void tri_hp_cns::project_new_variables(){
 		hp_ebdry(i)->vdirichlet();
 	
 	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
+		hp_vbdry(i)->vdirichlet();
 	
 	if (!basis::tri(log2p)->sm()) return;
 

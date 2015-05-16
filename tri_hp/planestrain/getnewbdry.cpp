@@ -21,8 +21,8 @@ using namespace bdry_ps;
  */
 class tri_hp_ps_stype {
 	public:
-		static const int ntypes = 4;
-		enum ids {unknown=-1,plain,dirichlet,neumann,friction_wall};
+		static const int ntypes = 3;
+		enum ids {unknown=-1,dirichlet,neumann,friction_wall};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -31,7 +31,7 @@ class tri_hp_ps_stype {
 		}
 };
 
-const char tri_hp_ps_stype::names[ntypes][40] = {"plain","dirichlet","neumann","friction_wall"};
+const char tri_hp_ps_stype::names[ntypes][40] = {"dirichlet","neumann","friction_wall"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -50,10 +50,6 @@ hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
 	}
 
 	switch(type) {
-		case tri_hp_ps_stype::plain: {
-			temp = new hp_edge_bdry(*this,*ebdry(bnum));
-			break;
-		}
 		case tri_hp_ps_stype::dirichlet: {
 			temp = new dirichlet(*this,*ebdry(bnum));
 			break;

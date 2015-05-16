@@ -9,11 +9,12 @@
 #include <stdio.h>
 #include "hp_boundary.h"
 #include "hp_coupled_boundary.h"
+#include <tri_boundary.h>
 
 class tri_hp_vtype {
 public:
-	static const int ntypes = 3;
-	enum ids {unknown=-1,plain,hp_deformable_fixed_pnt,hp_deformable_free_pnt};
+	static const int ntypes = 4;
+	enum ids {unknown=-1,plain,hp_deformable_fixed_pnt,hp_deformable_free_pnt,hp_deformable_follower_pnt};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -22,7 +23,7 @@ public:
 	}
 };
 
-const char tri_hp_vtype::names[ntypes][40] = {"plain","hp_deformable_fixed_pnt","hp_deformable_free_pnt"};
+const char tri_hp_vtype::names[ntypes][40] = {"plain","hp_deformable_fixed_pnt","hp_deformable_free_pnt","hp_deformable_follower_pnt"};
 
 hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -49,6 +50,10 @@ hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			temp = new hp_deformable_free_pnt(*this,*vbdry(bnum));
 			break;
 		}
+		case tri_hp_vtype::hp_deformable_follower_pnt: {
+			temp = new hp_deformable_follower_pnt(*this,*vbdry(bnum));
+			break;
+		}
 		default: {
 			temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
 		}
@@ -59,8 +64,8 @@ hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 
 class tri_hp_stype {
 public:
-	static const int ntypes = 3;
-	enum ids {unknown=-1,plain,symbolic,symbolic_with_integration_by_parts};
+	static const int ntypes = 4;
+	enum ids {unknown=-1,plain,symbolic_with_integration_by_parts,translating_surface};
 	static const char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -69,7 +74,7 @@ public:
 	}
 };
 
-const char tri_hp_stype::names[ntypes][40] = {"plain","symbolic","symbolic_ibp"};
+const char tri_hp_stype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -86,15 +91,27 @@ hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
 	}
 	else {
 		type = tri_hp_stype::getid(val.c_str());
+		if (type == tri_hp_stype::unknown) {
+			*gbl->log << "unknown side type:" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
 	}
 	
 	switch(type) {
-		case tri_hp_stype::symbolic: {
-			temp = new symbolic(*this,*ebdry(bnum));
-			break;
-		}
 		case tri_hp_stype::symbolic_with_integration_by_parts: {
 			temp = new symbolic_with_integration_by_parts(*this,*ebdry(bnum));
+			break;
+		}
+		case tri_hp_stype::translating_surface:  {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new  translating_surface(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for translating boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
+			}
 			break;
 		}
 		default: {

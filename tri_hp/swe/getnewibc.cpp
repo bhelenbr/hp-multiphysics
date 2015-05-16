@@ -33,7 +33,7 @@ namespace ibc_swe {
 				return(0.0);
 			}
 
-			void input(input_map &in_map,std::string idnty) {
+			void init(input_map &in_map,std::string idnty) {
 
 				if (!in_map.get(idnty + "_rossby_amp",amplitude)) in_map.getwdefault("rossby_amp",amplitude,0.395);
 			}

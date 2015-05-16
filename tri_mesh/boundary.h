@@ -194,24 +194,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				}
 			}
 		}
-		
-		void output(std::ostream& fout) {
-			BASE::output(fout);
-
-			fout << BASE::idprefix << "_group" << ": ";
-			for(int k=0;k<maxgroup+1;++k)
-				if (groupmask&(1<<k)) fout << k << ' ';
-			fout << std::endl;
-
-			for(int k=0;k<maxgroup+1;++k) {
-				if (groupmask&(1<<k)) {
-					fout << BASE::idprefix << "_phase (not set yet so this is dumb)" << k << ": ";
-					for (int m=0;m<nmatch;++m)
-						fout << phase(k,m) << " ";
-					fout << std::endl;
-				}
-			}
-		}
 
 		int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {
 			if (bin->idnum == BASE::idnum) {
@@ -873,7 +855,6 @@ template<int ND> class geometry {
 			return;
 		}
 		virtual void init(input_map& inmap, std::string idprefix, std::ostream& log) {}
-		virtual void output(std::ostream& fout, std::string idprefix) {}
 		virtual ~geometry() {}
 };
 
@@ -976,11 +957,6 @@ class circle : public geometry<2> {
 		circle(const circle &inbdry) : geometry<2>(inbdry), radius(inbdry.radius) {}
 		circle* create() const {return(new circle(*this));}
 
-		void output(std::ostream& fout,std::string idprefix) {
-			geometry<2>::output(fout,idprefix);
-			fout << idprefix << "_radius: " << radius << std::endl;
-		}
-
 		void init(input_map& inmap,std::string idprefix, std::ostream& log) {
 			geometry<2>::init(inmap,idprefix,log);
 			inmap.getwdefault(idprefix+"_radius",radius,0.5);
@@ -1002,11 +978,6 @@ class ellipse : public geometry<2> {
 		ellipse(const ellipse &inbdry) : geometry<2>(inbdry), axes(inbdry.axes) {}
 		ellipse* create() const {return(new ellipse(*this));}
 
-		void output(std::ostream& fout,std::string idprefix) {
-			geometry<2>::output(fout,idprefix);
-			fout << idprefix << "_a" << axes(0) << std::endl;
-			fout << idprefix << "_b" << axes(1) << std::endl;
-		}
 		void init(input_map& inmap, std::string idprefix,std::ostream& log) {
 			geometry<2>::init(inmap,idprefix,log);
 			inmap.getwdefault(idprefix+"_a",axes(0),1.0);
@@ -1054,16 +1025,6 @@ class naca : public geometry<2> {
 		}
 		naca* create() const {return(new naca(*this));}
 
-		void output(std::ostream& fout,std::string idprefix) {
-			geometry<2>::output(fout,idprefix);
-			fout << idprefix << "_sign: " << sign << std::endl;
-			fout << idprefix << "_coeff: ";
-			for(int i=0;i<5;++i)
-				fout << coeff[i] << " ";
-			fout << std::endl;
-			fout << idprefix << "_scale: " << scale << std::endl;
-		}
-
 		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
 			geometry<2>::init(inmap,idprefix,log);
 
@@ -1106,7 +1067,6 @@ class spline_geometry {
 		spline3<ND> my_spline;
 		FLT smin, smax; // LIMITS FOR BOUNDARY
 	public:
-		void output(std::ostream& fout) {}
 		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
 			std::string line;
 			if (!inmap.get(idprefix+"_filename",line)) {

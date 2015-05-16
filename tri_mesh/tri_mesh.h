@@ -329,10 +329,6 @@ class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
 			pnt = bin.pnt;
 			ebdry = bin.ebdry;
 		}
-		/* FIX ME: THESE AREN'T USED YET */
-		virtual void input(istream &fin,tri_mesh::filetype type = tri_mesh::grid) {}
-		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {boundary::output(fout);}
-
 		virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
 		virtual void vfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
 
@@ -366,18 +362,6 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
 			return(new edge_bdry(*this,xin));
 		}
 		virtual void copy(const edge_bdry& bin);
-
-		/* FIX ME: THESE AREN'T USED YET */
-		virtual void input(istream &fin,tri_mesh::filetype type = tri_mesh::grid) {
-			if (type == tri_mesh::grid) {
-				for(int j=0;j<nseg;++j) {
-					fin.ignore(80,':');
-					fin >> seg(j);
-					fin.ignore(80,'\n');
-				}
-			}
-		}
-		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {boundary::output(fout);}
 
 		/* ADDITIONAL STUFF FOR SIDES */
 		virtual void swap(int s1, int s2);

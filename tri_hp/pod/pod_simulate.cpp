@@ -47,7 +47,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	for(i=0;i<nmodes;++i) {
 		nstr.str("");
 		nstr << i << std::flush;
-		filename = "mode" +nstr.str() +"_" +BASE::gbl->idprefix;
+		filename = "mode" +nstr.str();
 		nstr.clear();
 		modes(i).v.resize(BASE::maxpst,BASE::NV);
 		modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
@@ -270,7 +270,7 @@ template<class BASE> void pod_simulate<BASE>::tadvance() {
 		BASE::hp_ebdry(i)->vdirichlet();
 
 	for(int i=0;i<BASE::nvbd;++i)
-		BASE::hp_vbdry(i)->vdirichlet2d();
+		BASE::hp_vbdry(i)->vdirichlet();
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
@@ -307,7 +307,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 		BASE::hp_ebdry(i)->vdirichlet();
 	
 	for(int i=0;i<BASE::nvbd;++i)
-		BASE::hp_vbdry(i)->vdirichlet2d();
+		BASE::hp_vbdry(i)->vdirichlet();
 		
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
@@ -362,7 +362,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 #ifndef petsc
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
-	BASE::setup_stabilization_constants();
+	BASE::setup_preconditioner();
 		
 	rsdl(BASE::gbl->nstage);
 
@@ -384,7 +384,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 			BASE::hp_ebdry(i)->vdirichlet();
 
 		for(int i=0;i<BASE::nvbd;++i)
-			BASE::hp_vbdry(i)->vdirichlet2d();
+			BASE::hp_vbdry(i)->vdirichlet();
 
 		/* APPLY DIRCHLET B.C.S TO MODE */
 		for(int i=0;i<BASE::nebd;++i)
@@ -419,7 +419,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 			BASE::hp_ebdry(i)->vdirichlet();
 
 		for(int i=0;i<BASE::nvbd;++i)
-			BASE::hp_vbdry(i)->vdirichlet2d();
+			BASE::hp_vbdry(i)->vdirichlet();
 
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
 		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
@@ -463,7 +463,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	Array<FLT,1> phi1D(ndofs), JPhi(ndofs);
 
 	/* Calculate Full Jacobian */
-	BASE::setup_stabilization_constants();
+	BASE::setup_preconditioner();
 	BASE::petsc_jacobian();
 		
 	/* Now compress it using phi^T J phi */
@@ -478,7 +478,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 			BASE::hp_ebdry(i)->vdirichlet();
 		
 		for(int i=0;i<BASE::nvbd;++i)
-			BASE::hp_vbdry(i)->vdirichlet2d();
+			BASE::hp_vbdry(i)->vdirichlet();
 		
 		/* APPLY DIRCHLET B.C.S TO MODE */
 		for(int i=0;i<BASE::nebd;++i)
@@ -515,7 +515,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 				BASE::hp_ebdry(i)->vdirichlet();
 			
 			for(int i=0;i<BASE::nvbd;++i)
-				BASE::hp_vbdry(i)->vdirichlet2d();
+				BASE::hp_vbdry(i)->vdirichlet();
 			
 			/* APPLY DIRCHLET B.C.S TO MODE */
 			for(int i=0;i<BASE::nebd;++i)
@@ -561,7 +561,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 			BASE::hp_ebdry(i)->vdirichlet();
 		
 		for(int i=0;i<BASE::nvbd;++i)
-			BASE::hp_vbdry(i)->vdirichlet2d();
+			BASE::hp_vbdry(i)->vdirichlet();
 		
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
 		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
@@ -698,7 +698,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 		BASE::hp_ebdry(i)->vdirichlet();
 
 	for(int i=0;i<BASE::nvbd;++i)
-		BASE::hp_vbdry(i)->vdirichlet2d();
+		BASE::hp_vbdry(i)->vdirichlet();
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
@@ -939,8 +939,8 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 			ofstream out;
 			out.setf(std::ios::scientific, std::ios::floatfield);
 			out.precision(4);
-			fnmapp = fname +"_coeff.txt";
-			out.open(fnmapp.c_str());
+			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix +".txt";
+			out.open(fnmapp);
 			if (!out) {
 				*BASE::gbl->log << "couldn't open text output file " << fname;
 				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
@@ -954,7 +954,7 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 		}
 		case(block::restart): {
 			/* Output list of coefficents */
-			fnmapp = fname +"_coeff.bin";
+			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix +".bin";
 			binofstream bout;
 			bout.open(fnmapp.c_str());
 			if (bout.error()) {

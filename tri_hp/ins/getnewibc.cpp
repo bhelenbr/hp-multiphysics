@@ -31,7 +31,7 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -73,7 +73,7 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -117,7 +117,7 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -195,7 +195,7 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -279,7 +279,7 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
@@ -611,12 +611,6 @@ class force_coupling : public tri_hp_helper {
 			
 			/* For full jacobian way (not working) */
 			int jacobian_start;
-
-			
-			/* This is to dump output from the generic boundaries */
-			struct nullstream : std::ostream {
-				nullstream(): std::ios(0), std::ostream(0) {}
-			} ns;
 
 		public:
 			force_coupling(tri_hp_ins& xin) : tri_hp_helper(xin), x(xin), horizontal(false), vertical(false), rotational(false), w(0.0) {}
@@ -963,7 +957,7 @@ class force_coupling : public tri_hp_helper {
 				FLT moment = 0.0;
 				for (int i=0; i<nboundary; ++i) { 
 					/* FORCE BOUNDARY TO CALCULATE ALL FLUXES */
-					hp_ebdry(i)->output(ns,tri_hp::tecplot);
+					hp_ebdry(i)->output("dump",tri_hp::tecplot);
 					force(0) -= hp_ebdry(i)->diff_flux(0);
 					force(1) -= hp_ebdry(i)->diff_flux(1);					
 					moment += hp_ebdry(i)->moment;
@@ -1479,7 +1473,7 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
 			return(tri_hp::getnewibc(suffix,inmap));
 		}
 	}
-	temp->input(inmap,keyword);
+	temp->init(inmap,keyword);
 	return(temp);
 }
 

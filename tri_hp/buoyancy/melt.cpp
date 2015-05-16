@@ -38,7 +38,7 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	/* Load in the heat flux */
 	keyword = base.idprefix + "_hp_typelist";
 	inmap[keyword] = "0 0 1 0";
-	symbolic::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap,gbl_in);
 	
 	/* Now that we have loaded flux, make temperature a dirichlet bc */
 	/* And make pressure neumann */
@@ -127,7 +127,7 @@ void melt::init(input_map& inmap,void* gbl_in) {
 void melt::tadvance() {
 	int i,j,m,sind;    
 	
-	symbolic::tadvance();
+	hp_edge_bdry::tadvance();
 	
 	if (x.gbl->substep == 0) {
 		/* SET SPRING CONSTANTS */
@@ -210,7 +210,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		amv(1) += x.gbl->mesh_ref_vel(1);
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
+		res(3,i) = RAD(crd(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
 		/* Heat Flux Upwinded NO!!! */
 		// res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
@@ -292,7 +292,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		amv(1) += x.gbl->mesh_ref_vel(1);
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(x.crd(0)(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
+		res(3,i) = RAD(x.crd(0)(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
 		/* Heat Flux Upwinded? */
 		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 	}
@@ -482,7 +482,7 @@ void melt::vdirichlet() {
 #endif
 	
 	/* Now apply dirichlet B.C.s */
-	symbolic::vdirichlet();
+	hp_edge_bdry::vdirichlet();
 	
 #ifdef petsc	
 	/* Store rotated vertex residual in r_mesh residual vector */
@@ -839,7 +839,7 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	
@@ -1287,7 +1287,7 @@ void melt::petsc_jacobian() {
 	}
 
 	
-	/* FIXME: NOT SURE ABOUT THIS TEMPORARY */
+	/* FIXME: NOT SURE ABOUT THIS */
 	//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian();
 	//	x.hp_vbdry(base.vbdry(1))->petsc_jacobian();
 	//	x.hp_vbdry(base.vbdry(0))->petsc_jacobian_dirichlet();
@@ -1815,7 +1815,7 @@ void melt::petsc_jacobian_dirichlet() {
 	}
 	
 	
-	symbolic::petsc_jacobian_dirichlet();  // Sets heat equation row to be just 1 on diagonal
+	hp_edge_bdry::petsc_jacobian_dirichlet();  // Sets heat equation row to be just 1 on diagonal
 }
 
 void melt::non_sparse(Array<int,1> &nnzero) {

@@ -15,21 +15,6 @@ using namespace bdry_buoyancy;
 void surface9::init(input_map& input,void* gbl_in) {
 	bdry_ins::surface::init(input,gbl_in);
 	
-	input_map zeromap;
-	zeromap["zero"] = "0.0";
-
-	std::ostringstream nstr;
-	for (int n=0;n<x.NV;++n) {
-		nstr.str("");
-		nstr << base.idprefix << "_flux" << n << std::flush;
-		if (input.find(nstr.str()) != input.end()) {
-			fluxes(n).init(input,nstr.str());
-		}
-		else {
-			fluxes(n).init(zeromap,"zero");
-		}
-	}
-	
 	if (input.find(base.idprefix+"_sigma_vs_T") != input.end()) {
 		sigma_vs_T.init(input,base.idprefix+"_sigma_vs_T");
 	} 
@@ -88,7 +73,7 @@ void surface9::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		for(int n=0;n<x.NV;++n)
 			au(n) = u(n)(i);
 		for(int n=0;n<x.NV;++n) {
-			flx(n) = fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
+			flx(n) = fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time);
 		}
 		
 		/* Evaluate Surface Tension */

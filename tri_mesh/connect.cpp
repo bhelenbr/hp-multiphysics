@@ -35,7 +35,7 @@ void tri_mesh::connect(multigrid_interface& in) {
 		std::ostringstream nstr;
 		nstr.str("");
 		nstr << gbl->tstep << std::flush;
-		name = "coarsen" +nstr.str() +"_" +gbl->idprefix +".";
+		name = "coarsen" +nstr.str() +"_";
 		nstr.str("");
 		nstr << coarse_level << flush;
 		fname = name +nstr.str();

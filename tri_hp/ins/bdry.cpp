@@ -11,25 +11,27 @@ using namespace bdry_ins;
 // #define MPDEBUG
 // #define L2_ERROR
 
-void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
 	FLT convect,jcb;
+	
+	std::string fname;
+	fname = filename +"_" +base.idprefix;
 
 	switch(typ) {
 		case(tri_hp::text): case(tri_hp::binary): {
-			hp_edge_bdry::output(fout,typ,tlvl);
+			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
 		case(tri_hp::tecplot): case(tri_mesh::vtk): {
 			if (!report_flag) return;
 			
-			std::ostringstream fname;
-			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
+			fname += ".dat";
 			
 			std::ofstream file_out;
-			file_out.open(fname.str().c_str());
+			file_out.open(fname);
 			
 			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"U0\",\"CFLUX0\",\"DLUX0\",\"U1\",\"CFLUX1\",\"DLUX1\",\"U2\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
@@ -180,7 +182,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			break;
 		}
 		default: {
-			hp_edge_bdry::output(fout,typ,tlvl);
+			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
 	}
@@ -449,7 +451,7 @@ void hybrid_pt::update(int stage) {
 	}
 }
 
-void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+void actuator_disc::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int n,ind,sind;
 	TinyVector<FLT,tri_mesh::ND> nrm, mvel, pt;
 	FLT power;
@@ -500,7 +502,7 @@ void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		}
 	}
 	
-	generic::output(fout,typ,tlvl);
+	generic::output(filename,typ,tlvl);
 	
 	return;
 }

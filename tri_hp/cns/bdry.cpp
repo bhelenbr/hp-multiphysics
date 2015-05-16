@@ -8,7 +8,7 @@
 /*************************************************/
 using namespace bdry_cns;
 
-void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	const int NV = 4;
 	TinyMatrix<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,NV-1,NV-1> visc;
@@ -21,17 +21,19 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/gm1;
 	FLT gogm1 = gam*ogm1;
+	
+	std::string fname;
+	fname = filename +"_" +base.idprefix;
 
 	switch(typ) {
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
 			
 			Array<FLT,1> lconv_flux(x.NV),ldiff_flux(x.NV);
-			std::ostringstream fname;
-			fname << "data" << x.gbl->tstep << '_' << base.idprefix << ".dat";
+			fname += ".dat";
 			
 			std::ofstream file_out;
-			file_out.open(fname.str().c_str());
+			file_out.open(fname);
 			
 			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\"DLUX3\",\"CFLUX3\",\"DLUX3\"\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
@@ -157,7 +159,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		}
 			
 		default: {
-			hp_edge_bdry::output(fout,typ,tlvl);
+			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
 	}

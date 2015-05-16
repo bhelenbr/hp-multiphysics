@@ -809,7 +809,7 @@ void epartition::calculate_halo() {
 //		std::string adapt_file;
 //		std::ostringstream nstr;
 //		nstr << x.gbl->tstep << std::flush;
-//		adapt_file = "beforehalo" +nstr.str() +"_" +idprefix;
+//		adapt_file = "beforehalo" +nstr.str();
 //		remote_halo.output(adapt_file);
 //	}
 	

@@ -946,10 +946,7 @@
 					"${prefix}/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-fast",
-				);
+				OTHER_CPLUSPLUSFLAGS = "";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				mpi_threads = NONE;
 				packages = "${HOME}/Packages";

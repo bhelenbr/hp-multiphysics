@@ -1163,7 +1163,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 	
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 	

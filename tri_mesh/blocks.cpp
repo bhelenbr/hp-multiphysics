@@ -1335,9 +1335,7 @@ void block::tadvance() {
 }
 
 void block::output(const std::string &filename, output_purpose why, int level) {
-	std::string fapp;
-	fapp = filename +"_" +idprefix;
-	grd(level)->output(fapp,why);
+	grd(level)->output(filename,why);
 }
 
 void block::adapt() {

@@ -128,7 +128,7 @@ namespace bdry_lvlset {
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride); 
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
 			
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,Range(0,x.ND-1)) = 0.0;
 				x.gbl->res.v(base.pnt,x.NV-1) = 0.0;  // Needs to be fixed
 			}

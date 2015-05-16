@@ -525,7 +525,7 @@ namespace bdry_cns_explicit {
 			return;
 		}
 		
-		void vdirichlet2d() {
+		void vdirichlet() {
 			x.gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
 		}
 	};

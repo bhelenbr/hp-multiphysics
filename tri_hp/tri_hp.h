@@ -40,7 +40,7 @@ class hp_edge_bdry;
 class init_bdry_cndtn {
 	public:
 		virtual FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) = 0;
-		virtual void input(input_map &blkdata, std::string idnty) {};
+		virtual void init(input_map &blkdata, std::string idnty) {};
 		virtual ~init_bdry_cndtn() {};
 };
 
@@ -194,7 +194,6 @@ class tri_hp : public r_tri_mesh  {
 		void matchboundaries();
 
 		/** Setup preconditioner */
-		virtual void setup_stabilization_constants() {setup_preconditioner();}  // default
 		void setup_preconditioner();
 
 		/** Calculate residuals */
@@ -312,7 +311,7 @@ class tri_hp_helper {
 				std::ostringstream nstr;
 				std::string fname;
 				nstr << x.gbl->tstep << std::flush;
-				fname = "rstrt" +nstr.str() +"_" +x.gbl->idprefix;
+				fname = "rstrt" +nstr.str();
 				if (!x.coarse_flag) x.input(fname);
 			} 
 		}

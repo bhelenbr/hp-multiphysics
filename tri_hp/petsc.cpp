@@ -574,19 +574,22 @@ void tri_hp::petsc_rsdl() {
 	for(int i=0;i<nvbd;++i)
 		hp_vbdry(i)->vdirichlet();
 	
-	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet2d();
-	
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int m=0;m<basis::tri(log2p)->sm();++m)
 		for(int i=0;i<nebd;++i)
 			hp_ebdry(i)->sdirichlet(m);
 	
 #ifdef RSDL_DEBUG
+	const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
 	for(int i=0;i<npnt;++i) {
 		*gbl->log << gbl->idprefix << " v: " << i << ' ';
 		for(int n=0;n<NV;++n) {
 			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+			else *gbl->log << "0.0 ";
+		}
+		
+		for(int n=0;n<vdofs-NV;++n) {
+			if (fabs(r_tri_mesh::gbl->res(i)(n)) > DEBUG_TOL) *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
 			else *gbl->log << "0.0 ";
 		}
 		*gbl->log << '\n';

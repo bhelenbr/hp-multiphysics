@@ -101,9 +101,9 @@ int tri_mesh::swap(int sind, FLT tol) {
 #ifdef DEBUG_ADAPT
 		std::ostringstream nstr;
 		nstr << adapt_count++ << std::flush;
-		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
+		adapt_file = "adapt" +nstr.str();
 		nstr.str("");
-		output(adapt_file.c_str(),debug_adapt);
+		output(adapt_file,debug_adapt);
 #endif
 
 	return(1);

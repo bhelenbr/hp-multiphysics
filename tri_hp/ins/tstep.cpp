@@ -6,7 +6,7 @@
 // #define TIMEACCURATE
 #define REFINED_WAY
 
-void tri_hp_ins::setup_stabilization_constants() {
+void tri_hp_ins::setup_preconditioner() {
 	TinyVector<FLT,ND> mvel;
 
 	if (gbl->diagonal_preconditioner) {
@@ -148,7 +148,7 @@ void tri_hp_ins::setup_stabilization_constants() {
 			if (!(h > 0.0)) { 
 				*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-				tri_mesh::output("negative_"+gbl->idprefix,grid);
+				tri_mesh::output("negative",grid);
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
@@ -250,7 +250,7 @@ void tri_hp_ins::setup_stabilization_constants() {
 			if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
 				*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-				tri_mesh::output("negative_"+gbl->idprefix,grid);
+				tri_mesh::output("negative",grid);
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
@@ -305,9 +305,5 @@ void tri_hp_ins::setup_stabilization_constants() {
 			}
 		}
 	}
-}
-
-void tri_hp_ins::setup_preconditioner() {
-	setup_stabilization_constants();
 	tri_hp::setup_preconditioner();
 }

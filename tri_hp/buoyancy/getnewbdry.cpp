@@ -23,8 +23,8 @@ using namespace bdry_buoyancy;
  */
 class tri_hp_buoyancy_vtype {
 public:
-	static const int ntypes = 4;
-	enum ids {unknown=-1,melt_end,melt_inflow,melt_facet_pt,melt_facet_pt2};
+	static const int ntypes = 5;
+	enum ids {unknown=-1,melt_end,melt_inflow,melt_facet_pt,melt_facet_pt2,triple_junction};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -33,7 +33,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt","melt_facet_pt2"};
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt","melt_facet_pt2","triple_junction"};
 
 hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -66,6 +66,10 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_buoyancy_vtype::melt_facet_pt2: {
 			temp = new melt_facet_pt2(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_buoyancy_vtype::triple_junction: {
+			temp = new triple_junction(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_buoyancy_vtype::unknown: {

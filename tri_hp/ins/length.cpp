@@ -23,7 +23,7 @@ void tri_hp_ins::error_estimator() {
 	if (gbl->error_estimator == global::none) {
 		if (gbl->adapt_output) {
 			ostringstream fname;
-			fname << "adapt_diagnostic" << gbl->tstep << '_' << gbl->idprefix;
+			fname << "adapt_diagnostic" << gbl->tstep;
 			output(fname.str(),tri_hp::adapt_diagnostic);
 		}
 		return;

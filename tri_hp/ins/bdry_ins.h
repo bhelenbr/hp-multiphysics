@@ -57,16 +57,22 @@ namespace bdry_ins {
 			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);  
+				conv_flux.resize(x.NV);
+				total_flux = 0.0;
+				diff_flux = 0.0;
+				conv_flux = 0.0;
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				hp_edge_bdry::init(input,gbl_in);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
-				conv_flux.resize(x.NV);            
+				conv_flux.resize(x.NV);
+				total_flux = 0.0;
+				diff_flux = 0.0;
+				conv_flux = 0.0;
 			}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	};
 
 
@@ -132,7 +138,7 @@ namespace bdry_ins {
 				return(v);
 			}
 			rigid() : omega(0.0), vel(0.0), ctr(0.0) {}
-			void input(input_map &inmap,std::string idnty) {
+			void init(input_map &inmap,std::string idnty) {
 				inmap.getwdefault(idnty+"_omega",omega,0.0);
 				FLT dflt[2] = {0.0, 0.0};
 				inmap.getwdefault(idnty+"_center",ctr.data(),2,dflt);
@@ -154,25 +160,17 @@ namespace bdry_ins {
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				inflow::init(input,gbl_in);
-				rigid::input(input,base.idprefix);
+				rigid::init(input,base.idprefix);
 				report_flag = true;
 			}
 			void tadvance() {hp_edge_bdry::tadvance();}
 			void update(int stage) {
 				if (!x.coarse_flag) setvalues(this,essential_indices);
 			}
-			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-				// FIXME:  THIS DOESN'T WORK
-				inflow::input(fin,typ,tlvl);  
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0) {
+				inflow::output(fname,typ,tlvl);
 				if (typ == tri_hp::text) {
-					fin >> omega >> vel >> ctr;
-				}
-			}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-				// FIXME:  THIS DOESN'T WORK
-				inflow::output(fout,typ,tlvl); 
-				if (typ == tri_hp::text) {
-					fout << omega << ' ' << vel << ' ' << ctr << '\n';
+					*x.gbl->log << omega << ' ' << vel << ' ' << ctr << '\n';
 				}
 		}
 	};
@@ -233,7 +231,7 @@ namespace bdry_ins {
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				generic::init(input,gbl_in);
-				rigid::input(input,base.idprefix);
+				rigid::init(input,base.idprefix);
 				std::string keyword = base.idprefix +"_sliplength";
 				if (!input.get(keyword,slip_length)) {
 					*x.gbl->log << "Couldn't find slip length for " << keyword << std::endl;
@@ -246,10 +244,10 @@ namespace bdry_ins {
 //					fin >> omega >> vel >> ctr;
 //				}
 //			}
-//			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-//				generic::output(fout,typ,tlvl);
+//			void output(const std::string& filename, tri_hp::filetype typ,int tlvl = 0) {
+//				generic::output(filename,typ,tlvl);
 //				if (typ == tri_hp::text) {
-//					fout << omega << ' ' << vel << ' ' << ctr << '\n';
+//					*x.gbl->log << omega << ' ' << vel << ' ' << ctr << '\n';
 //				}
 //				if (typ == tri_hp::tecplot) {
 //					/* Calculate total flux, (this is getting weird) */
@@ -492,7 +490,7 @@ namespace bdry_ins {
 					end_pt_open = temp;
 				}
 			}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+			void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 
 #ifdef petsc
 			void petsc_matchjacobian_snd();
@@ -730,7 +728,7 @@ namespace bdry_ins {
 				return;
 			}
 
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-2)) = 0.0;
 			}
 			
@@ -776,7 +774,7 @@ namespace bdry_ins {
 				return;
 			}
 			
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,x.NV-1) = 0.0;
 			}
 			
@@ -813,7 +811,7 @@ namespace bdry_ins {
 			hybrid_slave_pt(const hybrid_slave_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
 			hybrid_slave_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_slave_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-1)) = 0.0;
 			}
 
@@ -833,7 +831,7 @@ namespace bdry_ins {
 				contact_type = prdc;
 			}
 
-			void vdirichlet2d() {
+			void vdirichlet() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-1)) = 0.0;
 			}
 

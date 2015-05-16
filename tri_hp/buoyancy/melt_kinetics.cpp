@@ -102,7 +102,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);
 	
 		/* Latent Heat source term and additional heat flux */
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
+		res(3,i) = RAD(crd(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */
 //		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
@@ -199,7 +199,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		amv(1) += x.gbl->mesh_ref_vel(1);
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(x.crd(0)(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
+		res(3,i) = RAD(x.crd(0)(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -qdotn -gbl->Lf*res(1,i);
 		/* Heat Flux Upwinded? */
 		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 
@@ -900,7 +900,7 @@ void melt_kinetics::petsc_jacobian_dirichlet() {
 		++cpt2;
 	}
 	
-	symbolic::petsc_jacobian_dirichlet();  // Sets u,v dirichlet condition
+	hp_edge_bdry::petsc_jacobian_dirichlet();  // Sets u,v dirichlet condition
 
 }
 #endif
@@ -982,8 +982,8 @@ void melt_kinetics::setup_preconditioner() {
 	return;
 }
 
-void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
-	melt::output(fout,typ,tlvl);
+void melt_kinetics::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
+	melt::output(filename,typ,tlvl);
 	
 	TinyVector<FLT,tri_mesh::ND> norm, aloc;
 	FLT jcb;
@@ -994,10 +994,10 @@ void melt_kinetics::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		case(tri_hp::tecplot): {
 			if (!report_flag) break;
 			
-			std::ostringstream fname;
-			fname << "data" << x.gbl->tstep << "kinetics_" << base.idprefix << ".dat";
+			std::string fname;
+			fname = filename +"kinetics_" +base.idprefix +".dat";
 			std::ofstream fout;
-			fout.open(fname.str().c_str());
+			fout.open(fname);
 			
 			int indx = 0;
 			FLT s = 0.0;
@@ -1184,7 +1184,7 @@ void melt_facet_pt::petsc_jacobian() {
 		for(int n=0;n<x.NV;++n)
 			dw(n) = dw(n) + fabs(x.uht(n)(i));
 		
-	dw = dw*eps_r;
+	dw = blitz::sum(dw)*eps_r;
 	dw += eps_a;
 	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
 		
