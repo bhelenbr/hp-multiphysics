@@ -8,16 +8,13 @@
 
 using namespace bdry_swe;
 
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	FLT ul,vl,hl,hr,hul,hur,hvl,hvr,hu,hv,h,w1,w2,w3;
 	FLT um,vm,c,c2,lam0,lam1,lam2,mag,dxmax;
 	FLT pre,qmax,fmax,alpha,alpha2,sigma;
 	Array<FLT,1> ub(x.NV), uvp(x.NV);
 
-	/* CHARACTERISTIC FAR-FIELD B.C. */ 
-	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	norm(0) /= mag;
-	norm(1) /= mag;
+	/* CHARACTERISTIC FAR-FIELD B.C. */
 	um =  mv(0)*norm(0) +mv(1)*norm(1);
 	vm = -mv(0)*norm(1) +mv(1)*norm(0);
 
@@ -40,7 +37,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	qmax = ul*ul +vl*vl;
 	fmax = fabs(x.gbl->f0 +x.gbl->cbeta*xpt(1));
 	c2 = x.gbl->g*hl;
-	dxmax = 2.*mag/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
+	dxmax = 2.*side_length/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
 	alpha = x.gbl->cd*dxmax/(2*hl);
 	alpha2 = alpha*alpha;
 	sigma = MAX((qmax -c2)/qmax,0);
@@ -98,8 +95,6 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	ub(0) =  hu*norm(0) -hv*norm(1);
 	ub(1) =  hu*norm(1) +hv*norm(0);
 	ub(x.NV-1) =  h;
-
-	norm *= mag;
 
 	flx(x.NV-1) = ((ub(0) -ub(x.NV-1)*mv(0))*norm(0) +(ub(1) -ub(x.NV-1)*mv(1))*norm(1));
 

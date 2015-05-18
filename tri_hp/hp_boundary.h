@@ -35,7 +35,7 @@ protected:
 	enum bctypes {essential, natural};
 	std::vector<bctypes> type;
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
-	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;} //FIXME: Never been finished
+	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;} //FIXME: Never been finished for symbolic default
 	
 public:
 	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain"; type.resize(x.NV,natural);}
@@ -152,7 +152,7 @@ public:
 	std::vector<bctypes> type;
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
 	std::vector<vector_function> fluxes, derivative_fluxes;
-	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx);
+	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 	Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 	Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;

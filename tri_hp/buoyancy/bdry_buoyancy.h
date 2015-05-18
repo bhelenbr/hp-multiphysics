@@ -66,10 +66,10 @@ namespace bdry_buoyancy {
 		protected:
 			tri_hp_buoyancy& x;
 
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				FLT store_rho = x.gbl->rho;
 				x.gbl->rho = x.gbl->rho_vs_T.Eval(u(2));
-				bdry_ins::characteristic::flux(u,xpt,mv,norm,flx);
+				bdry_ins::characteristic::flux(u,xpt,mv,norm,side_length,flx);
 				flx(2) *= x.gbl->cp;
 				x.gbl->rho = store_rho;
 			}

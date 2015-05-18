@@ -243,9 +243,9 @@ void symmetry::tadvance() {
 }
 
 
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
-	FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
+	FLT s,um,v,c,den,lam0,lam1,lam2,hmax;
 	FLT nu,gam,qmax;
 	Array<FLT,1> ub(x.NV), uvp(x.NV);
 
@@ -254,13 +254,9 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	rho = x.gbl->rho;
 	nu = x.gbl->mu/x.gbl->rho;
 	rhoi = 1./rho;
-	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	hmax = mag*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
+	hmax = side_length*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
 	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
 	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
-
-	norm(0) /= mag;
-	norm(1) /= mag;
 
 	ul =  u(0)*norm(0) +u(1)*norm(1);
 	vl = -u(0)*norm(1) +u(1)*norm(0);
@@ -309,8 +305,6 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	for(int n=tri_mesh::ND;n<x.NV;++n)
 		ub(n) =uvp(n);
 
-	norm *= mag;
-
 	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
 
 	for(int n=0;n<tri_mesh::ND;++n)
@@ -318,7 +312,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 
 	for(int n=tri_mesh::ND;n<x.NV-1;++n)
 		flx(n) = flx(x.NV-1)*ub(n);
-
+	
 //	*x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
 //	*x.gbl->log << ul << ' ' << vl << ' ' << pl << ' ' << ur << ' ' << vr << ' ' << pr << ' '<< uvp << '\n';
 

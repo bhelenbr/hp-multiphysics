@@ -22,7 +22,7 @@
 namespace bdry_swe {
 
 	class wall : public bdry_ins::generic {        
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {            
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {            
 			flx(x.NV-1) = 0.0;
 
 			/* X&Y MOMENTUM */
@@ -46,7 +46,7 @@ namespace bdry_swe {
 	class characteristic : public bdry_ins::generic {
 		protected:
 			tri_hp_swe &x;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		public:
 			characteristic(tri_hp_swe &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "characteristic";}
 			characteristic(const characteristic& inbdry, tri_hp_swe &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}

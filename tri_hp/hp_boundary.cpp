@@ -2568,7 +2568,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 			u(n) = x.u(n)(0,k);
 		
 		/* Call flux function */
-		flux(u,pt,mvel,nrm,flx);
+		flux(u,pt,mvel,nrm,jcb,flx);
 		
 		for(n=0;n<x.NV;++n)
 			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n)*jcb;
@@ -2580,7 +2580,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	return;
 }
 
-void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
 	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
 	axpt(0) = xpt(0); axpt(1) = xpt(1);

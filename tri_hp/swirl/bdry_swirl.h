@@ -23,7 +23,7 @@
 namespace bdry_swirl {
 
 	class symmetry : public bdry_ins::generic {        
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 			/* THESE DON'T GET USED */
 			flx(Range(0,x.NV-1)) = 0.0;
 			return;

@@ -36,7 +36,7 @@ namespace bdry_cns {
 			tri_hp_cns &x;
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
 			FLT circumference,moment,convect,circulation;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		
 		public:
 			generic(tri_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
@@ -70,7 +70,7 @@ namespace bdry_cns {
 	
 	class adiabatic : public generic {  
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx);
 		public:
 			adiabatic(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "adiabatic";
@@ -84,7 +84,7 @@ namespace bdry_cns {
 
 	class characteristic : public generic {
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		public:
 			characteristic(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
@@ -95,7 +95,7 @@ namespace bdry_cns {
 		Array<symbolic_function<2>,1> stress;
 
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx); 				
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx); 				
 
 		public:
 			applied_stress(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "applied_stress";}

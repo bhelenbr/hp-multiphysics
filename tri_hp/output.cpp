@@ -764,7 +764,7 @@ void tri_hp::input(const std::string& filename) {
 
 	if (reload_type == tri_hp::binary) {
 		fnmapp = fname +".bin";
-		fin.open(fnmapp.c_str(),ios::in);
+		fin.open(fnmapp.c_str(),ios::in);  // Check if there is a grid file for moving mesh / adaptive
 		if(fin.is_open()) {
 			fin.close();
 			input_map blank;

@@ -38,7 +38,7 @@ namespace bdry_cns_explicit {
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
 			FLT circumference,moment,convect,circulation;
 			
-			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				
 				// switch u from conservative to primitive 
 				Array<FLT,1> cvu(x.NV);
@@ -89,7 +89,7 @@ namespace bdry_cns_explicit {
 	
 	class inflow : public generic {  
 	protected:
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx) {
 			
 			FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 			
@@ -220,7 +220,7 @@ namespace bdry_cns_explicit {
 #else
 	class inflow : public generic {  
 	protected:
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx) {
 			
 			FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 			
@@ -353,7 +353,7 @@ namespace bdry_cns_explicit {
 	
 	class adiabatic : public generic {  
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx) {
 				
 				FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 				
@@ -458,7 +458,7 @@ namespace bdry_cns_explicit {
 
 	class characteristic : public generic {
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		public:
 			characteristic(tri_hp_cns_explicit &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic& inbdry, tri_hp_cns_explicit &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
@@ -469,7 +469,7 @@ namespace bdry_cns_explicit {
 		Array<symbolic_function<2>,1> stress;
 
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 
 				// switch u from conservative to primitive 
 				Array<FLT,1> cvu(x.NV);
@@ -486,19 +486,18 @@ namespace bdry_cns_explicit {
 				/* CONTINUITY */
 				flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tri_mesh::ND;++n)
 					flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +pr*norm(n);
 #else
 				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +pr*norm(n);
+					flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time) +pr*norm(n);
 #endif
 
 				/* ENERGY EQUATION */
 				double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
-				flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time)*length;				
+				flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time);				
 				
 				return;
 			}

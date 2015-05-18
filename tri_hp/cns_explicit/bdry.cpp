@@ -32,14 +32,11 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
+void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 
 	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
 	Array<FLT,1> Aeigs(x.NV);
-	
-	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	norm /= mag;
 
 	/* Left */
 	/* Rotate Coordinate System */
@@ -154,8 +151,6 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
 	flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
 	flx(3) = fluxtemp(3);
-	
-	flx *= mag;
 	
 	return;
 }

@@ -183,7 +183,7 @@ void melt_buoyancy::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);
 		
 		/* Latent Heat source term and additional heat fluxes for just liquid calculation */
-		flux(au,aloc,amv,norm,flx);
+		flux(au,aloc,amv,anorm,jcb,flx);
 		res(3,i) =  -gbl->Lf*res(1,i) +(!base.is_comm())*(RAD(crd(0,i))*flx(2)*jcb +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i));
 		
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */

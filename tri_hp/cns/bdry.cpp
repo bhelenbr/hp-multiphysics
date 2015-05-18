@@ -167,7 +167,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	return;
 }
 
-void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
 	//			TinyVector<FLT,4> ub,fluxtemp;
 	//			FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
@@ -311,7 +311,7 @@ void inflow::modify_boundary_residual() {
 	return;
 }
 
-void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
 	/* CONTINUITY */
 	flx(0) = ibc->f(0, xpt, x.gbl->time)/ibc->f(x.NV-1, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
@@ -410,7 +410,7 @@ void adiabatic::modify_boundary_residual() {
 	return;
 }
 
-void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
+void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
 	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp,fluxleft, fluxright;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
@@ -418,9 +418,6 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT gam = x.gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
-	
-	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	norm /= mag;
 	
 	/* Left */
 	/* Rotate Coordinate System */
@@ -600,9 +597,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
 	flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
 	flx(3) = fluxtemp(3);
-
-	flx *= mag;
-		
+	
 	return;
 }
 
@@ -629,24 +624,23 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
 	/* CONTINUITY */
 	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 	
-	FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 	/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 	for (int n=0;n<tri_mesh::ND;++n)
-		flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+		flx(n+1) = -stress(n).Eval(xpt,x.gbl->time) +ibc->f(0, xpt, x.gbl->time)*norm(n);
 #else
 	for (int n=0;n<tri_mesh::ND;++n)
-		flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+		flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time) +ibc->f(0, xpt, x.gbl->time)*norm(n);
 #endif
 	
 	/* ENERGY EQUATION */
 	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
-	flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time)*length;				
+	flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time);
 	
 	return;
 }

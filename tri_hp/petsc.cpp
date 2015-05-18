@@ -617,7 +617,7 @@ void tri_hp::petsc_rsdl() {
 			*gbl->log << '\n';
 		}
 	}
-	//sim::finalize(__LINE__,__FILE__,gbl->log);
+	sim::finalize(__LINE__,__FILE__,gbl->log);
 #endif
 	
 	

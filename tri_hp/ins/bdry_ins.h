@@ -31,7 +31,7 @@ namespace bdry_ins {
 	class generic : public hp_edge_bdry {
 		protected:
 			tri_hp_ins &x;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				/* CONTINUITY */
 				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 				/* X&Y MOMENTUM */
@@ -92,7 +92,7 @@ namespace bdry_ins {
 
 	class euler : public generic {
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				Array<FLT,1> ub(x.NV);
 
 				for(int n=0;n<x.NV;++n)
@@ -148,7 +148,7 @@ namespace bdry_ins {
 	
 	class force_coupling : public inflow, public rigid {
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				for (int n=0;n<x.NV;++n)
 					flx(n) = 0.0;
 				return;
@@ -178,7 +178,7 @@ namespace bdry_ins {
 	class friction_slip : public generic, public rigid {
 		protected:
 			FLT slip_length;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				Array<FLT,1> urb(x.NV), ub(x.NV);
 
 				/* RIGID COMPONENT */
@@ -211,7 +211,7 @@ namespace bdry_ins {
 				// FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);
 				FLT un = 0.0;			// No flux through the surface	
 				TinyVector<FLT,tri_mesh::ND> tang(-norm(1),norm(0));
-				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.gbl->mu/(slip_length*sqrt(tang(0)*tang(0)+tang(1)*tang(1)));
+				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.gbl->mu/(slip_length);
 				
 				flx(x.NV-1) = x.gbl->rho*un;
 
@@ -271,7 +271,7 @@ namespace bdry_ins {
 
 	class characteristic : public generic {
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		public:
 			characteristic(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
@@ -299,19 +299,17 @@ namespace bdry_ins {
 		Array<symbolic_function<2>,1> stress;
 
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 
 				/* CONTINUITY */
 				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+					flx(n) = -stress(n).Eval(xpt,x.gbl->time) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
 				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+					flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
 				/* EVERYTHING ELSE */
@@ -443,13 +441,12 @@ namespace bdry_ins {
 		bool start_pt_open, end_pt_open;
 		symbolic_function<3> dp;
 		
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 			/* CONTINUITY */
 			flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 			
 			if (base.is_frst()) {
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-				FLT norm_vel = flx(x.NV-1)/(length*x.gbl->rho);
+				FLT norm_vel = flx(x.NV-1)/x.gbl->rho;
 				TinyVector<FLT,3> inpt(xpt(0),xpt(1),norm_vel);
 				FLT delta_p = dp.Eval(inpt,x.gbl->time);			
 				
