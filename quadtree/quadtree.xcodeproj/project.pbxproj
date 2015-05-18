@@ -240,7 +240,14 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					../include,
+					"$(PACKAGES)/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Debug;
 		};
@@ -249,7 +256,14 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					../include,
+					"$(PACKAGES)/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Release;
 		};
@@ -257,13 +271,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(HOME)/Codes/";
+				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_VERSION = "";
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Packages/include",
-					../include,
-				);
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = quad;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -274,13 +284,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(HOME)/Codes/";
+				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_VERSION = "";
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Packages/include",
-					../include,
-				);
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = quad;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;

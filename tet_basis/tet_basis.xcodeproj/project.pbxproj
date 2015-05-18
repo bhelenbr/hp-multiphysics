@@ -283,14 +283,15 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Packages/include",
-					"${HOME}/Codes/include",
+					"$(PACKAGES)/include",
+					../include,
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/lib",
+					../lib,
+					"${PACKAGES}/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Debug;
 		};
@@ -299,15 +300,15 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 3;
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Packages/include",
-					"${HOME}/Codes/include",
+					"$(PACKAGES)/include",
+					../include,
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/lib",
+					../lib,
+					"${PACKAGES}/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "-fast";
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Release;
 		};

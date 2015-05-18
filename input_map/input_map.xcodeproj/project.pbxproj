@@ -159,7 +159,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -221,8 +221,8 @@
 		6FD651C20922EC5F00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -231,8 +231,8 @@
 		6FD651C30922EC5F00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -243,10 +243,21 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../include",
+					"$(PACKAGES)/include",
+				);
 				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(PACKAGES)/lib",
+					"$(SRCROOT)/../lib",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -256,10 +267,21 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 3;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../include",
+					"$(PACKAGES)/include",
+				);
 				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(PACKAGES)/lib",
+					"$(SRCROOT)/../lib",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
@@ -268,8 +290,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
 				PRODUCT_NAME = mod_map;
 			};
 			name = Debug;
@@ -278,8 +298,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = mod_map;
 			};

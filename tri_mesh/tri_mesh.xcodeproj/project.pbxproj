@@ -163,8 +163,8 @@
 		E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
-		E6F1CDE31533E774009F6A6B /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* vecLib.framework */; };
-		E6F1CDE41533E774009F6A6B /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* vecLib.framework */; };
+		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
+		E6F1CDE41533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -204,7 +204,7 @@
 		E6A1C0AC176F480400074810 /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../Packages/lib/libmetis.dylib; sourceTree = "<group>"; };
 		E6D716EA1206CC15005572EE /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
-		E6F1CDE21533E774009F6A6B /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework; sourceTree = "<group>"; };
+		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = "<group>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
 		F515EA5602B7E15B012A8EDA /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = SOURCE_ROOT; };
@@ -251,7 +251,7 @@
 				6F16C6E80D81F12200F03F54 /* libmpi.1.dylib in Frameworks */,
 				6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 				E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */,
-				E6F1CDE41533E774009F6A6B /* vecLib.framework in Frameworks */,
+				E6F1CDE41533E774009F6A6B /* Accelerate.framework in Frameworks */,
 				E601998A167F68B200C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */,
 			);
@@ -268,7 +268,7 @@
 				6FA883610D868DFB00C8435F /* libpth.a in Frameworks */,
 				6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 				E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */,
-				E6F1CDE31533E774009F6A6B /* vecLib.framework in Frameworks */,
+				E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */,
 				E6019988167F68B100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
 				E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */,
 			);
@@ -289,7 +289,7 @@
 				6F8509B607A5383700343685 /* libquad.a */,
 				E6F1CDDF1533E715009F6A6B /* libspline++.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
-				E6F1CDE21533E774009F6A6B /* vecLib.framework */,
+				E6F1CDE21533E774009F6A6B /* Accelerate.framework */,
 				6FEFFC550C60191700352ED3 /* libpth.a */,
 				6F0BD8BD11A69A820013DB0A /* libboost_thread.dylib */,
 				6F16C6D70D81EDD900F03F54 /* libmpi.1.dylib */,
@@ -815,17 +815,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
-				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"${mpi_threads}",
 					MPISRC,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh_mpi;
 				threads = PTH;
 			};
@@ -835,17 +830,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
-				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"${mpi_threads}",
 					MPISRC,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_mesh_mpi;
 				threads = PTH;
 			};
@@ -855,20 +845,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
-				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					METIS,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};
@@ -878,20 +860,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Accelerate.framework/Versions/A/Frameworks",
-				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					"$(threads)",
 					METIS,
 				);
 				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};
@@ -901,30 +875,29 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${prefix}";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BZ_DEBUG,
 					f2cFortran,
 				);
 				HEADER_SEARCH_PATHS = (
-					"${prefix}/include",
-					"${packages}/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					"${packages}/lib",
-					"${prefix}/lib",
+					../lib,
+					"$(PACKAGES)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"-fno-inline",
 					"$(OTHER_CFLAGS)",
 				);
+				PACKAGES = "$(HOME)/Packages";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				mpi_threads = NONE;
-				packages = "${HOME}/Packages";
-				prefix = "${HOME}/Codes";
 				threads = BOOST;
 			};
 			name = Debug;
@@ -933,24 +906,23 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${prefix}";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				HEADER_SEARCH_PATHS = (
-					"${prefix}/include",
-					"${packages}/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					"${packages}/lib",
-					"${prefix}/lib",
+					../lib,
+					"$(PACKAGES)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = "";
+				PACKAGES = "$(HOME)/Packages";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				mpi_threads = NONE;
-				packages = "${HOME}/Packages";
-				prefix = "${HOME}/Codes";
 				threads = BOOST;
 			};
 			name = Release;

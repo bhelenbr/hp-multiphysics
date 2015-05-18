@@ -177,7 +177,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tri_basis" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -223,8 +223,9 @@
 		6F33E673086787BF0029F2D6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
@@ -238,8 +239,9 @@
 		6F33E674086787BF0029F2D6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = tri_basis;
@@ -273,14 +275,15 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Codes/include",
-					"$(HOME)/Packages/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Packages/lib/",
-					"$(HOME)/Codes/lib/",
+					"$(PACKAGES)/lib/",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Debug;
 		};
@@ -289,18 +292,15 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 3;
 				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Codes/include",
-					"$(HOME)/Packages/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Packages/lib/",
-					"$(HOME)/Codes/lib/",
+					"$(PACKAGES)/lib/",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-fast",
-				);
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Release;
 		};

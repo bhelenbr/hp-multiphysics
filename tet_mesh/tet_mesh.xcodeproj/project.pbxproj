@@ -455,7 +455,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -612,28 +612,26 @@
 		6F2262C208672FD1001017D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					METIS,
 					BOOST,
 				);
 				PRODUCT_NAME = tet_mesh;
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
 			};
 			name = Debug;
 		};
 		6F2262C308672FD1001017D0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					METIS,
 					PTH,
 				);
 				PRODUCT_NAME = tet_mesh;
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
 			};
 			name = Release;
 		};
@@ -654,6 +652,7 @@
 		6FB91AD90ACCB10300792B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -665,6 +664,7 @@
 		6FB91ADA0ACCB10300792B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -733,7 +733,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${HOME}/Codes";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					USING_MADLIB,
@@ -742,15 +742,16 @@
 					METIS,
 				);
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/Packages/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Packages/lib",
-					"${HOME}/Codes/lib",
+					"$(PACKAGES)/lib",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Debug;
@@ -759,7 +760,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${HOME}/Codes";
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					USING_MADLIB,
@@ -767,16 +768,16 @@
 					METIS,
 				);
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/Packages/include",
+					../include,
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Packages/lib",
-					"${HOME}/Codes/lib",
+					"$(PACKAGES)/lib",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "-fast";
+				PACKAGES = "$(HOME)/Packages";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
 			name = Release;

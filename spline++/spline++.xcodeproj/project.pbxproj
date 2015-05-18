@@ -148,7 +148,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "spline++" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -194,12 +194,9 @@
 		1DEB91EC08733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DSTROOT = "$(HOME)/Codes";
+				COMBINE_HIDPI_IMAGES = YES;
+				DSTROOT = ..;
 				GCC_VERSION = "";
-				HEADER_SEARCH_PATHS = (
-					"${HOME}/Packages/include",
-					../include,
-				);
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = "spline++";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -209,12 +206,9 @@
 		1DEB91ED08733DB70010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DSTROOT = "$(HOME)/Codes";
+				COMBINE_HIDPI_IMAGES = YES;
+				DSTROOT = ..;
 				GCC_VERSION = "";
-				HEADER_SEARCH_PATHS = (
-					"${HOME}/Packages/include",
-					../include,
-				);
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = "spline++";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -227,7 +221,14 @@
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					../include,
+					"$(PACKAGES)/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Debug;
 		};
@@ -237,7 +238,14 @@
 				DEPLOYMENT_LOCATION = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					../include,
+					"$(PACKAGES)/include",
+				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Release;
 		};
@@ -247,10 +255,6 @@
 				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Packages/include",
-					../include,
-				);
 				PRODUCT_NAME = main;
 			};
 			name = Debug;
@@ -261,10 +265,6 @@
 				DEPLOYMENT_LOCATION = NO;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = (
-					"$(HOME)/Packages/include",
-					../include,
-				);
 				PRODUCT_NAME = main;
 			};
 			name = Release;

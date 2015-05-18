@@ -193,10 +193,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../lib,
-					"$(HOME)/Packages/lib",
+					"$(PACKAGES)/lib",
 				);
 				PRODUCT_NAME = symbolic_function;
-				USER_HEADER_SEARCH_PATHS = "${HOME}/Packages/include ${HOME}/Codes/include";
 			};
 			name = Debug;
 		};
@@ -206,10 +205,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../lib,
-					"$(HOME)/Packages/lib",
+					"$(PACKAGES)/lib",
 				);
 				PRODUCT_NAME = symbolic_function;
-				USER_HEADER_SEARCH_PATHS = "${HOME}/Packages/include ${HOME}/Codes/include";
 			};
 			name = Release;
 		};
@@ -218,6 +216,8 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = BZ_DEBUG;
+				PACKAGES = "$(HOME)/Packages";
+				USER_HEADER_SEARCH_PATHS = "$(PACKAGES)/include ../include";
 			};
 			name = Debug;
 		};
@@ -225,6 +225,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 3;
+				PACKAGES = "$(HOME)/Packages";
+				USER_HEADER_SEARCH_PATHS = "$(PACKAGES)/include ../include";
 			};
 			name = Release;
 		};

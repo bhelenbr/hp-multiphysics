@@ -1788,19 +1788,18 @@
 				);
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(packages)/include",
-					"$(prefix)/include",
+					"$(PACKAGES)/include",
+					../include,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"$(packages)/lib",
-					"$(prefix)/lib",
+					"$(PACKAGES)/lib",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
-				packages = "$(HOME)/packages";
-				prefix = ..;
 				threads = PTH;
 			};
 			name = Debug;
@@ -1818,19 +1817,18 @@
 				);
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(packages)/include",
-					"$(prefix)/include",
+					"$(PACKAGES)/include",
+					../include,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"$(packages)/lib",
-					"$(prefix)/lib",
+					"$(PACKAGES)/lib",
+					../lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
-				packages = "$(HOME)/packages";
-				prefix = ..;
 				threads = PTH;
 			};
 			name = Release;

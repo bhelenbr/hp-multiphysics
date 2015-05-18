@@ -1037,10 +1037,6 @@
 					PTH,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp;
 			};
 			name = Debug;
@@ -1053,10 +1049,6 @@
 					PTH,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp;
 			};
 			name = Release;
@@ -1074,14 +1066,15 @@
 				);
 				HEADER_SEARCH_PATHS = (
 					../include,
-					"${HOME}/Packages/include",
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
-					"${HOME}/Packages/lib",
+					"$(PACKAGES)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -1096,15 +1089,15 @@
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				HEADER_SEARCH_PATHS = (
 					../include,
-					"${HOME}/Packages/include",
+					"$(PACKAGES)/include",
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
-					"${HOME}/Packages/lib",
+					"$(PACKAGES)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "-fast";
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
@@ -1143,10 +1136,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp_petsc;
 			};
 			name = Debug;
@@ -1159,10 +1148,6 @@
 					petsc,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp_petsc;
 			};
 			name = Release;
@@ -1175,11 +1160,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Packages/lib,
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp_mpi;
 			};
 			name = Debug;
@@ -1192,11 +1172,6 @@
 					MPISRC,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/Users/bhelenbr/Packages/lib,
-					/Users/bhelenbr/Codes/lib,
-				);
 				PRODUCT_NAME = tet_hp_mpi;
 			};
 			name = Release;
