@@ -128,7 +128,7 @@ void tri_mesh::allocate(int mxsize) {
 		/* gbl has not been set */
 		/* so create internal gbl_struct */
 		gbl = new global;
-		gbl->idprefix = "";
+		gbl->idprefix = "b0";
 		gbl->log = &std::cout;
 		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;

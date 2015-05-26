@@ -493,7 +493,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT nu = x.gbl->mu/rho;
 	FLT cp = gogm1*x.gbl->R;
 	FLT alpha = x.gbl->kcond/(rho*cp);
-	FLT h = mag; // or norm??? temp fix 
+	FLT h = side_length; 
 	
 	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
 	FLT umag = sqrt(u*u+v*v);

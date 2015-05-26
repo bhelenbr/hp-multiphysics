@@ -17,7 +17,6 @@ void tri_hp_explicit::init(input_map& input, void *gin) {
 	gbl = static_cast<global *>(gin);
 
 	tri_hp_cd::init(input,gin);
-	sprcn2.resize(maxpst,sm0,NV);
 	gbl->sprcn2.resize(maxpst,sm0,NV);
 
 

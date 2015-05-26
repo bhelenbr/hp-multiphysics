@@ -3,32 +3,84 @@
 #include <utilities.h>
 #include "../hp_boundary.h"
 
+// #define TESTING
+
 void tri_hp_explicit::setup_preconditioner() {
 	int side;
 	FLT jcb,dtstari;
 	TinyVector<int,3> v;
-	int ltm = basis::tri(log2p)->tm();
-	int lsm = basis::tri(log2p)->sm();
-	int lbm = basis::tri(log2p)->bm();
-	int lim = basis::tri(log2p)->im();
+	TinyVector<FLT,2> mvel;
+	const int ltm = basis::tri(log2p)->tm();
+	const int lsm = basis::tri(log2p)->sm();
+	const int lbm = basis::tri(log2p)->bm();
+	const int lim = basis::tri(log2p)->im();
 	Array<FLT,2> mass(ltm,ltm);
 	Array<FLT,1> uht(ltm), lf(ltm);
 	Range all(0,ltm-1);
+	const FLT alpha = gbl->kcond/gbl->rhocv;
 
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+	gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+
+	
+	/* Determine appropriate time step */
+	for(int tind = 0; tind < ntri; ++tind) {
+		jcb = 0.25*area(tind);  // area is 2 x triangle area
+		v = tri(tind).pnt;
+		FLT hmax = 0.0;
+		for(int j=0;j<3;++j) {
+			FLT h = pow(pnts(v(j))(0) -pnts(v((j+1)%3))(0),2.0) +
+			pow(pnts(v(j))(1) -pnts(v((j+1)%3))(1),2.0);
+			hmax = (h > hmax ? h : hmax);
+		}
+		hmax = sqrt(hmax);
+		
+		if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
+			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
+			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
+			tri_mesh::output("negative",grid);
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		FLT h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+		
+		FLT qmax = 0.0;
+		for(int j=0;j<3;++j) {
+			int v0 = v(j);
+			
+			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
+			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
+#ifdef MESH_REF_VEL
+			mvel += gbl->mesh_ref_vel;
+#endif
+			
+#ifdef CONST_A
+			FLT q = pow(gbl->ax -mvel(0),2.0)
+			+pow(gbl->ay -mvel(1),2.0);
+#else
+			FLT q = pow(gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0)
+			+pow(gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
+#endif
+			
+			qmax = MAX(qmax,q);
+		}
+		FLT q = sqrt(qmax);
+		
+		FLT lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
+		
+		/* SET UP DISSIPATIVE COEFFICIENTS */
+		gbl->tau(tind)  = adis*h/(jcb*lam1);
+
+		/* DETERMINE MAX TIME STEP */
+		dtstari = MAX(lam1/h,dtstari);
 	}
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0) << ' ' << dtstari << '\n';
+
 	uht(all) = 0.0;
-
-
 	/*	SET TIME STEP TO BE 1 */
 	for(int tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);
 		v = tri(tind).pnt;
-
-		/* SET UP DIAGONAL PRECONDITIONER */
-		dtstari = jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 		/* CALCULATE MIXED BASIS MASS MATRIX ON THIS TRIANGLE */
 		if (tri(tind).info > -1) {
@@ -42,7 +94,7 @@ void tri_hp_explicit::setup_preconditioner() {
 
 			for(int i=0;i<basis::tri(log2p)->gpx();++i) {
 				for(int j=0;j<basis::tri(log2p)->gpn();++j) {
-					cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+					cjcb(i,j) = RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 				}
 			}
 
@@ -53,7 +105,7 @@ void tri_hp_explicit::setup_preconditioner() {
 				basis::tri(log2p)->proj(&uht(0), &u(0)(0,0),MXGP);
 				for(int i=0;i<basis::tri(log2p)->gpx();++i) {
 					for(int j=0;j<basis::tri(log2p)->gpn();++j) {
-						res(0)(i,j) = u(0)(i,j)*cjcb(i,j);
+						res(0)(i,j) = u(0)(i,j)*cjcb(i,j)*dtstari;
 					}
 				}
 
@@ -90,22 +142,24 @@ void tri_hp_explicit::setup_preconditioner() {
 				}
 			}
 
-//			lmass = lmass/jcb;
-//			std::cout << lmass << std::endl;
-//			
-//			std::cout << basis::tri(log2p)->vdiag() << std::endl;
-//			
-//			std::cout <<  basis::tri(log2p)->sdiag << std::endl;
-//			
-//			std::cout << basis::tri(log2p)->vfms << std::endl;
-//
-//			std::cout << basis::tri(log2p)->sfms << std::endl;
-//			
-//			std::cout << basis::tri(log2p)->bfmi << std::endl;
-//			
-//			std::cout << basis::tri(log2p)->idiag << std::endl;
-//			
-//			sim::abort(_);
+#ifdef TESTING
+			lmass = lmass/jcb;
+			*gbl->log << lmass << std::endl;
+			*gbl->log << "vdiag " << basis::tri(log2p)->vdiag() << std::endl;
+			for (int m=0;m<lsm;++m)
+				*gbl->log << "sdiag " << basis::tri(log2p)->sdiag(m) << std::endl;
+			for (int m=0; m<lsm;++m)
+				*gbl->log << "vfms " << basis::tri(log2p)->vfms(0,m) << ' ' << basis::tri(log2p)->vfms(1,m) << ' ' << basis::tri(log2p)->vfms(2,m) << std::endl;
+			for (int m=0; m<lsm-1;++m)
+				for (int m1=m+1;m1 <lsm; ++m1)
+					*gbl->log << "sfms " << basis::tri(log2p)->sfms(m,m1,0) << ' ' << basis::tri(log2p)->sfms(m,m1,1) << ' ' << basis::tri(log2p)->sfms(m,m1,2)<< std::endl;
+			for(int mb=0;mb<lbm;++mb)
+				for(int mi=0;mi<lim;++mi)
+					*gbl->log << "bfmi " << basis::tri(log2p)->bfmi(mb,mi) << std::endl;
+			for(int mi=0;mi<lim;++mi)
+				*gbl->log << "idiag " << basis::tri(log2p)->idiag(mi,0) << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+#endif
 
 			indx = 3;
 			for(int i=0;i<3;++i) {
@@ -118,11 +172,10 @@ void tri_hp_explicit::setup_preconditioner() {
 					}
 				}
 			}
-
-			gbl->tprcn(tind,Range::all()) = dtstari;
+			gbl->tprcn(tind,Range::all()) = dtstari*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 		}
 		else {
-			gbl->tprcn(tind,Range::all()) = dtstari;        
+			gbl->tprcn(tind,Range::all()) = dtstari*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 			for(int i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all())*basis::tri(log2p)->vdiag();
@@ -135,69 +188,18 @@ void tri_hp_explicit::setup_preconditioner() {
 			}
 		}
 	}
+	
+	tri_hp::setup_preconditioner();
+	
+	gbl->vprcn(Range(0,npnt-1),Range::all()) *= basis::tri(log2p)->vdiag();  // undoes vdiag term done by tri_hp::setup_preconditioner
 
-	int i,last_phase,mp_phase;
-
-	/* SET UP TSTEP FOR MESH MOVEMENT */
-	if (mmovement == coupled_deformable && log2p == 0) {
-		r_tri_mesh::setup_preconditioner();    
+	if (log2p) {
+		sc0load(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);
+		smsgpass(boundary::all,0,boundary::symmetric);
+		sc0wait_rcv(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);   
+		/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */                
+		gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 1.0/gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all());
 	}
-
-	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->setup_preconditioner();
-
-	/* SET UP TSTEP FOR HELPER */
-	helper->setup_preconditioner();    
-
-	if (gbl->diagonal_preconditioner) {
-		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-			vc0load(mp_phase,gbl->vprcn.data());
-			pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-			last_phase = true;
-			last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn.data());
-		}
-		/* PREINVERT PRECONDITIONER FOR VERTICES */
-		gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/gbl->vprcn(Range(0,npnt-1),Range::all());
-
-		if (log2p) {
-			sc0load(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);
-			smsgpass(boundary::all,0,boundary::symmetric);
-			sc0wait_rcv(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);   
-			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */                
-			gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 1.0/gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all());
-		}
-
-	}
-	else {
-		/* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
-		for(int stage = 0; stage<NV; ++stage) {
-			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				vc0load(mp_phase,gbl->vprcn_ut.data() +stage*NV,NV);
-				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-				last_phase = true;
-				last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn_ut.data()+stage*NV,NV);
-			}
-			if (log2p) {
-				sc0load(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
-				smsgpass(boundary::all,0,boundary::symmetric);
-				sc0wait_rcv(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
-			}
-		}
-
-		/* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
-//        for(i=0;i<npnt;++i)
-//            for(int n=0;n<NV;++n)
-//                gbl->vprcn_ut(i,n,n) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn_ut(i,n,n));
-//      
-//        if (basis::tri(log2p)->sm() > 0) {
-//            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */     
-//            for(i=0;i<nseg;++i)
-//                for(int n=0;n<NV;++n)
-//                    gbl->sprcn_ut(i,n,n)= 1.0/gbl->sprcn_ut(i,n,n);
-//        }
-	}
-
 
 	return; 
 }

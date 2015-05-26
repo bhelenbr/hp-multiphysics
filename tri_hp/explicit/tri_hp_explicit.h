@@ -15,11 +15,10 @@
 
 class tri_hp_explicit : public tri_hp_cd {
 	public:
-		Array<FLT,3> sprcn2;  // Diagonal preconditioner
-		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-		struct global : public tri_hp::global {
-			Array<FLT,3> sprcn2;  // Diagonal preconditioner
-			std::map<int,Array<FLT,2> > mass;
+		/* things shared by all tri_hp_explicit in same multigrid block */
+		struct global : public tri_hp_cd::global {
+			Array<FLT,3> sprcn2;  // Diagonal side preconditioner that can vary for each mode
+			std::map<int,Array<FLT,2> > mass;  // mass matrix for curved elements
 		} *gbl;
 
 	public:

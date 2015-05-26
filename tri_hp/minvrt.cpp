@@ -95,7 +95,7 @@ void tri_hp::minvrt() {
 	/* SOLVE FOR SIDE MODES */
 	/* PART 1 REMOVE VERTEX CONTRIBUTIONS */
 
-	if (gbl->diagonal_preconditioner) {  // IF STATEMENT IN LOOP IS BAD FIXME
+	if (gbl->diagonal_preconditioner) {
 		for(tind=0;tind<ntri;++tind) {
 			for(i=0;i<3;++i) {
 				v0 = tri(tind).pnt(i);

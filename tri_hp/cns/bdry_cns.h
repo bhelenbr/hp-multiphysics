@@ -70,7 +70,7 @@ namespace bdry_cns {
 	
 	class adiabatic : public generic {  
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx);
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 		public:
 			adiabatic(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {
 				mytype = "adiabatic";

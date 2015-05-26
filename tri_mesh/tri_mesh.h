@@ -38,7 +38,7 @@ class tri_mesh : public multigrid_interface {
 	/***************/
 	public:
 		int maxpst;  /**< maximum length of point, segment, or tri lists (all same for convenience) */
-		static const int ND = 2;  /**< 2 eimensional */
+		static const int ND = 2;  /**< 2 dimensional */
 
 		/** @name Variables describing mesh points */
 		//@{

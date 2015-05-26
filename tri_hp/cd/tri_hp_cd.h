@@ -49,6 +49,6 @@ class tri_hp_cd : public tri_hp {
 		void error_estimator();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
-		//		void minvrt(); // Stuff for Mike's minvrt
+		//		void minvrt(); /**< This is for jacobi relaxation */
 };
 #endif

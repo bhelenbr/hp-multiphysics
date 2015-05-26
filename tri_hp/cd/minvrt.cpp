@@ -12,10 +12,10 @@
 #include "../hp_boundary.h"
 #include <myblas.h>
 
+
+// Jacobi Relaxation
+
 void tri_hp_cd::minvrt() {
-		
-	/* call normal minvrt */
-	//tri_hp::minvrt();return;
 		
 	Array<TinyVector<FLT,MXTM>,1> Rbar(NV),lf_re(NV),lf_im(NV);
 	Array<FLT,1> dw(NV);
