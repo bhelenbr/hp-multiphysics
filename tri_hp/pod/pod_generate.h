@@ -49,7 +49,7 @@ template<class BASE> class pod_generate : public BASE {
 #endif
 
 	public:
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 		void create_mass_matrix(sparse_row_major& mass);
@@ -77,7 +77,7 @@ template<class BASE> class gram_schmidt : public pod_generate<BASE> {
 
 template<class BASE> class pod_generate_with_r_mesh : public pod_generate<BASE> {
 	public:
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };
@@ -94,7 +94,7 @@ template<class BASE> class pod_gen_edge_bdry {
 
 	public:
 		pod_gen_edge_bdry(pod_generate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
-		void init(input_map& input);
+		void init(input_map& inmap);
 		void zero_bdry(tri_hp::vsi& ug);
 		void calculate_modes();
 		void output();

@@ -102,7 +102,7 @@ class communication_test : public init_bdry_cndtn {
 class ibc_type {
 	public:
 		const static int ntypes = 3;
-		enum ids {symbolic,communication_test,temporal_spline};
+		enum ids {unknown=-1,symbolic,communication_test,temporal_spline};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -115,22 +115,16 @@ const char ibc_type::names[ntypes][40] = {"symbolic","communication_test","splin
 
 
 
-init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tri_hp::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type " << keyword << std::endl;
-		}
+	type = ibc_type::getid(name.c_str());
+	if (type == ibc_type::unknown) {
+		*gbl->log << "unknown ibc type:" << name << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
-
-	type = ibc_type::getid(ibcname.c_str());
-
 	switch(type) {
 		case ibc_type::symbolic: {
 			temp = new symbolic_ibc;
@@ -150,9 +144,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 			assert(0);
 		}
 	}
-	temp->init(inmap,keyword);
 	return(temp);
-
 }
 
 
@@ -161,13 +153,13 @@ class translating : public tri_hp_helper {
 		TinyVector<FLT,2> velocity;
 		translating(tri_hp &xin) :tri_hp_helper(xin) {}
 
-		virtual void init(input_map& input, std::string idnty) {
+		virtual void init(input_map& inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
 
 			FLT vdflt[2] = {0.0, 0.0};
-			if (!input.get(idnty +"_velocity",velocity.data(),2)) input.getwdefault("velocity",velocity.data(),2,vdflt);
+			if (!inmap.get(idnty +"_velocity",velocity.data(),2)) inmap.getwdefault("velocity",velocity.data(),2,vdflt);
 		}
 
 		void tadvance() {
@@ -197,7 +189,7 @@ class gcl_test : public tri_hp_helper {
 		Array<symbolic_function<2>,1> vel;
 		gcl_test(tri_hp &xin) : tri_hp_helper(xin) {}
 
-		virtual void init(input_map& input, std::string idnty) {
+		virtual void init(input_map& inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
@@ -207,14 +199,14 @@ class gcl_test : public tri_hp_helper {
 			for(int n=0;n<tri_mesh::ND;++n) {
 				nstr.str("");
 				nstr << idnty << "_gcl_velocity" << n << std::flush;
-				if (input.find(nstr.str()) != input.end()) {
-					vel(n).init(input,nstr.str());
+				if (inmap.find(nstr.str()) != inmap.end()) {
+					vel(n).init(inmap,nstr.str());
 				}
 				else {
 					nstr.str("");
 					nstr << "gcl_velocity" << n << std::flush;
-					if (input.find(nstr.str()) != input.end()) {
-						vel(n).init(input,nstr.str());
+					if (inmap.find(nstr.str()) != inmap.end()) {
+						vel(n).init(inmap,nstr.str());
 					}
 					else {
 						*x.gbl->log << "couldn't find mesh movement function" << std::endl;
@@ -275,21 +267,21 @@ class cartesian_interpolation : public tri_hp_helper {
 	
 	public: 
 		cartesian_interpolation(tri_hp &xin) : tri_hp_helper(xin) {}
-		void init(input_map& input, std::string idnty) {
-			tri_hp_helper::init(input,idnty);
+		void init(input_map& inmap, std::string idnty) {
+			tri_hp_helper::init(inmap,idnty);
 			
-			if (!input.get(idnty+"_bbox0",&bbox(0,0),tri_mesh::ND)) {
-				if (!input.get("bbox0",&bbox(0,0),tri_mesh::ND)) {
+			if (!inmap.get(idnty+"_bbox0",&bbox(0,0),tri_mesh::ND)) {
+				if (!inmap.get("bbox0",&bbox(0,0),tri_mesh::ND)) {
 					*x.gbl->log << "couldn't find bbox0" << std::endl;
 				}
 			}
-			if (!input.get(idnty+"_bbox1",&bbox(1,0),tri_mesh::ND)) {
-				if (!input.get("bbox1",&bbox(1,0),tri_mesh::ND)) {
+			if (!inmap.get(idnty+"_bbox1",&bbox(1,0),tri_mesh::ND)) {
+				if (!inmap.get("bbox1",&bbox(1,0),tri_mesh::ND)) {
 					*x.gbl->log << "couldn't find bbox1" << std::endl;
 				}
 			}
-			if (!input.get(idnty+"_divisions",ndiv.data(),tri_mesh::ND)) {
-				if (!input.get("divisions",ndiv.data(),tri_mesh::ND)) {
+			if (!inmap.get(idnty+"_divisions",ndiv.data(),tri_mesh::ND)) {
+				if (!inmap.get("divisions",ndiv.data(),tri_mesh::ND)) {
 					*x.gbl->log << "couldn't find #divisions" << std::endl;
 				}
 			}		
@@ -418,10 +410,10 @@ class output_contour : public tri_hp_helper {
 		tri_hp &x;
 		output_contour(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
 
-		virtual void init(input_map& input, std::string idnty) {
-			input.getwdefault(idnty+"_var",var,0);
-			input.getwdefault(idnty+"_level",c,0.0);
-			norm.init(input,idnty+"_norm");
+		virtual void init(input_map& inmap, std::string idnty) {
+			inmap.getwdefault(idnty+"_var",var,0);
+			inmap.getwdefault(idnty+"_level",c,0.0);
+			norm.init(inmap,idnty+"_norm");
 		}
 
 		void output() {
@@ -486,8 +478,8 @@ class reinitialize : public tri_hp_helper {
 
 class helper_type {
 	public:
-		const static int ntypes = 7;
-		enum ids {translating,print_averages,l2error,output_contour,gcl_test,cartesian_interpolation,reinitialize};
+		const static int ntypes = 8;
+		enum ids {unknown=-1,plain,translating,print_averages,l2error,output_contour,gcl_test,cartesian_interpolation,reinitialize};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -496,19 +488,19 @@ class helper_type {
 			return(-1);
 		}
 };
-const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test","cartesian_interpolation","reinitialize"};
+const char helper_type::names[ntypes][40] = {"plain","translating","print_averages","l2error","output_contour","gcl_test","cartesian_interpolation","reinitialize"};
 
 
-tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
+tri_hp_helper *tri_hp::getnewhelper(std::string name) {
 	std::string movername;
 	int type;
-
-	/* FIND INITIAL CONDITION TYPE */
-	if (!inmap.get(gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("helper",movername,std::string("default"));
-
-	type = helper_type::getid(movername.c_str());
-
+	
+	type = helper_type::getid(name.c_str());
+	if (type == helper_type::unknown) {
+		*gbl->log << "unknown helper type:" << name << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+		
 	switch(type) {
 		case helper_type::translating: {
 			tri_hp_helper *temp = new translating(*this);

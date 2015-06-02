@@ -107,7 +107,7 @@ namespace bdry_cd {
 			}
 			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 			
-			void init(input_map& input,void* gbl_in);
+			void init(input_map& inmap,void* gbl_in);
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);

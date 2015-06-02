@@ -74,7 +74,7 @@ OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o buoyancy/length.o
 buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlset/reinit.o
-OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
+OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/tstep.o
 OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
 OBJPETSC = petsc.o
 

@@ -9,56 +9,75 @@
 
 #include "tri_hp_cd.h"
 
-void tri_hp_cd::init(input_map& input, void *gin) {
+void tri_hp_cd::init(input_map& inmap, void *gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
+	std::string ibcname;
 
 	gbl = static_cast<global *>(gin);
 	keyword = gbl->idprefix + "_nvariable";
-	input[keyword] = "1";
+	inmap[keyword] = "1";
 
-	tri_hp::init(input,gin);
+	tri_hp::init(inmap,gin);
 
 	keyword = gbl->idprefix + "_dissipation";
-	input.getwdefault(keyword,adis,1.0);
+	inmap.getwdefault(keyword,adis,1.0);
 	
 	FLT rho;
 	keyword = gbl->idprefix + "_rho";
-	if (!input.get(keyword,rho)) input.getwdefault("rho",rho,1.0);
+	if (!inmap.get(keyword,rho)) inmap.getwdefault("rho",rho,1.0);
 	
 	FLT cv;
 	keyword = gbl->idprefix + "_cv";
-	if (!input.get(keyword,cv)) input.getwdefault("cv",cv,1.0);
+	if (!inmap.get(keyword,cv)) inmap.getwdefault("cv",cv,1.0);
 	gbl->rhocv = rho*cv;
 
 #ifdef CONST_A
 	keyword = gbl->idprefix + "_ax";
-	if (!input.get(keyword,gbl->ax)) input.getwdefault("ax",gbl->ax,1.0);
+	if (!inmap.get(keyword,gbl->ax)) inmap.getwdefault("ax",gbl->ax,1.0);
 	
 	keyword = gbl->idprefix + "_ay";
-	if (!input.get(keyword,gbl->ay)) input.getwdefault("ay",gbl->ay,0.0);
+	if (!inmap.get(keyword,gbl->ay)) inmap.getwdefault("ay",gbl->ay,0.0);
 #else
-	gbl->a = getnewibc("a",input);
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = gbl->idprefix + "_a";
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = "a";
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find cd velocity field" << std::endl;
+		}
+	}
+	gbl->a = getnewibc(ibcname);
+	gbl->a->init(inmap,keyword);
 #endif
 
-	if (!input.get(gbl->idprefix + "_nu",gbl->kcond)) {
-		if (!input.get("nu",gbl->kcond)) {
-			if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
-				input.getwdefault("conductivity",gbl->kcond,0.0);
+	if (!inmap.get(gbl->idprefix + "_nu",gbl->kcond)) {
+		if (!inmap.get("nu",gbl->kcond)) {
+			if (!inmap.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
+				inmap.getwdefault("conductivity",gbl->kcond,0.0);
 			}
 		}
 	}
 
 	keyword = gbl->idprefix + "_minlngth";
-	if (!input.get(keyword,gbl->minlngth)) input.getwdefault("minlngth",gbl->minlngth,-1.0);
+	if (!inmap.get(keyword,gbl->minlngth)) inmap.getwdefault("minlngth",gbl->minlngth,-1.0);
 
 	keyword = gbl->idprefix + "_maxlngth";
-	if (!input.get(keyword,gbl->maxlngth)) input.getwdefault("maxlngth",gbl->maxlngth,1.0e99);    
+	if (!inmap.get(keyword,gbl->maxlngth)) inmap.getwdefault("maxlngth",gbl->maxlngth,1.0e99);    
 
 	gbl->tau.resize(maxpst);
 
-	gbl->src = getnewibc("src",input);
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = gbl->idprefix + "_src";
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = "src";
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find cd velocity field" << std::endl;
+		}
+	}
+	gbl->src = getnewibc(ibcname);
+	gbl->src->init(inmap,keyword);
 	
 	/* Stuff for Mike's minvrt */
 //	gbl->stiff_diag.v.resize(maxpst,NV);

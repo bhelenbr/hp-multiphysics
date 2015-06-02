@@ -792,6 +792,7 @@
 					"$(mpi_threads)",
 					MY_SPARSE,
 					MPISRC,
+					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
@@ -806,6 +807,7 @@
 					"${mpi_threads}",
 					MY_SPARSE,
 					MPISRC,
+					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
@@ -919,7 +921,6 @@
 					"$(PACKAGES)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CPLUSPLUSFLAGS = "";
 				PACKAGES = "$(HOME)/Packages";
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				mpi_threads = NONE;

@@ -90,17 +90,17 @@ class btype {
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
     "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns","cns_explicit","nonnewtonian","svv"};
 
-multigrid_interface* block::getnewlevel(input_map& input) {
+multigrid_interface* block::getnewlevel(input_map& inmap) {
 	std::string keyword,val,ibcname;
 	std::istringstream data;
 	int type;          
 
 	/* FIND BLOCK TYPE */
-	if (input.get(idprefix+"_type",val)) {
+	if (inmap.get(idprefix+"_type",val)) {
 		type = btype::getid(val.c_str());
 	}
 	else {
-		if (!input.get("blocktype",val)) {
+		if (!inmap.get("blocktype",val)) {
 			std::cerr << "couldn't find block type" << std::endl;
 			sim::abort(__LINE__,__FILE__,&std::cerr);
 		}

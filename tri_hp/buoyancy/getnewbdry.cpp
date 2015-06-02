@@ -35,22 +35,13 @@ public:
 
 const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt","melt_facet_pt2","triple_junction"};
 
-hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_vrtx_bdry *temp;
 	
-	keyword =  vbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing vertex type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_buoyancy_vtype::getid(val.c_str());
-	}
-	
-	
+	type = tri_hp_buoyancy_vtype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_buoyancy_vtype::melt_end: {
 			temp = new melt_end_pt(*this,*vbdry(bnum));
@@ -73,7 +64,7 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		case tri_hp_buoyancy_vtype::unknown: {
-			return(tri_hp_ins::getnewvrtxobject(bnum,bdrydata));
+			return(tri_hp_ins::getnewvrtxobject(bnum,name));
 		}
 	}
 	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
@@ -97,21 +88,13 @@ public:
 const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_edge_bdry *temp;
 	
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing side type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_buoyancy_stype::getid(val.c_str());
-	}
-	
+	type = tri_hp_buoyancy_stype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_buoyancy_stype::surface: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
@@ -190,7 +173,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 		}
 			
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
+			return(tri_hp_ins::getnewsideobject(bnum,name));
 			break;
 		}
 	}

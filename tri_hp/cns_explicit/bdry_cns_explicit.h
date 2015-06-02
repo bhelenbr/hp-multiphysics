@@ -76,8 +76,8 @@ namespace bdry_cns_explicit {
 				conv_flux.resize(x.NV);  
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_cns_explicit&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				hp_edge_bdry::init(input,gbl_in);
+			void init(input_map& inmap,void* gbl_in) {
+				hp_edge_bdry::init(inmap,gbl_in);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);            

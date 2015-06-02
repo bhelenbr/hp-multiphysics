@@ -34,21 +34,13 @@ class tri_hp_ps_stype {
 const char tri_hp_ps_stype::names[ntypes][40] = {"dirichlet","neumann","friction_wall"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing side type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_ps_stype::getid(val.c_str());
-	}
-
+	type = tri_hp_ps_stype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_ps_stype::dirichlet: {
 			temp = new dirichlet(*this,*ebdry(bnum));
@@ -63,7 +55,7 @@ hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,bdrydata));
+			return(tri_hp::getnewsideobject(bnum,name));
 		}
 	}
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

@@ -45,7 +45,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 
 	/* Initialize stuff for r_tri_mesh */
 	if ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable)) 
-		r_tri_mesh::init(inmap,gin); 
+		r_tri_mesh::init(inmap,gin);
 	else
 		tri_mesh::init(inmap,gin);
 
@@ -122,7 +122,16 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	}
 
 	/* GET INITIAL CONDITION FUNCTION */
-	gbl->ibc = getnewibc("ibc",inmap);
+	std::string ibcname;
+	keyword = gbl->idprefix + "_ibc";
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = "ibc";
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find ibc" << std::endl;
+		}
+	}
+	gbl->ibc = getnewibc(ibcname);
+	gbl->ibc->init(inmap,keyword);
 	
 	/* SET MESH VELOCITY TO ZERO */
 #ifdef MESH_REF_VEL
@@ -135,17 +144,36 @@ void tri_hp::init(input_map& inmap, void *gin) {
 
 	hp_ebdry.resize(nebd);
 	hp_vbdry.resize(nvbd);
-	for(i=0;i<nebd;++i) hp_ebdry(i) = getnewsideobject(i,inmap);
-	for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
+	for(i=0;i<nebd;++i) {
+		keyword =  ebdry(i)->idprefix + "_hp_type";
+		std::string val;
+		if (!inmap.get(keyword,val)) {
+			*gbl->log << "missing side type:" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		hp_ebdry(i) = getnewsideobject(i,val);
+	}
+	for(i=0;i<nvbd;++i) {
+		keyword =  vbdry(i)->idprefix + "_hp_type";
+		std::string val;
+		if (!inmap.get(keyword,val)) {
+			*gbl->log << "missing side type:" << keyword << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		hp_vbdry(i) = getnewvrtxobject(i,val);
+	}
 	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
 	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl->vbdry_gbls(i));
 	setinfo();
 
 	inmap.getwdefault("hp_fadd",fadd,1.0);
 
-	/* GET MESH MOVEMENT FUNCTION */
-	helper = getnewhelper(inmap);
-	helper->init(inmap,gbl->idprefix);
+	/* GET HELPER FUNCTION */
+	std::string helpername;
+	if (!inmap.get(gbl->idprefix + "_helper",helpername))
+		inmap.getwdefault("tri_hp_helper",helpername,std::string("plain"));
+	helper = getnewhelper(helpername);
+	helper->init(inmap,helpername);
 
 	/* UNSTEADY SOURCE TERMS */
 	dugdt.resize(log2pmax+1);

@@ -153,7 +153,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "symbolic_function" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -216,6 +216,7 @@
 			buildSettings = {
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = BZ_DEBUG;
+				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";
 				USER_HEADER_SEARCH_PATHS = "$(PACKAGES)/include ../include";
 			};
@@ -233,6 +234,7 @@
 		6F8B22220E352EC5005923AA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -245,6 +247,7 @@
 		6F8B22230E352EC5005923AA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "${HOME}/Codes";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;

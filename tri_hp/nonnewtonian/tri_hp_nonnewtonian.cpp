@@ -9,9 +9,9 @@
 
 #include "tri_hp_nonnewtonian.h"
 
-void tri_hp_nonnewtonian::init(input_map& input, void *gin) {
+void tri_hp_nonnewtonian::init(input_map& inmap, void *gin) {
 	gbl = static_cast<global *>(gin);
-	tri_hp_ins::init(input,gin);
+	tri_hp_ins::init(inmap,gin);
 	
 	Array<string,1> names(4);
 	Array<int,1> dims(4);
@@ -25,11 +25,11 @@ void tri_hp_nonnewtonian::init(input_map& input, void *gin) {
 
 	gbl->mu_of_strain.set_arguments(4,dims,names);
 
-	if (input.find(gbl->idprefix +"_mu_function") != input.end()) {
-		gbl->mu_of_strain.init(input,gbl->idprefix +"_mu_function");
+	if (inmap.find(gbl->idprefix +"_mu_function") != inmap.end()) {
+		gbl->mu_of_strain.init(inmap,gbl->idprefix +"_mu_function");
 	}
-	else if (input.find("mu_function") != input.end()){
-		gbl->mu_of_strain.init(input,"mu_function");
+	else if (inmap.find("mu_function") != inmap.end()){
+		gbl->mu_of_strain.init(inmap,"mu_function");
 	}
 	else {
 		*gbl->log << "couldn't find nonnewtonian viscosity function " << gbl->idprefix +"_mu_function" << std::endl;

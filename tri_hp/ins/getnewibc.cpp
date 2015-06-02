@@ -361,50 +361,50 @@ namespace ibc_ins {
 
 				if (bnum > x.nebd -1) surf = 0;
 			}
-			void init(input_map& input, std::string idnty) {
+			void init(input_map& inmap, std::string idnty) {
 				std::string keyword, val;
 
 				keyword = idnty + "_delta_rho";
-				if (!input.get(keyword,delta_rho)) {
-					input.getwdefault("delta_rho",delta_rho,0.0);
+				if (!inmap.get(keyword,delta_rho)) {
+					inmap.getwdefault("delta_rho",delta_rho,0.0);
 				}
 
 				keyword = idnty + "_rho_factor";
-				if (!input.get(keyword,rho_factor)) {
-					input.getwdefault("rho_factor",rho_factor,1.0);
+				if (!inmap.get(keyword,rho_factor)) {
+					inmap.getwdefault("rho_factor",rho_factor,1.0);
 				}
 
 				keyword = idnty + "_delta_mu";
-				if (!input.get(keyword,delta_mu)) {
-					input.getwdefault("delta_mu",delta_mu,0.0);
+				if (!inmap.get(keyword,delta_mu)) {
+					inmap.getwdefault("delta_mu",delta_mu,0.0);
 				}
 
 				keyword = idnty + "_mu_factor";
-				if (!input.get(keyword,mu_factor)) {
-					input.getwdefault("mu_factor",mu_factor,1.0);
+				if (!inmap.get(keyword,mu_factor)) {
+					inmap.getwdefault("mu_factor",mu_factor,1.0);
 				}
 
 				keyword = "delta_g";
-				input.getwdefault(keyword,delta_g,0.0);
-				input[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+				inmap.getwdefault(keyword,delta_g,0.0);
+				inmap[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 
 				keyword = "g_factor";
-				input.getwdefault(keyword,delta_g_factor,1.0);
-				input[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+				inmap.getwdefault(keyword,delta_g_factor,1.0);
+				inmap[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 
-				input.getwdefault("parameter_interval",interval,1);
+				inmap.getwdefault("parameter_interval",interval,1);
 
 				if (surf) {
 					std::string surfidnty = surf->base.idprefix;
 
 					keyword = surfidnty + "_delta_sigma";
-					input.getwdefault(keyword,delta_sigma,0.0);
+					inmap.getwdefault(keyword,delta_sigma,0.0);
 
 					keyword = surfidnty + "_sigma_factor";
-					input.getwdefault(keyword,sigma_factor,1.0);
+					inmap.getwdefault(keyword,sigma_factor,1.0);
 
 					keyword = surfidnty + "_matching_block";
-					if (!input.get(keyword,val)) {
+					if (!inmap.get(keyword,val)) {
 						delta_rho2 = 0.0;
 						rho2_factor = 1.0;
 						delta_mu2 = 0.0;
@@ -412,23 +412,23 @@ namespace ibc_ins {
 					}
 					else {                         
 						keyword = val + "_delta_rho";                    
-						if (!input.get(keyword,delta_rho2)) {
-							input.getwdefault("delta_rho",delta_rho2,0.0);
+						if (!inmap.get(keyword,delta_rho2)) {
+							inmap.getwdefault("delta_rho",delta_rho2,0.0);
 						}
 
 						keyword = val + "_rho_factor";
-						if (!input.get(keyword,rho2_factor)) {
-							input.getwdefault("rho_factor",rho2_factor,1.0);
+						if (!inmap.get(keyword,rho2_factor)) {
+							inmap.getwdefault("rho_factor",rho2_factor,1.0);
 						}
 
 						keyword = val + "_delta_mu";
-						if (!input.get(keyword,delta_mu2)) {
-							input.getwdefault("delta_mu",delta_mu2,0.0);
+						if (!inmap.get(keyword,delta_mu2)) {
+							inmap.getwdefault("delta_mu",delta_mu2,0.0);
 						}
 
 						keyword = val + "_mu_factor";
-						if (!input.get(keyword,mu2_factor)) {
-							input.getwdefault("mu_factor",mu2_factor,1.0);
+						if (!inmap.get(keyword,mu2_factor)) {
+							inmap.getwdefault("mu_factor",mu2_factor,1.0);
 						}
 					}
 				}
@@ -479,21 +479,21 @@ namespace ibc_ins {
 		public:
 			unsteady_body_force(tri_hp_ins& xin) : tri_hp_helper(xin) {}
 
-			void init(input_map& input, std::string idnty) {                
+			void init(input_map& inmap, std::string idnty) {                
 				std::string keyword,val;
 				std::ostringstream nstr;
 
 				for(int n=0;n<2;++n) {
 					nstr.str("");
 					nstr << idnty << "_forcing" << n << std::flush;
-					if (input.find(nstr.str()) != input.end()) {
-						fcn(n).init(input,nstr.str());
+					if (inmap.find(nstr.str()) != inmap.end()) {
+						fcn(n).init(inmap,nstr.str());
 					}
 					else {
 						nstr.str("");
 						nstr << "forcing" << n << std::flush;
-						if (input.find(nstr.str()) != input.end()) {
-							fcn(n).init(input,nstr.str());
+						if (inmap.find(nstr.str()) != inmap.end()) {
+							fcn(n).init(inmap,nstr.str());
 						}
 						else {
 							std::cerr << "couldn't find forcing function" << std::endl;
@@ -692,66 +692,66 @@ class force_coupling : public tri_hp_helper {
 			void jacobian() {}
 			void jacobian_dirichlet() {}
 
-			void init(input_map& input, std::string idnty) {     
+			void init(input_map& inmap, std::string idnty) {     
 				std::string bdrys;
 				std::istringstream bdryin;
 
-				if (!input.get(x.gbl->idprefix +"_horizontal",horizontal)) 
-					input.getwdefault("horizontal",horizontal,false);
+				if (!inmap.get(x.gbl->idprefix +"_horizontal",horizontal)) 
+					inmap.getwdefault("horizontal",horizontal,false);
 					
-				if (!input.get(x.gbl->idprefix +"_vertical",vertical)) 
-					input.getwdefault("vertical",vertical,false);
+				if (!inmap.get(x.gbl->idprefix +"_vertical",vertical)) 
+					inmap.getwdefault("vertical",vertical,false);
 
-				if (!input.get(x.gbl->idprefix +"_rotational",rotational)) 
-					input.getwdefault("rotational",rotational,false);
+				if (!inmap.get(x.gbl->idprefix +"_rotational",rotational)) 
+					inmap.getwdefault("rotational",rotational,false);
 								
 				if (horizontal) {
-					if (!input.get(x.gbl->idprefix +"_x0",w(0))) 
-					input.getwdefault("x0",w(0),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_x0",w(0))) 
+					inmap.getwdefault("x0",w(0),0.0);
 
-					if (!input.get(x.gbl->idprefix +"_dx0dt",w(1)))
-						input.getwdefault("dx0dt",w(1),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_dx0dt",w(1)))
+						inmap.getwdefault("dx0dt",w(1),0.0);
 						
-					if (!input.get(x.gbl->idprefix +"_k_linear0",k_linear(0))) 
-						input.getwdefault("k_linear0",k_linear(0),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_k_linear0",k_linear(0))) 
+						inmap.getwdefault("k_linear0",k_linear(0),0.0);
 				}
 				
 				if (vertical) {
-					if (!input.get(x.gbl->idprefix +"_x1",w(2))) 
-					input.getwdefault("x1",w(2),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_x1",w(2))) 
+					inmap.getwdefault("x1",w(2),0.0);
 
-					if (!input.get(x.gbl->idprefix +"_dx1dt",w(3)))
-						input.getwdefault("dx1dt",w(3),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_dx1dt",w(3)))
+						inmap.getwdefault("dx1dt",w(3),0.0);
 						
-					if (!input.get(x.gbl->idprefix +"_k_linear1",k_linear(0))) 
-						input.getwdefault("k_linear1",k_linear(1),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_k_linear1",k_linear(0))) 
+						inmap.getwdefault("k_linear1",k_linear(1),0.0);
 				}
 				
 				if (horizontal || vertical) {
-					if (!input.get(x.gbl->idprefix +"_mass",mass)) 
-						input.getwdefault("mass",mass,1.0);
+					if (!inmap.get(x.gbl->idprefix +"_mass",mass)) 
+						inmap.getwdefault("mass",mass,1.0);
 				}
 				
 				if (rotational) {
-					if (!input.get(x.gbl->idprefix +"_theta",w(4))) 
-					input.getwdefault("theta",w(4),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_theta",w(4))) 
+					inmap.getwdefault("theta",w(4),0.0);
 
-					if (!input.get(x.gbl->idprefix +"_dthetadt",w(5)))
-						input.getwdefault("dthetadt",w(5),0.0);
+					if (!inmap.get(x.gbl->idprefix +"_dthetadt",w(5)))
+						inmap.getwdefault("dthetadt",w(5),0.0);
 						
-					if (!input.get(x.gbl->idprefix +"_I",I)) 
-						input.getwdefault("I",I,1.0);
+					if (!inmap.get(x.gbl->idprefix +"_I",I)) 
+						inmap.getwdefault("I",I,1.0);
 					
-					if (!input.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
-						input.getwdefault("k_torsion",k_torsion,1.0);
+					if (!inmap.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
+						inmap.getwdefault("k_torsion",k_torsion,1.0);
 				}
 				w_tilda = w;		
 
-				if (!input.get(x.gbl->idprefix +"_nboundary",nboundary))
-					input.getwdefault("nboundary",nboundary,1);
+				if (!inmap.get(x.gbl->idprefix +"_nboundary",nboundary))
+					inmap.getwdefault("nboundary",nboundary,1);
 
-				if (!input.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
-					if (!input.getline("force_boundaries",bdrys)) {
+				if (!inmap.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
+					if (!inmap.getline("force_boundaries",bdrys)) {
 						std::cerr << "No boundary number list" << std::endl;
 						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
@@ -1190,53 +1190,53 @@ class force_coupling : public tri_hp_helper {
 				term_lines = tgt.term_lines;
 			}
 			tri_hp_helper* create(tri_hp& xin) { return new streamlines(*this,dynamic_cast<tri_hp_ins&>(xin)); }
-			void init(input_map& input, std::string idnty) {
+			void init(input_map& inmap, std::string idnty) {
 			
-				if (!input.get(x.gbl->idprefix +"_divisions",ndiv)) 
-					input.getwdefault("divisions",ndiv,0);
+				if (!inmap.get(x.gbl->idprefix +"_divisions",ndiv)) 
+					inmap.getwdefault("divisions",ndiv,0);
 					
-				if (!input.get(x.gbl->idprefix +"_maxtsteps",maxtsteps)) 
-					input.getwdefault("maxtsteps",maxtsteps,100000);
+				if (!inmap.get(x.gbl->idprefix +"_maxtsteps",maxtsteps)) 
+					inmap.getwdefault("maxtsteps",maxtsteps,100000);
 
-				if (!input.get(x.gbl->idprefix +"_pt0",&rake_pts(0,0),tri_mesh::ND)) {
-					if (!input.get("pt0",&rake_pts(0,0),tri_mesh::ND)) {
+				if (!inmap.get(x.gbl->idprefix +"_pt0",&rake_pts(0,0),tri_mesh::ND)) {
+					if (!inmap.get("pt0",&rake_pts(0,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				
-				if (!input.get(x.gbl->idprefix +"_pt1",&rake_pts(1,0),tri_mesh::ND)) {
-					if (!input.get("pt1",&rake_pts(1,0),tri_mesh::ND)) {
+				if (!inmap.get(x.gbl->idprefix +"_pt1",&rake_pts(1,0),tri_mesh::ND)) {
+					if (!inmap.get("pt1",&rake_pts(1,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				
 				/* Termination lines */
-				if (!input.get(x.gbl->idprefix +"_nterm_line",nterm_lines)) 
-					input.getwdefault("nterm_line",nterm_lines,0);
+				if (!inmap.get(x.gbl->idprefix +"_nterm_line",nterm_lines)) 
+					inmap.getwdefault("nterm_line",nterm_lines,0);
 
 				term_lines.resize(nterm_lines);
 
 				for (int n=0;n<nterm_lines;++n) {
 					ostringstream nstr;
 					nstr << "term_line" << n << std::endl;
-					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt0",&term_lines(n)(0,0),tri_mesh::ND)) {
+					if (!inmap.get(x.gbl->idprefix +nstr.str() +"_pt0",&term_lines(n)(0,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 					
-					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt1",&term_lines(n)(1,0),tri_mesh::ND)) {
+					if (!inmap.get(x.gbl->idprefix +nstr.str() +"_pt1",&term_lines(n)(1,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				
-				if (!input.get(x.gbl->idprefix +"_forward",forward)) 
-					input.getwdefault("forward",forward,true);
+				if (!inmap.get(x.gbl->idprefix +"_forward",forward)) 
+					inmap.getwdefault("forward",forward,true);
 					
-				if (!input.get(x.gbl->idprefix +"_backward",backward)) 
-					input.getwdefault("backward",backward,false);
+				if (!inmap.get(x.gbl->idprefix +"_backward",backward)) 
+					inmap.getwdefault("backward",backward,false);
 			}
 			
 			void output() {
@@ -1292,15 +1292,15 @@ class force_coupling : public tri_hp_helper {
 			static_particles(static_particles& tgt, tri_hp_ins& xin) : streamlines(tgt), rho(tgt.rho), d(tgt.d) {}
 			tri_hp_helper* create(tri_hp& xin) { return new static_particles(*this,dynamic_cast<tri_hp_ins&>(xin)); }
 			
-			void init(input_map& input, std::string idnty) {
+			void init(input_map& inmap, std::string idnty) {
 				
-				streamlines::init(input,idnty);
+				streamlines::init(inmap,idnty);
 				
-				if (!input.get(x.gbl->idprefix +"_particle_density",rho)) 
-					input.getwdefault("particle_density",rho,1.0);
+				if (!inmap.get(x.gbl->idprefix +"_particle_density",rho)) 
+					inmap.getwdefault("particle_density",rho,1.0);
 				
-				if (!input.get(x.gbl->idprefix +"_particle_diameter",d)) 
-					input.getwdefault("particle_diameter",d,1.0);
+				if (!inmap.get(x.gbl->idprefix +"_particle_diameter",d)) 
+					inmap.getwdefault("particle_diameter",d,1.0);
 			}
 			
 			void tadvance() {
@@ -1428,22 +1428,12 @@ class force_coupling : public tri_hp_helper {
 }
 
 
-init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tri_hp_ins::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
-		}
-	}
-	type = ibc_ins::ibc_type::getid(ibcname.c_str());
-
-
+	type = ibc_ins::ibc_type::getid(name.c_str());
 	switch(type) {
 		case ibc_ins::ibc_type::freestream: {
 			temp = new ibc_ins::freestream;
@@ -1470,27 +1460,17 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
 			break;
 		}
 		default: {
-			return(tri_hp::getnewibc(suffix,inmap));
+			return(tri_hp::getnewibc(name));
 		}
 	}
-	temp->init(inmap,keyword);
 	return(temp);
 }
 
-tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
+tri_hp_helper *tri_hp_ins::getnewhelper(std::string name) {
 	std::string keyword,movername;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_helper";
-	if (!inmap.get(keyword,movername)) {
-		if (!inmap.get("helper",movername)) {
-			type = -1;
-		}
-	}
-
-	type = ibc_ins::helper_type::getid(movername.c_str());
-
+	type = ibc_ins::helper_type::getid(name.c_str());
 	switch(type) {
 		case ibc_ins::helper_type::translating_drop: {
 			tri_hp_helper *temp = new ibc_ins::translating_drop(*this);
@@ -1517,7 +1497,7 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 			return(temp);
 		}
 		default: {
-			return(tri_hp::getnewhelper(inmap));
+			return(tri_hp::getnewhelper(name));
 		}
 	}
 }

@@ -88,7 +88,7 @@ namespace bdry_buoyancy {
 			surface9(const surface9& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), sigma_vs_T(inbdry.sigma_vs_T) {}
 			surface9* create(tri_hp& xin, edge_bdry &bin) const {return new surface9(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
-			void init(input_map& input,void* gbl_in);
+			void init(input_map& inmap,void* gbl_in);
 			void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	
@@ -147,7 +147,7 @@ namespace bdry_buoyancy {
 			}
 			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			
-			void init(input_map& input,void* gbl_in);
+			void init(input_map& inmap,void* gbl_in);
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
@@ -223,7 +223,7 @@ namespace bdry_buoyancy {
 			}
 			melt_kinetics(const melt_kinetics& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt(inbdry,xin,bin) { neq = 3; }
 			melt_kinetics* create(tri_hp& xin, edge_bdry &bin) const {return new melt_kinetics(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
-			void init(input_map& input,void* gbl_in);
+			void init(input_map& inmap,void* gbl_in);
 			FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
 			void element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf);
 #ifdef MELT1

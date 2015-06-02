@@ -40,16 +40,15 @@ class tri_hp_cns : public tri_hp {
 
 		FLT adis; // DISSIPATION CONSTANT
 
-		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-		tri_hp_helper* getnewhelper(input_map& inmap);
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
+		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		init_bdry_cndtn* getnewibc(std::string name);
 
     public:
 		void* create_global_structure() {return new global;}
 		tri_hp_cns* create() { return new tri_hp_cns(); }
 
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
 		void update();

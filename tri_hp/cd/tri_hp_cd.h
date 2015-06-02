@@ -37,13 +37,13 @@ class tri_hp_cd : public tri_hp {
 
 		FLT adis; // DISSIPATION CONSTANT
 
-		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
+		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		init_bdry_cndtn* getnewibc(std::string name);
 
     public:
 		void* create_global_structure() {return new global;}
 		tri_hp_cd* create() { return new tri_hp_cd(); }
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void calculate_unsteady_sources();
 		void error_estimator();

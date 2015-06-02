@@ -302,22 +302,12 @@ namespace ibc_cns {
 }
 
 
-init_bdry_cndtn *tri_hp_cns::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tri_hp_cns::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
-		}
-	}
-	type = ibc_cns::ibc_type::getid(ibcname.c_str());
-
-
+	type = ibc_cns::ibc_type::getid(name.c_str());
 	switch(type) {
 		case ibc_cns::ibc_type::freestream: {
 			temp = new ibc_cns::freestream;
@@ -332,30 +322,8 @@ init_bdry_cndtn *tri_hp_cns::getnewibc(std::string suffix, input_map& inmap) {
 			break;
 		}
 		default: {
-			return(tri_hp::getnewibc(suffix,inmap));
+			return(tri_hp::getnewibc(name));
 		}
 	}
-	temp->init(inmap,keyword);
 	return(temp);
-}
-
-tri_hp_helper *tri_hp_cns::getnewhelper(input_map& inmap) {
-	std::string keyword,movername;
-	int type;
-
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_helper";
-	if (!inmap.get(keyword,movername)) {
-		if (!inmap.get("helper",movername)) {
-			type = -1;
-		}
-	}
-
-	type = ibc_cns::helper_type::getid(movername.c_str());
-
-	switch(type) {
-		default: {
-			return(tri_hp::getnewhelper(inmap));
-		}
-	}
 }

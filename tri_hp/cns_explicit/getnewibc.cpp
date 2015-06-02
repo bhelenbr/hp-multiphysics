@@ -314,22 +314,12 @@ namespace ibc_cns_explicit {
 }
 
 
-init_bdry_cndtn *tri_hp_cns_explicit::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tri_hp_cns_explicit::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
-		}
-	}
-	type = ibc_cns_explicit::ibc_type::getid(ibcname.c_str());
-
-
+	type = ibc_cns_explicit::ibc_type::getid(name.c_str();
 	switch(type) {
 		case ibc_cns_explicit::ibc_type::freestream: {
 			temp = new ibc_cns_explicit::freestream;
@@ -360,46 +350,8 @@ init_bdry_cndtn *tri_hp_cns_explicit::getnewibc(std::string suffix, input_map& i
 //			break;
 //		}
 		default: {
-			return(tri_hp::getnewibc(suffix,inmap));
+			return(tri_hp::getnewibc(name));
 		}
 	}
-	temp->input(inmap,keyword);
 	return(temp);
-}
-
-tri_hp_helper *tri_hp_cns_explicit::getnewhelper(input_map& inmap) {
-	std::string keyword,movername;
-	int type;
-
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_helper";
-	if (!inmap.get(keyword,movername)) {
-		if (!inmap.get("helper",movername)) {
-			type = -1;
-		}
-	}
-
-	type = ibc_cns_explicit::helper_type::getid(movername.c_str());
-
-	switch(type) {
-//		case ibc_cns_explicit::helper_type::translating_drop: {
-//			tri_hp_helper *temp = new ibc_cns_explicit::translating_drop(*this);
-//			return(temp);
-//		}
-//		case ibc_cns_explicit::helper_type::parameter_changer: {
-//			tri_hp_helper *temp = new ibc_cns_explicit::parameter_changer(*this);
-//			return(temp);
-//		}
-//		case ibc_cns_explicit::helper_type::unsteady_body_force: {
-//			tri_hp_helper *temp = new ibc_cns_explicit::unsteady_body_force(*this);
-//			return(temp);
-//		}
-//		case ibc_cns_explicit::helper_type::force_coupling: {
-//			tri_hp_helper *temp = new ibc_cns_explicit::force_coupling(*this);
-//			return(temp);
-//		}
-		default: {
-			return(tri_hp::getnewhelper(inmap));
-		}
-	}
 }

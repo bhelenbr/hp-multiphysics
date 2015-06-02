@@ -10,17 +10,27 @@
 #include "tri_hp_swe.h"
 #include "../hp_boundary.h"
 
-void tri_hp_swe::init(input_map& input, void *gin) {
+void tri_hp_swe::init(input_map& inmap, void *gin) {
 
 	gbl = static_cast<global *>(gin);    
-	tri_hp_ins::init(input,gin);
+	tri_hp_ins::init(inmap,gin);
 
-	if (!input.get(gbl->idprefix + "_f0",gbl->f0)) input.getwdefault("f0",gbl->f0,0.0);
-	if (!input.get(gbl->idprefix + "_beta",gbl->beta)) input.getwdefault("beta",gbl->cbeta,0.0);
-	if (!input.get(gbl->idprefix + "_cd",gbl->cd)) input.getwdefault("cd",gbl->cd,0.0);
-	if (!input.get(gbl->idprefix + "_ptest",gbl->ptest)) input.getwdefault("ptest",gbl->ptest,1.0);
+	if (!inmap.get(gbl->idprefix + "_f0",gbl->f0)) inmap.getwdefault("f0",gbl->f0,0.0);
+	if (!inmap.get(gbl->idprefix + "_beta",gbl->beta)) inmap.getwdefault("beta",gbl->cbeta,0.0);
+	if (!inmap.get(gbl->idprefix + "_cd",gbl->cd)) inmap.getwdefault("cd",gbl->cd,0.0);
+	if (!inmap.get(gbl->idprefix + "_ptest",gbl->ptest)) inmap.getwdefault("ptest",gbl->ptest,1.0);
 
-	gbl->bathy = getnewbathy("bathy",input);
+	/* FIND INITIAL CONDITION TYPE */
+	std::string keyword, ibcname;
+	keyword = gbl->idprefix + "_bathy";
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = "bathy";
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find bathymettry function" << std::endl;
+		}
+	}
+	gbl->bathy = getnewibc(ibcname);
+	gbl->bathy->init(inmap,keyword);
 
 	return;
 }

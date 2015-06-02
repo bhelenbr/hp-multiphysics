@@ -34,22 +34,13 @@ class tri_hp_cns_explicit_vtype {
 
 const char tri_hp_cns_explicit_vtype::names[ntypes][40] = {"inflow"};
 
-hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_vrtx_bdry *temp;  
 
-	keyword =  vbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing vertex type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_cns_explicity_vtype::getid(val.c_str());
-	}
-
-
+	type = tri_hp_cns_explicity_vtype::getid(name.c_str());
 	switch(type) {
 
 		case tri_hp_cns_explicit_vtype::inflow: {
@@ -57,7 +48,7 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
 			break;
 		}
 		case tri_hp_cns_explicit_vtype::unknown: {
-			return(tri_hp::getnewvrtxobject(bnum,bdrydata));
+			return(tri_hp::getnewvrtxobject(bnum,name));
 		}
 	} 
 	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
@@ -87,22 +78,14 @@ class tri_hp_cns_explicit_stype {
 const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"inflow","outflow","characteristic","applied_stress","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
 
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing side type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_cns_explicit_stype::getid(val.c_str());
-	}
-
+	type = tri_hp_cns_explicit_stype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_cns_explicit_stype::inflow: {
 			temp = new inflow(*this,*ebdry(bnum));
@@ -126,7 +109,7 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,bdrydata));
+			return(tri_hp::getnewsideobject(bnum,name));
 		}
 	}    
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

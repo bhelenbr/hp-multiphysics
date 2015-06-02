@@ -74,10 +74,10 @@ class tri_hp : public r_tri_mesh  {
 
 		/** vertex boundary information */
 		Array<hp_vrtx_bdry *,1> hp_vbdry;
-		virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
+		virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		/** edge boundary information */
 		Array<hp_edge_bdry *,1> hp_ebdry;
-		virtual hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata); 
+		virtual hp_edge_bdry* getnewsideobject(int bnum, std::string name);
 		/** object to perform rigid mesh movement */
 		tri_hp_helper *helper;
 
@@ -144,8 +144,8 @@ class tri_hp : public r_tri_mesh  {
 			TinyVector<FLT,MXGP> cfl;
 
 		} *gbl;
-		virtual init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-		virtual tri_hp_helper* getnewhelper(input_map& inmap);
+		virtual init_bdry_cndtn* getnewibc(std::string name);
+		virtual tri_hp_helper* getnewhelper(std::string name);
 
 		/* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
 		void ugtouht(int tind); /**< Gathers globl u vector and stores it in uht */
@@ -170,7 +170,7 @@ class tri_hp : public r_tri_mesh  {
 		tri_hp() : r_tri_mesh() {}
 		virtual tri_hp* create() {return new tri_hp;}
 		void* create_global_structure() {return new global;}
-		void init(input_map& input, void *gin);
+		void init(input_map& inmap, void *gin);
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);
 		void curvinit();
@@ -301,9 +301,9 @@ class tri_hp_helper {
 		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin), post_process(in_help.post_process) {}
 		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
 		virtual ~tri_hp_helper() {};
-		virtual void init(input_map& input, std::string idnty) {
-			if (!input.get(idnty+"_post_process",post_process)) {
-				input.getwdefault("post_process",post_process,false);
+		virtual void init(input_map& inmap, std::string idnty) {
+			if (!inmap.get(idnty+"_post_process",post_process)) {
+				inmap.getwdefault("post_process",post_process,false);
 			}
 		}
 		virtual void tadvance() {

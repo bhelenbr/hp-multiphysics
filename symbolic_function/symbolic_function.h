@@ -220,6 +220,7 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	std::ostringstream conststring, varname;
 	std::istringstream constname;
 	std::string buffer,name,keyword;
+	bool read_constant;
 	double value;
 	
 	/* LOAD CONSTANTS IN FORMULA */
@@ -235,10 +236,15 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	   std::cout << "couldn't find expression" << idprefix << '\n';
 	}
 	
+	std::string echo_storage = input.echoprefix;
+	input.echoprefix = input.echoprefix +'\t';
+	
 	try {
 		ptemp.SetExpr(buffer);
 		mu::varmap_type variables = ptemp.GetUsedVar();
 
+		bool echo_store = input.echo;
+		input.echo = false;
 		/* Find out how many children are needed */
 		nchildren = 0;
 		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
@@ -271,7 +277,8 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 			
 			NEXT: continue;
 		}
-
+		
+		input.echo = echo_store;
 		children.resize(nchildren);
 		child_values.resize(nchildren);
 		/* REPEAT EXCEPT THIS TIME ALLOCATE CHILDREN */
@@ -290,7 +297,11 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 			}
 			if (item->first == "t") goto NEXT1;
 			
-			if (!input.get(item->first,value)) {
+			input.echo = false;
+			read_constant = input.get(item->first,value);
+			input.echo = echo_store;
+			
+			if (!read_constant) {
 				/* Check if it is not there or if it is also defined as a formula */
 				std::map<std::string,std::string>::const_iterator mi;
 					mi = input.find(item->first);
@@ -307,11 +318,17 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 					abort();
 				}
 			}
+			else {
+				/* reinput with echo on for log file */
+				input.get(item->first,value);
+			}
 			p.DefineConst(item->first,value);
 			
 			NEXT1: continue;
 		}
 		p.SetExpr(buffer);
+		input.echo = echo_store;
+		input.echoprefix = echo_storage;
 	}
 	catch (mu::Parser::exception_type &e) {
 		std::cout << "Message:  " << e.GetMsg() << std::endl;
@@ -603,6 +620,7 @@ public:
 		std::istringstream constname;
 		std::string buffer,name,keyword;
 		double value;
+		bool read_constant;
 		
 		/* LOAD CONSTANTS IN FORMULA */
 		mu::Parser ptemp;
@@ -617,10 +635,15 @@ public:
 			std::cout << "couldn't find expression" << idprefix << '\n';
 		}
 		
+		std::string echo_storage = input.echoprefix;
+		input.echoprefix = input.echoprefix +'\t';
+		
 		try {
 			ptemp.SetExpr(buffer);
 			mu::varmap_type variables = ptemp.GetUsedVar();
 			
+			bool echo_store = input.echo;
+			input.echo = false;
 			
 			/* Reassociate Children */
 			nchildren = 0;
@@ -656,6 +679,7 @@ public:
 				NEXT: continue;
 			}
 
+			input.echo = echo_store;
 			children.resize(nchildren);
 			child_values.resize(nchildren);
 			/* REPEAT EXCEPT THIS TIME ALLOCATE CHILDREN */
@@ -676,7 +700,11 @@ public:
 				}
 				if (item->first == "t") goto NEXT1;
 
-				if (!input.get(item->first,value)) {
+				input.echo = false;
+				read_constant = input.get(item->first,value);
+				input.echo = echo_store;
+				
+				if (!read_constant) {
 					/* Check if it is not there or if it is also defined as a formula */
 					std::map<std::string,std::string>::const_iterator mi;
 					mi = input.find(item->first);
@@ -693,11 +721,17 @@ public:
 						abort();
 					}
 				}
+				else {
+					/* reinput with echo on for log file */
+					input.get(item->first,value);
+				}
 				p.DefineConst(item->first,value);
 				
 			NEXT1: continue;
 			}
 			p.SetExpr(buffer);
+			input.echo = echo_store;
+			input.echoprefix = echo_storage;
 			
 			/* TESTING */
 		}

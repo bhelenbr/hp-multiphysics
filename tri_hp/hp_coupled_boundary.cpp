@@ -1284,14 +1284,14 @@ void hp_deformable_fixed_pnt::vdirichlet() {
 
 #ifdef petsc
 void hp_deformable_fixed_pnt::petsc_jacobian_dirichlet() {
+	
+	hp_vrtx_bdry::petsc_jacobian_dirichlet();
+	
 	const int nfix = tri_mesh::ND;
-
 	/* BOTH X & Y ARE FIXED */
 	Array<int,1> rows(tri_mesh::ND);
 	for(int n=0;n<nfix;++n)
 		rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n;
-	
-	
 	
 #ifdef MY_SPARSE
 	x.J.zero_rows(nfix,rows);
@@ -1400,10 +1400,10 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 #endif
 
 
-void translating_surface::init(input_map& input, void *gin) {
-	hp_deformable_bdry::init(input,gin);
-	if (!input.get(base.idprefix + "_velx",vel(0))) input.getwdefault("velx",vel(0),1.0);
-	if (!input.get(base.idprefix + "_vely",vel(0))) input.getwdefault("vely",vel(1),0.0);
+void translating_surface::init(input_map& inmap, void *gin) {
+	hp_deformable_bdry::init(inmap,gin);
+	if (!inmap.get(base.idprefix + "_velx",vel(0))) inmap.getwdefault("velx",vel(0),1.0);
+	if (!inmap.get(base.idprefix + "_vely",vel(0))) inmap.getwdefault("vely",vel(1),0.0);
 }
 	
 void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {

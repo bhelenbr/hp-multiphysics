@@ -37,9 +37,9 @@ template<class BASE> class pod_simulate : public BASE {
 #endif
 
 	public:
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
-		tri_hp_helper* getnewhelper(input_map& inmap);
+		tri_hp_helper* getnewhelper(std::string name);
 		void output(const std::string& fname, block::output_purpose why);
 		void calc_coeffs();
 		void tadvance();
@@ -74,7 +74,7 @@ template<class BASE> class pod_sim_edge_bdry {
 
 	public:
 		pod_sim_edge_bdry(pod_simulate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
-		void init(input_map& input);
+		void init(input_map& inmap);
 		void rsdl();
 		void addto2Dsolution(struct tri_hp::vsi ug);
 		void addto2Dsolution(struct tri_hp::vsi ug, int mode, FLT coeff);
@@ -91,14 +91,14 @@ class svv_ins : public pod_simulate<tri_hp_ins> {
 		bool remove_pressure; // Flag to remove pressure from equations based on incompressibility
 	
 		svv_ins* create() { return new svv_ins();}
-		void init(input_map& input, void *gin) { 
-			pod_simulate<tri_hp_ins>::init(input,gin);
-			if (!input.get("svv_cutoff", cutoff)) {
+		void init(input_map& inmap, void *gin) { 
+			pod_simulate<tri_hp_ins>::init(inmap,gin);
+			if (!inmap.get("svv_cutoff", cutoff)) {
 				*gbl->log << "Failed to find svv cutoff number" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-			input.getwdefault("svv_alpha", alpha,0.0);	
-			input.getwdefault("svv_remove_pressure",remove_pressure,false);
+			inmap.getwdefault("svv_alpha", alpha,0.0);	
+			inmap.getwdefault("svv_remove_pressure",remove_pressure,false);
 			
 			if (remove_pressure) {
 				for(int m=0;m<tmodes;++m) {

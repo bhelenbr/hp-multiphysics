@@ -63,8 +63,8 @@ namespace bdry_ins {
 				conv_flux = 0.0;
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				hp_edge_bdry::init(input,gbl_in);
+			void init(input_map& inmap,void* gbl_in) {
+				hp_edge_bdry::init(inmap,gbl_in);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);
@@ -158,9 +158,9 @@ namespace bdry_ins {
 			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin), rigid() {mytype = "force_coupling"; /* ibc = this; */}
 			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), rigid(inbdry) {/*ibc = this;*/}
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				inflow::init(input,gbl_in);
-				rigid::init(input,base.idprefix);
+			void init(input_map& inmap,void* gbl_in) {
+				inflow::init(inmap,gbl_in);
+				rigid::init(inmap,base.idprefix);
 				report_flag = true;
 			}
 			void tadvance() {hp_edge_bdry::tadvance();}
@@ -229,11 +229,11 @@ namespace bdry_ins {
 			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin), rigid(), slip_length(0.0) {mytype = "friction_slip";}
 			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), rigid(inbdry), slip_length(inbdry.slip_length) {}
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				generic::init(input,gbl_in);
-				rigid::init(input,base.idprefix);
+			void init(input_map& inmap,void* gbl_in) {
+				generic::init(inmap,gbl_in);
+				rigid::init(inmap,base.idprefix);
 				std::string keyword = base.idprefix +"_sliplength";
-				if (!input.get(keyword,slip_length)) {
+				if (!inmap.get(keyword,slip_length)) {
 					*x.gbl->log << "Couldn't find slip length for " << keyword << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
@@ -285,10 +285,10 @@ namespace bdry_ins {
 			symmetry(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
 			symmetry(const symmetry& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
 			symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				generic::init(input,gbl_in);
+			void init(input_map& inmap,void* gbl_in) {
+				generic::init(inmap,gbl_in);
 				std::string keyword = base.idprefix +"_dir";
-				input.getwdefault(keyword,dir,0);
+				inmap.getwdefault(keyword,dir,0);
 				essential_indices.push_back(dir);
 				type[dir] = essential;
 			}
@@ -408,7 +408,7 @@ namespace bdry_ins {
 				fine = &inbdry;
 			};
 			surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in); 
+			void init(input_map& inmap,void* gbl_in); 
 
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();

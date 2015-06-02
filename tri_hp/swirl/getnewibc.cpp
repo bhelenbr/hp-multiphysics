@@ -171,22 +171,12 @@ namespace ibc_swirl {
 }
 
 
-init_bdry_cndtn *tri_hp_swirl::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tri_hp_swirl::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
-		}
-	}
-
-	type = ibc_swirl::ibc_type::getid(ibcname.c_str());
-
+	type = ibc_swirl::ibc_type::getid(name.c_str());
 	switch(type) {
 		case ibc_swirl::ibc_type::spinning: {
 			temp = new ibc_swirl::spinning;
@@ -209,9 +199,8 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(std::string suffix, input_map& inmap) {
 		}
 
 		default: {
-			return(tri_hp::getnewibc(suffix,inmap));
+			return(tri_hp::getnewibc(name));
 		}
 	}
-	temp->input(inmap,keyword);
 	return(temp);
 }

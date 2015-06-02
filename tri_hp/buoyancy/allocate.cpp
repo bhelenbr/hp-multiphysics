@@ -10,27 +10,27 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
-void tri_hp_buoyancy::init(input_map& input, void *gin) {
+void tri_hp_buoyancy::init(input_map& inmap, void *gin) {
 	gbl = static_cast<global *>(gin);
-	input[gbl->idprefix + "_nvariable"] = "4";
-	tri_hp_ins::init(input,gin);
+	inmap[gbl->idprefix + "_nvariable"] = "4";
+	tri_hp_ins::init(inmap,gin);
 
-	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
+	if (!inmap.get(gbl->idprefix + "_conductivity",gbl->kcond)) inmap.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
 	gbl->D(0) = gbl->kcond;
-	if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
+	if (!inmap.get(gbl->idprefix + "_cp",gbl->cp)) inmap.getwdefault("cp",gbl->cp,1.0);
 
-	if (input.find(gbl->idprefix+"_rho_vs_T") != input.end()) {
-		gbl->rho_vs_T.init(input,gbl->idprefix+"_rho_vs_T");
+	if (inmap.find(gbl->idprefix+"_rho_vs_T") != inmap.end()) {
+		gbl->rho_vs_T.init(inmap,gbl->idprefix+"_rho_vs_T");
 	} 
-	else if (input.find("rho_vs_T") != input.end()){
-		gbl->rho_vs_T.init(input,"rho_vs_T");
+	else if (inmap.find("rho_vs_T") != inmap.end()){
+		gbl->rho_vs_T.init(inmap,"rho_vs_T");
 	}
 	else {
 		*gbl->log << "couldn't find rho_vs_T equation for density" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
-	if (!input.get(gbl->idprefix + "_energy_scaling",gbl->adapt_energy_scaling)) input.getwdefault("energy_scaling",gbl->adapt_energy_scaling,1.0);
+	if (!inmap.get(gbl->idprefix + "_energy_scaling",gbl->adapt_energy_scaling)) inmap.getwdefault("energy_scaling",gbl->adapt_energy_scaling,1.0);
 
 
 	return;

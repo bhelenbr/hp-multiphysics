@@ -10,21 +10,21 @@
 #include "tri_hp_lvlset.h"
 #include "../hp_boundary.h"
 
-void tri_hp_lvlset::init(input_map& input, void *gin) {
+void tri_hp_lvlset::init(input_map& inmap, void *gin) {
 	gbl = static_cast<global *>(gin);    
-	input[gbl->idprefix + "_nvariable"] = "4";
-	tri_hp_ins::init(input,gin);
-	input.getwdefault(gbl->idprefix + "_rho2",gbl->rho2,1.0);
-	input.getwdefault(gbl->idprefix + "_mu2",gbl->mu2,0.0);
-	input.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
+	inmap[gbl->idprefix + "_nvariable"] = "4";
+	tri_hp_ins::init(inmap,gin);
+	inmap.getwdefault(gbl->idprefix + "_rho2",gbl->rho2,1.0);
+	inmap.getwdefault(gbl->idprefix + "_mu2",gbl->mu2,0.0);
+	inmap.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
 	/* get estimate of mesh length to use for width */
 	FLT dx = circumradius(0)/basis::tri(log2p)->sm();
-	if (!input.get(gbl->idprefix + "_width",gbl->width)) {
-		input.getwdefault(gbl->idprefix +"_width_multiplier",gbl->width,2.0);
+	if (!inmap.get(gbl->idprefix + "_width",gbl->width)) {
+		inmap.getwdefault(gbl->idprefix +"_width_multiplier",gbl->width,2.0);
 		gbl->width *= dx;
 	}
 	
-	input.getwdefault(gbl->idprefix + "_reinit_iterations",reinit_iterations,0);
+	inmap.getwdefault(gbl->idprefix + "_reinit_iterations",reinit_iterations,0);
 	reinit_bdry.resize(nebd);
 	for (int i=0;i<nebd;++i)
 		reinit_bdry(i) = new reinit_bc(*this,*ebdry(i));

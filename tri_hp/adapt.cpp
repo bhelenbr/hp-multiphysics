@@ -199,6 +199,14 @@ void tri_hp::length() {
 			}
 		}
 		
+		/* Need to call this first because smooth_lngth uses fltwk */
+		if (gbl->adapt_output) {
+			ostringstream fname;
+			fname << "adapt_diagnostic" << gbl->tstep;
+			output(fname.str(),tri_hp::adapt_diagnostic);
+		}
+		
+		
 		/* Smooth length function? */
 		for (int i=0;i<gbl->length_smoothing_steps;++i) {
 			for(int last_phase = 0, mp_phase = 0; !last_phase; ++mp_phase) {
@@ -233,14 +241,7 @@ void tri_hp::length() {
 	//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
 	//	} while(count > 0 && nsweep < 5);
 	}
-	
-	
-	if (gbl->adapt_output) {
-		ostringstream fname;
-		fname << "adapt_diagnostic" << gbl->tstep;
-		output(fname.str(),tri_hp::adapt_diagnostic);
-	}
-	
+
 	return;
 }
 

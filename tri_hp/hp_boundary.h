@@ -47,7 +47,7 @@ public:
 	}
 	virtual void* create_global_structure() {return 0;}
 	virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
-	virtual void init(input_map& input,void* gbl_in); /**< This is to read definition data only (not solution data) */
+	virtual void init(input_map& inmap,void* gbl_in); /**< This is to read definition data only (not solution data) */
 	virtual void copy(const hp_vrtx_bdry& tgt) {}
 	virtual ~hp_vrtx_bdry() {}
 	
@@ -181,8 +181,8 @@ public:
 	}
 	virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 	virtual void* create_global_structure() {return 0;}
-	virtual void init(input_map& input,void* gbl_in);
-	void find_matching_boundary_name(input_map& input, std::string& blockname, std::string& sidename);
+	virtual void init(input_map& inmap,void* gbl_in);
+	void find_matching_boundary_name(input_map& inmap, std::string& blockname, std::string& sidename);
 	virtual void copy(const hp_edge_bdry& tgt);
 	virtual ~hp_edge_bdry() {}
 	
@@ -291,7 +291,7 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 		}
 		symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {}
 		symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
-		void init(input_map& input,void* gbl_in);
+		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	

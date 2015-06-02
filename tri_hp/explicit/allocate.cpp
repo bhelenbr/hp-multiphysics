@@ -9,14 +9,14 @@
 
 #include "tri_hp_explicit.h"
 
-void tri_hp_explicit::init(input_map& input, void *gin) {
+void tri_hp_explicit::init(input_map& inmap, void *gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
 	gbl = static_cast<global *>(gin);
 
-	tri_hp_cd::init(input,gin);
+	tri_hp_cd::init(inmap,gin);
 	gbl->sprcn2.resize(maxpst,sm0,NV);
 
 

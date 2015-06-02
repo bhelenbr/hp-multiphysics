@@ -10,21 +10,21 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-void tri_hp_ins::init(input_map& input, void *gin) {
+void tri_hp_ins::init(input_map& inmap, void *gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
 	gbl = static_cast<global *>(gin);
-    if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
-    if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
+    if (!inmap.get(gbl->idprefix + "_rho",gbl->rho)) inmap.getwdefault("rho",gbl->rho,1.0);
+    if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,0.0);
 
-	if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
-		input[gbl->idprefix + "_nvariable"] = "3";
+	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
+		inmap[gbl->idprefix + "_nvariable"] = "3";
 	}
-    input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+    inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 
-	tri_hp::init(input,gin);
+	tri_hp::init(inmap,gin);
 
 	gbl->tau.resize(maxpst,NV);
     /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
@@ -33,8 +33,8 @@ void tri_hp_ins::init(input_map& input, void *gin) {
         for (int n=2;n<NV-1;++n) {
             stringstream nstr;
             nstr << n-2;
-            if (!input.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n)))
-                if (!input.get("D" +nstr.str(),gbl->D(n)))
+            if (!inmap.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n)))
+                if (!inmap.get("D" +nstr.str(),gbl->D(n)))
                     gbl->D(n) = 0.0;
         }
     }

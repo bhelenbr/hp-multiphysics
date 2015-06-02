@@ -287,6 +287,9 @@ void sim::abort(int line,const char *file, std::ostream *log) {
 		sim::blks.blk(b)->output("aborted_solution", block::display);
 		sim::blks.blk(b)->output("aborted_solution", block::restart);
 	}
+#ifdef petsc
+	PetscEnd();
+#endif
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD,1);
 #endif

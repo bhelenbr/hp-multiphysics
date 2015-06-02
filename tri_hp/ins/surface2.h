@@ -35,7 +35,7 @@ class surface2 : public hp_deformable_bdry {
 		};
 		surface2* create(tri_hp& xin, edge_bdry &bin) const {return new surface2(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 		
-		void init(input_map& input,void* gbl_in);
+		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 		void setup_preconditioner();
 #ifndef petsc

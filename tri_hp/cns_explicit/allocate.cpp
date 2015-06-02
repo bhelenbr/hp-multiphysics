@@ -10,20 +10,20 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-void tri_hp_cns_explicit::init(input_map& input, void *gin) {
+void tri_hp_cns_explicit::init(input_map& inmap, void *gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
 	gbl = static_cast<global *>(gin);
 
-	if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
-		input[gbl->idprefix + "_nvariable"] = "4";
+	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
+		inmap[gbl->idprefix + "_nvariable"] = "4";
 	}
 
-	tri_hp::init(input,gin);
+	tri_hp::init(inmap,gin);
 
-	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 
 
 	gbl->tau.resize(maxpst,NV,NV);
@@ -31,17 +31,26 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 	double prandtl;
 	
 	double bodydflt[2] = {0.0,0.0};
-	if (!input.get(gbl->idprefix +"_body_force",gbl->body.data(),2)) input.getwdefault("body_force",gbl->body.data(),2,bodydflt); 
+	if (!inmap.get(gbl->idprefix +"_body_force",gbl->body.data(),2)) inmap.getwdefault("body_force",gbl->body.data(),2,bodydflt); 
 
-	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
-	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
-	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.713);
-	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,287.058);
+	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
+	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
+	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",prandtl,0.713);
+	if (!inmap.get(gbl->idprefix + "_R",gbl->R)) inmap.getwdefault("R",gbl->R,287.058);
 	
 	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
 
 	/* source term for MMS */
-	//gbl->src = getnewibc("src",input);
+//	std::string ibcname;
+//	keyword = gbl->idprefix + "_src";
+//	if (!inmap.get(keyword,ibcname)) {
+//		keyword = "src";
+//		if (!inmap.get(keyword,ibcname)) {
+//			*gbl->log << "couldn't find mms source" << std::endl;
+//		}
+//	}
+//	gbl->src = getnewibc(ibcname);
+//	gbl->src->init(inmap,keyword);
 	
 	return;
 }

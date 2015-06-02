@@ -21,7 +21,7 @@ struct bd_str {
 };
 #endif
 
-template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
+template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
@@ -29,13 +29,13 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 
 	/* Initialize base class */
 	/* If restart is not equal to 0, this will load DNS data */
-	BASE::init(input,gin);
+	BASE::init(inmap,gin);
 
-	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
+	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 	nstr.str("");
 	nstr << "pod" << pod_id << "_nmodes";
-	if (!input.get(nstr.str(),nmodes)) input.getwdefault("nmodes",nmodes,5); 
+	if (!inmap.get(nstr.str(),nmodes)) inmap.getwdefault("nmodes",nmodes,5); 
 	nstr.clear();
 
 	vsi ugstore;
@@ -78,7 +78,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i) = new pod_sim_edge_bdry<BASE>(*this,*BASE::ebdry(i));
 
 		keyword = pod_ebdry(i)->base.idprefix +"_pod";
-		input.getwdefault(keyword,pod_ebdry(i)->active,false);
+		inmap.getwdefault(keyword,pod_ebdry(i)->active,false);
 		if (!pod_ebdry(i)->active) {
 			pod_ebdry(i)->nmodes = 0;
 			continue;
@@ -86,11 +86,11 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		binfo(localid)++;
 
 		keyword = pod_ebdry(i)->base.idprefix + "_pod_id";
-		input.getwdefault(keyword,pod_ebdry(i)->pod_id,pod_ebdry(i)->base.idnum);
+		inmap.getwdefault(keyword,pod_ebdry(i)->pod_id,pod_ebdry(i)->base.idnum);
 
 		nstr.str("");
 		nstr << "bdry_pod" << pod_ebdry(i)->pod_id << "_nmodes";
-		if (!input.get(nstr.str(),pod_ebdry(i)->nmodes)) input.getwdefault("bdry_nmodes",pod_ebdry(i)->nmodes,nmodes); 
+		if (!inmap.get(nstr.str(),pod_ebdry(i)->nmodes)) inmap.getwdefault("bdry_nmodes",pod_ebdry(i)->nmodes,nmodes); 
 		nstr.clear();
 	}
 
@@ -164,7 +164,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 
 
 	int load_coeffs;
-	input.getwdefault("load_coeffs",load_coeffs,0);
+	inmap.getwdefault("load_coeffs",load_coeffs,0);
 	
 	if (load_coeffs) {
 		/* This is the old way */
@@ -197,7 +197,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 		scaling.resize(BASE::NV);
 		scaling = 1;
-		if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
+		if (inmap.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || inmap.getline("scale_vector",linebuff)) {
 			instr.str(linebuff);
 			for(i=0;i<BASE::NV;++i)
 				instr >> scaling(i);
@@ -756,7 +756,7 @@ template<class BASE> FLT pod_simulate<BASE>::maxres() {
 }
 
 #ifdef POD_BDRY
-template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
+template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& inmap) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
@@ -797,7 +797,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
 	}
 
 	int initfile;
-	input.getwdefault("initfile",initfile,1);
+	inmap.getwdefault("initfile",initfile,1);
 	nstr.str("");
 	nstr << initfile << std::flush;
 	filename = "coeff" +nstr.str() +"_" +base.idprefix +".bin";
@@ -1082,23 +1082,18 @@ namespace pod {
 	};
 }
 
-template<class BASE> tri_hp_helper *pod_simulate<BASE>::getnewhelper(input_map& inmap) {
+template<class BASE> tri_hp_helper *pod_simulate<BASE>::getnewhelper(std::string name) {
 	std::string movername;
 	int type;
 	
-	/* FIND INITIAL CONDITION TYPE */
-	if (!inmap.get(BASE::gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("helper",movername,std::string("default"));
-	
-	type = pod::helper_type::getid(movername.c_str());
-	
+	type = pod::helper_type::getid(name.c_str());
 	switch(type) {
 		case pod::helper_type::calc_coeffs: {
 			tri_hp_helper *temp = new pod::calc_coeffs<BASE>(*this);
 			return(temp);
 		}
 		default: {
-			return(BASE::getnewhelper(inmap));
+			return(BASE::getnewhelper(name));
 		}	
 	}
 }

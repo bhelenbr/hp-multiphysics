@@ -31,28 +31,21 @@ class tri_hp_lvlset_vtype {
 
 const char tri_hp_lvlset_vtype::names[ntypes][40] = {"hybrid_point"};
 
-hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_vrtx_bdry *temp;  
 
-	keyword =  vbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing vertex type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_lvlset_vtype::getid(val.c_str());
-	}
 
+	type = tri_hp_lvlset_vtype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_lvlset_vtype::hybrid_point: {
 			temp = new hybrid_pt(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_lvlset_vtype::unknown: {
-			return(tri_hp::getnewvrtxobject(bnum,bdrydata));
+			return(tri_hp::getnewvrtxobject(bnum,name));
 			break;
 		}
 	} 
@@ -75,21 +68,13 @@ class tri_hp_lvlset_stype {
 const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","outflow","characteristic","euler","hybrid"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing side type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_lvlset_stype::getid(val.c_str());
-	}
-
+	type = tri_hp_lvlset_stype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_lvlset_stype::inflow: {
 			temp = new characteristic<bdry_ins::inflow>(*this,*ebdry(bnum));
@@ -112,7 +97,7 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
+			return(tri_hp_ins::getnewsideobject(bnum,name));
 			break;
 		}
 	}    
@@ -157,23 +142,18 @@ class tri_hp_lvlset_helper_type {
 const char tri_hp_lvlset_helper_type::names[ntypes][40] = {"reinitialize"};
 
 
-tri_hp_helper *tri_hp_lvlset::getnewhelper(input_map& inmap) {
+tri_hp_helper *tri_hp_lvlset::getnewhelper(std::string name) {
 	std::string movername;
 	int type;
 	
-	/* FIND INITIAL CONDITION TYPE */
-	if (!inmap.get(gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("tri_hp_helper",movername,std::string("default"));
-	
-	type = tri_hp_lvlset_helper_type::getid(movername.c_str());
-	
+	type = tri_hp_lvlset_helper_type::getid(name.c_str());
 	switch(type) {
 		case tri_hp_lvlset_helper_type::reinitialize: {
 			tri_hp_helper *temp = new reinitialize_flow(*this);
 			return(temp);
 		}
 		default: {
-			return(tri_hp_ins::getnewhelper(inmap));
+			return(tri_hp_ins::getnewhelper(name));
 		}
 	}
 }

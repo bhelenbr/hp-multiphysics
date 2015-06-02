@@ -92,7 +92,8 @@ bool input_map::get(const std::string &keyword, double &vout) {
         else {
 					double (*my_erf)(double) = erf;
 					double (*my_erfc)(double) = erfc;
-                    
+					
+						if (echo) *log << echoprefix << keyword << ": " << (*this)[keyword] << std::endl;
             /* TRY TO PARSE MATHEMATICAL EXPRESSION */
             mu::Parser P,P1;
 						P.DefineFun("erf", my_erf, false);
@@ -104,16 +105,20 @@ bool input_map::get(const std::string &keyword, double &vout) {
                 P.SetExpr((*this)[keyword]);
                 mu::varmap_type variables = P.GetUsedVar();
                 mu::varmap_type::const_iterator item = variables.begin();
+								std::string echo_storage = echoprefix;
+								echoprefix = echoprefix +'\t';
                 for (; item!=variables.end(); ++item) {
                     if (!get(item->first,value)) {
 												// *log << echoprefix << "Trouble reading " << item->first << std::endl;
+												echoprefix = echo_storage;
 												return(false);
                     }
                     P1.DefineConst(item->first,value);
                 }
+								echoprefix = echo_storage;
                 P1.SetExpr((*this)[keyword]);
                 vout = P1.Eval();
-                if (echo) *log << echoprefix << keyword << ": " << (*this)[keyword] << " = " << vout << std::endl;
+                if (echo) *log << echoprefix << keyword << " = " << vout << std::endl;
                 return(true);
             }
             catch (mu::Parser::exception_type &e) {
@@ -175,12 +180,16 @@ bool input_map::get(const std::string &keyword, double *array, int nentry) {
                     P.SetExpr(expression);
                     mu::varmap_type variables = P.GetUsedVar();
                     mu::varmap_type::const_iterator item = variables.begin();
+										std::string echo_storage = echoprefix;
+										echoprefix = echoprefix +'\t';
                     for (; item!=variables.end(); ++item) {
                         if (!get(item->first,value)) {
+														echoprefix = echo_storage;
                             return(false);
                         }
                         P1.DefineConst(item->first,value);
                     }
+										echoprefix = echo_storage;
                     P1.SetExpr(expression);
                     array[n] = P1.Eval();
                 }

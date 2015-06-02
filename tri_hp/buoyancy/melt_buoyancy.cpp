@@ -6,16 +6,16 @@
 
 using namespace bdry_buoyancy;
 
-void surface_marangoni::init(input_map& input,void* gbl_in) {
-	bdry_ins::surface2::init(input,gbl_in);
+void surface_marangoni::init(input_map& inmap,void* gbl_in) {
+	bdry_ins::surface2::init(inmap,gbl_in);
 	
 	if (!is_master) return;
 	
-	if (input.find(base.idprefix+"_sigma_vs_T") != input.end()) {
-		sigma_vs_T.init(input,base.idprefix+"_sigma_vs_T");
+	if (inmap.find(base.idprefix+"_sigma_vs_T") != inmap.end()) {
+		sigma_vs_T.init(inmap,base.idprefix+"_sigma_vs_T");
 	}
-	else if (input.find("sigma_vs_T") != input.end()){
-		sigma_vs_T.init(input,"sigma_vs_T");
+	else if (inmap.find("sigma_vs_T") != inmap.end()){
+		sigma_vs_T.init(inmap,"sigma_vs_T");
 	}
 	else {
 		*x.gbl->log << "couldn't find sigma_vs_T equation for surface tension" << std::endl;
@@ -568,9 +568,9 @@ void melt_facet_pt2::petsc_jacobian() {
 }
 #endif
 
-void triple_junction::init(input_map& input,void* gbl_in) {
-	melt_facet_pt2::init(input, gbl_in);
-	input.getwdefault(base.idprefix +"_growth_angle",growth_angle,0.0);
+void triple_junction::init(input_map& inmap,void* gbl_in) {
+	melt_facet_pt2::init(inmap, gbl_in);
+	inmap.getwdefault(base.idprefix +"_growth_angle",growth_angle,0.0);
 	growth_angle *= M_PI/180.0;
 }
 

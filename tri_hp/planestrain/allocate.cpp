@@ -10,19 +10,19 @@
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 
-void tri_hp_ps::init(input_map& input, void *gin) {
+void tri_hp_ps::init(input_map& inmap, void *gin) {
 	FLT nu, E;
 
 	gbl = static_cast<global *>(gin);
 
-	input[gbl->idprefix + "_nvariable"] = "3";
-	tri_hp::init(input,gin);
+	inmap[gbl->idprefix + "_nvariable"] = "3";
+	tri_hp::init(inmap,gin);
 
 
 	gbl->tau.resize(maxpst);
-	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
-	input.getwdefault(gbl->idprefix + "_nu",nu,0.0);
-	input.getwdefault(gbl->idprefix + "_E",E,0.0);
+	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+	inmap.getwdefault(gbl->idprefix + "_nu",nu,0.0);
+	inmap.getwdefault(gbl->idprefix + "_E",E,0.0);
 
 	gbl->mu = E/(2.*(1.+nu));
 	gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);

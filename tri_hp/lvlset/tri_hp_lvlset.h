@@ -26,9 +26,9 @@ class tri_hp_lvlset : public tri_hp_ins {
 			FLT rho2, mu2;
 
 		} *gbl;
-		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-		tri_hp_helper *getnewhelper(input_map& inmap);
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
+		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		tri_hp_helper *getnewhelper(std::string name);
 
 		
 		/* Reinitialization Stuff */
@@ -59,7 +59,7 @@ class tri_hp_lvlset : public tri_hp_ins {
 		/* Main functions */
 		void* create_global_structure() {return new global;}
 		tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
-		void init(input_map& input, void *gin);  
+		void init(input_map& inmap, void *gin);  
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		// functions to reinitialize phi

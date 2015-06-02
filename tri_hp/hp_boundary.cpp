@@ -189,27 +189,30 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
 }
 
-void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
-	std::string keyword;
+void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
+	std::string keyword,ibcname;
 	
-	if (input.find(base.idprefix +"_ibc") != input.end()) {
-		ibc = x.getnewibc(base.idprefix+"_ibc",input);
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = base.idprefix + "_ibc";
+	if (inmap.get(keyword,ibcname)) {
+		ibc = x.getnewibc(ibcname);
+		ibc->init(inmap,keyword);
 	}
 	
 	keyword = base.idprefix + "_coupled";
 	coupled = false;
-	input.get(keyword,coupled);
+	inmap.get(keyword,coupled);
 	
 	keyword = base.idprefix + "_frozen";
 	frozen = false;
-	input.get(keyword,frozen);
+	inmap.get(keyword,frozen);
 	
 	keyword = base.idprefix +"_report";
 	report_flag = false;
-	input.get(keyword,report_flag);
+	inmap.get(keyword,report_flag);
 	
 	Array<int,1> atemp(x.NV);
-	if (input.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
+	if (inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
 		for (int n=0;n<x.NV;++n) {
 			type[n] = static_cast<bctypes>(atemp(n));
 			if (type[n] == essential) {
@@ -219,7 +222,7 @@ void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
 	}
 	
 	std::string val;
-	if (!input.getline(base.idprefix +"_c0_indices",val)) {
+	if (!inmap.getline(base.idprefix +"_c0_indices",val)) {
 		/* Default is that all variables are continuous across boundary */
 		for(int n=0;n<x.NV;++n) {
 			c0_indices.push_back(n);
@@ -246,12 +249,15 @@ void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
 
 void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	int i;
-	std::string keyword;
+	std::string keyword,ibcname;
 	std::istringstream data;
 	std::string filename;
-
-	if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
-		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
+	
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = base.idprefix + "_ibc";
+	if (inmap.get(keyword,ibcname)) {
+		ibc = x.getnewibc(ibcname);
+		ibc->init(inmap,keyword);
 	}
 
 	if (base.is_comm() || inmap.find(base.idprefix+"_type") == inmap.end() || inmap[base.idprefix+"_type"] == "plain") {

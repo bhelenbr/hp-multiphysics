@@ -25,22 +25,17 @@ public:
 
 const char tri_hp_vtype::names[ntypes][40] = {"plain","hp_deformable_fixed_pnt","hp_deformable_free_pnt","hp_deformable_follower_pnt"};
 
-hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_vrtx_bdry *temp;
 	
-	keyword =  vbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing vertex type:" << keyword << std::endl;
+	type = tri_hp_vtype::getid(name.c_str());
+	if (type == tri_hp_vtype::unknown) {
+		*gbl->log << "unknown vrtx type:" << keyword << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
-	else {
-		type = tri_hp_vtype::getid(val.c_str());
-	}
-	
-	
 	switch(type) {
 		case tri_hp_vtype::hp_deformable_fixed_pnt: {
 			temp = new hp_deformable_fixed_pnt(*this,*vbdry(bnum));
@@ -77,24 +72,17 @@ public:
 const char tri_hp_stype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp::getnewsideobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_edge_bdry *temp;
 	
 	
-	keyword =  ebdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing side type:" << keyword << std::endl;
+	type = tri_hp_stype::getid(name.c_str());
+	if (type == tri_hp_stype::unknown) {
+		*gbl->log << "unknown side type:" << keyword << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tri_hp_stype::getid(val.c_str());
-		if (type == tri_hp_stype::unknown) {
-			*gbl->log << "unknown side type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
 	}
 	
 	switch(type) {

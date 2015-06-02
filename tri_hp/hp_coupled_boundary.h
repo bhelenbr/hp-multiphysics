@@ -79,7 +79,7 @@ class hp_coupled_bdry : public hp_edge_bdry {
 			vdres.resize(1,base.maxseg+1,NV);
 		};
 		hp_coupled_bdry* create(tri_hp& xin, edge_bdry &bin) const {return new hp_coupled_bdry(*this,dynamic_cast<tri_hp&>(xin),bin);}
-		void init(input_map& input,void* gbl_in);
+		void init(input_map& inmap,void* gbl_in);
 		
 		/* FOR COUPLED DYNAMIC BOUNDARIES (COMMENTED ROUTINES NEED TO BE WRITTEN) */
 		// void tadvance();
