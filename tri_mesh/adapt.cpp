@@ -132,7 +132,7 @@ void tri_mesh::cleanup_after_adapt() {
 		nstr << gbl->tstep << std::flush;
 		adapt_file = "adapt" +nstr.str();
 		nstr.str("");
-		output(adapt_file,debug_adapt);
+		output(adapt_file,grid);
 	}
 
 	/* DELETE SIDES FROM BOUNDARY CONDITIONS */

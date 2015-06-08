@@ -171,7 +171,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	/* GET HELPER FUNCTION */
 	std::string helpername;
 	if (!inmap.get(gbl->idprefix + "_helper",helpername))
-		inmap.getwdefault("tri_hp_helper",helpername,std::string("plain"));
+		inmap.getwdefault("helper",helpername,std::string("plain"));
 	helper = getnewhelper(helpername);
 	helper->init(inmap,helpername);
 

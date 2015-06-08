@@ -696,7 +696,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<ND;++n)
 					out << pnts(i)(n) << ' ';
-				out << lngth(i) << '\n';                    
+				out << lngth(i) << ' ' << gbl->res.v(i,0) << '\n';
 			}
 
 			/* OUTPUT CONNECTIVY INFO */
