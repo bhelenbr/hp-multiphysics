@@ -1227,8 +1227,8 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 		surfbdry = 1;
 	}
 	else {
-		*x.gbl->log << "something's wrong neither side is a deformable boundary" << std::endl;
-		sim::abort(__LINE__,__FILE__,x.gbl->log);
+		surfbdry = -1;  // Just a fixed point (used for mesh touching complicated point in 3-phase flow with free-surface)
+		surface = 0;
 	}
 	
 	/* Check if set manually already, otherwise use other boundary to get defaults */
@@ -1251,7 +1251,7 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 		}
 	}
 	
-	if (!inmap.getline(base.idprefix +"_c0_indices",val)) {
+	if (!inmap.getline(base.idprefix +"_c0_indices",val) && surface) {
 		/* Get from surface */
 		c0_indices = surface->c0_indices;
 		c0_indices_xy = surface->c0_indices_xy;
@@ -1264,15 +1264,17 @@ void hp_deformable_fixed_pnt::vdirichlet() {
 	// APPLY FLOW B.C.'S
 	hp_vrtx_bdry::vdirichlet();
 	
-	if (surface->is_master) {
-		if (surfbdry == 0) {
-			for(int n=0;n<nfix;++n) {
-				surface->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;  
+	if (surface) {
+		if (surface->is_master) {
+			if (surfbdry == 0) {
+				for(int n=0;n<nfix;++n) {
+					surface->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;  
+				}
 			}
-		}
-		else {
-			for(int n=0;n<nfix;++n) {
-				surface->gbl->vres(0,n) = 0.0;
+			else if (surfbdry == 1) {
+				for(int n=0;n<nfix;++n) {
+					surface->gbl->vres(0,n) = 0.0;
+				}
 			}
 		}
 	}

@@ -59,7 +59,7 @@ public:
 				fname = filename +"_" +x.gbl->idprefix +".txt";
 				ofstream fout;
 				fout.open(fname,std::ofstream::out | std::ofstream::app);
-				fout << base.x.gbl->idprefix << " " << mytype << std::endl;
+				fout << base.idprefix << " " << mytype << std::endl;
 				fout.close();
 				break;
 			}
