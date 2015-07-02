@@ -225,7 +225,7 @@ void melt_buoyancy::output(const std::string& filename, tri_hp::filetype typ,int
 			std::string fname;
 			fname = filename +"kinetics_" +base.idprefix +".dat";
 			std::ofstream fout;
-			fout.open(fname);
+			fout.open(fname.c_str());
 			
 			int indx = 0;
 			FLT s = 0.0;

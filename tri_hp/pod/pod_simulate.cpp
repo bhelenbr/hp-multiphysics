@@ -940,7 +940,7 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 			out.setf(std::ios::scientific, std::ios::floatfield);
 			out.precision(4);
 			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix +".txt";
-			out.open(fnmapp);
+			out.open(fnmapp.c_str());
 			if (!out) {
 				*BASE::gbl->log << "couldn't open text output file " << fname;
 				sim::abort(__LINE__,__FILE__,BASE::gbl->log);

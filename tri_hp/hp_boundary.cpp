@@ -376,7 +376,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 			std::string fname;
 			fname = filename +"_" +x.gbl->idprefix +".txt";
 			ofstream fout;
-			fout.open(fname,std::ofstream::out | std::ofstream::app);
+			fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
 			
 			fout << base.idprefix << " " << mytype << std::endl;
 			if (curved) {
@@ -400,7 +400,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 				std::string fname;
 				fname = filename +"_" +x.gbl->idprefix +".bin";
 				ofstream fout;
-				fout.open(fname,std::ofstream::out | std::ofstream::app);
+				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
 				
 				binowstream bout(&fout);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
@@ -425,7 +425,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 			std::string fname;
 			fname = filename +"_" +base.idprefix +".dat";
 			std::ofstream fout;
-			fout.open(fname);
+			fout.open(fname.c_str());
 			
 			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"DXDT\",\"DYDT\",";
 			for(n=0;n<x.NV;++n)

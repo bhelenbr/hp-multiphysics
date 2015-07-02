@@ -31,7 +31,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			fname += ".dat";
 			
 			std::ofstream file_out;
-			file_out.open(fname);
+			file_out.open(fname.c_str());
 			
 			file_out << "VARIABLES=\"S\",\"X\",\"Y\",\"U0\",\"CFLUX0\",\"DLUX0\",\"U1\",\"CFLUX1\",\"DLUX1\",\"U2\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 

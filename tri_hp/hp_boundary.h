@@ -58,7 +58,7 @@ public:
 				std::string fname;
 				fname = filename +"_" +x.gbl->idprefix +".txt";
 				ofstream fout;
-				fout.open(fname,std::ofstream::out | std::ofstream::app);
+				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
 				fout << base.idprefix << " " << mytype << std::endl;
 				fout.close();
 				break;
@@ -294,5 +294,5 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
-	
 #endif
+
