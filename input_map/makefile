@@ -5,7 +5,7 @@ CPPFLAGS = -O3
 #CPPFLAGS = -debug -DBZ_DEBUG #(for intel procs)
 
 CPPFLAGS += -I$(PACKAGES)/include
-LIBS = -L$(PACKAGES)/lib -lparseargs -lmuparser
+LIBS = -L$(PACKAGES)/lib -L../lib -lparseargs -lmuparser
 
 ### Begin machine dependent
 
