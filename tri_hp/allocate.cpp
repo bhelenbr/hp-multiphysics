@@ -147,19 +147,13 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	for(i=0;i<nebd;++i) {
 		keyword =  ebdry(i)->idprefix + "_hp_type";
 		std::string val;
-		if (!inmap.get(keyword,val)) {
-			*gbl->log << "missing side type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+		inmap.getwdefault(keyword,val,string("plain"));
 		hp_ebdry(i) = getnewsideobject(i,val);
 	}
 	for(i=0;i<nvbd;++i) {
 		keyword =  vbdry(i)->idprefix + "_hp_type";
 		std::string val;
-		if (!inmap.get(keyword,val)) {
-			*gbl->log << "missing side type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+		inmap.getwdefault(keyword,val,string("plain"));
 		hp_vbdry(i) = getnewvrtxobject(i,val);
 	}
 	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
