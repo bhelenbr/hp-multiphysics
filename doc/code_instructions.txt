@@ -27,6 +27,15 @@ unpack & cd into directory
 [export PATH=$PATH:/usr/texbin]
 [make pdf] 
 
+METHOD 2 - from repository
+cd ~/Packages
+hg clone http://blitz.hg.sourceforge.net/hgweb/blitz blitz
+cd blitz
+autoreconf -fiv
+./configure --prefix=${HOME}/Packages
+make lib
+make install
+
 ###################################################################
 #### GET OPENMPI IF NOT INSTALLED (ON OS X)
 #### (CAN USE PACKAGE MANGER FOR UBUNTU (SYNAPTIC?) OR YUM) 
@@ -57,6 +66,9 @@ extract, configure
 	[make]
 	[make install]
 
+# or FROM repository
+svn checkout http://muparser.googlecode.com/svn/trunk/ muparser-read-only
+
 ###################################################################
 #### PLATFORM INDEPENDENT BINARY I/O LIBRARY
 #### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?)
@@ -74,8 +86,11 @@ unzip, configure
 	[make install]
 	[cd ..]
 
-libbinio may have an error in it and you will have to add 
-#include <cstdio> to binwrap.cpp
+# or from repository
+cvs -d:pserver:anonymous@libbinio.cvs.sourceforge.net:/cvsroot/libbinio login 
+cvs -z3 -d:pserver:anonymous@libbinio.cvs.sourceforge.net:/cvsroot/libbinio co -P libbinio
+autoreconf -fiv
+(fails on documentation?)
 
 ###################################################################
 ######## USER SPACE THREADS LIBRARY #############
@@ -91,6 +106,7 @@ move pth-2.0.7.tar.gz to Packages
 	[make install]
 	[cd ..]
 
+# curl -OL ftp://ftp.gnu.org/gnu/pth/pth-2.0.7.tar.gz
 
 ###################################################################
 ####### SYSTEM SPACE THREADS LIBRARY #############
@@ -108,8 +124,8 @@ unpack in packages folder (see index.html file for instructions)
 ###################################################################
 ### HEADER FOR C to CALL FORTRAN ROUTINES ###########
 ###################################################################
-http://www-zeus.desy.de/~burow/cfortran/
-save cfortran.h to ${HOME}/Packages/include/
+cd ${HOME}/Packages/include/
+curl -OL http://www-zeus.desy.de/~burow/cfortran/cfortran.h 
 
 ###################################################################
 #### (VALGRIND ONLY FOR DEBUGGING  SKIP THIS) ####
@@ -168,6 +184,10 @@ move to Packages, extract
 	[cd petsc-XX]
 	[tar zxvf petsc-XX]
 
+# OR from repository
+git clone -b maint https://bitbucket.org/petsc/petsc petsc
+
+
 # To know what packages are available: ./config/configure.py --help
 # with superlu
 # ON LION (For 3.2-p5 remove --download-metis=1)
@@ -185,6 +205,9 @@ move to Packages, extract
 ./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=${HOME}/Packages --with-shared-libraries=0  --with-valgrind-dir=/share/apps
 
 ./configure --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2-1.9 --with-debugging=0 --with-valgrind-dir=/share/apps
+
+# On stampede
+./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
 
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:

@@ -131,9 +131,14 @@ protected:
 public:
 	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
 	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
-		if (!(surface = dynamic_cast<hp_deformable_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
-			*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		if (surfbdry > -1) {
+			if (!(surface = dynamic_cast<hp_deformable_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
+				*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+		}
+		else {
+			surface = 0;  // Not a surface endpoint just a mesh fixed point
 		}
 	}
 	hp_deformable_fixed_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_fixed_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
