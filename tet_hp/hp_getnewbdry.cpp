@@ -124,7 +124,7 @@ hp_face_bdry* tet_hp::getnewfaceobject(int bnum, std::string name) {
 			temp = new hp_face_bdry(*this,*fbdry(bnum));
 		}
 	}
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+	gbl->fbdry_gbls(bnum) = temp->create_global_structure();
 	
 	return(temp);
 }
