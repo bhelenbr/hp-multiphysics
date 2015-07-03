@@ -64,10 +64,10 @@ namespace bdry_cns_explicit {
 			}
 		}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_face_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_face_bdry::init(inmap,gbl_in);
 			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);
+			inmap.getwdefault(keyword,report_flag,false);
 			
 			if (report_flag) {
 #ifdef L2_ERROR

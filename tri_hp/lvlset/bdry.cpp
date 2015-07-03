@@ -53,7 +53,7 @@ hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, std::string name) {
 	return(temp);
 }
 
-class tri_hp_lvlset_stype {
+class tri_hp_lvlset_etype {
 	public:
 		static const int ntypes = 5;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,hybrid};
@@ -65,39 +65,39 @@ class tri_hp_lvlset_stype {
 		}
 };
 
-const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","outflow","characteristic","euler","hybrid"};
+const char tri_hp_lvlset_etype::names[ntypes][40] = {"inflow","outflow","characteristic","euler","hybrid"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_lvlset::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	type = tri_hp_lvlset_stype::getid(name.c_str());
+	type = tri_hp_lvlset_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_lvlset_stype::inflow: {
+		case tri_hp_lvlset_etype::inflow: {
 			temp = new characteristic<bdry_ins::inflow>(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_lvlset_stype::outflow: {
+		case tri_hp_lvlset_etype::outflow: {
 			temp = new characteristic<bdry_ins::generic>(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_lvlset_stype::characteristic: {
+		case tri_hp_lvlset_etype::characteristic: {
 			temp = new characteristic<bdry_ins::characteristic>(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_lvlset_stype::euler: {
+		case tri_hp_lvlset_etype::euler: {
 			temp = new characteristic<bdry_ins::euler>(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_lvlset_stype::hybrid: {
+		case tri_hp_lvlset_etype::hybrid: {
 			temp = new hybrid(*this,*ebdry(bnum));
 			break;
 		}
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,name));
+			return(tri_hp_ins::getnewedgeobject(bnum,name));
 			break;
 		}
 	}    

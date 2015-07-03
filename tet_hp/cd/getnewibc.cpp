@@ -116,21 +116,12 @@ namespace ibc_cd {
 }
 
 
-init_bdry_cndtn *tet_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tet_hp_cd::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find cd initial condition type " << keyword << std::endl;
-		}
-	}
 	type = ibc_cd::ibc_type::getid(ibcname.c_str());
-
 	switch(type) {
 		case(ibc_cd::ibc_type::zero): {
 			temp = new ibc_cd::zero_src;
@@ -145,9 +136,8 @@ init_bdry_cndtn *tet_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
 			break;
 		}
 		default: {
-			return(tet_hp::getnewibc(suffix,inmap));
+			return(tet_hp::getnewibc(name));
 		}
 	}
-	temp->input(inmap,keyword);
 	return(temp);
 }

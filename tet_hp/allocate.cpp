@@ -127,8 +127,17 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	} 
 	
 	/* GET INITIAL CONDITION FUNCTION */
-	gbl->ibc = getnewibc("ibc",inmap);
-
+	keyword = gbl->idprefix + "_ibc";
+	std::string ibcname;
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = "ibc";
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find ibc" << std::endl;
+		}
+	}
+	gbl->ibc = getnewibc(ibcname);
+	gbl->ibc->init(inmap,keyword);
+	
 	/* ALLOCATE BOUNDARY CONDITION STUFF */
 	gbl->vbdry_gbls.resize(nvbd);
 	gbl->ebdry_gbls.resize(nebd);
@@ -137,10 +146,24 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	hp_fbdry.resize(nfbd);
 	hp_ebdry.resize(nebd);
 	hp_vbdry.resize(nvbd);
-	for(i=0;i<nfbd;++i) hp_fbdry(i) = getnewfaceobject(i,inmap);
-	for(i=0;i<nebd;++i) hp_ebdry(i) = getnewedgeobject(i,inmap);
-	for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
-	
+	for(i=0;i<nfbd;++i) {
+		keyword =  fbdry(i)->idprefix + "_hp_type";
+		std::string val;
+		inmap.getwdefault(keyword,val,string("plain"));
+		hp_fbdry(i) = getnewfaceobject(i,val);
+	}
+	for(i=0;i<nebd;++i) {
+		keyword =  ebdry(i)->idprefix + "_hp_type";
+		std::string val;
+		inmap.getwdefault(keyword,val,string("plain"));
+		hp_ebdry(i) = getnewedgeobject(i,val);
+	}
+	for(i=0;i<nvbd;++i) {
+		keyword =  vbdry(i)->idprefix + "_hp_type";
+		std::string val;
+		inmap.getwdefault(keyword,val,string("plain"));
+		hp_vbdry(i) = getnewvrtxobject(i,val);
+	}
 	for(i=0;i<nfbd;++i) hp_fbdry(i)->init(inmap,gbl->fbdry_gbls(i));
 	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
 	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl->vbdry_gbls(i));
@@ -148,9 +171,12 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	
 	inmap.getwdefault("hp_fadd",fadd,1.0);
 
-	/* GET MESH MOVEMENT FUNCTION */
-	helper = getnewhelper(inmap);
-	helper->init(inmap,gbl->idprefix);
+	/* GET HELPER FUNCTION */
+	std::string helpername;
+	if (!inmap.get(gbl->idprefix + "_helper",helpername))
+		inmap.getwdefault("helper",helpername,std::string("plain"));
+	helper = getnewhelper(helpername);
+	helper->init(inmap,helpername);
 	
 	/* UNSTEADY SOURCE TERMS */
 	dugdt.resize(log2p+1,maxvst,NV);

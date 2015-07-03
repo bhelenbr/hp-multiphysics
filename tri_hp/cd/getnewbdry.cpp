@@ -13,7 +13,7 @@ using namespace bdry_cd;
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_cd_stype {
+class tri_hp_cd_etype {
     public:
 		static const int ntypes = 5;
 		enum ids {unknown=-1,dirichlet,adiabatic,characteristic,melt,melt2};
@@ -25,30 +25,30 @@ class tri_hp_cd_stype {
 		}
 };
 
-const char tri_hp_cd_stype::names[ntypes][40] = {"dirichlet","adiabatic","characteristic","melt","melt2"};
+const char tri_hp_cd_etype::names[ntypes][40] = {"dirichlet","adiabatic","characteristic","melt","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_cd::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;
 	
-	type = tri_hp_cd_stype::getid(name.c_str());
+	type = tri_hp_cd_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_cd_stype::dirichlet: {
+		case tri_hp_cd_etype::dirichlet: {
 			temp = new dirichlet(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cd_stype::adiabatic: {
+		case tri_hp_cd_etype::adiabatic: {
 			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cd_stype::characteristic: {
+		case tri_hp_cd_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cd_stype::melt:  {
+		case tri_hp_cd_etype::melt:  {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new  melt(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -60,7 +60,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_cd_stype::melt2:  {
+		case tri_hp_cd_etype::melt2:  {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new  melt_cd(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -73,7 +73,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, std::string name) {
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,name));
+			return(tri_hp::getnewedgeobject(bnum,name));
 		}
 	}
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

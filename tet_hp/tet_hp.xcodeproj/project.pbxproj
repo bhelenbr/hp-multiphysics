@@ -252,6 +252,7 @@
 		E63DFFC3161BE6F500C02744 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
 		E63DFFC4161BE6F500C02744 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B00DCA19B7007A1D26 /* getnewbdry.cpp */; };
 		E63DFFC5161BE6F500C02744 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B10DCA19B7007A1D26 /* getnewibc.cpp */; };
+		E6447E921B46341900E7B4C5 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6447E911B46341900E7B4C5 /* hp_getnewbdry.cpp */; };
 		E6698B6A183E67890064EE88 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6698B66183E67890064EE88 /* allocate.cpp */; };
 		E6698B6B183E67890064EE88 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6698B67183E67890064EE88 /* rsdl.cpp */; };
 		E6698B6C183E67890064EE88 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6698B68183E67890064EE88 /* setup_preconditioner.cpp */; };
@@ -409,6 +410,7 @@
 		E61FC0361862963D0035181D /* tet_hp_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		E61FC03A186298DD0035181D /* libtet_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtet_mesh_mpi.a; path = ../lib/libtet_mesh_mpi.a; sourceTree = "<group>"; };
 		E63DFFBA161BE62800C02744 /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = ../../Packages/lib/libboost_thread.dylib; sourceTree = "<group>"; };
+		E6447E911B46341900E7B4C5 /* hp_getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_getnewbdry.cpp; sourceTree = "<group>"; };
 		E6698B66183E67890064EE88 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cd_multi/allocate.cpp; sourceTree = "<group>"; };
 		E6698B67183E67890064EE88 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = cd_multi/rsdl.cpp; sourceTree = "<group>"; };
 		E6698B68183E67890064EE88 /* setup_preconditioner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = setup_preconditioner.cpp; path = cd_multi/setup_preconditioner.cpp; sourceTree = "<group>"; };
@@ -559,6 +561,7 @@
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
+				E6447E911B46341900E7B4C5 /* hp_getnewbdry.cpp */,
 				95671D860F57074800872173 /* particle.cpp */,
 				95C73E1F105EA89D00637BEE /* sparse.cpp */,
 				953FD0AB106AB696002145CC /* petsc.cpp */,
@@ -821,6 +824,7 @@
 				6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */,
 				E6698B6B183E67890064EE88 /* rsdl.cpp in Sources */,
 				B2A837D00C43F4D70034A8DC /* tobasis.cpp in Sources */,
+				E6447E921B46341900E7B4C5 /* hp_getnewbdry.cpp in Sources */,
 				B2A8385E0C46A9790034A8DC /* allocate.cpp in Sources */,
 				B2DAEC540C70A5DA00D7B0D5 /* output.cpp in Sources */,
 				B21BBF3D0CBBE2620056D083 /* hp_boundary.cpp in Sources */,

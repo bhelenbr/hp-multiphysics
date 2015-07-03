@@ -23,26 +23,26 @@ extern "C" {
 }	
 
 
-template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) {
+template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
 	int i;
 
 	/* Initialize base class */
-	BASE::init(input,gin);
+	BASE::init(inmap,gin);
 
-	if (!input.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
-		input.getwdefault("snapshots",nsnapshots,10);
+	if (!inmap.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
+		inmap.getwdefault("snapshots",nsnapshots,10);
 	}
-	input.getwdefault("restart_interval",restart_interval,1);
+	inmap.getwdefault("restart_interval",restart_interval,1);
 
-	if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
+	if (!inmap.get(BASE::gbl->idprefix + "_podmodes",nmodes)) inmap.getwdefault("podmodes",nmodes,nsnapshots);    
 
 	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 	scaling.resize(BASE::NV);
 	scaling = 1;
-	if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
+	if (inmap.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || inmap.getline("scale_vector",linebuff)) {
 		instr.str(linebuff);
 		for(i=0;i<BASE::NV;++i)
 			instr >> scaling(i);
@@ -60,7 +60,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		modes(i).i.resize(BASE::maxvst,BASE::im0,BASE::NV);
 	}
 #else
-	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
+	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 #ifdef POD_BDRY
 	pod_fbdry.resize(BASE::nfbd);
@@ -76,7 +76,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 #endif
 #endif
 
-	input.getwdefault("restart",restartfile,1);
+	inmap.getwdefault("restart",restartfile,1);
 
 	return;
 }
@@ -697,25 +697,25 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 #endif
 
 #ifdef POD_BDRY
-template<class BASE> void pod_gen_face_bdry<BASE>::init(input_map& input) {
+template<class BASE> void pod_gen_face_bdry<BASE>::init(input_map& inmap) {
 	std::string keyword;
 
 	keyword = base.idprefix + "_pod";
-	input.getwdefault(keyword,active,false);
+	inmap.getwdefault(keyword,active,false);
 
 	if (!active) return;
 
 	keyword = base.idprefix + "_podmodes";
-	input.getwdefault(keyword,nmodes,x.nsnapshots);
+	inmap.getwdefault(keyword,nmodes,x.nsnapshots);
 
 	keyword = base.idprefix + "_pod_id";
-	if (!input.get(keyword,pod_id)) {
+	if (!inmap.get(keyword,pod_id)) {
 		*x.gbl->log << "Must provide a pod id for pod boundary" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 
 	/* ERROR CHECK THAT NUMBER IS LISTED IN GROUP LIST */
-	if (!input.getline(x.gbl->idprefix +"_groups",keyword)) {
+	if (!inmap.getline(x.gbl->idprefix +"_groups",keyword)) {
 		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
@@ -730,25 +730,25 @@ template<class BASE> void pod_gen_face_bdry<BASE>::init(input_map& input) {
 	} while (bnum != pod_id);
 }
 
-template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
+template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& inmap) {
 	std::string keyword;
 	
 	keyword = base.idprefix + "_pod";
-	input.getwdefault(keyword,active,false);
+	inmap.getwdefault(keyword,active,false);
 	
 	if (!active) return;
 	
 	keyword = base.idprefix + "_podmodes";
-	input.getwdefault(keyword,nmodes,x.nsnapshots);
+	inmap.getwdefault(keyword,nmodes,x.nsnapshots);
 	
 	keyword = base.idprefix + "_pod_id";
-	if (!input.get(keyword,pod_id)) {
+	if (!inmap.get(keyword,pod_id)) {
 		*x.gbl->log << "Must provide a pod id for pod boundary\n";
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	
 	/* ERROR CHECK THAT NUMBER IS LISTED IN GROUP LIST */
-	if (!input.getline(x.gbl->idprefix +"_groups",keyword)) {
+	if (!inmap.getline(x.gbl->idprefix +"_groups",keyword)) {
 		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "\n";
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}

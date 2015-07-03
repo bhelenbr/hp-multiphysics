@@ -16,7 +16,7 @@
 class tri_hp_swirl : public tri_hp_ins {
 	public:
 		FLT dpdz; //< 3D driving pressure gradient
-		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 		init_bdry_cndtn* getnewibc(std::string name);
 
 	public:

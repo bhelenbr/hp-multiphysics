@@ -19,7 +19,7 @@ using namespace bdry_ps;
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_ps_stype {
+class tri_hp_ps_etype {
 	public:
 		static const int ntypes = 3;
 		enum ids {unknown=-1,dirichlet,neumann,friction_wall};
@@ -31,31 +31,31 @@ class tri_hp_ps_stype {
 		}
 };
 
-const char tri_hp_ps_stype::names[ntypes][40] = {"dirichlet","neumann","friction_wall"};
+const char tri_hp_ps_etype::names[ntypes][40] = {"dirichlet","neumann","friction_wall"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_ps::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	type = tri_hp_ps_stype::getid(name.c_str());
+	type = tri_hp_ps_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_ps_stype::dirichlet: {
+		case tri_hp_ps_etype::dirichlet: {
 			temp = new dirichlet(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_ps_stype::neumann: {
+		case tri_hp_ps_etype::neumann: {
 			temp = new neumann(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_ps_stype::friction_wall: {
+		case tri_hp_ps_etype::friction_wall: {
 			temp = new friction_wall(*this,*ebdry(bnum));  // FIXME NOT WORKING YET
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,name));
+			return(tri_hp::getnewedgeobject(bnum,name));
 		}
 	}
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

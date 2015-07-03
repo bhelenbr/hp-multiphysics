@@ -88,7 +88,7 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_cns_stype {
+class tri_hp_cns_etype {
 	public:
 		static const int ntypes = 10;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,
@@ -101,44 +101,44 @@ class tri_hp_cns_stype {
 		}
 };
 
-const char tri_hp_cns_stype::names[ntypes][40] = {"inflow","outflow","characteristic","euler",
+const char tri_hp_cns_etype::names[ntypes][40] = {"inflow","outflow","characteristic","euler",
     "symmetry","applied_stress","surface","surface_slave","force_coupling","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
 
-	type = tri_hp_cns_stype::getid(name.c_str());
+	type = tri_hp_cns_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_cns_stype::inflow: {
+		case tri_hp_cns_etype::inflow: {
 			temp = new inflow(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_stype::outflow: {
+		case tri_hp_cns_etype::outflow: {
 			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_stype::characteristic: {
+		case tri_hp_cns_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_stype::euler: {
+//		case tri_hp_cns_etype::euler: {
 //			temp = new euler(*this,*ebdry(bnum));
 //			break;
 //		}
-		case tri_hp_cns_stype::symmetry: {
+		case tri_hp_cns_etype::symmetry: {
 			temp = new symmetry(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_stype::applied_stress: {
+		case tri_hp_cns_etype::applied_stress: {
 			temp = new applied_stress(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_stype::surface: {
+//		case tri_hp_cns_etype::surface: {
 //			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 //				temp = new surface(*this,*ebdry(bnum));
 //				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -149,21 +149,21 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, std::string name) {
 //			}
 //			break;
 //		}
-//		case tri_hp_cns_stype::surface_slave: {
+//		case tri_hp_cns_etype::surface_slave: {
 //			temp = new surface_slave(*this,*ebdry(bnum));
 //			dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
 //			break;
 //		}
-//		case tri_hp_cns_stype::force_coupling: {
+//		case tri_hp_cns_etype::force_coupling: {
 //			temp = new force_coupling(*this,*ebdry(bnum));
 //			break;
 //		}
-		case tri_hp_cns_stype::adiabatic: {
+		case tri_hp_cns_etype::adiabatic: {
 			temp = new adiabatic(*this,*ebdry(bnum));
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,name));
+			return(tri_hp::getnewedgeobject(bnum,name));
 		}
 	}    
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

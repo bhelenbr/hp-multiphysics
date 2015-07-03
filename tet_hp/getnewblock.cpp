@@ -62,17 +62,17 @@ class btype {
 };
 const char btype::names[ntypes][40] = {"plain","mass","cd","cd_multi","ins","cns","cns_explicit","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
 
-multigrid_interface* block::getnewlevel(input_map& input) {
+multigrid_interface* block::getnewlevel(input_map& inmap) {
 	std::string keyword,val,ibcname,srcname;
 	std::istringstream data;
 	int type;          
 	
 	/* FIND BLOCK TYPE */
-	if (input.get(idprefix+"_type",val)) {
+	if (inmap.get(idprefix+"_type",val)) {
 		type = btype::getid(val.c_str());
 	}
 	else {
-		if (!input.get("blocktype",val)) {
+		if (!inmap.get("blocktype",val)) {
 			std::cerr << "couldn't find block type" << std::endl;
 			exit(1);
 		}

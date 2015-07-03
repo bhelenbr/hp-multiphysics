@@ -15,12 +15,6 @@
 
 //#define MPDEBUG
 
-hp_vrtx_bdry* tet_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
-	hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));   
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-	return(temp);
-}
-
 //void hp_vrtx_bdry::tadvance() {
 //	/* put some stuff in here*/
 //	
@@ -40,13 +34,6 @@ void hp_vrtx_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 	return;
 }
 
-
-hp_edge_bdry* tet_hp::getnewedgeobject(int bnum, input_map &bdrydata) {
-	hp_edge_bdry *temp = new hp_edge_bdry(*this,*ebdry(bnum));
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
-	return(temp);
-}
-
 void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 	
 	if (!curved || !x.em0) return;
@@ -60,9 +47,14 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
-		if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
-		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
+	
+	keyword = base.idprefix + "_ibc";
+	std::string ibcname;
+	if (inmap.get(keyword,ibcname)) {
+		ibc = x.getnewibc(ibcname);
+		ibc->init(inmap,keyword);
 	}
+
 	keyword = base.idprefix + "_curved";
 	inmap.getwdefault(keyword,curved,false);
 
@@ -460,13 +452,6 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 	return;
 }
 
-
-hp_face_bdry* tet_hp::getnewfaceobject(int bnum, input_map &bdrydata) {
-	hp_face_bdry *temp = new hp_face_bdry(*this,*fbdry(bnum));
-	gbl->fbdry_gbls(bnum) = temp->create_global_structure();
-	return(temp);
-}
-
 void hp_face_bdry::copy(const hp_face_bdry &bin) {
 	
 	if (!curved || !x.em0) return;
@@ -483,8 +468,11 @@ void hp_face_bdry::init(input_map& inmap,void* gbl_in) {
 	std::istringstream data;
 	std::string filename;
 	
-	if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
-		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
+	keyword = base.idprefix + "_ibc";
+	std::string ibcname;
+	if (inmap.get(keyword,ibcname)) {
+		ibc = x.getnewibc(ibcname);
+		ibc->init(inmap,keyword);
 	}
 	
 	keyword = base.idprefix + "_curved";

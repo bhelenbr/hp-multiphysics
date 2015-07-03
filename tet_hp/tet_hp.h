@@ -39,7 +39,7 @@ class hp_face_bdry;
 class init_bdry_cndtn {
 	public:
 		virtual FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) = 0;
-		virtual void input(input_map &blkdata, std::string idnty) {};
+		virtual void init(input_map &inmap, std::string idnty) {};
 		virtual ~init_bdry_cndtn() {};
 };
 
@@ -91,13 +91,13 @@ class tet_hp : public tet_mesh  {
 		
 		/** vertex boundary information */
 		Array<hp_vrtx_bdry *,1> hp_vbdry;
-		virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
+		virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		/** side boundary information */
 		Array<hp_edge_bdry *,1> hp_ebdry;
-		virtual hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata); 
+		virtual hp_edge_bdry* getnewedgeobject(int bnum, std::string name); 
 		/** face boundary information */
 		Array<hp_face_bdry *,1> hp_fbdry;
-		virtual hp_face_bdry* getnewfaceobject(int bnum, input_map &bdrydata);
+		virtual hp_face_bdry* getnewfaceobject(int bnum, std::string name);
 		/** object to perform rigid mesh movement */
 		tet_hp_helper *helper;
 		
@@ -161,8 +161,8 @@ class tet_hp : public tet_mesh  {
 			TinyVector<FLT,MXGP> cfl;
 			
 		} *gbl;
-		virtual init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-		virtual tet_hp_helper* getnewhelper(input_map& inmap);
+		virtual init_bdry_cndtn* getnewibc(std::string name);
+		virtual tet_hp_helper* getnewhelper(std::string helpername);
 
 		/* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
 		void ugtouht(int tind);
@@ -198,7 +198,7 @@ class tet_hp : public tet_mesh  {
 		tet_hp() : tet_mesh() {}
 		virtual tet_hp* create() {return new tet_hp;}
 		void* create_global_structure() {return new global;}
-		void init(input_map& input, void *gin);
+		void init(input_map& inmap, void *gin);
 		void init_post_findmatch();
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void copy(const tet_hp& tgt);
@@ -383,7 +383,7 @@ class tet_hp_helper {
 		tet_hp_helper(const tet_hp_helper &in_help, tet_hp& xin) : x(xin) {}
 		virtual ~tet_hp_helper() {};
 		virtual tet_hp_helper* create(tet_hp& xin) { return new tet_hp_helper(*this,xin); }
-		virtual void init(input_map& input, std::string idnty) {}
+		virtual void init(input_map& inmap, std::string idnty) {}
 		virtual void tadvance() {}
 		virtual void setup_preconditioner() {}
 		virtual void rsdl(int stage) {}

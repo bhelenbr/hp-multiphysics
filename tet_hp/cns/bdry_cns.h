@@ -46,8 +46,8 @@ namespace bdry_cns {
 		generic(tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "generic";}
 		generic(const generic& inbdry, tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_face_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_face_bdry::init(inmap,gbl_in);
 		}
 	};
 		
@@ -180,8 +180,8 @@ namespace bdry_cns {
 		generic_edge(tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic_edge";}
 		generic_edge(const generic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_edge_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_edge_bdry::init(inmap,gbl_in);
 		}
 	};
 	

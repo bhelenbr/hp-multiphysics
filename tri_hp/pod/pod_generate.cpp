@@ -95,7 +95,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 	pod_ebdry.resize(BASE::nebd);
 	for (int i=0;i<BASE::nebd;++i) {
 		pod_ebdry(i) = new pod_gen_edge_bdry<BASE>(*this,*BASE::ebdry(i));
-		pod_ebdry(i)->init(input);
+		pod_ebdry(i)->init(inmap);
 	}
 #endif
 	

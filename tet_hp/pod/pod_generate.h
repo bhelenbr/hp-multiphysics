@@ -39,7 +39,7 @@ template<class BASE> class pod_generate : public BASE {
 #endif
 
 	public:
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };
@@ -55,7 +55,7 @@ template<class BASE> class pod_gen_face_bdry {
 
 	public:
 		pod_gen_face_bdry(pod_generate<BASE>& xin, face_bdry &bin) : x(xin), base(bin) {}
-		void init(input_map& input);
+		void init(input_map& inmap);
 		void zero_bdry(tet_hp::vefi ug);
 		void calculate_modes();
 		void output();
@@ -71,7 +71,7 @@ protected:
 	
 public:
 	pod_gen_edge_bdry(pod_generate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
-	void init(input_map& input);
+	void init(input_map& inmap);
 	void zero_bdry(tet_hp::vefi ug);
 	void calculate_modes();
 	void output();

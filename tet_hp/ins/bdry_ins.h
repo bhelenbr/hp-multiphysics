@@ -64,10 +64,10 @@ namespace bdry_ins {
 			}
 		}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_face_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_face_bdry::init(inmap,gbl_in);
 			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);
+			inmap.getwdefault(keyword,report_flag,false);
 			
 			if (report_flag) {
 #ifdef L2_ERROR
@@ -227,10 +227,10 @@ namespace bdry_ins {
 			symmetry(tet_hp_ins &xin, face_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
 			symmetry(const symmetry& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
 			symmetry* create(tet_hp& xin, face_bdry &bin) const {return new symmetry(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				generic::init(input,gbl_in);
+			void init(input_map& inmap,void* gbl_in) {
+				generic::init(inmap,gbl_in);
 				std::string keyword = base.idprefix +"_dir";
-				input.getwdefault(keyword,dir,0);
+				inmap.getwdefault(keyword,dir,0);
 			}
 		
 			void vdirichlet() {

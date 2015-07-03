@@ -10,17 +10,17 @@
 #include "tet_hp_cd_multi.h"
 #include <iostream> 
 
-void tet_hp_cd_multi::init(input_map& input, void *gin) {
+void tet_hp_cd_multi::init(input_map& inmap, void *gin) {
 
 	gbl = static_cast<global *>(gin);
-	tet_hp_cd::init(input,gin);
+	tet_hp_cd::init(inmap,gin);
 	
 	
 	marks.resize(maxvst);
 	
 	std::string gridname, filename;
-	if (!input.get(gbl->idprefix + "_mesh",gridname)) {
-		if (input.get("mesh",gridname)) {
+	if (!inmap.get(gbl->idprefix + "_mesh",gridname)) {
+		if (inmap.get("mesh",gridname)) {
 			gridname = gridname +"_" +gbl->idprefix;
 		}
 		else {
@@ -50,7 +50,7 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 	}
 	
 	std::ostringstream nstr;
-	for(gbl->nmaterials=0, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush; input.find(nstr.str()) != input.end(); ++gbl->nmaterials, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush);
+	for(gbl->nmaterials=0, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush; inmap.find(nstr.str()) != inmap.end(); ++gbl->nmaterials, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush);
 	
 	gbl->kcond.resize(gbl->nmaterials);
 	gbl->rhocv.resize(gbl->nmaterials);
@@ -58,7 +58,7 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 	for(int n=0;n<gbl->nmaterials;++n) {
 		nstr.str("");
 		nstr << "Material" << n << "_conductivity";
-		if (!input.get(nstr.str(),gbl->kcond(n))) {
+		if (!inmap.get(nstr.str(),gbl->kcond(n))) {
 			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
@@ -66,7 +66,7 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 		nstr.str("");
 		nstr << "Material" << n << "_rho";
 		FLT rho;
-		if (!input.get(nstr.str(),rho)) {
+		if (!inmap.get(nstr.str(),rho)) {
 			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
@@ -74,7 +74,7 @@ void tet_hp_cd_multi::init(input_map& input, void *gin) {
 		nstr.str("");
 		nstr << "Material" << n << "_cv";
 		FLT cv;
-		if (!input.get(nstr.str(),cv)) {
+		if (!inmap.get(nstr.str(),cv)) {
 			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}

@@ -73,7 +73,7 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 
 
 
-class tri_hp_buoyancy_stype {
+class tri_hp_buoyancy_etype {
 public:
 	static const int ntypes = 7;
 	enum ids {unknown=-1,surface,surface_marangoni,melt,melt_kinetics,solid_fluid,characteristic,melt2};
@@ -85,18 +85,18 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic","melt2"};
+const char tri_hp_buoyancy_etype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_edge_bdry *temp;
 	
-	type = tri_hp_buoyancy_stype::getid(name.c_str());
+	type = tri_hp_buoyancy_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_buoyancy_stype::surface: {
+		case tri_hp_buoyancy_etype::surface: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new surface9(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -108,7 +108,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_stype::surface_marangoni: {
+		case tri_hp_buoyancy_etype::surface_marangoni: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new surface_marangoni(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -120,7 +120,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_stype::melt: {
+		case tri_hp_buoyancy_etype::melt: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new melt(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -132,7 +132,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_stype::melt_kinetics: {
+		case tri_hp_buoyancy_etype::melt_kinetics: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new melt_kinetics(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -144,7 +144,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_stype::solid_fluid: {
+		case tri_hp_buoyancy_etype::solid_fluid: {
 			if (dynamic_cast<eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> > *>(ebdry(bnum))) {
 				temp = new solid_fluid(*this,*ebdry(bnum));
 			}
@@ -155,11 +155,11 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_stype::characteristic: {
+		case tri_hp_buoyancy_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_buoyancy_stype::melt2: {
+		case tri_hp_buoyancy_etype::melt2: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new melt_buoyancy(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
@@ -173,7 +173,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, std::string name) {
 		}
 			
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,name));
+			return(tri_hp_ins::getnewedgeobject(bnum,name));
 			break;
 		}
 	}

@@ -148,7 +148,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		keyword =  ebdry(i)->idprefix + "_hp_type";
 		std::string val;
 		inmap.getwdefault(keyword,val,string("plain"));
-		hp_ebdry(i) = getnewsideobject(i,val);
+		hp_ebdry(i) = getnewedgeobject(i,val);
 	}
 	for(i=0;i<nvbd;++i) {
 		keyword =  vbdry(i)->idprefix + "_hp_type";

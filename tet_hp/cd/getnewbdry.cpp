@@ -19,22 +19,14 @@ public:
 
 const char tet_hp_cd_vtype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
 	
-hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, std::string name) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
     hp_vrtx_bdry *temp;  
     
-		keyword =  vbdry(bnum)->idprefix + "_hp_type";
-		if (!bdrydata.get(keyword,val)) {
-			*gbl->log << "missing vertex type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-		else {
-			type = tet_hp_cd_vtype::getid(val.c_str());
-		}
-	
-	
+
+		type = tet_hp_cd_vtype::getid(name.c_str());
     switch(type) {
 		case tet_hp_cd_vtype::plain: {
 			temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
@@ -49,7 +41,7 @@ hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			break;
 		}
         default: {
-            temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
+            temp = tet_hp::getnewvrtxobject(bnum,name);
             break;
         }
     } 
@@ -80,22 +72,14 @@ public:
 const char tet_hp_cd_etype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, std::string name) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
     hp_edge_bdry *temp;  
     
 	
-		keyword =  ebdry(bnum)->idprefix + "_hp_type";
-		if (!bdrydata.get(keyword,val)) {
-			*gbl->log << "missing side type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-		else {
-			type = tet_hp_cd_etype::getid(val.c_str());
-		}
-	
+		type = tet_hp_cd_etype::getid(name.c_str());
     switch(type) {
 		case tet_hp_cd_etype::plain: {
 			temp = new hp_edge_bdry(*this,*ebdry(bnum));
@@ -110,7 +94,7 @@ hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, input_map &bdrydata) {
 			break;
 		}
         default: {
-            temp = tet_hp::getnewedgeobject(bnum,bdrydata);
+            temp = tet_hp::getnewedgeobject(bnum,name);
             break;
         }
     }    
@@ -134,22 +118,14 @@ class tet_hp_cd_ftype {
 
 const char tet_hp_cd_ftype::names[ntypes][40] = {"plain","dirichlet","adiabatic"};
 
-hp_face_bdry* tet_hp_cd::getnewfaceobject(int bnum, input_map &bdrydata) {
+hp_face_bdry* tet_hp_cd::getnewfaceobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_face_bdry *temp;  
 	
 
-	keyword =  fbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing face type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tet_hp_cd_ftype::getid(val.c_str());
-	}
-
+	type = tet_hp_cd_ftype::getid(name.c_str());
 	switch(type) {
 		case tet_hp_cd_ftype::plain: {
 			temp = new hp_face_bdry(*this,*fbdry(bnum));
@@ -165,7 +141,7 @@ hp_face_bdry* tet_hp_cd::getnewfaceobject(int bnum, input_map &bdrydata) {
 		}
 
 		default: {
-			temp = tet_hp::getnewfaceobject(bnum,bdrydata);
+			temp = tet_hp::getnewfaceobject(bnum,name);
 			break;
 		}
 	}

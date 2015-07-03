@@ -37,7 +37,7 @@ class tri_hp_cns_explicit : public tri_hp {
 		FLT adis; // DISSIPATION CONSTANT
 
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
-		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 		init_bdry_cndtn* getnewibc(std::string name);
 
     public:

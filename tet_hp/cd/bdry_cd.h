@@ -21,10 +21,10 @@ namespace bdry_cd {
 		generic(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
 		generic(const generic& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_face_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_face_bdry::init(inmap,gbl_in);
 			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);       
+			inmap.getwdefault(keyword,report_flag,false);       
 		}
 		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 	};
@@ -110,10 +110,10 @@ namespace bdry_cd {
 		generic_edge(tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_edge";}
 		generic_edge(const generic_edge& inbdry, tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_edge_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_edge_bdry::init(inmap,gbl_in);
 			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);       
+			inmap.getwdefault(keyword,report_flag,false);       
 		}
 		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 	};
@@ -172,10 +172,10 @@ namespace bdry_cd {
 		generic_pt(tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_pt";}
 		generic_pt(const generic_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new generic_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& input,void* gbl_in) {
-			hp_vrtx_bdry::init(input,gbl_in);
+		void init(input_map& inmap,void* gbl_in) {
+			hp_vrtx_bdry::init(inmap,gbl_in);
 			std::string keyword = base.idprefix +"_report";
-			input.getwdefault(keyword,report_flag,false);       
+			inmap.getwdefault(keyword,report_flag,false);       
 		}
 		//void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 	};

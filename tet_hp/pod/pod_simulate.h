@@ -38,9 +38,8 @@ template<class BASE> class pod_simulate : public BASE {
 #endif
 	
 	public:
-		void init(input_map& input, void *gin); 
+		void init(input_map& inmap, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
-//		tri_hp_helper* getnewhelper(input_map& inmap);
 //		void output(const std::string& fname, block::output_purpose why);
 //		void calc_coeffs();
 //		void tadvance();
@@ -77,7 +76,7 @@ protected:
 	
 public:
 	pod_sim_face_bdry(pod_simulate<BASE>& xin, face_bdry &bin) : x(xin), base(bin) {}
-	void init(input_map& input);
+	void init(input_map& inmap);
 	void rsdl();
 	void addto2Dsolution(struct tet_hp::vefi ug);
 	void addto2Dsolution(struct tet_hp::vefi ug, int mode, FLT coeff);
@@ -104,7 +103,7 @@ template<class BASE> class pod_sim_edge_bdry {
 
 	public:
 		pod_sim_edge_bdry(pod_simulate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
-		void init(input_map& input);
+		void init(input_map& inmap);
 		void rsdl();
 		void addto2Dsolution(struct tet_hp::vefi ug);
 		void addto2Dsolution(struct tet_hp::vefi ug, int mode, FLT coeff);

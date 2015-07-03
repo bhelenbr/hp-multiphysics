@@ -40,7 +40,7 @@ class hp_edge_bdry;
 class init_bdry_cndtn {
 	public:
 		virtual FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) = 0;
-		virtual void init(input_map &blkdata, std::string idnty) {};
+		virtual void init(input_map &inmap, std::string idnty) {};
 		virtual ~init_bdry_cndtn() {};
 };
 
@@ -77,7 +77,7 @@ class tri_hp : public r_tri_mesh  {
 		virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		/** edge boundary information */
 		Array<hp_edge_bdry *,1> hp_ebdry;
-		virtual hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		virtual hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 		/** object to perform rigid mesh movement */
 		tri_hp_helper *helper;
 

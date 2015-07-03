@@ -25,7 +25,7 @@ class tet_hp_cd_multi : public tet_hp_cd {
 	
 		void* create_global_structure() {return new global;}
 		tet_hp_cd_multi* create() { return new tet_hp_cd_multi(); }
-		void init(input_map& input, void *gin);
+		void init(input_map& inmap, void *gin);
 		void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void calculate_unsteady_sources();
 		void setup_preconditioner();

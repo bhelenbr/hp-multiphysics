@@ -26,7 +26,7 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_vrtx_bdry* create(tet_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
-		virtual void init(input_map& input,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
+		virtual void init(input_map& inmap,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
 		virtual void copy(const hp_vrtx_bdry& tgt) {}
 		virtual ~hp_vrtx_bdry() {}
 		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
@@ -104,7 +104,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		}
 		virtual hp_edge_bdry* create(tet_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 		virtual void* create_global_structure() {return 0;}
-		virtual void init(input_map& input,void* gbl_in);
+		virtual void init(input_map& inmap,void* gbl_in);
 		virtual void copy(const hp_edge_bdry& tgt);
 		virtual ~hp_edge_bdry() {}
 			
@@ -208,7 +208,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_face_bdry* create(tet_hp& xin, face_bdry &bin) const {return(new hp_face_bdry(*this,xin,bin));}
-		virtual void init(input_map& input,void *gbl_in); 
+		virtual void init(input_map& inmap,void *gbl_in); 
 		virtual void copy(const hp_face_bdry& tgt);
 		virtual ~hp_face_bdry() {}
 			

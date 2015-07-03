@@ -20,7 +20,7 @@ using namespace bdry_swirl;
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_swirl_stype {
+class tri_hp_swirl_etype {
 	public:
 		static const int ntypes = 1;
 		enum ids {unknown=-1,symmetry};
@@ -32,23 +32,23 @@ class tri_hp_swirl_stype {
 		}
 };
 
-const char tri_hp_swirl_stype::names[ntypes][40] = {"symmetry"};
+const char tri_hp_swirl_etype::names[ntypes][40] = {"symmetry"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_swirl::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_swirl::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	type = tri_hp_swirl_stype::getid(name.c_str());
+	type = tri_hp_swirl_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_swirl_stype::symmetry: {
+		case tri_hp_swirl_etype::symmetry: {
 			temp = new symmetry(*this,*ebdry(bnum));
 			break;
 		}	
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,name));
+			return(tri_hp_ins::getnewedgeobject(bnum,name));
 		}
 	}
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

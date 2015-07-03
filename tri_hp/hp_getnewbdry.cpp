@@ -57,7 +57,7 @@ hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, std::string name) {
 	return(temp);
 }
 
-class tri_hp_stype {
+class tri_hp_etype {
 public:
 	static const int ntypes = 4;
 	enum ids {unknown=-1,plain,symbolic_with_integration_by_parts,translating_surface};
@@ -69,28 +69,28 @@ public:
 	}
 };
 
-const char tri_hp_stype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface"};
+const char tri_hp_etype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;
 	hp_edge_bdry *temp;
 	
 	
-	type = tri_hp_stype::getid(name.c_str());
-	if (type == tri_hp_stype::unknown) {
+	type = tri_hp_etype::getid(name.c_str());
+	if (type == tri_hp_etype::unknown) {
 		*gbl->log << "unknown side type:" << keyword << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	switch(type) {
-		case tri_hp_stype::symbolic_with_integration_by_parts: {
+		case tri_hp_etype::symbolic_with_integration_by_parts: {
 			temp = new symbolic_with_integration_by_parts(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_stype::translating_surface:  {
+		case tri_hp_etype::translating_surface:  {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new  translating_surface(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;

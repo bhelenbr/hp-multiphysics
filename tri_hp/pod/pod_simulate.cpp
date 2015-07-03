@@ -224,7 +224,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 	for (int i=0;i<BASE::nebd;++i) {
 		if (!pod_ebdry(i)->active) continue;
 		pod_ebdry(i)->bindex = pod_bdry_map[pod_ebdry(i)->pod_id].nmodes;
-		pod_ebdry(i)->init(input);
+		pod_ebdry(i)->init(inmap);
 	}	
 
 	// *BASE::gbl->log << multiplicity << std::endl;

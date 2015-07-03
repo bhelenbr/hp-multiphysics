@@ -26,7 +26,7 @@ class tri_hp_swe : public tri_hp_ins {
 		} *gbl;
 
 		init_bdry_cndtn* getnewibc(std::string name);
-		hp_edge_bdry* getnewsideobject(int bnum, std::string name);
+		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 
 	public:
 		void* create_global_structure() {return new global;}

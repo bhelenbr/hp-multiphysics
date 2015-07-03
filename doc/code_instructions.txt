@@ -17,7 +17,7 @@
 #### GET BLITZ 
 ###################################################################
 METHOD 1 - Download blitz.10 tar.gz file 
-mv blitzXX.tgz to Packages (OS X) or /share/apps (orion)
+mv blitzXX.tgz to Packages (OS X) or /share/apps (orion
 unpack & cd into directory
 [./configure -disable-fortran --prefix=$HOME/Packages] (OS X)
 [./configure --prefix=/share/apps] (Orion)

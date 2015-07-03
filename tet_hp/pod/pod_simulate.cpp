@@ -21,7 +21,7 @@ struct bd_str {
 };
 #endif
 
-template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
+template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
@@ -29,13 +29,13 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 
 	/* Initialize base class */
 	/* If restart is not equal to 0, this will load DNS data */
-	BASE::init(input,gin);
+	BASE::init(inmap,gin);
 
-	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
+	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 	nstr.str("");
 	nstr << "pod" << pod_id << "_nmodes";
-	if (!input.get(nstr.str(),nmodes)) input.getwdefault("nmodes",nmodes,5); 
+	if (!inmap.get(nstr.str(),nmodes)) inmap.getwdefault("nmodes",nmodes,5); 
 	nstr.clear();
 
 	vefi ugstore;
@@ -82,7 +82,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		pod_fbdry(i) = new pod_sim_face_bdry<BASE>(*this,*BASE::fbdry(i));
 		
 		keyword = pod_fbdry(i)->base.idprefix +"_pod";
-		input.getwdefault(keyword,pod_fbdry(i)->active,false);
+		inmap.getwdefault(keyword,pod_fbdry(i)->active,false);
 		if (!pod_fbdry(i)->active) {
 			pod_fbdry(i)->nmodes = 0;
 			continue;
@@ -90,11 +90,11 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		binfo(localid)++;
 		
 		keyword = pod_fbdry(i)->base.idprefix + "_pod_id";
-		input.getwdefault(keyword,pod_fbdry(i)->pod_id,pod_fbdry(i)->base.idnum);
+		inmap.getwdefault(keyword,pod_fbdry(i)->pod_id,pod_fbdry(i)->base.idnum);
 		
 		nstr.str("");
 		nstr << "bdry_pod" << pod_fbdry(i)->pod_id << "_nmodes";
-		if (!input.get(nstr.str(),pod_fbdry(i)->nmodes)) input.getwdefault("bdry_nmodes",pod_fbdry(i)->nmodes,nmodes); 
+		if (!inmap.get(nstr.str(),pod_fbdry(i)->nmodes)) inmap.getwdefault("bdry_nmodes",pod_fbdry(i)->nmodes,nmodes); 
 		nstr.clear();
 	}
 	//keep separate counters for boundaries?? fix me temp
@@ -103,7 +103,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i) = new pod_sim_edge_bdry<BASE>(*this,*BASE::ebdry(i));
 
 		keyword = pod_ebdry(i)->base.idprefix +"_pod";
-		input.getwdefault(keyword,pod_ebdry(i)->active,false);
+		inmap.getwdefault(keyword,pod_ebdry(i)->active,false);
 		if (!pod_ebdry(i)->active) {
 			pod_ebdry(i)->nmodes = 0;
 			continue;
@@ -111,11 +111,11 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		binfo(localid)++;
 
 		keyword = pod_ebdry(i)->base.idprefix + "_pod_id";
-		input.getwdefault(keyword,pod_ebdry(i)->pod_id,pod_ebdry(i)->base.idnum);
+		inmap.getwdefault(keyword,pod_ebdry(i)->pod_id,pod_ebdry(i)->base.idnum);
 
 		nstr.str("");
 		nstr << "bdry_pod" << pod_ebdry(i)->pod_id << "_nmodes";
-		if (!input.get(nstr.str(),pod_ebdry(i)->nmodes)) input.getwdefault("bdry_nmodes",pod_ebdry(i)->nmodes,nmodes); 
+		if (!inmap.get(nstr.str(),pod_ebdry(i)->nmodes)) inmap.getwdefault("bdry_nmodes",pod_ebdry(i)->nmodes,nmodes); 
 		nstr.clear();
 	}
 
@@ -194,7 +194,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 #endif
 
 	int initfile;
-	input.getwdefault("initfile",initfile,1);
+	inmap.getwdefault("initfile",initfile,1);
 	nstr.str("");
 	nstr << initfile << std::flush;
 	filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
@@ -582,7 +582,7 @@ template<class BASE> FLT pod_simulate<BASE>::maxres() {
 }
 
 #ifdef POD_BDRY
-template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
+template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& inmap) {
     std::string filename,keyword,linebuff;
     std::ostringstream nstr;
     std::istringstream instr;
@@ -623,7 +623,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
     }
 
     int initfile;
-    input.getwdefault("initfile",initfile,1);
+    inmap.getwdefault("initfile",initfile,1);
     nstr.str("");
     nstr << initfile << std::flush;
     filename = "coeff" +nstr.str() +"_" +base.idprefix +".bin";

@@ -19,7 +19,7 @@ using namespace bdry_swe;
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_swe_stype {
+class tri_hp_swe_etype {
 	public:
 		static const int ntypes = 2;
 		enum ids {unknown=-1,wall,characteristic};
@@ -31,27 +31,27 @@ class tri_hp_swe_stype {
 		}
 };
 
-const char tri_hp_swe_stype::names[ntypes][40] = {"wall","characteristic"};
+const char tri_hp_swe_etype::names[ntypes][40] = {"wall","characteristic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_swe::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_swe::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
-	type = tri_hp_swe_stype::getid(name.c_str());
+	type = tri_hp_swe_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_swe_stype::wall: {
+		case tri_hp_swe_etype::wall: {
 			temp = new wall(*this,*ebdry(bnum));
 			break;
 		}	
-		case tri_hp_swe_stype::characteristic: {
+		case tri_hp_swe_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}	
 		default: {
-			return(tri_hp_ins::getnewsideobject(bnum,name));
+			return(tri_hp_ins::getnewedgeobject(bnum,name));
 			break;
 		}
 	}

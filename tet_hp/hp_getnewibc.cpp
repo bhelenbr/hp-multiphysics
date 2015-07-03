@@ -45,7 +45,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 class ibc_type {
 	public:
 		const static int ntypes = 1;
-		enum ids {symbolic};
+		enum ids {unknown=-1,symbolic};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -58,22 +58,16 @@ const char ibc_type::names[ntypes][40] = {"symbolic"};
 
 
 
-init_bdry_cndtn *tet_hp::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tet_hp::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type " << keyword << std::endl;
-		}
-	}
-	
 	type = ibc_type::getid(ibcname.c_str());
-		
+	if (type == ibc_type::unknown) {
+		*gbl->log << "unknown ibc type:" << name << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 	switch(type) {
 		case ibc_type::symbolic: {
 			temp = new symbolic_ibc;
@@ -81,10 +75,9 @@ init_bdry_cndtn *tet_hp::getnewibc(std::string suffix, input_map& inmap) {
 		}
 		default: {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
-	temp->input(inmap,keyword);
 	return(temp);
 
 }
@@ -96,13 +89,13 @@ class translating : public tet_hp_helper {
 		TinyVector<FLT,tet_mesh::ND> velocity;
 		translating(tet_hp &xin) :tet_hp_helper(xin), x(xin) {}
 
-		virtual void init(input_map& input, std::string idnty) {
+		virtual void init(input_map& inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
 
 			FLT vdflt[tet_mesh::ND] = {0.0, 0.0, 0.0};
-			if (!input.get(idnty +"_velocity",velocity.data(),3)) input.getwdefault("velocity",velocity.data(),2,vdflt);
+			if (!inmap.get(idnty +"_velocity",velocity.data(),3)) inmap.getwdefault("velocity",velocity.data(),2,vdflt);
 		}
 		
 		void tadvance() {
@@ -133,7 +126,7 @@ class gcl_test : public tet_hp_helper {
 		Array<symbolic_function<tet_mesh::ND>,1> vel;
 		gcl_test(tet_hp &xin) : tet_hp_helper(xin), x(xin) {}
 
-		virtual void init(input_map& input, std::string idnty) {
+		virtual void init(input_map& inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
@@ -143,14 +136,14 @@ class gcl_test : public tet_hp_helper {
 			for(int n=0;n<tet_mesh::ND;++n) {
 				nstr.str("");
 				nstr << idnty << "_gcl_velocity" << n << std::flush;
-				if (input.find(nstr.str()) != input.end()) {
-						vel(n).init(input,nstr.str());
+				if (inmap.find(nstr.str()) != inmap.end()) {
+						vel(n).init(inmap,nstr.str());
 				}
 				else {
 						nstr.str("");
 						nstr << "gcl_velocity" << n << std::flush;
-						if (input.find(nstr.str()) != input.end()) {
-							vel(n).init(input,nstr.str());
+						if (inmap.find(nstr.str()) != inmap.end()) {
+							vel(n).init(inmap,nstr.str());
 						}
 						else {
 							*x.gbl->log << "couldn't find mesh movement function\n";
@@ -189,7 +182,7 @@ class l2_error : public tet_hp_helper {
 class helper_type {
 	public:
 		const static int ntypes = 3;
-		enum ids {translating,l2error,gcl_test};
+		enum ids {unknown=-1,translating,l2error,gcl_test};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -201,15 +194,15 @@ class helper_type {
 const char helper_type::names[ntypes][40] = {"translating","l2error","gcl_test"};
 
 
-tet_hp_helper *tet_hp::getnewhelper(input_map& inmap) {
+tet_hp_helper *tet_hp::getnewhelper(std::string helpername) {
 	std::string movername;
 	int type;
 	
-	/* FIND INITIAL CONDITION TYPE */
-	if (!inmap.get(gbl->idprefix + "_helper",movername))
-		inmap.getwdefault("helper",movername,std::string("default"));
-
-	type = helper_type::getid(movername.c_str());
+	type = helper_type::getid(helpername.c_str());
+	if (type == helper_type::unknown) {
+		*gbl->log << "unknown helper type:" << helpername << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 		
 	switch(type) {
 		case helper_type::translating: {

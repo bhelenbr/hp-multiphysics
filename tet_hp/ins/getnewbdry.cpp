@@ -34,22 +34,13 @@ class tet_hp_ins_vtype {
 
 const char tet_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar","inflow"};
 
-hp_vrtx_bdry* tet_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
+hp_vrtx_bdry* tet_hp_ins::getnewvrtxobject(int bnum, std::string name) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
     hp_vrtx_bdry *temp;  
     
-		keyword =  vbdry(bnum)->idprefix + "_hp_type";
-		if (!bdrydata.get(keyword,val)) {
-			*gbl->log << "missing vertex type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-		else {
-			type = tet_hp_ins_vtype::getid(val.c_str());
-		}
-	
-	
+		type = tet_hp_ins_vtype::getid(name.c_str());
     switch(type) {
 //        case tet_hp_ins_vtype::surface_inflow: {
 //            temp = new surface_fixed_pt(*this,*vbdry(bnum));
@@ -72,7 +63,7 @@ hp_vrtx_bdry* tet_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 //            break;
 //        }
         default: {
-            temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
+            temp = tet_hp::getnewvrtxobject(bnum,name);
             break;
         }
     } 
@@ -105,22 +96,14 @@ const char tet_hp_ins_etype::names[ntypes][40] = {"plain","inflow","outflow","ch
     "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, std::string name) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
     hp_edge_bdry *temp;  
     
 
-		keyword =  ebdry(bnum)->idprefix + "_hp_type";
-		if (!bdrydata.get(keyword,val)) {
-			*gbl->log << "missing edge type:" << keyword << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-		else {
-			type = tet_hp_ins_etype::getid(val.c_str());
-		}
-
+		type = tet_hp_ins_etype::getid(name.c_str());
     switch(type) {
 //        case tet_hp_ins_etype::plain: {
 //            temp = new generic(*this,*ebdry(bnum));
@@ -175,7 +158,7 @@ hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, input_map &bdrydata) {
 //            break;
 //        }
         default: {
-            temp = tet_hp::getnewedgeobject(bnum,bdrydata);
+            temp = tet_hp::getnewedgeobject(bnum,name);
             break;
         }
     }    
@@ -207,22 +190,14 @@ class tet_hp_ins_ftype {
 const char tet_hp_ins_ftype::names[ntypes][40] = {"plain","inflow","outflow","symmetry","applied_stress"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_face_bdry* tet_hp_ins::getnewfaceobject(int bnum, input_map &bdrydata) {
+hp_face_bdry* tet_hp_ins::getnewfaceobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_face_bdry *temp;  
 	
 
-	keyword =  fbdry(bnum)->idprefix + "_hp_type";
-	if (!bdrydata.get(keyword,val)) {
-		*gbl->log << "missing face type:" << keyword << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	else {
-		type = tet_hp_ins_ftype::getid(val.c_str());
-	}
-
+	type = tet_hp_ins_ftype::getid(name.c_str());
 	switch(type) {
 		case tet_hp_ins_ftype::plain: {
 			temp = new generic(*this,*fbdry(bnum));
@@ -245,7 +220,7 @@ hp_face_bdry* tet_hp_ins::getnewfaceobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			temp = tet_hp::getnewfaceobject(bnum,bdrydata);
+			temp = tet_hp::getnewfaceobject(bnum,name);
 			break;
 		}
 	}	

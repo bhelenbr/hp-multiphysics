@@ -141,7 +141,6 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string name) {
 		default: {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
-			assert(0);
 		}
 	}
 	return(temp);

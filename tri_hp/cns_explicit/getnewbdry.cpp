@@ -63,7 +63,7 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, std::string name) 
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_cns_explicit_stype {
+class tri_hp_cns_explicit_etype {
 	public:
 		static const int ntypes = 5;
 		enum ids {unknown=-1,inflow,outflow,characteristic,applied_stress,adiabatic};
@@ -75,41 +75,41 @@ class tri_hp_cns_explicit_stype {
 		}
 };
 
-const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"inflow","outflow","characteristic","applied_stress","adiabatic"};
+const char tri_hp_cns_explicit_etype::names[ntypes][40] = {"inflow","outflow","characteristic","applied_stress","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, std::string name) {
+hp_edge_bdry* tri_hp_cns_explicit::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
 
 
-	type = tri_hp_cns_explicit_stype::getid(name.c_str());
+	type = tri_hp_cns_explicit_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_cns_explicit_stype::inflow: {
+		case tri_hp_cns_explicit_etype::inflow: {
 			temp = new inflow(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_explicit_stype::outflow: {
+		case tri_hp_cns_explicit_etype::outflow: {
 			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_explicit_stype::characteristic: {
+		case tri_hp_cns_explicit_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
 
-		case tri_hp_cns_explicit_stype::applied_stress: {
+		case tri_hp_cns_explicit_etype::applied_stress: {
 			temp = new applied_stress(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cns_explicit_stype::adiabatic: {
+		case tri_hp_cns_explicit_etype::adiabatic: {
 			temp = new adiabatic(*this,*ebdry(bnum));
 			break;
 		}
 		default: {
-			return(tri_hp::getnewsideobject(bnum,name));
+			return(tri_hp::getnewedgeobject(bnum,name));
 		}
 	}    
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();

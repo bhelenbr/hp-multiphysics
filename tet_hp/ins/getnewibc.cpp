@@ -91,50 +91,50 @@ namespace ibc_ins {
 //			
 //			if (bnum > x.nebd -1) surf = 0;
 		}
-		void init(input_map& input, std::string idnty) {
+		void init(input_map& inmap, std::string idnty) {
 			std::string keyword, val;
 			
 			keyword = idnty + "_delta_rho";
-			if (!input.get(keyword,delta_rho)) {
-				input.getwdefault("delta_rho",delta_rho,0.0);
+			if (!inmap.get(keyword,delta_rho)) {
+				inmap.getwdefault("delta_rho",delta_rho,0.0);
 			}
 			
 			keyword = idnty + "_rho_factor";
-			if (!input.get(keyword,rho_factor)) {
-				input.getwdefault("rho_factor",rho_factor,1.0);
+			if (!inmap.get(keyword,rho_factor)) {
+				inmap.getwdefault("rho_factor",rho_factor,1.0);
 			}
 			
 			keyword = idnty + "_delta_mu";
-			if (!input.get(keyword,delta_mu)) {
-				input.getwdefault("delta_mu",delta_mu,0.0);
+			if (!inmap.get(keyword,delta_mu)) {
+				inmap.getwdefault("delta_mu",delta_mu,0.0);
 			}
 			
 			keyword = idnty + "_mu_factor";
-			if (!input.get(keyword,mu_factor)) {
-				input.getwdefault("mu_factor",mu_factor,1.0);
+			if (!inmap.get(keyword,mu_factor)) {
+				inmap.getwdefault("mu_factor",mu_factor,1.0);
 			}
 			
 			keyword = "delta_g";
-			input.getwdefault(keyword,delta_g,0.0);
-			input[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+			inmap.getwdefault(keyword,delta_g,0.0);
+			inmap[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 			
 			keyword = "delta_g_factor";
-			input.getwdefault(keyword,delta_g_factor,1.0);
-			input[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+			inmap.getwdefault(keyword,delta_g_factor,1.0);
+			inmap[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
 			
-			input.getwdefault("parameter_interval",interval,1);
+			inmap.getwdefault("parameter_interval",interval,1);
 			
 //			if (surf) {
 //				std::string surfidnty = surf->base.idprefix;
 //				
 //				keyword = surfidnty + "_delta_sigma";
-//				input.getwdefault(keyword,delta_sigma,0.0);
+//				inmap.getwdefault(keyword,delta_sigma,0.0);
 //				
 //				keyword = surfidnty + "_sigma_factor";
-//				input.getwdefault(keyword,sigma_factor,1.0);
+//				inmap.getwdefault(keyword,sigma_factor,1.0);
 //				
 //				keyword = surfidnty + "_matching_block";
-//				if (!input.get(keyword,val)) {
+//				if (!inmap.get(keyword,val)) {
 //					delta_rho2 = 0.0;
 //					rho2_factor = 1.0;
 //					delta_mu2 = 0.0;
@@ -142,23 +142,23 @@ namespace ibc_ins {
 //				}
 //				else {                         
 //					keyword = val + "_delta_rho";                    
-//					if (!input.get(keyword,delta_rho2)) {
-//						input.getwdefault("delta_rho",delta_rho2,0.0);
+//					if (!inmap.get(keyword,delta_rho2)) {
+//						inmap.getwdefault("delta_rho",delta_rho2,0.0);
 //					}
 //					
 //					keyword = val + "_rho_factor";
-//					if (!input.get(keyword,rho2_factor)) {
-//						input.getwdefault("rho_factor",rho2_factor,1.0);
+//					if (!inmap.get(keyword,rho2_factor)) {
+//						inmap.getwdefault("rho_factor",rho2_factor,1.0);
 //					}
 //					
 //					keyword = val + "_delta_mu";
-//					if (!input.get(keyword,delta_mu2)) {
-//						input.getwdefault("delta_mu",delta_mu2,0.0);
+//					if (!inmap.get(keyword,delta_mu2)) {
+//						inmap.getwdefault("delta_mu",delta_mu2,0.0);
 //					}
 //					
 //					keyword = val + "_mu_factor";
-//					if (!input.get(keyword,mu2_factor)) {
-//						input.getwdefault("mu_factor",mu2_factor,1.0);
+//					if (!inmap.get(keyword,mu2_factor)) {
+//						inmap.getwdefault("mu_factor",mu2_factor,1.0);
 //					}
 //				}
 //			}
@@ -218,20 +218,11 @@ namespace ibc_ins {
 
 }
 
-tet_hp_helper *tet_hp_ins::getnewhelper(input_map& inmap) {
+tet_hp_helper *tet_hp_ins::getnewhelper(std::string helpername) {
 	std::string keyword,movername;
 	int type;
 	
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_helper";
-	if (!inmap.get(keyword,movername)) {
-		if (!inmap.get("helper",movername)) {
-			type = -1;
-		}
-	}
-	
-	type = ibc_ins::helper_type::getid(movername.c_str());
-	
+	type = ibc_ins::helper_type::getid(helpername.c_str());
 	switch(type) {
 		case ibc_ins::helper_type::parameter_changer: {
 			tet_hp_helper *temp = new ibc_ins::parameter_changer(*this);
@@ -239,38 +230,27 @@ tet_hp_helper *tet_hp_ins::getnewhelper(input_map& inmap) {
 		}
 
 		default: {
-			return(tet_hp::getnewhelper(inmap));
+			return(tet_hp::getnewhelper(helpername));
 		}
 	}
 }
 
 
-init_bdry_cndtn *tet_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
+init_bdry_cndtn *tet_hp_ins::getnewibc(std::string name) {
 	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
 	int type;
 
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = gbl->idprefix + "_" +suffix;
-	if (!inmap.get(keyword,ibcname)) {
-		keyword = suffix;
-		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
-		}
-	}
 	type = ibc_ins::ibc_type::getid(ibcname.c_str());
-
-		
 	switch(type) {
 		case ibc_ins::ibc_type::freestream: {
 			temp = new ibc_ins::freestream;
 			break;
 		}
 		default: {
-			return(tet_hp::getnewibc(suffix,inmap));
+			return(tet_hp::getnewibc(name));
 		}
 	}
-	temp->input(inmap,keyword);
 	return(temp);
 }
 
