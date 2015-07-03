@@ -35,7 +35,7 @@ class tet_hp_cd : public tet_hp {
 		hp_face_bdry* getnewfaceobject(int bnum, std::string name);
 
 	
-		init_bdry_cndtn* getnewibc(std::string name);
+		init_bdry_cndtn* getnewibc(std::string ibcname);
 		
 	public:
 		void* create_global_structure() {return new global;}

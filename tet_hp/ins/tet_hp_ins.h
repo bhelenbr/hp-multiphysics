@@ -35,7 +35,7 @@ class tet_hp_ins : public tet_hp {
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 		hp_face_bdry* getnewfaceobject(int bnum, std::string name);
-		init_bdry_cndtn* getnewibc(std::string name);
+		init_bdry_cndtn* getnewibc(std::string ibcname);
 		tet_hp_helper* getnewhelper(std::string helpername);
 
 	public:

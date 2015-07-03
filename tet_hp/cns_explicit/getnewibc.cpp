@@ -311,45 +311,10 @@ namespace ibc_cns_explicit {
 		}
 	};
 	const char ibc_type::names[ntypes][40] = {"freestream","sphere","ringleb"};
-	
-	
-	class helper_type {
-	public:
-		const static int ntypes = 4;
-		enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling};
-		const static char names[ntypes][40];
-		static int getid(const char *nin) {
-			int i;
-			for(i=0;i<ntypes;++i) 
-				if (!strcmp(nin,names[i])) return(i);
-			return(-1);
-		}
-	};
-	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
-	
 
 }
 
-tet_hp_helper *tet_hp_cns_explicit::getnewhelper(std::string helpername) {
-	std::string keyword,movername;
-	int type;
-	
-	type = ibc_cns_explicit::helper_type::getid(helpername.c_str());
-	switch(type) {
-//		case ibc_cns::helper_type::parameter_changer: {
-//			tet_hp_helper *temp = new ibc_cns::parameter_changer(*this);
-//			return(temp);
-//		}
-
-		default: {
-			return(tet_hp::getnewhelper(helpername));
-		}
-	}
-}
-
-
-init_bdry_cndtn *tet_hp_cns_explicit::getnewibc(std::string name) {
-	std::string keyword,ibcname;
+init_bdry_cndtn *tet_hp_cns_explicit::getnewibc(std::string ibcname) {
 	init_bdry_cndtn *temp;
 	int type;
 
@@ -368,7 +333,7 @@ init_bdry_cndtn *tet_hp_cns_explicit::getnewibc(std::string name) {
 			break;
 		}
 		default: {
-			return(tet_hp::getnewibc(name));
+			return(tet_hp::getnewibc(ibcname));
 		}
 	}
 	return(temp);

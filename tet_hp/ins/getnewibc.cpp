@@ -236,8 +236,7 @@ tet_hp_helper *tet_hp_ins::getnewhelper(std::string helpername) {
 }
 
 
-init_bdry_cndtn *tet_hp_ins::getnewibc(std::string name) {
-	std::string keyword,ibcname;
+init_bdry_cndtn *tet_hp_ins::getnewibc(std::string ibcname) {
 	init_bdry_cndtn *temp;
 	int type;
 
@@ -248,7 +247,7 @@ init_bdry_cndtn *tet_hp_ins::getnewibc(std::string name) {
 			break;
 		}
 		default: {
-			return(tet_hp::getnewibc(name));
+			return(tet_hp::getnewibc(ibcname));
 		}
 	}
 	return(temp);

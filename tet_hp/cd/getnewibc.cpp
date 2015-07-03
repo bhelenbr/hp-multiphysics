@@ -116,8 +116,7 @@ namespace ibc_cd {
 }
 
 
-init_bdry_cndtn *tet_hp_cd::getnewibc(std::string name) {
-	std::string keyword,ibcname;
+init_bdry_cndtn *tet_hp_cd::getnewibc(std::string ibcname) {
 	init_bdry_cndtn *temp;
 	int type;
 
@@ -136,7 +135,7 @@ init_bdry_cndtn *tet_hp_cd::getnewibc(std::string name) {
 			break;
 		}
 		default: {
-			return(tet_hp::getnewibc(name));
+			return(tet_hp::getnewibc(ibcname));
 		}
 	}
 	return(temp);

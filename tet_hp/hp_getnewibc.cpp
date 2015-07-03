@@ -58,14 +58,13 @@ const char ibc_type::names[ntypes][40] = {"symbolic"};
 
 
 
-init_bdry_cndtn *tet_hp::getnewibc(std::string name) {
-	std::string keyword,ibcname;
+init_bdry_cndtn *tet_hp::getnewibc(std::string ibcname) {
 	init_bdry_cndtn *temp;
 	int type;
 
 	type = ibc_type::getid(ibcname.c_str());
 	if (type == ibc_type::unknown) {
-		*gbl->log << "unknown ibc type:" << name << std::endl;
+		*gbl->log << "unknown ibc type:" << ibcname << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	switch(type) {

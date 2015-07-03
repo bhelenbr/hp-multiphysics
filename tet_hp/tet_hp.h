@@ -161,7 +161,7 @@ class tet_hp : public tet_mesh  {
 			TinyVector<FLT,MXGP> cfl;
 			
 		} *gbl;
-		virtual init_bdry_cndtn* getnewibc(std::string name);
+		virtual init_bdry_cndtn* getnewibc(std::string ibcname);
 		virtual tet_hp_helper* getnewhelper(std::string helpername);
 
 		/* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
