@@ -33,21 +33,21 @@ namespace ibc_ins {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &inmap, std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
 				keyword = idnty +"_flowspeed";
-				if (!blockdata.get(keyword,speed)) 
-						blockdata.getwdefault("flowspeed",speed,1.0);
+				if (!inmap.get(keyword,speed)) 
+						inmap.getwdefault("flowspeed",speed,1.0);
 
 				keyword = idnty +"_flowangle";
-				if (!blockdata.get(keyword,alpha)) 
-						blockdata.getwdefault("flowangle",alpha,0.0);  
+				if (!inmap.get(keyword,alpha)) 
+						inmap.getwdefault("flowangle",alpha,0.0);  
 
 				keyword = idnty +"_perturb_amplitude";
-				if (!blockdata.get(keyword,perturb_amp)) 
-						blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
+				if (!inmap.get(keyword,perturb_amp)) 
+						inmap.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
 				alpha *= M_PI/180.0;
 			}

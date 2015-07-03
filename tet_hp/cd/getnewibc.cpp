@@ -18,7 +18,7 @@ namespace ibc_cd {
 			FLT f(int n, TinyVector<FLT,tet_mesh::ND> x,FLT time) {
 				return(0.0);
 			}
-			void input(input_map &inmap,std::string idnty) {}
+			void init(input_map &inmap, std::string idnty) {}
 	};
 	
 	class unsteady_spline : public init_bdry_cndtn {
@@ -29,7 +29,7 @@ namespace ibc_cd {
 				time_history.interpolate(time, source);
 				return(source(0));
 			}
-			void input(input_map &inmap,std::string idnty) {
+			void init(input_map &inmap, std::string idnty) {
 				std::string filename;
 				if (!inmap.get(idnty+"_filename",filename)) {
 					std::cerr << "couldn't find unsteady_spline filename" << std::endl;
@@ -61,7 +61,7 @@ namespace ibc_cd {
 			return(source(0));
 		}
 		
-		void input(input_map &inmap,std::string idnty) {
+		void init(input_map &inmap, std::string idnty) {
 			
 			if (!inmap.get(idnty+"_nregions",nregion)){
 				std::cerr << "couldn't find " << idnty+"nregions" << std::endl;

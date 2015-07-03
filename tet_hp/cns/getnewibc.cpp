@@ -41,37 +41,37 @@ namespace ibc_cns {
 				return(0.0);
 			}
 
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &inmap, std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 
 				keyword = idnty +"_flowspeed";
-				if (!blockdata.get(keyword,speed)) 
-					blockdata.getwdefault("flowspeed",speed,0.1);
+				if (!inmap.get(keyword,speed)) 
+					inmap.getwdefault("flowspeed",speed,0.1);
 
 				keyword = idnty +"_flowangle1";
-				if (!blockdata.get(keyword,angle1)) 
-					blockdata.getwdefault("flowangle1",angle1,0.0);  
+				if (!inmap.get(keyword,angle1)) 
+					inmap.getwdefault("flowangle1",angle1,0.0);  
 
 				keyword = idnty +"_flowangle2";
-				if (!blockdata.get(keyword,angle2)) 
-					blockdata.getwdefault("flowangle2",angle2,90.0); 
+				if (!inmap.get(keyword,angle2)) 
+					inmap.getwdefault("flowangle2",angle2,90.0); 
 				
 				keyword = idnty +"_perturb_amplitude";
-				if (!blockdata.get(keyword,perturb_amp)) 
-					blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
+				if (!inmap.get(keyword,perturb_amp)) 
+					inmap.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
 				keyword = idnty +"_gamma";
-				if (!blockdata.get(keyword,gamma))
-					blockdata.getwdefault("gamma",gamma,1.4);
+				if (!inmap.get(keyword,gamma))
+					inmap.getwdefault("gamma",gamma,1.4);
 				
 				keyword = idnty +"_atm_pressure";
-				if (!blockdata.get(keyword,atm_pressure))
-					blockdata.getwdefault("atm_pressure",atm_pressure,0.0);
+				if (!inmap.get(keyword,atm_pressure))
+					inmap.getwdefault("atm_pressure",atm_pressure,0.0);
 				
 				keyword = idnty +"_temperature";
-				if (!blockdata.get(keyword,temperature))
-					blockdata.getwdefault("temperature",temperature,1.0/gamma);
+				if (!inmap.get(keyword,temperature))
+					inmap.getwdefault("temperature",temperature,1.0/gamma);
 				
 				if(atm_pressure > 0.0)
 					pressure = 0.0;
@@ -116,43 +116,43 @@ namespace ibc_cns {
 			return(0.0);
 		}
 		
-		void input(input_map &blockdata,std::string idnty) {
+		void init(input_map &inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			
 			keyword = idnty +"_flowspeed";
-			if (!blockdata.get(keyword,speed)) 
-				blockdata.getwdefault("flowspeed",speed,0.1);
+			if (!inmap.get(keyword,speed)) 
+				inmap.getwdefault("flowspeed",speed,0.1);
 			
 			keyword = idnty +"_angle1";
-			if (!blockdata.get(keyword,angle1)) 
-				blockdata.getwdefault("angle1",angle1,0.0);
+			if (!inmap.get(keyword,angle1)) 
+				inmap.getwdefault("angle1",angle1,0.0);
 			angle1 *= M_PI/180.0;
 			
 			keyword = idnty +"_angle2";
-			if (!blockdata.get(keyword,angle2)) 
-				blockdata.getwdefault("angle2",angle2,90.0);
+			if (!inmap.get(keyword,angle2)) 
+				inmap.getwdefault("angle2",angle2,90.0);
 			angle2 *= M_PI/180.0;
 						
 			keyword = idnty +"_inner_radius";
-			if (!blockdata.get(keyword,inner)) 
-				blockdata.getwdefault("inner_radius",inner,1.1);
+			if (!inmap.get(keyword,inner)) 
+				inmap.getwdefault("inner_radius",inner,1.1);
 			
 			keyword = idnty +"_outer_radius";
-			if (!blockdata.get(keyword,outer)) 
-				blockdata.getwdefault("outer_radius",outer,2.1);
+			if (!inmap.get(keyword,outer)) 
+				inmap.getwdefault("outer_radius",outer,2.1);
 			
 			keyword = idnty +"_gamma";
-			if (!blockdata.get(keyword,gamma))
-				blockdata.getwdefault("gamma",gamma,1.403);
+			if (!inmap.get(keyword,gamma))
+				inmap.getwdefault("gamma",gamma,1.403);
 			
 			keyword = idnty +"_RT";
-			if (!blockdata.get(keyword,RT)) 
-				blockdata.getwdefault("RT",RT,1.0/gamma);
+			if (!inmap.get(keyword,RT)) 
+				inmap.getwdefault("RT",RT,1.0/gamma);
 			
 			keyword = idnty +"_pressure";
-			if (!blockdata.get(keyword,pr)) 
-				blockdata.getwdefault("pressure",pr,1.0/gamma);
+			if (!inmap.get(keyword,pr)) 
+				inmap.getwdefault("pressure",pr,1.0/gamma);
 			
 			/* spherical coordinates */
 			vel(0) = speed*cos(angle1)*sin(angle2);
@@ -182,39 +182,39 @@ namespace ibc_cns {
 				return(val(n));
 			}
 			
-			void input(input_map &blockdata,std::string idnty) {
+			void init(input_map &inmap, std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
 				
 				keyword = idnty +"_q0";
-				if (!blockdata.get(keyword,q0)) 
-					blockdata.getwdefault("q0",q0,0.02);
+				if (!inmap.get(keyword,q0)) 
+					inmap.getwdefault("q0",q0,0.02);
 				
 				keyword = idnty +"_theta0";
-				if (!blockdata.get(keyword,theta0)) 
-					blockdata.getwdefault("theta0",theta0,90.0);
+				if (!inmap.get(keyword,theta0)) 
+					inmap.getwdefault("theta0",theta0,90.0);
 				theta0 *= M_PI/180.0;
 				
 				keyword = idnty +"_theta1";
-				if (!blockdata.get(keyword,theta1)) 
-					blockdata.getwdefault("theta1",theta1,90.0);
+				if (!inmap.get(keyword,theta1)) 
+					inmap.getwdefault("theta1",theta1,90.0);
 				theta1 *= M_PI/180.0;
 				
 				keyword = idnty +"_scale";
-				if (!blockdata.get(keyword,scale)) 
-					blockdata.getwdefault("scale",scale,20.0);
+				if (!inmap.get(keyword,scale)) 
+					inmap.getwdefault("scale",scale,20.0);
 				
 				keyword = idnty +"_xshift";
-				if (!blockdata.get(keyword,xshift)) 
-					blockdata.getwdefault("xshift",xshift,-40.0);
+				if (!inmap.get(keyword,xshift)) 
+					inmap.getwdefault("xshift",xshift,-40.0);
 				
 				keyword = idnty +"_yshift";
-				if (!blockdata.get(keyword,yshift)) 
-					blockdata.getwdefault("yshift",yshift,0.0);
+				if (!inmap.get(keyword,yshift)) 
+					inmap.getwdefault("yshift",yshift,0.0);
 				
 				keyword = idnty +"_gamma";
-				if (!blockdata.get(keyword,gam))
-					blockdata.getwdefault("gamma",gam,1.403);
+				if (!inmap.get(keyword,gam))
+					inmap.getwdefault("gamma",gam,1.403);
 				
 				shift[0] = xshift;
 				shift[1] = yshift;
@@ -339,61 +339,61 @@ namespace ibc_cns {
 			return(0.0);
 		}
 		
-		void input(input_map &blockdata,std::string idnty) {
+		void init(input_map &inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			
 			keyword = idnty +"_gamma";
-			if (!blockdata.get(keyword,gamma))
-				blockdata.getwdefault("gamma",gamma,1.4);
+			if (!inmap.get(keyword,gamma))
+				inmap.getwdefault("gamma",gamma,1.4);
 			
 			keyword = idnty +"_pressure";
-			if (!blockdata.get(keyword,pressure)) 
-				blockdata.getwdefault("pressure",pressure,1.0/gamma);
+			if (!inmap.get(keyword,pressure)) 
+				inmap.getwdefault("pressure",pressure,1.0/gamma);
 			
 			keyword = idnty +"_temperature_wall";
-			if (!blockdata.get(keyword,temperature_wall)) 
-				blockdata.getwdefault("temperature_wall",temperature_wall,1.0/gamma);  
+			if (!inmap.get(keyword,temperature_wall)) 
+				inmap.getwdefault("temperature_wall",temperature_wall,1.0/gamma);  
 
 			keyword = idnty +"_temperature_man";
-			if (!blockdata.get(keyword,temperature_man)) 
-				blockdata.getwdefault("temperature_man",temperature_man,1.0/gamma); 
+			if (!inmap.get(keyword,temperature_man)) 
+				inmap.getwdefault("temperature_man",temperature_man,1.0/gamma); 
 			
 			keyword = idnty +"_shiftz";
-			if (!blockdata.get(keyword,shiftz)) 
-				blockdata.getwdefault("shiftz",shiftz,0.0); 
+			if (!inmap.get(keyword,shiftz)) 
+				inmap.getwdefault("shiftz",shiftz,0.0); 
 			
 			keyword = idnty +"_gravity";
-			if (!blockdata.get(keyword,gravity)) 
-				blockdata.getwdefault("gravity",gravity,-9.81); 
+			if (!inmap.get(keyword,gravity)) 
+				inmap.getwdefault("gravity",gravity,-9.81); 
 			
 			keyword = idnty +"_xmin";
-			if (!blockdata.get(keyword,xmin)) 
-				blockdata.getwdefault("xmin",xmin,-0.2);
+			if (!inmap.get(keyword,xmin)) 
+				inmap.getwdefault("xmin",xmin,-0.2);
 			
 			keyword = idnty +"_ymin";
-			if (!blockdata.get(keyword,ymin)) 
-				blockdata.getwdefault("ymin",ymin,-0.2);
+			if (!inmap.get(keyword,ymin)) 
+				inmap.getwdefault("ymin",ymin,-0.2);
 			
 			keyword = idnty +"_zmin";
-			if (!blockdata.get(keyword,zmin)) 
-				blockdata.getwdefault("zmin",zmin,-.679);
+			if (!inmap.get(keyword,zmin)) 
+				inmap.getwdefault("zmin",zmin,-.679);
 			
 			keyword = idnty +"_xmax";
-			if (!blockdata.get(keyword,xmax)) 
-				blockdata.getwdefault("xmax",xmax,0.2);
+			if (!inmap.get(keyword,xmax)) 
+				inmap.getwdefault("xmax",xmax,0.2);
 			
 			keyword = idnty +"_ymax";
-			if (!blockdata.get(keyword,ymax)) 
-				blockdata.getwdefault("ymax",ymax,0.2);
+			if (!inmap.get(keyword,ymax)) 
+				inmap.getwdefault("ymax",ymax,0.2);
 			
 			keyword = idnty +"_zmax";
-			if (!blockdata.get(keyword,zmax)) 
-				blockdata.getwdefault("zmax",zmax,0.1);
+			if (!inmap.get(keyword,zmax)) 
+				inmap.getwdefault("zmax",zmax,0.1);
 			
 			keyword = idnty + "_atm_pressure";
-			if (!blockdata.get(keyword,atm_pressure)) 
-				blockdata.getwdefault("atm_pressure",atm_pressure,0.0);
+			if (!inmap.get(keyword,atm_pressure)) 
+				inmap.getwdefault("atm_pressure",atm_pressure,0.0);
 			
 			
 		}
@@ -450,29 +450,29 @@ namespace ibc_cns {
 			return(0.0);
 		}
 		
-		void input(input_map &blockdata,std::string idnty) {
+		void init(input_map &inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			
 			keyword = idnty +"_rotationalspeed";
-			if (!blockdata.get(keyword,omega)) 
-				blockdata.getwdefault("rotationalspeed",omega,0.1); 
+			if (!inmap.get(keyword,omega)) 
+				inmap.getwdefault("rotationalspeed",omega,0.1); 
 			
 			keyword = idnty +"_offset";
-			if (!blockdata.get(keyword,epsilon)) 
-				blockdata.getwdefault("offset",epsilon,0.05); 
+			if (!inmap.get(keyword,epsilon)) 
+				inmap.getwdefault("offset",epsilon,0.05); 
 			
 			keyword = idnty +"_height";
-			if (!blockdata.get(keyword,height)) 
-				blockdata.getwdefault("height",height,2.5); 
+			if (!inmap.get(keyword,height)) 
+				inmap.getwdefault("height",height,2.5); 
 			
 			keyword = idnty +"_radius";
-			if (!blockdata.get(keyword,radius)) 
-				blockdata.getwdefault("radius",radius,1.0); 
+			if (!inmap.get(keyword,radius)) 
+				inmap.getwdefault("radius",radius,1.0); 
 			
 			keyword = idnty +"_gamma";
-			if (!blockdata.get(keyword,gamma)) 
-				blockdata.getwdefault("gamma",gamma,1.4);
+			if (!inmap.get(keyword,gamma)) 
+				inmap.getwdefault("gamma",gamma,1.4);
 			
 		}
 	};

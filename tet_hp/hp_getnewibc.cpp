@@ -17,7 +17,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 		FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
 			return(fcn(n).Eval(x,time));
 		}
-		void input(input_map &inmap,std::string idnty) {
+		void init(input_map &inmap, std::string idnty) {
 			std::string keyword,val;
 			std::istringstream data;
 			std::ostringstream nstr;
