@@ -180,8 +180,8 @@ class l2_error : public tet_hp_helper {
 
 class helper_type {
 	public:
-		const static int ntypes = 3;
-		enum ids {unknown=-1,translating,l2error,gcl_test};
+		const static int ntypes = 4;
+		enum ids {unknown=-1,plain,translating,l2error,gcl_test};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -190,7 +190,7 @@ class helper_type {
 			return(-1);
 		}
 };
-const char helper_type::names[ntypes][40] = {"translating","l2error","gcl_test"};
+const char helper_type::names[ntypes][40] = {"plain","translating","l2error","gcl_test"};
 
 
 tet_hp_helper *tet_hp::getnewhelper(std::string helpername) {
