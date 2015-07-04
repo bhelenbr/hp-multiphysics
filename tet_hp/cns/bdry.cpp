@@ -703,7 +703,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 		}
 		else {
 			*x.gbl->log << "couldn't find stress function " << nstr.str() << '\n';
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 	}
 	

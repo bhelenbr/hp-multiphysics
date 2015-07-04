@@ -119,7 +119,7 @@ void tet_hp::getu(const TinyVector<FLT,3> &xp, int &tind,TinyVector<FLT,4> &uout
 //		}
 //		if(tind < 0){
 //			*gbl->log << "Error pnt outside domain: seed vertex = " << seedvrtx " tet = " << tind << " location = " << xp << std::endl;   
-//			exit(1);
+//			sim::abort(__LINE__,__FILE__,gbl->log);
 //		}
 //
 //	}

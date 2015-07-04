@@ -140,7 +140,7 @@ hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, std::string name) {
 //            }
 //            else {
 //                std::cerr << "use coupled physics for surface boundary\n";
-//                exit(1);
+//                sim::abort(__LINE__,__FILE__,gbl->log);
 //            }
 //            break;
 //        }

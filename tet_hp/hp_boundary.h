@@ -32,16 +32,33 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
 
 		/* input output functions */
-		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0) {
-			switch(typ) {
-				case(tet_hp::text):
-				fout << base.x.gbl->idprefix << " " << mytype << std::endl;
-				break;
-				default:
+	/* input output functions */
+	virtual void output(const std::string& filename, tet_hp::filetype typ,int tlvl = 0) {
+		switch(typ) {
+			case(tet_hp::text): {
+				std::string fname;
+				fname = filename +"_" +x.gbl->idprefix +".txt";
+				ofstream fout;
+				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+				fout << base.idprefix << " " << mytype << std::endl;
+				fout.close();
 				break;
 			}
-			return;
+//			case(tet_hp::tecplot): {
+//				if (report_flag) {
+//					streamsize oldprecision = (*x.gbl->log).precision(10);
+//					*x.gbl->log << base.idprefix << " position: " << x.pnts(base.pnt) << std::endl;
+//					*x.gbl->log << base.idprefix << " value: " << x.ug.v(base.pnt,Range::all()) << std::endl;
+//					(*x.gbl->log).precision(oldprecision);
+//				}
+//				break;
+//			}
+			default:
+				break;
 		}
+		return;
+	}
+	
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0) {
 			std::string idin,mytypein;
@@ -109,7 +126,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		virtual ~hp_edge_bdry() {}
 			
 		/* input output functions */
-		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+		virtual void output(const std::string& filename, tet_hp::filetype typ,int tlvl);
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0); 
 		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
@@ -213,7 +230,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual ~hp_face_bdry() {}
 			
 		/* input output functions */
-		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
+		virtual void output(const std::string& filename, tet_hp::filetype typ,int tlvl);
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0); 
 		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);

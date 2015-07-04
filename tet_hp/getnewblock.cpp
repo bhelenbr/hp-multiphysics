@@ -74,7 +74,7 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 	else {
 		if (!inmap.get("blocktype",val)) {
 			std::cerr << "couldn't find block type" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		type = btype::getid(val.c_str());
 	}

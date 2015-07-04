@@ -76,11 +76,16 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-void hp_edge_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
+void hp_edge_bdry::output(const std::string& filename, tet_hp::filetype typ,int tlvl) {
 	int j,m,n;
 
 	switch(typ) {
-		case(tet_hp::text):
+		case(tet_hp::text): {
+			std::string fname;
+			fname = filename +"_" +x.gbl->idprefix +".txt";
+			ofstream fout;
+			fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+			
 			fout << base.idprefix << " " << mytype << std::endl;
 			if (curved) {
 			fout << "p0: " << x.p0 << std::endl;
@@ -93,10 +98,17 @@ void hp_edge_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 				}
 			}
 			}
+			fout.close();
 			break;
+		}
 			
-		case(tet_hp::binary):
+		case(tet_hp::binary): {
 			if (curved) {
+				std::string fname;
+				fname = filename +"_" +x.gbl->idprefix +".txt";
+				ofstream fout;
+				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+				
 				binowstream bout(&fout);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -108,8 +120,10 @@ void hp_edge_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 						bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
 				}
 			}
+			fout.close();
 			}
 			break;
+		}
 			
 		default:
 			break;
@@ -502,11 +516,16 @@ void hp_face_bdry::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-void hp_face_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
+void hp_face_bdry::output(const std::string& filename, tet_hp::filetype typ,int tlvl) {
 	int j,m,n;
 
 	switch(typ) {
-		case(tet_hp::text):
+		case(tet_hp::text): {
+			std::string fname;
+			fname = filename +"_" +x.gbl->idprefix +".txt";
+			ofstream fout;
+			fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+			
 			fout << base.idprefix << " " << mytype << std::endl;
 			if (curved) {
 			fout << "p0: " << x.p0 << std::endl;
@@ -527,10 +546,17 @@ void hp_face_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 				}
 			}                       
 			}
+			fout.close();
 			break;
+		}
 			
-		case(tet_hp::binary):
+		case(tet_hp::binary): {
 			if (curved) {
+				std::string fname;
+				fname = filename +"_" +x.gbl->idprefix +".bin";
+				ofstream fout;
+				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+
 				binowstream bout(&fout);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -548,9 +574,12 @@ void hp_face_bdry::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 							bout.writeFloat(fcrvbd(tlvl)(j,m)(n),binio::Double);
 					}
 				}
+				fout.close();
 			}
-			break;
 			
+			break;
+		}
+	
 		default:
 			break;
 	}

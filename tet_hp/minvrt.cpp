@@ -183,7 +183,7 @@ void tet_hp::minvrt() {
 				GETRS(trans,pnt(vind).nspk,1,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),&spkres(0),pnt(vind).nspk,info); 
 				if (info != 0) {
 					printf("DGETRS FAILED - VERTEX BALL info:%d vertex:%d \n",info,vind);
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				for(int spk = 0; spk < pnt(vind).nspk; ++spk){
 					gbl->res.e(spklink(vind)(spk)(0),0,n)+=spkres(spk)/2.0;
@@ -565,7 +565,7 @@ void tet_hp::spoke(){
 		GETRF(pnt(vind).nspk,pnt(vind).nspk,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),info); 
 		if (info != 0) {
 			printf("DGETRF FAILED - VERTEX BALL info:%d vertex:%d \n",info,vind);
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		for(int spk = 0; spk < pnt(vind).nspk; ++spk)

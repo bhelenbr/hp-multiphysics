@@ -38,7 +38,7 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 			return;
 		}
 		case(block::restart): {
-			namewdot = fname +".d";
+			namewdot = fname +"_d";
 			for(i=0;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
@@ -46,14 +46,14 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 				output(fnmapp,output_type(1),i);
 			}
 			if (mmovement != fixed || gbl->adapt_interval) {
-			namewdot = fname +".v";
+			namewdot = fname +"_v";
 			if (output_type(1) == tet_hp::binary) {
 				tet_mesh::output(fname,tet_mesh::binary);
 				binofstream bout;
 				for(i=1;i<gbl->nadapt;++i) {
 					nstr.str("");
 					nstr << i << std::flush;
-					fnmapp = namewdot +nstr.str() +".bin";
+					fnmapp = namewdot +nstr.str() +"_" +gbl->idprefix +".bin";
 					bout.open(fnmapp.c_str());
 					bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 					bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -71,7 +71,7 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 				for(i=1;i<gbl->nadapt;++i) {
 					nstr.str("");
 					nstr << i << std::flush;
-					fnmapp = namewdot +nstr.str() +".txt";
+					fnmapp = namewdot +nstr.str() +"_" +gbl->idprefix +".txt";
 					out.open(fnmapp.c_str());
 					out << npnt << std::endl;
 					for (j=0;j<npnt;++j) 
@@ -84,14 +84,15 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 		}
 		case(block::debug): {
 			output(fname,output_type(2));
+			helper->output();
 		}
 	}
 	return;
 }
 
-void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
+void tet_hp::output(const std::string& filename, filetype typ, int tlvl) {
 	ofstream out;
-	std::string fnmapp;
+	std::string fname, fnmapp;
 	int i,j,k,m,n,v0,v1,eind,find,tind,indx,sgn,rot;
 	int ijind[basis::tet(log2p).em+2][basis::tet(log2p).em+2][basis::tet(log2p).em+2];
 	int stridey = MXGP;
@@ -100,14 +101,15 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 	
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
-
+	fname = filename +"_" +gbl->idprefix;
+	
 	switch (typ) {
 		case (text):
 			fnmapp = fname +".txt";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open text output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			/* HEADER INFORMATION */
@@ -144,19 +146,6 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 					out << std::endl;
 				}
 			}
-
-			/* BOUNDARY INFO */
-			for(i=0;i<nfbd;++i) {
-				hp_fbdry(i)->output(out,typ,tlvl);
-			}
-			
-			for(i=0;i<nebd;++i) {
-				hp_ebdry(i)->output(out,typ,tlvl);
-			}
-			
-			for(i=0;i<nvbd;++i) {
-				hp_vbdry(i)->output(out,typ,tlvl);
-			}
 			
 			out.close();
 			break;
@@ -166,7 +155,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			out.open(fnmapp.c_str(),std::ios::binary);
 			if (!out) {
 				*gbl->log << "couldn't open binary output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			binowstream bout(&out);
 			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
@@ -204,350 +193,17 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 						bout.writeFloat(ugbd(tlvl).i(i,m,n),binio::Double);
 				}
 			}
-		
-			/* BOUNDARY INFO */
-			for(i=0;i<nfbd;++i) {
-				hp_fbdry(i)->output(out,typ,tlvl);
-			}
-			
-			for(i=0;i<nebd;++i) {
-				hp_ebdry(i)->output(out,typ,tlvl);
-			}
-			
-			for(i=0;i<nvbd;++i) {
-				hp_vbdry(i)->output(out,typ,tlvl);
-			}
 			
 			out.close();
 			break;
 		}
 
-		
-		case(tecplot): {
-			fnmapp = fname +".dat";
-			out.open(fnmapp.c_str());
-			if (!out) {
-				*gbl->log<< "couldn't open tecplot output file " << fnmapp;
-				exit(1);
-			}
-			out << "ZONE F=FEPOINT, ET=TETRAHEDRON, N = " << npnt+basis::tet(log2p).em*nseg+basis::tet(log2p).fm*ntri+basis::tet(log2p).im*ntet << ", E = "  << ntet*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1) << std::endl;
-						
-			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n) {
-					out << vrtxbd(tlvl)(i)(n) << ' ';
-				}
-				for(n=0;n<NV;++n) {
-					out << ugbd(tlvl).v(i,n)<< ' ';
-				}            
-
-				out << std::endl;
-			}
-			
-			if (basis::tet(log2p).p > 1) {
-			/* EDGE MODES */
-				for(eind=0;eind<nseg;++eind) {
-					if (seg(eind).info < 0) {
-						v0 = seg(eind).pnt(0);
-						v1 = seg(eind).pnt(1);
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd1d(n)(0));
-					}
-					else {
-						crdtocht1d(eind,tlvl);
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj1d_leg(&cht(n)(0),&crd1d(n)(0));
-					}
-					ugtouht1d(eind,tlvl);
-					for(n=0;n<NV;++n)
-						basis::tet(log2p).proj1d_leg(&uht(n)(0),&u1d(n)(0));
-
-					for(i=1;i<basis::tet(log2p).em+1;++i) {
-						for(n=0;n<ND;++n) {
-							out << crd1d(n)(i) << ' ';
-						}
-						for(n=0;n<NV;++n){
-							out << u1d(n)(i)<< ' ';               
-						}            
-						out << std::endl; 
-					}
-				}
-			}
-	
-			/* FACE MODES */
-			if (basis::tet(log2p).p > 2) {
-				for(find = 0; find < ntri; ++find) {
-					ugtouht2d(find,tlvl);
-					for(n=0;n<NV;++n)
-						basis::tet(log2p).proj2d_leg(&uht(n)(0),&u2d(n)(0)(0),MXGP);
-
-					if (tri(find).info < 0) {
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj2d_leg(vrtxbd(tlvl)(tri(find).pnt(0))(n),vrtxbd(tlvl)(tri(find).pnt(1))(n),vrtxbd(tlvl)(tri(find).pnt(2))(n),&crd2d(n)(0)(0),MXGP);
-					}
-					else {
-						crdtocht2d(find,tlvl);
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj2d_bdry_leg(&cht(n)(0),&crd2d(n)(0)(0),MXGP);
-					}
-
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							for(n=0;n<ND;++n) {
-								out << crd2d(n)(i)(j) << ' ';
-							}
-//							u2d(0)(i)(j)-=1.0;
-							for(n=0;n<NV;++n) {
-								out << u2d(n)(i)(j) << ' ';               
-							}              
-							out << std::endl;
-						}
-					}
-				}
-			}
-			
-			/* INTERIOR MODES */
-			if (basis::tet(log2p).p > 3) {
-				for(tind = 0; tind < ntet; ++tind) {
-					ugtouht(tind,tlvl);
-					for(n=0;n<NV;++n)
-						basis::tet(log2p).proj_leg(&uht(n)(0),&u(n)(0)(0)(0),stridex,stridey);
-
-					if (tri(find).info < 0) {
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj_leg(vrtxbd(tlvl)(tet(tind).pnt(0))(n),vrtxbd(tlvl)(tet(tind).pnt(1))(n),vrtxbd(tlvl)(tet(tind).pnt(2))(n),vrtxbd(tlvl)(tet(tind).pnt(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
-					}
-					else {
-						crdtocht(tind,tlvl);
-						for(n=0;n<ND;++n)
-							basis::tet(log2p).proj_bdry_leg(&cht(n)(0),&crd(n)(0)(0)(0),stridex,stridey);
-					}
-
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em+1-i;++j) {
-							for(int k = 1; k < basis::tet(log2p).em+1-i-j; ++k) {
-								for(n=0;n<ND;++n) {
-									out << crd(n)(i)(j)(k) << ' ';	
-								}						
-								for(n=0;n<NV;++n) {
-									out << u(n)(i)(j)(k)<< ' ';               
-								}         
-								out << std::endl;
-							}
-						}
-					}
-				}
-			}
-			
-			/* OUTPUT CONNECTIVY INFO */
-			for(tind=0;tind<ntet;++tind) {
-
-				/* VERTICES */
-				ijind[0][0][basis::tet(log2p).em+1] = tet(tind).pnt(0);
-				ijind[0][basis::tet(log2p).em+1][0] = tet(tind).pnt(1);
-				ijind[0][0][0] = tet(tind).pnt(2);
-				ijind[basis::tet(log2p).em+1][0][0] = tet(tind).pnt(3);
-
-				/* EDGES */
-				indx = tet(tind).seg(0);
-				sgn = tet(tind).sgn(0);
-				if (sgn < 0) {  
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[i+1][0][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[i+1][0][0] = npnt +indx*basis::tet(log2p).em +i;
-				}
-
-				indx = tet(tind).seg(1);
-				sgn = tet(tind).sgn(1);
-				if (sgn > 0) { 
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[basis::tet(log2p).em-i][i+1][0] = npnt +indx*basis::tet(log2p).em +i;
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[basis::tet(log2p).em-i][i+1][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-
-				indx = tet(tind).seg(2);
-				sgn = tet(tind).sgn(2);
-				if (sgn < 0) { 
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][i+1][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][i+1][0] = npnt +indx*basis::tet(log2p).em +i;
-				}
-				
-				indx = tet(tind).seg(3);
-				sgn = tet(tind).sgn(3);
-				if (sgn > 0) {  
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][i+1][basis::tet(log2p).em-i] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][i+1][basis::tet(log2p).em-i] = npnt +indx*basis::tet(log2p).em +i;
-				}
-
-				indx = tet(tind).seg(4);
-				sgn = tet(tind).sgn(4);
-				if (sgn > 0) { 
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][0][i+1] = npnt +indx*basis::tet(log2p).em +i;
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[0][0][i+1] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-
-				indx = tet(tind).seg(5);
-				sgn = tet(tind).sgn(5);
-				if (sgn > 0) { 
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[i+1][0][basis::tet(log2p).em-i] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
-				}
-				else {
-					for(i=0;i<basis::tet(log2p).em;++i)
-						ijind[i+1][0][basis::tet(log2p).em-i] = npnt +indx*basis::tet(log2p).em +i;
-				}
-		
-				/* FACES */
-				k = 0;
-				indx = tet(tind).tri(0);
-				rot = -tet(tind).rot(0);
-				if (rot == -1){
-					for(i=1;i<basis::tet(log2p).em;++i) { 
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[basis::tet(log2p).em-i-j+1][j][0] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-				if (rot == 1) {
-					for(i=1;i<basis::tet(log2p).em;++i) { 
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[i][j][0] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-				
-				k = 0;
-				indx = tet(tind).tri(1);
-				rot = -tet(tind).rot(1);
-				if(rot == 1){
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[basis::tet(log2p).em-i-j+1][0][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-				if (rot == -1) {
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[i][0][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-
-				k = 0;
-				indx = tet(tind).tri(2);
-				rot = -tet(tind).rot(2);
-				if (rot == 1){
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[i][basis::tet(log2p).em-i-j+1][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-				if (rot == -1) {
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[basis::tet(log2p).em-i-j+1][i][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}			
-				}
-
-				k = 0;
-				indx = tet(tind).tri(3);
-				rot = -tet(tind).rot(3);
-				if (rot == -1){
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[0][basis::tet(log2p).em-i-j+1][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-				if (rot == 1) {
-					for(i=1;i<basis::tet(log2p).em;++i) {
-						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-							ijind[0][i][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
-							++k;
-						}
-					}
-				}
-
-				/* INTERIOR */
-				m = 0;
-				for(i=1;i<basis::tet(log2p).em;++i) {
-					for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
-						for(k=1;k<basis::tet(log2p).em-i-j+1;++k){
-							ijind[i][j][k] = npnt +nseg*basis::tet(log2p).em +ntri*basis::tet(log2p).fm +tind*basis::tet(log2p).im +m;
-							++m;
-						}
-					}
-				}
-
-
-				/* OUTPUT CONNECTION LIST */     
-				int em = basis::tet(log2p).em;
-				for(i=0;i<em;++i) {
-					for(j=0;j<em-i;++j) {
-						for(k=0;k<em-i-j-1;++k) { 
-							out << ijind[i][j][k]+1 << ' ' << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k]+1 <<  ' ' << ijind[i][j+1][k]+1 << std::endl;
-							out << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i+1][j][k]+1 <<  ' ' << ijind[i][j+1][k]+1 << std::endl;
-							out << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 <<  ' ' << ijind[i][j+1][k+1]+1 << std::endl;
-							out << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 << ' ' << ijind[i+1][j+1][k]+1 <<  ' ' << ijind[i+1][j][k]+1 << std::endl;
-							out << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 << ' ' << ijind[i][j+1][k+1]+1 <<  ' ' << ijind[i+1][j+1][k]+1 << std::endl;
-							out << ijind[i][j+1][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i+1][j+1][k]+1 <<  ' ' << ijind[i+1][j+1][k+1]+1 << std::endl;
-
-						}			
-						// five tet new way
-						out << ijind[i][j][em-j-1-i]+1 << ' ' << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-1-i]+1 << std::endl;
-						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-1-i]+1 << std::endl;
-						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-i]+1 << std::endl;
-						out << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 << ' ' << ijind[i+1][j+1][em-j-1-i]+1 <<  ' ' << ijind[i+1][j][em-j-1-i]+1 << std::endl;
-						out << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 << ' ' << ijind[i][j+1][em-j-i]+1 <<  ' ' << ijind[i+1][j+1][em-j-1-i]+1 << std::endl;
-
-						// single tet
-						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-i]+1 <<  ' ' << ijind[i][j][em-j+1-i]+1 << std::endl;
-						
-					}
-					//single tet
-					out << ijind[i][em-i][0]+1 << ' ' << ijind[i+1][em-i][0]+1 << ' ' << ijind[i][em+1-i][0]+1 <<  ' ' << ijind[i][em-i][1]+1 << std::endl;
-				}
-				//single tet
-				out << ijind[em][0][0]+1 << ' ' << ijind[em+1][0][0]+1 << ' ' << ijind[em][1][0]+1 <<  ' ' << ijind[em][0][1]+1 << std::endl;			
-			}
-			out.close();
-			break; 
-		}
-			
 		case (vtu): {
 			fnmapp = fname +".vtu";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log<< "couldn't open vtu output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (basis::tet(log2p).p > 2) {
 				*gbl->log << "vtu output routine does not work for p > 2 " << endl;
@@ -950,38 +606,373 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 			break;
 		}
 			
+		case(tecplot): {
+			fnmapp = fname +".dat";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log<< "couldn't open tecplot output file " << fnmapp;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			out << "ZONE F=FEPOINT, ET=TETRAHEDRON, N = " << npnt+basis::tet(log2p).em*nseg+basis::tet(log2p).fm*ntri+basis::tet(log2p).im*ntet << ", E = "  << ntet*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1)*(basis::tet(log2p).em+1) << std::endl;
+			
+			/* VERTEX MODES */
+			for(i=0;i<npnt;++i) {
+				for(n=0;n<ND;++n) {
+					out << vrtxbd(tlvl)(i)(n) << ' ';
+				}
+				for(n=0;n<NV;++n) {
+					out << ugbd(tlvl).v(i,n)<< ' ';
+				}
+				
+				out << std::endl;
+			}
+			
+			if (basis::tet(log2p).p > 1) {
+				/* EDGE MODES */
+				for(eind=0;eind<nseg;++eind) {
+					if (seg(eind).info < 0) {
+						v0 = seg(eind).pnt(0);
+						v1 = seg(eind).pnt(1);
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd1d(n)(0));
+					}
+					else {
+						crdtocht1d(eind,tlvl);
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj1d_leg(&cht(n)(0),&crd1d(n)(0));
+					}
+					ugtouht1d(eind,tlvl);
+					for(n=0;n<NV;++n)
+						basis::tet(log2p).proj1d_leg(&uht(n)(0),&u1d(n)(0));
+					
+					for(i=1;i<basis::tet(log2p).em+1;++i) {
+						for(n=0;n<ND;++n) {
+							out << crd1d(n)(i) << ' ';
+						}
+						for(n=0;n<NV;++n){
+							out << u1d(n)(i)<< ' ';
+						}
+						out << std::endl;
+					}
+				}
+			}
+			
+			/* FACE MODES */
+			if (basis::tet(log2p).p > 2) {
+				for(find = 0; find < ntri; ++find) {
+					ugtouht2d(find,tlvl);
+					for(n=0;n<NV;++n)
+						basis::tet(log2p).proj2d_leg(&uht(n)(0),&u2d(n)(0)(0),MXGP);
+					
+					if (tri(find).info < 0) {
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj2d_leg(vrtxbd(tlvl)(tri(find).pnt(0))(n),vrtxbd(tlvl)(tri(find).pnt(1))(n),vrtxbd(tlvl)(tri(find).pnt(2))(n),&crd2d(n)(0)(0),MXGP);
+					}
+					else {
+						crdtocht2d(find,tlvl);
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj2d_bdry_leg(&cht(n)(0),&crd2d(n)(0)(0),MXGP);
+					}
+					
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							for(n=0;n<ND;++n) {
+								out << crd2d(n)(i)(j) << ' ';
+							}
+							//							u2d(0)(i)(j)-=1.0;
+							for(n=0;n<NV;++n) {
+								out << u2d(n)(i)(j) << ' ';
+							}
+							out << std::endl;
+						}
+					}
+				}
+			}
+			
+			/* INTERIOR MODES */
+			if (basis::tet(log2p).p > 3) {
+				for(tind = 0; tind < ntet; ++tind) {
+					ugtouht(tind,tlvl);
+					for(n=0;n<NV;++n)
+						basis::tet(log2p).proj_leg(&uht(n)(0),&u(n)(0)(0)(0),stridex,stridey);
+					
+					if (tri(find).info < 0) {
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj_leg(vrtxbd(tlvl)(tet(tind).pnt(0))(n),vrtxbd(tlvl)(tet(tind).pnt(1))(n),vrtxbd(tlvl)(tet(tind).pnt(2))(n),vrtxbd(tlvl)(tet(tind).pnt(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
+					}
+					else {
+						crdtocht(tind,tlvl);
+						for(n=0;n<ND;++n)
+							basis::tet(log2p).proj_bdry_leg(&cht(n)(0),&crd(n)(0)(0)(0),stridex,stridey);
+					}
+					
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em+1-i;++j) {
+							for(int k = 1; k < basis::tet(log2p).em+1-i-j; ++k) {
+								for(n=0;n<ND;++n) {
+									out << crd(n)(i)(j)(k) << ' ';
+								}
+								for(n=0;n<NV;++n) {
+									out << u(n)(i)(j)(k)<< ' ';
+								}
+								out << std::endl;
+							}
+						}
+					}
+				}
+			}
+			
+			/* OUTPUT CONNECTIVY INFO */
+			for(tind=0;tind<ntet;++tind) {
+				
+				/* VERTICES */
+				ijind[0][0][basis::tet(log2p).em+1] = tet(tind).pnt(0);
+				ijind[0][basis::tet(log2p).em+1][0] = tet(tind).pnt(1);
+				ijind[0][0][0] = tet(tind).pnt(2);
+				ijind[basis::tet(log2p).em+1][0][0] = tet(tind).pnt(3);
+				
+				/* EDGES */
+				indx = tet(tind).seg(0);
+				sgn = tet(tind).sgn(0);
+				if (sgn < 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[i+1][0][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[i+1][0][0] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				
+				indx = tet(tind).seg(1);
+				sgn = tet(tind).sgn(1);
+				if (sgn > 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[basis::tet(log2p).em-i][i+1][0] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[basis::tet(log2p).em-i][i+1][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				
+				indx = tet(tind).seg(2);
+				sgn = tet(tind).sgn(2);
+				if (sgn < 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][i+1][0] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][i+1][0] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				
+				indx = tet(tind).seg(3);
+				sgn = tet(tind).sgn(3);
+				if (sgn > 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][i+1][basis::tet(log2p).em-i] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][i+1][basis::tet(log2p).em-i] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				
+				indx = tet(tind).seg(4);
+				sgn = tet(tind).sgn(4);
+				if (sgn > 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][0][i+1] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[0][0][i+1] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				
+				indx = tet(tind).seg(5);
+				sgn = tet(tind).sgn(5);
+				if (sgn > 0) {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[i+1][0][basis::tet(log2p).em-i] = npnt +(indx+1)*basis::tet(log2p).em -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tet(log2p).em;++i)
+						ijind[i+1][0][basis::tet(log2p).em-i] = npnt +indx*basis::tet(log2p).em +i;
+				}
+				
+				/* FACES */
+				k = 0;
+				indx = tet(tind).tri(0);
+				rot = -tet(tind).rot(0);
+				if (rot == -1){
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[basis::tet(log2p).em-i-j+1][j][0] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				if (rot == 1) {
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[i][j][0] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				
+				k = 0;
+				indx = tet(tind).tri(1);
+				rot = -tet(tind).rot(1);
+				if(rot == 1){
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[basis::tet(log2p).em-i-j+1][0][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				if (rot == -1) {
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[i][0][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				
+				k = 0;
+				indx = tet(tind).tri(2);
+				rot = -tet(tind).rot(2);
+				if (rot == 1){
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[i][basis::tet(log2p).em-i-j+1][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				if (rot == -1) {
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[basis::tet(log2p).em-i-j+1][i][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				
+				k = 0;
+				indx = tet(tind).tri(3);
+				rot = -tet(tind).rot(3);
+				if (rot == -1){
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[0][basis::tet(log2p).em-i-j+1][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				if (rot == 1) {
+					for(i=1;i<basis::tet(log2p).em;++i) {
+						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+							ijind[0][i][j] = npnt +nseg*basis::tet(log2p).em +indx*basis::tet(log2p).fm +k;
+							++k;
+						}
+					}
+				}
+				
+				/* INTERIOR */
+				m = 0;
+				for(i=1;i<basis::tet(log2p).em;++i) {
+					for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
+						for(k=1;k<basis::tet(log2p).em-i-j+1;++k){
+							ijind[i][j][k] = npnt +nseg*basis::tet(log2p).em +ntri*basis::tet(log2p).fm +tind*basis::tet(log2p).im +m;
+							++m;
+						}
+					}
+				}
+				
+				
+				/* OUTPUT CONNECTION LIST */
+				int em = basis::tet(log2p).em;
+				for(i=0;i<em;++i) {
+					for(j=0;j<em-i;++j) {
+						for(k=0;k<em-i-j-1;++k) {
+							out << ijind[i][j][k]+1 << ' ' << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k]+1 <<  ' ' << ijind[i][j+1][k]+1 << std::endl;
+							out << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i+1][j][k]+1 <<  ' ' << ijind[i][j+1][k]+1 << std::endl;
+							out << ijind[i][j][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 <<  ' ' << ijind[i][j+1][k+1]+1 << std::endl;
+							out << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 << ' ' << ijind[i+1][j+1][k]+1 <<  ' ' << ijind[i+1][j][k]+1 << std::endl;
+							out << ijind[i+1][j][k+1]+1 << ' ' << ijind[i][j+1][k]+1 << ' ' << ijind[i][j+1][k+1]+1 <<  ' ' << ijind[i+1][j+1][k]+1 << std::endl;
+							out << ijind[i][j+1][k+1]+1 << ' ' << ijind[i+1][j][k+1]+1 << ' ' << ijind[i+1][j+1][k]+1 <<  ' ' << ijind[i+1][j+1][k+1]+1 << std::endl;
+							
+						}
+						// five tet new way
+						out << ijind[i][j][em-j-1-i]+1 << ' ' << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-1-i]+1 << std::endl;
+						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-1-i]+1 << std::endl;
+						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 <<  ' ' << ijind[i][j+1][em-j-i]+1 << std::endl;
+						out << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 << ' ' << ijind[i+1][j+1][em-j-1-i]+1 <<  ' ' << ijind[i+1][j][em-j-1-i]+1 << std::endl;
+						out << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-1-i]+1 << ' ' << ijind[i][j+1][em-j-i]+1 <<  ' ' << ijind[i+1][j+1][em-j-1-i]+1 << std::endl;
+						
+						// single tet
+						out << ijind[i][j][em-j-i]+1 << ' ' << ijind[i+1][j][em-j-i]+1 << ' ' << ijind[i][j+1][em-j-i]+1 <<  ' ' << ijind[i][j][em-j+1-i]+1 << std::endl;
+						
+					}
+					//single tet
+					out << ijind[i][em-i][0]+1 << ' ' << ijind[i+1][em-i][0]+1 << ' ' << ijind[i][em+1-i][0]+1 <<  ' ' << ijind[i][em-i][1]+1 << std::endl;
+				}
+				//single tet
+				out << ijind[em][0][0]+1 << ' ' << ijind[em+1][0][0]+1 << ' ' << ijind[em][1][0]+1 <<  ' ' << ijind[em][0][1]+1 << std::endl;
+			}
+			out.close();
+			break; 
+		}
+
+			
 		default: {
 			*gbl->log << "can't output a tet_hp to that filetype" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 			break;
 		}
 	}
+	
+	/* BOUNDARY INFO */
+	for(i=0;i<nfbd;++i) {
+		hp_fbdry(i)->output(filename,typ,tlvl);
+	}
+	
+	for(i=0;i<nebd;++i) {
+		hp_ebdry(i)->output(filename,typ,tlvl);
+	}
+	
+	for(i=0;i<nvbd;++i) {
+		hp_vbdry(i)->output(filename,typ,tlvl);
+	}
+	
 	return;
 }
 
-void tet_hp::input(const std::string& fname) {
+void tet_hp::input(const std::string& filename) {
 	int i,j;
-	std::string fnmapp;
+	std::string fname,fnmapp;
 	std::ostringstream nstr;
 	ifstream fin;
 	binifstream bin;
+	
+	fname = filename +"_" +gbl->idprefix;
 	
 	if (reload_type == tet_hp::binary) {
 		fnmapp = fname +".bin";
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
-			fnmapp = fname +".v";
 			input_map blank;
-			tet_mesh::input(fname,tet_mesh::binary,1,blank);
+			tet_mesh::input(fnmapp,tet_mesh::binary,1,blank);
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
-				fnmapp = fname +".v" +nstr.str() +".bin";
+				fnmapp = filename +"_v" +nstr.str() +"_" +gbl->idprefix +".bin";
 				bin.open(fnmapp.c_str());
 				if (bin.error()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-					exit(1);
+					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 				}
 				bin.setFlag(binio::BigEndian,bin.readInt(1));
 				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
@@ -1001,26 +992,26 @@ void tet_hp::input(const std::string& fname) {
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
-			fnmapp = fname +".d" +nstr.str();
+			fnmapp = filename +"_d" +nstr.str();
 			input(fnmapp,reload_type,i);
 		}
 	}
 	else {
-		fnmapp = fname +".grd";
+		fnmapp = fname +"_" +gbl->idprefix +".grd";
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
 			fnmapp = fname +".v";
 			input_map blank;
-			tet_mesh::input(fname,tet_mesh::grid,1,blank);
+			tet_mesh::input(fnmapp,tet_mesh::grid,1,blank);
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
-				fnmapp = fname +".v" +nstr.str() +".txt";
+				fnmapp = filename +"_v" +nstr.str() +"_" +gbl->idprefix +".txt";
 				fin.open(fnmapp.c_str());
 				if (!fin.is_open()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
 				for (j=0;j<npnt;++j) {
@@ -1038,7 +1029,7 @@ void tet_hp::input(const std::string& fname) {
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
-			fnmapp = fname +".d" +nstr.str();
+			fnmapp = filename +".d" +nstr.str();
 			input(fnmapp,reload_type,i);
 		}
 	}
@@ -1053,6 +1044,9 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 	char buffer[80];
 	ifstream in;
 	FLT fltskip;
+	
+	std::string fname;
+	fname = filename +"_" +gbl->idprefix;
 
 	switch(typ) {
 		case (text): {
@@ -1060,7 +1054,7 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			/* HEADER INFORMATION */
@@ -1141,11 +1135,11 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 		}
 		
 		case (binary): {
-			fnapp = filename +".bin";
+			fnapp = fname +".bin";
 			in.open(fnapp.c_str());
 			if (!in) {
-				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
-				exit(1);
+				*gbl->log << "couldn't open binary input file " << fnapp << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			biniwstream bin(&in);
 
@@ -1159,19 +1153,19 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			if (bin.readInt(sizeof(int))  != npnt) {
 				*gbl->log << "mismatched pnt counts?\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (bin.readInt(sizeof(int))  != nseg) {
 				*gbl->log << "mismatched seg counts?\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (bin.readInt(sizeof(int))  != ntri) {
 				*gbl->log << "mismatched tri counts?\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (bin.readInt(sizeof(int))  != ntet) {
 				*gbl->log << "mismatched tet counts?\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			for(i=0;i<npnt;++i) {
@@ -1220,7 +1214,7 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			for(i=0;i<ntet;++i) {
 				for(m=0;m<im0;++i) {
 					for(n=0;n<NV;++n) 
-						ugbd(tlvl).i(i,m,n) = bin.readFloat(binio::Double);;
+						ugbd(tlvl).i(i,m,n) = bin.readFloat(binio::Double);
 				}
 			}
 
@@ -1239,7 +1233,7 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 		}                    
 		default:
 			*gbl->log << "can't input a tet_hp from that filetype" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 			break;
 	}
 	

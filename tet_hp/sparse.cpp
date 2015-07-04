@@ -776,7 +776,7 @@ void tet_hp::ug_to_vec(){
 	for(int i = 0; i < ntri; ++i)
 		for(int m = 0; m < basis::tet(log2p).fm; ++m)
 			for(int n = 0; n < NV; ++n)
-				ug_vec(ind++) = ug.f(i,m,n);;		
+				ug_vec(ind++) = ug.f(i,m,n);		
 	
 	if(!basis::tet(log2p).im) return;
 

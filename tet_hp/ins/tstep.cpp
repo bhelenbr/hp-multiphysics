@@ -65,13 +65,13 @@ void tet_hp_ins::setup_preconditioner() {
 				*gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
 				tet_mesh::output("negative",grid);
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if  (!(qmax >= 0.0)) {  // THIS CATCHES NAN'S TOO
 				*gbl->log << "flow solution has nan's" << std::endl;
 				output("nan",tecplot);
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 #ifndef INERTIALESS
@@ -166,7 +166,7 @@ void tet_hp_ins::setup_preconditioner() {
 //                *gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 //                *gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
 //                tri_mesh::output("negative",grid);
-//                exit(1);
+//                sim::abort(__LINE__,__FILE__,gbl->log);
 //            }
 //            h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
 //            hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));

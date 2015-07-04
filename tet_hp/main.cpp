@@ -91,7 +91,7 @@ void ctrlc(int signal)
 //#ifdef MPISRC
 //	MPI_Finalize();
 //#endif
-//	exit(1);
+//	sim::abort(__LINE__,__FILE__,gbl->log);
 	
 	sim::abort(__LINE__,__FILE__,&std::cerr);
 

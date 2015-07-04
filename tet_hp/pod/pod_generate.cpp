@@ -909,7 +909,7 @@ template<class BASE> void pod_gen_face_bdry<BASE>::calculate_modes() {
 				&neig, eigenvalues.data(),eigenvector.data(), &x.nsnapshots, work.data(), iwork.data(), ifail.data(), &info); 
 		if (info != 0) {
 			*x.gbl->log << "Failed to find eigenmodes " << info << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		*x.gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
@@ -1009,7 +1009,7 @@ template<class BASE> void pod_gen_face_bdry<BASE>::calculate_modes() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*x.gbl->log << "couldn't open coefficient output file " << filename;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);

@@ -51,13 +51,13 @@ void surface::init(input_map& inmap,void* gin) {
 		keyword = val +"_mu";
 		if (!inmap.get(keyword,gbl->mu2)) {
 			*x.gbl->log << "couldn't find matching blocks viscosity" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
 		keyword = val +"_rho";
 		if (!inmap.get(keyword,gbl->rho2)) {
 			*x.gbl->log << "couldn't find matching blocks density" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	
@@ -491,7 +491,7 @@ void surface::minvrt() {
 			GETRS(trans,2*basis::tri(x.log2p).sm,1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
 			if (info != 0) {
 				printf("DGETRS FAILED FOR SIDE MODE UPDATE\n");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 #else
 	
@@ -736,7 +736,7 @@ void surface::setup_preconditioner() {
 			GETRF(2*lsm,2*lsm,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),info);
 			if (info != 0) {
 				printf("DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			/*
 			\phi_n dx,dy*t = \phi_n Vt

@@ -143,7 +143,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			fnmapp = fname +".bin";
 			out.open(fnmapp.c_str(),std::ios::binary);
 			if (!out) {
-				*gbl->log << "couldn't open text output file " << fnmapp;
+				*gbl->log << "couldn't open binary output file " << fnmapp;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			binowstream bout(&out);

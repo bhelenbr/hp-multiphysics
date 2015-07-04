@@ -447,7 +447,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	//timestep = spectral_radius(Tinv);
 	//cout << "timestep " << timestep;
 	timestep = MAX(3.0*maxeig/h,MAX(0.5*gbl->bd(0),3.0*MAX(4.0*nu/(3.0*h*h),alpha/(h*h))));
-	//cout << ' ' << timestep << endl;;
+	//cout << ' ' << timestep << endl;
 
 
 	/*  LU factorization  */

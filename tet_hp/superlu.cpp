@@ -183,7 +183,7 @@ void tet_hp::superilu(){
 		
 		if (info > 0) {
 			cout << "something went wrong with superlu \n";
-			//exit(1);
+			//sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		printf("L\\U MB %.3f\ttotal MB needed %.3f\n",
@@ -211,7 +211,7 @@ void tet_hp::superilu(){
 
 		if (info > 0) {
 			cout << "something went wrong with gmres \n";
-			//exit(1);
+			//sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
 		b=res_vec;
@@ -347,7 +347,7 @@ void tet_hp::superlu(){
 		
 		if (info > 0) {
 			cout << "something went wrong with superlu \n";
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
 		printf("L\\U MB %.3f\ttotal MB needed %.3f\n", mem_usage.for_lu/1e6, mem_usage.total_needed/1e6);

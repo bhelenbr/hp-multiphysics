@@ -33,7 +33,7 @@ namespace ibc_cd {
 				std::string filename;
 				if (!inmap.get(idnty+"_filename",filename)) {
 					std::cerr << "couldn't find unsteady_spline filename" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 				time_history.read(filename);
 			}
@@ -65,7 +65,7 @@ namespace ibc_cd {
 			
 			if (!inmap.get(idnty+"_nregions",nregion)){
 				std::cerr << "couldn't find " << idnty+"nregions" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&std::cerr);
 			}
 			bbox.resize(nregion,2,tet_mesh::ND);
 			time_history.resize(nregion);
@@ -77,7 +77,7 @@ namespace ibc_cd {
 				if (!inmap.get(idnty+"_region" +nstr.str() +"_filename",filename)) {
 					if (!inmap.get(idnty +"_filename",filename)) {
 						std::cerr << "couldn't find unsteady_spline filename" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
 				}
 				time_history(r).read(filename);
