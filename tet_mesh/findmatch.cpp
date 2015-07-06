@@ -2131,15 +2131,16 @@ void tet_mesh::setup_partition2(int nparts) {
 	/* Need to classify every face, edge, and vertex */
 	
 	/* Start by classifying faces */
-	int combinations = (nparts+nfbd)*(nparts+nfbd);  /* The most there can be is nparts*nparts combinations */
-	Array<int,2> fbdry_marks(combinations,nparts+nfbd);  /* Marks for each face boundary */
+	int combinations = (nparts+nfbd)*(nparts+nfbd);  /* Counting physical boundaries as a separate partition, the most there can be is (nparts+nfbd)*(nparts+nfbd) combinations */
+	Array<int,2> fbdry_marks(combinations,nparts+nfbd);  /* A bit redundant, for each combination, keeps a 0/1 mark for each partition/boundary that defines it used for comparing memberships */
 	Array<std::vector<int>,1> fbdry_partitions(combinations);  /* list of triangles for each face boundary */
 	int nfbdry_partitions = 0; /* number of face boundary partitions */
-	vector<int> fidnum;
+	vector<int> fidnum; /* id of each boundary face (partitions are -1, physical boundaries receive their boundary count) */
 	
-	/* Array to store marks for comparisons */
+	/* work array to store marks for comparisons to fbdry_marks */
 	Array<int,1> face_marks(nparts+nfbd);
 	
+	/* When this routine finishes each tri(i).info on a partition will contain the number of the bdry it belongs to */
 	for(int i = 0; i < ntri; ++i)
 		tri(i).info = -1;
 	
@@ -2179,7 +2180,7 @@ void tet_mesh::setup_partition2(int nparts) {
 				/* new face boundary */
 				if (match != 0) {
 					std::cout << "b0_f" << nfbdry_partitions << "_type: partition" << std::endl;
-					fidnum.push_back(-1);
+					fidnum.push_back(-1);  // partition faces are tagged with a -1 idnum
 
 					/* tag with unique number */
 					tri(i).info = nfbdry_partitions;
@@ -2227,6 +2228,7 @@ void tet_mesh::setup_partition2(int nparts) {
 			/* new face boundary */
 			if (match != 0) {
 				
+				// Output new identity of physical face
 				std::cout << "b0_f" << nfbdry_partitions << " b0" << fbdry(b)->idprefix << "" << std::endl;
 				fidnum.push_back(b);
 				/* tag with unique number */
@@ -2265,6 +2267,7 @@ void tet_mesh::setup_partition2(int nparts) {
 		}
 	}
 	
+	/* work array to store marks for comparisons to ebdry_marks */
 	Array<int,1> edge_marks(nfbdry_partitions+nebd);
 	
 	/* mark boundary edges */
@@ -2276,13 +2279,13 @@ void tet_mesh::setup_partition2(int nparts) {
 			seg(ebdry(i)->seg(j).gindx).info = i;
 	
 	/* classify edges */
-	combinations = (nfbdry_partitions +nebd)*(nfbdry_partitions+nebd);  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
+	combinations = (nfbdry_partitions +nebd)*(nfbdry_partitions+nebd);  /* The most there can be is (nfbdry+nebd)*(nfbdry+nebd) combinations? Could be more because of possible 3-way combinations*/
 	Array<int,2> ebdry_marks(combinations,nfbdry_partitions+nebd);  /* Marks for each edge boundary */
 	Array<std::vector<int>,1> ebdry_partitions(combinations);  /* list of edges for each edge boundary */
 	int nebdry_partitions = 0; /* number of edge boundary partitions */
-	vector<bool> partition_edge;
-	vector<bool> physical_edge;
-	vector<string> edge_types;
+	vector<bool> partition_edge;  /* boolean for each combination */
+	vector<bool> physical_edge; /* boolean for each combination */
+	vector<string> edge_types; /* idprefix for each combination */
 	
 	/* find communication edge boundaries */
 	for(int i = 0; i < nseg; ++i) {
@@ -2680,6 +2683,8 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	
 	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */
 	/* don't mess with predifined plain edges because gmsh will recombine them*/
+	/* reordering causes problems if it creates a new partition boundary */
+	/* then it is unclear which boundary should communicte with which */
 	for(int i=0;i<nebd;++i) {
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();

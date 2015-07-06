@@ -268,76 +268,85 @@ void edge_bdry::setup_next_prev() {
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL & REORIENTS EDGES TO ALL BE ALIGNED IN THE SAME DIRECTION */
 /* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
 void edge_bdry::reorder() {
-	int i,count,next,sind,first;
+	int i,count,next,sind,first,completed;
 	bool loop = false;
 	
-	/* FIND FIRST SIDE */    
-	first = -1;
-	for(i=0;i<nseg;++i) {
-		if (seg(i).prev < 0 || seg(i).next < 0) {
-			first = i;
-			break;
-		}
-	}
-	 
-	 if (first < 0) {
-		 /* EDGE LOOP */
-		 first = 0;
-		 loop = true;
-	 }
-	 else {
-	    if (seg(first).prev != -1) {
-		    /* Reverse orientation of first side */
-			 seg(first).next = seg(first).prev;
-			 seg(first).prev = -1;
-			 sind = seg(first).gindx;
-			 int v0 = x.seg(sind).pnt(0);
-			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
-			 x.seg(sind).pnt(1) = v0;
-			 //x.switch_edge_sign(sind);
-		 }
-	 }
-	 
-	/* First swap directions, then reorder */
-	count = 0;
-	int indx = first;	
-	while(count < nseg && (next = seg(indx).next) > -1) {
-		if (seg(next).prev != indx) {
-			/* Reverse orientation side */
-			seg(next).next = seg(next).prev;
-			seg(next).prev = indx;
-			sind = seg(next).gindx;
-			int v0 = x.seg(sind).pnt(0);
-			x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
-			x.seg(sind).pnt(1) = v0;
-			//x.switch_edge_sign(sind);
-		}
-		++count;
-		indx = next;
-	}
-	 
-	/* insert -1 so while loop exits for an edge loop */
-	if (loop == true) seg(seg(first).prev).next = -1;
-	
-	/* now reorder */
-	count = 0;
-	indx = first;	
+	completed = 0;
 	do {
-		swap(count++,indx);
-	} while (count < nseg && (indx = seg(count-1).next) > -1);    
+		/* FIND FIRST SIDE */
+		first = -1;
+		for(i=completed;i<nseg;++i) {
+			if (seg(i).prev < 0 || seg(i).next < 0) {
+				first = i;
+				break;
+			}
+		}
+		 
+		 if (first < 0) {
+			 /* EDGE LOOP */
+			 first = completed;
+			 loop = true;
+		 }
+		 else {
+				if (seg(first).prev != -1) {
+					/* Reverse orientation of first side */
+				 seg(first).next = seg(first).prev;
+				 seg(first).prev = -1;
+				 sind = seg(first).gindx;
+				 int v0 = x.seg(sind).pnt(0);
+				 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+				 x.seg(sind).pnt(1) = v0;
+				 //x.switch_edge_sign(sind);
+			 }
+		 }
+		 
+		/* First swap directions, then reorder */
+		int indx = first;
+		count = completed;
+		while(count < nseg && (next = seg(indx).next) > -1) {
+			if (seg(next).prev != indx) {
+				/* Reverse orientation side */
+				seg(next).next = seg(next).prev;
+				seg(next).prev = indx;
+				sind = seg(next).gindx;
+				int v0 = x.seg(sind).pnt(0);
+				x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+				x.seg(sind).pnt(1) = v0;
+				//x.switch_edge_sign(sind);
+			}
+			++count;
+			indx = next;
+		}
+		 
+		/* insert -1 so while loop exits for an edge loop */
+		if (loop == true) seg(seg(first).prev).next = -1;
+		
+		/* now reorder */
+		count = completed;
+		indx = first;	
+		do {
+			swap(count++,indx);
+		} while (count < nseg && (indx = seg(count-1).next) > -1);
+		completed = count;
+	}	while(completed < nseg);
 	
+	
+	/* Two options here?  */
+	/* Either create new boundary (bad for communication, better for multigrid?) */
 	/* separate disconnected edge boundaries */
-	 if (count < nseg) {
-		++x.nebd;
-		x.ebdry.resizeAndPreserve(x.nebd);
-		x.ebdry(x.nebd-1) = create(x);
-		x.ebdry(x.nebd-1)->copy(*this);
-		for(i=0;i<nseg-count;++i)
-			x.ebdry(x.nebd-1)->swap(i,i+count);
-		x.ebdry(x.nebd-1)->nseg = nseg -count;
-		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
-		nseg = count;
-	 }
+	
+	
+//	 if (count < nseg) {
+//		++x.nebd;
+//		x.ebdry.resizeAndPreserve(x.nebd);
+//		x.ebdry(x.nebd-1) = create(x);
+//		x.ebdry(x.nebd-1)->copy(*this);
+//		for(i=0;i<nseg-count;++i)
+//			x.ebdry(x.nebd-1)->swap(i,i+count);
+//		x.ebdry(x.nebd-1)->nseg = nseg -count;
+//		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
+//		nseg = count;
+//	 }
 	
 	return;
 }
