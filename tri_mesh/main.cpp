@@ -221,15 +221,15 @@ int main(int argc, char *argv[]) {
 		ostringstream nstr;
 		zx.input(argv[1],in,1.0,bdrymap);
 		zx.setpartition(p);
-		Array<tri_mesh,1> zpart(p);
 		for(int i=0;i<p;++i) {
+			tri_mesh zpart;
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart(i).partition(zx,i);
-			zpart(i).checkintegrity();
-			zpart(i).output(fname,out);
+			zpart.partition(zx,i);
+			zpart.checkintegrity();
+			zpart.output(fname,out);
 			//zpart(i).output(fname,tri_mesh::boundary);
 		}
 #else
