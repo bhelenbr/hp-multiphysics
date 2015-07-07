@@ -323,13 +323,14 @@ int main(int argc, char *argv[]) {
 			
 		/* now partition mesh and marks if found */
 		for(int i=0;i<p;++i) {
+			tet_mesh zpart;
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
 			mname = fname +".marks";
 			// std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
 			// zpart(i).partition2(zx,i,p,blist,bnum);
-			zpart(i).partition3(zx,i);
+			zpart.partition3(zx,i);
 
 			if (marks_flag) {
 				ofstream fout;
@@ -347,9 +348,7 @@ int main(int argc, char *argv[]) {
 			}
 			
 			// zpart(i).output(fname,tet_mesh::gmsh);
-			zpart(i).output(fname);
-
-
+			zpart.output(fname);
 		}
 		
 		//        for(int i=0;i<p;++i) {
