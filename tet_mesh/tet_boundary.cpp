@@ -198,11 +198,27 @@ void edge_bdry::swap(int s1, int s2) {
 	if (prev2 == s2) prev2 = s1;
 	if (next2 == s2) next2 = s1;
 	
-	if (prev1 > -1) seg(prev1).next = s1;
-	if (next1 > -1) seg(next1).prev = s1;
-	 
-	if (prev2 > -1) seg(prev2).next = s2;
-	if (next2 > -1) seg(next2).prev = s2;
+	/* -1 access is ok because of allocation */
+	/* Don't assume sides point all in same direction */
+	if (seg(prev1).next == s2)
+		seg(prev1).next = s1;
+	else
+		seg(prev1).prev = s1;
+	
+	if (seg(next1).prev == s2)
+		seg(next1).prev = s1;
+	else
+		seg(next1).next = s1;
+	
+	if (seg(prev2).next == s1)
+		seg(prev2).next = s2;
+	else
+		seg(prev2).prev = s2;
+	
+	if (seg(next2).prev == s1)
+		seg(next2).prev = s2;
+	else
+		seg(next2).next = s2;
 
 	return;
 }
