@@ -218,11 +218,11 @@ void edge_bdry::swap(int s1, int s2) {
 	if (prev2 == s2) prev2 = s1;
 	if (next2 == s2) next2 = s1;
 
-	if (prev1 > -1) next(prev1) = s1;
-	if (next1 > -1) prev(next1) = s1;
+	next(prev1) = s1;
+	prev(next1) = s1;
 
-	if (prev2 > -1) next(prev2) = s2;
-	if (next2 > -1) prev(next2) = s2;
+	next(prev2) = s2;
+	prev(next2) = s2;
 
 	return;
 }
