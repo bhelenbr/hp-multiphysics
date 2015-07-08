@@ -2684,7 +2684,7 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */
 	/* don't mess with predifined plain edges because gmsh will recombine them*/
 	/* reordering causes problems if it creates a new partition boundary */
-	/* then it is unclear which boundary should communicte with which */
+	/* then it is unclear which boundary should communicate with which */
 	for(int i=0;i<nebd;++i) {
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();

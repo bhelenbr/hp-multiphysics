@@ -195,7 +195,6 @@ void edge_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int
 void edge_bdry::swap(int s1, int s2) {
 	int ind;
 
-	/* FIXME NOT SURE HOW TO SWAP S VALUES */
 	ind = seg(s1);
 	seg(s1) = seg(s2);
 	seg(s2) = ind;
@@ -219,11 +218,11 @@ void edge_bdry::swap(int s1, int s2) {
 	if (prev2 == s2) prev2 = s1;
 	if (next2 == s2) next2 = s1;
 
-	next(prev1) = s1;
-	prev(next1) = s1;
+	if (prev1 > -1) next(prev1) = s1;
+	if (next1 > -1) prev(next1) = s1;
 
-	next(prev2) = s2;
-	prev(next2) = s2;
+	if (prev2 > -1) next(prev2) = s2;
+	if (next2 > -1) prev(next2) = s2;
 
 	return;
 }
