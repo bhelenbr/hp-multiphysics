@@ -103,18 +103,18 @@ int main(int argc, char *argv[]) {
 	tet_mesh::filetype out = static_cast<tet_mesh::filetype>(outformat);
 	std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
 	ifstream intest;
-	input_map bdrymap;
+	input_map inmap;
 	intest.open(bdry_nm.c_str());
 	if (intest) {
 		intest.close();
-		bdrymap.input(bdry_nm);
-		bdrymap.echo = true;
+		inmap.input(bdry_nm);
+		inmap.echo = true;
 		std::cout << "Using " << bdry_nm << std::endl;
 	}
 	//
 	//    if (Cut) {
 	//        class tet_mesh zx;
-	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        zx.input(argv[1],in,1.0,inmap);
 	//        for(int i=0;i<zx.npnt;++i)
 	//            zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
 	//
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 	//    /* TO SYMMETRIZE A MESH */
 	//    if (Symmetrize) {
 	//        class tet_mesh zx;
-	//        zx.input(argv[1],in,8.0,bdrymap);
+	//        zx.input(argv[1],in,8.0,inmap);
 	//        zx.symmetrize();
 	//        return 0;
 	//    }
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 	if (Vlngth) {
 		class tet_mesh zx;
 		
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		std::string name;
 		name = std::string(argv[1]) +".lngth";
 		FILE *fp = fopen(name.c_str(),"w");
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 	//    if (Smooth) {
 	//        class tet_mesh zx;
 	//
-	//        zx.input(argv[1],in,8.0,bdrymap);
+	//        zx.input(argv[1],in,8.0,inmap);
 	//        zx.smooth_cofa(2);
 	//        zx.output(argv[2],out);
 	//
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 	//
 	if (Refineby2) {
 		class tet_mesh zx,zy;
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		zy.refineby2(zx);
 		zy.checkintegrity();
 		zy.output(argv[2],out);
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 	//        class tet_mesh zx,zy;
 	//
 	//        int p;
-	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        zx.input(argv[1],in,1.0,inmap);
 	//        printf("input p\n");
 	//        scanf("%d",&p);
 	//        zy.coarsen_substructured(zx,p);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 		TinyVector<FLT,tet_mesh::ND> s;
 		printf("Enter x y and z scaling\n");
 		scanf("%le%le%le",&s(0),&s(1),&s(2));
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.scale(s);
 		zx.output(argv[2],out);
 		return 0;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 		TinyVector<FLT,tet_mesh::ND> s;
 		printf("Enter x y and z shift\n");
 		scanf("%le%le%le",&s(0),&s(1),&s(2));
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.shift(s);
 		zx.output(argv[2],out);
 		return 0;
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 	
 	if (Format) {
 		class tet_mesh zx;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.output(argv[2],out);
 		return(0);
 	}
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 		std::string fname;
 		ostringstream nstr;
 		
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		
 		/* input calls setinfo but to make sure call it again because partition needs it to work */
 		zx.tet_mesh::setinfo();
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
 	if (GMSHLabel) {
 		/* This creates a file containing labels of the elements in different volumes in a GMSH mesh */
 		class tet_mesh zx;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 
 		string gridname(argv[1]), filename;
 		size_t dotloc;
@@ -281,17 +281,16 @@ int main(int argc, char *argv[]) {
 		sscanf(argv[2],"%d",&p);
 		std::string fname,mname;
 		ostringstream nstr;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		
 		/* input calls setinfo but to make sure call it again because partition needs it to work */
 		zx.tet_mesh::setinfo();
 		
+		/* Uses metis to set tet(i).info to a partition number */
 		zx.setpartition(p);
-		Array<tet_mesh,1> zpart(p);
 		
-		Array<int,2> blist;
-		Array<int,1> bnum;
-		
+		//Array<int,2> blist;
+		//Array<int,1> bnum;
 		// zx.setup_partition(p,blist,bnum);
 		zx.setup_partition2(p);
 		
@@ -299,11 +298,10 @@ int main(int argc, char *argv[]) {
 		ifstream fin;
 		bool marks_flag = false;
 		Array<int,1> marks;
-
 		string gridname(argv[1]), filename;
 		size_t dotloc;
-		dotloc = gridname.find_last_of('.');
 		
+		dotloc = gridname.find_last_of('.');
 		if (dotloc != string::npos) {
 			/* Found and ending */
 			filename = gridname.substr(0,dotloc) +".marks";
@@ -320,6 +318,7 @@ int main(int argc, char *argv[]) {
 				marks_flag = true;
 			}
 		}
+		
 			
 		/* now partition mesh and marks if found */
 		for(int i=0;i<p;++i) {
@@ -372,7 +371,7 @@ int main(int argc, char *argv[]) {
 	//    if (Coarsen_Marks) {
 	//        class tet_mesh zx;
 	//
-	//        zx.input(argv[1],in,1.0,bdrymap);
+	//        zx.input(argv[1],in,1.0,inmap);
 	//        FILE *fp = fopen(argv[3],"r");
 	//
 	//        for(int i=0;i<zx.npnt;++i) {

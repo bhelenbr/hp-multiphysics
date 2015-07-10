@@ -2156,11 +2156,11 @@ void tet_mesh::setup_partition2(int nparts) {
 			}
 			
 			/* if sum is greater than one then it is a communication boundary */
-			int sum = 0;
+			int sum_marks = 0;
 			for(int j = 0; j < nparts; ++j)
-				sum += face_marks(j);
+				sum_marks += face_marks(j);
 			
-			if (sum > 1) {
+			if (sum_marks > 1) {
 				
 				/* check if boundary already defined */
 				int match = -1;
@@ -2247,7 +2247,7 @@ void tet_mesh::setup_partition2(int nparts) {
 
 	
 	/* Now need to classify all edges */
-	/* Make lists of face memberships for each edge in mesh */
+	/* Make lists of face memberships for each edge in face boundary */
 	Array<std::vector<int>,1> fbdry_memberships(nseg);  /* for each edge list of faces it belongs to */
 	for(int i = 0; i < nfbdry_partitions; ++i) {
 		for(std::vector<int>::iterator j = fbdry_partitions(i).begin(); j != fbdry_partitions(i).end(); ++j) {
@@ -2256,6 +2256,7 @@ void tet_mesh::setup_partition2(int nparts) {
 			for (int ls = 0; ls < 3; ++ls) {
 				int sind = tri(tind).seg(ls);
 				
+				/* Check if edge has already been added */
 				for(std::vector<int>::iterator f = fbdry_memberships(sind).begin(); f != fbdry_memberships(sind).end(); ++f) {
 					if (*f == i) {
 						goto nextside;
@@ -2274,6 +2275,7 @@ void tet_mesh::setup_partition2(int nparts) {
 	for(int i = 0; i < nseg; ++i)
 		seg(i).info = -1;
 	
+	/* this should already have been done by setinfo? */
 	for(int i = 0; i < nebd; ++i)
 		for(int j = 0; j < ebdry(i)->nseg; ++j)
 			seg(ebdry(i)->seg(j).gindx).info = i;
@@ -2288,6 +2290,7 @@ void tet_mesh::setup_partition2(int nparts) {
 	vector<string> edge_types; /* idprefix for each combination */
 	
 	/* find communication edge boundaries */
+	/* Shouldn't really have to loop over all edges in mesh, but oh well */
 	for(int i = 0; i < nseg; ++i) {
 		
 		edge_marks = 0;
@@ -2300,12 +2303,13 @@ void tet_mesh::setup_partition2(int nparts) {
 		}
 		
 		/* if sum is greater than one then it is an edge boundary */
-		int sum = 0;
+		int sum_marks = 0;
 		for(int j = 0; j < nfbdry_partitions+nebd; ++j)
-			sum += edge_marks(j);
+			sum_marks += edge_marks(j);
 		
-		if (sum > 1) {
-			/* check if boundary already defined */
+		if (sum_marks > 1) {
+			/* This is an edge between faces or on an already defined physical edge */
+			/* First check if this type of edge is already defined */
 			int match = -1;
 			for(int j = 0; j < nebdry_partitions; ++j) {
 				match = 0;
@@ -2314,7 +2318,6 @@ void tet_mesh::setup_partition2(int nparts) {
 				
 				/* boundary found tag with unique number */
 				if (match == 0) {
-					seg(i).info = j;
 					ebdry_partitions(j).push_back(i);
 					break;
 				}
@@ -2323,13 +2326,12 @@ void tet_mesh::setup_partition2(int nparts) {
 			/* new edge boundary */
 			if (match != 0) {
 				/* Determine type of edge */
-				int sum2 = 0;
+				int sum_face_memberships = 0;
 				for(int j = 0; j < nfpartitions; ++j)
-					sum2 += edge_marks(j);
+					sum_face_memberships += edge_marks(j);
 				
-				if (sum2 > 1) {
-					/* More than one communication face touches edge */
-					std::cout << "b0_e" << nebdry_partitions << "_type: partition" << std::endl;
+				if (sum_face_memberships > 1) {
+					/* More than one face touches edge */
 					partition_edge.push_back(true);
 				}
 				else {
@@ -2337,22 +2339,21 @@ void tet_mesh::setup_partition2(int nparts) {
 				}
 				
 				if (seg(i).info > -1) {
-					std::cout << "b0_e" << nebdry_partitions << " b0" << ebdry(seg(i).info)->idprefix << std::endl;
+					/* physical edge that also lies on partition face */
+					/* output mapping from new edge number to old so edge can be given correct physical definition */
 					edge_types.push_back(" b0" +ebdry(seg(i).info)->idprefix);
 					physical_edge.push_back(true);
-					if (sum2 > 1) {
+					if (sum_face_memberships > 1) {
 						std::cerr << "Warning: physical boundary edge b0_e" << nebdry_partitions << " is also partition edge" << std::endl;
 						std::cerr << "Make sure correct edge type is defined" << std::endl;
 					}
 				}
-				else if (sum -sum2 > 0 && sum2 > 1) {
-					/* New edge on physical boundary of domain between communication partitions */
+				else if (sum_marks -sum_face_memberships > 0 && sum_face_memberships > 1) {
+					/* New edge on physical face boundary of domain between communication partitions */
 					for(int k = nfpartitions; k<nfbdry_partitions;++k) {
 						if (edge_marks(k)) {
-							std::cout << "b0_e" << nebdry_partitions << " b0 " << fbdry(fidnum[k])->idprefix << std::endl;
 							physical_edge.push_back(true);
 							edge_types.push_back("b0 " + fbdry(fidnum[k])->idprefix);
-
 							break;
 						}
 					}
@@ -2361,11 +2362,7 @@ void tet_mesh::setup_partition2(int nparts) {
 					physical_edge.push_back(false);
 					edge_types.push_back("");
 				}
-					
 				
-				
-				/* tag with unique number */
-				seg(i).info = nebdry_partitions;
 				ebdry_partitions(nebdry_partitions).push_back(i);
 				
 				/* store 0,1's */
@@ -2378,12 +2375,60 @@ void tet_mesh::setup_partition2(int nparts) {
 	}
 	~fbdry_memberships;  // delete this
 	
-	/* Now need to classify all vertices */
-	/* Make lists of edge memberships for each edge in mesh */
-	Array<std::vector<int>,1> ebdry_memberships(npnt);  /* for each edge list of faces it belongs to */
-	for(int i = 0; i < nebdry_partitions; ++i) {
+	/* Going to sort edges of partition boundaries here and divide into connected edges */
+	/* because edge boundaries are defined as single connected segment */
+	Array<edge_bdry *,1> new_ebdry; /**< array of edge boundary objects */
+	new_ebdry.resize(nebdry_partitions);
+
+	Array<edge_bdry *,1> temp;
+	temp.reference(ebdry);
+	ebdry.reference(new_ebdry);
+	
+	int current_nebd = nebd;
+	nebd = nebdry_partitions;
+	input_map inmap;
+	for(int i = 0; i < nebd; ++i) {
+		ebdry(i) = getnewedgeobject(i,inmap);
+		ebdry(i)->nseg = ebdry_partitions(i).size();
+		ebdry(i)->alloc(static_cast<int>(new_ebdry(i)->nseg));
+		int count = 0;
 		for(std::vector<int>::iterator j = ebdry_partitions(i).begin(); j != ebdry_partitions(i).end(); ++j) {
 			int eind = *j;
+			ebdry(i)->seg(count++).gindx = eind;
+		}
+		/* This will divide up disconnected segments */
+		ebdry(i)->setup_next_prev();
+		int total_seg = ebdry(i)->nseg;
+		ebdry(i)->reorder();
+		
+		for(int j = 0; j < ebdry(i)->nseg; ++j) {
+			int eind = ebdry(i)->seg(j).gindx;
+			seg(eind).info = j;
+		}
+		
+		if (ebdry(i)->nseg < total_seg) {
+			/* new edge boundary was created */
+			partition_edge.push_back(partition_edge[i]);
+			physical_edge.push_back(physical_edge[i]);
+			edge_types.push_back(edge_types[i]);
+		}
+		
+		if (partition_edge[i])
+			std::cout << "b0_e" << i << "_type: partition" << std::endl;
+
+		if (physical_edge[i])
+			std::cout << "b0_e" << i << ' ' << edge_types[i] << std::endl;
+	}
+	
+	
+	
+	/* vertices */
+	/* Now need to classify all vertices */
+	/* Make lists of edge memberships for each edge in mesh */
+	Array<std::vector<int>,1> ebdry_memberships(npnt);  /* for each vertex list of edges it belongs to */
+	for(int i = 0; i < nebd; ++i) {
+		for (int j = 0; j < ebdry(i)->nseg; ++j) {
+			int eind = ebdry(i)->seg(j).gindx;
 			
 			for (int ls = 0; ls < 2; ++ls) {
 				int pnt = seg(eind).pnt(ls);
@@ -2399,7 +2444,7 @@ void tet_mesh::setup_partition2(int nparts) {
 		}
 	}
 	
-	Array<int,1> pnt_marks(nebdry_partitions+nvbd);
+	Array<int,1> pnt_marks(nebd+nvbd);
 	
 	/* mark boundary edges */
 	for(int i = 0; i < npnt; ++i)
@@ -2409,8 +2454,8 @@ void tet_mesh::setup_partition2(int nparts) {
 		pnt(vbdry(i)->pnt).info = i;
 	
 	/* classify edges */
-	combinations = (nebdry_partitions+nvbd)*(nebdry_partitions+nvbd);  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
-	Array<int,2> vbdry_marks(combinations,nebdry_partitions+nvbd);  /* Marks for each edge boundary */
+	combinations = (nebd+nvbd)*(nebd+nvbd);  /* The most there can be is nfbdry*nfbdry combinations? Could be more because of possible 3-wa*/
+	Array<int,2> vbdry_marks(combinations,nebd+nvbd);  /* Marks for each edge boundary */
 	Array<std::vector<int>,1> vbdry_partitions(combinations);  /* list of edges for each edge boundary */
 	int nvbdry_partitions = 0; /* number of edge boundary partitions */
 	
@@ -2423,34 +2468,34 @@ void tet_mesh::setup_partition2(int nparts) {
 		}
 		
 		if (pnt(i).info > -1) {
-			pnt_marks(nebdry_partitions+pnt(i).info) = 1;
+			pnt_marks(nebd+pnt(i).info) = 1;
 		}
 		
 		/* if sum is greater than one then it is an vertex boundary */
-		int sum = 0;
-		for(int j = 0; j < nebdry_partitions+nvbd; ++j)
-			sum += pnt_marks(j);
+		int sum_marks = 0;
+		for(int j = 0; j < nebd+nvbd; ++j)
+			sum_marks += pnt_marks(j);
 		
-		if (sum > 1) {
+		if (sum_marks > 1) {
 			/* new vertex boundary */
-			int sum2 = 0;
-			for(int j = 0; j < nebdry_partitions; ++j)
-				sum2 += partition_edge[j]*pnt_marks(j);
+			int sum_edge_memberships = 0;
+			for(int j = 0; j < nebd; ++j)
+				sum_edge_memberships += partition_edge[j]*pnt_marks(j);
 
-			if (sum2 > 1) {
+			if (sum_edge_memberships > 1) {
 				std::cout << "b0_v" << nvbdry_partitions << "_type: partition" << std::endl;
 			}
 			
 			if (pnt(i).info > -1) {
 				std::cout << "b0_v" << nvbdry_partitions << " b0" << vbdry(pnt(i).info)->idprefix << std::endl;
-				if (sum2 > 1) {
+				if (sum_edge_memberships > 1) {
 					std::cerr << "Warning: physical boundary vertex b0_v" << nvbdry_partitions << " is also partition vertex" << std::endl;
 					std::cerr << "Make sure correct vertex type is defined" << std::endl;
 				}
 			}
 			else {
-				if (sum2 > 1) {
-					for(int j = 0; j < nebdry_partitions; ++j) {
+				if (sum_edge_memberships > 1) {
+					for(int j = 0; j < nebd; ++j) {
 						if (physical_edge[j]*pnt_marks(j) ) {
 							std::cout << "b0_v" << nvbdry_partitions << ' ' << edge_types[j] << std::endl;
 							break;
@@ -2464,13 +2509,17 @@ void tet_mesh::setup_partition2(int nparts) {
 			vbdry_partitions(nvbdry_partitions).push_back(i);
 			
 			/* store 0,1's */
-			for(int k = 0; k < nebdry_partitions+nvbd; ++k)
+			for(int k = 0; k < nebd+nvbd; ++k)
 				vbdry_marks(nvbdry_partitions,k) = pnt_marks(k);
 			
 			++nvbdry_partitions;
 		}
 	}
 	~ebdry_memberships;  // delete this
+	
+	/* Put back edge boundary info */
+	nebd = current_nebd;
+	ebdry.reference(temp);
 	
 	return;
 }
@@ -2614,7 +2663,6 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 		for(vector<int>::iterator j = i->second.begin(); j != i->second.end(); ++j) {
 			fbdry(nfbd)->tri(fbdry(nfbd)->ntri++).gindx = *j;
 		}
-		// std::cout << "b" << npart << "_f" << i->first << "_type:" << endl;
 		++nfbd;
 	}
 	
@@ -2628,6 +2676,7 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	for(int i = 0; i < xin.nseg; ++i) {
 		
 		/* search if on partition */
+		/* Should be a faster way to do this */
 		int nbor = xin.seg(i).nnbor;
 		xin.ring(i);
 		

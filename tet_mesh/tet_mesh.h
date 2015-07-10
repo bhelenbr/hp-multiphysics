@@ -64,7 +64,7 @@ class tet_mesh : public multigrid_interface {
 		//@{
 		int nvbd; /**< number of vertex boundaries */
 		Array<vrtx_bdry *,1> vbdry; /**< Array of vertex boundary objects */
-		vrtx_bdry* getnewvrtxobject(int idnum, input_map& bdrydata); /**< function for obtaining different vertex boundary objects */
+		vrtx_bdry* getnewvrtxobject(int idnum, input_map& inmap); /**< function for obtaining different vertex boundary objects */
 		//@}
 		
 		/* SEGMENT DATA */        
@@ -90,7 +90,7 @@ class tet_mesh : public multigrid_interface {
 		//@{
 		int nebd; /**< number of edge boundaries */
 		Array<edge_bdry *,1> ebdry; /**< array of edge boundary objects */
-		edge_bdry* getnewedgeobject(int idnum, input_map& bdrydata); /**< function for obtaining different edge boundary objects */
+		edge_bdry* getnewedgeobject(int idnum, input_map& inmap); /**< function for obtaining different edge boundary objects */
 		//@}
 		
 		/* TRIANGLE DATA */  
@@ -113,7 +113,7 @@ class tet_mesh : public multigrid_interface {
 		//@{
 		int nfbd; /**< number of face boundaries */
 		Array<face_bdry *,1> fbdry;  /**< array of face boundary objects */
-		face_bdry* getnewfaceobject(int idnum, input_map& bdrydata); /**< function for obtaining different face boundary objects */
+		face_bdry* getnewfaceobject(int idnum, input_map& inmap); /**< function for obtaining different face boundary objects */
 		//@}
 		
 		/* This is a way to find out which boundary a tri or edge belongs to */

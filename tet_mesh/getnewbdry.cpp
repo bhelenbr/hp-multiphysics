@@ -208,7 +208,7 @@ class ftype {
 const char ftype::names[ntypes][40] = {"plain","comm","prdc","partition","symbolic","symbolic_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
+face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& inmap) {
 	std::string keyword,val;
 	std::istringstream data;
 	ostringstream nstr;
@@ -220,7 +220,7 @@ face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
 	nstr.str("");
 	nstr << idnum << std::flush;        
 	keyword = gbl->idprefix +"_f" +nstr.str() + "_type";
-	if (bdrydata.get(keyword,val)) {
+	if (inmap.get(keyword,val)) {
 		type = ftype::getid(val.c_str());
 		if (type < 0)  {
 			*gbl->log << "unknown face type:" << val << std::endl;
@@ -263,7 +263,7 @@ face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
 		}
 	}
 	
-	temp->init(bdrydata);
+	temp->init(inmap);
 	
 	return(temp);
 }

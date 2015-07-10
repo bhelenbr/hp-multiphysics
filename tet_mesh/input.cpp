@@ -167,7 +167,7 @@ void tet_mesh::allocate(int mxsize) {
 
 
 
-void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
+void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, FLT grwfac,input_map& inmap) {
 	int temp,nbfaces;
 	std::string grd_nm, bdry_nm, grd_app;
 	TinyVector<int,3> v,s,e;
@@ -232,7 +232,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.ignore(160,'\n'); 
 			in.ignore(160,'\n');  
 			
-			fbdry(0) = getnewfaceobject(0,bdrymap);
+			fbdry(0) = getnewfaceobject(0,inmap);
 			fbdry(0)->alloc(static_cast<int>(grwfac*3*nbfaces/2));
 			nvbd = 0;
 			nebd = 0;
@@ -345,7 +345,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			for(int i = 0; i < nvbd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
-				vbdry(i) = getnewvrtxobject(temp,bdrymap);
+				vbdry(i) = getnewvrtxobject(temp,inmap);
 				vbdry(i)->alloc(4);
 				in.ignore(80,':');
 				in >> vbdry(i)->pnt;
@@ -357,7 +357,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			for(int i = 0; i < nebd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
-				ebdry(i) = getnewedgeobject(temp,bdrymap);
+				ebdry(i) = getnewedgeobject(temp,inmap);
 				in.ignore(80,':');
 				in >> ebdry(i)->nseg;
 				ebdry(i)->alloc(static_cast<int>(20*grwfac*ebdry(i)->nseg));
@@ -376,7 +376,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			for(int i = 0; i < nfbd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
-				fbdry(i) = getnewfaceobject(temp,bdrymap);
+				fbdry(i) = getnewfaceobject(temp,inmap);
 				in.ignore(80,':');
 				in >> fbdry(i)->npnt;
 				in.ignore(80,':');
@@ -466,7 +466,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.ignore(160,'\n');    
 
 			for(int i = 0; i < nfbd; ++i) {
-				fbdry(i) = getnewfaceobject(i,bdrymap);
+				fbdry(i) = getnewfaceobject(i,inmap);
 				in.ignore(20,':');
 				in >> intskip;
 				in.ignore(20,':');
@@ -552,7 +552,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 			nfbd = 1;
 			fbdry.resize(1);
-			fbdry(0) = getnewfaceobject(1,bdrymap);
+			fbdry(0) = getnewfaceobject(1,inmap);
 			fbdry(0)->alloc(static_cast<int>(3*grwfac*count));
 			fbdry(0)->ntri = count;
 			count = 0;
@@ -575,7 +575,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 #ifdef USING_MADLIB
 		case(gmsh): {
-			MAdLib_input(grd_nm, grwfac, bdrymap);
+			MAdLib_input(grd_nm, grwfac, inmap);
 			break;
 		}
 #endif

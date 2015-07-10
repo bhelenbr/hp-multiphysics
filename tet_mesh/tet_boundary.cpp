@@ -286,8 +286,10 @@ void edge_bdry::reorder() {
 	int i,count,next,sind,first,completed;
 	bool loop = false;
 	
+#ifdef ALLOW_MULTIPLE_SEGS_IN_EDGE
 	completed = 0;
 	do {
+#endif
 		/* FIND FIRST SIDE */
 		first = -1;
 		for(i=completed;i<nseg;++i) {
@@ -343,25 +345,23 @@ void edge_bdry::reorder() {
 			swap(count++,indx);
 		} while (count < nseg && (indx = seg(count-1).next) > -1);
 		completed = count;
+#ifdef ALLOW_MULTIPLE_SEGS_IN_EDGE
 	}	while(completed < nseg);
+#endif
 	
-	
-	/* Two options here?  */
-	/* Either create new boundary (bad for communication, better for multigrid?) */
 	/* separate disconnected edge boundaries */
-	
-	
-//	 if (count < nseg) {
-//		++x.nebd;
-//		x.ebdry.resizeAndPreserve(x.nebd);
-//		x.ebdry(x.nebd-1) = create(x);
-//		x.ebdry(x.nebd-1)->copy(*this);
-//		for(i=0;i<nseg-count;++i)
-//			x.ebdry(x.nebd-1)->swap(i,i+count);
-//		x.ebdry(x.nebd-1)->nseg = nseg -count;
-//		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
-//		nseg = count;
-//	 }
+	/* (bad for communication, but keeps definition of edges simpler) */
+	if (count < nseg) {
+		++x.nebd;
+		x.ebdry.resizeAndPreserve(x.nebd);
+		x.ebdry(x.nebd-1) = create(x);
+		x.ebdry(x.nebd-1)->copy(*this);
+		for(i=0;i<nseg-count;++i)
+			x.ebdry(x.nebd-1)->swap(i,i+count);
+		x.ebdry(x.nebd-1)->nseg = nseg -count;
+		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
+		nseg = count;
+	 }
 	
 	return;
 }
@@ -429,12 +429,14 @@ void ecomm::match_numbering(int step) {
 					
 					if (dist > 10.*EPSILON) {
 						printstuff = true;
-						*x.gbl->log << "Matching edge numbering error, edge: " << idprefix << endl;						
+						*x.gbl->log << "Matching edge numbering error, edge: " << idprefix << endl;
+						*x.gbl->log << "target points " << mpnt1 << ' ' << mpnt2 << std::endl;
 						//*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << ' ' << x.pnts(pnt(i).gindx) << '\n';
 						//*x.gbl->log << "idnum " << idnum << " lcl point " << i << " gbl point " << pnt(i).gindx << '\n';
 					}					
 				}
 				setup_next_prev();
+				// This should keep the same order but flip the edges to have the correct orientation?
 				reorder();
 				
 				/* check to make sure pnts locations match perfectly */
