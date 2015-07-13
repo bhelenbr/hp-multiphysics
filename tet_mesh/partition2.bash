@@ -59,11 +59,11 @@ if [ -z "${PHYSICAL}" ]; then
 # partition mesh
 	if [ -n "$FTYP" ];
 	then
-					echo "tet_mesh -i $FTYP -p $MESH $BLKS | grep -v Info > boundary_mapping.txt"
-		tet_mesh -i $FTYP -p $MESH $BLKS | grep -v "Info"  > boundary_mapping.txt
+					echo "tet_mesh -i $FTYP -p $MESH $BLKS | grep -v Info | grep -v Creating > boundary_mapping.txt"
+		tet_mesh -i $FTYP -p $MESH $BLKS | grep -v "Info"  | grep -v "Creating" > boundary_mapping.txt
 	else
-					echo "tet_mesh -p $MESH $BLKS | grep -v Info > boundary_mapping.txt"
-		tet_mesh -p $MESH $BLKS | grep -v "Info"  > boundary_mapping.txt
+					echo "tet_mesh -p $MESH $BLKS | grep -v Info | grep -v Creating > boundary_mapping.txt"
+		tet_mesh -p $MESH $BLKS | grep -v "Info" | grep -v "Creating" > boundary_mapping.txt
 	fi
 
 	# get the lines defining the new partition boundaries

@@ -316,7 +316,7 @@ void face_bdry::match_tri_and_seg(void) {
 				}
 				sind = seg(sind).info;
 			}
-			*x.gbl->log << "didn't match side: " << v1 << v2 << std::endl;
+			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << std::endl;
 			exit(1);
 			
 NEXTTRISIDE:
