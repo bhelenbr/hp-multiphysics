@@ -31,7 +31,7 @@ class vtype {
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc","symbolic"};
 
-vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
+vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& inmap) {
 	std::string keyword,typ_str;
 	ostringstream nstr;
 	int type;
@@ -41,7 +41,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
 	nstr << idnum << std::flush;
 	keyword = gbl->idprefix +"_v" +nstr.str() + "_type";
 
-	in_map.getwdefault(keyword,typ_str,std::string("plain"));
+	inmap.getwdefault(keyword,typ_str,std::string("plain"));
 	type = vtype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << "unknown vertex type:" << typ_str << std::endl;
@@ -72,7 +72,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
 		}
 	}
 
-	temp->init(in_map);
+	temp->init(inmap);
 
 	return(temp);
 }
@@ -102,7 +102,7 @@ const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "sy
 	"coupled_symbolic","coupled_symbolic_comm", "spline","spline_comm","coupled_spline","coupled_spline_comm","circle", "naca","ellipse","planar"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
+edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
 	std::string keyword,typ_str;
 	ostringstream nstr;
 	int type;
@@ -114,7 +114,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 	nstr << idnum << std::flush;
 	keyword = gbl->idprefix +"_s" +nstr.str() + "_type";
 
-	in_map.getwdefault(keyword,typ_str,std::string("plain"));
+	inmap.getwdefault(keyword,typ_str,std::string("plain"));
 	type = etype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << "unknown edge type:" << typ_str << std::endl;
@@ -197,7 +197,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 		}
 	}
 
-	temp->init(in_map);
+	temp->init(inmap);
 
 	return(temp);
 }

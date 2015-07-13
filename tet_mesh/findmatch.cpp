@@ -2380,30 +2380,37 @@ void tet_mesh::setup_partition2(int nparts) {
 	Array<edge_bdry *,1> new_ebdry; /**< array of edge boundary objects */
 	new_ebdry.resize(nebdry_partitions);
 
+	/* Going to keep reference to original boundary objects */
+	/* reorder directly uses ebdry when it makes new objects */
+	/* so have to rearrange pointers to keep old information */
+	int current_nebd = nebd;
 	Array<edge_bdry *,1> temp;
 	temp.reference(ebdry);
 	ebdry.reference(new_ebdry);
 	
-	int current_nebd = nebd;
 	nebd = nebdry_partitions;
 	input_map inmap;
 	for(int i = 0; i < nebd; ++i) {
 		ebdry(i) = getnewedgeobject(i,inmap);
 		ebdry(i)->nseg = ebdry_partitions(i).size();
-		ebdry(i)->alloc(static_cast<int>(new_ebdry(i)->nseg));
+		ebdry(i)->alloc(static_cast<int>(ebdry(i)->nseg));
 		int count = 0;
 		for(std::vector<int>::iterator j = ebdry_partitions(i).begin(); j != ebdry_partitions(i).end(); ++j) {
 			int eind = *j;
 			ebdry(i)->seg(count++).gindx = eind;
 		}
-		/* This will divide up disconnected segments */
+	}
+	
+	/* Label seg.info in mesh */
+	/* Reorder and divide disconnected segments */
+	for(int i = 0; i < nebd; ++i) {
 		ebdry(i)->setup_next_prev();
 		int total_seg = ebdry(i)->nseg;
 		ebdry(i)->reorder();
 		
 		for(int j = 0; j < ebdry(i)->nseg; ++j) {
 			int eind = ebdry(i)->seg(j).gindx;
-			seg(eind).info = j;
+			seg(eind).info = i;
 		}
 		
 		if (ebdry(i)->nseg < total_seg) {

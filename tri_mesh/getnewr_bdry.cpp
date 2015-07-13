@@ -26,12 +26,12 @@ class r_stype {
 const char r_stype::names[ntypes][40] = {"free", "fixed", "fixed_angled", "curved", "translating", "oscillating", "deforming"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
+r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& inmap) {
 	std::string typ_str;
 	int type;
 	r_side_bdry *temp;
 
-	if (in_map.get(ebdry(bnum)->idprefix + "_r_type",typ_str)) {
+	if (inmap.get(ebdry(bnum)->idprefix + "_r_type",typ_str)) {
 		type = r_stype::getid(typ_str.c_str());
 		if (type < 0)  {
 			*gbl->log << ebdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
@@ -47,11 +47,11 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
 		} else if (ebdry(bnum)->mytype == "prdc") {
 			type = r_stype::fixed;
 			int dir;
-			in_map.getwdefault(ebdry(bnum)->idprefix + "_dir",dir,0);
+			inmap.getwdefault(ebdry(bnum)->idprefix + "_dir",dir,0);
 			if (dir == 0)
-				in_map[ebdry(bnum)->idprefix+"_r_dir"] = "0 0";
+				inmap[ebdry(bnum)->idprefix+"_r_dir"] = "0 0";
 			else
-				in_map[ebdry(bnum)->idprefix+"_r_dir"] = "1 1";
+				inmap[ebdry(bnum)->idprefix+"_r_dir"] = "1 1";
 		}
 		else {
 			type = r_stype::fixed;
@@ -94,7 +94,7 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
 		}
 	}
 
-	temp->init(in_map);
+	temp->init(inmap);
 
 	return(temp);
 }
@@ -114,12 +114,12 @@ class r_vtype {
 const char r_vtype::names[ntypes][40] = {"free", "fixed", "moving"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& in_map) {
+r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& inmap) {
 	std::string typ_str;
 	int type;
 	r_vrtx_bdry *temp;
 
-	in_map.getwdefault(vbdry(bnum)->idprefix + "_r_type",typ_str,std::string("free"));
+	inmap.getwdefault(vbdry(bnum)->idprefix + "_r_type",typ_str,std::string("free"));
 	type = r_vtype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << vbdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
@@ -146,7 +146,7 @@ r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& in_map) {
 		}
 	}
 
-	temp->init(in_map);
+	temp->init(inmap);
 
 	return(temp);
 }

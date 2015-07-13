@@ -98,18 +98,18 @@ int main(int argc, char *argv[]) {
 	tri_mesh::filetype out = static_cast<tri_mesh::filetype>(outformat);
 	std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
 	ifstream intest;
-	input_map bdrymap;
+	input_map inmap;
 	intest.open(bdry_nm.c_str());
 	if (intest) {
 		intest.close();
-		bdrymap.input(bdry_nm);
-		bdrymap.echo = true;
+		inmap.input(bdry_nm);
+		inmap.echo = true;
 		std::cout << "Using " << bdry_nm << std::endl;
 	}
 
 	if (Cut) {
 		class tri_mesh zx;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		for(int i=0;i<zx.npnt;++i)
 			zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
 
@@ -120,8 +120,8 @@ int main(int argc, char *argv[]) {
 	
 	if (Append) {
 		class tri_mesh zx,zy;
-		zx.input(argv[1],in,1.0,bdrymap);
-		zy.input(argv[2],in,100.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
+		zy.input(argv[2],in,100.0,inmap);
 		zy.append(zx);
 		zy.output(argv[3],out);
 		return(0);
@@ -130,14 +130,14 @@ int main(int argc, char *argv[]) {
 	/* TO SYMMETRIZE A MESH */
 	if (Symmetrize) {
 		class tri_mesh zx;
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		zx.symmetrize();
 		return 0;
 	}
 
 	if (Vlngth) {
 		class tri_mesh zx;
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		
 		symbolic_function<2> length_modifier_function;
 		input_map length_modifier_input;
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
 
 	if (Smooth) {
 		class tri_mesh zx;
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		zx.smooth_cofa(2);
 		zx.output(argv[2],out);
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
 	if (Refineby2) {
 		class tri_mesh zx,zy;
-		zx.input(argv[1],in,8.0,bdrymap);
+		zx.input(argv[1],in,8.0,inmap);
 		zy.refineby2(zx);
 		zy.checkintegrity();
 		zy.output(argv[2],out);
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 		class tri_mesh zx,zy;
 
 		int p;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		printf("input p\n");
 		scanf("%d",&p);
 		zy.coarsen_substructured(zx,p);
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 		TinyVector<FLT,2> s;
 		printf("Enter x and y scaling\n");
 		scanf("%le%le",&s(0),&s(1));
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.scale(s);
 		zx.output(argv[2],out);
 		return 0;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 		TinyVector<FLT,2> s;
 		printf("Enter x and y shift\n");
 		scanf("%le %le",&s(0),&s(1));
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.shift(s);
 		zx.output(argv[2],out);
 		return 0;
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
 
 	if (Format) {
 		class tri_mesh zx;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.output(argv[2],out);
 		return(0);
 	}
@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
 		sscanf(argv[2],"%d",&p);
 		std::string fname;
 		ostringstream nstr;
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		zx.setpartition(p);
 		for(int i=0;i<p;++i) {
 			tri_mesh zpart;
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
 	if (Coarsenby2) {
 		class tri_mesh zx,zy;
 
-		zx.input(argv[1],in,1.0,bdrymap);
+		zx.input(argv[1],in,1.0,inmap);
 		
 		for(int i=0;i<zx.npnt;++i) {
 			zx.lngth(i) *= 2.0;
@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
 //	if (Coarsen_Marks) {
 //		class tri_mesh zx;
 //
-//		zx.input(argv[1],in,1.0,bdrymap);
+//		zx.input(argv[1],in,1.0,inmap);
 //		FILE *fp = fopen(argv[3],"r");
 //
 //		for(int i=0;i<zx.npnt;++i) {

@@ -283,11 +283,10 @@ void edge_bdry::setup_next_prev() {
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL & REORIENTS EDGES TO ALL BE ALIGNED IN THE SAME DIRECTION */
 /* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
 void edge_bdry::reorder() {
-	int i,count,next,sind,first,completed;
+	int i,count,next,sind,first,completed=0;
 	bool loop = false;
 	
 #ifdef ALLOW_MULTIPLE_SEGS_IN_EDGE
-	completed = 0;
 	do {
 #endif
 		/* FIND FIRST SIDE */
@@ -344,8 +343,8 @@ void edge_bdry::reorder() {
 		do {
 			swap(count++,indx);
 		} while (count < nseg && (indx = seg(count-1).next) > -1);
-		completed = count;
 #ifdef ALLOW_MULTIPLE_SEGS_IN_EDGE
+		completed = count;
 	}	while(completed < nseg);
 #endif
 	
