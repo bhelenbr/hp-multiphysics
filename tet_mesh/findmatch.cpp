@@ -2341,7 +2341,7 @@ void tet_mesh::setup_partition2(int nparts) {
 				if (seg(i).info > -1) {
 					/* physical edge that also lies on partition face */
 					/* output mapping from new edge number to old so edge can be given correct physical definition */
-					edge_types.push_back(" b0" +ebdry(seg(i).info)->idprefix);
+					edge_types.push_back("b0" +ebdry(seg(i).info)->idprefix);
 					physical_edge.push_back(true);
 					if (sum_face_memberships > 1) {
 						std::cerr << "Warning: physical boundary edge b0_e" << nebdry_partitions << " is also partition edge" << std::endl;
@@ -2353,7 +2353,7 @@ void tet_mesh::setup_partition2(int nparts) {
 					for(int k = nfpartitions; k<nfbdry_partitions;++k) {
 						if (edge_marks(k)) {
 							physical_edge.push_back(true);
-							edge_types.push_back("b0 " + fbdry(fidnum[k])->idprefix);
+							edge_types.push_back("b0" + fbdry(fidnum[k])->idprefix);
 							break;
 						}
 					}
