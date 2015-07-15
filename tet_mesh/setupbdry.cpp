@@ -489,7 +489,7 @@ void face_bdry::checkintegrity() {
 void edge_bdry::checkintegrity() {
 	for(int i=0;i<nseg;++i) {
 		if (seg(i).next > -1) {
-			if (seg(i).next != seg(seg(i).next).prev) {
+			if (seg(seg(i).next).prev != i) {
 				*x.gbl->log << "next prev is out of whack" << i << ' ' << seg(i).next << ' ' << seg(seg(i).next).prev << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
