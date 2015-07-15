@@ -432,7 +432,16 @@ void tet_mesh::checkintegrity() {
 			}
 		}
 	}
-		
+	
+	
+	for(int i=0;i<nfbd;++i)
+		fbdry(i)->checkintegrity();
+	
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->checkintegrity();
+	
+	for(int i=0;i<nvbd;++i)
+		vbdry(i)->checkintegrity();
 	
 	return;
 }

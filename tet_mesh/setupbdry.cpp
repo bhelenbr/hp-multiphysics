@@ -428,3 +428,69 @@ void face_bdry::treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]) {
 	
 	return;
 }
+
+void face_bdry::checkintegrity() {
+	int i,j,sind,dir;
+	
+	for(i=0;i<npnt;++i) {
+		int tind = pnt(i).tri;
+		for(j=0;j<3;++j)
+			if (tri(tind).pnt(j) == i) goto next;
+		
+		*x.gbl->log << "tri.pnt is out of whack" <<  i << tind << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+		
+	next: continue;
+	}
+	
+	for(i=0;i<nseg;++i) {
+		for(j=0;j<2;++j) {
+			if (pnt(seg(i).pnt(j)).gindx != x.seg(seg(i).gindx).pnt(j)) {
+				*x.gbl->log << "failed segment gindx check sind" << i << ' ' << pnt(seg(i).pnt(j)).gindx << ' ' << x.seg(seg(i).gindx).pnt(j) << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+		}
+	}
+
+	
+	for(i=0;i<ntri;++i) {
+		
+		//if (tri(i).info < 0) continue;
+		//if (area(i) < 0.0) *x.gbl->log << "negative area" << i << std::endl;
+		
+		for(j=0;j<3;++j) {
+			sind = tri(i).seg(j);
+			dir = -(tri(i).sgn(j) -1)/2;
+			
+			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
+				*x.gbl->log << "failed pnt check tind" << i << "sind" << sind << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			
+			if (seg(sind).tri(dir) != i) {
+				*x.gbl->log << "failed segment check tind" << i << "sind" << sind << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			
+			if (tri(i).tri(j) != seg(sind).tri(1-dir)) {
+				*x.gbl->log << "failed ttri check tind" << i << "sind" << sind << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			
+			if (pnt(tri(i).pnt(j)).gindx != x.tri(tri(i).gindx).pnt(j)) {
+				*x.gbl->log << "failed tri gindx check sind" << i << ' ' << pnt(tri(i).pnt(j)).gindx << ' ' << x.tri(tri(i).gindx).pnt(j) << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+		}
+	}
+	return;
+}
+
+void edge_bdry::checkintegrity() {
+	for(int i=0;i<nseg;++i) {
+		if (seg(i).next > -1) {
+			assert(seg(i).next == seg(seg(i).next).prev);
+		}
+	}
+	return;
+}

@@ -433,8 +433,8 @@ class vrtx_bdry : public boundary {
 		/* INPUT/OUTPUT NOT USED YET // FIXME */
 		virtual void input(istream &fin,tet_mesh::filetype type = tet_mesh::grid) {}
 		virtual void output(ostream &fin,tet_mesh::filetype type = tet_mesh::grid) const {}
-		
-		
+		void checkintegrity(void) {}
+
 		virtual void ploadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
 		virtual void pfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
 
@@ -497,7 +497,9 @@ class edge_bdry : public boundary {
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
 		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
 		virtual void findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, FLT &psiloc) const;
-		
+		void checkintegrity(void);
+
+	
 		/* DEFAULT SENDING FOR SIDE VERTICES */
 		virtual void ploadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride) {}
 		virtual void pfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
@@ -600,7 +602,8 @@ class face_bdry : public boundary {
 		void create_pnt_nnbor(void);
 		void create_tri_tri(void);
 		void create_pnt_tri(void);
-		
+		void checkintegrity(void);
+	
 		virtual void pull_apart_face_boundaries();
 	
 		void create_from_tri() {
