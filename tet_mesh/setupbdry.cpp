@@ -78,7 +78,7 @@ void face_bdry::create_seg_gindx(void) {
 				}
 			}        
 		}
-		*x.gbl->log << "Trouble matching face boundary seg to global side definitions " << idprefix << ' ' << sind << ' ' << v(0) << ' ' << v(1) << std::endl;
+		*x.gbl->log << "Trouble matching face boundary seg to global side definitions " << idprefix << ' ' << sind << ' ' << seg(sind).pnt(0) << ' ' << seg(sind).pnt(1) << ' ' << v(0) << ' ' << v(1) << std::endl;
 NEXTSIDE:;
 	}
 	
