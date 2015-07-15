@@ -236,11 +236,10 @@ int main(int argc, char *argv[]) {
 			fname = "partition_" +nstr.str();
 			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
-			zpart = new tet_mesh;
-			zpart->partition2(zx,i,p,blist,bnum);
-			zpart->output(fname,tet_mesh::gmsh);
-			zpart->output(fname);
-			delete zpart;
+			tet_mesh zpart;
+			zpart.partition2(zx,i,p,blist,bnum);
+			zpart.output(fname,tet_mesh::gmsh);
+			zpart.output(fname);
 		}
 		return(0);
 	}
@@ -330,7 +329,7 @@ int main(int argc, char *argv[]) {
 			nstr.str("");
 			// zpart(i).partition2(zx,i,p,blist,bnum);
 			zpart.partition3(zx,i);
-
+			zpart.checkintegrity();
 			if (marks_flag) {
 				ofstream fout;
 				fout.open(mname.c_str());
