@@ -468,7 +468,7 @@ void face_bdry::checkintegrity() {
 			}
 			
 			if (seg(sind).tri(dir) != i) {
-				*x.gbl->log << "failed segment check tind" << i << "sind" << sind << std::endl;
+				*x.gbl->log << "failed segment check tind" << i << "sind" << sind << ' ' << seg(sind).tri << ' ' << dir << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			
@@ -489,8 +489,19 @@ void face_bdry::checkintegrity() {
 void edge_bdry::checkintegrity() {
 	for(int i=0;i<nseg;++i) {
 		if (seg(i).next > -1) {
-			assert(seg(i).next == seg(seg(i).next).prev);
+			if (seg(i).next != seg(seg(i).next).prev) {
+				*x.gbl->log << "next prev is out of whack" << i << ' ' << seg(i).next << ' ' << seg(seg(i).next).prev << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			else {
+				if (x.seg(seg(i).gindx).pnt(1) != x.seg(seg(seg(i).next).gindx).pnt(0)) {
+					*x.gbl->log << "something funny in definition of edge boundary" << i << ' ' << x.seg(seg(i).gindx).pnt(1) << ' ' << x.seg(seg(seg(i).next).gindx).pnt(0) << std::endl;
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
+				}
+			}
 		}
+		
+		
 	}
 	return;
 }
