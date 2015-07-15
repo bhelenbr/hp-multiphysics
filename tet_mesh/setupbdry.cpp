@@ -159,7 +159,7 @@ void face_bdry::convert_gbl_to_lcl(void) {
 	for(int i = 0; i < ntri; ++i) {
 		for(int j = 0; j < 3; ++j) {
 			ind = tri(i).seg(j);
-			if (seg(ind).tri(0) < 0) {
+			if (tri(i).sgn(j) > 0) {
 				seg(ind).tri(0) = i;
 			}
 			else {
