@@ -437,7 +437,7 @@ void face_bdry::checkintegrity() {
 		for(j=0;j<3;++j)
 			if (tri(tind).pnt(j) == i) goto next;
 		
-		*x.gbl->log << "tri.pnt is out of whack" <<  i << tind << std::endl;
+		*x.gbl->log << "tri.pnt is out of whack for " << idprefix << ' ' <<  i << tind << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 		
 	next: continue;
@@ -446,7 +446,7 @@ void face_bdry::checkintegrity() {
 	for(i=0;i<nseg;++i) {
 		for(j=0;j<2;++j) {
 			if (pnt(seg(i).pnt(j)).gindx != x.seg(seg(i).gindx).pnt(j)) {
-				*x.gbl->log << "failed segment gindx check sind" << i << ' ' << pnt(seg(i).pnt(j)).gindx << ' ' << x.seg(seg(i).gindx).pnt(j) << std::endl;
+				*x.gbl->log << "failed segment gindx check for " << idprefix << " sind " << i << ' ' << pnt(seg(i).pnt(j)).gindx << ' ' << x.seg(seg(i).gindx).pnt(j) << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 		}
@@ -463,22 +463,22 @@ void face_bdry::checkintegrity() {
 			dir = -(tri(i).sgn(j) -1)/2;
 			
 			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
-				*x.gbl->log << "failed pnt check tind" << i << "sind" << sind << std::endl;
+				*x.gbl->log << "failed pnt check for " << idprefix << " tind " << i << " sind " << sind << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			
 			if (seg(sind).tri(dir) != i) {
-				*x.gbl->log << "failed segment check tind" << i << "sind" << sind << ' ' << seg(sind).tri << ' ' << dir << std::endl;
+				*x.gbl->log << "failed segment check for " << idprefix << " tind " << i << " sind " << sind << ' ' << seg(sind).tri << ' ' << dir << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			
 			if (tri(i).tri(j) != seg(sind).tri(1-dir)) {
-				*x.gbl->log << "failed ttri check tind" << i << "sind" << sind << std::endl;
+				*x.gbl->log << "failed ttri check for " << idprefix << " tind " << i << " sind " << sind << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			
 			if (pnt(tri(i).pnt(j)).gindx != x.tri(tri(i).gindx).pnt(j)) {
-				*x.gbl->log << "failed tri gindx check sind" << i << ' ' << pnt(tri(i).pnt(j)).gindx << ' ' << x.tri(tri(i).gindx).pnt(j) << std::endl;
+				*x.gbl->log << "failed tri gindx check for " << idprefix << " sind " << i << ' ' << pnt(tri(i).pnt(j)).gindx << ' ' << x.tri(tri(i).gindx).pnt(j) << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 		}
@@ -489,13 +489,17 @@ void face_bdry::checkintegrity() {
 void edge_bdry::checkintegrity() {
 	for(int i=0;i<nseg;++i) {
 		if (seg(i).next > -1) {
+			if (seg(i).next != i+1) {
+				*x.gbl->log << "sides are out of order for " << idprefix << ' ' << i << ' ' << seg(i).next << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
 			if (seg(seg(i).next).prev != i) {
-				*x.gbl->log << "next prev is out of whack" << i << ' ' << seg(i).next << ' ' << seg(seg(i).next).prev << std::endl;
+				*x.gbl->log << "next prev is out of whack for " << idprefix << ' ' << i << ' ' << seg(i).next << ' ' << seg(seg(i).next).prev << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			else {
 				if (x.seg(seg(i).gindx).pnt(1) != x.seg(seg(seg(i).next).gindx).pnt(0)) {
-					*x.gbl->log << "something funny in definition of edge boundary" << i << ' ' << x.seg(seg(i).gindx).pnt(1) << ' ' << x.seg(seg(seg(i).next).gindx).pnt(0) << std::endl;
+					*x.gbl->log << "something funny in definition of edge boundary for " << idprefix << ' ' << i << ' ' << x.seg(seg(i).gindx).pnt(1) << ' ' << x.seg(seg(seg(i).next).gindx).pnt(0) << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 			}
