@@ -323,7 +323,7 @@ void face_bdry::match_tri_and_seg(void) {
 			}
 			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << ' ' << pnt(v1).gindx << ' ' << pnt(v2).gindx << std::endl;
 			for(i=0;i<npnt;++i)
-				*x.gbl->log << "pnt " << i << ' ' << pnt(i).gindx;
+				*x.gbl->log << "pnt " << i << ' ' << pnt(i).gindx << std::endl;
 			
 			
 			for(i=0;i<nseg;++i)
