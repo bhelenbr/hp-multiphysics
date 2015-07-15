@@ -321,13 +321,17 @@ void face_bdry::match_tri_and_seg(void) {
 				}
 				sind = seg(sind).info;
 			}
-			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << std::endl;
+			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << ' ' << pnt(v1).gindx << ' ' << pnt(v2).gindx << std::endl;
+			for(i=0;i<npnt;++i)
+				*x.gbl->log << "pnt " << i << ' ' << pnt(i).gindx;
+			
+			
 			for(i=0;i<nseg;++i)
-				*x.gbl->log << "seg " << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ' << seg(i).gindx << std::endl;
+				*x.gbl->log << "seg " << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ' << seg(i).gindx << x.seg(seg(i).gindx).pnt(0) << ' ' << x.seg(seg(i).gindx).pnt(1) << std::endl;
 		
 			
 			for(i=0;i<ntri;++i) {
-				*x.gbl->log << "tri " << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << ' ' << tri(i).gindx << std::endl;
+				*x.gbl->log << "tri " << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << ' ' << tri(i).gindx << ' ' << x.tri(tri(i).gindx).pnt(0) << ' ' << x.tri(tri(i).gindx).pnt(1) << ' ' << x.tri(tri(i).gindx).pnt(2) << std::endl;
 			}
 			
 			exit(1);
