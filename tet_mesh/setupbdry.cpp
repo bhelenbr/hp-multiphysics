@@ -261,7 +261,10 @@ void face_bdry::match_tri_and_seg(void) {
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
-		
+	
+	
+	// pnt(minv).info points to side
+	// seg(sind).info points to next side connected to minv
 	for(i=0;i<nseg;++i) {
 		v1 = seg(i).pnt(0);//fix me temp switch these to be consistent?
 		v2 = seg(i).pnt(1);
@@ -317,6 +320,14 @@ void face_bdry::match_tri_and_seg(void) {
 				sind = seg(sind).info;
 			}
 			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << std::endl;
+			for(i=0;i<nseg;++i)
+				*x.gbl->log << "seg " << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ' << seg(i).gindx << std::endl;
+		
+			
+			for(i=0;i<ntri;++i) {
+				*x.gbl->log << "tri " << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << ' ' << tri(i).gindx << std::endl;
+			}
+			
 			exit(1);
 			
 NEXTTRISIDE:
