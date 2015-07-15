@@ -325,7 +325,7 @@ void tet_mesh::create_unique_numbering() {
 	int sind,pnt0,phase;
 	bool last_phase;
 	
-	/* vinfo will store unique numbers of each vertex */
+	/* pnt(i).info will store unique numbers of each vertex */
 	/* Find maximum number of vertices on any block */
 	int maxpnts, sndpnt = npnt;
 	sim::blks.allreduce(&sndpnt,&maxpnts,1,blocks::int_msg,blocks::max);

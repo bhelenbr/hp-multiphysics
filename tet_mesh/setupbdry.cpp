@@ -78,6 +78,7 @@ void face_bdry::create_seg_gindx(void) {
 				}
 			}        
 		}
+		*x.gbl->log << "Trouble matching face boundary seg to global side definitions " << idprefix << ' ' << sind << ' ' << v(0) << ' ' << v(1) << std::endl;
 NEXTSIDE:;
 	}
 	
@@ -108,8 +109,9 @@ void face_bdry::create_tri_gindx(void) {
 					tri(tind).gindx=find;
 					goto NEXTTRI;
 				}
-			}        
+			}
 		}
+		*x.gbl->log << "Trouble matching face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << std::endl;
 NEXTTRI:;
 	}
 	

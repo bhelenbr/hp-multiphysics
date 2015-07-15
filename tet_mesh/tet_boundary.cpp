@@ -430,6 +430,8 @@ void ecomm::match_numbering(int step) {
 						printstuff = true;
 						*x.gbl->log << "Matching edge numbering error, edge: " << idprefix << endl;
 						*x.gbl->log << "target points " << mpnt1 << ' ' << mpnt2 << std::endl;
+						sim::abort(__LINE__, __FILE__, x.gbl->log);
+
 						//*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << ' ' << x.pnts(pnt(i).gindx) << '\n';
 						//*x.gbl->log << "idnum " << idnum << " lcl point " << i << " gbl point " << pnt(i).gindx << '\n';
 					}					
@@ -439,20 +441,25 @@ void ecomm::match_numbering(int step) {
 				reorder();
 				
 				/* check to make sure pnts locations match perfectly */
-				if (printstuff) {
-					count = 0;
-					for (int i=0; i<nseg; ++i) {
-						for (int n=0; n<3; ++n) {
-							*x.gbl->log << fsndbuf(count++)-x.pnts(x.seg(seg(i).gindx).pnt(0))(n) << endl;
-						}
+				count = 0;
+				for (int i=0; i<nseg; ++i) {
+					FLT dist = 0.0;
+					for (int n=0; n<3; ++n) {
+						dist += pow(fsndbuf(count++)-x.pnts(x.seg(seg(i).gindx).pnt(0))(n), 2.0);
 					}
-					for (int n=0; n<3; ++n) 
-						*x.gbl->log << fsndbuf(count++)-x.pnts(x.seg(seg(nseg-1).gindx).pnt(1))(n) << endl;
-					
-					exit(4);
+					if (dist > 10.*EPSILON) {
+						*x.gbl->log << "Matching edge numbering error after reorder" << idprefix << endl;
+						sim::abort(__LINE__, __FILE__, x.gbl->log);
+					}
 				}
-				
-				
+				FLT dist = 0.0;
+				for (int n=0; n<3; ++n) {
+					dist += pow(fsndbuf(count++)-x.pnts(x.seg(seg(nseg-1).gindx).pnt(1))(n), 2.0);
+				}
+				if (dist > 10.*EPSILON) {
+					*x.gbl->log << "Matching edge numbering error after reorder" << idprefix << endl;
+					sim::abort(__LINE__, __FILE__, x.gbl->log);
+				}
 			}
 			return;
 		}

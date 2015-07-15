@@ -807,7 +807,6 @@
 					"${mpi_threads}",
 					MY_SPARSE,
 					MPISRC,
-					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 			};
