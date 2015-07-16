@@ -79,7 +79,7 @@ void tet_mesh::mgconnect(tet_mesh &tgt, Array<transfer,1> &cnnct) {
 		/* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
 		if (fbdry(bnum)->idnum != tgt.fbdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		fbdry(bnum)->mgconnect(cnnct,tgt,bnum);
 		//thread_func(bnum) = boost::bind(&edge_bdry::mgconnect,ebdry(bnum),boost::ref(cnnct),boost::ref(tgt),bnum);
@@ -92,7 +92,7 @@ void tet_mesh::mgconnect(tet_mesh &tgt, Array<transfer,1> &cnnct) {
 		/* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
 		if (ebdry(bnum)->idnum != tgt.ebdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		ebdry(bnum)->mgconnect(cnnct,tgt,bnum);
 	}	

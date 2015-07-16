@@ -761,7 +761,7 @@ void face_bdry::copy(const face_bdry& tgt) {
 		/* CHECK IF BIG ENOUGH */
 		if (tgt.nseg > maxpst) {
 			*x.gbl->log << "face_bdry is too big to copy" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 	}
 	

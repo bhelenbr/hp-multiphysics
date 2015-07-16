@@ -215,7 +215,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.open(grd_app.c_str());
 			if (!in) {
 				*gbl->log << "error loading" << grd_nm << ".d" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}                    
 							
 			/* LOAD NUMBER OF BDRY PTS, BDRY FACES, PTS, TETS, AND EDGES  */
@@ -301,7 +301,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.open(grd_app.c_str());    
 			if (!in) {
 				*gbl->log << "error loading" << grd_nm << ".grd" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}			
 
 			in.ignore(80,':');
@@ -416,7 +416,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.open(grd_app.c_str());
 			if (!in) {
 					  *gbl->log << "trouble opening " << grd_nm << std::endl;
-					  exit(1);
+					  sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			for(int i=0;i<5;++i)
@@ -499,7 +499,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.open(grd_app.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open tecplot file: " << grd_app<< std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			/* HEADER LINES */
@@ -518,7 +518,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			}
 			else if ((3*ntet) > maxvst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 				
 			/* READ VERTEX DATA */
@@ -584,7 +584,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 		default:
 			*gbl->log << "That filetype is not supported" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	/* FIND ENDPOINT MATCHES */

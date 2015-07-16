@@ -83,7 +83,7 @@ void tet_mesh::reorient_tets(bool usevinfo) {
 		}
 		else if (volume < EPSILON*volL1) {
 			std::cout << "tet " << tind << " has a zero volume " << volume << ' ' << volL1 << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		tet(tind).pnt = v;
 		
@@ -289,7 +289,7 @@ void tet_mesh::match_tet_and_seg() {
 				eind=seg(eind).info;
 			}
 
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 
 NEXTEDGE:;
 
@@ -476,7 +476,7 @@ void tet_mesh::match_tet_and_tri() {
 				find=tri(find).info;
 			}
 			*gbl->log << "Error matching tet and tri\n";
-			exit(1);	
+			sim::abort(__LINE__,__FILE__,gbl->log);
 
 NEXTFACE:;
 	
@@ -559,7 +559,7 @@ void tet_mesh::match_tri_and_seg() {
 				for (int j=0;j<3;++j) {
 					cout << pnts(v(j)) << std::endl;
 				}
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 		}
 	}

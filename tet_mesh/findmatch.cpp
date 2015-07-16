@@ -513,12 +513,6 @@ void tet_mesh::match_bdry_numbering() {
 //		ebdry(i)->match_numbering(2);		  
 
 	
-	
-	
-	
-	
-	
-	
 	/* Redefine tets based on global numbering system */
 	reorient_tets(true);
 	create_from_pnt_definitions();
@@ -707,7 +701,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 	}
 	else if (4*ntet > maxvst) {//FIX ME 3->4??
 		*gbl->log << "mesh is too small" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	ostringstream nstr;
@@ -1520,7 +1514,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 	}
 	else if (4*ntet > maxvst) {//FIX ME 3->4??
 		*gbl->log << "mesh is too small" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	ostringstream nstr;
@@ -2070,7 +2064,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 		if (findpnts(i) == -2) {
 			cout << "HEY LOOK HERE make new vertex comm: " << pnt(i).info+maxvnum << endl;
 			cout << "code is gonna crash with this mesh" << endl;
-			//exit(1);
+			//sim::abort(__LINE__,__FILE__,gbl->log);
 //			vbdry.resizeAndPreserve(nvbd+1);
 //			vbdry(nvbd) = new vcomm(pnt(i).info+maxvnum,*this);
 //			vbdry(nvbd)->alloc(4);
@@ -2550,7 +2544,7 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	}
 	else if (4*ntet > maxvst) {//FIX ME 3->4??
 		*gbl->log << "mesh is too small" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	ostringstream nstr;
@@ -2616,9 +2610,11 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	map<int,vector<int> > face_boundaries;
 	
 	/* find all face boundaries */
+	xin.tet(-1).info = -1; // external partition is -1
+	
 	for(int i = 0; i < xin.ntri; ++i) {
 		
-		if (xin.tet(xin.tri(i).tet(0)).info == npart) {
+		if (xin.tet(xin.tri(i).tet(0)).info == npart || xin.tet(xin.tri(i).tet(1)).info == npart) {
 			/* triangle vertex points */
 			for(int n = 0; n < 3; ++n)
 				tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
@@ -2631,21 +2627,12 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 			}
 			
 			++ntri;
-		}
-		else if (xin.tri(i).tet(1) > -1) {
-			if (xin.tet(xin.tri(i).tet(1)).info == npart) {
-				/* triangle vertex points */
-				for(int n = 0; n < 3; ++n)
-					tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
-				
-				tri(ntri).info = i;
-				
-				/* count boundary faces */
-				if (xin.tri(i).info > -1) {
-					face_boundaries[xin.tri(i).info].push_back(ntri);
-				}
-				
-				++ntri;
+			
+			if (xin.tet(xin.tri(i).tet(0)).info < xin.tet(xin.tri(i).tet(1)).info) {
+				/* Swap orientation of tri */
+				int temp = tri(ntri).pnt(1);
+				tri(ntri).pnt(1) = tri(ntri).pnt(2);
+				tri(ntri).pnt(2) = temp;
 			}
 		}
 	}

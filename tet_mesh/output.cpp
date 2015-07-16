@@ -67,7 +67,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			out << npnt << endl;
@@ -84,7 +84,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << nseg << endl;
 			for(int i=0;i<nseg;++i) {
@@ -96,7 +96,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << ntri << endl;
 			for(int i=0;i<ntri;++i) {
@@ -111,7 +111,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << ntet << endl;
 			for(int i=0;i<ntet;++i) {
@@ -202,7 +202,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << "VARIABLES = \"X\", \"Y\", \"Z\" " << endl;
 			out << "ZONE F=FEPOINT, ET=TETRAHEDRON, N = " << npnt << ", E = " << ntet << endl;
@@ -232,7 +232,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << npnt << endl;
 			for(int i=0;i<npnt;++i) {
@@ -286,7 +286,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(int i=0;i<npnt;++i)

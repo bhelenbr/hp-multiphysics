@@ -70,7 +70,7 @@ void face_bdry::vertexcircle(int vind) {
 //			std::cout << xpt << '\n';
 //		}
 //	}
-//	exit(1);
+//	sim::abort(__LINE__,__FILE__,gbl->log);
 
 
 void face_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s) {
@@ -248,7 +248,7 @@ void face_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, 
 		for (int i=0;i<nseg;++i)
 			std::cout << i << ' ' << seg(i).gindx << ' ' << seg(i).info << std::endl;
 	
-		exit(1);
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 		
 	

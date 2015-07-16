@@ -173,37 +173,56 @@ NEXTTRI:;
 /* fills in all info after loading minimal mesh data (grid) */
 void face_bdry::create_from_gindx() {
 	int ind;
-		
+	
+	/* fill in pnt data */
 	for(int i = 0; i < npnt; ++i) {
-		x.gbl->i2wk(pnt(i).gindx)=i;
+		x.gbl->i1wk(pnt(i).gindx)=i;
 	}
 	
 	for(int i = 0; i < nseg; ++i) {
 		ind = seg(i).gindx;
-		seg(i).pnt(0)=x.gbl->i2wk(x.seg(ind).pnt(0));    
-		seg(i).pnt(1)=x.gbl->i2wk(x.seg(ind).pnt(1));    
+		seg(i).pnt(0)=x.gbl->i1wk(x.seg(ind).pnt(0));
+		seg(i).pnt(1)=x.gbl->i1wk(x.seg(ind).pnt(1));
+		seg(i).tri = -1;
 	}
 	
 	for(int i = 0; i < ntri; ++i) {
 		ind = tri(i).gindx;
-		tri(i).pnt(0)=x.gbl->i2wk(x.tri(ind).pnt(0));    
-		tri(i).pnt(1)=x.gbl->i2wk(x.tri(ind).pnt(1));    
-		tri(i).pnt(2)=x.gbl->i2wk(x.tri(ind).pnt(2));
+		tri(i).pnt(0)=x.gbl->i1wk(x.tri(ind).pnt(0));
+		tri(i).pnt(1)=x.gbl->i1wk(x.tri(ind).pnt(1));
+		tri(i).pnt(2)=x.gbl->i1wk(x.tri(ind).pnt(2));
 	}
 	
+	/* Reset i1wk */
+	for(int i = 0; i < npnt; ++i) {
+		x.gbl->i1wk(pnt(i).gindx) = -1;
+	}
+
+	
+	/* Fill in tri.seg and seg.tri data */
 	for(int i = 0; i < nseg; ++i) {
-		x.gbl->i2wk(seg(i).gindx)=i;
-	}
-	for(int i = 0; i < ntri; ++i) {
-		ind = tri(i).gindx;
-		tri(i).seg(0)=x.gbl->i2wk(x.tri(ind).seg(0));
-		tri(i).seg(1)=x.gbl->i2wk(x.tri(ind).seg(1));
-		tri(i).seg(2)=x.gbl->i2wk(x.tri(ind).seg(2));
-		tri(i).sgn(0)=x.tri(ind).sgn(0);
-		tri(i).sgn(1)=x.tri(ind).sgn(1);
-		tri(i).sgn(2)=x.tri(ind).sgn(2);
+		x.gbl->i1wk(seg(i).gindx)=i;
 	}
 	
+	for(int i = 0; i < ntri; ++i) {
+		int tind = tri(i).gindx;
+		tri(i).sgn = x.tri(tind).sgn;
+		for (int j=0;j<3;++j) {
+			int sind = x.gbl->i1wk(x.tri(tind).seg(j));
+			tri(i).seg(j)=sind;
+			int sign = tri(i).sgn(j);
+			if (seg(sind).tri((1-sign)/2) == -1)
+				seg(sind).tri((1-sign)/2) = i;
+			else {
+				*x.gbl->log << "tri's not consistently defined cw or ccw on face " << std::endl;
+				sim::abort(__LINE__, __FILE__, x.gbl->log);
+			}
+		}
+	}
+	for(int i = 0; i < nseg; ++i) {
+		x.gbl->i1wk(seg(i).gindx) = -1;
+	}
+
 	create_pntnnbor_tritri_pnttri();
 
 	return;

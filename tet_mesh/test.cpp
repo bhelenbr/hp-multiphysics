@@ -314,14 +314,14 @@ void tet_mesh::checkintegrity() {
 	for(i=0;i<maxvst;++i) {
 		if (gbl->i1wk(i) != -1) {
 			*gbl->log << "gbl->i1wk check failed" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 		
 	for(tind=0;tind<ntet;++tind) {
 		if (tet(tind).vol < 0) {
 			*gbl->log << "negative tet volume on tet: " << tind << endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
 		for(i = 0; i < 6; ++i) {
@@ -329,13 +329,13 @@ void tet_mesh::checkintegrity() {
 			if (tet(tind).sgn(i) == 1) {
 				if (seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))) {
 					*gbl->log << "tet seg vertex error type 1"<< endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 			else{
 				if (seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))) {
 					*gbl->log << "tet seg vertex error type 2 " << sind << ' ' << tind << ' ' << i << endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 		}
@@ -346,11 +346,11 @@ void tet_mesh::checkintegrity() {
 			if (tri(find).tet(1) > -1) {
 				if (tet(tind).tet(i) < 0) {
 					*gbl->log << "tet neighbor data error type 1"<< endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				if (tri(find).tet(1) != tet(tind).tet(i) && tri(find).tet(0) != tet(tind).tet(i)) {
 					*gbl->log << "tet neighbor data error type 2"<< endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 
@@ -358,33 +358,33 @@ void tet_mesh::checkintegrity() {
 				for(j = 0; j < 3; ++j) {
 					if (tet(tind).pnt(vf1(i,j)) != tri(find).pnt(j)) {
 						*gbl->log << "face vertex error type 1"<< endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 					if (tet(tind).seg(sf1(i,j)) != tri(find).seg(j)) {
 						*gbl->log << "face seg error type 1"<< endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 				if (tind != tri(find).tet(0)) {
 					*gbl->log << "tet rot error type 1"<< endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 			else{
 				for(j = 0; j < 3; ++j) {
 					if (tet(tind).pnt(vf2(i,j)) != tri(find).pnt(j)) {
 						*gbl->log << "face vertex error type 2"<< endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 					if (tet(tind).seg(sf2(i,j)) != tri(find).seg(j)) {
 						*gbl->log << "face seg error type 2"<< endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 //                if (tri(find).tet(1) != -1) {
 //                    if (tet(tind).tet(i) != tri(find).tet(1)) {
 //                        *gbl->log << "tet rot error type 2 "<< tri(find).tet(1)<<' '<<tet(tind).tet(i)<< ' '<< tri(find).tet(1)<< ' ' << tet(tind).rot(i) << endl;                        
-//                        exit(1);
+//                        sim::abort(__LINE__,__FILE__,gbl->log);
 //                    }
 //                }
 			}
@@ -396,7 +396,7 @@ void tet_mesh::checkintegrity() {
 						*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
 						output("error",grid);
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 				else{
@@ -404,7 +404,7 @@ void tet_mesh::checkintegrity() {
 						*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
 						output("error",easymesh);
 						output("error",grid);
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 			}
@@ -419,7 +419,7 @@ void tet_mesh::checkintegrity() {
 					*gbl->log << "seg vertex error type 3 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",grid);
 					output("error",easymesh);
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 			else{
@@ -427,7 +427,7 @@ void tet_mesh::checkintegrity() {
 					*gbl->log << "seg vertex error type 4 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",grid);
 					output("error",easymesh);
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 		}

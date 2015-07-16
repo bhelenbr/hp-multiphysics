@@ -58,7 +58,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 		output("error"+gbl->idprefix,easymesh);
 		output("error"+gbl->idprefix);
 		
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 			
 	/* SEARCH SURROUNDING TETS */
@@ -85,7 +85,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 //	}
 //	output("error",easymesh);
 //	output("error");
-//	exit(1);
+//	sim::abort(__LINE__,__FILE__,gbl->log);
 
 	found = false;
 	

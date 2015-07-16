@@ -12,7 +12,7 @@ void tet_mesh::copy(const tet_mesh& tgt) {
 		/* CHECK IF BIG ENOUGH */
 		if (tgt.ntri > maxvst) {
 			*gbl->log << "mesh is too big to copy: " << tgt.ntri << ' ' << maxvst << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	

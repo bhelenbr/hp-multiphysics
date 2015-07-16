@@ -28,7 +28,7 @@ void tet_mesh::fangle(int i, double Q) {
 	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 		
 	T = sqrt(1.0/CHALF -1.0);
@@ -42,7 +42,7 @@ void tet_mesh::fangle(int i, double Q) {
 	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	T = sqrt(1.0/CHALF-1.0);
 	ANGL2 = 2.0*atan(T);
@@ -54,7 +54,7 @@ void tet_mesh::fangle(int i, double Q) {
 	if (CHALF <= 1.0e-6) {
 		cout << "face " << i << " has an angle of 180 degrees" << endl;
 		cout << "routine fangle has stopped" << endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	T = sqrt(1.0/CHALF-1.0);

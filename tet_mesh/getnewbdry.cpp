@@ -45,7 +45,7 @@ vrtx_bdry* tet_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
 	type = vtype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << "unknown vertex type:" << typ_str << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 		
 	switch(type) {
@@ -118,7 +118,7 @@ edge_bdry* tet_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 	type = etype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << "unknown edge type:" << typ_str << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 
@@ -224,7 +224,7 @@ face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& inmap) {
 		type = ftype::getid(val.c_str());
 		if (type < 0)  {
 			*gbl->log << "unknown face type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
