@@ -190,69 +190,41 @@ void face_bdry::convert_gbl_to_lcl(void) {
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
 void face_bdry::create_seg_from_tri(void) {
-	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind=-1,sindprev=-1;
+	int i,j,v1,v2,vout,temp,minv,maxv,order,sind=-1,sindprev=-1;
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
 		
 	nseg = 0;
-	for(tind=0;tind<ntri;++tind) {
+	for(int tind=0;tind<ntri;++tind) {
+		int gtind = tri(tind).gindx;
+		tri(tind).sgn = x.tri(gtind).sgn;
 		vout = tri(tind).pnt(0);
 		v1 = tri(tind).pnt(1);
 		v2 = tri(tind).pnt(2);
-		for(j=0;j<3;++j) {
-			/* CHECK IF SIDE HAS BEEN CREATED ALREADY */
-			if (v2 > v1) {
-				minv = v1;
-				maxv = v2;
-				order = 0;
+		for(int j=0;j<3;++j) {
+			assert(x.tri(gtind).pnt(j) == pnt(tri(tind).pnt(j)).gindx);
+			int gsind = x.tri(gtind).seg(j);
+			if (x.gbl->i1wk(gsind) == -1) {
+				tri(tind).seg(j) = nseg;
+				seg(nseg).gindx = gsind;
+				int sign = tri(tind).sgn(j);
+				seg(nseg).pnt((1-sign)/2) = v1;
+				seg(nseg).pnt((1+sign)/2) = v2;
+				seg(nseg).tri((1-sign)/2) = tind;
+				x.gbl->i1wk(gsind) = nseg++;
 			}
 			else {
-				minv = v2;
-				maxv = v1;
-				order = 1;
+				int sind = x.gbl->i1wk(gsind);
+				tri(tind).seg(j) = sind;
+				int sign = tri(tind).sgn(j);
+				seg(sind).tri((1-sign)/2) = tind;
 			}
-			
-			sind = pnt(minv).info;
-			while (sind >= 0) {
-				if (maxv == seg(sind).pnt(order)) {
-					if (seg(sind).tri(1) >= 0) {
-						*x.gbl->log << "Error: side " << sind << " has been matched with Triangle " << tind << " 3 times" << std::endl;  
-						*x.gbl->log << "tets "<< x.tri(tri(tind).gindx).tet(0) << ' ' << x.tri(tri(tind).gindx).tet(1)<< " pnts "<< x.pnts(x.tri(tri(tind).gindx).pnt(0)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(1)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(2))<<std::endl;  
-
-						x.output("error",tet_mesh::easymesh);
-						x.output("error",tet_mesh::grid);
-						exit(1);
-					}
-					else {
-						seg(sind).tri(1) = tind;
-						tri(tind).seg(j) = sind;
-						tri(tind).sgn(j) = -1;
-						goto NEXTTRISIDE;
-					}
-				}
-				sindprev = sind;
-				sind = seg(sind).info;
-			}
-			/* NEW SIDE */
-			seg(nseg).pnt(0) = v1;
-			seg(nseg).pnt(1) = v2;
-			seg(nseg).tri(0) = tind;
-			seg(nseg).tri(1) = -1;
-			tri(tind).seg(j) = nseg;
-			tri(tind).sgn(j) = 1;
-			seg(nseg).info = -1;
-			if (pnt(minv).info < 0)
-				pnt(minv).info = nseg;
-			else 
-				seg(sindprev).info = nseg;
-			++nseg;
-NEXTTRISIDE:
-			temp = vout;
-			vout = v1;
-			v1 = v2;
-			v2 = temp;
 		}
+		temp = vout;
+		vout = v1;
+		v1 = v2;
+		v2 = temp;
 	}
 
 	return;

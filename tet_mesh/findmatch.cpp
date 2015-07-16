@@ -521,7 +521,7 @@ void tet_mesh::match_bdry_numbering() {
 	
 	/* Redefine tets based on global numbering system */
 	reorient_tets(true);
-	match_all();
+	create_from_pnt_definitions();
 		
 	/* Master loads integer data (seg, tri definitions) */
 	for(int i=0;i<nfbd;++i)
@@ -741,7 +741,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 	}
 	
 	/* fill in the rest of the mesh data structure */
-	create_from_tet();// messes up pnt,seg,tri.info
+	create_from_tet_definitions();// messes up pnt,seg,tri.info
 	
 	/* find and create face boundaries */
 	nfbd = 0;
@@ -843,7 +843,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 				fbdry(i)->tri(tind).pnt(j) = tri(tri_gindx).pnt(j);		
 		}
 		/* fill in mesh data structure on face boundaries */
-		fbdry(i)->create_from_tri();
+		fbdry(i)->create_from_pnt();
 	}
 	
 	/* find face boundaries that are disconnected and separate them */
@@ -1245,10 +1245,10 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 #endif
 
 	
-	/* call match_all because reorder doesnt account for sign change */
-	match_all();
+	/* call create_data_from_pnt_definitions because reorder doesnt account for sign change */
+	create_from_pnt_definitions();
 	for(int i = 0; i < nfbd; ++i) {
-		fbdry(i)->match_all(); 
+		fbdry(i)->create_from_gindx();
 	}
 	
 	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
@@ -2729,12 +2729,12 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 		++nebd;
 	}
 	
-	/* call match_all because reorder doesnt account for sign change */
-	match_all();
+	/* call create_from_pnt_definitions because reorder doesnt account for sign change */
+	create_from_pnt_definitions();
 	for(int i = 0; i < nfbd; ++i) {
 		/* Load global vertex indices */
 		fbdry(i)->create_gbl_pnt_from_tri();
-		fbdry(i)->create_from_tri();
+		fbdry(i)->create_from_pnt();
 	}
 	
 	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */

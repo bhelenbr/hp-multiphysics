@@ -277,6 +277,7 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	
 	// temporary
 	mesh->output("adapted_mesh_b0",tet_mesh::grid);
+	mesh->checkintegrity();
 
 	// 3.B. get the solution from the MDB mesh
 	//solver->allocateSolution();
@@ -424,17 +425,6 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 		pGEntity pge = R_whatIn(pr);
 		int gDim = GEN_type(pge);
 		int gId = GEN_tag(pge);
-		
-		if (gDim <= 2) {
-			cout << "why is this here" << endl;
-			// Edge Boundary */
-			for (int i=0;i<mesh->nfbd;++i) {
-				if (gId == mesh->fbdry(i)->idnum) {
-					mesh->fbdry(i)->tri(mesh->fbdry(i)->ntri++).gindx = mesh->ntet;
-					break;
-				}
-			}
-		}
 	
 		// get list of node id's in the solver mesh
 		TinyVector<int,4> nodes;
@@ -460,7 +450,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 	}
 	
 	mesh->reorient_tets();
-	mesh->match_all();
+	mesh->create_from_pnt_definitions();
 	
 	for(int i = 0; i < mesh->nfbd; ++i) {
 		/* Load global vertex info */
@@ -468,7 +458,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 			int gindx =mesh->fbdry(i)->tri(j).gindx;
 			mesh->fbdry(i)->tri(j).pnt = mesh->tri(gindx).pnt;
 		}
-		mesh->fbdry(i)->create_from_tri();
+		mesh->fbdry(i)->create_from_pnt();
 	}
 	/* FIND ENDPOINT MATCHES */
 	for(int i=0;i<mesh->nvbd;++i) {
@@ -489,7 +479,6 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 		mesh->fbdry(i)->treeinit();	
 	
 	mesh->tet_mesh::setinfo();
-	mesh->checkintegrity();
 	
 //	mesh->output("asdf",tet_mesh::grid);
 //	

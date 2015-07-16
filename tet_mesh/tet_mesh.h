@@ -311,7 +311,7 @@ class tet_mesh : public multigrid_interface {
 		void create_tet_tet(void); /**< createst tet(ttind).tet(0-4) data */
 		
 		/* Standard usages to initialize data */
-		void create_from_tet() {
+		void create_from_tet_definitions() {
 			create_seg_from_tet();
 			create_tri_from_tet();
 			match_tri_and_seg();
@@ -319,7 +319,7 @@ class tet_mesh : public multigrid_interface {
 			create_tet_tet();
 		}
 		
-		void match_all() {
+		void create_from_pnt_definitions() {
 			match_tet_and_seg(); // Requires tet.pnt and seg.pnt
 			match_tet_and_tri(); // Requires tet.pnt and tri.pnt
 			match_tri_and_seg(); // 
@@ -606,17 +606,16 @@ class face_bdry : public boundary {
 	
 		virtual void pull_apart_face_boundaries();
 	
-		void create_from_tri() {
+		void create_from_pnt() {
 			create_tri_pnt_and_pnt_gindx_from_gbltris();
-			create_seg_from_tri(); 
 			create_tri_gindx();
-			create_seg_gindx();
+			create_seg_from_tri();
 			create_tri_tri();
 			create_pnt_nnbor();
 			create_pnt_tri(); 
 		}
 				
-		void match_all() {
+		void create_from_gindx() {
 			convert_gbl_to_lcl(); 
 			create_pnt_nnbor();
 			create_pnt_tri();

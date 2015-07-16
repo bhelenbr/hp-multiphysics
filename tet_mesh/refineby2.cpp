@@ -161,10 +161,10 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	
 	/* UPDATE DATA STRUCTURES */
 	reorient_tets();
-	create_from_tet();
+	create_from_tet_definitions();
 	
 	for(int i = 0; i < nfbd; ++i) {
-		fbdry(i)->create_from_tri();
+		fbdry(i)->create_from_pnt();
 	}
 	
 	return;

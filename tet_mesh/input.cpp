@@ -290,8 +290,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.close(); 
 			
 			reorient_tets();
-			create_from_tet();
-			fbdry(0)->create_from_tri();      
+			create_from_tet_definitions();
+			fbdry(0)->create_from_pnt();      
 					
 			break;
 			
@@ -402,10 +402,10 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			in.close();
 			
-			match_all();
+			create_from_pnt_definitions();
 			
 			for(int i = 0; i < nfbd; ++i) {
-				fbdry(i)->match_all(); 
+				fbdry(i)->create_from_gindx();
 			}
 			
 			break;
@@ -486,9 +486,9 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in.close();
 
 			reorient_tets();
-			create_from_tet();
+			create_from_tet_definitions();
 			for(int i = 0; i < nfbd; ++i) 
-				fbdry(i)->create_from_tri(); 
+				fbdry(i)->create_from_pnt(); 
 			
 			break;
 			
@@ -543,7 +543,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			/* CREATE ALL MESH INFO */
 			reorient_tets();
-			create_from_tet();
+			create_from_tet_definitions();
 
 			/* FIND ALL BOUNDARY SIDES */
 			int count = 0;
@@ -564,7 +564,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			}
 			
 			for(int i = 0; i < nfbd; ++i)
-				fbdry(i)->create_from_tri();  
+				fbdry(i)->create_from_pnt();  
 			
 			nvbd = 0;
 			nebd = 0;
@@ -616,6 +616,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 	else if (filetype != boundary) initlngth();
 	
 	tet_mesh::setinfo();
+	output("error",tet_mesh::grid);
 	checkintegrity();
 
 	initialized = 1;

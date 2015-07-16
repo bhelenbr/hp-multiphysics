@@ -1113,7 +1113,7 @@ void face_bdry::pull_apart_face_boundaries() {
 			}
 		}
 		
-		create_from_tri();
+		create_from_pnt();
 		
 		for (int n=1; n<chunk; ++n) {
 			int fbd = x.nfbd-n;
@@ -1129,7 +1129,7 @@ void face_bdry::pull_apart_face_boundaries() {
 				}
 			}
 			
-			x.fbdry(fbd)->create_from_tri();
+			x.fbdry(fbd)->create_from_pnt();
 			
 		}	
 	}
