@@ -226,6 +226,10 @@ void face_bdry::create_seg_from_tri(void) {
 		v1 = v2;
 		v2 = temp;
 	}
+	
+	for(int sind=0;sind<nseg;++sind) {
+		x.gbl->i1wk(seg(sind).gindx) = -1;
+	}
 
 	return;
 }
