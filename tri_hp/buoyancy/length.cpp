@@ -78,6 +78,9 @@ void tri_hp_buoyancy::error_estimator() {
 				FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
 				FLT rhol = gbl->rho_vs_T.Eval(ul(2)(i,j));
 				
+				rho = 1;  // TEMPO
+				rhol = 1; // TEMPO
+				
 				FLT dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
 				FLT dudy = -ldcrd(0,1)*du(0,0)(i,j) +ldcrd(0,0)*du(0,1)(i,j);
 				FLT dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);

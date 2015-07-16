@@ -291,7 +291,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			reorient_tets();
 			create_from_tet_definitions();
-			fbdry(0)->create_from_pnt();      
+			fbdry(0)->create_from_gbl_tri_pnt();
 					
 			break;
 			
@@ -488,7 +488,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			reorient_tets();
 			create_from_tet_definitions();
 			for(int i = 0; i < nfbd; ++i) 
-				fbdry(i)->create_from_pnt(); 
+				fbdry(i)->create_from_gbl_tri_pnt(); 
 			
 			break;
 			
@@ -564,7 +564,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			}
 			
 			for(int i = 0; i < nfbd; ++i)
-				fbdry(i)->create_from_pnt();  
+				fbdry(i)->create_from_gbl_tri_pnt();  
 			
 			nvbd = 0;
 			nebd = 0;

@@ -454,11 +454,8 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 	
 	for(int i = 0; i < mesh->nfbd; ++i) {
 		/* Load global vertex info */
-		for(int j=0;j<mesh->fbdry(i)->ntri;++j) {
-			int gindx =mesh->fbdry(i)->tri(j).gindx;
-			mesh->fbdry(i)->tri(j).pnt = mesh->tri(gindx).pnt;
-		}
-		mesh->fbdry(i)->create_from_pnt();
+		mesh->fbdry(i)->load_gbl_tri_pnt_from_mesh();
+		mesh->fbdry(i)->create_from_gbl_tri_pnt();
 	}
 	/* FIND ENDPOINT MATCHES */
 	for(int i=0;i<mesh->nvbd;++i) {

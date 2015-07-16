@@ -79,8 +79,6 @@ class tet_mesh : public multigrid_interface {
 			int nnbor;    /**< number of neighboring tets */
 			int info;   /**< General purpose (mostly for adaptation) */
 			int nspk;  /**< Number of tris connected to this seg */
-			int bnum;  /**< boundary number of edge/face bdry */
-			int lnum;  /**< local number on associated edge/face bdry */
 		};
 		Array<segstruct,1> seg; /**< Array of segment data */
 		//@}
@@ -103,8 +101,6 @@ class tet_mesh : public multigrid_interface {
 			TinyVector<int,2> tet;  /**< 2 tets sharing common tri */
 			TinyVector<int,3> sgn;  /**< sign convention for each segment on tri */
 			int info; /**< General purpose (mostly for adaptation) */
-			int bnum;  /**< face boundary number */
-			int lnum;  /**< local tri number on associated face bdry */
 		};
 		Array<tristruct,1> tri; /**< Array of triangle data */
 		
@@ -115,40 +111,10 @@ class tet_mesh : public multigrid_interface {
 		Array<face_bdry *,1> fbdry;  /**< array of face boundary objects */
 		face_bdry* getnewfaceobject(int idnum, input_map& inmap); /**< function for obtaining different face boundary objects */
 		//@}
-		
-		/* This is a way to find out which boundary a tri or edge belongs to */
-		/* This is ugly, but it works for now (I think?) */
-//		int getbdrynum(int seginfo) const {
-//			int bnum = (-seginfo>>20) -1;
-//			if (bnum > 256) return(bnum-256);
-//			else return(bnum);
-//		}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
-//		
-//		int getbdryel(int seginfo) const { return(-seginfo&0xFFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
-//		int is_edge(int seginfo) {
-//			int bnum = -seginfo>>20 -1;
-//			if (bnum > 256) return(true);
-//			else return(false);
-//		}
-//		int numatbdry(int bnum, int bel, bool is_edge = false) const { return(-(((bnum+is_edge*256 +1)<<20) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */		
-//		
 	
-//	int getbdrynum(int bdry_info) const {
-//		return(-bdry_info-10);		
-//	}
-//	
-//	int numatbdry(int bnum) const {
-//		return(-bnum-10);
-//	}
-	
-	int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
-	int getbdrytri(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
-	int numatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
-	
-	
-//	int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
-//	int getbdryel(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
-//	int numatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
+		int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
+		int getbdrytri(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
+		int numatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
 	
 		/* TETRAHEDRAL DATA */    
 		/** @name Variables describing tetrahedrals */
@@ -298,17 +264,17 @@ class tet_mesh : public multigrid_interface {
 		/** @name Setup routines */
 		//@{
 		void allocate(int mxsize);  /**< Allocates memory */
-		void bdrylabel(void); /**< Makes seg().tri and tri().tri on boundary have pointer to boundary group/element */
+		void bdrylabel(); /**< Makes seg().tri and tri().tri on boundary have pointer to boundary group/element */
 		void treeinit(); /**< Initialize octtree data */
 		void treeinit(FLT x1[ND], FLT x2[ND]); /** Initialize octtree data with specified domain */
 		void reorient_tets(bool use_pnt_info=false);  /**< reorients vertex ordering, and calculates volume */
-		void create_seg_from_tet(void);
-		void create_tri_from_tet(void);
-		void match_tet_and_seg(void);
-		void match_tet_and_tri(void);
-		void match_tri_and_seg(void);
-		void create_pnt_nnbor(void);  /**< counts number of neighboring tet's connected to a point pnt().nnbor*/
-		void create_tet_tet(void); /**< createst tet(ttind).tet(0-4) data */
+		void create_seg_from_tet();
+		void create_tri_from_tet();
+		void match_tet_and_seg();
+		void match_tet_and_tri();
+		void match_tri_and_seg();
+		void create_pnt_nnbor();  /**< counts number of neighboring tet's connected to a point pnt().nnbor*/
+		void create_tet_tet(); /**< createst tet(ttind).tet(0-4) data */
 		
 		/* Standard usages to initialize data */
 		void create_from_tet_definitions() {
@@ -433,7 +399,7 @@ class vrtx_bdry : public boundary {
 		/* INPUT/OUTPUT NOT USED YET // FIXME */
 		virtual void input(istream &fin,tet_mesh::filetype type = tet_mesh::grid) {}
 		virtual void output(ostream &fin,tet_mesh::filetype type = tet_mesh::grid) const {}
-		void checkintegrity(void) {}
+		void checkintegrity() {}
 
 		virtual void ploadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
 		virtual void pfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
@@ -497,7 +463,7 @@ class edge_bdry : public boundary {
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
 		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
 		virtual void findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, FLT &psiloc) const;
-		void checkintegrity(void);
+		void checkintegrity();
 
 	
 		/* DEFAULT SENDING FOR SIDE VERTICES */
@@ -591,36 +557,17 @@ class face_bdry : public boundary {
 		/* SOME UTITILITIES */
 		/*******************/  
 		virtual void match_numbering(int step) {}
+		void load_gbl_tri_pnt_from_mesh();
+		void create_from_gbl_tri_pnt();
+		void create_from_gindx();
+		void create_pntnnbor_tritri_pnttri();
+		void create_seg_gindx();
+		void create_tri_gindx();
+	
 		void vertexcircle(int vind);
-		void create_seg_from_tri(void);
-		void match_tri_and_seg(void);
-		void create_gbl_pnt_from_tri(void);
-		void create_tri_pnt_and_pnt_gindx_from_gbltris(void);
-		void create_seg_gindx(void);
-		void create_tri_gindx(void);
-		void convert_gbl_to_lcl(void);
-		void create_pnt_nnbor(void);
-		void create_tri_tri(void);
-		void create_pnt_tri(void);
-		void checkintegrity(void);
-	
+		void checkintegrity();
 		virtual void pull_apart_face_boundaries();
-	
-		void create_from_pnt() {
-			create_tri_pnt_and_pnt_gindx_from_gbltris();
-			create_tri_gindx();
-			create_seg_from_tri();
-			create_tri_tri();
-			create_pnt_nnbor();
-			create_pnt_tri(); 
-		}
-				
-		void create_from_gindx() {
-			convert_gbl_to_lcl(); 
-			create_pnt_nnbor();
-			create_pnt_tri();
-			create_tri_tri();
-		}
+
 		void treeinit();
 		void treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]);
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);

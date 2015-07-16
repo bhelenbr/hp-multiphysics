@@ -10,9 +10,8 @@
 #include <utilities.h>
 #include <float.h>
 
-/* only run once else it gets screwed up */
 /* this assumes that the global vertex numbers are in tri.pnt */
-void face_bdry::create_gbl_pnt_from_tri(void) {
+void face_bdry::load_gbl_tri_pnt_from_mesh() {
 
 	for(int i = 0; i < ntri; ++i) {
 		int tind = tri(i).gindx;
@@ -24,37 +23,87 @@ void face_bdry::create_gbl_pnt_from_tri(void) {
 	return;
 }
 
-
-void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
-	int nvrt,vrt;    
-	Array<int,1> vinfo(x.npnt);
+void face_bdry::create_from_gbl_tri_pnt() {
 	
-	vinfo = -1;
-		
-	nvrt = 0;
+	/* Create pnt.gindx and tri.pnt */
+	npnt = 0;
 	for(int i = 0; i < ntri; ++i) {
 		for(int j = 0; j < 3; ++j) {
-			vrt = tri(i).pnt(j);
-			if (vinfo(vrt) < 0) {
-				vinfo(vrt) = nvrt;
-				tri(i).pnt(j) = nvrt;
-				pnt(nvrt).gindx = vrt;
-				++nvrt;                
+			int v0 = tri(i).pnt(j);
+			if (x.gbl->i1wk(v0) < 0) {
+				x.gbl->i1wk(v0) = npnt;
+				tri(i).pnt(j) = npnt;
+				pnt(npnt).gindx = v0;
+				++npnt;
 			}
 			else {
-				tri(i).pnt(j) = vinfo(vrt);
+				tri(i).pnt(j) = x.gbl->i1wk(v0);
 			}
-							
-		}		
-	}	
+		}
+	}
 	
-	// store total number of vertex on face bdry
-	npnt = nvrt;
+	for(int i = 0; i < npnt; ++i) {
+		x.gbl->i1wk(pnt(i).gindx) = -1;
+	}
 	
+	/* Fill in gbl indices of triangles */
+	/* Triangles are oriented the same as in the mesh */
+	create_tri_gindx();
+	
+	/* Create seg definitions */
+	int v1,v2,vout;
+	
+	for(int i=0;i<npnt;++i)
+		pnt(i).info = -1;
+	
+	nseg = 0;
+	for(int tind=0;tind<ntri;++tind) {
+		int gtind = tri(tind).gindx;
+		tri(tind).sgn = x.tri(gtind).sgn;
+		vout = tri(tind).pnt(0);
+		v1 = tri(tind).pnt(1);
+		v2 = tri(tind).pnt(2);
+		for(int j=0;j<3;++j) {
+			assert(x.tri(gtind).pnt(j) == pnt(tri(tind).pnt(j)).gindx);
+			int gsind = x.tri(gtind).seg(j);
+			if (x.gbl->i1wk(gsind) == -1) {
+				tri(tind).seg(j) = nseg;
+				seg(nseg).gindx = gsind;
+				int sign = tri(tind).sgn(j);
+				seg(nseg).pnt((1-sign)/2) = v1;
+				seg(nseg).pnt((1+sign)/2) = v2;
+				seg(nseg).tri((1-sign)/2) = tind;
+				seg(nseg).tri((1+sign)/2) = -1;
+				x.gbl->i1wk(gsind) = nseg++;
+			}
+			else {
+				int sind = x.gbl->i1wk(gsind);
+				tri(tind).seg(j) = sind;
+				int sign = tri(tind).sgn(j);
+				
+				if (seg(sind).tri((1-sign)/2) == -1)
+					seg(sind).tri((1-sign)/2) = tind;
+				else {
+					*x.gbl->log << "different orientation triangles on face boundary? " << tind << ' ' << gtind << std::endl;
+					sim::abort(__LINE__, __FILE__, x.gbl->log);
+				}
+			}
+			int temp = vout;
+			vout = v1;
+			v1 = v2;
+			v2 = temp;
+		}
+	}
+	
+	for(int sind=0;sind<nseg;++sind) {
+		x.gbl->i1wk(seg(sind).gindx) = -1;
+	}
+	create_pntnnbor_tritri_pnttri();
+
 	return;
 }
 
-void face_bdry::create_seg_gindx(void) {
+void face_bdry::create_seg_gindx() {
 	int i,j,lcl2,eind,sind;    
 	long lcl0,lcl1;
 	TinyVector<int,2> v,a;
@@ -85,7 +134,7 @@ NEXTSIDE:;
 	return;
 }
 
-void face_bdry::create_tri_gindx(void) {
+void face_bdry::create_tri_gindx() {
 	int i,j,tind,lcl2,find;    
 	long lcl0,lcl1;
 	TinyVector<int,3> v,a;
@@ -113,13 +162,16 @@ void face_bdry::create_tri_gindx(void) {
 		}
 		*x.gbl->log << "Trouble matching face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << std::endl;
 NEXTTRI:;
+		if (v(0) == a(0) && v(1) == a(1) && v(2)==a(2)) continue;
+		
+		*x.gbl->log << "Rotation trouble matching face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << ' ' << a(0) << ' ' << a(1) << ' ' << a(2) << std::endl;
 	}
 	
 	return;
 }
 
 /* fills in all info after loading minimal mesh data (grid) */
-void face_bdry::convert_gbl_to_lcl(void) {
+void face_bdry::create_from_gindx() {
 	int ind;
 		
 	for(int i = 0; i < npnt; ++i) {
@@ -152,215 +204,35 @@ void face_bdry::convert_gbl_to_lcl(void) {
 		tri(i).sgn(2)=x.tri(ind).sgn(2);
 	}
 	
-	for(int i = 0; i < nseg; ++i)
-		seg(i).tri = -1;
-		
-	/* tri's sharing a side */
-	for(int i = 0; i < ntri; ++i) {
-		for(int j = 0; j < 3; ++j) {
-			ind = tri(i).seg(j);
-			if (tri(i).sgn(j) > 0) {
-				seg(ind).tri(0) = i;
-			}
-			else {
-				seg(ind).tri(1) = i;
-			}			
-		}
-	}
-	
-	/* 3 tri's connected to each tri */
-	for(int i = 0; i < ntri; ++i) {
-		for(int j = 0; j < 3; ++j) {
-			ind = tri(i).seg(j);
-			if (seg(ind).tri(0) == i) {
-				tri(i).tri(j) = seg(ind).tri(1);
-			}
-			else if (seg(ind).tri(1) == i) {
-				tri(i).tri(j) = seg(ind).tri(0);
-			}
-		}
-	}
+	create_pntnnbor_tritri_pnttri();
 
 	return;
 }
 
-
-/* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
-/* USES VINFO TO STORE FIRST SIND FROM VERTEX */
-/* USES SINFO TO STORE NEXT SIND FROM SIND */
-/* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-void face_bdry::create_seg_from_tri(void) {
-	int i,j,v1,v2,vout,temp,minv,maxv,order,sind=-1,sindprev=-1;
+void face_bdry::create_pntnnbor_tritri_pnttri() {
 	
-	for(i=0;i<npnt;++i)
-		pnt(i).info = -1;
-		
-	nseg = 0;
-	for(int tind=0;tind<ntri;++tind) {
-		int gtind = tri(tind).gindx;
-		tri(tind).sgn = x.tri(gtind).sgn;
-		vout = tri(tind).pnt(0);
-		v1 = tri(tind).pnt(1);
-		v2 = tri(tind).pnt(2);
-		for(int j=0;j<3;++j) {
-			assert(x.tri(gtind).pnt(j) == pnt(tri(tind).pnt(j)).gindx);
-			int gsind = x.tri(gtind).seg(j);
-			if (x.gbl->i1wk(gsind) == -1) {
-				tri(tind).seg(j) = nseg;
-				seg(nseg).gindx = gsind;
-				int sign = tri(tind).sgn(j);
-				seg(nseg).pnt((1-sign)/2) = v1;
-				seg(nseg).pnt((1+sign)/2) = v2;
-				seg(nseg).tri((1-sign)/2) = tind;
-				x.gbl->i1wk(gsind) = nseg++;
-			}
-			else {
-				int sind = x.gbl->i1wk(gsind);
-				tri(tind).seg(j) = sind;
-				int sign = tri(tind).sgn(j);
-				seg(sind).tri((1-sign)/2) = tind;
-			}
-		}
-		temp = vout;
-		vout = v1;
-		v1 = v2;
-		v2 = temp;
-	}
-	
-	for(int sind=0;sind<nseg;++sind) {
-		x.gbl->i1wk(seg(sind).gindx) = -1;
-	}
-
-	return;
-}
-
-void face_bdry::match_tri_and_seg(void) {
-	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
-	
-	for(i=0;i<npnt;++i)
-		pnt(i).info = -1;
-	
-	
-	// pnt(minv).info points to side
-	// seg(sind).info points to next side connected to minv
-	for(i=0;i<nseg;++i) {
-		v1 = seg(i).pnt(0);//fix me temp switch these to be consistent?
-		v2 = seg(i).pnt(1);
-		minv = (v1 < v2 ? v1 : v2);
-		seg(i).info = -1;
-		if ((sind = pnt(minv).info) < 0)
-			pnt(minv).info = i;
-		else {
-			while (sind >= 0) {
-				sindprev = sind;
-				sind = seg(sind).info;
-			}
-			seg(sindprev).info = i;
-		}
-	}
-
-	for(i=0;i<nseg;++i) {
-		seg(i).tri(0) = -1;
-		seg(i).tri(1) = -1;
-	}
-		
-
-	for(tind=0;tind<ntri;++tind) {
-		vout = tri(tind).pnt(0);
-		v1 = tri(tind).pnt(1);
-		v2 = tri(tind).pnt(2);
-		for(j=0;j<3;++j) {
-			/* CHECK IF SIDE HAS BEEN CREATED ALREADY */
-			if (v2 > v1) {
-				minv = v1;
-				maxv = v2;
-				order = 0;
-			}
-			else {
-				minv = v2;
-				maxv = v1;
-				order = 1;
-			}
-			sind = pnt(minv).info;
-			while (sind >= 0) {
-				if (maxv == seg(sind).pnt(1)) {
-					seg(sind).tri(order) = tind;
-					tri(tind).seg(j) = sind;
-					tri(tind).sgn(j) = 1 -2*order;
-					goto NEXTTRISIDE;
-				}
-				if (maxv == seg(sind).pnt(0)) {
-					seg(sind).tri(1-order) = tind;
-					tri(tind).seg(j) = sind;
-					tri(tind).sgn(j) = 2*order -1;
-					goto NEXTTRISIDE;
-				}
-				sind = seg(sind).info;
-			}
-			*x.gbl->log << "didn't match side: " << v1 << ' ' << v2 << ' ' << pnt(v1).gindx << ' ' << pnt(v2).gindx << std::endl;
-			for(i=0;i<npnt;++i)
-				*x.gbl->log << "pnt " << i << ' ' << pnt(i).gindx << std::endl;
-			
-			
-			for(i=0;i<nseg;++i)
-				*x.gbl->log << "seg " << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ' << seg(i).gindx << x.seg(seg(i).gindx).pnt(0) << ' ' << x.seg(seg(i).gindx).pnt(1) << std::endl;
-		
-			
-			for(i=0;i<ntri;++i) {
-				*x.gbl->log << "tri " << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << ' ' << tri(i).gindx << ' ' << x.tri(tri(i).gindx).pnt(0) << ' ' << x.tri(tri(i).gindx).pnt(1) << ' ' << x.tri(tri(i).gindx).pnt(2) << std::endl;
-			}
-			
-			exit(1);
-			
-NEXTTRISIDE:
-			temp = vout;
-			vout = v1;
-			v1 = v2;
-			v2 = temp;
-		}
-	}
-
-	return;
-}
-
-
-void face_bdry::create_pnt_tri(void) {
-	int i,tind;
-	
-	/* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
-	for (tind=0;tind<ntri;++tind)
-		for(i=0;i<3;++i)
-			pnt(tri(tind).pnt(i)).tri = tind;
-	
-	return;
-}
-
-/* CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
-void face_bdry::create_pnt_nnbor(void) {
-	int i;
-	
-	for (i=0;i<npnt;++i)
+	/* pnt.nnbor */
+	for (int i=0;i<npnt;++i)
 		pnt(i).nnbor = 0;
 	
-	for(i=0;i<nseg;++i) {
+	for(int i=0;i<nseg;++i) {
 		++pnt(seg(i).pnt(0)).nnbor;
 		++pnt(seg(i).pnt(1)).nnbor;
 	}
 
-	return;
-}
-
-/* CREATES TRIANGLE TO TRIANGLE POINTER */
-void face_bdry::create_tri_tri(void) {
-	int tind,sind,j,flip;
-	
-	for(tind=0;tind<ntri;++tind) {
-		for(j=0;j<3;++j) {
-			sind = tri(tind).seg(j);
-			flip = (1 +tri(tind).sgn(j))/2;
+	/* tri.tri */
+	for(int tind=0;tind<ntri;++tind) {
+		for(int j=0;j<3;++j) {
+			int sind = tri(tind).seg(j);
+			int flip = (1 +tri(tind).sgn(j))/2;
 			tri(tind).tri(j) = seg(sind).tri(flip);
 		}
 	}
+	
+	/* pnt.tri */
+	for (int tind=0;tind<ntri;++tind)
+		for(int i=0;i<3;++i)
+			pnt(tri(tind).pnt(i)).tri = tind;
 	
 	return;
 }
@@ -407,6 +279,7 @@ void face_bdry::treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]) {
 
 void face_bdry::checkintegrity() {
 	int i,j,sind,dir;
+	bool abort = false;
 	
 	for(i=0;i<npnt;++i) {
 		int tind = pnt(i).tri;
@@ -423,7 +296,8 @@ void face_bdry::checkintegrity() {
 		for(j=0;j<2;++j) {
 			if (pnt(seg(i).pnt(j)).gindx != x.seg(seg(i).gindx).pnt(j)) {
 				*x.gbl->log << "failed segment gindx check for " << idprefix << " sind " << i << ' ' << pnt(seg(i).pnt(j)).gindx << ' ' << x.seg(seg(i).gindx).pnt(j) << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				*x.gbl->log << "seg(i).gindx " << seg(i).gindx << " seg(i).pnt " << seg(i).pnt << std::endl;
+				abort = true;
 			}
 		}
 	}
@@ -436,52 +310,60 @@ void face_bdry::checkintegrity() {
 		
 		for(j=0;j<3;++j) {
 			sind = tri(i).seg(j);
-			dir = -(tri(i).sgn(j) -1)/2;
+			dir = (1-tri(i).sgn(j))/2;
 			
 			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
 				*x.gbl->log << "failed pnt check for " << idprefix << " tind " << i << " sind " << sind << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				*x.gbl->log << seg(sind).pnt << ' ' << tri(i).pnt << std::endl;
+				abort = true;
 			}
 			
 			if (seg(sind).tri(dir) != i) {
 				*x.gbl->log << "failed segment check for " << idprefix << " tind " << i << " sind " << sind << ' ' << seg(sind).tri << ' ' << dir << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				abort = true;
 			}
 			
 			if (tri(i).tri(j) != seg(sind).tri(1-dir)) {
 				*x.gbl->log << "failed ttri check for " << idprefix << " tind " << i << " sind " << sind << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				abort = true;
 			}
 			
 			if (pnt(tri(i).pnt(j)).gindx != x.tri(tri(i).gindx).pnt(j)) {
 				*x.gbl->log << "failed tri gindx check for " << idprefix << " sind " << i << ' ' << pnt(tri(i).pnt(j)).gindx << ' ' << x.tri(tri(i).gindx).pnt(j) << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				abort = true;
 			}
 		}
 	}
+	
+
+	
 	return;
 }
 
 void edge_bdry::checkintegrity() {
+	bool abort = false;
+	
 	for(int i=0;i<nseg;++i) {
 		if (seg(i).next > -1) {
 			if (seg(i).next != i+1) {
 				*x.gbl->log << "sides are out of order for " << idprefix << ' ' << i << ' ' << seg(i).next << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				abort = true;
 			}
 			if (seg(seg(i).next).prev != i) {
 				*x.gbl->log << "next prev is out of whack for " << idprefix << ' ' << i << ' ' << seg(i).next << ' ' << seg(seg(i).next).prev << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+				abort = true;
 			}
 			else {
 				if (x.seg(seg(i).gindx).pnt(1) != x.seg(seg(seg(i).next).gindx).pnt(0)) {
 					*x.gbl->log << "something funny in definition of edge boundary for " << idprefix << ' ' << i << ' ' << x.seg(seg(i).gindx).pnt(1) << ' ' << x.seg(seg(seg(i).next).gindx).pnt(0) << std::endl;
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
+					abort = true;
 				}
 			}
 		}
-		
-		
 	}
+	
+	if (abort)
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	
 	return;
 }

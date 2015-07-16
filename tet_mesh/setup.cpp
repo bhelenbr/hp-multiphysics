@@ -96,7 +96,7 @@ void tet_mesh::reorient_tets(bool usevinfo) {
 
 
 
-void tet_mesh::create_pnt_nnbor(void) {
+void tet_mesh::create_pnt_nnbor() {
 	/* counts the number of neigboring tet's connected to a pnt*/
 	TinyVector<int,4> v;
 	
@@ -140,7 +140,7 @@ void tet_mesh::create_pnt_nnbor(void) {
 }
 
 
-void tet_mesh::create_seg_from_tet(void) {
+void tet_mesh::create_seg_from_tet() {
 	int i,tind,minv,eind,eindprev=-1,ne,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,6,2> vs;
@@ -211,7 +211,7 @@ NEXTEDGE:;
 }
 
 
-void tet_mesh::match_tet_and_seg(void) {
+void tet_mesh::match_tet_and_seg() {
 	int i,tind,minv,eind,eindprev,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,6,2> vs;
@@ -299,7 +299,7 @@ NEXTEDGE:;
 	return;
 }
 
-void tet_mesh::create_tri_from_tet(void) {
+void tet_mesh::create_tri_from_tet() {
 	int i,j,tind,minv,find,findprev=-1,nf,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,4,3> vf;
@@ -374,7 +374,7 @@ NEXTFACE:;
 	return;
 }
 
-void tet_mesh::match_tet_and_tri(void) {
+void tet_mesh::match_tet_and_tri() {
 	int i,j,tind,minv,find,findprev,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,4,3> vf;
@@ -486,7 +486,7 @@ NEXTFACE:;
 	return;
 }
 
-void tet_mesh::match_tri_and_seg(void) {
+void tet_mesh::match_tri_and_seg() {
 	int i,tind,find;
 	TinyMatrix<int,4,3> sf;
 	TinyMatrix<int,3,2> vs;
@@ -569,7 +569,7 @@ void tet_mesh::match_tri_and_seg(void) {
 
 
 /* We don't allow randaom face orientations anymore */
-//void tet_mesh::createfaceorientation(void) {
+//void tet_mesh::createfaceorientation() {
 //	int i,j,tind,find;
 //	TinyMatrix<int,4,3> vf;
 //	TinyVector<int,3> v,a;
@@ -622,7 +622,7 @@ void tet_mesh::match_tri_and_seg(void) {
 //}
 
 
-void tet_mesh::create_tet_tet(void) {
+void tet_mesh::create_tet_tet() {
 	int tind,find,j;
 
 	for(tind = 0; tind < ntet; ++tind) {

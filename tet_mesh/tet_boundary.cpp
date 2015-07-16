@@ -964,6 +964,7 @@ void fcomm::match_numbering(int step) {
 				return;
 			}
 			else {
+				/* determine pnt.gindx */
 				/* Slave receives master boundaries vertex positions */
 				int count = 0;
 				bool printstuff = false;
@@ -1113,7 +1114,7 @@ void face_bdry::pull_apart_face_boundaries() {
 			}
 		}
 		
-		create_from_pnt();
+		create_from_gbl_tri_pnt();
 		
 		for (int n=1; n<chunk; ++n) {
 			int fbd = x.nfbd-n;
@@ -1129,7 +1130,7 @@ void face_bdry::pull_apart_face_boundaries() {
 				}
 			}
 			
-			x.fbdry(fbd)->create_from_pnt();
+			x.fbdry(fbd)->create_from_gbl_tri_pnt();
 			
 		}	
 	}

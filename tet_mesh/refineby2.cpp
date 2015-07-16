@@ -164,7 +164,7 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	create_from_tet_definitions();
 	
 	for(int i = 0; i < nfbd; ++i) {
-		fbdry(i)->create_from_pnt();
+		fbdry(i)->create_from_gbl_tri_pnt();
 	}
 	
 	return;
