@@ -481,7 +481,7 @@ void tet_mesh::match_tet_and_tri() {
 NEXTFACE:;
 	
 		}    
-	}	
+	}
 	
 	return;
 }
@@ -506,6 +506,9 @@ void tet_mesh::match_tri_and_seg() {
 		
 		if (tind < 0) {
 			cout << " uh oh negative tet index " << tind << ' ' << find << endl;
+			for(int i=0;i<ntri;++i)
+				*gbl->log << tri(i).pnt << ' ' << tri(i).tet << std::endl;
+			
 			exit(3);
 		}
 		
