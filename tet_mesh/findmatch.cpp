@@ -2627,13 +2627,6 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 			}
 			
 			++ntri;
-			
-			if (xin.tet(xin.tri(i).tet(0)).info < xin.tet(xin.tri(i).tet(1)).info) {
-				/* Swap orientation of tri */
-				int temp = tri(ntri).pnt(1);
-				tri(ntri).pnt(1) = tri(ntri).pnt(2);
-				tri(ntri).pnt(2) = temp;
-			}
 		}
 	}
 		
