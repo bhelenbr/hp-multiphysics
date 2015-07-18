@@ -616,7 +616,6 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 	else if (filetype != boundary) initlngth();
 	
 	tet_mesh::setinfo();
-	output("error",tet_mesh::grid);
 	checkintegrity();
 
 	initialized = 1;

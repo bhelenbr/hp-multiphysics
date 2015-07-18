@@ -2613,8 +2613,7 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	xin.tet(-1).info = -1; // external partition is -1
 	
 	for(int i = 0; i < xin.ntri; ++i) {
-		
-		if (xin.tet(xin.tri(i).tet(0)).info == npart || xin.tet(xin.tri(i).tet(1)).info == npart) {
+		if (xin.tet(xin.tri(i).tet(0)).info == npart || xin.tet(max(xin.tri(i).tet(1),-1)).info == npart) {
 			/* triangle vertex points */
 			for(int n = 0; n < 3; ++n)
 				tri(ntri).pnt(n) = intwk(xin.tri(i).pnt(n));
