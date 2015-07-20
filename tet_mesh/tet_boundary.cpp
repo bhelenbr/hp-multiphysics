@@ -292,12 +292,13 @@ void edge_bdry::reorder() {
 		/* FIND FIRST SIDE */
 		first = -1;
 		for(i=completed;i<nseg;++i) {
-			if (seg(i).prev < 0 || seg(i).next < 0) {
+			if (seg(i).prev < 0) {
 				first = i;
 				break;
 			}
 		}
-		 
+		
+		count = completed;
 		 if (first < 0) {
 			 /* EDGE LOOP */
 			 first = completed;
@@ -312,13 +313,13 @@ void edge_bdry::reorder() {
 				 int v0 = x.seg(sind).pnt(0);
 				 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
 				 x.seg(sind).pnt(1) = v0;
-				 //x.switch_edge_sign(sind);
+//					*x.gbl->log << "swapping first side of " << idprefix << ' ' << sind << ' ' << x.seg(sind).pnt << std::endl;
 			 }
 		 }
+		++count;
 		 
 		/* First swap directions, then reorder */
 		int indx = first;
-		count = completed;
 		while(count < nseg && (next = seg(indx).next) > -1) {
 			if (seg(next).prev != indx) {
 				/* Reverse orientation side */
@@ -328,7 +329,7 @@ void edge_bdry::reorder() {
 				int v0 = x.seg(sind).pnt(0);
 				x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
 				x.seg(sind).pnt(1) = v0;
-				//x.switch_edge_sign(sind);
+//				*x.gbl->log << "swapping " << idprefix << ' ' << count << " of " << nseg << ' ' << sind << ' ' << x.seg(sind).pnt << std::endl;
 			}
 			++count;
 			indx = next;

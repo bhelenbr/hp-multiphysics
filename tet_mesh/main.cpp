@@ -329,7 +329,6 @@ int main(int argc, char *argv[]) {
 			nstr.str("");
 			// zpart(i).partition2(zx,i,p,blist,bnum);
 			zpart.partition3(zx,i);
-			zpart.checkintegrity();
 			if (marks_flag) {
 				ofstream fout;
 				fout.open(mname.c_str());
@@ -347,6 +346,8 @@ int main(int argc, char *argv[]) {
 			
 			// zpart(i).output(fname,tet_mesh::gmsh);
 			zpart.output(fname);
+			zpart.checkintegrity();
+
 		}
 		
 		//        for(int i=0;i<p;++i) {

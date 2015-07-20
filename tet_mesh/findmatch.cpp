@@ -2701,15 +2701,6 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 		// std::cout << "b" << npart << "_e" << i->first << "_type:" << endl;
 		++nebd;
 	}
-	
-	/* call create_from_pnt_definitions because reorder doesnt account for sign change */
-	create_from_pnt_definitions();
-	for(int i = 0; i < nfbd; ++i) {
-		/* Load global vertex indices */
-		fbdry(i)->load_gbl_tri_pnt_from_mesh();
-		fbdry(i)->create_from_gbl_tri_pnt();
-	}
-	
 	/* fill in edge boundary stuff and reorder/separate disconnected boundaries */
 	/* don't mess with predifined plain edges because gmsh will recombine them*/
 	/* reordering causes problems if it creates a new partition boundary */
@@ -2717,6 +2708,14 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 	for(int i=0;i<nebd;++i) {
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();
+	}
+	
+	/* call create_from_pnt_definitions because reorder doesnt account for sign change */
+	create_from_pnt_definitions();
+	for(int i = 0; i < nfbd; ++i) {
+		/* Load global vertex indices */
+		fbdry(i)->load_gbl_tri_pnt_from_mesh();
+		fbdry(i)->create_from_gbl_tri_pnt();
 	}
 	
 	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT

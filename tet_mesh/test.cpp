@@ -335,6 +335,7 @@ void tet_mesh::checkintegrity() {
 			else{
 				if (seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))) {
 					*gbl->log << "tet seg vertex error type 2 " << sind << ' ' << tind << ' ' << i << endl;
+					*gbl->log << seg(sind).pnt << ' ' << tet(tind).pnt(vs(i,0)) << ' ' << tet(tind).pnt(vs(i,1)) << std::endl;
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
