@@ -1397,6 +1397,7 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 	MatZeroRow(x.petsc_J,row,PETSC_NULL);
 #endif
 
+	/* Use Jacobian routine to fill in Jacobian terms */
 	hp_vrtx_bdry::petsc_jacobian();
 }
 #endif
@@ -1696,6 +1697,10 @@ void translating_surface::setup_preconditioner() {
 
 /* Routine to make sure r_gbl residual doesn't get screwed up at triple junction */
 void hp_deformable_follower_pnt::rsdl(int stage) {
+	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
+	/* equation for tangential poistion */
+	r_gbl->res(base.pnt)(0) = 0.0;
+	r_gbl->res(base.pnt)(1) = 0.0;
 	
 	if (!surface->is_master) return;
 		
@@ -1704,11 +1709,6 @@ void hp_deformable_follower_pnt::rsdl(int stage) {
 		endpt = x.ebdry(base.ebdry(0))->nseg;
 	else
 		endpt = 0;
-	
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	/* equation for tangential poistion */
-	r_gbl->res(base.pnt)(0) = 0.0;
-	r_gbl->res(base.pnt)(1) = 0.0;
 	
 	// FIXME: This should be deleted eventually
 	surface->gbl->vres(endpt,0) = 0.0;

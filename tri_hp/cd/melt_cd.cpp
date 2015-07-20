@@ -37,6 +37,9 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 		is_master = false; // Liquid boundary is master
 		/* Let temperature be continuous */
 		inmap[base.idprefix +"_c0_indices"] = "0";
+		keyword = base.idprefix + "_hp_typelist";
+		inmap[keyword] = "1";
+		
 		find_matching_boundary_name(inmap, matching_block, side_id);
 		liquid_block = matching_block +"_" +side_id;
 		

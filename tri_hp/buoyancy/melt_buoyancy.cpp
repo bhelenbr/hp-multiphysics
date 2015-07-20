@@ -400,6 +400,10 @@ void melt_facet_pt2::element_rsdl(Array<FLT,1> lf) {
 
 /* Routine to add surface tension stress or endpoint movement residual */
 void melt_facet_pt2::rsdl(int stage) {
+
+	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
+	r_gbl->res(base.pnt)(0) = 0.0;
+	r_gbl->res(base.pnt)(1) = 0.0;
 	
 	if (!surface->is_master) return;
 	
@@ -423,12 +427,10 @@ void melt_facet_pt2::rsdl(int stage) {
 		
 	x.gbl->res.v(base.pnt,Range::all()) += lf(Range(0,x.NV-1));
 	
-	
 	// FIXME: These should be deleted eventually
 	surface->gbl->vres(endpt,0) = lf(x.NV);
 	surface->gbl->vres(endpt,1) = lf(x.NV+1);
 	
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	r_gbl->res(base.pnt)(0) = lf(x.NV);
 	r_gbl->res(base.pnt)(1) = lf(x.NV+1);
 
@@ -572,6 +574,11 @@ void triple_junction::init(input_map& inmap,void* gbl_in) {
 	melt_facet_pt2::init(inmap, gbl_in);
 	inmap.getwdefault(base.idprefix +"_growth_angle",growth_angle,0.0);
 	growth_angle *= M_PI/180.0;
+	
+	if (!dynamic_cast<melt_buoyancy *>(surface)) {
+		*x.gbl->log << "Didn't make triple junction point general with respect to orientation of surfaces\n";
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	}
 }
 
 
