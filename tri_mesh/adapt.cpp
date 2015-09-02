@@ -8,7 +8,7 @@
  */
 
 #include "tri_mesh.h"
-
+#define USE_PRIORITY_QUEUE
 
 /* Memory Usage */
 /* tri(i).info: (Should be able to merge this with intwk, except for reorder?) */

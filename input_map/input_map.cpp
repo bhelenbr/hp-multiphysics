@@ -163,17 +163,16 @@ bool input_map::get(const std::string &keyword, int &vout) {
 bool input_map::get(const std::string &keyword, double *array, int nentry) {
     double value;
     std::string expression;
-    std::istringstream data;
+    std::istringstream data,data1;
     std::map<std::string,std::string>::const_iterator mi;
   
     mi = find(keyword);
     if (mi != end()) {
         data.str((*this)[keyword]);
         for (int n=0;n<nentry;++n) {
-            if (!(data >> array[n])) {
-                data.clear();
-                data >> expression;
-                
+						data >> expression;
+						data1.str(expression);
+            if (!(data1 >> array[n])) {
                 /* TRY TO PARSE MATHEMATICAL EXPRESSION */
                 mu::Parser P,P1;
                 try {
@@ -202,6 +201,7 @@ bool input_map::get(const std::string &keyword, double *array, int nentry) {
                     return(false);
                 }
             }
+						data1.clear();
         }
         if (echo) {
             *log << echoprefix << keyword << ": ";

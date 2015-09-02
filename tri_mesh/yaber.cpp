@@ -205,7 +205,6 @@ void tri_mesh::yaber(FLT tolsize) {
 				l1 = dx*dx +dy*dy;
 
 				endpt = (l0 > l1 ? 0 : 1);
-				// endpt = (l0 < l1 ? 0 : 1); // TEMPORARY
 
 			}
 		}

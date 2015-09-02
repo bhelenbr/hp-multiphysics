@@ -11,6 +11,8 @@
 #ifdef MPISRC
 #include <mpi.h>
 #endif
+#include <unistd.h>
+
 
 void ctrlc(int signal);
 
@@ -45,6 +47,8 @@ int main(int argc, char **argv) {
 		std::cerr << "# Need to specify input file" << std::endl;
 		exit(1);
 	}
+//	sleep(20);
+	
 	sim::blks.go(argv[1]);
 	
 #ifdef PTH
