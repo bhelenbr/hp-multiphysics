@@ -17,10 +17,6 @@
 //#define OLDWAY2
 //#define OLDWAY3
 
-#ifdef DEBUG_JAC
-#define SKIP_EXCHANGE
-#endif
-
 #ifdef OLDWAY1
 void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
@@ -1869,11 +1865,14 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #endif
 			/* Shift all entries for this vertex */
 			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
-#ifndef SKIP_EXCHANGE
-				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
-				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
-				x.J(row+n,row+n_mpi) += dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+					(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
+					x.J(row+n,row+n_mpi) += dval;
+				}
 			}
 		}  
 	}
@@ -2024,11 +2023,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
-				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
-				x.J(row+n,row+n_mpi) += dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+					(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
+					x.J(row+n,row+n_mpi) += dval;
+				}
 			}
 			x.J.multiply_row(row+n,0.5);
 			x.J_mpi.multiply_row(row+n,0.5);
@@ -2067,11 +2069,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row+mcnt << ',' << row_mpi+mcnt_mpi << " for " << row+mcnt << ',' << row +mcnt_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
-						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
-						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+#ifdef DEBUG_JAC
+						if (!x.gbl->jac_debug)
 #endif
+						{
+							FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
+							(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+							x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+						}
 						++mcnt_mpi;
 					}
 					sgn_mpi *= -1;
@@ -2110,11 +2115,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row+n << ',' << row_mpi+n_mpi << " for " << row+n << ',' << row+n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-			FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
-			(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
-			x.J(row+n,row+n_mpi) += dval;
+#ifdef DEBUG_JAC
+			if (!x.gbl->jac_debug)
 #endif
+			{
+				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
+				x.J(row+n,row+n_mpi) += dval;
+			}
 		}
 		x.J.multiply_row(row+n,0.5);
 		x.J_mpi.multiply_row(row+n,0.5);
@@ -2234,11 +2242,14 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-				FLT dval = (*pJ_mpi)(row,*row_mpi);
-				(*pJ_mpi)(row,*row_mpi) = 0.0;
-				x.J(row,rowbase+*n_mpi) += dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = (*pJ_mpi)(row,*row_mpi);
+					(*pJ_mpi)(row,*row_mpi) = 0.0;
+					x.J(row,rowbase+*n_mpi) += dval;
+				}
 				++row_mpi;
 			}
 		}
@@ -2409,11 +2420,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-				FLT dval = (*pJ_mpi)(row,*row_mpi);
-				(*pJ_mpi)(row,*row_mpi) = 0.0;
-				x.J(row,rowbase+*n_mpi) += dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = (*pJ_mpi)(row,*row_mpi);
+					(*pJ_mpi)(row,*row_mpi) = 0.0;
+					x.J(row,rowbase+*n_mpi) += dval;
+				}
 				++row_mpi;
 			}
 			x.J.multiply_row(row,0.5);
@@ -2464,11 +2478,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 						*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*x.NV +*n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-						FLT dval = (*pJ_mpi)(row,*row_mpi);
-						(*pJ_mpi)(row,*row_mpi) = 0.0;
-						x.J(row,rowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+#ifdef DEBUG_JAC
+						if (!x.gbl->jac_debug)
 #endif
+						{
+							FLT dval = (*pJ_mpi)(row,*row_mpi);
+							(*pJ_mpi)(row,*row_mpi) = 0.0;
+							x.J(row,rowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+						}
 						++row_mpi;
 					}
 					sgn_mpi *= -1;
@@ -2514,11 +2531,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #ifdef MPDEBUG
 			*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
 #endif
-#ifndef SKIP_EXCHANGE
-			FLT dval = (*pJ_mpi)(row,*row_mpi);
-			(*pJ_mpi)(row,*row_mpi) = 0.0;
-			x.J(row,rowbase+*n_mpi) += dval;
+#ifdef DEBUG_JAC
+			if (!x.gbl->jac_debug)
 #endif
+			{
+				FLT dval = (*pJ_mpi)(row,*row_mpi);
+				(*pJ_mpi)(row,*row_mpi) = 0.0;
+				x.J(row,rowbase+*n_mpi) += dval;
+			}
 			++row_mpi;
 		}
 		x.J.multiply_row(row,0.5);
