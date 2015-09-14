@@ -901,11 +901,14 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 #endif
 			/* Shift all entries for this vertex */
 			for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
-#ifndef DEBUG_JAC
-				FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
-				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
-				x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
+					(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+					x.J(row,rowbase+c0vars(n_mpi)) += dval;
+				}
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -943,11 +946,14 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 				int sgn_mpi = 1;
 				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
 					for(int n_mpi = 0;n_mpi<x.NV-1;++n_mpi) {
-#ifndef DEBUG_JAC
-						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
-						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
-						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+#ifdef DEBUG_JAC
+						if (!x.gbl->jac_debug)
 #endif
+						{
+							FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
+							(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+							x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+						}
 						++mcnt_mpi;
 					}
 					sgn_mpi *= -1;
@@ -987,11 +993,14 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex */
 		for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
-#ifndef DEBUG_JAC
-			FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
-			(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
-			x.J(row,rowbase+c0vars(n_mpi)) += dval;
+#ifdef DEBUG_JAC
+			if (!x.gbl->jac_debug)
 #endif
+			{
+				FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
+				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+				x.J(row,rowbase+c0vars(n_mpi)) += dval;
+			}
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);
