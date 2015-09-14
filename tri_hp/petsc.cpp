@@ -26,8 +26,6 @@
 #include "hp_boundary.h"
 #include <r_tri_boundary.h>
 
-//#define RSDL_DEBUG
-//#define PETSC_RSDL_DEBUG
 #define DEBUG_TOL 1.0e-9
 #define DEBUG_ABS_TOL 1.0e-5
 #define DEBUG_REL_TOL 1.0e-1
@@ -262,16 +260,14 @@ void tri_hp::petsc_setup_preconditioner() {
 	petsc_jacobian();
 	petsc_premultiply_jacobian();
 
+	if (gbl->jac_debug)	{
+		streamsize oldprecision = (*gbl->log).precision(2);
+		*gbl->log << J << std::endl;
+		*gbl->log << J_mpi << std::endl;
+		(*gbl->log).precision(oldprecision);
+	}
 	J.check_for_unused_entries();
 	J_mpi.check_for_unused_entries();
-
-#ifdef DEBUG_JAC
-	streamsize oldprecision = (*gbl->log).precision(2);
-	*gbl->log << J << std::endl;
-	*gbl->log << J_mpi << std::endl;
-	(*gbl->log).precision(oldprecision);
-	// sim::finalize(__LINE__,__FILE__,gbl->log);
-#endif
 
 #ifndef MPISRC
 	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
@@ -319,10 +315,10 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscTime(&time2);
 	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 
-#ifdef DEBUG_JAC
-	test_jacobian();
-	sim::finalize(__LINE__,__FILE__,gbl->log);
-#endif
+	if (gbl->jac_debug) {
+		test_jacobian();
+		sim::finalize(__LINE__,__FILE__,gbl->log);
+	}
 
 	PetscTime(&time1);	 
 	err = KSPSetOperators(ksp,petsc_J,petsc_J);
@@ -579,46 +575,46 @@ void tri_hp::petsc_rsdl() {
 		for(int i=0;i<nebd;++i)
 			hp_ebdry(i)->sdirichlet(m);
 	
-#ifdef RSDL_DEBUG
-	const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
-	for(int i=0;i<npnt;++i) {
-		*gbl->log << gbl->idprefix << " v: " << i << ' ';
-		for(int n=0;n<NV;++n) {
-			if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
-			else *gbl->log << "0.0 ";
+	if (gbl->rsdl_debug == 1) {
+		const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
+		for(int i=0;i<npnt;++i) {
+			*gbl->log << gbl->idprefix << " v: " << i << ' ';
+			for(int n=0;n<NV;++n) {
+				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			
+			for(int n=0;n<vdofs-NV;++n) {
+				if (fabs(r_tri_mesh::gbl->res(i)(n)) > DEBUG_TOL) *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
+				else *gbl->log << "0.0 ";
+			}
+			*gbl->log << '\n';
 		}
 		
-		for(int n=0;n<vdofs-NV;++n) {
-			if (fabs(r_tri_mesh::gbl->res(i)(n)) > DEBUG_TOL) *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
-			else *gbl->log << "0.0 ";
-		}
-		*gbl->log << '\n';
-	}
-	
-	for(int i=0;i<nseg;++i) {
-		for(int m=0;m<basis::tri(log2p)->sm();++m) {
-			*gbl->log << gbl->idprefix << " s: " << i << ' ';
-			for(int n=0;n<NV;++n) {
-				if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
-				else *gbl->log << "0.0 ";
+		for(int i=0;i<nseg;++i) {
+			for(int m=0;m<basis::tri(log2p)->sm();++m) {
+				*gbl->log << gbl->idprefix << " s: " << i << ' ';
+				for(int n=0;n<NV;++n) {
+					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
-			*gbl->log << '\n';
 		}
-	}
-	
-	
-	for(int i=0;i<ntri;++i) {
-		for(int m=0;m<basis::tri(log2p)->im();++m) {
-			*gbl->log << gbl->idprefix << " i: " << i << ' ';
-			for(int n=0;n<NV;++n) {
-				if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
-				else *gbl->log << "0.0 ";
+		
+		
+		for(int i=0;i<ntri;++i) {
+			for(int m=0;m<basis::tri(log2p)->im();++m) {
+				*gbl->log << gbl->idprefix << " i: " << i << ' ';
+				for(int n=0;n<NV;++n) {
+					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
+				}
+				*gbl->log << '\n';
 			}
-			*gbl->log << '\n';
 		}
+		sim::finalize(__LINE__,__FILE__,gbl->log);
 	}
-	sim::finalize(__LINE__,__FILE__,gbl->log);
-#endif
 	
 	
 	PetscScalar *array;
@@ -666,54 +662,51 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 	}
 	
 	
-#ifdef PETSC_RSDL_DEBUG
-	const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
-	ind = 0;
-	for(int i=0;i<npnt;++i) {
-		*gbl->log << gbl->idprefix << " v: " << i << ' ';
-		for(int n=0;n<vdofs;++n) {
-			if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+	if (gbl->rsdl_debug == 2) {
+		const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
+		ind = 0;
+		for(int i=0;i<npnt;++i) {
+			*gbl->log << gbl->idprefix << " v: " << i << ' ';
+			for(int n=0;n<vdofs;++n) {
+				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+				else *gbl->log << "0.0 ";
+				++ind;
+			}
+			*gbl->log << '\n';
+		}
+		
+		for(int i=0;i<nseg;++i) {
+			for(int m=0;m<basis::tri(log2p)->sm();++m) {
+				*gbl->log << gbl->idprefix << " s: " << i << ' ';
+				for(int n=0;n<NV;++n) {
+					if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+					else *gbl->log << "0.0 ";
+					++ind;
+				}
+				*gbl->log << '\n';
+			}
+		}
+		
+		
+		for(int i=0;i<ntri;++i) {
+			for(int m=0;m<basis::tri(log2p)->im();++m) {
+				*gbl->log << gbl->idprefix << " i: " << i << ' ';
+				for(int n=0;n<NV;++n) {
+					if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
+					else *gbl->log << "0.0 ";
+					++ind;
+				}
+				*gbl->log << '\n';
+			}
+		}
+		
+		for (int i = ind; i< rv.extent(firstDim); ++i) {
+			if (fabs(rv(i)) > DEBUG_TOL) *gbl->log << rv(i) << ' ';
 			else *gbl->log << "0.0 ";
-			++ind;
 		}
-		*gbl->log << '\n';
+		
+		sim::finalize(__LINE__,__FILE__,gbl->log);
 	}
-	
-	for(int i=0;i<nseg;++i) {
-		for(int m=0;m<basis::tri(log2p)->sm();++m) {
-			*gbl->log << gbl->idprefix << " s: " << i << ' ';
-			for(int n=0;n<NV;++n) {
-				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
-				else *gbl->log << "0.0 ";
-				++ind;
-			}
-			*gbl->log << '\n';
-		}
-	}
-	
-	
-	for(int i=0;i<ntri;++i) {
-		for(int m=0;m<basis::tri(log2p)->im();++m) {
-			*gbl->log << gbl->idprefix << " i: " << i << ' ';
-			for(int n=0;n<NV;++n) {
-				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
-				else *gbl->log << "0.0 ";
-				++ind;
-			}
-			*gbl->log << '\n';
-		}
-	}
-	
-	for (int i = ind; i< rv.extent(firstDim); ++i) {
-		if (fabs(rv(i)) > DEBUG_TOL) *gbl->log << rv(i) << ' ';
-		else *gbl->log << "0.0 ";
-	}
-	
-	sim::finalize(__LINE__,__FILE__,gbl->log);
-
-#endif
-
-	
 }
 
 /* temp fix can I input petsc vectors ? */
