@@ -256,12 +256,15 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 			*x.gbl->log << std::endl;
 #endif
 			/* Shift all entries for this vertex.  Remote variables on solid are T */
-#ifndef DEBUG_JAC
-			for(int n=0;n<1;++n) {
-				FLT dval = x.J_mpi(row,row_mpi +n);
-				(*pJ_mpi)(row,row_mpi +n) = 0.0;
-				x.J(row,rowbase +c0vars[n]) += dval;
+#ifdef DEBUG_JAC
+			if (!x.gbl->jac_debug)
 #endif
+			{
+				for(int n=0;n<1;++n) {
+					FLT dval = x.J_mpi(row,row_mpi +n);
+					(*pJ_mpi)(row,row_mpi +n) = 0.0;
+					x.J(row,rowbase +c0vars[n]) += dval;
+				}
 			}
 			x.J.multiply_row(row,0.5);
 			x.J_mpi.multiply_row(row,0.5);
@@ -294,11 +297,14 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 			int mcnt_mpi = 0;
 			int sgn_mpi = 1;
 			for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
-#ifndef DEBUG_JAC
-				FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
-				(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;
-				x.J(row+mcnt,row+x.ND+mode_mpi*x.NV) += sgn_mpi*dval;
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
 #endif
+				{
+					FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
+					(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;
+					x.J(row+mcnt,row+x.ND+mode_mpi*x.NV) += sgn_mpi*dval;
+				}
 				sgn_mpi *= -1;
 				mcnt_mpi += 1; // Only temperature on solid block
 			}
@@ -332,11 +338,14 @@ void solid_fluid::petsc_matchjacobian_rcv(int phase) {
 #endif
 		/* Shift all entries for this vertex.  Remote variables on solid are T, x, y */
 		for(int n=0;n<1;++n) {
-#ifndef DEBUG_JAC
-			FLT dval = x.J_mpi(row,row_mpi +n);
-			(*pJ_mpi)(row,row_mpi +n) = 0.0;
-			x.J(row,rowbase +c0vars[n]) += dval;
+#ifdef DEBUG_JAC
+			if (!x.gbl->jac_debug)
 #endif
+			{
+				FLT dval = x.J_mpi(row,row_mpi +n);
+				(*pJ_mpi)(row,row_mpi +n) = 0.0;
+				x.J(row,rowbase +c0vars[n]) += dval;
+			}
 		}
 		x.J.multiply_row(row,0.5);
 		x.J_mpi.multiply_row(row,0.5);
