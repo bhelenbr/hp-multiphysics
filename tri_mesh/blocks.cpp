@@ -1023,6 +1023,10 @@ void block::init(input_map &input) {
 	if (!input.get(idprefix+"_length_smoothing_steps",gbl->length_smoothing_steps)) {
 		input.getwdefault("length_smoothing_steps",gbl->length_smoothing_steps,0);
 	}
+	
+	input.getwdefault("rsdl_debug",gbl->rsdl_debug,0);
+	
+	input.getwdefault("jac_debug",gbl->jac_debug,0);
 
 	/* LOAD FINE MESH INFORMATION */
 	grd(0)->init(input,gbl);

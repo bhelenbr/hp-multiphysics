@@ -104,6 +104,14 @@ struct block_global {
 	FLT max_length; /**< maximum allowable edge length */
 	int length_smoothing_steps; /**< number of iterations for smoothing of target length function */
 	//@}
+	
+	/** @name Debugging flags
+	 *  constants controlling debugging options
+	 */
+	//@{
+	int rsdl_debug; /**< Output residuals in log file and exit for debugging */
+	int jac_debug; /**< Output jacobian in log file and exit for debugging */
+	//@}
 };
 
 /* THIS IS A BLOCK THAT HAS THE CAPABILITIES OF DRIVING A MULTIGRID CYCLE OR AN EXPLICT TIME ADVANCEMENT LOOP */
