@@ -290,34 +290,35 @@ void melt_buoyancy::output(const std::string& filename, tri_hp::filetype typ,int
 //}
 
 
-
+#define OLDKINETICS
 FLT melt_buoyancy::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
+#ifndef OLDKINETICS
 	const int p = 2;
+#endif
 	
 	// K2Dn is the inverse of B and is a ratio relative to Krough
-	// FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
+#ifdef OLDKINETICS
+	FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
+#else
 	FLT K2Dn_exp = 1./pow(pow(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))/gbl->K2Dn,p) +pow(1./gbl->K2Dn_max,p),1.0/p);
+#endif
 	
 	
+#ifdef TWOFACETS
 	// Hack to get other facet angle
 	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
 	// This inconsistency makes counterclockwise rotations negative
-//	FLT theta = asin(sint);
-//	theta -= 70.0*M_PI/180.0;
-//	K = gbl->Krough*pow(1. + 1./(pow(sint/gbl->Ksn,p) +pow(1./K2Dn_exp,p)) +1./(pow(fabs(sin(theta))/gbl->Ksn,p) +pow(1./K2Dn_exp,p)),1.0/p);
-//	return(K);
-	
-	
-	// K2Dn and Ksn are ratios relative to Krough
-	// FLT K = gbl->Krough*(1. +gbl->Ksn*K2Dn_exp/sqrt(pow(K2Dn_exp*sint,2) +pow(gbl->Ksn,2)));
-	// FLT K = gbl->Krough*(1. + 1./sqrt(pow(sint/gbl->Ksn,2) +pow(1./K2Dn_exp,2)));
-	
+	FLT theta = asin(sint);
+	theta -= 70.0*M_PI/180.0;
+	K = gbl->Krough*pow(1. + 1./(pow(sint/gbl->Ksn,p) +pow(1./K2Dn_exp,p)) +1./(pow(fabs(sin(theta))/gbl->Ksn,p) +pow(1./K2Dn_exp,p)),1.0/p);
+	return(K);
+#endif
 	
 	if (sint == 0.0) {
 		K = gbl->Krough*K2Dn_exp;
 		
-		
+
 		// Step Oscillation */
 		// FLT K1 = gbl->Krough*(1.); // + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
 		// K = 0.5*(K1-K)*erfc(cos(M_PI*x.gbl->time/gbl->surge_time)*4.0) +K;
@@ -337,7 +338,11 @@ FLT melt_buoyancy::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		//		}
 	}
 	else {
+#ifdef OLDKINETICS
+		K = gbl->Krough*(1. + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
+#else
 		K = gbl->Krough*pow(1. + pow(2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON),p),1.0/p);
+#endif
 	}
 	
 	return(K);
