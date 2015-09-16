@@ -102,7 +102,7 @@ void melt_kinetics::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		res(2,i) = RAD(crd(0,i))*x.gbl->rho*(-DT)*jcb +K*res(1,i);
 	
 		/* Latent Heat source term and additional heat flux */
-		res(3,i) = RAD(crd(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
+		res(3,i) = RAD(crd(0,i))*fluxes[2]->Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */
 //		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);

@@ -151,7 +151,7 @@ public:
 	enum bctypes {essential, natural};
 	std::vector<bctypes> type;
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
-	std::vector<vector_function> fluxes, derivative_fluxes;
+	std::vector<vector_function *> fluxes, derivative_fluxes;
 	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 	Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
@@ -286,7 +286,7 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 			names(2) = "xt";
 			names(3) = "n";
 			for(int n=0;n<x.NV;++n) {
-				derivative_fluxes[n].set_arguments(4,dims,names);
+				derivative_fluxes[n] = new vector_function(4,dims,names);
 			}
 		}
 		symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {}

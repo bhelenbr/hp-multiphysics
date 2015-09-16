@@ -339,7 +339,8 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	names(2) = "xt";
 	names(3) = "n";
 	for(int n=0;n<x.NV;++n) {
-		fluxes[n].set_arguments(4,dims,names);
+		fluxes[n] = new vector_function(4,dims,names);
+		fluxes[n]->set_arguments(4,dims,names);
 	}
 	
 	input_map zeromap;
@@ -350,14 +351,14 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 			nstr.str("");
 			nstr << base.idprefix << "_flux" << n << std::flush;
 			if (inmap.find(nstr.str()) != inmap.end()) {
-				fluxes[n].init(inmap,nstr.str());
+				fluxes[n]->init(inmap,nstr.str());
 			}
 			else {
-				fluxes[n].init(zeromap,"zero");
+				fluxes[n]->init(zeromap,"zero");
 			}
 		}
 		else {
-			fluxes[n].init(zeromap,"zero");
+			fluxes[n]->init(zeromap,"zero");
 		}
 	}
 	
@@ -2620,7 +2621,7 @@ void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyV
 				break;
 			}
 			case(natural): {
-				flx(n) = fluxes[n].Eval(u,axpt,amv,anorm,x.gbl->time);
+				flx(n) = fluxes[n]->Eval(u,axpt,amv,anorm,x.gbl->time);
 				break;
 			}
 		}
@@ -2738,10 +2739,10 @@ void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
 			nstr.str("");
 			nstr << base.idprefix << "_dflux" << n << std::flush;
 			if (inmap.find(nstr.str()) != inmap.end()) {
-				derivative_fluxes[n].init(inmap,nstr.str());
+				derivative_fluxes[n]->init(inmap,nstr.str());
 			}
 			else {
-				derivative_fluxes[n].init(zeromap,"zero");
+				derivative_fluxes[n]->init(zeromap,"zero");
 			}
 		}
 	}
@@ -2800,8 +2801,8 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 					break;
 				}
 				case(natural): {
-					cflux(n,i) = RAD(crd(0,i))*fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
-					dflux(n,i) = RAD(crd(0,i))*derivative_fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time);
+					cflux(n,i) = RAD(crd(0,i))*fluxes[n]->Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
+					dflux(n,i) = RAD(crd(0,i))*derivative_fluxes[n]->Eval(au,axpt,amv,anorm,x.gbl->time);
 					break;
 				}
 			}

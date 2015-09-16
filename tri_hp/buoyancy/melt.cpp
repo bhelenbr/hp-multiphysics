@@ -210,7 +210,7 @@ void melt::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		amv(1) += x.gbl->mesh_ref_vel(1);
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(crd(0,i))*fluxes[2].Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
+		res(3,i) = RAD(crd(0,i))*fluxes[2]->Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf*res(1,i) +gbl->rho_s*gbl->cp_s*u(2)(i)*res(1,i);
 		
 		/* Heat Flux Upwinded NO!!! */
 		// res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);

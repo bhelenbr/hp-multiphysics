@@ -70,7 +70,7 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 		for(int n=0;n<x.NV;++n)
 			au(n) = u(n)(i);
 		for(int n=0;n<x.NV;++n) {
-			flx(n) = fluxes[n].Eval(au,axpt,amv,anorm,x.gbl->time);
+			flx(n) = fluxes[n]->Eval(au,axpt,amv,anorm,x.gbl->time);
 		}
 		
 		/* Evaluate Surface Tension */
