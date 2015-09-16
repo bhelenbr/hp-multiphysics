@@ -17,6 +17,7 @@
 //#define DETAILED_MINV
 //#define ROTATE_RESIDUALS
 //#define ONE_SIDED
+//#define ONE_SIDED_NEW
 
 /* Non-deforming coupled boundary with variables on boundary */
 class hp_coupled_bdry : public hp_edge_bdry {
@@ -115,6 +116,9 @@ class hp_deformable_bdry : public hp_coupled_bdry {
 		void non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
 		void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
 		void petsc_jacobian();
+#ifdef ONE_SIDED
+	void petsc_matchjacobian_snd();
+#endif
 		void petsc_matchjacobian_rcv(int phase);
 #ifdef ROTATE_RESIDUALS
 		void petsc_premultiply_jacobian();

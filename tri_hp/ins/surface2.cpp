@@ -400,7 +400,7 @@ void surface2::setup_preconditioner() {
 		for(m=0;m<tri_mesh::ND;++m)
 			for(n=0;n<tri_mesh::ND;++n)
 				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
-		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+		gbl->vdt(base.nseg+1,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
 	}
 	
 	FLT jcbi,temp;

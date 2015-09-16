@@ -375,6 +375,12 @@ void hp_deformable_bdry::init(input_map& inmap,void* gbl_in) {
 	*x.gbl->log << "ONE_SIDED is not defined\n";
 #endif
 	
+#ifdef ONE_SIDED_NEW
+	*x.gbl->log << "ONE_SIDED_NEW is defined\n";
+#else
+	*x.gbl->log << "ONE_SIDED_NEW is not defined\n";
+#endif
+	
 	ksprg.resize(base.maxseg);
 }
 
@@ -925,18 +931,590 @@ void hp_deformable_bdry::non_sparse(Array<int,1> &nnzero) {
 	}
 }
 
+#ifdef ONE_SIDED
+void hp_deformable_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	if (is_master) {
+		const int sm=basis::tri(x.log2p)->sm();
+		const int NV = x.NV;
+		const int ND = tri_mesh::ND;
+		
+		int vdofs;
+		if (x.mmovement != tri_hp::coupled_deformable)
+			vdofs = NV;
+		else
+			vdofs = ND+NV;
+		
+		int begin_seg = x.npnt*vdofs;
+		
+		int count = 0;
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
+			int nentry = base.ircvbuf(0,count);
+			for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+				// T received from conv-diffusive side;
+				nnzero_mpi(pind+*it) += nentry;
+				++count; // Skip sizes sent for x & y rows (must match T size)
+			}
+			
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		int nentry = base.ircvbuf(0,count);
+		for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+			// T received from conv-diffusive side;
+			nnzero_mpi(pind+*it) += nentry;
+			++count; // Skip sizes sent for x & y rows (must match T size)
+		}
+		
+		
+		/* Now add to side degrees of freedom */
+		if (sm) {
+			int toadd = base.ircvbuf(0,count++);
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				for (int mode=0;mode<sm;++mode) {
+					for(int n=x.ND;n<x.ND+1;++n) {
+						nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+					}
+				}
+			}
+			/* Make these big enough to hold heat equation */
+			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) += toadd;
+		}
+	}
+	else {
+		const int sm=basis::tri(x.log2p)->sm();
+		const int NV = x.NV;
+		const int ND = tri_mesh::ND;
+		
+		if (sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+		
+		int vdofs;
+		if (x.mmovement != tri_hp::coupled_deformable)
+			vdofs = NV;
+		else
+			vdofs = ND+NV;
+		
+		int begin_seg = x.npnt*vdofs;
+	
+		int count = 0;
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
+			for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+				nnzero_mpi(pind+*it) += 1;  // Just continuity constraint
+				count++;
+			}
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+			nnzero_mpi(pind+*it) += 1; // Just continuity constraint
+			count++;
+		}
+		
+		/* Now add to side degrees of freedom */
+		if (sm) {
+			// int toadd = base.ircvbuf(0,count++);
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				for (int mode=0;mode<sm;++mode) {
+					for(int n=0;n<x.NV;++n) {
+						nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += 1;  // Just continuity constraint
+					}
+				}
+			}
+		}
+	}
+}
+#else
 void hp_deformable_bdry::non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi) {
 	hp_coupled_bdry::non_sparse_rcv(nnzero,nnzero_mpi);
 	if (!is_master && x.sm0) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*x.sm0*tri_mesh::ND-1)) = 1;  // equality constraint
 }
+#endif
 
+#ifdef ONE_SIDED
+void hp_deformable_bdry::petsc_matchjacobian_snd() {
+	
+	if (!base.is_comm()) return;
+	
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	
+	if (is_master) {
+		/* Now do stuff for communication boundaries */
+		int row,sind=-2;
+		
+		/* Send Jacobian entries for continous variables  */
+		base.sndsize() = 0;
+		base.sndtype() = boundary::flt_msg;
+		/* Send index of start of jacobian */
+		base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
+		/* Send index of start of surface unknowns (if they exist) */
+		base.fsndbuf(base.sndsize()++) = jacobian_start+0.1;
+		
+		for(int i=0;i<base.nseg;++i) {
+			sind = base.seg(i);
+			int rowbase = x.seg(sind).pnt(0)*vdofs;
+			
+			/* Send continuous variables */
+			for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+				row = rowbase + *n;
+				/* attach diagonal column # to allow continuity enforcement */
+				base.fsndbuf(base.sndsize()++) = row +0.1;
+			}
+			
+			/* Send Side Information */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase + *n;
+					/* attach diagonal column # to allow continuity enforcement */
+					base.fsndbuf(base.sndsize()++) = row +0.1;
+				}
+				rowbase += x.NV;
+			}
+		}
+		
+		/* LAST POINT */
+		int rowbase = x.seg(sind).pnt(1)*vdofs;
+		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+			row = rowbase + *n;
+			/* attach diagonal # to allow continuity enforcement */
+			base.fsndbuf(base.sndsize()++) = row +0.1;
+		}
+	}
+	else {
+		/* Now do stuff for communication boundaries */
+		int row,sind=-2;
+		
+		/* I am cheating here and sending floats and int's together */
+#ifdef MY_SPARSE
+		/* Send Jacobian entries for continous variables  */
+		base.sndsize() = 0;
+		base.sndtype() = boundary::flt_msg;
+		/* Send index of start of jacobian */
+		base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
+		/* Send index of start of surface unknowns (if they exist) */
+		base.fsndbuf(base.sndsize()++) = jacobian_start+0.1;
+		
+		for(int i=0;i<base.nseg;++i) {
+			sind = base.seg(i);
+			int rowbase = x.seg(sind).pnt(0)*vdofs;
+			
+			/* Send continuous variables */
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				row = rowbase + *n;
+				/* attach diagonal column # to allow continuity enforcement */
+				base.fsndbuf(base.sndsize()++) = row +0.1;
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
+#ifdef MPDEBUG
+				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+#endif
+				for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+					*x.gbl->log << x.J._col(col) << ' ';
+#endif
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
+					base.fsndbuf(base.sndsize()++) = x.J._val(col);
+				}
+#ifdef MPDEBUG
+				*x.gbl->log << std::endl;
+#endif
+			}
+			
+			/* Send Side Information */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase + *n;
+					/* attach diagonal column # to allow continuity enforcement */
+					base.fsndbuf(base.sndsize()++) = row +0.1;
+					base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
+#ifdef MPDEBUG
+					*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << *n << std::endl;
+#endif
+					for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+						*x.gbl->log << x.J._col(col) << ' ';
+#endif
+						base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
+						base.fsndbuf(base.sndsize()++) = x.J._val(col);
+					}
+					
+#ifdef MPDEBUG
+					*x.gbl->log << std::endl;
+#endif
+				}
+				rowbase += x.NV;
+			}
+		}
+		
+		/* LAST POINT */
+		int rowbase = x.seg(sind).pnt(1)*vdofs;
+		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+			row = rowbase + *n;
+			/* attach diagonal # to allow continuity enforcement */
+			base.fsndbuf(base.sndsize()++) = row +0.1;
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
+#ifdef MPDEBUG
+			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+#endif
+			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+				*x.gbl->log << x.J._col(col) << ' ';
+#endif
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
+				base.fsndbuf(base.sndsize()++) = x.J._val(col);
+			}
+			
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+		}
+	}
+}
+	
+	
+void hp_deformable_bdry::petsc_matchjacobian_rcv(int phase) {
+	
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	const int sm = x.sm0;
+	
+	if (!is_master) {
+		/* Apply matching constraint for c0 vars */
+		
+		int count = 0;
+		int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++)); // Start of jacobian on matching block
+		count++; // Skip index of boundary unknowns on mathcing block.   Not used in this routine
+		
+		sparse_row_major *pJ_mpi;
+		if (base.is_local(0)) {
+			pJ_mpi = &x.J;
+			Jstart_mpi = 0;
+		}
+		else {
+			pJ_mpi = &x.J_mpi;
+		}
+		
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+		
+		/* Now do stuff for communication boundaries */
+		int row;
+		/* Now Receive Information */
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int rowbase = x.seg(sind).pnt(1)*vdofs;
+			vector<int> row_mpi_storage;
+			for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+				row = rowbase + *n;
+				int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+				row_mpi_storage.push_back(row_mpi);
+			}
+			/* Set equality constraint */
+			std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+			for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+				row = rowbase + *n;
+				pJ_mpi->zero_row(row);
+				x.J.zero_row(row);
+				x.J.set_values(row, row, 1.0);
+				pJ_mpi->set_values(row,*row_mpi,-1.0);
+				++row_mpi;
+			}
+			row_mpi_storage.clear();
+			
+			/* Now receive side Jacobian information */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase +*n;
+					int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+					row_mpi_storage.push_back(row_mpi);
+				}
+				rowbase += x.NV;
+			}
+			
+			/* Equality of C0_vars */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			row_mpi=row_mpi_storage.begin();
+			int sgn_mpi = 1;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase +mode*x.NV +*n;
+					pJ_mpi->zero_row(row);
+					x.J.zero_row(row);
+					x.J.set_values(row, row, 1.0);
+					pJ_mpi->set_values(row,*row_mpi,-sgn_mpi);
+					++row_mpi;
+				}
+				sgn_mpi *= -1;
+			}
+			row_mpi_storage.clear();
+		}
+		int sind = base.seg(0);
+		int rowbase = x.seg(sind).pnt(0)*vdofs;
+		vector<int> row_mpi_storage;
+		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+			row = rowbase + *n;
+			int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+			row_mpi_storage.push_back(row_mpi);
+		}
+		/* Set equality constraint */
+		std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+			row = rowbase + *n;
+			pJ_mpi->zero_row(row);
+			x.J.zero_row(row);
+			x.J.set_values(row, row, 1.0);
+			pJ_mpi->set_values(row,*row_mpi,-1.0);
+			++row_mpi;
+		}
+		row_mpi_storage.clear();
+	}
+	else {
+		/* Master receives jacobian entries for c0 variables */
+		
+		if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+		
+		int count = 0;
+		int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++)); // Start of jacobian on matching block
+		count++; // Skip index of boundary unknowns on mathcing block.   Not used in this routine
+		
+		sparse_row_major *pJ_mpi;
+		if (base.is_local(0)) {
+			pJ_mpi = &x.J;
+			Jstart_mpi = 0;
+		}
+		else {
+			pJ_mpi = &x.J_mpi;
+		}
+		
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+		
+		/* Now do stuff for communication boundaries */
+		int row;
+		/* Now Receive Information */
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int rowbase = x.seg(sind).pnt(1)*vdofs;
+			vector<int> row_mpi_storage;
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				row = rowbase + *n;
+				int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+				row_mpi_storage.push_back(row_mpi);
+				int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+				*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+#endif
+				for (int k = 0;k<ncol;++k) {
+					int col = static_cast<int>(base.frcvbuf(0,count++));
+					FLT val = base.frcvbuf(0,count++);
+					if (col < INT_MAX-10 && col > -1) {
+						col += Jstart_mpi;
+#ifdef MPDEBUG
+						*x.gbl->log  << col << ' ';
+#endif
+						(*pJ_mpi).add_values(row,col,val);
+					}
+				}
+#ifdef MPDEBUG
+				*x.gbl->log << std::endl;
+#endif
+			}
+			
+			/* Shift all diagonal block entries for this vertex */
+			std::vector<int>::iterator nxy=c0_indices_xy.begin();
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				row = rowbase + *n;
+				std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+				for(std::vector<int>::iterator n_mpi=c0_indices.begin();n_mpi != c0_indices.end();++n_mpi) {
+#ifdef MPDEBUG
+					*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+					if (!x.gbl->jac_debug)
+#endif
+					{
+						FLT dval = (*pJ_mpi)(row,*row_mpi);
+						(*pJ_mpi)(row,*row_mpi) = 0.0;
+						x.J(row,rowbase+*n_mpi) += dval;
+					}
+					++row_mpi;
+				}
+				x.J.multiply_row(row,0.5);
+				x.J_mpi.multiply_row(row,0.5);
+				++nxy;
+			}
+			for(;nxy != c0_indices_xy.end();++nxy) {
+				row = rowbase + *nxy;
+				x.J.multiply_row(row,0.5);
+				x.J_mpi.multiply_row(row,0.5);
+			}
+			row_mpi_storage.clear();
+			
+			/* Now receive side Jacobian information */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			int sgn = 1;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase +*n;
+					int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+					row_mpi_storage.push_back(row_mpi);
+					int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+					*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << *n << std::endl;
+#endif
+					for (int k = 0;k<ncol;++k) {
+						int col = static_cast<int>(base.frcvbuf(0,count++));
+						FLT val = sgn*base.frcvbuf(0,count++);
+						if (col < INT_MAX-10 && col > -1) {
+							col += Jstart_mpi;
+#ifdef MPDEBUG
+							*x.gbl->log  << col << ' ';
+#endif
+							(*pJ_mpi).add_values(row,col,val);
+						}
+					}
+#ifdef MPDEBUG
+					*x.gbl->log << std::endl;
+#endif
+				}
+				rowbase += x.NV;
+				sgn *= -1;
+			}
+			
+			/* Shift diagonal block of modes */
+			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					row = rowbase +mode*x.NV +*n;
+					int sgn_mpi = 1;
+					std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+					for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+						for(std::vector<int>::iterator n_mpi=c0_indices.begin();n_mpi != c0_indices.end();++n_mpi) {
+#ifdef MPDEBUG
+							*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*x.NV +*n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+							if (!x.gbl->jac_debug)
+#endif
+							{
+								FLT dval = (*pJ_mpi)(row,*row_mpi);
+								(*pJ_mpi)(row,*row_mpi) = 0.0;
+								x.J(row,rowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+							}
+							++row_mpi;
+						}
+						sgn_mpi *= -1;
+					}
+					x.J.multiply_row(row,0.5);
+					x.J_mpi.multiply_row(row,0.5);
+				}
+			}
+			row_mpi_storage.clear();
+		}
+		int sind = base.seg(0);
+		int rowbase = x.seg(sind).pnt(0)*vdofs;
+		vector<int> row_mpi_storage;
+		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+			row = rowbase + *n;
+			int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+			row_mpi_storage.push_back(row_mpi);
+			int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+#endif
+			for (int k = 0;k<ncol;++k) {
+				int col = static_cast<int>(base.frcvbuf(0,count++));
+				FLT val = base.frcvbuf(0,count++);
+				if (col < INT_MAX-10 && col > -1) {
+					col += Jstart_mpi;
+#ifdef MPDEBUG
+					*x.gbl->log  << col << ' ';
+#endif
+					(*pJ_mpi).add_values(row,col,val);
+				}
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+		}
+		
+		/* Shift all diagonal block entries for this vertex */
+		std::vector<int>::iterator nxy=c0_indices_xy.begin();
+		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+			row = rowbase + *n;
+			std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+			for(std::vector<int>::iterator n_mpi=c0_indices.begin();n_mpi != c0_indices.end();++n_mpi) {
+#ifdef MPDEBUG
+				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+				if (!x.gbl->jac_debug)
+#endif
+				{
+					FLT dval = (*pJ_mpi)(row,*row_mpi);
+					(*pJ_mpi)(row,*row_mpi) = 0.0;
+					x.J(row,rowbase+*n_mpi) += dval;
+				}
+				++row_mpi;
+			}
+			x.J.multiply_row(row,0.5);
+			x.J_mpi.multiply_row(row,0.5);
+			++nxy;
+		}
+		for(;nxy != c0_indices_xy.end();++nxy) {
+			row = rowbase + *nxy;
+			x.J.multiply_row(row,0.5);
+			x.J_mpi.multiply_row(row,0.5);
+		}
+		row_mpi_storage.clear();
+#endif
+	}
+
+	/* Apply matching curvature constraint */
+	if (sm && !is_master) {
+		int Jstart_mpi = static_cast<int>(base.frcvbuf(0,0));
+		sparse_row_major *pJ_mpi;
+		if (base.is_local(0)) {
+			pJ_mpi = &x.J;
+			Jstart_mpi = 0;
+		}
+		else {
+			pJ_mpi = &x.J_mpi;
+		}
+		
+		/* Equality of curved mode constraint */
+		int ind = jacobian_start;
+		int ind_mpi = static_cast<int>(base.frcvbuf(0,1)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
+		for(int i=0;i<base.nseg;++i) {
+			int sgn = 1;
+			for(int mode=0;mode<x.sm0;++mode) {
+				for (int n=0;n<x.ND;++n) {
+					x.J(ind,ind) = 1.0;
+					(*pJ_mpi)(ind,ind_mpi) = -1.0*sgn;
+					++ind;
+					++ind_mpi;
+				}
+				sgn *= -1;
+			}
+			ind_mpi -= 2*sm*x.ND;
+		}
+	}
+}
+#else
 void hp_deformable_bdry::petsc_matchjacobian_rcv(int phase) {
 	
 	hp_coupled_bdry::petsc_matchjacobian_rcv(phase);
 	
 	const int sm = x.sm0;
 	
-#ifdef ONE_SIDED
+#ifdef ONE_SIDED_NEW
 	/* Apply matching constraint for c0 vars */
 	if (!is_master) {
 		
@@ -1077,7 +1655,9 @@ void hp_deformable_bdry::petsc_matchjacobian_rcv(int phase) {
 		}
 	}
 }
-
+#endif
+	
+	
 void hp_deformable_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	const int sm = basis::tri(x.log2p)->sm();
 	int ind = jacobian_start;
@@ -1657,7 +2237,7 @@ void translating_surface::setup_preconditioner() {
 		for(m=0;m<tri_mesh::ND;++m)
 			for(n=0;n<tri_mesh::ND;++n)
 				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
-		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+		gbl->vdt(base.nseg+1,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
 	}
 	
 	FLT jcbi,temp;

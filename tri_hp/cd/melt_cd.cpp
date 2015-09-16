@@ -163,7 +163,7 @@ void melt_cd::setup_preconditioner() {
 	/**************************************************/
 	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
 	/**************************************************/
-	gbl->vdt(0) = 0.0;
+	gbl->vdt(0,Range::all(),Range::all()) = 0.0;
 	
 	for(indx=0; indx < base.nseg; ++indx) {
 		sind = base.seg(indx);
@@ -474,10 +474,11 @@ void melt_cd::non_sparse(Array<int,1> &nnzero) {
 	const int im=basis::tri(x.log2p)->im();
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
+#ifdef ONE_SIDED_NEW
 	// On slave side make more space so vertex equations can be swapped
-	for (int i=0;i<base.nseg;++i) {
-		int sind = base.seg(i);
-		if (!is_master) {
+	if (!is_master) {
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
 			int pind = x.seg(sind).pnt(0);
 			nnzero(Range(pind*vdofs+x.NV,(pind+1)*vdofs-1)) += NV*sm;
 			
@@ -485,6 +486,7 @@ void melt_cd::non_sparse(Array<int,1> &nnzero) {
 			nnzero(Range(pind*vdofs+x.NV,(pind+1)*vdofs-1)) += NV*sm;
 		}
 	}
+#endif
 
 	if(x.sm0 > 0) {
 		if (is_master) {
@@ -573,26 +575,11 @@ void melt_cd::petsc_premultiply_jacobian() {
 	}
 	
 	/* Swap kinetic and energy vertex rows */
-#ifdef ONE_SIDED
-	if (!is_master) {
-		int i = 0;
-		int sind;
-		do {
-			sind = base.seg(i);
-			int row = x.seg(sind).pnt(0)*vdofs;
-			x.J.match_patterns(row+heatindex, row+vdofs-1);
-			x.J.match_patterns(row+heatindex, row+vdofs-2);
-			x.J_mpi.match_patterns(row+heatindex, row+vdofs-1);
-			x.J_mpi.match_patterns(row+heatindex, row+vdofs-2);
-		} while (++i < base.nseg);
-		int row = x.seg(sind).pnt(1)*vdofs;
-		x.J.match_patterns(row+heatindex, row+vdofs-1);
-		x.J.match_patterns(row+heatindex, row+vdofs-2);
-		x.J_mpi.match_patterns(row+heatindex, row+vdofs-1);
-		x.J_mpi.match_patterns(row+heatindex, row+vdofs-2);
-	}
-	else {
+#if defined(ONE_SIDED) || defined(ONE_SIDED_NEW)
+	if (is_master)
 #endif
+	{
+		/* Swap rows */
 		int i = 0;
 		int sind;
 		do {
@@ -612,9 +599,27 @@ void melt_cd::petsc_premultiply_jacobian() {
 		x.J_mpi.match_patterns(row+heatindex, row+vdofs-1);
 		x.J_mpi.match_patterns(row+heatindex, row+vdofs-2);
 		x.J_mpi.swap_rows(row+heatindex, row+vdofs-1);
-#ifdef ONE_SIDED
+	}
+#ifdef ONE_SIDED_NEW
+	else {
+		int i = 0;
+		int sind;
+		do {
+			sind = base.seg(i);
+			int row = x.seg(sind).pnt(0)*vdofs;
+			x.J.match_patterns(row+heatindex, row+vdofs-1);
+			x.J.match_patterns(row+heatindex, row+vdofs-2);
+			x.J_mpi.match_patterns(row+heatindex, row+vdofs-1);
+			x.J_mpi.match_patterns(row+heatindex, row+vdofs-2);
+		} while (++i < base.nseg);
+		int row = x.seg(sind).pnt(1)*vdofs;
+		x.J.match_patterns(row+heatindex, row+vdofs-1);
+		x.J.match_patterns(row+heatindex, row+vdofs-2);
+		x.J_mpi.match_patterns(row+heatindex, row+vdofs-1);
+		x.J_mpi.match_patterns(row+heatindex, row+vdofs-2);
 	}
 #endif
+
 	/* now rotate based on normal */
 	hp_deformable_bdry::petsc_premultiply_jacobian();
 }
