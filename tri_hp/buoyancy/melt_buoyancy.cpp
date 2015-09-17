@@ -170,7 +170,7 @@ void melt_buoyancy::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		
-		/* This is from Weinstein's expression */
+		/* This is from Weinsteins expression */
 		FLT sint = -gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0);
 		FLT DT = ibc->f(2, aloc, x.gbl->time) -u(2)(i);
 		FLT K = calculate_kinetic_coefficients(DT,sint);
@@ -582,7 +582,7 @@ void triple_junction::init(input_map& inmap,void* gbl_in) {
 	growth_angle *= M_PI/180.0;
 	
 	if (!dynamic_cast<melt_buoyancy *>(surface)) {
-		*x.gbl->log << "Didn't make triple junction point general with respect to orientation of surfaces\n";
+		*x.gbl->log << "Did not make triple junction point general with respect to orientation of surfaces\n";
 		sim::abort(__LINE__, __FILE__, x.gbl->log);
 	}
 }
@@ -878,7 +878,7 @@ void triple_junction::petsc_jacobian() {
 		rows(n) = base.pnt*vdofs +n;
 	x.J.add_values(vdofs,rows,nvars,cols,K);
 #else
-	This doesn't work
+	This does not work
 	MatSetValuesLocal(x.petsc_J,vdofs,rows.data(),nvars,cols.data(),K.data(),ADD_VALUES);
 #endif
 }

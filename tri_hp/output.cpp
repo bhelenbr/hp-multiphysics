@@ -890,6 +890,10 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						in >> ugbd(tlvl).s(i,m,n);
 				}
+				
+				for(m=pmin-1;m<p0-1;++m)
+					for(n=0;n<NV;++n)
+						ugbd(tlvl).s(i,m,n) = 0.0;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)
@@ -905,11 +909,24 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 							in >> ugbd(tlvl).i(i,indx,n);
 						++indx;
 					}
-					indx += p0 -pmin;
+					
+					for(k=pmin-1-m;k<p0-1-m;++k) {
+						for(n=0;n<NV;++n)
+							ugbd(tlvl).i(i,indx,n) = 0.0;
+						++indx;
+					}
 
 					for(k=0;k<pin-p0;++k) {
 						for(n=0;n<NV;++n) 
 							in >> fltskip;
+					}
+				}
+				
+				for(m=pmin-1;m<p0-1;++m) {
+					for(k=0;k<p0-1-m;++k) {
+						for(n=0;n<NV;++n)
+							ugbd(tlvl).i(i,indx,n) = 0.0;
+						++indx;
 					}
 				}
 
@@ -973,6 +990,10 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						ugbd(tlvl).s(i,m,n) = bin.readFloat(binio::Double);
 				}
+				
+				for(m=pmin-1;m<p0-1;++m)
+					for(n=0;n<NV;++n)
+						ugbd(tlvl).s(i,m,n) = 0.0;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)
@@ -982,26 +1003,24 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			for(i=0;i<ntri;++i) {
 				indx = 0;
-				for(m=1;m<pmin-1;++m) {
+				for(m=1;m<p0-1;++m) {
 					for(k=0;k<pmin-1-m;++k) {
 						for(n=0;n<NV;++n) 
 							ugbd(tlvl).i(i,indx,n) = bin.readFloat(binio::Double);
 						++indx;
 					}
-					indx += p0 -pmin;
+					
+					for(k=pmin-1-m;k<p0-1-m;++k) {
+						for(n=0;n<NV;++n)
+							ugbd(tlvl).i(i,indx,n) = 0.0;
+						++indx;
+					}
 
 					for(k=0;k<pin-p0;++k) {
 						for(n=0;n<NV;++n) 
 							bin.readFloat(binio::Double);
 					}
 				}
-
-				for(m=pmin-1;m<pin-1;++m) {
-					for(k=0;k<pin-1-m;++k) {
-						for(n=0;n<NV;++n) 
-							bin.readFloat(binio::Double); 
-					}
-				}              
 			}
 
 			/* BOUNDARY INFO */

@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
 //    //FLT avg[5];
 //    //hp.integrated_averages(avg);
 //#endif
-
+	
+	return 0;
 }
 
 void ctrlc(int signal)
