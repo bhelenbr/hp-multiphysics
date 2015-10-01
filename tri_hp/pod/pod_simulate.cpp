@@ -464,7 +464,6 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	/* Calculate Full Jacobian */
 	BASE::setup_preconditioner();
-	BASE::petsc_jacobian();
 		
 	/* Now compress it using phi^T J phi */
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
@@ -505,7 +504,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		BASE::J.mmult(phi1D,JPhi);
 		
 		for (int modeloop1 = 0; modeloop1 < nmodes; ++modeloop1) {
-			/* PERTURB EACH COEFFICIENT */
+			/* MAKE 1D Vector of Mode with B.C.'s */
 			BASE::gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop1).v(Range(0,BASE::npnt-1));
 			BASE::gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop1).s(Range(0,BASE::nseg-1));
 			BASE::gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop1).i(Range(0,BASE::ntri-1));
