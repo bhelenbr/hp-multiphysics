@@ -859,6 +859,7 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 					basis::tri(p).proj1d(&x.cht(n,0),&crd(n,0));
 					for (int i=0;i<basis::tri(p).gpx;++i)
 						dxdt(p,j)(n,i) += x.gbl->bd(level)/x.gbl->bd(0)*crd(n,i);
+#FIXME: This will not work divide by 0.0
 				}
 			}
 		}
