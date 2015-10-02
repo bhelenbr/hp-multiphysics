@@ -389,39 +389,39 @@ void hp_deformable_bdry::tadvance() {
 	
 	hp_coupled_bdry::tadvance();
 	
-    if (x.gbl->substep == 0) {
-        /* SET SPRING CONSTANTS */
-        for(j=0;j<base.nseg;++j) {
-            sind = base.seg(j);
-            ksprg(j) = 1.0/x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1));
-        }
-        
-        if (is_master) {
-            /* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
-            /* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
-            if (!x.coarse_level) {
-                for(i=0;i<base.nseg+1;++i)
-                    vdres(x.log2p,i,0) = 0.0;
-                
-                for(i=0;i<base.nseg;++i)
-                    for(m=0;m<basis::tri(x.log2p)->sm();++m)
-                        sdres(x.log2p,i,m,0) = 0.0;
-                
-                rsdl(x.gbl->nstage);
-                
-                for(i=0;i<base.nseg+1;++i)
-                    vdres(x.log2p,i,0) = -gbl->vres(i,0);
-                
-                for(i=0;i<base.nseg;++i)
-                    for(m=0;m<basis::tri(x.log2p)->sm();++m)
-                        sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
-            }
-        }
-        else {
-            if (!x.coarse_level) {
-                rsdl(x.gbl->nstage);  // Matching call by slave for communication
-            }
-        }
+	if (x.gbl->substep == 0) {
+		/* SET SPRING CONSTANTS */
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			ksprg(j) = 1.0/x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1));
+		}
+		
+		if (is_master) {
+			/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
+			/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
+			if (!x.coarse_level) {
+				for(i=0;i<base.nseg+1;++i)
+					vdres(x.log2p,i,0) = 0.0;
+				
+				for(i=0;i<base.nseg;++i)
+					for(m=0;m<basis::tri(x.log2p)->sm();++m)
+						sdres(x.log2p,i,m,0) = 0.0;
+				
+				rsdl(x.gbl->nstage);
+				
+				for(i=0;i<base.nseg+1;++i)
+					vdres(x.log2p,i,0) = -gbl->vres(i,0);
+				
+				for(i=0;i<base.nseg;++i)
+					for(m=0;m<basis::tri(x.log2p)->sm();++m)
+						sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
+			}
+		}
+		else {
+			if (!x.coarse_level) {
+				rsdl(x.gbl->nstage);  // Matching call by slave for communication
+			}
+		}
 	}
 	return;
 }
