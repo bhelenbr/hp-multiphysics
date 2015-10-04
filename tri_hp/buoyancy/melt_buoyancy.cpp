@@ -205,7 +205,7 @@ void melt_buoyancy::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(2,0)); // kinetic equation
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(4,0)); // kinetic equation upwinded
-	
+//	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1)(0),&res(4,0)); // mass flux upwinded
 	return;
 }
 
