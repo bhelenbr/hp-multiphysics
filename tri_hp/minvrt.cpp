@@ -2,6 +2,83 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
+void tri_hp::setup_preconditioner() {
+	int i,last_phase,mp_phase;
+	
+#ifndef petsc
+	/* SET UP TSTEP FOR MESH MOVEMENT */
+	if (mmovement == coupled_deformable && log2p == 0) {
+		r_tri_mesh::setup_preconditioner();
+	}
+#else
+	if (mmovement == coupled_deformable) {
+		r_tri_mesh::setup_preconditioner();
+	}
+#endif
+	
+	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->setup_preconditioner();
+	
+	/* SET UP TSTEP FOR HELPER */
+	helper->setup_preconditioner();
+	
+	if (gbl->diagonal_preconditioner) {
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			vc0load(mp_phase,gbl->vprcn.data());
+			pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+			last_phase = true;
+			last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn.data());
+		}
+		/* PREINVERT PRECONDITIONER FOR VERTICES */
+		gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
+		
+		if (log2p) {
+			sc0load(gbl->sprcn.data(),0,0,1);
+			smsgpass(boundary::all,0,boundary::symmetric);
+			sc0wait_rcv(gbl->sprcn.data(),0,0,1);
+			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */
+			gbl->sprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->sprcn(Range(0,nseg-1),Range::all());
+		}
+		
+	}
+	else {
+		/* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
+		for(int stage = 0; stage<NV; ++stage) {
+			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+				vc0load(mp_phase,gbl->vprcn_ut.data() +stage*NV,NV);
+				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+				last_phase = true;
+				last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn_ut.data()+stage*NV,NV);
+			}
+			if (log2p) {
+				sc0load(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
+				smsgpass(boundary::all,0,boundary::symmetric);
+				sc0wait_rcv(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
+			}
+		}
+		
+		/* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
+		//        for(i=0;i<npnt;++i)
+		//            for(int n=0;n<NV;++n)
+		//                gbl->vprcn_ut(i,n,n) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn_ut(i,n,n));
+		//
+		//        if (basis::tri(log2p)->sm() > 0) {
+		//            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */
+		//            for(i=0;i<nseg;++i)
+		//                for(int n=0;n<NV;++n)
+		//                    gbl->sprcn_ut(i,n,n)= 1.0/gbl->sprcn_ut(i,n,n);
+		//        }
+	}
+	
+#ifdef petsc
+	petsc_setup_preconditioner();
+#endif
+	
+	return;
+}
+
+
 /************************************************/
 /**********        INVERT MASS MATRIX     **********/
 /************************************************/
@@ -304,79 +381,4 @@ void tri_hp::restouht_bdry(int tind) {
 	return;
 }
 
-void tri_hp::setup_preconditioner() {
-	int i,last_phase,mp_phase;
-
-#ifndef petsc
-	/* SET UP TSTEP FOR MESH MOVEMENT */
-	if (mmovement == coupled_deformable && log2p == 0) {
-		r_tri_mesh::setup_preconditioner();    
-	}
-#else
-	if (mmovement == coupled_deformable) {
-		r_tri_mesh::setup_preconditioner();    
-	}
-#endif
-
-	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->setup_preconditioner();
-
-	/* SET UP TSTEP FOR HELPER */
-	helper->setup_preconditioner();    
-
-	if (gbl->diagonal_preconditioner) {
-		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-			vc0load(mp_phase,gbl->vprcn.data());
-			pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-			last_phase = true;
-			last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn.data());
-		}
-		/* PREINVERT PRECONDITIONER FOR VERTICES */
-		gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
-
-		if (log2p) {
-			sc0load(gbl->sprcn.data(),0,0,1);
-			smsgpass(boundary::all,0,boundary::symmetric);
-			sc0wait_rcv(gbl->sprcn.data(),0,0,1);   
-			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */                
-			gbl->sprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->sprcn(Range(0,nseg-1),Range::all());
-		}
-
-	}
-	else {
-		/* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
-		for(int stage = 0; stage<NV; ++stage) {
-			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				vc0load(mp_phase,gbl->vprcn_ut.data() +stage*NV,NV);
-				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-				last_phase = true;
-				last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn_ut.data()+stage*NV,NV);
-			}
-			if (log2p) {
-				sc0load(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
-				smsgpass(boundary::all,0,boundary::symmetric);
-				sc0wait_rcv(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
-			}
-		}
-
-		/* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
-//        for(i=0;i<npnt;++i)
-//            for(int n=0;n<NV;++n)
-//                gbl->vprcn_ut(i,n,n) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn_ut(i,n,n));
-//      
-//        if (basis::tri(log2p)->sm() > 0) {
-//            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */     
-//            for(i=0;i<nseg;++i)
-//                for(int n=0;n<NV;++n)
-//                    gbl->sprcn_ut(i,n,n)= 1.0/gbl->sprcn_ut(i,n,n);
-//        }
-	}
-	
-#ifdef petsc
-	petsc_setup_preconditioner();
-#endif
-
-	return;
-}
 
