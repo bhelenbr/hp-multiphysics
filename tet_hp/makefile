@@ -33,12 +33,12 @@ VPATH = ../
 
 BASE = allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o mg_prolongate.o mg_restrict.o minvrt.o  \
 tadvance.o output.o ptprobe.o particle.o tobasis.o update.o test.o hp_getnewbdry.o
-OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o 
+OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/setup_preconditioner.o 
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o 
 #cd/minvrt.o
 OBJCD_MULTI = cd_multi/allocate.o cd_multi/rsdl.o cd_multi/setup_preconditioner.o
-OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/tstep.o 
-OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/tstep.o 
+OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/setup_preconditioner.o 
+OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/setup_preconditioner.o 
 OBJMASS = mass/allocate.o mass/bdry.o mass/getnewbdry.o mass/getnewibc.o mass/rsdl.o mass/setup_preconditioner.o
 
 OBJ = $(BASE)

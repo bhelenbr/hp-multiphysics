@@ -455,7 +455,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0700;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -734,6 +734,7 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					USING_MADLIB,

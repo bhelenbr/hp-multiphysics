@@ -64,17 +64,17 @@ VPATH = ../
 
 BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o minvrt.o movco.o movfin.o \
 nstage.o output.o ptprobe.o tadvance.o tobasis.o hp_coupled_boundary.o hp_getnewbdry.o
-OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o ins/surface2.o
-OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/tstep.o cns/update.o
-OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns_explicit/rsdl.o cns_explicit/tstep.o cns/minvrt.o
-OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/tstep.o cd/melt_cd.o # cd/minvrt.o 
-OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/tstep.o
-OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
-OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/melt.o buoyancy/surface.o buoyancy/melt_kinetics.o \
+OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/setup_preconditioner.o ins/surface.o ins/surface2.o
+OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/setup_preconditioner.o cns/update.o
+OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns_explicit/rsdl.o cns_explicit/setup_preconditioner.o cns/minvrt.o
+OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/setup_preconditioner.o cd/melt_cd.o # cd/minvrt.o 
+OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/setup_preconditioner.o
+OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/setup_preconditioner.o
+OBJBUOY = buoyancy/allocate.o buoyancy/setup_preconditioner.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/melt.o buoyancy/surface.o buoyancy/melt_kinetics.o \
 buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
-OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
-OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlset/reinit.o
-OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/tstep.o
+OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/setup_preconditioner.o
+OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/setup_preconditioner.o lvlset/reinit.o
+OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/setup_preconditioner.o
 OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
 OBJPETSC = petsc.o
 
