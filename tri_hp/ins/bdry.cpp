@@ -320,131 +320,6 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	return;
 }
 
-void hybrid_slave_pt::update(int stage) {
-	
-	if (stage == -1) return;
-	
-	int sendsize(8);
-	base.sndsize() = sendsize;
-	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(0) = 0.0;
-	base.fsndbuf(1) = 0.0;
-	base.fsndbuf(2) = 0.0;
-	base.fsndbuf(3) = 0.0;
-	base.fsndbuf(4) = 0.0;
-	base.fsndbuf(5) = 0.0;
-	base.fsndbuf(6) = 0.0;
-	base.fsndbuf(7) = 0.0;
-	
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-	
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<sendsize;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-	
-	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
-	}
-	if (base.fsndbuf(0) > 0.0) {
-		// flow is into moving-mesh from level-set
-		// Match position to levelset
-		x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-		
-		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
-		x.pnts(base.pnt)(0) = 0.0;  // FIXME
-	}
-}
-
-void hybrid_pt::rsdl(int stage) {
-	// This is supposed to be called by surface::rsdl
-	int sind,v0,v1;
-	TinyVector<FLT,2> pt,vel;
-	FLT tangvel,psi;
-	
-	if (surfbdry == 0) {
-		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
-		v0 = x.seg(sind).pnt(1);
-		v1 = x.seg(sind).pnt(0);
-		psi = 1.0;
-	}
-	else {
-		sind = x.ebdry(base.ebdry(1))->seg(0);
-		v0 = x.seg(sind).pnt(0);
-		v1 = x.seg(sind).pnt(1);
-		psi = -1.0;
-	}
-
-	x.crdtocht1d(sind);
-	basis::tri(x.log2p)->ptprobe1d(2,pt.data(),tang.data(),psi,&x.cht(0,0),MXTM);
-	tang *= -psi;
-																 
-	
-	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
-	vel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
-	vel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
-#ifdef MESH_REF_VEL
-	vel -= x.gbl->mesh_ref_vel;
-#endif
-	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
-	
-	if (tangvel > 0.0)
-		fix_norm = 1;
-	else
-		fix_norm = 0;
-	
-	surface_outflow::rsdl(stage);
-}
-
-void hybrid_pt::update(int stage) {
-	if (stage == -1) return;
-	
-	int sendsize(8);
-	base.sndsize() = sendsize;
-	base.sndtype() = boundary::flt_msg;
-	// (0) = flow direction
-	// (1) = x location
-	// (2) = y location
-	base.fsndbuf(0) = 2*fix_norm-1.0;
-	base.fsndbuf(1) = x.pnts(base.pnt)(0);
-	base.fsndbuf(2) = x.pnts(base.pnt)(1);
-	// see /lvlset/bdry.cpp hybrid_pt::update
-	base.fsndbuf(3) = 0.0;
-	base.fsndbuf(4) = 0.0;
-	base.fsndbuf(5) = 0.0;
-	// Tack on tangent so levelset can also determine correct slope on boundary
-	base.fsndbuf(6) = tang(0);
-	base.fsndbuf(7) = tang(1);
-	
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-	
-	// add information from other points
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<sendsize;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-	
-	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
-	}
-	if (base.fsndbuf(0) > 0.0) {
-		// flow is into moving-mesh from level-set
-		// Match position to levelset
-		x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-		
-		// WACKY COMBINED HYBRID & PERIODIC BOUNDARY  (NOT GENERAL!!!)
-		x.pnts(base.pnt)(0) = 0.0;  // FIXME
-	}
-}
-
 void actuator_disc::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int n,ind,sind;
 	TinyVector<FLT,tri_mesh::ND> nrm, mvel, pt;
@@ -528,7 +403,7 @@ void actuator_disc::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride)
 }
 
 
-void actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+int actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 	
 	if (!base.is_comm()) return;
 	
@@ -586,7 +461,7 @@ void actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride)
 			
 		}
 	}
-	return;
+	return(count);
 }
 
 #ifdef petsc
@@ -633,7 +508,7 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	return;
 }
 
-void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
 	if (!base.is_comm()) return;
 	
@@ -651,8 +526,8 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 		c0vars(n-1) = n;
 	}	
 	
+	int count = 0;
 	if (base.is_local(0)) {
-		int count = 0;
 		int pind, sind=-2;
 		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
 			sind = base.seg(i);
@@ -709,7 +584,6 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 		}
 	}
 	else {
-		int count = 0;
 		int pind, sind=-2;
 		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
 			sind = base.seg(i);
@@ -737,7 +611,7 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 			}
 		}
 	}
-	
+	return(count);
 }
 
 void actuator_disc::petsc_matchjacobian_snd() {	
@@ -844,7 +718,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 	}
 }
 
-void actuator_disc::petsc_matchjacobian_rcv(int phase) {
+int actuator_disc::petsc_matchjacobian_rcv(int phase) {
 	
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
 	
@@ -1006,6 +880,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		x.J_mpi.multiply_row(row,0.5);
 	} 
 #endif
+	return(count);
 }	
 
 #endif

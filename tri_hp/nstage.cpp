@@ -9,8 +9,6 @@
 #include <CHUD/CHUD.h>
 #endif
 
-//#define OLDWAY
-
 void tri_hp::rsdl(int stage) {    
 
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
@@ -34,16 +32,6 @@ void tri_hp::rsdl(int stage) {
 			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
 		}
 	}
-    
-#ifdef OLDWAY
-    //	for(int i=0;i<nvbd;++i)
-    //		hp_vbdry(i)->rsdl(stage);  // CONFLICT BETWEEN ebdry's calling rsdl and vbdry's having their own rsdl (melt_end_pt)
-    
-    for(int i=0;i<nebd;++i)
-        hp_ebdry(i)->rsdl(stage);
-    
-    helper->rsdl(stage);
-#endif
 
 	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
 	
@@ -79,7 +67,6 @@ void tri_hp::rsdl(int stage) {
 		}
 	}
 
-#ifndef OLDWAY
 	helper->rsdl(stage);
 	
 	for(int i=0;i<nebd;++i)
@@ -87,7 +74,6 @@ void tri_hp::rsdl(int stage) {
 	
 	for(int i=0;i<nvbd;++i)
 		hp_vbdry(i)->rsdl(stage);
-#endif
 	
 	if (!coarse_flag) {
 		if (stage == gbl->nstage) {

@@ -14,6 +14,7 @@
 #include <symbolic_function.h>
 
 //#define DEBUG_JAC
+//#define PRECONDITION
 
 #ifdef DEBUG_JAC
 const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
@@ -97,8 +98,6 @@ public:
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
 		x.gbl->res.v(base.pnt,*n)= 0.0;
 	}
-	//		virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
-	//		virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
 	virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
 	
@@ -124,10 +123,10 @@ public:
 #ifdef petsc
 	virtual void non_sparse(Array<int,1> &nnzero) {}
 	virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
-	virtual void non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	virtual int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	virtual void petsc_jacobian();
 	virtual void petsc_matchjacobian_snd();
-	virtual void petsc_matchjacobian_rcv(int phase);
+	virtual int petsc_matchjacobian_rcv(int phase);
 	virtual void petsc_jacobian_dirichlet();
 	virtual void petsc_premultiply_jacobian() {}
 	virtual int petsc_to_ug(PetscScalar *array) {return 0;}
@@ -202,12 +201,10 @@ public:
 	virtual void maxres() {}
 	virtual void vdirichlet();
 	virtual void sdirichlet(int mode);
-	//		virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
-	//		virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
 	virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
 	virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride);
-	virtual void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
+	virtual int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 	
 	/* FOR COUPLED DYNAMIC BOUNDARIES */
 	virtual void setup_preconditioner() {}
@@ -226,10 +223,10 @@ public:
 #ifdef petsc
 	virtual void non_sparse(Array<int,1> &nnzero) {}
 	virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
-	virtual void non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	virtual int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	virtual void petsc_jacobian();
 	virtual void petsc_matchjacobian_snd();
-	virtual void petsc_matchjacobian_rcv(int phase);
+	virtual int petsc_matchjacobian_rcv(int phase);
 	virtual void petsc_jacobian_dirichlet();
 	virtual void petsc_premultiply_jacobian() {}
 	virtual int petsc_to_ug(PetscScalar *array);

@@ -340,138 +340,6 @@ namespace ibc_ins {
 			}
 	};
 
-	class parameter_changer : public tri_hp_helper {
-		protected:
-			tri_hp_ins &x;
-			bdry_ins::surface *surf;
-			FLT delta_rho, rho_factor;
-			FLT delta_mu, mu_factor;
-			FLT delta_g, delta_g_factor;
-			FLT delta_rho2, rho2_factor;
-			FLT delta_mu2, mu2_factor;
-			FLT delta_sigma, sigma_factor;
-			int interval;
-
-		public:
-			parameter_changer(tri_hp_ins& xin) : tri_hp_helper(xin), x(xin) {
-				int bnum;
-
-				for(bnum=0;bnum<x.nebd;++bnum) 
-					if ((surf = dynamic_cast<bdry_ins::surface *>(x.hp_ebdry(bnum)))) break;
-
-				if (bnum > x.nebd -1) surf = 0;
-			}
-			void init(input_map& inmap, std::string idnty) {
-				std::string keyword, val;
-
-				keyword = idnty + "_delta_rho";
-				if (!inmap.get(keyword,delta_rho)) {
-					inmap.getwdefault("delta_rho",delta_rho,0.0);
-				}
-
-				keyword = idnty + "_rho_factor";
-				if (!inmap.get(keyword,rho_factor)) {
-					inmap.getwdefault("rho_factor",rho_factor,1.0);
-				}
-
-				keyword = idnty + "_delta_mu";
-				if (!inmap.get(keyword,delta_mu)) {
-					inmap.getwdefault("delta_mu",delta_mu,0.0);
-				}
-
-				keyword = idnty + "_mu_factor";
-				if (!inmap.get(keyword,mu_factor)) {
-					inmap.getwdefault("mu_factor",mu_factor,1.0);
-				}
-
-				keyword = "delta_g";
-				inmap.getwdefault(keyword,delta_g,0.0);
-				inmap[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
-
-				keyword = "g_factor";
-				inmap.getwdefault(keyword,delta_g_factor,1.0);
-				inmap[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
-
-				inmap.getwdefault("parameter_interval",interval,1);
-
-				if (surf) {
-					std::string surfidnty = surf->base.idprefix;
-
-					keyword = surfidnty + "_delta_sigma";
-					inmap.getwdefault(keyword,delta_sigma,0.0);
-
-					keyword = surfidnty + "_sigma_factor";
-					inmap.getwdefault(keyword,sigma_factor,1.0);
-
-					keyword = surfidnty + "_matching_block";
-					if (!inmap.get(keyword,val)) {
-						delta_rho2 = 0.0;
-						rho2_factor = 1.0;
-						delta_mu2 = 0.0;
-						mu2_factor = 1.0;
-					}
-					else {                         
-						keyword = val + "_delta_rho";                    
-						if (!inmap.get(keyword,delta_rho2)) {
-							inmap.getwdefault("delta_rho",delta_rho2,0.0);
-						}
-
-						keyword = val + "_rho_factor";
-						if (!inmap.get(keyword,rho2_factor)) {
-							inmap.getwdefault("rho_factor",rho2_factor,1.0);
-						}
-
-						keyword = val + "_delta_mu";
-						if (!inmap.get(keyword,delta_mu2)) {
-							inmap.getwdefault("delta_mu",delta_mu2,0.0);
-						}
-
-						keyword = val + "_mu_factor";
-						if (!inmap.get(keyword,mu2_factor)) {
-							inmap.getwdefault("mu_factor",mu2_factor,1.0);
-						}
-					}
-				}
-			}
-			tri_hp_helper* create(tri_hp& xin) { return new parameter_changer(dynamic_cast<tri_hp_ins&>(xin)); }
-
-
-
-			void tadvance() {
-				if (!x.coarse_level) {
-					if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-
-						x.gbl->rho += delta_rho;
-						x.gbl->rho *= rho_factor;
-
-						x.gbl->mu  += delta_mu;
-						x.gbl->mu  *= mu_factor;
-
-						x.gbl->g += delta_g;
-						x.gbl->g *= delta_g_factor;
-
-						*x.gbl->log << "new density, viscosity, and gravity are " << x.gbl->rho << ' ' << x.gbl->mu << ' ' << x.gbl->g << std::endl;
-
-
-						if (surf) {
-							surf->gbl->rho2 += delta_rho2;
-							surf->gbl->rho2 *= rho2_factor;
-
-							surf->gbl->mu2  += delta_mu2;
-							surf->gbl->mu2  *= mu2_factor;
-
-							surf->gbl->sigma  += delta_sigma;
-							surf->gbl->sigma  *= sigma_factor;
-
-							*x.gbl->log << "matching block density, viscosity, and surface tension are " << surf->gbl->rho2 << ' ' << surf->gbl->mu2 << ' ' << surf->gbl->sigma << std::endl;
-						}
-					}
-				}
-				return;
-			}
-	};
-
-
 	class unsteady_body_force : public tri_hp_helper {
 		protected:
 			TinyVector<symbolic_function<1>,2> fcn;
@@ -512,69 +380,6 @@ namespace ibc_ins {
 	};
 
 	static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
-
-	class translating_drop : public parameter_changer {
-		public:
-			translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {}
-
-			tri_hp_helper* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
-			void calculate_stuff() {
-#ifdef MESH_REF_VEL
-				TinyVector<FLT,2> mesh_vel;
-				mesh_vel = 0;
-				if (surf) {
-					if (!x.coarse_flag) surf->calculate_penalties(surf->gbl->vflux, x.gbl->mesh_ref_vel(1));
-					mesh_vel= x.gbl->mesh_ref_vel;
-				}
-				sim::blks.allreduce(mesh_vel.data(), x.gbl->mesh_ref_vel.data(), 2, blocks::flt_msg,blocks::sum);
-				x.gbl->mesh_ref_vel(0) = 0.0;
-#endif
-				return;
-			}
-
-
-			void rsdl(int stage) {
-				calculate_stuff();
-				return;
-			}
-
-			void setup_preconditioner() {
-				calculate_stuff();
-#ifdef DROP
-#ifdef MESH_REF_VEL
-				if (surf && !x.coarse_flag) *x.gbl->log << "# vflux " << surf->gbl->vflux << " mesh_ref_vel(1) " << x.gbl->mesh_ref_vel(1) << std::endl;
-#else
-				if (surf && !x.coarse_flag) *x.gbl->log << "# vflux " << surf->gbl->vflux << " gravity " << x.gbl->g << std::endl;
-#endif
-#endif
-				return;
-			}
-
-			void tadvance() {
-
-				if (x.coarse_flag) return;
-
-				calculate_stuff();
-
-				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-					*x.gbl->log << "#gravity, " << x.gbl->g << ' ';   
-#ifdef MESH_REF_VEL
-					*x.gbl->log << ", mesh_vel " << x.gbl->mesh_ref_vel(1) << ' ';
-#endif
-					if (surf) {
-						int v0 = x.seg(surf->base.seg(0)).pnt(0);
-						int v1 = x.seg(surf->base.seg(surf->base.nseg-1)).pnt(1);
-						FLT height = x.pnts(v0)(1)-x.pnts(v1)(1);
-						*x.gbl->log << "height " << height << std::endl;
-						surf->findmax(xmax);
-					}
-				}
-
-				parameter_changer::tadvance();
-				
-				return;
-			}
-	};
 
 class force_coupling : public tri_hp_helper {
 		protected:
@@ -1399,8 +1204,8 @@ class force_coupling : public tri_hp_helper {
 
 	class helper_type {
 		public:
-			const static int ntypes = 6;
-			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling,streamlines,static_particles};
+			const static int ntypes = 4;
+			enum ids {unsteady_body_force,force_coupling,streamlines,static_particles};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -1409,7 +1214,7 @@ class force_coupling : public tri_hp_helper {
 				return(-1);
 			}
 	};
-	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling","streamlines","static_particles"};
+	const char helper_type::names[ntypes][40] = {"unsteady_body_force","force_coupling","streamlines","static_particles"};
 
 	class ibc_type {
 		public:
@@ -1472,14 +1277,6 @@ tri_hp_helper *tri_hp_ins::getnewhelper(std::string name) {
 
 	type = ibc_ins::helper_type::getid(name.c_str());
 	switch(type) {
-		case ibc_ins::helper_type::translating_drop: {
-			tri_hp_helper *temp = new ibc_ins::translating_drop(*this);
-			return(temp);
-		}
-		case ibc_ins::helper_type::parameter_changer: {
-			tri_hp_helper *temp = new ibc_ins::parameter_changer(*this);
-			return(temp);
-		}
 		case ibc_ins::helper_type::unsteady_body_force: {
 			tri_hp_helper *temp = new ibc_ins::unsteady_body_force(*this);
 			return(temp);

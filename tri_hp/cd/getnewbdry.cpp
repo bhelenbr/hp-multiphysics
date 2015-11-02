@@ -15,8 +15,8 @@ using namespace bdry_cd;
  */
 class tri_hp_cd_etype {
     public:
-		static const int ntypes = 5;
-		enum ids {unknown=-1,dirichlet,adiabatic,characteristic,melt,melt2};
+		static const int ntypes = 4;
+		enum ids {unknown=-1,dirichlet,adiabatic,characteristic,melt2};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -25,7 +25,7 @@ class tri_hp_cd_etype {
 		}
 };
 
-const char tri_hp_cd_etype::names[ntypes][40] = {"dirichlet","adiabatic","characteristic","melt","melt2"};
+const char tri_hp_cd_etype::names[ntypes][40] = {"dirichlet","adiabatic","characteristic","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cd::getnewedgeobject(int bnum, std::string name) {
@@ -46,18 +46,6 @@ hp_edge_bdry* tri_hp_cd::getnewedgeobject(int bnum, std::string name) {
 		}
 		case tri_hp_cd_etype::characteristic: {
 			temp = new characteristic(*this,*ebdry(bnum));
-			break;
-		}
-		case tri_hp_cd_etype::melt:  {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new  melt(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for melt boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
 			break;
 		}
 		case tri_hp_cd_etype::melt2:  {

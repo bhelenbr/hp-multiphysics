@@ -23,8 +23,8 @@ using namespace bdry_buoyancy;
  */
 class tri_hp_buoyancy_vtype {
 public:
-	static const int ntypes = 5;
-	enum ids {unknown=-1,melt_end,melt_inflow,melt_facet_pt,melt_facet_pt2,triple_junction};
+	static const int ntypes = 2;
+	enum ids {unknown=-1,melt_facet_pt2,triple_junction};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -33,7 +33,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow","melt_facet_pt","melt_facet_pt2","triple_junction"};
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_facet_pt2","triple_junction"};
 
 hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
@@ -43,18 +43,6 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	
 	type = tri_hp_buoyancy_vtype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_buoyancy_vtype::melt_end: {
-			temp = new melt_end_pt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_buoyancy_vtype::melt_inflow: {
-			temp = new melt_inflow_pt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_buoyancy_vtype::melt_facet_pt: {
-			temp = new melt_facet_pt(*this,*vbdry(bnum));
-			break;
-		}
 		case tri_hp_buoyancy_vtype::melt_facet_pt2: {
 			temp = new melt_facet_pt2(*this,*vbdry(bnum));
 			break;
@@ -75,8 +63,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 
 class tri_hp_buoyancy_etype {
 public:
-	static const int ntypes = 7;
-	enum ids {unknown=-1,surface,surface_marangoni,melt,melt_kinetics,solid_fluid,characteristic,melt2};
+	static const int ntypes = 4;
+	enum ids {unknown=-1,surface_marangoni,solid_fluid,characteristic,melt2};
 	static const char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -85,7 +73,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_etype::names[ntypes][40] = {"surface","surface_marangoni","melt","melt_kinetics","solid_fluid","characteristic","melt2"};
+const char tri_hp_buoyancy_etype::names[ntypes][40] = {"surface_marangoni","solid_fluid","characteristic","melt2"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
@@ -96,18 +84,6 @@ hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
 	
 	type = tri_hp_buoyancy_etype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_buoyancy_etype::surface: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new surface9(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for surface boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
 		case tri_hp_buoyancy_etype::surface_marangoni: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new surface_marangoni(*this,*ebdry(bnum));
@@ -120,30 +96,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
 			}
 			break;
 		}
-		case tri_hp_buoyancy_etype::melt: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new melt(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for melt boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
-		case tri_hp_buoyancy_etype::melt_kinetics: {
-			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-				temp = new melt_kinetics(*this,*ebdry(bnum));
-				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-			}
-			else {
-				std::cerr << "use coupled physics for melt_kinetics boundary" << std::endl;
-				sim::abort(__LINE__,__FILE__,&std::cerr);
-				assert(0);
-			}
-			break;
-		}
+
 		case tri_hp_buoyancy_etype::solid_fluid: {
 			if (dynamic_cast<eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> > *>(ebdry(bnum))) {
 				temp = new solid_fluid(*this,*ebdry(bnum));
