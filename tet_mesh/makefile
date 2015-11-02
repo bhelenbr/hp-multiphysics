@@ -47,10 +47,10 @@ tet_prims.o vertexcircle.o test.o MAdLibInterface.o
 MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
-LIB = -L../lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
+LIB = -L../../lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs -lMAdLib
 
-CPPFLAGS = -O3 -g -I../include/ -I$(PACKAGES)/include
+CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
 
 ### Begin machine dependent
 
@@ -64,8 +64,8 @@ CPPFLAGS += $(DEFINES)
 
 libtet_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtet_mesh.a ../lib/
-	cp -f ../*.h ../include/
+	cp -f libtet_mesh.a ../../lib/
+	cp -f ../*.h ../../include/
 
 tet_mesh: libtet_mesh.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh $(LIB)
@@ -73,8 +73,8 @@ tet_mesh: libtet_mesh.a $(MAINOBJ)
 
 libtet_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtet_mesh_mpi.a ../lib/
-	cp -f ../*.h ../include/
+	cp -f libtet_mesh_mpi.a ../../lib/
+	cp -f ../*.h ../../include/
 
 tet_mesh_mpi: libtet_mesh_mpi.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi $(LIB)
