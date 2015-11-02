@@ -209,6 +209,14 @@ class blocks {
 			list_change.notify_all();
 #endif
 		}
+	~blocks() {
+		for (std::map<int,all_reduce_data *>::iterator mi=group_data.begin();mi != group_data.end(); ++mi) {
+			delete mi->second;
+		}
+		for(int m=0;m<myblock;++m) {
+			delete blk(m);
+		}
+	}
 	};
 
 
