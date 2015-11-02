@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
- 
+
 #ifndef _myblas_h_
 #define _myblas_h_
 
@@ -104,48 +104,50 @@ void matrix_absolute_value(blitz::Array<double,2> &A);
 using namespace blitz;
 
 class sparse_row_major {
-	public:
-		int _nrow, _offset;
-		Array<int,1> _cpt; //pointer to column indices for each row
-		Array<int,1> _col; //sparse list of column indices
-		Array<FLT,1> _val; //sparse list of matrix values
+public:
+	int _nrow, _offset;
+	Array<int,1> _cpt; //pointer to column indices for each row
+	Array<int,1> _col; //sparse list of column indices
+	Array<FLT,1> _val; //sparse list of matrix values
 	
-		sparse_row_major() {}
-		sparse_row_major(int nrow, Array<int,1>& nnzero, int offset = 0);
-		void resize(int nrow, Array<int,1>& nnzero, int offset=0);
-		void reset_columns();
-		
-		void add_values(int row, int col, FLT value);
-		void add_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
-		void add_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
-		void add_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
-		void add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
-		
-		void set_values(int row, int col, FLT value);
-		void set_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
-		void set_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
-		void set_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
-		void set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+	sparse_row_major() {}
+	sparse_row_major(int nrow,const Array<int,1>& nnzero, int offset = 0);
+	void resize(int nrow,const Array<int,1>& nnzero, int offset=0);
+	void reset_columns();
 	
-		void set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
-		void zero_row(int row);
-		void zero_rows(int nrows,const Array<int,1>& rows);
-		void multiply_row(int row, FLT val);
-		void match_patterns(int row1, int row2);
-		void swap_rows(int row1, int row2);  // Rows must have same sparseness pattern
-		void add_rows(int row1, int row2); // Rows must have same sparseness pattern
-		void combine_rows(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M); // Rows must have same sparseness pattern
-
-		void mmult(Array<FLT,1>& x,Array<FLT,1>& rslt);
-		void unpack(Array<FLT,2>& tgt);
-
-		// Array<FLT,1>& operator*(Array<FLT,1>&);
-		
-		FLT& operator()(int row, int col);
-		void check_for_unused_entries();
-		friend ostream &operator<<(ostream &stream, sparse_row_major mat);
-		void output_row(ostream &stream,int row);
-
+	void add_values(int row, int col, FLT value);
+	void add_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
+	void add_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
+	void add_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
+	void add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+	
+	void set_values(int row, int col, FLT value);
+	void set_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
+	void set_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
+	void set_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
+	void set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+	
+	void set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
+	void set_diag(int nels,const Array<int,1>& rows, const Array<FLT,1>& vals, int offset=0);
+	void zero_row(int row);
+	void zero_rows(int nrows,const Array<int,1>& rows);
+	void multiply_row(int row, FLT val);
+	void match_patterns(int row1, int row2);
+	void match_patterns(int nrows,const Array<int,1>& rows);
+	void swap_rows(int row1, int row2);  // Rows must have same sparseness pattern
+	void add_rows(int row1, int row2); // Rows must have same sparseness pattern
+	void combine_rows(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M); // Rows must have same sparseness pattern
+	void combine_rows(int nrows, const Array<int, 1> &rows,const Array<double, 2> &A, int LDA,const Array<int, 1> &ipiv); 	// Combine rows by multiply by multiplying by inverse of a DGETRF factorized square matrix
+	void mmult(const Array<FLT,1>& x,Array<FLT,1> rslt);
+	void unpack(Array<FLT,2> tgt);
+	
+	// Array<FLT,1>& operator*(Array<FLT,1>&);
+	
+	FLT& operator()(int row, int col);
+	void check_for_unused_entries();
+	friend ostream &operator<<(ostream &stream, sparse_row_major mat);
+	void output_row(ostream &stream,int row);
+	
 };
 #endif
 

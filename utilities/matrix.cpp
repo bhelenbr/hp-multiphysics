@@ -84,7 +84,7 @@ void matrix_absolute_value(Array<double,2> &A) {
 			temp(j,i)=lambda_real(i)*VR(i,j);
 	
 	/*  LU factorization  */
-	GETRF(n, n, VR.data(), n, ipiv, info);
+	GETRF(n,  n, VR.data(), n, ipiv, info);
 	
 	if (info != 0) {
 		std::cerr << "DGETRF FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
@@ -107,11 +107,11 @@ void matrix_absolute_value(Array<double,2> &A) {
 	return;
 }
 
-sparse_row_major::sparse_row_major(int nrow, Array<int,1>& nnzero, int offset) {
+sparse_row_major::sparse_row_major(int nrow,const Array<int,1>& nnzero, int offset) {
 	resize(nrow,nnzero,offset);
 }
 
-void sparse_row_major::resize(int nrow, Array<int,1>& nnzero, int offset) {
+void sparse_row_major::resize(int nrow,const Array<int,1>& nnzero, int offset) {
 	_nrow = nrow;
 	_offset = offset;
 	_cpt.resize(nrow+1);
@@ -140,7 +140,7 @@ FLT& sparse_row_major::operator()(int row, int col) {
 	}
 	
 #ifdef BZ_DEBUG
-	if (cindx >= _cpt(row+1)) {
+	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
 			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
 			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
@@ -158,7 +158,6 @@ FLT& sparse_row_major::operator()(int row, int col) {
 	/* insert new element into sparse matrix */
 	_col(cindx) = col;
 	return(_val(cindx)=0.0);
-
 }
 
 
@@ -175,7 +174,7 @@ void sparse_row_major::add_values(int row, int col, double val) {
 	}
 	
 #ifdef BZ_DEBUG
-	if (cindx >= _cpt(row+1)) {
+	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
 			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
 			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
@@ -200,114 +199,26 @@ void sparse_row_major::add_values(int row, int col, double val) {
 void sparse_row_major::add_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D) {
 	for (int indx = 0; indx < nrows; ++indx) {
 		int row = rows(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) += D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		add_values(row,col,D(indx));
 	}
-	
 	return;	
 }
 
 void sparse_row_major::add_values(int row,int ncols, const Array<int,1>& cols,const Array<FLT,1>& D) {
 	for (int indx = 0; indx < ncols; ++indx) {
 		int col = cols(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) += D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		add_values(row,col,D(indx));
 	}
-	
-	return;	
+	return;
 }
-
 
 void sparse_row_major::add_values(int nels,const Array<int,1>& rows, const Array<int,1>& cols,const Array<FLT,1>& D) {
 	for (int indx = 0; indx < nels; ++indx) {
 		int row = rows(indx);
 		int col = cols(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) += D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		add_values(row,col,D(indx));
 	}
-	
-	return;	
+	return;
 }
 
 void sparse_row_major::add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M) {
@@ -315,40 +226,9 @@ void sparse_row_major::add_values(int nrows,const Array<int,1>& rows, int ncols,
 		int row = rows(lrow);
 		for (int lcol = 0; lcol < ncols; ++lcol) {
 			int col = cols(lcol);
-			
-			/* add value to already existing element in sparse */
-			int cindx;
-			for (cindx=_cpt(row);col>_col(cindx);++cindx);
-			
-			if (_col(cindx) == col) {
-				_val(cindx) += M(lrow,lcol);
-				continue;
-			}
-			
-			
-			
-#ifdef BZ_DEBUG
-			if (cindx >= _cpt(row+1)) {
-				std::cerr << "Too many entries for row " << row << " and col " << col ;
-				std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-				Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-				std::cerr << "Current usage " << colinds << std::endl;
-				assert(0);
-			}
-#endif
-			
-			/* slide all entries after insertion column to the right*/
-			for(int i = _cpt(row+1)-1; i > cindx; --i){
-				_val(i)=_val(i-1);
-				_col(i)=_col(i-1);
-			}
-			
-			/* insert new element into sparse matrix */
-			_val(cindx) = M(lrow,lcol);
-			_col(cindx) = col;	
+			add_values(row,col,M(lrow,lcol));
 		}
 	}
-	
 	return;	
 }
 
@@ -364,7 +244,7 @@ void sparse_row_major::set_values(int row, int col, double val) {
 	}
 	
 #ifdef BZ_DEBUG
-	if (cindx >= _cpt(row+1)) {
+	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
 			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
 			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
@@ -389,73 +269,16 @@ void sparse_row_major::set_values(int row, int col, double val) {
 void sparse_row_major::set_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D) {
 	for (int indx = 0; indx < nrows; ++indx) {
 		int row = rows(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) = D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		set_values(row,col,D(indx));
 	}
-	
 	return;	
 }
 
 void sparse_row_major::set_values(int row,int ncols, const Array<int,1>& cols,const Array<FLT,1>& D) {
 	for (int indx = 0; indx < ncols; ++indx) {
 		int col = cols(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) = D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		set_values(row,col,D(indx));
 	}
-	
 	return;	
 }
 
@@ -464,35 +287,7 @@ void sparse_row_major::set_values(int nels,const Array<int,1>& rows, const Array
 	for (int indx = 0; indx < nels; ++indx) {
 		int row = rows(indx);
 		int col = cols(indx);
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) = D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = D(indx);
-		_col(cindx) = col;	
+		set_values(row,col,D(indx));
 	}
 	
 	return;	
@@ -503,38 +298,9 @@ void sparse_row_major::set_values(int nrows,const Array<int,1>& rows, int ncols,
 		int row = rows(lrow);
 		for (int lcol = 0; lcol < ncols; ++lcol) {
 			int col = cols(lcol);
-			
-			/* add value to already existing element in sparse */
-			int cindx;
-			for (cindx=_cpt(row);col>_col(cindx);++cindx);
-			
-			if (_col(cindx) == col) {
-				_val(cindx) = M(lrow,lcol);
-				continue;
-			}
-			
-#ifdef BZ_DEBUG
-			if (cindx >= _cpt(row+1)) {
-				std::cerr << "Too many entries for row " << row << " and col " << col ;
-				std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-				Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-				std::cerr << "Current usage " << colinds << std::endl;
-				assert(0);
-			}
-#endif
-			
-			/* slide all entries after insertion column to the right*/
-			for(int i = _cpt(row+1)-1; i > cindx; --i){
-				_val(i)=_val(i-1);
-				_col(i)=_col(i-1);
-			}
-			
-			/* insert new element into sparse matrix */
-			_val(cindx) = M(lrow,lcol);
-			_col(cindx) = col;	
+			set_values(row,col,M(lrow,lcol));
 		}
 	}
-	
 	return;	
 }
 
@@ -542,38 +308,19 @@ void sparse_row_major::set_diag(int nels,const Array<int,1>& rows, FLT val, int 
 	for (int indx = 0; indx < nels; ++indx) {
 		int row = rows(indx);
 		int col = row+offset;
-		
-		/* add value to already existing element in sparse */
-		int cindx;
-		for (cindx = _cpt(row); col > _col(cindx); ++cindx);
-		
-		if (_col(cindx) == col) {
-			_val(cindx) = val;
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-		if (cindx >= _cpt(row+1)) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
-		}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = _cpt(row+1)-1; i > cindx; --i){
-			_val(i)=_val(i-1);
-			_col(i)=_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		_val(cindx) = val;
-		_col(cindx) = col;	
+		set_values(row,col,val);
 	}
-	
 	return;	
+}
+
+
+void sparse_row_major::set_diag(int nels,const Array<int,1>& rows, const Array<FLT,1>& vals, int offset) {
+	for (int indx = 0; indx < nels; ++indx) {
+		int row = rows(indx);
+		int col = row+offset;
+		set_values(row,col,vals(indx));
+	}
+	return;
 }
 
 void sparse_row_major::zero_row(int row) {
@@ -680,13 +427,47 @@ void sparse_row_major::combine_rows(int nrows, const Array<int, 1> &rows, int nc
 				temp(Range::all()) += M(i,j)*_val_store(j,Range::all());
 			}
 			int row = rows(i);
+			_val(Range(_cpt(row),_cpt(row+1)-1)) = temp(Range::all());
+			_col(Range(_cpt(row),_cpt(row+1)-1)) = _col(Range(_cpt(row0),_cpt(row0+1)-1));
+		}
+	}
+}
+
+// Combine rows by multiply by multiplying by inverse of a DGETRF factorized square matrix
+void sparse_row_major::combine_rows(int nrows, const Array<int, 1> &rows,const Array<double, 2> &A, int LDA,const Array<int, 1> &ipiv) {
+	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+	
+	int row0 = rows(0);
+	int nnz0 = _cpt(row0+1) -_cpt(row0);
+	if (nnz0) {
+		Array<FLT,2> _val_store(nnz0,nrows);
+		_val_store(Range::all(),0) = _val(Range(_cpt(row0),_cpt(row0+1)-1));
+		for(int i=1;i<nrows;++i) {
+			int row = rows(i);
 			int nnz = _cpt(row+1) -_cpt(row);
 			if (nnz != nnz0) {
 				std::cerr << "sparseness problem combine rows" << std::endl;
 				assert(0);
 			}
-			_val(Range(_cpt(row),_cpt(row+1)-1)) = temp(Range::all());
-			_col(Range(_cpt(row),_cpt(row+1)-1)) = _col(Range(_cpt(row0),_cpt(row0+1)-1));
+			
+			int col0 = _cpt(row0);
+			int col1 = _cpt(row);
+			for(int col=0;col<nnz0;++col) {
+				if (_col(col0++) != _col(col1++)) {
+					std::cerr << "zeros indexing problem in combine rows" << std::endl;
+					assert(0);
+				}
+			}
+			_val_store(Range::all(),i) = _val(Range(_cpt(row),_cpt(row+1)-1));
+		}
+		
+		int info;
+		char trans[] = "T";
+		GETRS(trans,nrows,nnz0,const_cast<FLT *>(A.data()),LDA,const_cast<int *>(ipiv.data()),_val_store.data(),nrows,info);
+		
+		for(int i=0;i<nrows;++i) {
+			int row = rows(i);
+			_val(Range(_cpt(row),_cpt(row+1)-1)) = _val_store(Range::all(),i);
 		}
 	}
 }
@@ -704,7 +485,7 @@ void sparse_row_major::match_patterns(int row1, int row2) {
 	int cpt1 = _cpt(row1);
 	int cpt2 = _cpt(row2);
 	for(int col=0;col<nnz1;++col) {
-		/* swap rows */
+		/* match rows */
 		if (_col(cpt1) < _col(cpt2)) {
 			set_values(row2, _col(cpt1), 0.0);
 		}
@@ -715,6 +496,63 @@ void sparse_row_major::match_patterns(int row1, int row2) {
 		++cpt2;
 	}
 }
+
+void sparse_row_major::match_patterns(int nrows,const Array<int,1>& rows) {
+	int nnz = _cpt(rows(0)+1) -_cpt(rows(0));
+	Array<int,1> cols(nnz);
+	cols = INT_MAX-1;
+	
+	cols = _col(Range(_cpt(rows(0)),_cpt(rows(0)+1)-1));
+	for(int row=1;row<nrows;++row) {
+		int nnz1 = _cpt(rows(row)+1) -_cpt(rows(row));
+
+		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+		if (nnz1 != nnz) {
+			std::cerr << "sparseness problem in match patterns" << nnz << ' ' << nnz1 << std::endl;
+			assert(0);
+		}
+		
+		for(int col_cnt=0;col_cnt<nnz;++col_cnt) {
+			int col = _col(_cpt(rows(row))+col_cnt);
+			if (col == INT_MAX-1) break;
+		
+			/* Find insertion spot */
+			int cindx;
+			for (cindx=0;col>cols(cindx);++cindx);
+		
+			if (col == cols(cindx)) continue;
+			
+#ifdef BZ_DEBUG
+			if (cindx >= nnz || cols(nnz-1) != INT_MAX-1) {
+				std::cerr << "Too many columns in match_patterns " << rows(row) << ' ' << col << std::endl;
+				for(int row2=0;row2<nrows;++row2) {
+					std::cerr << rows(row2) << ' ' << _col(Range(_cpt(rows(row2)),_cpt(rows(row2)+1)-1)) << std::endl;
+				}
+				std::cerr << " allocated entries " << nnz << std::endl;
+				std::cerr << "Current usage " << cols << std::endl;
+				assert(0);
+			}
+#endif
+		
+			/* slide all entries after insertion column to the right*/
+			for(int i = nnz-1; i > cindx; --i) {
+				cols(i)=cols(i-1);
+			}
+
+			cols(cindx) = col;
+		}
+	}
+	
+	// Insert 0's if entry doesn't exist
+	for(int row=0;row<nrows;++row) {
+		for(int col=0;col<nnz;++col) {
+			add_values(rows(row),cols(col),0.0);
+		}
+	}
+
+	return;
+}
+
 
 void sparse_row_major::add_rows(int row1, int row2) {
 	
@@ -729,7 +567,7 @@ void sparse_row_major::add_rows(int row1, int row2) {
     int j2 = _cpt(row2);
     int col_check_sum = 0;
     for (int j=0;j<nentries1;++j) {
-        col_check_sum += _col(j1)-_col(j2);
+        col_check_sum += abs(_col(j1)-_col(j2));
          _val(j1) += _val(j2);
         ++j1;
         ++j2;
@@ -751,7 +589,7 @@ void sparse_row_major::output_row(ostream &stream,int row) {
 	return;
 }
 
-void sparse_row_major::mmult(Array<FLT,1>& x,Array<FLT,1>& ax) {
+void sparse_row_major::mmult(const Array<FLT,1>& x,Array<FLT,1> ax) {
 	
 	for (int i=_offset;i<_offset+_nrow;++i) {
 		FLT lclax = 0.0;
@@ -762,7 +600,7 @@ void sparse_row_major::mmult(Array<FLT,1>& x,Array<FLT,1>& ax) {
 	return;
 }
 
-void sparse_row_major::unpack(Array<FLT,2>& tgt) {
+void sparse_row_major::unpack(Array<FLT,2> tgt) {
     
     tgt = 0.0;
     for (int i=_offset;i<_offset+_nrow;++i) {
