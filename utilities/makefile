@@ -36,10 +36,10 @@ clean:
 
 libutil.a: utilities.h $(OBJU)
 	$(AR) $(ARFLAGS) $@ $(OBJU)
-	cp -f utilities.h $(HOME)/Codes/include/
-	cp -f libutil.a $(HOME)/Codes/lib/
+	cp -f utilities.h ../include/
+	cp -f libutil.a ../lib/
 
 libmyblas.a: myblas.h $(OBJM)
 	$(AR) $(ARFLAGS) $@ $(OBJ) $(OBJM)
-	cp -f myblas.h $(HOME)/Codes/include/
-	cp -f libmyblas.a $(HOME)/Codes/lib/
+	cp -f myblas.h ../include/
+	cp -f libmyblas.a ../lib/

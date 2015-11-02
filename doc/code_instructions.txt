@@ -160,6 +160,7 @@ make install
 xcode-select --install
 
 # download valgrind from web
+xcode-select --install  (To install Xcode command line tools)
 tar --use-compress-program bzip2 valgrindXXX.tar.bz2
 ./configure --prefix=/share/apps (for cluster)
 ./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc (for OS X)

@@ -200,7 +200,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0700;
 			};
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -277,6 +277,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
@@ -311,8 +312,9 @@
 		6FB1508B0867812C00EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes/";
+				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BZ_DEBUG,
 					f2cFortran,
@@ -327,8 +329,9 @@
 		6FB1508C0867812C00EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes/";
+				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				INSTALL_PATH = /lib;
@@ -340,8 +343,9 @@
 		6FB150A30867821E00EAF2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = util;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -351,8 +355,9 @@
 		6FB150A40867821E00EAF2E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
+				DSTROOT = ..;
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = util;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;

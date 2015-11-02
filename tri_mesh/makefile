@@ -49,10 +49,10 @@ MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
+LIB = -L../lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
 LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs
 
-CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+CPPFLAGS = -O3 -g -I../include/ -I$(PACKAGES)/include
 
 ### Begin machine dependent
 
@@ -68,8 +68,8 @@ CPPFLAGS += $(DEFINES)
 
 libtri_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtri_mesh.a $(HOME)/Codes/lib/
-	cp -f ../*.h $(HOME)/Codes/include/
+	cp -f libtri_mesh.a ../lib/
+	cp -f ../*.h ../include/
 
 tri_mesh: libtri_mesh.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh $(LIB)
@@ -77,8 +77,8 @@ tri_mesh: libtri_mesh.a $(MAINOBJ)
 
 libtri_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtri_mesh_mpi.a $(HOME)/Codes/lib/
-	cp -f ../*.h $(HOME)/Codes/include/
+	cp -f libtri_mesh_mpi.a ../lib/
+	cp -f ../*.h ../include/
 
 tri_mesh_mpi: libtri_mesh_mpi.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)

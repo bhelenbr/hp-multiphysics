@@ -1,10 +1,10 @@
 OBJ = instances.o
 
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+CPPFLAGS = -I../include/ -I$(PACKAGES)/include
 CPPFLAGS += -fno-inline
 #CPPFLAGS += -debug #(for icc)
 DEFINES = -Df2cFortran
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lmyblas -lm
+LIB = -L../lib -L$(PACKAGES)/lib -lmyblas -lm
 
 
 
@@ -58,8 +58,8 @@ tri_basis: $(OBJ) main.o
 
 libtri_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtri_basis.a $(HOME)/Codes/lib/
-	cp -f tri_basis.h $(HOME)/Codes/include/
+	cp -f libtri_basis.a ../lib/
+	cp -f tri_basis.h ../include/
 
 $(OBJ): tri_basis.h
 

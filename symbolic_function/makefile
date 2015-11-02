@@ -1,7 +1,7 @@
 OBJ=main.o
 
-LIB = -L$(PACKAGES)/lib -lmuparser -L$(HOME)/Codes/lib -linput_map
-CPPFLAGS += -I$(PACKAGES)/include -I$(HOME)/Codes/include
+LIB = -L$(PACKAGES)/lib -lmuparser -L../lib -linput_map
+CPPFLAGS += -I$(PACKAGES)/include -I../include
 
 # FOR CLUSTER
 #CXX=icpc

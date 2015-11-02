@@ -236,7 +236,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${HOME}/Codes";
+				DSTROOT = ..;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = install;
@@ -249,7 +249,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "${HOME}/Codes";
+				DSTROOT = ..;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = install;

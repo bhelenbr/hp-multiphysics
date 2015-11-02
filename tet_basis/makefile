@@ -1,9 +1,9 @@
 OBJ = initialize.o intgrt.o intgrt2d.o intgrt1d.o proj.o \
 proj1d.o proj2d.o ptvalues.o hpprobe.o outputstuff.o 
 
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+CPPFLAGS = -I../include/ -I$(PACKAGES)/include
 DEFINES = -Df2cFortran
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lmyblas -lm
+LIB = -L../lib -L$(PACKAGES)/lib -lmyblas -lm
 
 ### Begin machine dependent
 
@@ -51,7 +51,7 @@ tet_basis: $(OBJ) main.o
 
 libtet_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libtet_basis.a $(HOME)/Codes/lib/
-	cp -f tet_basis.h $(HOME)/Codes/include/
+	cp -f libtet_basis.a ../lib/
+	cp -f tet_basis.h ../include/
 
 $(OBJ): tet_basis.h

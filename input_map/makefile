@@ -40,7 +40,7 @@ mod_map: $(OBJ) main.o
 
 libinput_map.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f input_map.h $(HOME)/Codes/include/
-	cp -f libinput_map.a $(HOME)/Codes/lib/
+	cp -f input_map.h ../include/
+	cp -f libinput_map.a ../lib/
 	
 $(OBJ): input_map.h

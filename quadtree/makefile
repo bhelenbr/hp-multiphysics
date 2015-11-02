@@ -1,6 +1,6 @@
 OBJ = quad.o
 
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+CPPFLAGS = -I../include/ -I$(PACKAGES)/include
 
 # CPPFLAGS += -debug -DBZ_DEBUG #(for icc)
 
@@ -36,10 +36,10 @@ clean:
 
 libquad.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libquad.a $(HOME)/Codes/lib/
-	cp -f quadtree.h $(HOME)/Codes/include/
+	cp -f libquad.a ../lib/
+	cp -f quadtree.h ../include/
 
 quadtest: $(OBJ) main.o
-	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lquad -lm
+	${CXX} -o $@ main.o -L../lib -lquad -lm
 
 $(OBJ): quadtree.h quad_impl.h

@@ -36,10 +36,10 @@ clean:
 
 libspline.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	cp -f libspline.a $(HOME)/Codes/lib/
-	cp -f spline.h $(HOME)/Codes/include/
+	cp -f libspline.a ../lib/
+	cp -f spline.h ../include/
 
 splinetest: $(OBJ) main.o libspline.a
-	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lspline -llapack -lblas -lm
+	${CXX} -o $@ main.o -L../lib -lspline -llapack -lblas -lm
 
 $(OBJ): spline.h spline_impl.h
