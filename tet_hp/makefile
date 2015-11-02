@@ -50,18 +50,18 @@ OBJ += $(OBJCNS)
 #OBJ += $(OBJMASS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
+CPPFLAGS = -O3 -g -I../include/ -I$(PACKAGES)/include
+LIB = -L../lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
 
 ### Begin machine dependent
 
 ## Linux:
-#LIB += -llapack -lblas 
+LIB += -llapack -lblas 
 
 ## Darwin:
 #LIB += -framework veclib
 
-LIB += -mkl
+#LIB += -mkl
 
 ### End machine dependent
 
