@@ -102,7 +102,7 @@ public:
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
 	
 	/* FOR COUPLED DYNAMIC BOUNDARIES */
-	virtual void setup_preconditioner() {}
+	virtual void setup_preconditioner();
 	virtual void tadvance() {
 		int pnt = base.pnt;
 		base.mvpttobdry(x.pnts(pnt));
@@ -207,7 +207,7 @@ public:
 	virtual int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 	
 	/* FOR COUPLED DYNAMIC BOUNDARIES */
-	virtual void setup_preconditioner() {}
+	virtual void setup_preconditioner();
 	virtual void tadvance();
 	virtual void calculate_unsteady_sources();
 	virtual void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);

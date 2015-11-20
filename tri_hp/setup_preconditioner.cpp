@@ -2,6 +2,10 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
+
+/* This is for a diagonal or block diagonal preconditioner where the block could be of size NVxNV */
+/* Physics classes should call this routine after they have finished setting up their diagonal preconditioner */
+
 void tri_hp::setup_preconditioner() {
 	int i,last_phase,mp_phase;
 	
@@ -16,13 +20,7 @@ void tri_hp::setup_preconditioner() {
 	}
 #endif
 	
-	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->setup_preconditioner();
-	
-	/* SET UP TSTEP FOR HELPER */
-	helper->setup_preconditioner();
-	
+	/* Do communication for preconditioner */
 	if (gbl->diagonal_preconditioner) {
 		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 			vc0load(mp_phase,gbl->vprcn.data());
@@ -30,17 +28,12 @@ void tri_hp::setup_preconditioner() {
 			last_phase = true;
 			last_phase &= vc0wait_rcv(mp_phase,gbl->vprcn.data());
 		}
-		/* PREINVERT PRECONDITIONER FOR VERTICES */
-		gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
 		
 		if (log2p) {
 			sc0load(gbl->sprcn.data(),0,0,1);
 			smsgpass(boundary::all,0,boundary::symmetric);
 			sc0wait_rcv(gbl->sprcn.data(),0,0,1);
-			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */
-			gbl->sprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->sprcn(Range(0,nseg-1),Range::all());
 		}
-		
 	}
 	else {
 		/* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
@@ -57,7 +50,30 @@ void tri_hp::setup_preconditioner() {
 				sc0wait_rcv(gbl->sprcn_ut.data()+stage*NV,0,0,NV);
 			}
 		}
+	}
+	
+	/* Modify according to boundary conditions */
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->setup_preconditioner();
+	
+	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->setup_preconditioner();
+	
+	/* SET UP TSTEP FOR HELPER */
+	helper->setup_preconditioner();
+	
+	/* Invert Preconditioner */
+	if (gbl->diagonal_preconditioner) {
+		/* PREINVERT PRECONDITIONER FOR VERTICES */
+		gbl->vprcn(Range(0,npnt-1),Range::all()) = 1.0/(basis::tri(log2p)->vdiag()*gbl->vprcn(Range(0,npnt-1),Range::all()));
+		if (log2p) {
+			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */
+			gbl->sprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->sprcn(Range(0,nseg-1),Range::all());
+		}
 		
+	}
+	else {
 		/* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
 		//        for(i=0;i<npnt;++i)
 		//            for(int n=0;n<NV;++n)

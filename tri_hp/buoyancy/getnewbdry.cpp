@@ -44,7 +44,7 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	type = tri_hp_buoyancy_vtype::getid(name.c_str());
 	switch(type) {
 		case tri_hp_buoyancy_vtype::melt_facet_pt2: {
-			temp = new melt_facet_pt2(*this,*vbdry(bnum));
+			temp = new bdry_cd::melt_facet_pt2(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_buoyancy_vtype::triple_junction: {

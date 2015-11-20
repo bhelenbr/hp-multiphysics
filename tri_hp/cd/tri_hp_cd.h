@@ -37,6 +37,7 @@ class tri_hp_cd : public tri_hp {
 
 		FLT adis; // DISSIPATION CONSTANT
 
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 		init_bdry_cndtn* getnewibc(std::string name);
 

@@ -15,9 +15,9 @@
 //#define MPDEBUG
 //#define DEBUG
 //#define DETAILED_MINV
-//#define ROTATE_RESIDUALS
 //#define ONE_SIDED
 //#define ONE_SIDED_NEW
+//#define SYMMETRIC
 
 /* Non-deforming coupled boundary with variables on boundary */
 class hp_coupled_bdry : public hp_edge_bdry {
@@ -39,6 +39,7 @@ class hp_coupled_bdry : public hp_edge_bdry {
 		Array<FLT,3> vdres; //!< Driving term for multigrid (log2p, pnts,NV)
 		Array<FLT,4> sdres; //!< Driving term for multigrid (log2p, side, order, NV)
 		const hp_coupled_bdry *fine, *coarse;  //!< Pointers to coarse and fine mesh objects for multigrid transfers
+		Array<FLT,1> ksprg;  //!< For tangential deforming boundary equation
 		
 		struct global {
 			
@@ -55,8 +56,12 @@ class hp_coupled_bdry : public hp_edge_bdry {
 			Array<FLT,3> sres0; //!< side multigrid driving terms (segs,mode,NV)
 
 			/* PRECONDITIONER */
-			Array<FLT,3> vdt; //!< Time advancement for vertices (pnts,NV,NV)
-			Array<FLT,3> sdt; //!< Time advancement for sides (segs,NV,NV)
+			Array<FLT,3> vdt; //!< Time advancement for vertices (pnts,x.NV+NV,x.NV+NV)
+			Array<int,2> vpiv; //!< Pivot matrix for vdt inversion
+			Array<FLT,3> sdt; //!< Time advancement for sides (segs,x.NV+NV,x.NV+NV)
+			Array<int,2> spiv; //!< Pivot matrix for sdt inversion
+			Array<FLT,4> sdt2; //!< Time advancement for sides (segs,sm,x.NV+NV,x.NV+NV)
+			Array<int,3> spiv2; //!< Pivot matrix for sdt2 inversion
 			Array<FLT,2> meshc; //!< upwinding constants (segs,NV)
 			
 #ifdef DETAILED_MINV
@@ -76,6 +81,7 @@ class hp_coupled_bdry : public hp_edge_bdry {
 			fine = &inbdry;
 			if (!is_master) return;
 			/* default initializer for p=1 multigrid (overriddent in init for fine level) */
+			ksprg.resize(base.maxseg);
 			vug_frst.resize(base.maxseg+1,NV);
 			vdres.resize(1,base.maxseg+1,NV);
 		};
@@ -83,60 +89,47 @@ class hp_coupled_bdry : public hp_edge_bdry {
 		void init(input_map& inmap,void* gbl_in);
 		
 		/* FOR COUPLED DYNAMIC BOUNDARIES (COMMENTED ROUTINES NEED TO BE WRITTEN) */
-		// void tadvance();
+		void tadvance();
+		void setup_preconditioner();
 		void rsdl(int stage);
 		void maxres();
+		void update(int stage);
 		void minvrt();  //FIXME: NOT GENERAL YET
-		// void update(int stage);
 		void mg_restrict();
 		void mg_source();
-#ifdef petsc
-		//void non_sparse(Array<int,1> &nnzero);
-		//void petsc_jacobian();
-		//void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+#ifdef SYMMETRIC
+	void smatchsolution_snd(FLT *sdata, int bgn, int end, int stride);
+	int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 #endif
-};
-
-/* deforming coupled boundary */
-class hp_deformable_bdry : public hp_coupled_bdry {
-	protected:
-		Array<FLT,1> ksprg;
-	public:
-		hp_deformable_bdry(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin) {mytype = "hp_deformable_bdry";}
-		hp_deformable_bdry(const hp_deformable_bdry& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin) {if (is_master) ksprg.resize(base.maxseg);}
-		hp_deformable_bdry* create(tri_hp& xin, edge_bdry &bin) const {return new hp_deformable_bdry(*this,dynamic_cast<tri_hp&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in);
-		void tadvance();
-		void rsdl(int stage);
+	
 		void element_jacobian(int indx, Array<FLT,2>& K);
-		void update(int stage);
-
 #ifdef petsc
-		void non_sparse(Array<int,1> &nnzero);
-		void non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
-		void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
-		void petsc_jacobian();
-#ifdef ONE_SIDED
+	void non_sparse(Array<int,1> &nnzero);
+#ifdef SYMMETRIC
+	void non_sparse_snd(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
+#endif
+	int non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
+	void petsc_jacobian();
+#if defined(ONE_SIDED) || defined(SYMMETRIC)
 	void petsc_matchjacobian_snd();
 #endif
-		void petsc_matchjacobian_rcv(int phase);
-#ifdef ROTATE_RESIDUALS
-		void petsc_premultiply_jacobian();
-#endif
+	int petsc_matchjacobian_rcv(int phase);
+	void petsc_make_1D_rsdl_vector(Array<FLT,1> res);
+	void petsc_premultiply_jacobian();
 #endif
 };
 
 class hp_deformable_fixed_pnt : public hp_vrtx_bdry {
 	/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 protected:
-	hp_deformable_bdry *surface;
+	hp_coupled_bdry *surface;
 	int surfbdry;
 	
 public:
 	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
 	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
 		if (surfbdry > -1) {
-			if (!(surface = dynamic_cast<hp_deformable_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
+			if (!(surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
 				*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
@@ -151,6 +144,7 @@ public:
 	void vdirichlet();
 #ifdef petsc
 	void petsc_jacobian_dirichlet();
+	void setup_preconditioner();
 #endif
 };
 
@@ -175,17 +169,18 @@ public:
 #ifdef petsc
 	void petsc_jacobian();
 	void petsc_jacobian_dirichlet() {hp_vrtx_bdry::petsc_jacobian_dirichlet();}
+	void setup_preconditioner() {hp_vrtx_bdry::setup_preconditioner();}
 #endif
 };
 
 
-class translating_surface : public hp_deformable_bdry {
+class translating_surface : public hp_coupled_bdry {
 protected:
 	TinyVector<FLT,tri_mesh::ND> vel;
 	
 public:
-	translating_surface(tri_hp &xin, edge_bdry &bin) : hp_deformable_bdry(xin,bin) {mytype = "translating_surface";}
-	translating_surface(const translating_surface& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_deformable_bdry(inbdry,xin,bin), vel(inbdry.vel) {};
+	translating_surface(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin) {mytype = "translating_surface";}
+	translating_surface(const translating_surface& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_coupled_bdry(inbdry,xin,bin), vel(inbdry.vel) {};
 	translating_surface* create(tri_hp& xin, edge_bdry &bin) const {return new translating_surface(*this,xin,bin);}
 	
 	void init(input_map& inmap,void* gbl_in);
@@ -203,7 +198,8 @@ public:
 	void element_rsdl(Array<FLT,1> lf) { hp_vrtx_bdry::element_rsdl(lf);}
 	void rsdl(int stage);
 #ifdef petsc
-	void petsc_jacobian(); 
+	void petsc_jacobian();
+	void setup_preconditioner() {hp_deformable_fixed_pnt::setup_preconditioner();}
 #endif
 };
 

@@ -73,6 +73,7 @@ class r_fixed : public r_side_bdry {
 //		void jacobian_dirichlet(Mat petsc_J, int stride) {
 			int np = (base.nseg+1)*(dstop -dstart +1);
 			Array<int,1> points(np);
+			Array<FLT,1> vals(np);
 			
 			int j = 0;
 			int cnt = 0;
@@ -80,15 +81,20 @@ class r_fixed : public r_side_bdry {
 			do {
 				sind = base.seg(j);
 				int gindx = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +dstart;
-				for (int n=dstart;n<=dstop;++n)
-					points(cnt++) = gindx++;
+				for (int n=dstart;n<=dstop;++n) {
+					points(cnt) = gindx++;
+					vals(cnt++) = 1./x.gbl->diag(x.seg(sind).pnt(0));  // Makes diagonals of jacobian uniform in scaling
+				}
 			} while(++j < base.nseg);
 			int gindx = x.seg(sind).pnt(1)*stride +stride -tri_mesh::ND +dstart;
-			for (int n=dstart;n<=dstop;++n)
-				points(cnt++) = gindx++;			
+			for (int n=dstart;n<=dstop;++n) {
+				points(cnt) = gindx++;
+				vals(cnt++) = 1./x.gbl->diag(x.seg(sind).pnt(1)); // Makes diagonals of jacobian uniform in scaling
+			}
 			
 			J.zero_rows(cnt,points);
 			J_mpi.zero_rows(cnt,points);
+			//J.set_diag(cnt,points,vals);
 			J.set_diag(cnt,points,1.0);
 //			MatZeroRows(petsc_J,cnt,points.data(),1.0);
 		}
@@ -158,13 +164,13 @@ class r_fixed_angled : public r_side_bdry {
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
 					if (J._col(row1+col) == row) {
-						vals(1,col) = cos(theta);
+						vals(1,col) = cos(theta)/x.gbl->diag(x.seg(sind).pnt(1)); // For improved conditioning
 						break;
 					}
 				}
 				for(int col=0;col<nnz1;++col) {
 					if (J._col(row1+col) == row+1) {
-						vals(1,col) = sin(theta);
+						vals(1,col) = sin(theta)/x.gbl->diag(x.seg(sind).pnt(1));  // For improved conditioning
 						break;
 					}
 				}

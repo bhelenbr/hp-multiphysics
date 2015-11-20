@@ -73,7 +73,7 @@ void surface2::init(input_map& inmap,void* gin) {
 		vars << n << ' ';
 	}
 	inmap[base.idprefix +"_c0_indices"] = vars.str();
-	hp_deformable_bdry::init(inmap,gin);
+	hp_coupled_bdry::init(inmap,gin);
 	
 	inmap.getwdefault(master_id +"_sigma",gbl->sigma,0.0);
 	inmap.getwdefault(master_id +"_p_ext",gbl->p_ext,0.0);
@@ -168,6 +168,8 @@ void surface2::setup_preconditioner() {
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
+	
+	hp_coupled_bdry::setup_preconditioner();
 	
 	drho = x.gbl->rho -gbl->rho2;
 	srho = x.gbl->rho +gbl->rho2;
@@ -435,6 +437,7 @@ void surface2::setup_preconditioner() {
 			gbl->sdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
 		}
 	}
+
 	return;
 }
 

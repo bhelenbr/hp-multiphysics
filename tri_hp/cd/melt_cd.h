@@ -15,16 +15,12 @@
 #include "myblas.h"
 #include <symbolic_function.h>
 
-#ifdef ROTATE_RESIDUALS
-#define SWAP_ROWS
-#endif
-
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {
-	class melt_cd : public hp_deformable_bdry {
+	class melt_cd : public hp_coupled_bdry {
 		
 	public:
-		struct global : public hp_deformable_bdry::global {
+		struct global : public hp_coupled_bdry::global {
 			/* PROPERTIES */
 			FLT Lf, rho_s, cp_s, k_s, rho_l, cp_l, k_l;
 			
@@ -38,21 +34,40 @@ namespace bdry_cd {
 			Array<FLT,1> sdt_kinetic;
 		} *gbl;
 		
-		public:
-			melt_cd(tri_hp &xin, edge_bdry &bin) : hp_deformable_bdry(xin,bin) {mytype = "melt_cd";}
-			melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_deformable_bdry(inbdry,xin,bin) {}
-			melt_cd* create(tri_hp& xin, edge_bdry &bin) const {return new melt_cd(*this,xin,bin);}
-			void* create_global_structure() {return new global;}
-
-			void init(input_map& inmap, void* gbl_in);
-			void setup_preconditioner();
+	public:
+		melt_cd(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin) {mytype = "melt_cd";}
+		melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin) {}
+		melt_cd* create(tri_hp& xin, edge_bdry &bin) const {return new melt_cd(*this,xin,bin);}
+		void* create_global_structure() {return new global;}
 		
-#if defined(petsc) && defined(SWAP_ROWS)
+		void init(input_map& inmap, void* gbl_in);
+		void output(const std::string& filename, tri_hp::filetype typ,int tlvl);
+		void setup_preconditioner();
+		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
+		FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
+		
+		
+#ifdef petsc
 		/* routines to swap residuals between kinetic equation and energy equation */
 		void non_sparse(Array<int,1> &nnzero);
-		void non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
+#ifndef SYMMETRIC
+		int non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
+#endif
 		void petsc_make_1D_rsdl_vector(Array<double,1> res);
 		void petsc_premultiply_jacobian();
+#endif
+	};
+	
+	class melt_facet_pt2 : public hp_deformable_free_pnt {
+	public:
+		melt_facet_pt2(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin) {mytype = "melt_facet_pt";}
+		melt_facet_pt2(const melt_facet_pt2& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
+		melt_facet_pt2* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt2(*this,xin,bin);}
+		
+		void rsdl(int stage);
+		void element_rsdl(Array<FLT,1> lf);
+#ifdef petsc
+		void petsc_jacobian();
 #endif
 	};
 }

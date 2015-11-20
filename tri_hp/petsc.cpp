@@ -497,7 +497,58 @@ void tri_hp::petsc_jacobian() {
 }
 
 void tri_hp::petsc_premultiply_jacobian() {
+
+#ifdef PRECONDITION
+	int count = 0;
+	if (mmovement == coupled_deformable) {
+		for(int i=0;i<npnt;++i) {
+			for(int n=0;n<NV;++n) {
+				J.multiply_row(count,gbl->vprcn(i,n));
+				J_mpi.multiply_row(count,gbl->vprcn(i,n));
+				++count;
+			}
+			for(int n=0;n<ND;++n) {
+				J.multiply_row(count,r_tri_mesh::gbl->diag(i));
+				J_mpi.multiply_row(count,r_tri_mesh::gbl->diag(i));
+				++count;
+			}
+		}
+	}
+	else {
+		for(int i=0;i<npnt;++i) {
+			for(int n=0;n<NV;++n) {
+				J.multiply_row(count,gbl->vprcn(i,n));
+				J_mpi.multiply_row(count,gbl->vprcn(i,n));
+				++count;
+			}
+		}
+	}
 	
+	if (sm0) {
+		for(int i=0;i<nseg;++i) {
+			for(int m=0;m<sm0;++m) {
+				for(int n=0;n<NV;++n) {
+					J.multiply_row(count,gbl->sprcn(i,n));
+					J_mpi.multiply_row(count,gbl->sprcn(i,n));
+					++count;
+				}
+			}
+		}
+		
+		if (im0) {
+			for(int i=0;i<ntri;++i) {
+				for(int m=0;m<im0;++m) {
+					for(int n=0;n<NV;++n) {
+						J.multiply_row(count,1./gbl->tprcn(i,n));
+						J_mpi.multiply_row(count,1./gbl->tprcn(i,n));
+						++count;
+					}
+				}
+			}
+		}
+	}
+#endif
+
 	for(int i=0;i<nebd;++i) {
 		hp_ebdry(i)->petsc_premultiply_jacobian();
 	}
@@ -628,7 +679,33 @@ void tri_hp::petsc_rsdl() {
 
 
 void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
-	int ind = 0;	
+	int ind = 0;
+	
+#ifdef PRECONDITION
+	if (mmovement != coupled_deformable) {
+		for (int i=0;i<npnt;++i)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.v(i,n)*gbl->vprcn(i,n);
+	}
+	else {
+		for (int i=0;i<npnt;++i) {
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.v(i,n)*gbl->vprcn(i,n);
+			for(int n=0;n<ND;++n)
+				rv(ind++) = r_tri_mesh::gbl->res(i)(n)*r_tri_mesh::gbl->diag(i);
+		}
+	}
+		
+	for (int i=0;i<nseg;++i) 
+		for(int m=0;m<sm0;++m)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.s(i,m,n)*gbl->sprcn(i,n);
+	
+	for (int i=0;i<ntri;++i) 
+		for(int m=0;m<im0;++m)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.i(i,m,n)/gbl->tprcn(i,n);
+#else
 	if (mmovement != coupled_deformable) {
 		for (int i=0;i<npnt;++i)
 			for(int n=0;n<NV;++n)
@@ -642,16 +719,18 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 				rv(ind++) = r_tri_mesh::gbl->res(i)(n);
 		}
 	}
-		
-	for (int i=0;i<nseg;++i) 
+	
+	for (int i=0;i<nseg;++i)
 		for(int m=0;m<sm0;++m)
 			for(int n=0;n<NV;++n)
 				rv(ind++) = gbl->res.s(i,m,n);
 	
-	for (int i=0;i<ntri;++i) 
+	for (int i=0;i<ntri;++i)
 		for(int m=0;m<im0;++m)
 			for(int n=0;n<NV;++n)
 				rv(ind++) = gbl->res.i(i,m,n);
+#endif
+	
 	
 	for (int i=0;i<nebd;++i) {
 		hp_ebdry(i)->petsc_make_1D_rsdl_vector(rv);

@@ -43,33 +43,14 @@ namespace bdry_buoyancy {
 		melt_buoyancy(const melt_buoyancy& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : melt_cd(inbdry,xin,bin), x(xin) {}
 		melt_buoyancy* create(tri_hp& xin, edge_bdry &bin) const {return new melt_buoyancy(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 		
-		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
-		FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
-		void output(const std::string& fname, tri_hp::filetype typ,int tlvl);
 	};
 	
-	
-	class melt_facet_pt2 : public hp_deformable_free_pnt {
-	protected:
-		tri_hp_buoyancy &x;
-	public:
-		melt_facet_pt2(tri_hp_buoyancy &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin), x(xin) {mytype = "melt_facet_pt";}
-		melt_facet_pt2(const melt_facet_pt2& inbdry, tri_hp_buoyancy &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin), x(xin) {}
-		melt_facet_pt2* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt2(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
-		
-		void rsdl(int stage);
-		void element_rsdl(Array<FLT,1> lf);
-#ifdef petsc
-		void petsc_jacobian();
-#endif
-	};
-	
-	class triple_junction : public melt_facet_pt2 {
+	class triple_junction : public bdry_cd::melt_facet_pt2 {
 	protected:
 		FLT growth_angle;
 	public:
-		triple_junction(tri_hp_buoyancy &xin, vrtx_bdry &bin) : melt_facet_pt2(xin,bin) {mytype = "triple_junction";}
-		triple_junction(const triple_junction& inbdry, tri_hp_buoyancy &xin, vrtx_bdry &bin) : melt_facet_pt2(inbdry,xin,bin) {}
+		triple_junction(tri_hp &xin, vrtx_bdry &bin) : bdry_cd::melt_facet_pt2(xin,bin) {mytype = "triple_junction";}
+		triple_junction(const triple_junction& inbdry, tri_hp &xin, vrtx_bdry &bin) : melt_facet_pt2(inbdry,xin,bin) {}
 		triple_junction* create(tri_hp& xin, vrtx_bdry &bin) const {return new triple_junction(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 		
 		void init(input_map& inmap,void* gbl_in);

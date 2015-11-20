@@ -18,19 +18,19 @@ namespace bdry_ins {
 //#define MPDEBUG
 //#define DEBUG
 
-class surface2 : public hp_deformable_bdry {
+class surface2 : public hp_coupled_bdry {
 	protected:
 		tri_hp_ins &x;
 	
 	public:
-		struct global : public hp_deformable_bdry::global {
+		struct global : public hp_coupled_bdry::global {
 			/* FLUID PROPERTIES */
 			FLT sigma,rho2,mu2,p_ext;
 		} *gbl;
 		
 		void* create_global_structure() {return new global;}
-		surface2(tri_hp_ins &xin, edge_bdry &bin) : hp_deformable_bdry(xin,bin), x(xin) {mytype = "surface2";}
-		surface2(const surface2& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : hp_deformable_bdry(inbdry,xin,bin), x(xin) {
+		surface2(tri_hp_ins &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin), x(xin) {mytype = "surface2";}
+		surface2(const surface2& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : hp_coupled_bdry(inbdry,xin,bin), x(xin) {
 			gbl = inbdry.gbl;
 		};
 		surface2* create(tri_hp& xin, edge_bdry &bin) const {return new surface2(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
