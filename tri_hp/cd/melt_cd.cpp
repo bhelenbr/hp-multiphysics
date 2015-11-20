@@ -791,15 +791,15 @@ void melt_cd::petsc_premultiply_jacobian() {
 	if (is_master)
 #endif
 		{
-		int row = jacobian_start; // Index of motion equations
+		int row0 = jacobian_start; // Index of motion equations
 		
 		const int sm = basis::tri(x.log2p)->sm();
 		for(int j=0;j<base.nseg;++j) {
 			int row1 = x.npnt*vdofs +base.seg(j)*sm*x.NV +heatindex;  // Index of heat equation
 			for(int m=0;m<sm;++m) {
 				row_ind(0) = row1;
-				row_ind(1) = row;
-				row_ind(2) = row+1;
+				row_ind(1) = row0;
+				row_ind(2) = row0+1;
 				// Store Jacobian
 				gbl->sdt2(j,m,Range::all(),Range::all()) = 0.0;
 #ifdef PRECONDITION
@@ -826,7 +826,7 @@ void melt_cd::petsc_premultiply_jacobian() {
 				x.J.combine_rows(3, row_ind, A, x.NV+NV, ipiv);
 				x.J_mpi.match_patterns(3, row_ind);
 				x.J_mpi.combine_rows(3, row_ind, A, x.NV+NV, ipiv);
-				row += tri_mesh::ND;
+				row0 += tri_mesh::ND;
 				row1 += x.NV;
 			}
 		}
