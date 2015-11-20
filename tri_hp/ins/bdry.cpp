@@ -405,7 +405,7 @@ void actuator_disc::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride)
 
 int actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 	
-	if (!base.is_comm()) return;
+	if (!base.is_comm()) return(0);
 	
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
 	int j,k,m,n,count,countdn,countup,offset,sind,sign;
