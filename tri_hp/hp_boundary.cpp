@@ -1128,7 +1128,7 @@ void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 
 int hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return;
+	if (!base.is_comm()) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
@@ -1199,7 +1199,7 @@ void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 
 int hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return;
+	if (!base.is_comm()) return(0);
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
@@ -1547,7 +1547,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 
 int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	const int rowbase = base.pnt*vdofs;
@@ -1739,7 +1739,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 
 int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	int count = 0;
 	int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++)); // Start of jacobian on matching block
