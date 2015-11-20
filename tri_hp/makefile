@@ -70,8 +70,7 @@ OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnew
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/setup_preconditioner.o cd/melt_cd.o # cd/minvrt.o 
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/setup_preconditioner.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/setup_preconditioner.o
-OBJBUOY = buoyancy/allocate.o buoyancy/setup_preconditioner.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/surface.o buoyancy/melt_kinetics.o \
-buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
+OBJBUOY = buoyancy/allocate.o buoyancy/setup_preconditioner.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/surface.o buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/setup_preconditioner.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/setup_preconditioner.o lvlset/reinit.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/setup_preconditioner.o
