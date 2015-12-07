@@ -971,28 +971,12 @@ void hp_coupled_bdry::non_sparse(Array<int,1> &nnzero) {
 	const int begin_tri = begin_seg+x.nseg*sm*x.NV;
 	
 	if(x.sm0 > 0) {
-#ifndef SYMMETRIC
-		if (is_master) {
-			if (gbl->field_is_coupled) {
-				nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +NV*sm;  // Space to store entire jacobian
-			}
-			else {
-				nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = (x.NV+NV)*(sm+2);  // Just variables along edge
-			}
-		}
-		else {
-			/* Just an equality constraint */
-			// nnzero_mpi is set to 1 in receive */
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
-		}
-#else
 		if (gbl->field_is_coupled) {
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +NV*sm;
 		}
 		else {
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = vdofs*(sm+2);
 		}
-#endif
 		
 		/* effect of curvature on flow equations */
 		for (int i=0;i<base.nseg;++i) {
@@ -1063,8 +1047,6 @@ int hp_coupled_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_m
 	if (!base.is_comm()) return(0);
 
 	const int sm=basis::tri(x.log2p)->sm();
-	const int im=basis::tri(x.log2p)->im();
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
 	int count = hp_edge_bdry::non_sparse_rcv(nnzero, nnzero_mpi);
 	
@@ -1082,20 +1064,20 @@ int hp_coupled_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_m
 #ifndef SYMMETRIC
 	if (is_master) {
 		/* Add to mpi to allow preconditioning */
-		if (sm) {
-			if (gbl->field_is_coupled) {
-				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 3*vdofs +(3*sm +im)*x.NV +NV*sm;
-			}
-			else {
-				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
-			}
+		if (sm && !gbl->field_is_coupled) {
+			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
 		}
 	}
 	else {
 		/* For anything other than SYMMETRIC, slave side modes are just followers */
-		if (sm) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
+		if (sm) {
+			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
+			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
+		}
 		
 #ifdef ONE_SIDED
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 		/* If ONE_SIDED all c0 variables are followers */
 		for (int i=base.nseg-1;i>=0;--i) {
 			int sind = base.seg(i);
@@ -1126,7 +1108,42 @@ int hp_coupled_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_m
 #endif
 	}
 #endif
+	
+	// make sure flow and coupled side variables have same number of entries
+	if (is_master && gbl->field_is_coupled) {
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+		const int c0var = c0_indices[0];
+		
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
+			int flow_vars = nnzero_mpi(pind+c0var);
+			for(int n=x.NV;n<vdofs;++n) {
+				nnzero_mpi(pind+n) = flow_vars;
+			}
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		int flow_vars = nnzero_mpi(pind+c0var);
+		for(int n=x.NV;n<vdofs;++n) {
+			nnzero_mpi(pind+n) = flow_vars;
+		}
 
+		if (sm) {
+			const int begin_seg = x.npnt*vdofs;
+
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				for (int mode=0;mode<sm;++mode) {
+					int flow_vars = nnzero_mpi(begin_seg+sind*x.NV*sm +mode*x.NV +c0var);
+					for(int n=0;n<NV;++n) {
+						nnzero_mpi(jacobian_start+i*sm*NV +mode*NV +n) = flow_vars;
+					}
+				}
+			}
+		}
+	}
+	
 	return(count);
 }
 
