@@ -188,6 +188,10 @@ move to Packages, extract
 # OR from repository
 git clone -b maint https://bitbucket.org/petsc/petsc petsc
 
+# OR to update
+rm -rf arch-darwin-c-debug #remove build files
+git pull
+git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
 # with superlu
@@ -225,7 +229,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 #### NOT NECESSARY FOR 2D CODE ###
 #### (FOR TETS ONLY) FOR MADLIB ####
 (NEED PASSWORD FROM BRIAN)
-	[svn co https://svn.cenaero.be/MAdLib/trunk MAdLib]
+	[svn co https://svn.cenaero.be/MAdLib/trunk MAdLib] or [svn update]
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
