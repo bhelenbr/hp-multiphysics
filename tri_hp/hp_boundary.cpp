@@ -1572,7 +1572,7 @@ int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	for (int m=0;m<base.nmatches();++m) {
 		int count = 0;
 		int Jstart_mpi = static_cast<int>(base.frcvbuf(m, count++)); // Start of jacobian on matching block
-		int Jstart_mpi_vrtx_unknowns = static_cast<int>(base.frcvbuf(m, count++)); // Start of vertex unknowns on mathcing block (not used typically)
+		count++; // int Jstart_mpi_vrtx_unknowns = static_cast<int>(base.frcvbuf(m, count++)); // Start of vertex unknowns on mathcing block (not used typically)
 		
 		sparse_row_major *pJ_mpi;
 		if (base.is_local(m)) {
@@ -2030,43 +2030,6 @@ void hp_edge_bdry::sdirichlet(int mode) {
 			x.gbl->res.s(sind,mode,*n) = 0.0;
 	}
 }
-
-#if defined(petsc) && defined(PRECONDITION)
-void hp_vrtx_bdry::setup_preconditioner() {
-	for(std::vector<int>::const_iterator n=essential_indices.begin();n != essential_indices.end();++n) {
-		x.gbl->vprcn(base.pnt,*n) = 1.0;
-	}
-}
-#else
-void hp_vrtx_bdry::setup_preconditioner() {}
-#endif
-
-
-#if defined(petsc) && defined(PRECONDITION)
-void hp_edge_bdry::setup_preconditioner() {
-	int sind,v0;
-	int j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		for(std::vector<int>::const_iterator n=essential_indices.begin();n != essential_indices.end();++n) {
-			x.gbl->vprcn(v0,*n) = 1.0;
-		}
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n) {
-		x.gbl->vprcn(v0,*n) = 1.0;
-	}
-	
-	for(int i=0;i<base.nseg;++i) {
-		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n) {
-			x.gbl->sprcn(base.seg(i),*n) = 1.0;
-		}
-	}
-}
-#else
-void hp_edge_bdry::setup_preconditioner() {}
-#endif
 
 #ifdef petsc
 void hp_vrtx_bdry::petsc_jacobian_dirichlet() {

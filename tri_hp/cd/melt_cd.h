@@ -45,17 +45,6 @@ namespace bdry_cd {
 		void setup_preconditioner();
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 		FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
-		
-		
-#ifdef petsc
-		/* routines to swap residuals between kinetic equation and energy equation */
-		void non_sparse(Array<int,1> &nnzero);
-#ifndef SYMMETRIC
-		int non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
-#endif
-		void petsc_make_1D_rsdl_vector(Array<double,1> res);
-		void petsc_premultiply_jacobian();
-#endif
 	};
 	
 	class melt_facet_pt2 : public hp_deformable_free_pnt {
