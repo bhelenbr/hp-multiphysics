@@ -22,7 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		6F16C6E40D81F11000F03F54 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D80D81EDD900F03F54 /* libmpi_cxx.1.dylib */; };
-		6F16C6E80D81F12200F03F54 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D70D81EDD900F03F54 /* libmpi.1.dylib */; };
+		6F16C6E80D81F12200F03F54 /* libmpi.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D70D81EDD900F03F54 /* libmpi.12.dylib */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F2262C508673029001017D0 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
@@ -157,8 +157,8 @@
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
-		E6019988167F68B100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */; };
-		E601998A167F68B200C5C90E /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */; };
+		E6019988167F68B100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */; };
+		E601998A167F68B200C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */; };
 		E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
 		E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
@@ -183,7 +183,7 @@
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F0BD8BD11A69A820013DB0A /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = ../../Packages/lib/libboost_thread.dylib; sourceTree = SOURCE_ROOT; };
 		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
-		6F16C6D70D81EDD900F03F54 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = /Users/bhelenbr/Packages/lib/libmpi.1.dylib; sourceTree = "<absolute>"; };
+		6F16C6D70D81EDD900F03F54 /* libmpi.12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.12.dylib; path = /Users/bhelenbr/Packages/lib/libmpi.12.dylib; sourceTree = "<absolute>"; };
 		6F16C6D80D81EDD900F03F54 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = /Users/bhelenbr/Packages/lib/libmpi_cxx.1.dylib; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libtri_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F2F749A0DD89553002615F9 /* libbinio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbinio.dylib; path = ../../Packages/lib/libbinio.dylib; sourceTree = SOURCE_ROOT; };
@@ -205,7 +205,7 @@
 		E6D716EA1206CC15005572EE /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
-		E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = "<group>"; };
+		E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.4.dylib; path = ../../Packages/lib/libmuparser.2.2.4.dylib; sourceTree = "<group>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
 		F515EA5602B7E15B012A8EDA /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = SOURCE_ROOT; };
 		F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_tri_boundary.h; sourceTree = "<group>"; };
@@ -248,11 +248,11 @@
 				6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */,
 				6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */,
 				6F16C6E40D81F11000F03F54 /* libmpi_cxx.1.dylib in Frameworks */,
-				6F16C6E80D81F12200F03F54 /* libmpi.1.dylib in Frameworks */,
+				6F16C6E80D81F12200F03F54 /* libmpi.12.dylib in Frameworks */,
 				6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 				E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */,
 				E6F1CDE41533E774009F6A6B /* Accelerate.framework in Frameworks */,
-				E601998A167F68B200C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
+				E601998A167F68B200C5C90E /* libmuparser.2.2.4.dylib in Frameworks */,
 				E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -269,7 +269,7 @@
 				6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 				E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */,
 				E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */,
-				E6019988167F68B100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
+				E6019988167F68B100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */,
 				E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -281,7 +281,7 @@
 			isa = PBXGroup;
 			children = (
 				E6A1C0AC176F480400074810 /* libmetis.dylib */,
-				E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.3.dylib */,
+				E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */,
 				6F1616010B974E67006CA043 /* libDT.a */,
 				6F2F749A0DD89553002615F9 /* libbinio.dylib */,
 				6F56D55C09EEE7F900C97501 /* libblitz.a */,
@@ -292,7 +292,7 @@
 				E6F1CDE21533E774009F6A6B /* Accelerate.framework */,
 				6FEFFC550C60191700352ED3 /* libpth.a */,
 				6F0BD8BD11A69A820013DB0A /* libboost_thread.dylib */,
-				6F16C6D70D81EDD900F03F54 /* libmpi.1.dylib */,
+				6F16C6D70D81EDD900F03F54 /* libmpi.12.dylib */,
 				6F16C6D80D81EDD900F03F54 /* libmpi_cxx.1.dylib */,
 			);
 			name = "External Frameworks and Libraries";
@@ -531,7 +531,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0600;
+				LastUpgradeCheck = 0710;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -877,6 +877,7 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BZ_DEBUG,

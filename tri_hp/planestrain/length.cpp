@@ -7,8 +7,6 @@
  *
  */
 #include <math.h>
-#include <utilities.h>
-
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 

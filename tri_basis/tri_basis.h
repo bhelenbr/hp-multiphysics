@@ -12,6 +12,7 @@
 
 #include <blitz/array.h>
 #include <float.h>
+#include <sys/param.h>
 
 #ifdef SINGLE
 #define FLT float

@@ -12,7 +12,6 @@
 #include <cstring>
 #include <assert.h>
 #include <stdlib.h>
-#include <utilities.h>
 #include <myblas.h>
 #include <libbinio/binwrap.h>
 #include <libbinio/binfile.h>
@@ -506,8 +505,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			break; 
 
-		case (datatank): {
 #ifdef DATATANK
+		case (datatank): {
 			fnmapp = fname +".dt";
 			int dt_pnts = npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri;
 			int dt_tris = ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);
@@ -678,11 +677,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			Write(outputFile,"Var_var1",dt_mesh,Info_DTTriangularGrid2D);
 			Write(outputFile,"Var_var2",dt_mesh,Info_DTTriangularGrid2D);
 			Write(outputFile,"Var",DTDoubleArray()); // So that DataTank can see the variable.
-#else
-			*gbl->log << "Not supported on this platform" << std::endl;
-#endif
 			break;
 		}
+#endif
 
 		case(adapt_diagnostic): {            
 			fnmapp = fname+ "_length.dat";

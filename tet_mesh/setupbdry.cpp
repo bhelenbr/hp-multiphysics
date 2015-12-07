@@ -7,7 +7,6 @@
  *
  */
 #include "tet_mesh.h"
-#include <utilities.h>
 #include <float.h>
 
 /* this assumes that the global vertex numbers are in tri.pnt */

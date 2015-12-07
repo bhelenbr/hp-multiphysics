@@ -1,5 +1,4 @@
 #include "tet_mesh.h"
-#include <utilities.h>
 
 //void tet_mesh::coarsen_substructured(const class tet_mesh &zx,int p) {
 //    int i,sind,sgn,p2;

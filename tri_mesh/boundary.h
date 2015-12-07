@@ -9,7 +9,6 @@
  *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
  *
  */
-#include <utilities.h>
 #include <stdio.h>
 #include <input_map.h>
 #include <symbolic_function.h>

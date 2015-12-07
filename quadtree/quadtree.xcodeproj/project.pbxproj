@@ -152,7 +152,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0710;
 			};
 			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -239,6 +239,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -270,6 +271,7 @@
 		6FD8B0170865BC8A005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -283,6 +285,7 @@
 		6FD8B0180865BC8A005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;

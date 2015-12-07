@@ -10,7 +10,6 @@
 #include "tri_hp_cd.h"
 #include "../hp_boundary.h"
 #include <math.h>
-#include <utilities.h>
 
 void tri_hp_cd::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;

@@ -8,7 +8,6 @@
  */
 
 #include "tri_hp.h"
-#include <utilities.h>
 #include <input_map.h>
 #include "hp_boundary.h"
 

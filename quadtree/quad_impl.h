@@ -11,8 +11,8 @@
 #include<cstdio>
 #include<assert.h>
 #include<string.h>
-#include<utilities.h>
 #include<math.h>
+#include<sys/param.h>  // includes max/min definitions
 
 /* STATIC VARIABLES FOR SEARCHING */ 
 // class box<ND> **quadtree<ND>::srchlst;

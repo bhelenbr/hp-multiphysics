@@ -8,7 +8,6 @@
 #include <fstream>
 #include <blitz/array.h>
 #include <input_map.h>
-#include <utilities.h>
 
 #ifdef PTH
 #include <pth.h>

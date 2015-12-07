@@ -1,6 +1,4 @@
-//#include <utilities.h>
 //#include <myblas.h>
-
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
 

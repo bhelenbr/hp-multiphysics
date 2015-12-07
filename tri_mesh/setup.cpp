@@ -1,5 +1,4 @@
 #include "tri_mesh.h"
-#include <utilities.h>
 #include <float.h>
 
 /* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */

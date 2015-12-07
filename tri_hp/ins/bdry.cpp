@@ -25,7 +25,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
-		case(tri_hp::tecplot): case(tri_mesh::vtk): {
+		case(tri_hp::tecplot): {
 			if (!report_flag) return;
 			
 			fname += ".dat";

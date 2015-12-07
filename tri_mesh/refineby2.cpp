@@ -7,7 +7,6 @@
  *
  */
 #include "tri_mesh.h"
-#include <utilities.h>
 #include <assert.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {

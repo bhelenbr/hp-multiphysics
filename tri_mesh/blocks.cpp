@@ -12,11 +12,10 @@
 #include "block.h"
 #include <time.h>
 #include <input_map.h>
-#include <utilities.h>
 #include <iostream>
+#include <sys/param.h>
 #include <string>
 #include <sstream>
-#include <utilities.h>
 #ifdef MPISRC
 #include <mpi.h>
 #include <set>

@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
-#include <utilities.h>
 #include <myblas.h>
 
 void tet_basis::outputstuff(int check) {

@@ -12,7 +12,7 @@
 		6FD651D10922EC6800D18689 /* input_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FD651CD0922EC6800D18689 /* input_map.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FD651F30922EFB000D18689 /* input_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CC0922EC6800D18689 /* input_map.cpp */; };
 		6FD651F40922EFB200D18689 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CE0922EC6800D18689 /* main.cpp */; };
-		E6019987167F689100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E601997F167F636000C5C90E /* libmuparser.2.2.3.dylib */; };
+		E6019987167F689100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,7 +24,7 @@
 		6FD651CF0922EC6800D18689 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FD651F10922EF8E00D18689 /* mod_map */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mod_map; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC046055464E500DB518D /* libinput_map.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinput_map.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		E601997F167F636000C5C90E /* libmuparser.2.2.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.3.dylib; path = ../../Packages/lib/libmuparser.2.2.3.dylib; sourceTree = "<group>"; };
+		E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.4.dylib; path = ../../Packages/lib/libmuparser.2.2.4.dylib; sourceTree = "<group>"; };
 		E631981016DBA7ED00B5C23C /* mod_map.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = mod_map.bash; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -34,7 +34,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F99D04E0B5DE0FA00628456 /* libparseargs.a in Frameworks */,
-				E6019987167F689100C5C90E /* libmuparser.2.2.3.dylib in Frameworks */,
+				E6019987167F689100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,7 +82,7 @@
 		6F99D0500B5DE10E00628456 /* Frameworks & Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				E601997F167F636000C5C90E /* libmuparser.2.2.3.dylib */,
+				E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */,
 				6F99D04D0B5DE0FA00628456 /* libparseargs.a */,
 			);
 			name = "Frameworks & Libraries";
@@ -159,7 +159,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0710;
 			};
 			buildConfigurationList = 6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -244,6 +244,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

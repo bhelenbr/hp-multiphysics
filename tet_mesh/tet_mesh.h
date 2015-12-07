@@ -5,7 +5,7 @@
 #include <quadtree.h>
 #include <iostream>
 #include <float.h>
-#include <utilities.h>
+#include <sys/param.h>
 #include <iostream>
 #include <input_map.h>
 #include <string>

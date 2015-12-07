@@ -8,7 +8,6 @@
  */
 
 #include "tet_hp.h"
-#include <utilities.h>
 #include "hp_boundary.h"
 
 void tet_hp::l2error(init_bdry_cndtn *comparison) {

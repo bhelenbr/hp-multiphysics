@@ -12,7 +12,6 @@
 #include <cstring>
 #include <assert.h>
 #include <stdlib.h>
-#include <utilities.h>
 #include <myblas.h>
 #include <libbinio/binwrap.h>
 #include <libbinio/binfile.h>

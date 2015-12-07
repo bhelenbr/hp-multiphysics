@@ -7,8 +7,6 @@
  *
  */
 #include <math.h>
-#include <utilities.h>
-
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 #include <vector>

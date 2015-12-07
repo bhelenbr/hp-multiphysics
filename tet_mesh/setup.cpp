@@ -8,7 +8,6 @@
  */
 
 #include "tet_mesh.h"
-#include <utilities.h>
 #include <float.h>
 #include <math.h>
 

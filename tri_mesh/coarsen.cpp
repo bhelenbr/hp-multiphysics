@@ -1,5 +1,4 @@
 #include "tri_mesh.h"
-#include <utilities.h>
 #include <cstdlib>
 #include <cstring>
 #include <cmath>

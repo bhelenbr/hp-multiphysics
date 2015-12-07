@@ -9,7 +9,6 @@
 
 #include"tet_basis.h"
 #include<math.h>
-#include<utilities.h>
 
 #ifndef BZ_DEBUG
 #define lin(n,m) lin1[(n)*stride +m]

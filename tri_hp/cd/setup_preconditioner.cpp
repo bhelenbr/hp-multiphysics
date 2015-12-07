@@ -1,6 +1,5 @@
 #include "tri_hp_cd.h"
 #include <math.h>
-#include <utilities.h>
 #include "../hp_boundary.h"
 
 

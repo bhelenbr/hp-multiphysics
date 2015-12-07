@@ -1,6 +1,5 @@
 #include "tet_hp_cd_multi.h"
 #include <math.h>
-#include <utilities.h>
 #include "../hp_boundary.h"
 
 //#define TIMEACCURATE

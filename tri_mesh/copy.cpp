@@ -1,5 +1,4 @@
 #include "tri_mesh.h"
-#include <utilities.h>
 #include<assert.h>
 
 void tri_mesh::copy(const tri_mesh& tgt) {

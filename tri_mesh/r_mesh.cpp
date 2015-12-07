@@ -1,7 +1,6 @@
 #include "r_tri_mesh.h"
 #include "r_tri_boundary.h"
 #include "block.h"
-#include <utilities.h>
 #include <iostream>
 #include <cmath>
 #include <input_map.h>

@@ -9,7 +9,6 @@
 // #define DEBUG
 
 #include <math.h>
-#include <utilities.h>
 #include <myblas.h>
 #include "tri_basis.h"
 

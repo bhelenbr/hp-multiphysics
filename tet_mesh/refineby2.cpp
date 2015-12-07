@@ -7,7 +7,6 @@
  *
  */
 #include "tet_mesh.h"
-#include <utilities.h>
 #include <assert.h>
 //#include <blitz/tinyvec-et.h>
 

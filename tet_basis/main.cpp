@@ -1,7 +1,6 @@
 #include "tet_basis.h"
 #include <stdio.h>
 #include <myblas.h>
-#include <utilities.h>
 #include <time.h>
 
 #define P 4

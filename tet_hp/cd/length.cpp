@@ -10,7 +10,6 @@
 #include "tet_hp_cd.h"
 #include "../hp_boundary.h"
 #include <math.h>
-#include <utilities.h>
 
 void tet_hp_cd::length() {
 	int i,j,k,v0,v1,v2,sind,tind,count;

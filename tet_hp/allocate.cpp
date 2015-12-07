@@ -9,7 +9,6 @@
 
 
 #include "tet_hp.h"
-#include <utilities.h>
 #include <input_map.h>
 #include <boundary.h>
 #include "hp_boundary.h"

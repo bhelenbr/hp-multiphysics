@@ -7,8 +7,6 @@
  *
  */
 #include <math.h>
-#include <utilities.h>
-
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 #include <vector>

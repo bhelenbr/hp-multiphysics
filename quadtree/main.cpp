@@ -9,7 +9,6 @@
 
 #include "quadtree.h"
 #include <cstdio>
-#include <utilities.h>
 #include <float.h>
 #include <math.h>
 #include <string.h>

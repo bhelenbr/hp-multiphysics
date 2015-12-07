@@ -177,7 +177,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0710;
 			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tri_basis" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -273,6 +273,7 @@
 		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					../include,

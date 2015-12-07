@@ -1,6 +1,4 @@
-//#include <utilities.h>
 //#include <myblas.h>
-
 #include "tet_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 //#include<blitz/tinyvec-et.h>

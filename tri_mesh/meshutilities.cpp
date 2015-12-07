@@ -1,5 +1,4 @@
 #include "tri_mesh.h"
-#include <utilities.h>
 
 void tri_mesh::coarsen_substructured(const class tri_mesh &zx,int p) {
 	int i,sind,sgn,p2;

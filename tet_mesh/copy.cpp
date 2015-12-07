@@ -1,5 +1,4 @@
 #include "tet_mesh.h"
-#include <utilities.h>
 #include<assert.h>
 
 void tet_mesh::copy(const tet_mesh& tgt) {

@@ -8,7 +8,6 @@
  */
 
 #include "tri_mesh.h"
-#include <utilities.h>
 #include<assert.h>
 #include<float.h>
 

@@ -8,9 +8,14 @@
  */
 
 #include "tri_mesh.h"
-#include <utilities.h>
 #include<float.h>
 #include<assert.h>
+
+#ifndef SIGN
+#define SIGN(a) ( ( (a) < 0 )  ?  -1   : ( (a) > 0 ) )
+#endif
+
+
 
 void tri_mesh::triangulate(int nsd) {
 	int i,j,n,vcnt,sck,dirck,stest,nv,vtry;

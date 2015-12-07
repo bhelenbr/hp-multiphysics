@@ -7,8 +7,6 @@
  *
  */
 #include <math.h>
-#include <utilities.h>
-
 #include "tet_hp_cns.h"
 #include "../hp_boundary.h"
 //#include <blitz/tinyvec-et.h>

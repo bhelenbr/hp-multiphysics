@@ -7,7 +7,6 @@
  *
  */
 #include <math.h>
-#include <utilities.h>
 #include "tri_hp_swirl.h"
 #include "../hp_boundary.h"
 

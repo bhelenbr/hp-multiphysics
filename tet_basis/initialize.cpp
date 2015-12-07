@@ -9,7 +9,6 @@
 #define NO_DEBUG
 
 #include <math.h>
-#include <utilities.h>
 #include <myblas.h>
 #include "tet_basis.h"
 

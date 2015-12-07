@@ -8,7 +8,6 @@
  */
 
 #include "tri_hp.h"
-#include "utilities.h"
 #include "hp_boundary.h"
 
  void tri_hp::copy(const tri_hp& tgt) {

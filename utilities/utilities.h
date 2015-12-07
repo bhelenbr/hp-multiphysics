@@ -3,9 +3,15 @@
 #ifndef _utilities_h_
 #define _utilities_h_
 
-#define MAX(A,B) (A>B?A:B)
-#define MIN(A,B) (A<B?A:B)
-#define SIGN(A) (A > 0 ? 1 : -1)
+#ifndef SIGN
+#define SIGN(a) ( ( (a) < 0 )  ?  -1   : ( (a) > 0 ) )
+#endif
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif /* MIN */
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
 
 #ifdef __cplusplus
 extern "C" void *xmalloc(size_t a);	
