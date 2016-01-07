@@ -104,7 +104,11 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	inmap.getwdefault(liquid_block + "_Kgt",gbl->Kgt,0.0);
 	inmap.getwdefault(liquid_block + "_Ksn",gbl->Ksn,0.0);
 	inmap.getwdefault(liquid_block + "_K2Dn",gbl->K2Dn,0.0);
+#ifdef OLDKINETICS
 	inmap.getwdefault(liquid_block + "_K2Dn_max",gbl->K2Dn_max,300.0);
+#else
+	inmap.getwdefault(liquid_block + "_K2Dn_DT_min",gbl->K2Dn_DT_min,1.0);
+#endif
 	inmap.getwdefault(liquid_block + "_A2Dn",gbl->A2Dn,1.0);
 	inmap.getwdefault(liquid_block + "_surge_time",gbl->surge_time,1.0);
 	
@@ -116,7 +120,6 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-#define OLDKINETICS
 FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
 #ifndef OLDKINETICS
@@ -127,10 +130,8 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 #ifdef OLDKINETICS
 	FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
 #else
-	FLT K2Dn_exp = 1./pow(pow(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))/gbl->K2Dn,p) +pow(1./gbl->K2Dn_max,p),1.0/p);
+	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
 #endif
-	
-	
 #ifdef TWOFACETS
 	// Hack to get other facet angle
 	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
@@ -167,7 +168,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 #ifdef OLDKINETICS
 		K = gbl->Krough*(1. + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
 #else
-		K = gbl->Krough*pow(1. + pow(2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON),p),1.0/p);
+		K = pow(pow(gbl->Krough,p) + pow(gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
 #endif
 	}
 	

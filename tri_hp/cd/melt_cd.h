@@ -15,6 +15,8 @@
 #include "myblas.h"
 #include <symbolic_function.h>
 
+//#define OLDKINETICS
+
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {
 	class melt_cd : public hp_coupled_bdry {
@@ -25,7 +27,12 @@ namespace bdry_cd {
 			FLT Lf, rho_s, cp_s, k_s, rho_l, cp_l, k_l;
 			
 			/* Kinetic Coefficients */
-			FLT Krough, Ksn, A2Dn, K2Dn, K2Dn_max; // Coefficients for Weinstein Kinetic model
+			FLT Krough, Ksn, A2Dn, K2Dn;
+#ifdef OLDKINETICS
+			FLT K2Dn_max; // Coefficients for Weinstein Kinetic model
+#else
+			FLT K2Dn_DT_min; // Minimum supercooling DT for nucleation
+#endif
 			FLT Kgt; // Gibbs Thompson curvature effect (not working)
 			TinyVector<FLT,tri_mesh::ND> facetdir; // Diretion of facet
 			FLT surge_time;
