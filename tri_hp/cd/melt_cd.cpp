@@ -120,18 +120,11 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
+#ifdef OLDKINETICS
 FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
-#ifndef OLDKINETICS
-	const int p = 2;
-#endif
-	
-	// K2Dn is the inverse of B and is a ratio relative to Krough
-#ifdef OLDKINETICS
 	FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
-#else
-	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
-#endif
+
 #ifdef TWOFACETS
 	// Hack to get other facet angle
 	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
@@ -144,7 +137,6 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	
 	if (sint == 0.0) {
 		K = gbl->Krough*K2Dn_exp;
-		
 		
 		// Step Oscillation */
 		// FLT K1 = gbl->Krough*(1.); // + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
@@ -165,15 +157,28 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		//		}
 	}
 	else {
-#ifdef OLDKINETICS
 		K = gbl->Krough*(1. + 2.*gbl->Ksn/((-sint +fabs(sint)) +EPSILON));
-#else
-		K = pow(pow(gbl->Krough,p) + pow(gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
-#endif
 	}
 	
 	return(K);
 }
+#else
+FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
+	FLT K;
+	const int p = 2;
+	
+	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
+	
+	if (sint == 0.0) {
+		K = K2Dn_exp;
+	}
+	else {
+		K = pow(pow(gbl->Krough,p) + pow(gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
+	}
+	
+	return(K);
+}
+#endif
 
 void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	
