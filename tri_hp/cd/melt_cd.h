@@ -16,6 +16,7 @@
 #include <symbolic_function.h>
 
 //#define OLDKINETICS
+//#define TWOFACETS
 
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {
