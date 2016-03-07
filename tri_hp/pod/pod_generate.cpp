@@ -43,10 +43,10 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 	
 	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 	
-    if (!inmap.get("snapshots",nsnapshots)) {
-        *BASE::gbl->log << "# Couldn't find number of snapshots" << std::endl;
-        sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-    }
+	if (!inmap.get("snapshots",nsnapshots)) {
+		*BASE::gbl->log << "# Couldn't find number of snapshots" << std::endl;
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+	}
 	inmap.getwdefault("restart_interval",restart_interval,1);
 	inmap.getwdefault("restart",restartfile,1);
 	
@@ -90,6 +90,14 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 		modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
 		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
 	}
+	
+#ifdef USING_MASS_MATRIX
+	const int sm = basis::tri(BASE::log2p)->sm();
+	const int im = basis::tri(BASE::log2p)->im();
+	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+	int ntotal = ndofs*BASE::NV;
+	mass_times_snapshot.resize(ntotal);
+#endif
 	
 #ifdef POD_BDRY
 	pod_ebdry.resize(BASE::nebd);
@@ -151,47 +159,46 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	BASE::tadvance();
 	
 	int psi1dcounter;
-    Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
+	Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
 	
 #ifdef USING_MASS_MATRIX
 	create_mass_matrix(mass);
-	const int sm = basis::tri(BASE::log2p)->sm();
-	const int im = basis::tri(BASE::log2p)->im();
-	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
-    int ntotal = ndofs*BASE::NV;
-    mass_times_snapshot.resize(ntotal);
 #endif
 	
 #ifdef DIRECT_METHOD
-    Array<FLT,2> mass_times_timeaverage(ntotal,ntotal);
-    Array<FLT,1> packed_mass_times_timeaverage((ntotal+1)*ntotal/2),packed_mass((ntotal+1)*ntotal/2);
+	const int sm = basis::tri(BASE::log2p)->sm();
+	const int im = basis::tri(BASE::log2p)->im();
+	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+	int ntotal = ndofs*BASE::NV;
+	Array<FLT,2> mass_times_timeaverage(ntotal,ntotal);
+	Array<FLT,1> packed_mass_times_timeaverage((ntotal+1)*ntotal/2),packed_mass((ntotal+1)*ntotal/2);
 #endif
 	
 	Array<FLT,1> eigenvalues(nmodes);
 	for (int deflation_count=0; deflation_count<ndeflation;++deflation_count) {
-        int start = nmodes_per_deflation*deflation_count;
+		int start = nmodes_per_deflation*deflation_count;
 		/* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
 #ifdef DIRECT_METHOD
 		/////////////////////
 		// DIRECT METHOD //
 		/////////////////////
-        
-        /* Make packed storage version of block mass matrix for Lapack routine */
-        for(int n=0;n<BASE::NV;++n) {
-            for(int m=0;m<BASE::NV;++m) {
-                Array<FLT,2> mass_block = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),Range(m*ndofs,(m+1)*ndofs-1));  // Reference to data, not a copy
-                mass.unpack(mass_block);
-            }
-        }
-        
-        // Store block mass matrix in packed format
-        psi1dcounter = 0;
-        for (int k=0;k<ntotal;++k) {
-            for(int l=k;l<ntotal;++l) {
-                packed_mass(psi1dcounter++) = mass_times_timeaverage(k,l);
-            }
-        }
-        
+		
+		/* Make packed storage version of block mass matrix for Lapack routine */
+		for(int n=0;n<BASE::NV;++n) {
+			for(int m=0;m<BASE::NV;++m) {
+				Array<FLT,2> mass_block = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),Range(m*ndofs,(m+1)*ndofs-1));  // Reference to data, not a copy
+				mass.unpack(mass_block);
+			}
+		}
+		
+		// Store block mass matrix in packed format
+		psi1dcounter = 0;
+		for (int k=0;k<ntotal;++k) {
+			for(int l=k;l<ntotal;++l) {
+				packed_mass(psi1dcounter++) = mass_times_timeaverage(k,l);
+			}
+		}
+		
 		mass_times_timeaverage = 0;
 		for (int k=0;k<nsnapshots;++k) {
 			nstr.str("");
@@ -201,7 +208,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			time_average(BASE::ug,mass_times_timeaverage);
 		}
 		mass_times_timeaverage /= static_cast<FLT>(nsnapshots);
-				
+		
 		/* Left multiply time average blocks by mass matrix */
 		Array<FLT,1> subarray(ndofs);
 		for(int n=0;n<BASE::NV;++n){
@@ -213,23 +220,23 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				mass.mmult(subarray,mass_times_timeaverage_subarray);
 			}
 		}
-        
-        /* Right multiply time average blocks by mass matrix (done by transposing as M is symmetric) */
-        mass_times_timeaverage.transposeSelf(secondDim, firstDim);
-        for(int n=0;n<BASE::NV;++n){
-            for(int i=0;i<ndofs*BASE::NV;++i) {
-                // Copies data for this section of time average so it can be repeatedly multiplied
-                subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-                // Makes reference to data so can be stored in correct location
-                Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-                mass.mmult(subarray,mass_times_timeaverage_subarray);
-            }
-        }
+		
+		/* Right multiply time average blocks by mass matrix (done by transposing as M is symmetric) */
+		mass_times_timeaverage.transposeSelf(secondDim, firstDim);
+		for(int n=0;n<BASE::NV;++n){
+			for(int i=0;i<ndofs*BASE::NV;++i) {
+				// Copies data for this section of time average so it can be repeatedly multiplied
+				subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+				// Makes reference to data so can be stored in correct location
+				Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+				mass.mmult(subarray,mass_times_timeaverage_subarray);
+			}
+		}
 		
 		// Fixme:  not sure how this is going to work in parallel
 		// *BASE::gbl->log << "mass_times_timeaverage" << std::endl;
 		// sim::blks.allreduce(psimatrix2.data(),psimatrix_recv2.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
-				
+		
 		// Store in packed format
 		psi1dcounter = 0;
 		for (int k=0;k<ndofs*BASE::NV;++k) {
@@ -237,10 +244,10 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				packed_mass_times_timeaverage(psi1dcounter++) = mass_times_timeaverage(k,l);
 			}
 		}
-
-        // generalized eigenvalue problem
+		
+		// generalized eigenvalue problem
 		int info;
-        int ITYPE = 1;
+		int ITYPE = 1;
 		char jobz[2] = "V", uplo[2] = "L";
 		Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
 		Array<FLT,2> eigenvectors(ntotal,nmodes_per_deflation,ColumnMajorArray<2>());
@@ -253,15 +260,15 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		Array<double,1> work(8*ntotal);
 		Array<int,1> ifail(ntotal);
 		double abstol = 2.*dlamch_("Safe minimum");
-        
-        dspgvx_(&ITYPE, jobz, range, uplo, &ntotal, packed_mass_times_timeaverage.data(), packed_mass.data(), &vl, &vu, &il, &iu, &abstol,
-                &neig, eigenvalues_subarray.data(), eigenvectors.data(), &ntotal, work.data(), iwork.data(), ifail.data(), &info);
-
+		
+		dspgvx_(&ITYPE, jobz, range, uplo, &ntotal, packed_mass_times_timeaverage.data(), packed_mass.data(), &vl, &vu, &il, &iu, &abstol,
+						&neig, eigenvalues_subarray.data(), eigenvectors.data(), &ntotal, work.data(), iwork.data(), ifail.data(), &info);
+		
 		if (info != 0) {
 			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
 			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 		}
-        		
+		
 		/* Reorder largest to smallest */
 		if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
 			eigenvalues_subarray.reverseSelf(firstDim);
@@ -271,7 +278,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		// Put eigenvector back into modes */
 		for(int k=0;k<nmodes_per_deflation;++k)	{
 			eigenvalues(start+k) = eigenvalues_subarray(k);
-            int ind = 0;
+			int ind = 0;
 			for(int n=0;n<BASE::NV;++n) {
 				for (int i=0;i<BASE::npnt;++i)
 					modes(start+k).v(i,n) = eigenvectors(ind++,k);
@@ -1396,7 +1403,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 		
-		for (l=0;l<nmodes;++l) 
+		for (l=0;l<nmodes;++l)
 			bout.writeFloat(coeff(k,l),binio::Double);
 		
 		bout.close();
