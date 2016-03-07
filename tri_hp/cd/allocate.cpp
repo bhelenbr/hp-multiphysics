@@ -73,7 +73,7 @@ void tri_hp_cd::init(input_map& inmap, void *gin) {
 	if (!inmap.get(keyword,ibcname)) {
 		keyword = "src";
 		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find cd velocity field" << std::endl;
+			ibcname = "zero";
 		}
 	}
 	gbl->src = getnewibc(ibcname);
