@@ -46,7 +46,7 @@ void face_bdry::create_from_gbl_tri_pnt() {
 	}
 	
 	/* Fill in gbl indices of triangles */
-	/* Triangles are oriented the same as in the mesh */
+	/* Triangles will be oriented the same as in the mesh */
 	create_tri_gindx();
 	
 	/* Create seg definitions */
@@ -163,7 +163,16 @@ void face_bdry::create_tri_gindx() {
 NEXTTRI:;
 		if (v(0) == a(0) && v(1) == a(1) && v(2)==a(2)) continue;
 		
-		*x.gbl->log << "Rotation trouble matching face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << ' ' << a(0) << ' ' << a(1) << ' ' << a(2) << std::endl;
+		*x.gbl->log << "Reoreinting face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << find << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << ' ' << a(0) << ' ' << a(1) << ' ' << a(2) << std::endl;
+		
+		for(int j=0;j<3;++j)
+			x.gbl->i1wk(v(j)) = tri(tind).pnt(j);
+		
+		for(int j=0;j<3;++j)
+			tri(tind).pnt(j) = x.gbl->i1wk(a(j));
+		
+		for(int j=0;j<3;++j)
+			x.gbl->i1wk(v(j)) = -1;
 	}
 	
 	return;

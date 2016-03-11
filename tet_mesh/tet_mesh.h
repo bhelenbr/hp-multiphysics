@@ -361,6 +361,8 @@ class tet_mesh : public multigrid_interface {
 				d += pow(pnts(p0)(n) -pnts(p1)(n),2);
 			return(sqrt(d));
 		}
+		FLT area(int find);
+		void face_normal(int find,TinyVector<FLT,ND> normal);
 		/** Calculate the distance squared between two points */
 		inline FLT distance2(int p0, int p1) const {
 			FLT d = 0.0;

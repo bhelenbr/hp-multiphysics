@@ -224,7 +224,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			nfbd = 1; //TEMPORARY
 			fbdry.resize(1);
 					
-			maxvst = (4*ntet+nbfaces)/2;  // CHECK THIS TEMPORARY!!!!
+			maxvst = max((4*ntet+nbfaces)/2,npnt); 
+			maxvst = max(maxvst,nseg);
 			allocate(static_cast<int>(grwfac*maxvst));
 			
 			/* LOAD PTS (npnt,3) */

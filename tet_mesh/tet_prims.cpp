@@ -334,7 +334,33 @@ void tet_mesh::switch_edge_sign(int eind) {
 	return;
 }
 
+FLT tet_mesh::area(int find) {
+	int N1 = tri(find).pnt(0);
+	int N2 = tri(find).pnt(1);
+	int N3 = tri(find).pnt(2);
+	double ax, ay, az, area;
+	
+	/* Calculate normal to face */
+	ax = (pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(2)-pnts(N1)(2))-(pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(1)-pnts(N1)(1));
+	ay = (pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(0)-pnts(N1)(0))-(pnts(N2)(0)-pnts(N1)(0))*(pnts(N3)(2)-pnts(N1)(2));
+	az = (pnts(N2)(0)-pnts(N1)(0))*(pnts(N3)(1)-pnts(N1)(1))-(pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(0)-pnts(N1)(0));
+	
+	return(sqrt(ax*ax +ay*ay +az*az));
+}
 
+void tet_mesh::face_normal(int find,TinyVector<FLT,ND> normal) {
+	int N1 = tri(find).pnt(0);
+	int N2 = tri(find).pnt(1);
+	int N3 = tri(find).pnt(2);
+	double ax, ay, az, area;
+	
+	/* Calculate normal to face */
+	normal(0) = (pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(2)-pnts(N1)(2))-(pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(1)-pnts(N1)(1));
+	normal(1) = (pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(0)-pnts(N1)(0))-(pnts(N2)(0)-pnts(N1)(0))*(pnts(N3)(2)-pnts(N1)(2));
+	normal(2) = (pnts(N2)(0)-pnts(N1)(0))*(pnts(N3)(1)-pnts(N1)(1))-(pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(0)-pnts(N1)(0));
+	
+	return;
+}
 
  //       
 //FLT tri_mesh::minangle(int p0, int p1, int p2) const {
