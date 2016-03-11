@@ -42,7 +42,7 @@ void tri_hp_cd::minvrt() {
 			for(int n=0;n<NV;++n)
 				dw(n) = dw(n) + fabs(uht(n)(i));
 
-		dw = blitz::sum(dw)*eps_r;
+		dw *= eps_r;
 		dw = dw+eps_a;
 		
 		element_rsdl(tind,0,uht,lf_re,lf_im);

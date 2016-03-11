@@ -79,7 +79,9 @@ int main(int argc, char *argv[]) {
 #endif
 #ifdef PTH
 	// For debugging put interrupt here
-	// On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
+	// On interrupt type this into gdb console:
+	// for gdb: handle SIGUSR1 nostop print pass
+	// for lldb: pro hand -p true -s false SIGUSR1
 	// Then continue
 	int rc = pth_init();
 	if (!rc) {

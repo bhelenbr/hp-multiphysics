@@ -16,9 +16,9 @@
 //#define DEBUG_JAC
 
 #ifdef DEBUG_JAC
-const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+const FLT eps_r = 0.0, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
 #else
-const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+const FLT eps_r = 1.0e-8, eps_a = 1.0e-8;  /*<< constants for accurate numerical determination of jacobians */
 #endif
 
 class hp_edge_bdry;
