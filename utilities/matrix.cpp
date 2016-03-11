@@ -502,6 +502,8 @@ void sparse_row_major::match_patterns(int nrows,const Array<int,1>& rows) {
 	Array<int,1> cols(nnz);
 	cols = INT_MAX-1;
 	
+	if (!nnz) return;
+	
 	cols = _col(Range(_cpt(rows(0)),_cpt(rows(0)+1)-1));
 	for(int row=1;row<nrows;++row) {
 		int nnz1 = _cpt(rows(row)+1) -_cpt(rows(row));
