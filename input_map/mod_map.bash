@@ -25,10 +25,11 @@ case "${Command}" in
 	Uncomment)
 		sed -i.bak -E "s:^# *$2 *\::$2\::g" $1;;
 	Echo)
-		grep "^ *$2 *:.*$" $1 | tail -n 1 | cut -f 2 -d: | sed "s:^ *::";;
+		grep "^ *$2 *:.*$" $1 | tail -n 1 | cut -f 2- -d: | sed "s:^ *::";;
 	*)
 		if grep -q "^ *$2 *:.*$" $1; then
-			sed -i.bak -E "s:^ *$2 *\:.*$:$2\: $3:g" $1;
+			REPL=$(echo $3 | sed -E 's:[:]:\\&:g')
+			sed -i.bak -E "s:^ *$2 *\:.*$:$2\: ${REPL}:g" $1;
 		else
 			echo "$2: $3" >> $1
 		fi
