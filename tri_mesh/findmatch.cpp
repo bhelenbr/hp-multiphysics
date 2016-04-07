@@ -286,6 +286,85 @@ void tri_mesh::setpartition(int nparts) {
 	}
 	return;
 }
+
+void tri_mesh::subpartition(int& nparts) {
+	idx_t ncon = 1;
+	idx_t objval;
+	idx_t ntri_idx = ntri;
+	idx_t npnt_idx = npnt;
+	idx_t nparts_idx = nparts;
+	Array<idx_t,1> iwk1(ntri), adjwgt(6*ntri), xadj(ntri+1), adjncy(6*ntri), vwgt(ntri);
+	idx_t options[METIS_NOPTIONS];
+	
+	METIS_SetDefaultOptions(options);
+	options[METIS_OPTION_NITER] = 1000;
+	options[METIS_OPTION_CONTIG] = 1;
+	options[METIS_OPTION_CTYPE] = METIS_CTYPE_SHEM;
+	
+	int ndomains = 0;
+	int count = 0;
+	for(int i=0;i<ntri;++i) {
+		xadj(i) = count;
+		int mark = tri(i).info;
+		vwgt(i) = 1+4*mark;
+		ndomains = MAX(mark,ndomains);
+		for(int j=0;j<3;++j) {
+			if (tri(i).tri(j) > -1) {
+				adjncy(count) = tri(i).tri(j);
+				if (mark == tri(tri(i).tri(j)).info) {
+					adjwgt(count) = 1;
+				}
+				else {
+					adjwgt(count) = 1;
+				}
+				++count;
+			}
+		}
+	}
+	
+	xadj(ntri) = count;
+	++ndomains;
+	//int err = METIS_PartGraphRecursive(&ntri_idx,&ncon, xadj.data(), adjncy.data(), vwgt.data(), NULL, adjwgt.data(), &nparts_idx, NULL, NULL, options, &objval, iwk1.data());
+	
+	int err = METIS_PartGraphKway(&ntri_idx,&ncon, xadj.data(), adjncy.data(), vwgt.data(), NULL, adjwgt.data(), &nparts_idx, NULL, NULL, options, &objval, iwk1.data());
+	if (err != METIS_OK) {
+		*gbl->log << "METIS partitioning error" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
+	/* Do an intersection of partitions */
+	std::map<int,int> part_numbers;
+	int nsubparts = 0;
+	for(int i=0;i<ntri;++i) {
+		int p1 = iwk1(i);
+		int p2 = tri(i).info;
+		if (part_numbers.find(p1*ndomains+p2) == part_numbers.end()) {
+			part_numbers[p1*ndomains+p2] = nsubparts;
+			tri(i).info = nsubparts;
+			++nsubparts;
+			
+		}
+		else {
+			tri(i).info = part_numbers[p1*ndomains+p2];
+		}
+	}
+	
+	/* output number of parititions for each physical domain */
+	for(int i=0;i<ndomains;++i) {
+		int nsubdomain = 0;
+		for (int j=0;j<nparts;++j) {
+			if (part_numbers.find(j*ndomains+i) != part_numbers.end())
+				++nsubdomain;
+		}
+		std::cout << 'b' << i << "_npartitions: " << nsubdomain << std::endl;
+	}
+	
+	nparts = nsubparts;
+	
+	
+	return;
+}
+
 #endif
 
 /* WHEN THIS ROUTINE EXITS */

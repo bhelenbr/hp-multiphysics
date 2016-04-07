@@ -14,6 +14,7 @@ using namespace std;
 
 static int informat = 3;
 static int outformat = 3;
+static GBool Echo = gFalse;
 static GBool Generate = gFalse;
 static GBool Shift = gFalse;
 static GBool Scale = gFalse;
@@ -32,6 +33,8 @@ GBool printHelp = gFalse;
 static ArgDesc argDesc[] = {
   {"-A",        argFlag,        &Append,      0,
 	"append two meshes"},
+	{"-e",        argFlag,        &Echo,      0,
+		"display basic mesh information"},
   {"-g",        argFlag,        &Generate,      0,
 	"generate mesh from .d file"},
   {"-m",        argFlag,        &Shift,        0,
@@ -109,6 +112,14 @@ int main(int argc, char *argv[]) {
 		std::cout << "Using " << bdry_nm << std::endl;
 	}
 
+	if (Echo) {
+		class tri_mesh zx;
+		zx.input(argv[1],in,1.0,inmap);
+		std::cout << "npnt: " << zx.npnt << " nseg: " << zx.nseg << " ntri: " << zx.ntri << std::endl;
+		return(0);
+	}
+	
+
 	if (Cut) {
 		class tri_mesh zx;
 		zx.input(argv[1],in,1.0,inmap);
@@ -122,10 +133,23 @@ int main(int argc, char *argv[]) {
 	
 	if (Append) {
 		class tri_mesh zx,zy;
-		zx.input(argv[1],in,1.0,inmap);
-		zy.input(argv[2],in,100.0,inmap);
-		zy.append(zx);
-		zy.output(argv[3],out);
+		zx.input(argv[1],in,100.0,inmap);
+		zy.input(argv[2],in,1.0,inmap);
+		zx.append(zy);
+		zx.output(argv[3],out);
+		/* Output a marks file so you know which element came from where */
+		ofstream file;
+		std::string filename;
+		filename = std::string(argv[3]) +".marks";
+		file.open(filename);
+		for(int i=0;i<zx.ntri-zy.ntri;++i) {
+			file << 0 << std::endl;
+		}
+		for (int i=0;i<zy.ntri;++i) {
+			file << 1 << std::endl;
+		}
+		file.close();
+		
 		return(0);
 	}
 
@@ -219,20 +243,38 @@ int main(int argc, char *argv[]) {
 		class tri_mesh zx;
 		int p;
 		sscanf(argv[2],"%d",&p);
-		std::string fname;
-		ostringstream nstr;
-		zx.input(argv[1],in,1.0,inmap);
-		zx.setpartition(p);
-		for(int i=0;i<p;++i) {
-			tri_mesh zpart;
-			nstr << "b" << i << std::flush;
-			fname = "partition_" +nstr.str();
-			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
-			nstr.str("");
-			zpart.partition(zx,i);
-			zpart.checkintegrity();
-			zpart.output(fname,out);
-			//zpart(i).output(fname,tri_mesh::boundary);
+		if (p > 1) {
+			
+			/* Load mesh */
+			std::string fname;
+			ostringstream nstr;
+			zx.input(argv[1],in,1.0,inmap);
+			
+			/* If there is a marks file then try to subdivide appended multiphysics mesh */
+			ifstream marks_file;
+			std::string marksfilename = std::string(argv[1]) +".marks";
+			marks_file.open(marksfilename);
+			if (marks_file) {
+				for(int i=0;i<zx.ntri;++i)
+					marks_file >> zx.tri(i).info;
+				zx.subpartition(p);
+			}
+			else {
+				zx.setpartition(p);
+			}
+
+			/* Extract partitions */
+			for(int i=0;i<p;++i) {
+				tri_mesh zpart;
+				nstr << "b" << i << std::flush;
+				fname = "partition_" +nstr.str();
+				std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+				nstr.str("");
+				zpart.partition(zx,i);
+				zpart.checkintegrity();
+				zpart.output("partition",out);
+				//zpart(i).output(fname,tri_mesh::boundary);
+			}
 		}
 #else
 		printf("Need metis package to partition\n");

@@ -84,7 +84,7 @@ void tri_mesh::append(const tri_mesh &z) {
 	}
 
 	/* MOVE BOUNDARY INFO */
-	if (nvbd+z.nvbd > 0) vbdry.resizeAndPreserve(nvbd+z.nvbd);
+	if (z.nvbd > 0) vbdry.resizeAndPreserve(nvbd+z.nvbd);
 	for(i=0;i<z.nvbd;++i) {
 		vbdry(nvbd) = z.vbdry(i)->create(*this);
 		vbdry(nvbd)->alloc(4);
@@ -131,14 +131,9 @@ void tri_mesh::append(const tri_mesh &z) {
 
 	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
-	/* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
-	for(i=nsideold;i<nseg;++i)
-		seg(i).info = -1;
+	setup_for_adapt();
 
-	/* VINFO TO KEEP TRACK OF DELETED POINTS (-3) */
-	for(i=nvrtxold;i<npnt;++i)
-		pnt(i).info = -1;
-
+	std::vector<int> merged_bcs;
 	/* FIND MATCHING COMMUNICATION BOUNDARIES */
 	for(i=0;i<nebd -z.nebd;++i) {
 		// if (!ebdry(i)->is_comm()) continue;
@@ -148,6 +143,8 @@ void tri_mesh::append(const tri_mesh &z) {
 				int bseg = ebdry(i)->nseg;
 				
 				assert(bseg == z.ebdry(j)->nseg);
+				
+				std::cout << "merging " << ebdry(i)->idprefix << std::endl;
 
 				/* DO FIRST POINT OF EDGE (IF NOT ALREADY DONE) */
 				sind1 = ebdry(i)->seg(bseg-1);
@@ -156,9 +153,9 @@ void tri_mesh::append(const tri_mesh &z) {
 				sind2 = z.ebdry(j)->seg(0);
 				tind2 = z.seg(sind2).tri(0) +ntriold;
 				v2a = z.seg(sind2).pnt(0) +nvrtxold;
-				if (pnt(v2a).info != -3) {
+				if (!(tri(v2a).info&PDLTE)) {
+					tri(v2a).info |= PDLTE;
 					qtree.dltpt(v2a);
-					pnt(v2a).info = -3;
 					do {
 						for(vrt=0;vrt<3;++vrt)
 							if (tri(tind2).pnt(vrt) == v2a) break;
@@ -175,7 +172,7 @@ void tri_mesh::append(const tri_mesh &z) {
 
 
 				/* MERGE SIDES AND VERTICES ALONG MATCHING BOUNDARIES */
-				for(k=0;k<bseg-1;++k) {
+				for(k=0;k<bseg;++k) {
 					/* Go backwards on this boundary */
 					sind1 = ebdry(i)->seg(bseg-k-1);
 					tind1 = seg(sind1).tri(0);
@@ -200,14 +197,13 @@ void tri_mesh::append(const tri_mesh &z) {
 					tri(tind2).seg(vrt) = sind1;
 					tri(tind2).sgn(vrt) = -1;
 					tri(tind2).tri(vrt) = tind1;
-					seg(sind2).info = -3;
+					tri(sind2).info |= SDLTE;
 					
 					/* Change all references to v2b to v1a */
-					if (pnt(v2b).info != -3) {
+					if (!(tri(v2b).info&PDLTE)) {
 						vrt = (vrt+2)%3;
-						pnt(v2b).info = -3;
+						tri(v2b).info |= PDLTE;
 						qtree.dltpt(v2b);
-
 						/* Find all segs/tri's referring to v2b and change to v1a */
 						for(;;) {
 							/* First one */
@@ -228,47 +224,36 @@ void tri_mesh::append(const tri_mesh &z) {
 					}
 				}
 
+				merged_bcs.push_back(i);
+				
+				/* Delete 1st boundary */
 				delete ebdry(i);
 				for(k=i;k<nebd-1;++k)
 					ebdry(k) = ebdry(k+1);
-				delete ebdry(nebd-z.nebd+j-1);
-				for(k=nebd-z.nebd+j-1;k<nebd-2;++k)
+				nebd -= 1;
+				
+				/* Delete 2nd boundary */
+				delete ebdry(nebd-z.nebd+j);
+				for(k=nebd-z.nebd+j;k<nebd-1;++k)
 					ebdry(k) = ebdry(k+1);
-				nebd -= 2;
+				nebd -= 1;
+				
 				break;
 			}
 		}
 	}
-
-		/* DELETE LEFTOVER POINTS */
-	/* VINFO > NPOINT STORES POINT MOVEMENT HISTORY */
-	for(i=0;i<npnt;++i)
-		if (pnt(i).info == -3)
-			dltpnt(i);
-
-	/* FIX BOUNDARY CONDITION POINTERS */
-	for(i=nvbd-z.nvbd;i<nvbd;++i)
-		if (vbdry(i)->pnt >= npnt)
-			vbdry(i)->pnt = pnt(vbdry(i)->pnt).info;
-
-	/* CLEAN UP SIDES */
-	/* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-	/* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
-	for(i=nsideold;i<nseg;++i)
-		if (seg(i).info == -3) dltseg(i);
-
-	/* FIX BOUNDARY CONDITION POINTERS */
-	for(i=nebd-z.nebd+1;i<nebd;++i)
-		for(j=0;j<ebdry(i)->nseg;++j)
-			if (ebdry(i)->seg(j) >= nseg)
-				ebdry(i)->seg(j) = seg(ebdry(i)->seg(j)).info;
-
-	for (i=0;i<nebd;++i) {
-		ebdry(i)->reorder();
+	
+	/* DELETE VERTEX BOUNDARY CONDITION THAT REFERS TO DELETED POINT */
+	for(i=nvbd-z.nvbd;i<nvbd;++i) {
+		if (tri(vbdry(i)->pnt).info&PDLTE) {
+			delete vbdry(i);
+			for(j=i+1;j<nvbd;++j)
+				vbdry(j-1) =vbdry(j);
+			--nvbd;
+		}
 	}
-
-	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
-	cnt_nbor();
+	
+	cleanup_after_adapt();
 
 	return;
 }

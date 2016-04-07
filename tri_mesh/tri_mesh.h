@@ -164,6 +164,7 @@ class tri_mesh : public multigrid_interface {
 		//@{
 #ifdef METIS
 		void setpartition(int nparts);  /**< Set partition of mesh (in tri(i).info) */
+		void subpartition(int& nparts);  /**< routine to do parallel paritition of a multiphysics mesh */
 #endif
 		void partition(class tri_mesh& xmesh, int npart); /**< Creates a partition from xmesh */
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */

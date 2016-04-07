@@ -22,8 +22,33 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
 	
-	grd_nm = filename +"_" +gbl->idprefix;
+	if (filename.substr(0,7) == "${HOME}") {
+		grd_nm = getenv("HOME") +filename.substr(7,filename.length());
+	}
+	else
+		grd_nm = filename;
 	
+	/* Override filetype based on ending? */
+	size_t dotloc;
+	dotloc = grd_nm.find_last_of('.');
+	string ending;
+	ending = grd_nm.substr(dotloc+1);
+	if (ending == "grd") {
+		filetype = grid;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "bin") {
+		filetype = binary;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "dat") {
+		filetype = tecplot;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+
+	if (!gbl->idprefix.empty())
+		grd_nm = grd_nm +"_" +gbl->idprefix;
+
 	switch (filetype) {
 
 		case (easymesh):
