@@ -159,9 +159,9 @@
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
 		E6019988167F68B100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */; };
 		E601998A167F68B200C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FAED2C167F5A0E00D8CE53 /* libmuparser.2.2.4.dylib */; };
+		E63D72E51CCE650100A33659 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B4CD341CB6E7970015FEDF /* libparmetis.dylib */; };
 		E67423FA1785BF1100D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
 		E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0AC176F480400074810 /* libmetis.dylib */; };
-		E6B4CD351CB6E7970015FEDF /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6B4CD341CB6E7970015FEDF /* libparmetis.dylib */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
@@ -230,7 +230,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E6B4CD351CB6E7970015FEDF /* libparmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +255,7 @@
 				E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */,
 				E6F1CDE41533E774009F6A6B /* Accelerate.framework in Frameworks */,
 				E601998A167F68B200C5C90E /* libmuparser.2.2.4.dylib in Frameworks */,
+				E63D72E51CCE650100A33659 /* libparmetis.dylib in Frameworks */,
 				E67423FB1785BF1400D39B2B /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -834,8 +834,13 @@
 					"${inherited}",
 					"${mpi_threads}",
 					MPISRC,
+					METIS,
 				);
 				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				threads = PTH;
 			};
@@ -849,8 +854,13 @@
 					"${inherited}",
 					"${mpi_threads}",
 					MPISRC,
+					METIS,
 				);
 				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				threads = PTH;
 			};
@@ -866,6 +876,10 @@
 					METIS,
 				);
 				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};
@@ -881,6 +895,10 @@
 					METIS,
 				);
 				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
 			};

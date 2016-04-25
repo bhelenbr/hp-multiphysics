@@ -1283,6 +1283,7 @@ void block::go(input_map input) {
 
 	init(input);
 	
+#ifdef METIS
 	/* partition utility */
 	int nparts;
 	if (input.get("partition",nparts)) {
@@ -1318,6 +1319,7 @@ void block::go(input_map input) {
 		}
 		return;
 	}
+#endif
 
 	begin_time = clock();
 

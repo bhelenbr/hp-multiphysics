@@ -262,6 +262,11 @@
 		E63566D61949D85800AB8511 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		E63566D71949D85800AB8511 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		E63566D81949D85800AB8511 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E63D72E61CCE660500A33659 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
+		E63D72E71CCE660900A33659 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
+		E63D72E81CCE660A00A33659 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
+		E63D72E91CCE662C00A33659 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
+		E63D72EA1CCE662D00A33659 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
 		E64A35DF1AACD76B008BAE74 /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
 		E64A35E21AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
@@ -386,7 +391,6 @@
 		E6A1C0B0176F487B00074810 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
 		E6A1C0B1176F488100074810 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
 		E6A1C0B2176F488900074810 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
-		E6A1C0B3176F488900074810 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
 		E6A1C0B4176F488E00074810 /* libpetsc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A6176F47AD00074810 /* libpetsc.dylib */; };
 		E6A1C0B5176F488F00074810 /* libpetsc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A6176F47AD00074810 /* libpetsc.dylib */; };
 		E6A1C0B6176F489300074810 /* libsuperlu_dist_4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A7176F47AD00074810 /* libsuperlu_dist_4.1.a */; };
@@ -769,9 +773,11 @@
 				6F48D8690D848AED00514E23 /* libmpi.12.dylib in Frameworks */,
 				6F48D86A0D848AED00514E23 /* libmpi_cxx.1.dylib in Frameworks */,
 				E6C1E589192230E6008D6411 /* libmuparser.2.2.4.dylib in Frameworks */,
+				E63D72EA1CCE662D00A33659 /* libmetis.dylib in Frameworks */,
 				6F2F75020DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
+				E63D72E71CCE660900A33659 /* libparmetis.dylib in Frameworks */,
 				E6F1CDEB1533E7F1009F6A6B /* libspline++.a in Frameworks */,
 				E6FB359316B6E9B900F60110 /* libpth.a in Frameworks */,
 			);
@@ -790,9 +796,11 @@
 				6F2F75010DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				E6C1E587192230E5008D6411 /* libmuparser.2.2.4.dylib in Frameworks */,
+				E63D72E91CCE662C00A33659 /* libmetis.dylib in Frameworks */,
 				6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F5ABB541141CE7D00CA83FE /* libpth.a in Frameworks */,
 				E6F1CDE71533E7EF009F6A6B /* libspline++.a in Frameworks */,
+				E63D72E61CCE660500A33659 /* libparmetis.dylib in Frameworks */,
 				E6FB359416B6E9C100F60110 /* libmpi.12.dylib in Frameworks */,
 				E6FB359516B6E9C600F60110 /* libmpi_cxx.1.dylib in Frameworks */,
 			);
@@ -857,13 +865,13 @@
 				E67EBB2512D603E10011EB69 /* libpth.a in Frameworks */,
 				E67EBB2712D603E10011EB69 /* libbinio.dylib in Frameworks */,
 				E67EBB2812D603E10011EB69 /* Accelerate.framework in Frameworks */,
+				E63D72E81CCE660A00A33659 /* libparmetis.dylib in Frameworks */,
 				E67EBB2A12D603E10011EB69 /* libmpi.12.dylib in Frameworks */,
 				E67EBB2B12D603E10011EB69 /* libmpi_cxx.1.dylib in Frameworks */,
 				E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 				E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */,
 				E6A1C0B0176F487B00074810 /* libmetis.dylib in Frameworks */,
 				E6C1E58B192230E8008D6411 /* libmuparser.2.2.4.dylib in Frameworks */,
-				E6A1C0B3176F488900074810 /* libparmetis.dylib in Frameworks */,
 				E6A1C0B5176F488F00074810 /* libpetsc.dylib in Frameworks */,
 				E6A1C0B7176F489400074810 /* libsuperlu_dist_4.1.a in Frameworks */,
 			);

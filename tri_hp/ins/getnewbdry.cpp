@@ -71,7 +71,7 @@ class tri_hp_ins_etype {
 	public:
 		static const int ntypes = 12;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,
-			symmetry,applied_stress,surface,surface_slave,surface2,force_coupling,friction_slip,actuator_disc};
+			symmetry,applied_stress,surface2,force_coupling,friction_slip,actuator_disc};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
