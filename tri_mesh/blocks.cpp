@@ -208,6 +208,11 @@ void blocks::go(input_map& input) {
 		}
 	}
 #endif
+	
+	int partition;
+	input.getwdefault("partition",partition,0);
+	/* Allocate memory for partitioning */
+	if (partition) allocate_shared_memory(partition*nblock*100, sizeof(int));
 
 	/* Give blocks in localid for each group sequential numbering */
 	for (mi=group_data.begin();mi != group_data.end(); ++mi) {
@@ -236,7 +241,7 @@ void blocks::go(input_map& input) {
 		myGo(b).blk = blk(b);
 		threads(b) = pth_spawn(attr, thread_go,static_cast<void *>(&myGo(b)));
 	}
-
+	
 	for (int b=0;b<myblock;++b)
 		pth_join(threads(b),NULL);
 
@@ -246,6 +251,7 @@ void blocks::go(input_map& input) {
 		thread_func(b) = boost::bind(&block::go,blk(b),input);
 		threads.create_thread(thread_func(b));
 	}
+
 	threads.join_all();
 #else
 	if (myblock != 1) {
@@ -254,6 +260,9 @@ void blocks::go(input_map& input) {
 	}
 	blk(0)->go(input);
 #endif
+	
+	if (partition) free_shared_memory();
+
 
 }
 
@@ -470,6 +479,159 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
 #endif
 	return;
 }
+
+void blocks::allocate_shared_memory(int nentry, size_t size) {
+#if defined(PTH)
+	pth_mutex_acquire(&shared_mem_mutex,false,NULL);
+#elif defined(BOOST)
+	boost::mutex::scoped_lock lock(shared_mem_mutex);
+#endif
+//	if (shared_mem_call_count == 0) {
+		shared_mem_size = size*nentry;
+#ifndef MPISRC
+		shared_mem = malloc(shared_mem_size);
+#else
+		int ierr = MPI_Alloc_mem(shared_mem_size, MPI_INFO_NULL, &shared_mem);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't allocate shared memory for partitioning " << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+#endif
+		Array<FLT,1> temp(static_cast<FLT *>(shared_mem), (shared_mem_size)/sizeof(FLT), neverDeleteData);
+		fshared_mem.reference(temp);
+		Array<int,1> temp1(static_cast<int *>(shared_mem), (shared_mem_size)/sizeof(int), neverDeleteData);
+		ishared_mem.reference(temp1);
+		ishared_mem = 0;
+		
+#ifdef MPISRC
+		if (myid == 0) {
+			/* Rank 0 will hold the master of the data */
+			int ierr = MPI_Win_create(shared_mem,shared_mem_size,1,MPI_INFO_NULL,MPI_COMM_WORLD,&shared_mem_win);
+			if (ierr != MPI_SUCCESS) {
+				std::cerr << "couldn't create rank 0 window " << ierr << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
+		}
+		else {
+			/* Others do not receive asynchronous messages */
+			int ierr = MPI_Win_create(NULL,0,1,MPI_INFO_NULL, MPI_COMM_WORLD, &shared_mem_win);
+			if (ierr != MPI_SUCCESS) {
+				std::cerr << "couldn't create non rank 0 window " << ierr << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
+		}
+#endif
+//	}
+//	++shared_mem_call_count;
+//	
+//	if(shared_mem_call_count == myblock)
+//		shared_mem_call_count = 0;
+
+#if defined(PTH)
+	pth_mutex_release(&shared_mem_mutex);
+#endif
+	return;
+}
+
+void blocks::begin_use_shared_memory() {
+#if defined(PTH)
+	pth_mutex_acquire(&shared_mem_mutex,false,NULL);
+#elif defined(BOOST)
+	shared_mem_mutex.lock();
+#endif
+#ifdef MPISRC
+	if (myid == 0) {
+		/* Request lock of process 1 */
+		int ierr = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,0,shared_mem_win);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't get lock rank 0" << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+	}
+	else {
+		int ierr = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,0,shared_mem_win);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't get lock rank != 0" << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+		ierr = MPI_Get(shared_mem,shared_mem_size,MPI_CHAR,0,0,shared_mem_size,MPI_CHAR,shared_mem_win);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't get shared_mem" << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+		
+		ierr =  MPI_Win_flush(0,shared_mem_win);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't get shared_mem" << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+	}
+	std::cout << "myid " << myid << "entering shared memory" << std::endl;
+	std::cout << "nentry " << ishared_mem(0) << std::endl;
+#endif
+}
+
+void blocks::end_use_shared_memory() {
+	
+	std::cout << "myid " << myid << "leaving shared memory" << std::endl;
+	std::cout << "nentry " << ishared_mem(0) << std::endl;
+
+#ifdef MPISRC
+	if (myid != 0) {
+		/* Request lock of process 1 */
+		int ierr = MPI_Put(shared_mem,shared_mem_size,MPI_CHAR,0,0,shared_mem_size,MPI_CHAR,shared_mem_win);
+		if (ierr != MPI_SUCCESS) {
+			std::cerr << "couldn't put shared_mem" << ierr << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+	}
+	/* Block until put succeeds */
+	int ierr = MPI_Win_unlock(0,shared_mem_win);
+	if (ierr != MPI_SUCCESS) {
+		std::cerr << "couldn't unlock shared_mem" << ierr << std::endl;
+		sim::abort(__LINE__,__FILE__,&std::cerr);
+	}
+#endif
+	
+#if defined(PTH)
+	pth_mutex_release(&shared_mem_mutex);
+#elif defined(BOOST)
+	shared_mem_mutex.unlock();
+#endif
+
+}
+
+
+void blocks::free_shared_memory() {
+#if defined(PTH)
+	pth_mutex_acquire(&shared_mem_mutex,false,NULL);
+#elif defined(BOOST)
+	boost::mutex::scoped_lock lock(shared_mem_mutex);
+#endif
+	
+//	if (shared_mem_call_count == 0) {
+		
+#ifndef MPISRC
+		free(shared_mem);
+#else
+		MPI_Free_mem(shared_mem);
+		MPI_Win_free(&shared_mem_win);
+#endif
+//	}
+//	++shared_mem_call_count;
+//	
+//	if(shared_mem_call_count == myblock)
+//		shared_mem_call_count = 0;
+
+#if defined(PTH)
+	pth_mutex_release(&shared_mem_mutex);
+#endif
+	return;
+}
+
+
+
+
 
 /** This is a data structure for storing communication info
  *  only used temporarily to sort things out in findmatch
@@ -1120,6 +1282,42 @@ void block::go(input_map input) {
 
 
 	init(input);
+	
+	/* partition utility */
+	int nparts;
+	if (input.get("partition",nparts)) {
+		const int nblock = sim::blks.nblock;
+		Array<int,1> part_list(nparts*nblock+2);
+		grd(0)->setpartition(nparts,part_list);
+		
+		Array<int,1> part_count(nblock+1);
+		part_count(0) = 0;
+		for(int i=0;i<nblock;++i) {
+			part_count(i+1) = part_count(i);
+			for(int j=0;j<nparts;++j) {
+				part_count(i+1) += part_list(i*nparts+j);
+			}
+		}
+		
+		int myparts = part_count(gbl->idnum);
+		for(int i=0;i<nparts;++i) {
+			if (part_list(nparts*gbl->idnum +i)) {
+				multigrid_interface *apart = getnewlevel(input);
+				apart->init(*grd(0),multigrid_interface::adapt_storage,1.0);
+				apart->partition(*grd(0),myparts,part_list(nparts*nblock),part_list(nparts*nblock+1));
+				ostringstream nstr;
+				nstr << "b" << myparts++ << std::flush;
+				*gbl->log << nstr.str() << "_matches: " << gbl->idprefix << std::endl;
+				std::string old_idprefix = gbl->idprefix;
+				gbl->idprefix = nstr.str();
+				nstr.clear();
+				apart->output("partition",block::display);
+				apart->output("partition",block::restart);
+				gbl->idprefix = old_idprefix;
+			}
+		}
+		return;
+	}
 
 	begin_time = clock();
 

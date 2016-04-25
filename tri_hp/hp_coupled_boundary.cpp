@@ -16,21 +16,21 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	std::string filename;
 
 #ifdef ONE_SIDED
-	*x.gbl->log << "ONE_SIDED is defined\n";
+	*x.gbl->log << "#ONE_SIDED is defined\n";
 #else
-	*x.gbl->log << "ONE_SIDED is not defined\n";
+	*x.gbl->log << "#ONE_SIDED is not defined\n";
 #endif
 	
 #ifdef SYMMETRIC
-	*x.gbl->log << "SYMMETRIC is defined\n";
+	*x.gbl->log << "#SYMMETRIC is defined\n";
 #else
-	*x.gbl->log << "SYMMETRIC is not defined\n";
+	*x.gbl->log << "#SYMMETRIC is not defined\n";
 #endif
 	
 #ifdef PRECONDITION
-	*x.gbl->log << "PRECONDITION IS DEFINED\n";
+	*x.gbl->log << "#PRECONDITION IS DEFINED\n";
 #else
-	*x.gbl->log << "PRECONDITION IS NOT DEFINED\n";
+	*x.gbl->log << "#PRECONDITION IS NOT DEFINED\n";
 #endif
 	
 	if (!inmap.get(base.idprefix + "_NV",NV)) {

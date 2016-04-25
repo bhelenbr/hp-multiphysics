@@ -251,6 +251,7 @@ class tri_hp : public r_tri_mesh  {
 		int sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 
 		/* Some other utilities */
+		void partition(multigrid_interface& xmesh, int npart, int maxenum = 0, int maxvnum = 0); /**< Creates a partition from xmesh */
 		void l2error(init_bdry_cndtn *toCompare);
 		void findmax(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
 		void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));

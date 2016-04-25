@@ -362,6 +362,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 		hp_ebdry(i) = inmesh.hp_ebdry(i)->create(*this,*ebdry(i));
 	for(int i=0;i<nvbd;++i)
 		hp_vbdry(i) = inmesh.hp_vbdry(i)->create(*this,*vbdry(i));
+	helper = inmesh.helper->create(*this);
 
 
 	switch (why) {

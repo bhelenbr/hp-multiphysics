@@ -96,7 +96,23 @@ class blocks {
 		boost::mutex list_mutex;
 		boost::condition_variable list_change;
 #endif
-		//@}
+	
+		/** @name variables needed for asynchronous shared memory communications using mpi */
+		//@{
+		void *shared_mem;
+		size_t shared_mem_size;
+		blitz::Array<int,1> ishared_mem;
+		blitz::Array<FLT,1> fshared_mem;
+		int shared_mem_call_count = 0;
+#if defined(PTH)
+		pth_mutex_t shared_mem_mutex;
+#elif defined(BOOST)
+		boost::mutex shared_mem_mutex;
+#endif
+#ifdef MPISRC
+		MPI_Win shared_mem_win;
+#endif
+	//@}
 
 	public:
 		/** Initialize multiblock/mgrid mesh */
@@ -138,6 +154,13 @@ class blocks {
 			return(nmember);
 		}
 
+		/** Shared memory routines */
+		void allocate_shared_memory(int size, size_t type);
+		void begin_use_shared_memory();
+		void end_use_shared_memory();
+		void free_shared_memory();
+		int& int_shared_memory(int n) {return(ishared_mem(n));}
+		FLT& FLT_shared_memory(int n) {return(fshared_mem(n));}
 
 		/** Functions for thread communication */
 #if defined(PTH)
@@ -208,7 +231,7 @@ class blocks {
 			list_change.notify_all();
 #endif
 		}
-	~blocks() {
+	~blocks() {		
 		for (std::map<int,all_reduce_data *>::iterator mi=group_data.begin();mi != group_data.end(); ++mi) {
 			delete mi->second;
 		}

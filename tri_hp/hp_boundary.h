@@ -243,13 +243,15 @@ public:
 	virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
 	virtual void movepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
 	virtual void updatesdata_bdry(int bel,hp_edge_bdry *bin) {}
-	virtual void movesdata_bdry(int bel,hp_edge_bdry *tgt) {
-		int sind,tgtel,step,m,n;
+	virtual void movesdata_bdry(int bel,hp_edge_bdry *tgt, int tgtel = -1) {
+		int step,m,n;
 		
 		if (!curved || !x.sm0) return;
 		
-		sind = base.seg(bel);
-		tgtel = tgt->x.getbdryseg(tgt->x.seg(sind).tri(1));
+		if (tgtel < 0) {
+			/* Assumes that sind's are the same */
+			tgtel = tgt->x.getbdryseg(tgt->x.seg(base.seg(bel)).tri(1));
+		}
 		
 		for(step=0;step<x.gbl->nadapt;++step) {
 			for(m=0;m<x.sm0;++m) {

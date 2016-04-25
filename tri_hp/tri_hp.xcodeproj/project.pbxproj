@@ -429,6 +429,12 @@
 		E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F10F6459E9006AB2DA /* allocate.cpp */; };
 		E6DE8D181AEBD8CF00BA9256 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FCA81550F6842FD000F34F8 /* minvrt.cpp */; };
 		E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F40F6459E9006AB2DA /* setup_preconditioner.cpp */; };
+		E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
+		E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
+		E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
+		E6E0961E1CC9C93000B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
+		E6E0961F1CC9C93100B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
+		E6E096201CC9C93200B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E6F5C31AADD212008767EE /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E6E6F5C41AADD213008767EE /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E6E6F5C51AADD214008767EE /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
@@ -722,6 +728,9 @@
 		E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = melt_buoyancy.cpp; path = buoyancy/melt_buoyancy.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6C03FD01A9216950021A0FE /* melt_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_buoyancy.h; path = buoyancy/melt_buoyancy.h; sourceTree = "<group>"; };
 		E6C1E58519222C42008D6411 /* libmuparser.2.2.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.4.dylib; path = ../../Packages/lib/libmuparser.2.2.4.dylib; sourceTree = "<group>"; };
+		E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = partition.cpp; sourceTree = "<group>"; };
+		E6E0961A1CC9C81500B1F871 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
+		E6E0961B1CC9C81500B1F871 /* subpartition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = subpartition.bash; sourceTree = "<group>"; };
 		E6E8E31A14719FA800571FC3 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = ../../Packages/lib/libboost_thread.a; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
@@ -878,6 +887,7 @@
 				6FC92CF00A786287000C734E /* POD */,
 				6FB526EA0F645767006AB2DA /* Explicit */,
 				E658002313E2CF6200A01E99 /* NonNewtonian */,
+				E6E096191CC9C7EE00B1F871 /* Scripts */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				6F661FF3091AFADC00FB5D82 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -898,6 +908,7 @@
 				6FB40ADC091AF516002BAA09 /* l2error.cpp */,
 				6FB40AC9091AF516002BAA09 /* adapt.cpp */,
 				6FB40AD4091AF516002BAA09 /* copy.cpp */,
+				E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */,
 				6FB40AE5091AF516002BAA09 /* ptprobe.cpp */,
 				6FB40AEC091AF516002BAA09 /* tadvance.cpp */,
 				6FB40AE3091AF516002BAA09 /* nstage.cpp */,
@@ -1130,6 +1141,15 @@
 			name = NonNewtonian;
 			sourceTree = "<group>";
 		};
+		E6E096191CC9C7EE00B1F871 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				E6E0961A1CC9C81500B1F871 /* Doxyfile */,
+				E6E0961B1CC9C81500B1F871 /* subpartition.bash */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1318,6 +1338,7 @@
 				6F9853E20BDE612700D342F6 /* getnewibc.cpp in Sources */,
 				E63566C51949D84300AB8511 /* allocate.cpp in Sources */,
 				6F9853E50BDE612700D342F6 /* allocate.cpp in Sources */,
+				E6E0961E1CC9C93000B1F871 /* partition.cpp in Sources */,
 				E6BBC0DA1ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				6F9853F10BDE612700D342F6 /* bdry.cpp in Sources */,
 			);
@@ -1367,6 +1388,7 @@
 				6F9854990BDE649A00D342F6 /* getnewibc.cpp in Sources */,
 				E63566C61949D84400AB8511 /* allocate.cpp in Sources */,
 				6F98549A0BDE649A00D342F6 /* getnewibc.cpp in Sources */,
+				E6E0961F1CC9C93100B1F871 /* partition.cpp in Sources */,
 				E6BBC0DB1ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				6F98549D0BDE649A00D342F6 /* allocate.cpp in Sources */,
 			);
@@ -1416,6 +1438,7 @@
 				E63566C41949D84000AB8511 /* allocate.cpp in Sources */,
 				E6B93EA7138A0914005FF1A9 /* bdry.cpp in Sources */,
 				E6B93EA8138A0915005FF1A9 /* getnewbdry.cpp in Sources */,
+				E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */,
 				E6BBC0D81ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */,
 			);
@@ -1475,6 +1498,7 @@
 				E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */,
 				E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */,
 				E6B7481C1616915D008409F5 /* setup_preconditioner.cpp in Sources */,
+				E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */,
 				E6B7481D16169160008409F5 /* allocate.cpp in Sources */,
 				E60E8157180AEFA70067E2E7 /* length.cpp in Sources */,
 				E6BBC0D71ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
@@ -1489,6 +1513,7 @@
 				E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */,
 				E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */,
 				E67EBAB312D603C50011EB69 /* hp_boundary.cpp in Sources */,
+				E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */,
 				E67EBAB412D603C50011EB69 /* l2error.cpp in Sources */,
 				E67EBAB512D603C50011EB69 /* setup_preconditioner.cpp in Sources */,
 				E67EBAB612D603C50011EB69 /* movco.cpp in Sources */,
@@ -1547,6 +1572,7 @@
 				E67EBAFF12D603E10011EB69 /* adapt.cpp in Sources */,
 				E67EBB0012D603E10011EB69 /* gtol.cpp in Sources */,
 				E67EBB0112D603E10011EB69 /* hp_boundary.cpp in Sources */,
+				E6E096201CC9C93200B1F871 /* partition.cpp in Sources */,
 				E67EBB0212D603E10011EB69 /* l2error.cpp in Sources */,
 				E67EBB0312D603E10011EB69 /* setup_preconditioner.cpp in Sources */,
 				E67EBB0412D603E10011EB69 /* movco.cpp in Sources */,
@@ -1766,6 +1792,7 @@
 					"$(mpi_threads)",
 					MPISRC,
 					petsc,
+					METIS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				PRODUCT_NAME = tri_hp_petsc;
@@ -1781,6 +1808,7 @@
 					"$(mpi_threads)",
 					MPISRC,
 					petsc,
+					METIS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				PRODUCT_NAME = tri_hp_petsc;

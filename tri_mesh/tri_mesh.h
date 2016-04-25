@@ -148,7 +148,7 @@ class tri_mesh : public multigrid_interface {
 
 		/** @name Mesh modification utilties */
 		//@{
-	    void symmetrize();  /**< Creates a symmetric mesh about y = 0 */
+		void symmetrize();  /**< Creates a symmetric mesh about y = 0 */
 		void cut(); /**< Cut's mesh based on indicator array inf fltwk (Positive / Negative at each point) and aligns cut edge along 0 */
 		void trim(); /**< Starting from boundaries deletes triangles based on sign of fltwk */
 		void append(const tri_mesh &z); /**< Appends mesh */
@@ -163,10 +163,11 @@ class tri_mesh : public multigrid_interface {
 		/** @name Routines for parallel computations */
 		//@{
 #ifdef METIS
-		void setpartition(int nparts);  /**< Set partition of mesh (in tri(i).info) */
+		void setpartition(int npart); /**< Set partition of mesh (in tri(i).info) */
+		void setpartition(int nparts,blitz::Array<int,1> part_list); /**< Parallel partitioning of multiblock mesh */
 		void subpartition(int& nparts);  /**< routine to do parallel paritition of a multiphysics mesh */
 #endif
-		void partition(class tri_mesh& xmesh, int npart); /**< Creates a partition from xmesh */
+		void partition(multigrid_interface& xmesh, int npart, int maxenum = 0, int maxvnum = 0); /**< Creates a partition from xmesh */
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */
 		int comm_entity_list(Array<int,1>& list);  /**< Returns list of communication entities */
 		class boundary* getvbdry(int num); /**< Returns pointer to vertex boundary (for blocks.h) */
@@ -258,7 +259,7 @@ class tri_mesh : public multigrid_interface {
 		virtual void updatepdata_bdry(int bnum,int bel,int endpt) {} /**< Virtual routine so inheritors can automatically have new bondary point data updated */
 		void dltseg(int sind); /**< Removes leftover segment references */
 		virtual void movesdata(int frm, int to) {} /**< Virtual routine so inheritors can automatically have their segment data moved */
-		virtual void movesdata_bdry(int bnum,int bel) {} /**< Virtual routine so inheritors can automatically have their boundry segment data moved  */
+		virtual void movesdata_bdry(int bnum,int bel, int sind = -1) {} /**< Virtual routine so inheritors can automatically have their boundry segment data moved  */
 		virtual void updatesdata(int s) {} /**< Virtual routine so inheritors can update segment data */
 		virtual void updatesdata_bdry(int bnum,int bel) {} /**< Virtual routine so inheritors can update boundary segment data */
 		void dlttri(int tind); /**< Removes leftover triangle references */

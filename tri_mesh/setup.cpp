@@ -10,7 +10,7 @@ void tri_mesh::createseg(void) {
 	int sindprev = 0; // To avoid may be used uninitialized warning
 
 	for(i=0;i<npnt;++i)
-		pnt(i).info = -1;
+		gbl->intwk(i) = -1;
 
 	nseg = 0;
 	for(tind=0;tind<ntri;++tind) {
@@ -30,7 +30,7 @@ void tri_mesh::createseg(void) {
 				order = 1;
 			}
 
-			sind = pnt(minp).info;
+			sind = gbl->intwk(minp);
 			while (sind >= 0) {
 				if (maxp == seg(sind).pnt(order)) {
 					if (seg(sind).tri(1) >= 0) {
@@ -54,8 +54,8 @@ void tri_mesh::createseg(void) {
 			tri(tind).seg(j) = nseg;
 			tri(tind).sgn(j) = 1;
 			seg(nseg).info = -1;
-			if (pnt(minp).info < 0)
-				pnt(minp).info = nseg;
+			if (gbl->intwk(minp) < 0)
+				gbl->intwk(minp) = nseg;
 			else
 				seg(sindprev).info = nseg;
 			++nseg;
@@ -66,6 +66,9 @@ NEXTTRISIDE:
 			p2 = temp;
 		}
 	}
+	
+	for(i=0;i<npnt;++i)
+		gbl->intwk(i) = -1;
 
 	return;
 }

@@ -129,7 +129,8 @@ public:
 	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
 		if (surfbdry > -1) {
 			if (!(surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
-				*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
+				*x.gbl->log << base.idprefix << " something's wrong can't find surface boundary " << surfbdry << ' ' << base.ebdry(surfbdry) << ' ' << x.ebdry(base.ebdry(surfbdry))->idprefix << std::endl;
+				x.tri_mesh::output("darn");
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 		}
