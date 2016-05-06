@@ -62,7 +62,7 @@ else
 
 VPATH = ../
 
-BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_vrtx_boundary.o hp_getnewibc.o l2error.o main.o movco.o movfin.o \
+BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_vrtx_bdry.o hp_getnewibc.o l2error.o main.o movco.o movfin.o \
 nstage.o output.o ptprobe.o tadvance.o tobasis.o hp_coupled_boundary.o hp_getnewbdry.o setup_preconditioner.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/setup_preconditioner.o ins/surface2.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/setup_preconditioner.o cns/update.o
@@ -94,8 +94,8 @@ OBJ += $(OBJBUOY)
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -libverbs
-LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lHYPRE -lscalapack -lsuperlu_dist_3.3 -lparmetis -ldl
+LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs
+LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lHYPRE -lscalapack -lsuperlu_dist_3.3 -ldl
 
 ### Begin machine dependent
 

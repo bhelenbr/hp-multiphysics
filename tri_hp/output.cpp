@@ -939,7 +939,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			/* BOUNDARY INFO */
 			for(i=0;i<nebd;++i)
-				hp_ebdry(i)->input(in,typ,tlvl);
+				if (ebdry(i)->idnum == 3) hp_ebdry(i)->input(in,typ,tlvl);
 
 			for(i=0;i<nvbd;++i)
 				hp_vbdry(i)->input(in,typ,tlvl);

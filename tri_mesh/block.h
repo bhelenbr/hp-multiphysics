@@ -235,7 +235,7 @@ class multigrid_interface {
 	
 #ifdef METIS
 		/** Mesh partition routines */
-		virtual void setpartition(int nparts, blitz::Array<int,1> part_list) = 0;
+		virtual void setpartition(int nparts, blitz::Array<int,1> part_list) {}
 		virtual void partition(multigrid_interface& src, int part, int maxenum, int maxvnum) {}
 #endif
 

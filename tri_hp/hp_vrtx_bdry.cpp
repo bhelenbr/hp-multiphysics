@@ -6,7 +6,7 @@
 //
 //
 
-#include <hp_boundary.h>
+#include "hp_boundary.h"
 
 void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
 	std::string keyword,ibcname;
