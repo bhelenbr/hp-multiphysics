@@ -62,7 +62,7 @@ else
 
 VPATH = ../
 
-BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o movco.o movfin.o \
+BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_vrtx_boundary.o hp_getnewibc.o l2error.o main.o movco.o movfin.o \
 nstage.o output.o ptprobe.o tadvance.o tobasis.o hp_coupled_boundary.o hp_getnewbdry.o setup_preconditioner.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/setup_preconditioner.o ins/surface2.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/setup_preconditioner.o cns/update.o
