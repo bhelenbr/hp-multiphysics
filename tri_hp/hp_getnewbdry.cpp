@@ -13,8 +13,8 @@
 
 class tri_hp_vtype {
 public:
-	static const int ntypes = 4;
-	enum ids {unknown=-1,plain,hp_deformable_fixed_pnt,hp_deformable_free_pnt,hp_deformable_follower_pnt};
+	static const int ntypes = 5;
+	enum ids {unknown=-1,plain,multi_physics_pnt,hp_deformable_fixed_pnt,hp_deformable_free_pnt,hp_deformable_follower_pnt};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -23,7 +23,7 @@ public:
 	}
 };
 
-const char tri_hp_vtype::names[ntypes][40] = {"plain","hp_deformable_fixed_pnt","hp_deformable_free_pnt","hp_deformable_follower_pnt"};
+const char tri_hp_vtype::names[ntypes][40] = {"plain","multi_physics_pnt","hp_deformable_fixed_pnt","hp_deformable_free_pnt","hp_deformable_follower_pnt"};
 
 hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
@@ -37,6 +37,10 @@ hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, std::string name) {
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	switch(type) {
+		case tri_hp_vtype::multi_physics_pnt: {
+			temp = new multi_physics_pnt(*this,*vbdry(bnum));
+			break;
+		}
 		case tri_hp_vtype::hp_deformable_fixed_pnt: {
 			temp = new hp_deformable_fixed_pnt(*this,*vbdry(bnum));
 			break;

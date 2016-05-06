@@ -84,7 +84,10 @@ void tri_hp::partition(multigrid_interface& xmesh, int npart, int maxenum, int m
 				goto next1;
 			}
 		}
+		/* New vertex boundary must be communication type */
+		/* Try to match physics of side??? */
 		hp_vbdry(i) = new hp_vrtx_bdry(*this,*vbdry(i));
+		
 	next1: continue;
 	}
 }

@@ -28,7 +28,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		gbl->idprefix = std::string("b0");
 		gbl->log = &std::cout;
 		gbl->adapt_interval	= 1;
-		gbl->tolerance = 1.25;
+		gbl->tolerance = sqrt(2.0);
 	}
 
 	if (!initialized) {
@@ -130,7 +130,7 @@ void tri_mesh::allocate(int mxsize) {
 		gbl->idprefix = "";
 		gbl->log = &std::cout;
 		gbl->adapt_interval = 1;
-		gbl->tolerance = 1.25;
+		gbl->tolerance = sqrt(2.0);
 	}
 
 	if (gbl->intwk.ubound(firstDim) < maxpst) {

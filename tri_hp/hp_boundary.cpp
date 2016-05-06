@@ -14,153 +14,6 @@
 
 //#define MPDEBUG
 
-void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
-	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-	int j,k,count,offset,sind,sign;
-	
-	if (!base.is_comm()) return;
-	
-	int ebp1 = end-bgn+1;
-	if (base.is_frst()) {
-		count = 0;
-		for(j=0;j<base.nseg;++j) {
-			sind = base.seg(j);
-			offset = (sind*stride +bgn)*x.NV;
-			for(k=0;k<ebp1;++k) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					base.fsndbuf(count++) = sdata[offset +*n];
-				}
-				offset+=x.NV;
-			}
-		}
-	}
-	else {
-		int bgnsign = (bgn % 2 ? -1 : 1);
-		count = 0;
-		
-		for(j=base.nseg-1;j>=0;--j) {
-			sind = base.seg(j);
-			offset = (sind*stride +bgn)*x.NV;
-			sign = bgnsign;
-			for (k=bgn;k<=end;++k) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					base.fsndbuf(count++) = sign*sdata[offset +*n];
-				}
-				sign *= -1;
-				offset+=x.NV;
-			}
-		}
-	}
-	base.sndsize() = count;
-	base.sndtype() = boundary::flt_msg;
-}
-
-int hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
-	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-	int j,k,count,offset,sind,sign;
-	
-	count = 0;
-	bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
-	if (!reload) return(count);
-	
-	int ebp1 = end -bgn +1;
-	if (base.is_frst()) {
-		for(j=0;j<base.nseg;++j) {
-			sind = base.seg(j);
-			offset = (sind*stride +bgn)*x.NV;
-			for(k=0;k<ebp1;++k) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					sdata[offset+*n] = base.fsndbuf(count++);
-				}
-				offset+=x.NV;
-			}
-		}
-	}
-	else {
-		
-		int bgnsign = (bgn % 2 ? -1 : 1);
-		for(j=base.nseg-1;j>=0;--j) {
-			sind = base.seg(j);
-			offset = (sind*stride +bgn)*x.NV;
-			sign = bgnsign;
-			for (k=bgn;k<=end;++k) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					sdata[offset+*n] = sign*base.fsndbuf(count++);
-				}
-				sign *= -1;
-				offset+=x.NV;
-			}
-		}
-	}
-	return(count);
-}
-
-void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
-	
-	if (!curved || !x.sm0) return;
-	
-	for(int i=0;i<x.gbl->nadapt; ++i)
-		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
-}
-
-void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
-	std::string keyword,ibcname;
-	
-	/* FIND INITIAL CONDITION TYPE */
-	keyword = base.idprefix + "_ibc";
-	if (inmap.get(keyword,ibcname)) {
-		ibc = x.getnewibc(ibcname);
-		ibc->init(inmap,keyword);
-	}
-	
-	keyword = base.idprefix + "_coupled";
-	coupled = false;
-	inmap.get(keyword,coupled);
-	
-	keyword = base.idprefix + "_frozen";
-	frozen = false;
-	inmap.get(keyword,frozen);
-	
-	keyword = base.idprefix +"_report";
-	report_flag = false;
-	inmap.get(keyword,report_flag);
-	
-	Array<int,1> atemp(x.NV);
-	if (inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
-		for (int n=0;n<x.NV;++n) {
-			type[n] = static_cast<bctypes>(atemp(n));
-			if (type[n] == essential) {
-				essential_indices.push_back(n);
-			}
-		}
-	}
-	
-	std::string val;
-	if (!inmap.getline(base.idprefix +"_c0_indices",val)) {
-		/* Default is that all variables are continuous across boundary */
-		for(int n=0;n<x.NV;++n) {
-			c0_indices.push_back(n);
-		}
-	}
-	else {
-		istringstream data;
-		data.str(val);
-		int ind;
-		while (data >> ind)
-			c0_indices.push_back(ind);
-		data.clear();
-	}
-	c0_indices_xy = c0_indices;
-	if (x.mmovement == x.coupled_deformable) {
-		c0_indices_xy.push_back(x.NV);
-		c0_indices_xy.push_back(x.NV+1);
-	}
-	
-#ifdef petsc
-	base.resize_buffers((x.NV+x.ND)*60*(3 +3*x.sm0+x.im0));  // Allows for 10 elements of jacobian entries to be sent
-#endif
-}
-
 void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	int i;
 	std::string keyword,ibcname;
@@ -282,6 +135,87 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	
 	return;
 }
+
+void hp_edge_bdry::find_matching_boundary_name(input_map& inmap, std::string& matching_block, std::string& side_id) {
+	
+	std::ostringstream nstr;
+	nstr << base.idnum << std::flush;
+	side_id = "s" +nstr.str();
+	
+	if (!base.is_comm()) return;
+	
+	std::vector<std::string> blocks;
+	if (!inmap.keys_with_ending(side_id+"_hp_type",blocks)) {
+		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	}
+	
+	if (blocks.size() != 2) {
+		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
+		sim::abort(__LINE__, __FILE__, x.gbl->log);
+	}
+	matching_block = blocks[0].substr(0,blocks[0].length()-9-side_id.length());
+	if (matching_block == x.gbl->idprefix)
+		matching_block = blocks[1].substr(0,blocks[1].length()-9-side_id.length());
+}
+
+void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
+	
+	if (!curved || !x.sm0) return;
+	
+	for(int i=0;i<x.gbl->nadapt; ++i)
+		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
+}
+
+void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
+	int j,m,n,pmin;
+	std::string idin, mytypein;
+	switch(typ) {
+		case(tri_hp::text):
+			fin >> idin >> mytypein;
+			if (curved) {
+				fin.ignore(80,':');
+				fin >>  pmin;
+				for(j=0;j<base.nseg;++j) {
+					for(m=0;m<pmin -1;++m) {
+						for(n=0;n<tri_mesh::ND;++n)
+							fin >> crvbd(tlvl)(j,m)(n);
+					}
+					for(m=pmin-1;m<x.sm0;++m) {
+						for(n=0;n<tri_mesh::ND;++n)
+							crvbd(tlvl)(j,m)(n) = 0.0;
+					}
+				}
+			}
+			break;
+		case(tri_hp::binary):
+			if (curved) {
+				biniwstream bin(&fin);
+				
+				/* HEADER INFORMATION */
+				bin.setFlag(binio::BigEndian,bin.readInt(1));
+				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+				pmin = bin.readInt(sizeof(int));
+				
+				for(j=0;j<base.nseg;++j) {
+					for(m=0;m<pmin-1;++m) {
+						for(n=0;n<tri_mesh::ND;++n) {
+							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+						}
+					}
+					for(m=pmin-1;m<x.sm0;++m) {
+						for(n=0;n<tri_mesh::ND;++n)
+							crvbd(tlvl)(j,m)(n) = 0.0;
+					}
+				}
+			}
+			break;
+			
+		default:
+			break;
+	}
+}
+
 
 void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	int j,m,n;
@@ -425,79 +359,6 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 	return;
 }
 
-void hp_edge_bdry::find_matching_boundary_name(input_map& inmap, std::string& matching_block, std::string& side_id) {
-	
-	std::ostringstream nstr;
-	nstr << base.idnum << std::flush;
-	side_id = "s" +nstr.str();
-	
-	if (!base.is_comm()) return;
-	
-	std::vector<std::string> blocks;
-	if (!inmap.keys_with_ending(side_id+"_hp_type",blocks)) {
-		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
-		sim::abort(__LINE__, __FILE__, x.gbl->log);
-	}
-	
-	if (blocks.size() != 2) {
-		*x.gbl->log << "Something screwy with surface blocks" << std::endl;
-		sim::abort(__LINE__, __FILE__, x.gbl->log);
-	}
-	matching_block = blocks[0].substr(0,blocks[0].length()-9-side_id.length());
-	if (matching_block == x.gbl->idprefix)
-		matching_block = blocks[1].substr(0,blocks[1].length()-9-side_id.length());
-}
-
-
-void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-	int j,m,n,pmin;
-	std::string idin, mytypein;
-	switch(typ) {
-		case(tri_hp::text):
-			fin >> idin >> mytypein;
-			if (curved) {
-				fin.ignore(80,':');
-				fin >>  pmin;
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<pmin -1;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							fin >> crvbd(tlvl)(j,m)(n);
-					}
-					for(m=pmin-1;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							crvbd(tlvl)(j,m)(n) = 0.0;
-					}
-				}
-			}
-			break;
-		case(tri_hp::binary):
-			if (curved) {
-				biniwstream bin(&fin);
-				
-				/* HEADER INFORMATION */
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-				pmin = bin.readInt(sizeof(int));
-				
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<pmin-1;++m) {
-						for(n=0;n<tri_mesh::ND;++n) {
-							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-						}
-					}
-					for(m=pmin-1;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							crvbd(tlvl)(j,m)(n) = 0.0;
-					}
-				}
-			}
-			break;
-			
-		default:
-			break;
-	}
-}
-
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
 	int j,k,m,n,v0,v1,sind,indx,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
@@ -616,53 +477,111 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	return;
 }
 
-void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
-	int sind,v0,v1,iter;
-	FLT dx,dy,ol,roundoff,dpsi;
-	TinyVector<FLT,2> pt;
+void hp_edge_bdry::vdirichlet() {
+	int sind,j,v0;
 	
-	base.findbdrypt(xp,bel,psi);
-	if (!curved) {
-		base.edge_bdry::mvpttobdry(bel,psi,xp);
-		basis::tri(x.log2p)->ptvalues1d(psi);
-		return;
-	}
-	
-	sind = base.seg(bel);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
-	dx = x.pnts(v1)(0) - x.pnts(v0)(0);
-	dy = x.pnts(v1)(1) - x.pnts(v0)(1);
-	ol = 2./(dx*dx +dy*dy);
-	dx *= ol;
-	dy *= ol;
-	
-	/* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
-	/* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */
-	x.crdtocht1d(sind);
-	
-	iter = 0;
-	roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
+	j = 0;
 	do {
-		basis::tri(x.log2p)->ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
-		dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
-		psi -= dpsi;
-		if (iter++ > 100) {
-			*x.gbl->log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
-			break;
-		}
-	} while (fabs(dpsi) > roundoff);
-	xp = pt;
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
+			x.gbl->res.v(v0,*n)= 0.0;
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
+		x.gbl->res.v(v0,*n) = 0.0;
 }
 
-void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
+void hp_edge_bdry::sdirichlet(int mode) {
+	int sind;
 	
-	/* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
-	/* FIRST GET LINEAR APPROXIMATION TO LOCATION */
-	base.edge_bdry::mvpttobdry(bel, psi, xp);
-	adapt_storage->findandmovebdrypt(xp,bel,psi);
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
+			x.gbl->res.s(sind,mode,*n) = 0.0;
+	}
+}
+
+
+void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,count,offset,sind,sign;
 	
-	return;
+	if (!base.is_comm()) return;
+	
+	int ebp1 = end-bgn+1;
+	if (base.is_frst()) {
+		count = 0;
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			offset = (sind*stride +bgn)*x.NV;
+			for(k=0;k<ebp1;++k) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					base.fsndbuf(count++) = sdata[offset +*n];
+				}
+				offset+=x.NV;
+			}
+		}
+	}
+	else {
+		int bgnsign = (bgn % 2 ? -1 : 1);
+		count = 0;
+		
+		for(j=base.nseg-1;j>=0;--j) {
+			sind = base.seg(j);
+			offset = (sind*stride +bgn)*x.NV;
+			sign = bgnsign;
+			for (k=bgn;k<=end;++k) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					base.fsndbuf(count++) = sign*sdata[offset +*n];
+				}
+				sign *= -1;
+				offset+=x.NV;
+			}
+		}
+	}
+	base.sndsize() = count;
+	base.sndtype() = boundary::flt_msg;
+}
+
+int hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,count,offset,sind,sign;
+	
+	count = 0;
+	bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
+	if (!reload) return(count);
+	
+	int ebp1 = end -bgn +1;
+	if (base.is_frst()) {
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			offset = (sind*stride +bgn)*x.NV;
+			for(k=0;k<ebp1;++k) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					sdata[offset+*n] = base.fsndbuf(count++);
+				}
+				offset+=x.NV;
+			}
+		}
+	}
+	else {
+		
+		int bgnsign = (bgn % 2 ? -1 : 1);
+		for(j=base.nseg-1;j>=0;--j) {
+			sind = base.seg(j);
+			offset = (sind*stride +bgn)*x.NV;
+			sign = bgnsign;
+			for (k=bgn;k<=end;++k) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					sdata[offset+*n] = sign*base.fsndbuf(count++);
+				}
+				sign *= -1;
+				offset+=x.NV;
+			}
+		}
+	}
+	return(count);
 }
 
 #ifdef DIRK
@@ -787,157 +706,22 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 }
 #endif
 
-
-void tri_hp::vc0load(int phase, FLT *pdata, int vrtstride) {
-	int i;
+void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 	
-	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
-	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
+	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+	axpt(0) = xpt(0); axpt(1) = xpt(1);
+	amv(0) = mv(0); amv(1) = mv(1);
+	anorm(0)= norm(0); anorm(1) = norm(1);
 	
-	for(i=0;i<nebd;++i)
-		ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
-	for(i=0;i<nvbd;++i)
-		vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
-	
-	return;
-}
-int tri_hp::vc0wait_rcv(int phase, FLT *pdata, int vrtstride) {
-	int stop = 1;
-	int i;
-	
-	for(i=0;i<nebd;++i) {
-		stop &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
-	}
-	
-	for(i=0;i<nvbd;++i) {
-		stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
-	}
-	
-	
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-	
-	return(stop);
-}
-
-int tri_hp::vc0rcv(int phase, FLT *pdata, int vrtstride) {
-	int stop = 1,i;
-	
-	for(i=0;i<nebd;++i)
-		stop &= ebdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
-	for(i=0;i<nvbd;++i)
-		stop &= vbdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
-	
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-	
-	return(stop);
-}
-
-void tri_hp::sc0load(FLT *sdata, int bgnmode, int endmode, int modestride) {
-	int i;
-	
-	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->smatchsolution_snd(sdata,bgnmode,endmode,modestride);
-	
-	for(i=0;i<nebd;++i)
-		ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
-	
-	return;
-}
-
-int tri_hp::sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
-	int stop = 1;
-	int i;
-	
-	for(i=0;i<nebd;++i) {
-		stop &= ebdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-	}
-	
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
-	
-	return(stop);
-}
-
-int tri_hp::sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
-	int stop = 1,i;
-	
-	for(i=0;i<nebd;++i)
-		stop &= ebdry(i)->comm_nowait(boundary::all,0,boundary::symmetric);
-	
-	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
-	
-	return(stop);
-}
-
-
-void tri_hp::matchboundaries() {
-	int i, m, n, msgn, bnum, count;
-	int last_phase, mp_phase;
-	
-	/* Match boundary vertices */
-	tri_mesh::matchboundaries();
-	
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		vc0load(mp_phase,ug.v.data());
-		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-		last_phase = true;
-		last_phase &= vc0wait_rcv(mp_phase,ug.v.data());
-	}
-	
-	if (!sm0) return;
-	
-	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
-	smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
-	
-	/* Match curved sides */
-	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
-			count = 0;
-			for(i=0;i<ebdry(bnum)->nseg;++i) {
-				for(m=0;m<basis::tri(log2p)->sm();++m) {
-					for(n=0;n<ND;++n)
-						ebdry(bnum)->fsndbuf(count++) = hp_ebdry(bnum)->crds(i,m,n);
-				}
+	for (int n=0;n<x.NV;++n) {
+		switch(type[n]) {
+			case(essential): {
+				flx(n) = 0.0;
+				break;
 			}
-			ebdry(bnum)->sndsize() = count;
-			ebdry(bnum)->sndtype() = boundary::flt_msg;
-			ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
-		}
-	}
-	
-	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
-			ebdry(bnum)->comm_exchange(boundary::all,0,boundary::master_slave);
-		}
-	}
-	
-	
-	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
-			ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
-			
-			if (!ebdry(bnum)->is_frst()) {
-				count = 0;
-				for(i=ebdry(bnum)->nseg-1;i>=0;--i) {
-					msgn = 1;
-					for(m=0;m<basis::tri(log2p)->sm();++m) {
-						for(n=0;n<ND;++n)
-							hp_ebdry(bnum)->crds(i,m,n) = msgn*ebdry(bnum)->frcvbuf(0,count++);
-						msgn *= -1;
-					}
-				}
+			case(natural): {
+				flx(n) = fluxes[n]->Eval(u,axpt,amv,anorm,x.gbl->time);
+				break;
 			}
 		}
 	}
@@ -945,144 +729,60 @@ void tri_hp::matchboundaries() {
 	return;
 }
 
-void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
-	FLT ddpsi1, ddpsi2, psil, psir;
-	TinyVector<FLT,2> xp, dx, maxloc, minloc;
-	FLT max,min;
-	int v0, sind;
+void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
+	int k,n,sind;
+	TinyVector<FLT,2> pt,mvel,nrm;
+	Array<FLT,1> u(x.NV),flx(x.NV);
 	
-	minloc = 0.0;
-	maxloc = 0.0;
+	lf = 0.0;
+	sind = base.seg(eind);
 	
-	
-	/* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
-	sind = base.seg(base.nseg-1);
+	/* Load coordinates */
 	x.crdtocht1d(sind);
-	basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
-	ddpsi2 = (*fxy)(dx);
-	if (base.vbdry(1) >= 0) {
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
-		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
-	}
-	if (base.vbdry(0) >= 0) {
-		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
-	}
 	
+	/* Project coordinates to Gauss points & coordinate derivates */
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 	
-	if (base.vbdry(1) >= 0)
-		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
-	if (base.vbdry(0) >= 0)
-		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
+	/* Project solution to Gauss points */
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 	
-	if (base.vbdry(1) >= 0)
-		x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,0,boundary::master_slave);
-	if (base.vbdry(0) >= 0) {
-		x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,0,boundary::master_slave);
-		if (x.vbdry(base.vbdry(0))->is_comm())
-			ddpsi2 = x.vbdry(base.vbdry(0))->frcvbuf(0,0);
-		else
-			ddpsi2 = 0.0;
-	}
-	
-	max = -1.0e99;
-	min = 1.0e99;
-	for(int indx=0;indx<base.nseg;++indx) {
-		sind = base.seg(indx);
-		x.crdtocht1d(sind);
-		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
-		ddpsi1 = (*fxy)(dx);
-		if (ddpsi1 * ddpsi2 <= 0.0) {
-			v0 = x.seg(base.seg(indx)).pnt(0);
-			if ((*fxy)(x.pnts(v0)) > max) {
-				maxloc[0] = x.pnts(v0)(0);
-				maxloc[1] = x.pnts(v0)(1);
-				max = (*fxy)(x.pnts(v0));
-			}
-			if ((*fxy)(x.pnts(v0)) < min) {
-				minloc[0] = x.pnts(v0)(0);
-				minloc[1] = x.pnts(v0)(1);
-				min = (*fxy)(x.pnts(v0));
-			}
-			*x.gbl->log << "#LOCAL EXTREMA: " << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' <<(*fxy)(x.pnts(v0)) << std::endl;
-		}
-		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 1.0, &x.cht(0,0), MXTM);
-		ddpsi2 = (*fxy)(dx);
-		if (ddpsi1 *ddpsi2 <= 0.0) {
-			/* INTERIOR MAXIMUM */
-			psil = -1.0;
-			psir = 1.0;
-			while (psir-psil > 1.0e-10) {
-				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 0.5*(psil +psir), &x.cht(0,0), MXTM);
-				if ((*fxy)(dx)*ddpsi1 < 0.0)
-					psir = 0.5*(psil+psir);
-				else
-					psil = 0.5*(psil+psir);
-			}
-			if ((*fxy)(xp) > max) {
-				maxloc[0] = xp[0];
-				maxloc[1] = xp[1];
-				max = (*fxy)(xp);
-			}
-			if ((*fxy)(xp) < min) {
-				minloc[0] = xp[0];
-				minloc[1] = xp[1];
-				min = (*fxy)(xp);
-			}
-			*x.gbl->log << "#LOCAL EXTREMA: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
-		}
-	}
-	*x.gbl->log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
-	*x.gbl->log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
-	
-	return;
-}
-
-void hp_edge_bdry::findintercept(FLT (*fxy)(TinyVector<FLT,2> &x)) {
-	FLT psil, psir;
-	TinyVector<FLT,2> xp, dx;
-	int v0, sind;
-	FLT vl, vr;
-	
-	sind = base.seg(0);
-	x.crdtocht1d(sind);
-	v0 = x.seg(sind).pnt(0);
-	vl = (*fxy)(x.pnts(v0));
-	
-	for(int indx=0;indx<base.nseg;++indx) {
-		sind = base.seg(indx);
-		x.crdtocht1d(sind);
-		v0 = x.seg(sind).pnt(1);
-		vr = (*fxy)(x.pnts(v0));
+	/* Integrate flux across element boundary times basis functions */
+	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
+		/* Calculate boundary normal */
+		nrm(0) = x.dcrd(1,0)(0,k);
+		nrm(1) = -x.dcrd(0,0)(0,k);
+		FLT jcb = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+		nrm(0) /= jcb;
+		nrm(1) /= jcb;
 		
-		if (vl*vr <= 0.0) {
-			/* INTERIOR INTERCEPT */
-			psil = -1.0;
-			psir = 1.0;
-			while (psir-psil > 1.0e-10) {
-				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),0.5*(psil+psir),&x.cht(0,0),MXTM);
-				if ((*fxy)(xp)*vl < 0.0)
-					psir = 0.5*(psil+psir);
-				else
-					psil = 0.5*(psil+psir);
-			}
-			*x.gbl->log << "#INTERSECTION: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+		/* Calculate the mesh velocity */
+		for(n=0;n<tri_mesh::ND;++n) {
+			pt(n) = x.crd(n)(0,k);
+			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
+#ifdef MESH_REF_VEL
+			mvel(n) += x.gbl->mesh_ref_vel(n);
+#endif
+			
 		}
-		vl = vr;
+		
+		for(n=0;n<x.NV;++n)
+			u(n) = x.u(n)(0,k);
+		
+		/* Call flux function */
+		flux(u,pt,mvel,nrm,jcb,flx);
+		
+		for(n=0;n<x.NV;++n)
+			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n)*jcb;
 	}
+	/* Integrate fluxes * basis */
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->intgrt1d(&lf(n)(0),&x.res(n)(0,0));
 	
 	return;
 }
 
-void hp_vrtx_bdry::rsdl(int stage) {
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	
-	Array<FLT,1> lf(vdofs);
-	element_rsdl(lf);
-	
-	for(int n=0;n<x.NV;++n)
-		x.gbl->res.v(base.pnt,n) += lf(n);
-	
-}
 
 void hp_edge_bdry::rsdl(int stage) {
 	
@@ -1106,195 +806,6 @@ void hp_edge_bdry::rsdl(int stage) {
 		}
 	}
 }
-
-#ifdef petsc
-void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
-	
-	if (!base.is_comm()) return;
-	
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	
-	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
-	/* Send number of non-zeros to matches */
-	base.sndsize() = 0;
-	base.sndtype() = boundary::int_msg;
-	
-	int pind = base.pnt*vdofs;
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		base.isndbuf(base.sndsize()++) = nnzero(pind +*n);
-	}
-}
-
-
-int hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
-	
-	if (!base.is_comm()) return(0);
-	
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	
-	/* Reload to avoid overlap with sides */
-	int pind = base.pnt*vdofs;
-	int count = 0;
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		nnzero(pind +*n) = base.isndbuf(count++);
-		nnzero_mpi(pind +*n) = 0;
-	}
-	
-	for(int m=0;m<base.nmatches();++m) {
-		Array<int,1> target;
-		if (base.is_local(m))  // only 1 matching boundary
-			target.reference(nnzero);
-		else
-			target.reference(nnzero_mpi);
-		
-		int count = 0;
-		int pind = base.pnt*vdofs;
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			target(pind +*n) += base.ircvbuf(m,count++);
-		}
-	}
-	return(count);
-}
-
-
-void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
-	
-	if (!base.is_comm()) return;
-	
-	const int sm=basis::tri(x.log2p)->sm();
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int begin_seg = x.npnt*vdofs;
-	
-	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
-	/* Send number of non-zeros to matches */
-	base.sndsize() = 0;
-	base.sndtype() = boundary::int_msg;
-	for (int i=0;i<base.nseg;++i) {
-		int sind = base.seg(i);
-		int pind = x.seg(sind).pnt(0)*vdofs;
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			base.isndbuf(base.sndsize()++) = nnzero(pind +*n);
-		}
-	}
-	int sind = base.seg(base.nseg-1);
-	int pind = x.seg(sind).pnt(1)*vdofs;
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		base.isndbuf(base.sndsize()++) = nnzero(pind+*n);
-	}
-	
-	/* Last thing to send is nnzero for edges */
-	if (sm) {
-		for (int i=0;i<base.nseg;++i) {
-			int sind = base.seg(i);
-			for (int m=0;m<sm;++m) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					base.isndbuf(base.sndsize()++) = nnzero(begin_seg +sind*sm*x.NV +m*x.NV +*n);
-				}
-			}
-		}
-	}
-	
-	return;
-}
-
-int hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
-	
-	if (!base.is_comm()) return(0);
-	
-	const int sm=basis::tri(x.log2p)->sm();
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int begin_seg = x.npnt*vdofs;
-	
-	/* if local match then entries will go in to local jacobian */
-	Array<int,1> target;
-	if (base.is_local(0))  // only 1 matching boundary
-		target.reference(nnzero);
-	else
-		target.reference(nnzero_mpi);
-	
-	int count = 0;
-	for (int i=base.nseg-1;i>=0;--i) {
-		int sind = base.seg(i);
-		int pind = x.seg(sind).pnt(1)*vdofs;
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			target(pind +*n) += base.ircvbuf(0,count++);
-		}
-	}
-	int sind = base.seg(0);
-	int pind = x.seg(sind).pnt(0)*vdofs;
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		target(pind+*n) += base.ircvbuf(0,count++);
-	}
-	
-	/* Now add to side degrees of freedom */
-	if (sm) {
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			for (int mode=0;mode<sm;++mode) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					target(begin_seg +sind*sm*x.NV +mode*x.NV +*n) += base.ircvbuf(0,count++);
-				}
-			}
-		}
-	}
-	return(count);
-}
-#endif
-
-void hp_vrtx_bdry::element_jacobian(Array<FLT,2>& K) {
-	
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	Array<FLT,1> Rbar(vdofs),lf(vdofs);;
-	
-	/* Calculate and store initial residual */
-	lf = 0.0;
-	element_rsdl(lf);
-	Rbar = lf;
-	
-	Array<FLT,1> dw(x.NV);
-	dw = 0.0;
-	for(int i=0;i<2;++i)
-		for(int n=0;n<x.NV;++n)
-			dw(n) = dw(n) + fabs(x.ug.v(base.pnt,n));
-	
-	dw *= eps_r;
-	dw += eps_a;
-	
-	int kcol = 0;
-	for(int var = 0; var < x.NV; ++var){
-		x.ug.v(base.pnt,var) += dw(var);
-		
-		lf = 0.0;
-		element_rsdl(lf);
-		
-		int krow = 0;
-		for(int n=0;n<vdofs;++n)
-			K(krow++,kcol) = (lf(n)-Rbar(n))/dw(var);
-		
-		++kcol;
-		
-		x.ug.v(base.pnt,var) -= dw(var);
-	}
-	
-	int sind = x.ebdry(base.ebdry(1))->seg(0);
-	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
-	
-	for(int var = 0; var < vdofs -x.NV; ++var){
-		x.pnts(base.pnt)(var) += dx;
-		
-		lf = 0.0;
-		element_rsdl(lf);
-		
-		int krow = 0;
-		for(int n=0;n<vdofs;++n)
-			K(krow++,kcol) = (lf(n)-Rbar(n))/dx;
-		
-		++kcol;
-		
-		x.pnts(base.pnt)(var) -= dx;
-	}
-}
-
 
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();
@@ -1402,6 +913,89 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 }
 
 #ifdef petsc
+void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	const int begin_seg = x.npnt*vdofs;
+	
+	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	for (int i=0;i<base.nseg;++i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+			base.isndbuf(base.sndsize()++) = nnzero(pind +*n);
+		}
+	}
+	int sind = base.seg(base.nseg-1);
+	int pind = x.seg(sind).pnt(1)*vdofs;
+	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+		base.isndbuf(base.sndsize()++) = nnzero(pind+*n);
+	}
+	
+	/* Last thing to send is nnzero for edges */
+	if (sm) {
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			for (int m=0;m<sm;++m) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					base.isndbuf(base.sndsize()++) = nnzero(begin_seg +sind*sm*x.NV +m*x.NV +*n);
+				}
+			}
+		}
+	}
+	
+	return;
+}
+
+int hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return(0);
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+	const int begin_seg = x.npnt*vdofs;
+	
+	/* if local match then entries will go in to local jacobian */
+	Array<int,1> target;
+	if (base.is_local(0))  // only 1 matching boundary
+		target.reference(nnzero);
+	else
+		target.reference(nnzero_mpi);
+	
+	int count = 0;
+	for (int i=base.nseg-1;i>=0;--i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(1)*vdofs;
+		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+			target(pind +*n) += base.ircvbuf(0,count++);
+		}
+	}
+	int sind = base.seg(0);
+	int pind = x.seg(sind).pnt(0)*vdofs;
+	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+		target(pind+*n) += base.ircvbuf(0,count++);
+	}
+	
+	/* Now add to side degrees of freedom */
+	if (sm) {
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			for (int mode=0;mode<sm;++mode) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					target(begin_seg +sind*sm*x.NV +mode*x.NV +*n) += base.ircvbuf(0,count++);
+				}
+			}
+		}
+	}
+	return(count);
+}
+
 int hp_edge_bdry::petsc_to_ug(PetscScalar *array) {
 	int ind = 0;
 	
@@ -1430,33 +1024,6 @@ void hp_edge_bdry::ug_to_petsc(int& ind) {
 			}
 		}
 	}
-}
-
-void hp_vrtx_bdry::petsc_jacobian() {
-	
-	/* Generic method for adding Jacobian terms */
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	Array<FLT,2> K(vdofs,vdofs);
-	Array<int,1> rows(vdofs);
-	Array<int,1> cols(vdofs);
-	
-	const int v0 = base.pnt;
-	
-	int rind = 0;
-	int cind = 0;
-	int gindx = vdofs*v0;
-	for(int n=0;n<vdofs;++n) {
-		rows(rind++) = gindx;
-		cols(cind++) = gindx++;
-	}
-	
-	element_jacobian(K);
-	
-#ifdef MY_SPARSE
-	x.J.add_values(vdofs,rows,vdofs,cols,K);
-#else
-	MatSetValuesLocal(x.petsc_J,vdofs,rows.data(),vdofs,cols.data(),K.data(),ADD_VALUES);
-#endif
 }
 
 void hp_edge_bdry::petsc_jacobian() {
@@ -1506,140 +1073,6 @@ void hp_edge_bdry::petsc_jacobian() {
 	}
 }
 
-void hp_vrtx_bdry::petsc_matchjacobian_snd() {
-	
-	if (!base.is_comm()) return;
-	
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	
-#ifdef MY_SPARSE
-	/* I am cheating here and sending floats and int's together */
-	/* Send Jacobian entries for continous variables  */
-	base.sndsize() = 0;
-	base.sndtype() = boundary::flt_msg;
-	/* Send index of start of jacobian */
-	base.fsndbuf(base.sndsize()++) = x.jacobian_start +0.1;
-	/* Send index of start of surface unknowns (if they exist) */
-	base.fsndbuf(base.sndsize()++) = jacobian_start+0.1;
-	
-	int rowbase = base.pnt*vdofs;
-	/* Send continuous variables */
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		int row = rowbase + *n;
-		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +0.1;
-		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +0.1;
-#ifdef MPDEBUG
-		*x.gbl->log << "vertex sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
-#endif
-		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
-#ifdef MPDEBUG
-			*x.gbl->log << x.J._col(col) << ' ';
-#endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
-			base.fsndbuf(base.sndsize()++) = x.J._val(col);
-		}
-#ifdef MPDEBUG
-		*x.gbl->log << std::endl;
-#endif
-	}
-}
-
-int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
-	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
-	
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int rowbase = base.pnt*vdofs;
-	
-	int count = 0;
-	assert(x.jacobian_start == static_cast<int>(base.fsndbuf(count++)));
-	assert(jacobian_start == static_cast<int>(base.fsndbuf(count++)));
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		int row = static_cast<int>(base.fsndbuf(count++));
-		int ncol = static_cast<int>(base.fsndbuf(count++));
-		for (int k = 0;k<ncol;++k) {
-			int col = static_cast<int>(base.fsndbuf(count++));
-			FLT val = base.fsndbuf(count++);
-			/* This is a check that we aren't receiving unusued local degrees of freedom */
-			if (col < INT_MAX-10 && col > -1) {
-				x.J.set_values(row,col,val);
-			}
-		}
-		x.J_mpi.multiply_row(row, 0.0);
-	}
-	
-	for (int m=0;m<base.nmatches();++m) {
-		int count = 0;
-		int Jstart_mpi = static_cast<int>(base.frcvbuf(m, count++)); // Start of jacobian on matching block
-		count++; // int Jstart_mpi_vrtx_unknowns = static_cast<int>(base.frcvbuf(m, count++)); // Start of vertex unknowns on mathcing block (not used typically)
-		
-		sparse_row_major *pJ_mpi;
-		if (base.is_local(m)) {
-			pJ_mpi = &x.J;
-			Jstart_mpi = 0;
-		}
-		else {
-			pJ_mpi = &x.J_mpi;
-		}
-		
-		vector<int> row_mpi_storage;
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			int row = rowbase + *n;
-			int row_mpi = static_cast<int>(base.frcvbuf(m,count++)) +Jstart_mpi;
-			row_mpi_storage.push_back(row_mpi);
-			int ncol = static_cast<int>(base.frcvbuf(m,count++));
-#ifdef MPDEBUG
-			*x.gbl->log << "vertex receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
-#endif
-			for (int k = 0;k<ncol;++k) {
-				int col = static_cast<int>(base.frcvbuf(m,count++));
-				FLT val = base.frcvbuf(m,count++);
-				if (col < INT_MAX-10 && col > -1) {
-					col += Jstart_mpi;
-#ifdef MPDEBUG
-					*x.gbl->log  << col << ' ';
-#endif
-					(*pJ_mpi).add_values(row,col,val);
-				}
-			}
-#ifdef MPDEBUG
-			*x.gbl->log << std::endl;
-#endif
-		}
-		
-		/* Shift all diagonal block entries for this vertex */
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			int row = rowbase + *n;
-			std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
-			for(std::vector<int>::iterator n_mpi=c0_indices_xy.begin();n_mpi != c0_indices_xy.end();++n_mpi) {
-#ifdef MPDEBUG
-				*x.gbl->log << "vertex swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +*n_mpi << std::endl;
-#endif
-#ifdef DEBUG_JAC
-				if (!x.gbl->jac_debug)
-#endif
-				{
-					FLT dval = (*pJ_mpi)(row,*row_mpi);
-					(*pJ_mpi)(row,*row_mpi) = 0.0;
-					x.J(row,rowbase+*n_mpi) += dval;
-				}
-				++row_mpi;
-			}
-		}
-		row_mpi_storage.clear();
-	}
-	
-	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-		x.J.multiply_row(rowbase+*n,1.0/(1.0+base.nmatches()));
-		x.J_mpi.multiply_row(rowbase+*n,1.0/(1.0+base.nmatches()));
-	}
-	
-#else
-	This Part not working
-#endif
-	return(count);
-}
 
 void hp_edge_bdry::petsc_matchjacobian_snd() {
 	
@@ -1923,135 +1356,6 @@ int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 #endif
 	return(count);
 }
-#endif
-
-
-void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
-	int k,n,sind;
-	TinyVector<FLT,2> pt,mvel,nrm;
-	Array<FLT,1> u(x.NV),flx(x.NV);
-	
-	lf = 0.0;
-	sind = base.seg(eind);
-	
-	/* Load coordinates */
-	x.crdtocht1d(sind);
-	
-	/* Project coordinates to Gauss points & coordinate derivates */
-	for(n=0;n<tri_mesh::ND;++n)
-		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-	
-	/* Project solution to Gauss points */
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-	
-	/* Integrate flux across element boundary times basis functions */
-	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
-		/* Calculate boundary normal */
-		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);
-		FLT jcb = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
-		nrm(0) /= jcb;
-		nrm(1) /= jcb;
-		
-		/* Calculate the mesh velocity */
-		for(n=0;n<tri_mesh::ND;++n) {
-			pt(n) = x.crd(n)(0,k);
-			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
-#ifdef MESH_REF_VEL
-			mvel(n) += x.gbl->mesh_ref_vel(n);
-#endif
-			
-		}
-		
-		for(n=0;n<x.NV;++n)
-			u(n) = x.u(n)(0,k);
-		
-		/* Call flux function */
-		flux(u,pt,mvel,nrm,jcb,flx);
-		
-		for(n=0;n<x.NV;++n)
-			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n)*jcb;
-	}
-	/* Integrate fluxes * basis */
-	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->intgrt1d(&lf(n)(0),&x.res(n)(0,0));
-	
-	return;
-}
-
-void hp_edge_bdry::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
-	
-	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
-	axpt(0) = xpt(0); axpt(1) = xpt(1);
-	amv(0) = mv(0); amv(1) = mv(1);
-	anorm(0)= norm(0); anorm(1) = norm(1);
-	
-	for (int n=0;n<x.NV;++n) {
-		switch(type[n]) {
-			case(essential): {
-				flx(n) = 0.0;
-				break;
-			}
-			case(natural): {
-				flx(n) = fluxes[n]->Eval(u,axpt,amv,anorm,x.gbl->time);
-				break;
-			}
-		}
-	}
-	
-	return;
-}
-
-
-
-
-void hp_edge_bdry::vdirichlet() {
-	int sind,j,v0;
-	
-	j = 0;
-	do {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-			x.gbl->res.v(v0,*n)= 0.0;
-	} while (++j < base.nseg);
-	v0 = x.seg(sind).pnt(1);
-	for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-		x.gbl->res.v(v0,*n) = 0.0;
-}
-
-void hp_edge_bdry::sdirichlet(int mode) {
-	int sind;
-	
-	for(int j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-			x.gbl->res.s(sind,mode,*n) = 0.0;
-	}
-}
-
-#ifdef petsc
-void hp_vrtx_bdry::petsc_jacobian_dirichlet() {
-	const int nessentials = essential_indices.size();
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int v0 = base.pnt;
-	const int gind = v0*vdofs;
-	Array<int,1> indices(nessentials);
-	
-	int counter = 0;
-	for(std::vector<int>::const_iterator n=essential_indices.begin();n != essential_indices.end();++n) {
-		indices(counter++)=gind +*n;
-	}
-	
-#ifdef MY_SPARSE
-	x.J.zero_rows(counter,indices);
-	x.J_mpi.zero_rows(counter,indices);
-	x.J.set_diag(counter,indices,1.0);
-#else
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
-#endif
-}
 
 void hp_edge_bdry::petsc_jacobian_dirichlet() {
 	int sm=basis::tri(x.log2p)->sm();
@@ -2097,8 +1401,343 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
 #endif
 }
+
 #endif
 
+void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
+	int sind,v0,v1,iter;
+	FLT dx,dy,ol,roundoff,dpsi;
+	TinyVector<FLT,2> pt;
+	
+	base.findbdrypt(xp,bel,psi);
+	if (!curved) {
+		base.edge_bdry::mvpttobdry(bel,psi,xp);
+		basis::tri(x.log2p)->ptvalues1d(psi);
+		return;
+	}
+	
+	sind = base.seg(bel);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	dx = x.pnts(v1)(0) - x.pnts(v0)(0);
+	dy = x.pnts(v1)(1) - x.pnts(v0)(1);
+	ol = 2./(dx*dx +dy*dy);
+	dx *= ol;
+	dy *= ol;
+	
+	/* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+	/* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */
+	x.crdtocht1d(sind);
+	
+	iter = 0;
+	roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
+	do {
+		basis::tri(x.log2p)->ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
+		dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
+		psi -= dpsi;
+		if (iter++ > 100) {
+			*x.gbl->log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
+			break;
+		}
+	} while (fabs(dpsi) > roundoff);
+	xp = pt;
+}
+
+void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
+	
+	/* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
+	/* FIRST GET LINEAR APPROXIMATION TO LOCATION */
+	base.edge_bdry::mvpttobdry(bel, psi, xp);
+	adapt_storage->findandmovebdrypt(xp,bel,psi);
+	
+	return;
+}
+
+void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
+	FLT ddpsi1, ddpsi2, psil, psir;
+	TinyVector<FLT,2> xp, dx, maxloc, minloc;
+	FLT max,min;
+	int v0, sind;
+	
+	minloc = 0.0;
+	maxloc = 0.0;
+	
+	
+	/* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
+	sind = base.seg(base.nseg-1);
+	x.crdtocht1d(sind);
+	basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
+	ddpsi2 = (*fxy)(dx);
+	if (base.vbdry(1) >= 0) {
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
+	}
+	if (base.vbdry(0) >= 0) {
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
+	}
+	
+	
+	if (base.vbdry(1) >= 0)
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
+	if (base.vbdry(0) >= 0)
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
+	
+	if (base.vbdry(1) >= 0)
+		x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,0,boundary::master_slave);
+	if (base.vbdry(0) >= 0) {
+		x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,0,boundary::master_slave);
+		if (x.vbdry(base.vbdry(0))->is_comm())
+			ddpsi2 = x.vbdry(base.vbdry(0))->frcvbuf(0,0);
+		else
+			ddpsi2 = 0.0;
+	}
+	
+	max = -1.0e99;
+	min = 1.0e99;
+	for(int indx=0;indx<base.nseg;++indx) {
+		sind = base.seg(indx);
+		x.crdtocht1d(sind);
+		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
+		ddpsi1 = (*fxy)(dx);
+		if (ddpsi1 * ddpsi2 <= 0.0) {
+			v0 = x.seg(base.seg(indx)).pnt(0);
+			if ((*fxy)(x.pnts(v0)) > max) {
+				maxloc[0] = x.pnts(v0)(0);
+				maxloc[1] = x.pnts(v0)(1);
+				max = (*fxy)(x.pnts(v0));
+			}
+			if ((*fxy)(x.pnts(v0)) < min) {
+				minloc[0] = x.pnts(v0)(0);
+				minloc[1] = x.pnts(v0)(1);
+				min = (*fxy)(x.pnts(v0));
+			}
+			*x.gbl->log << "#LOCAL EXTREMA: " << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' <<(*fxy)(x.pnts(v0)) << std::endl;
+		}
+		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 1.0, &x.cht(0,0), MXTM);
+		ddpsi2 = (*fxy)(dx);
+		if (ddpsi1 *ddpsi2 <= 0.0) {
+			/* INTERIOR MAXIMUM */
+			psil = -1.0;
+			psir = 1.0;
+			while (psir-psil > 1.0e-10) {
+				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 0.5*(psil +psir), &x.cht(0,0), MXTM);
+				if ((*fxy)(dx)*ddpsi1 < 0.0)
+					psir = 0.5*(psil+psir);
+				else
+					psil = 0.5*(psil+psir);
+			}
+			if ((*fxy)(xp) > max) {
+				maxloc[0] = xp[0];
+				maxloc[1] = xp[1];
+				max = (*fxy)(xp);
+			}
+			if ((*fxy)(xp) < min) {
+				minloc[0] = xp[0];
+				minloc[1] = xp[1];
+				min = (*fxy)(xp);
+			}
+			*x.gbl->log << "#LOCAL EXTREMA: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+		}
+	}
+	*x.gbl->log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
+	*x.gbl->log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
+	
+	return;
+}
+
+void hp_edge_bdry::findintercept(FLT (*fxy)(TinyVector<FLT,2> &x)) {
+	FLT psil, psir;
+	TinyVector<FLT,2> xp, dx;
+	int v0, sind;
+	FLT vl, vr;
+	
+	sind = base.seg(0);
+	x.crdtocht1d(sind);
+	v0 = x.seg(sind).pnt(0);
+	vl = (*fxy)(x.pnts(v0));
+	
+	for(int indx=0;indx<base.nseg;++indx) {
+		sind = base.seg(indx);
+		x.crdtocht1d(sind);
+		v0 = x.seg(sind).pnt(1);
+		vr = (*fxy)(x.pnts(v0));
+		
+		if (vl*vr <= 0.0) {
+			/* INTERIOR INTERCEPT */
+			psil = -1.0;
+			psir = 1.0;
+			while (psir-psil > 1.0e-10) {
+				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),0.5*(psil+psir),&x.cht(0,0),MXTM);
+				if ((*fxy)(xp)*vl < 0.0)
+					psir = 0.5*(psil+psir);
+				else
+					psil = 0.5*(psil+psir);
+			}
+			*x.gbl->log << "#INTERSECTION: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+		}
+		vl = vr;
+	}
+	
+	return;
+}
+
+
+void tri_hp::vc0load(int phase, FLT *pdata, int vrtstride) {
+	int i;
+	
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
+	
+	for(i=0;i<nebd;++i)
+		ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+	for(i=0;i<nvbd;++i)
+		vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+	
+	return;
+}
+int tri_hp::vc0wait_rcv(int phase, FLT *pdata, int vrtstride) {
+	int stop = 1;
+	int i;
+	
+	for(i=0;i<nebd;++i) {
+		stop &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+	}
+	
+	for(i=0;i<nvbd;++i) {
+		stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+	}
+	
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
+	
+	return(stop);
+}
+
+int tri_hp::vc0rcv(int phase, FLT *pdata, int vrtstride) {
+	int stop = 1,i;
+	
+	for(i=0;i<nebd;++i)
+		stop &= ebdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
+	for(i=0;i<nvbd;++i)
+		stop &= vbdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
+	
+	return(stop);
+}
+
+void tri_hp::sc0load(FLT *sdata, int bgnmode, int endmode, int modestride) {
+	int i;
+	
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->smatchsolution_snd(sdata,bgnmode,endmode,modestride);
+	
+	for(i=0;i<nebd;++i)
+		ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+	
+	return;
+}
+
+int tri_hp::sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
+	int stop = 1;
+	int i;
+	
+	for(i=0;i<nebd;++i) {
+		stop &= ebdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+	}
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
+	
+	return(stop);
+}
+
+int tri_hp::sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
+	int stop = 1,i;
+	
+	for(i=0;i<nebd;++i)
+		stop &= ebdry(i)->comm_nowait(boundary::all,0,boundary::symmetric);
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
+	
+	return(stop);
+}
+
+
+void tri_hp::matchboundaries() {
+	int i, m, n, msgn, bnum, count;
+	int last_phase, mp_phase;
+	
+	/* Match boundary vertices */
+	tri_mesh::matchboundaries();
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,ug.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,ug.v.data());
+	}
+	
+	if (!sm0) return;
+	
+	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	
+	/* Match curved sides */
+	for(bnum=0;bnum<nebd;++bnum) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+			count = 0;
+			for(i=0;i<ebdry(bnum)->nseg;++i) {
+				for(m=0;m<basis::tri(log2p)->sm();++m) {
+					for(n=0;n<ND;++n)
+						ebdry(bnum)->fsndbuf(count++) = hp_ebdry(bnum)->crds(i,m,n);
+				}
+			}
+			ebdry(bnum)->sndsize() = count;
+			ebdry(bnum)->sndtype() = boundary::flt_msg;
+			ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
+		}
+	}
+	
+	for(bnum=0;bnum<nebd;++bnum) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+			ebdry(bnum)->comm_exchange(boundary::all,0,boundary::master_slave);
+		}
+	}
+	
+	
+	for(bnum=0;bnum<nebd;++bnum) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+			ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
+			
+			if (!ebdry(bnum)->is_frst()) {
+				count = 0;
+				for(i=ebdry(bnum)->nseg-1;i>=0;--i) {
+					msgn = 1;
+					for(m=0;m<basis::tri(log2p)->sm();++m) {
+						for(n=0;n<ND;++n)
+							hp_ebdry(bnum)->crds(i,m,n) = msgn*ebdry(bnum)->frcvbuf(0,count++);
+						msgn *= -1;
+					}
+				}
+			}
+		}
+	}
+	
+	return;
+}
 
 void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;

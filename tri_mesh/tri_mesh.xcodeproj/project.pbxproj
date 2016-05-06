@@ -203,7 +203,7 @@
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		E6A1C0AC176F480400074810 /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../Packages/lib/libmetis.dylib; sourceTree = "<group>"; };
-		E6B4CD341CB6E7970015FEDF /* libparmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libparmetis.dylib; sourceTree = "<group>"; };
+		E6B4CD341CB6E7970015FEDF /* libparmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libparmetis.dylib; path = ../../Packages/lib/libparmetis.dylib; sourceTree = "<group>"; };
 		E6D716EA1206CC15005572EE /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };

@@ -289,7 +289,7 @@ class boundary {
 		virtual bool in_group(int group) {return(false);}
 		virtual int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {return 1;}
 #ifdef MPISRC
-		virtual int mpi_cnnct(int proc_tgt, int snd_tag, int rcv_tag) {return 1;}
+		virtual int mpi_cnnct(int proc_tgt, int snd_tag, int rcv_tag, std::string name) {return 1;}
 #endif
 		virtual int& matchphase(boundary::groups group, int matchnum) {return(dummy.idum=0);}
 		virtual void resize_buffers(int size) {}
@@ -298,9 +298,13 @@ class boundary {
 		virtual int& msg_phase(int grp, int match) {return(dummy.idum=0);}
 		virtual int& isndbuf(int indx) {return(dummy.idum);}
 		virtual FLT& fsndbuf(int indx) {return(dummy.fdum);}
+		virtual int& isndbuf(int m, int indx) {return(dummy.idum);}
+		virtual FLT& fsndbuf(int m, int indx) {return(dummy.fdum);}
 		virtual int& ircvbuf(int m,int indx) {return(dummy.idum);}
 		virtual FLT& frcvbuf(int m,int indx) {return(dummy.fdum);}
 		virtual int& sndsize() {return(dummy.idum=0);}
+		virtual bool& one_send_buf() {return(dummy.bdum=true);}
+		virtual void match_name(int m, std::string& name) {name = std::string("");}
 		virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
 		virtual void comm_prepare(boundary::groups group, int phase, comm_type type) {}
 		virtual void comm_exchange(boundary::groups group, int phase, comm_type type) {}

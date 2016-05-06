@@ -267,6 +267,12 @@
 		E63D72E81CCE660A00A33659 /* libparmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A5176F47AD00074810 /* libparmetis.dylib */; };
 		E63D72E91CCE662C00A33659 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
 		E63D72EA1CCE662D00A33659 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6A1C0A4176F47AD00074810 /* libmetis.dylib */; };
+		E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E63D72ED1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E63D72EE1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E63D72EF1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E63D72F01CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E63D72F11CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E64A35DF1AACD76B008BAE74 /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
 		E64A35E21AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
@@ -717,6 +723,7 @@
 		E62A21711C04D9BF003C9A03 /* libscalapack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libscalapack.a; path = ../../Packages/lib/libscalapack.a; sourceTree = "<group>"; };
 		E62CDC4112B7114C0042211D /* bdry_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy.h; path = buoyancy/bdry_buoyancy.h; sourceTree = "<group>"; };
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
+		E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_vrtx_bdry.cpp; sourceTree = "<group>"; };
 		E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_getnewbdry.cpp; sourceTree = "<group>"; };
 		E658002813E2CFC400A01E99 /* tri_hp_nonnewtonian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_nonnewtonian.h; path = nonnewtonian/tri_hp_nonnewtonian.h; sourceTree = "<group>"; };
 		E658002913E2CFC400A01E99 /* tri_hp_nonnewtonian.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tri_hp_nonnewtonian.cpp; path = nonnewtonian/tri_hp_nonnewtonian.cpp; sourceTree = "<group>"; };
@@ -926,6 +933,7 @@
 				95BD203410B863F40006A896 /* petsc.cpp */,
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
+				E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
 				E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */,
 				E60B06131A4EE7E3007AE41D /* hp_coupled_boundary.h */,
@@ -1330,6 +1338,7 @@
 				E64A35E41AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
 				6F9853CA0BDE612700D342F6 /* rsdl.cpp in Sources */,
 				6F9853CB0BDE612700D342F6 /* length.cpp in Sources */,
+				E63D72EF1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6BBC0E01ABFA4A4008C50F2 /* melt_cd.cpp in Sources */,
 				6F9853CC0BDE612700D342F6 /* getnewblock.cpp in Sources */,
 				6F9853CD0BDE612700D342F6 /* getnewbdry.cpp in Sources */,
@@ -1380,6 +1389,7 @@
 				E64A35E51AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
 				6F9854810BDE649A00D342F6 /* rsdl.cpp in Sources */,
 				6F9854820BDE649A00D342F6 /* length.cpp in Sources */,
+				E63D72F01CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6BBC0E11ABFA4A4008C50F2 /* melt_cd.cpp in Sources */,
 				6F9854830BDE649A00D342F6 /* getnewblock.cpp in Sources */,
 				6F9854840BDE649A00D342F6 /* getnewbdry.cpp in Sources */,
@@ -1430,6 +1440,7 @@
 				E64A35E21AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
 				6FB91A700ACCB04500792B04 /* length.cpp in Sources */,
 				6FB91A710ACCB04500792B04 /* allocate.cpp in Sources */,
+				E63D72ED1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6BBC0DE1ABFA4A3008C50F2 /* melt_cd.cpp in Sources */,
 				6FB91A730ACCB04500792B04 /* bdry.cpp in Sources */,
 				6FB91A740ACCB04500792B04 /* getnewbdry.cpp in Sources */,
@@ -1502,6 +1513,7 @@
 				E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
 				E6B748191616914B008409F5 /* bdry.cpp in Sources */,
 				E6B7481A16169151008409F5 /* rsdl.cpp in Sources */,
+				E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6B7481B16169158008409F5 /* length.cpp in Sources */,
 				E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */,
 				E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */,
@@ -1565,6 +1577,7 @@
 				E6EAD3221580FB9A00C3F95A /* length.cpp in Sources */,
 				E61CE95D1A5815F5001914E8 /* surface2.cpp in Sources */,
 				E64A35E31AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
+				E63D72EE1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E60E814E180AE3A90067E2E7 /* rsdl.cpp in Sources */,
 				E6EAD3231580FB9A00C3F95A /* rsdl.cpp in Sources */,
 				E6EAD3241580FBA800C3F95A /* bdry.cpp in Sources */,
@@ -1612,6 +1625,7 @@
 				E6979392153CBF75008D750F /* rsdl.cpp in Sources */,
 				E61CE9611A5815F8001914E8 /* surface2.cpp in Sources */,
 				E6979394153CBF79008D750F /* length.cpp in Sources */,
+				E63D72F11CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6979396153CBF7E008D750F /* bdry.cpp in Sources */,
 				E6979398153CBF82008D750F /* getnewbdry.cpp in Sources */,
 				E697939A153CBF86008D750F /* getnewibc.cpp in Sources */,

@@ -35,7 +35,6 @@ protected:
 	enum bctypes {essential, natural};
 	std::vector<bctypes> type;
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
-	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;} //FIXME: Never been finished for symbolic default
 	
 public:
 	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain"; type.resize(x.NV,natural);}
@@ -51,47 +50,11 @@ public:
 	virtual void copy(const hp_vrtx_bdry& tgt) {}
 	virtual ~hp_vrtx_bdry() {}
 	
-	/* input output functions */
-	virtual void output(const std::string& filename, tri_hp::filetype typ,int tlvl = 0) {
-		switch(typ) {
-			case(tri_hp::text): {
-				std::string fname;
-				fname = filename +"_" +x.gbl->idprefix +".txt";
-				ofstream fout;
-				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
-				fout << base.idprefix << " " << mytype << std::endl;
-				fout.close();
-				break;
-			}
-			case(tri_hp::tecplot): {
-				if (report_flag) {
-					streamsize oldprecision = (*x.gbl->log).precision(10);
-					*x.gbl->log << base.idprefix << " position: " << x.pnts(base.pnt) << std::endl;
-					*x.gbl->log << base.idprefix << " value: " << x.ug.v(base.pnt,Range::all()) << std::endl;
-					(*x.gbl->log).precision(oldprecision);
-				}
-				break;
-			}
-			default:
-				break;
-		}
-		return;
-	}
 	/** This is to read solution data **/
-	virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0) {
-		std::string idin,mytypein;
-		
-		switch(typ) {
-			case(tri_hp::text):
-				fin >> idin >> mytypein;
-				break;
-			default:
-				break;
-		}
-		return;
-	}
-	
-	
+	virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);
+	/* output functions */
+	virtual void output(const std::string& filename, tri_hp::filetype typ,int tlvl = 0);
+
 	/* BOUNDARY CONDITION FUNCTIONS */
 	virtual void vdirichlet() {
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
@@ -111,6 +74,7 @@ public:
 		}
 	}
 	virtual void calculate_unsteady_sources() {}
+	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {flx = 0.0;} //FIXME: Never been finished for symbolic default
 	virtual void element_rsdl(Array<FLT,1> lf) {lf = 0.0;}
 	virtual void rsdl(int stage);
 	virtual void update(int stage) {}
@@ -137,8 +101,6 @@ public:
 
 class hp_edge_bdry : public egeometry_interface<2> {
 public:
-	
-	
 	std::string mytype;										/**< Class name */
 	tri_hp& x;														/**< Reference to parent */
 	edge_bdry &base;											/**< Reference to mesh boundary */
@@ -150,7 +112,6 @@ public:
 	std::vector<bctypes> type;
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
 	std::vector<vector_function *> fluxes, derivative_fluxes;
-	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 	Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 	Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
@@ -184,10 +145,10 @@ public:
 	virtual void copy(const hp_edge_bdry& tgt);
 	virtual ~hp_edge_bdry() {}
 	
-	/* input output functions */
-	virtual void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	/** This is to read solution data **/
 	virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);
+	/* input output functions */
+	virtual void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
 	
 	/* CURVATURE FUNCTIONS */
@@ -209,6 +170,7 @@ public:
 	virtual void setup_preconditioner() {}
 	virtual void tadvance();
 	virtual void calculate_unsteady_sources();
+	virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
 	virtual void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 	virtual void rsdl(int stage);
 	virtual void element_jacobian(int sind, Array<FLT,2>& K);
@@ -292,5 +254,21 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
+
+/* Special communication point at the intersection of blocks with different physics */
+class multi_physics_pnt : public hp_vrtx_bdry {
+	/* Matching constraints for each match */
+	/* Going to simplify to 1-1 matches only for now */
+	std::vector<std::vector<std::pair<int,int> > > match_pairs; //<! Indices of continuous variables (for communication routines)
+	Array<FLT,1> denom;
+public:
+	multi_physics_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "smulti_physics_pnt";}
+	multi_physics_pnt(const multi_physics_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), match_pairs(inbdry.match_pairs) {}
+	multi_physics_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new multi_physics_pnt(*this,xin,bin);}
+	void init(input_map& inmap,void* gbl_in);
+	void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
+	int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	int petsc_matchjacobian_rcv(int phase);
+};
 #endif
 

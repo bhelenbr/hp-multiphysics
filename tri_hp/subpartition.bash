@@ -27,46 +27,44 @@ BLKS=$(grep -E "^b[0-9]*_mesh:" $1 | wc -l | tr -d ' ')
 
 #mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt -stop_for_debugger
 mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt
-rm temp.inpt
 
 for file in partition_b[0-9].bin; do
 	tri_mesh -x $file ${file%.bin}.grd
 done
 
+LOG=$(mod_map -e $1 logfile)
+
 let b=0
-rm new.inpt
+rm -f new.inpt
+rm -f matches.inpt
 while [ $b -lt $BLKS ]; do
-	grep -E "^[^#]" out_b${b}.log | grep -v matches >> new.inpt
-	grep -E "^[^#]" out_b${b}.log | grep matches >> matches.inpt
+	grep -E "^[^#]" ${LOG}_b${b}.log | grep -v matches >> new.inpt
+	grep -E "^[^#]" ${LOG}_b${b}.log | grep matches >> matches.inpt
 	let b=$b+1
 done
-rm out_b*.log
 
 grep -E "b[0-9]*_matches" matches.inpt > block_matches.inpt
 grep -E "b[0-9]*_[s,v][0-9]*_matches" matches.inpt > boundary_matches.inpt
-rm matches.inpt
 
 let TOTAL=$(ls partition_b*.bin | wc -w | tr -d ' ')
 
 while read tgt src
 do
   tgt=${tgt%_matches:}
-  tgt=$(echo $tgt | sed 's/^b/B/g')
+  tgt=$(echo $tgt | sed 's/^b/BUB/g')
   grep "$src" partition.inpt | sed "s/$src/$tgt/g" > temp.inpt
   cat temp.inpt >> partition.inpt
 done < boundary_matches.inpt
-rm boundary_matches.inpt
 
 while read tgt src
 do
   tgt=${tgt%_matches:}
-  tgt=$(echo $tgt | sed 's/^b/K/g')
+  tgt=$(echo $tgt | sed 's/^b/KUK/g')
   grep "$src" partition.inpt | sed "s/$src/$tgt/g" > temp.inpt
   cat temp.inpt >> partition.inpt
 done < block_matches.inpt
-rm block_matches.inpt
 
-grep -v "K[0-9][0-9]*_[s,v][0-9][0-9]*" partition.inpt | grep -v "b[0-9][0-9]*" | sed 's/K\([0-9][0-9]*\)/b\1/g' | sed 's/B\([0-9][0-9]*\)/b\1/g' > temp.inpt
+grep -v "KUK[0-9][0-9]*_[s,v][0-9][0-9]*" partition.inpt | grep -v "b[0-9][0-9]*" | sed 's/KUK\([0-9][0-9]*\)/b\1/g' | sed 's/BUB\([0-9][0-9]*\)/b\1/g' > temp.inpt
 rm partition.inpt
 
 if [ -n "${THREADED}" ]; then
@@ -99,10 +97,14 @@ while [ $b -lt $TOTAL ]; do
 done
 mod_map -d temp.inpt partition
 mv temp.inpt partition.inpt
-rm temp.inpt.bak
 cat new.inpt >> partition.inpt
-rm new.inpt
 
+rm -f matches.inpt
+rm -f new.inpt
+rm -f out_b*.log
+rm -f temp.inpt.bak
+rm -f boundary_matches.inpt
+rm -f block_matches.inpt
 
 
 

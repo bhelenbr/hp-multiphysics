@@ -822,7 +822,9 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 					}
 #ifdef MPISRC
 					else {
-						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(1,b1,b2,i,j),sim::blks.tagid(1,b2,b1,j,i));
+						ostringstream nstr;
+						nstr << 'b' << b2 << "_v" << binfo[b2].vcomm[j].idnum;
+						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(1,b1,b2,i,j),sim::blks.tagid(1,b2,b1,j,i),nstr.str());
 						if (!first_found) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
@@ -861,7 +863,9 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 					}
 #ifdef MPISRC
 					else {
-						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(2,b1,b2,i,j),sim::blks.tagid(2,b2,b1,j,i));
+						ostringstream nstr;
+						nstr << 'b' << b2 << "_s" << binfo[b2].ecomm[j].idnum;
+						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(2,b1,b2,i,j),sim::blks.tagid(2,b2,b1,j,i),nstr.str());
 						if (!first_found) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
@@ -902,7 +906,9 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 					}
 #ifdef MPISRC
 					else {
-						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(3,b1,b2,i,j),sim::blks.tagid(3,b2,b1,j,i));
+						ostringstream nstr;
+						nstr << 'b' << b2 << "_f" << binfo[b2].fcomm[j].idnum;
+						bp1->mpi_cnnct(binfo[b2].proc,sim::blks.tagid(3,b1,b2,i,j),sim::blks.tagid(3,b2,b1,j,i),nstr.str());
 						if (!first_found) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
@@ -1174,7 +1180,7 @@ void block::init(input_map &input) {
 	}
 
 	if (!input.get(idprefix + "_tolerance",gbl->tolerance)) {
-		input.getwdefault("tolerance",gbl->tolerance,1.25);
+		input.getwdefault("tolerance",gbl->tolerance,sqrt(2.0));
 	}
 
 	if (!input.get(idprefix + "_error_target",gbl->error_target)) {

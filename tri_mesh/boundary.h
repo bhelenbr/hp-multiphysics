@@ -49,11 +49,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		TinyMatrix<int,maxgroup,maxmatch> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
 		int& msg_phase(int grp, int match) {return(phase(grp,match));} //!< virtual accessor
 		int buffsize; //!< Size in bytes of buffer
-		void *sndbuf; //!< Raw memory for outgoing message buffer
-		Array<FLT,1> fsndbufarray; //!< Access to outgoing message buffer for floats
-		Array<int,1> isndbufarray; //!< Access to outgoing message buffer for ints
 		int msgsize; //!< Outgoing size
 		boundary::msg_type msgtype; //!< Outgoing type
+		bool use_one_send_buffer;
 
 		/** Different types of matching boundaries,
 		* local is same processor same thread
@@ -69,9 +67,13 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		int& nmatches() {return(nmatch);} //!< virtual accessor
 		TinyVector<matchtype,maxmatch> mtype; //!< Local or mpi or ?
 		TinyVector<boundary *,maxmatch> local_match; //!< Pointers to local matches
+		TinyVector<std::string,maxmatch> match_names;
 		TinyVector<int,maxmatch> snd_tags; //!< Identifies each connection uniquely
 		TinyVector<int,maxmatch> rcv_tags; //!< Identifies each connection uniquely
+		TinyVector<void *,maxmatch> sndbuf; //!< Raw memory to store incoming messages
 		TinyVector<void *,maxmatch> rcvbuf; //!< Raw memory to store incoming messages
+		TinyVector<Array<FLT,1>,maxmatch> fsndbufarray; //!< Access to incoming message buffer for floats
+		TinyVector<Array<int,1>,maxmatch> isndbufarray; //!< Access to incoming message buffer for ints
 		TinyVector<Array<FLT,1>,maxmatch> frcvbufarray; //!< Access to incoming message buffer for floats
 		TinyVector<Array<int,1>,maxmatch> ircvbufarray; //!< Access to incoming message buffer for ints
 
@@ -82,24 +84,29 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #endif
 
 	public:
-		comm_bdry(int inid, MESH &xin) : BASE(inid,xin), first(1), groupmask(0x3), buffsize(0), nmatch(0), maxphase(0) {
-			for (int m=0;m<maxmatch;++m)
+		comm_bdry(int inid, MESH &xin) : BASE(inid,xin), first(1), groupmask(0x3), buffsize(0), nmatch(0), maxphase(0), use_one_send_buffer(true) {
+			for (int m=0;m<maxmatch;++m) {
+				sndbuf(m) = NULL;
 				rcvbuf(m) = NULL; // So I know they haven't been allocated
+			}
 			phase = 0;
 		}
 		comm_bdry(const comm_bdry<BASE,MESH> &inbdry, MESH& xin) : BASE(inbdry,xin), first(inbdry.first), groupmask(inbdry.groupmask), buffsize(0), nmatch(0),
-			maxphase(inbdry.maxphase), phase(inbdry.phase) {
+			maxphase(inbdry.maxphase), phase(inbdry.phase), use_one_send_buffer(inbdry.use_one_send_buffer) {
 			/* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
 			first = true; // Findmatch sets this
 			mtype = inbdry.mtype;
 			local_match = local_match;
+			match_names = inbdry.match_names;
 			snd_tags = inbdry.snd_tags;
 			rcv_tags = inbdry.rcv_tags;
 #ifdef MPISRC
 			mpi_match = inbdry.mpi_match;
 #endif
-			for (int m=0;m<maxmatch;++m)
+			for (int m=0;m<maxmatch;++m) {
+				sndbuf(m) = NULL;
 				rcvbuf(m) = NULL; // So I know they haven't been allocated
+			}
 			return;
 		}
 
@@ -111,27 +118,32 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		bool in_group(int grp) {return(((1<<grp)&groupmask));}
 		int& sndsize() {return(msgsize);}
 		boundary::msg_type& sndtype() {return(msgtype);}
-		int& isndbuf(int indx) {return(isndbufarray(indx));}
-		FLT& fsndbuf(int indx) {return(fsndbufarray(indx));}
+		void match_name(int m, std::string& name) {name = match_names(m);}
+		bool& one_send_buf() {return(use_one_send_buffer);}
+		int& isndbuf(int indx) {return(isndbufarray(0)(indx));}
+		FLT& fsndbuf(int indx) {return(fsndbufarray(0)(indx));}
+		int& isndbuf(int m, int indx) {return(isndbufarray(m)(indx));}
+		FLT& fsndbuf(int m, int indx) {return(fsndbufarray(m)(indx));}
 		int& ircvbuf(int m,int indx) {return(ircvbufarray(m)(indx));}
 		FLT& frcvbuf(int m,int indx) {return(frcvbufarray(m)(indx));}
 
 		void resize_buffers(int nfloats) {
-			if (buffsize) free(sndbuf);
 			buffsize = nfloats*sizeof(FLT);
-			sndbuf = malloc(buffsize);
-			Array<FLT,1> temp(static_cast<FLT *>(sndbuf), buffsize/sizeof(FLT), neverDeleteData);
-			fsndbufarray.reference(temp);
-			Array<int,1> temp1(static_cast<int *>(sndbuf), buffsize/sizeof(int), neverDeleteData);
-			isndbufarray.reference(temp1);
 			
 			for (int m=0;m<nmatch;++m) {
+				if (sndbuf(m) != NULL) free(sndbuf(m));
+				sndbuf(m) = malloc(buffsize);
+				Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
+				fsndbufarray(m).reference(temp1);
+				Array<int,1> temp2(static_cast<int *>(sndbuf(m)), buffsize/sizeof(int), neverDeleteData);
+				isndbufarray(m).reference(temp2);
+				
 				if (rcvbuf(m) != NULL) free(rcvbuf(m));
 				rcvbuf(m) = malloc(buffsize); 
-				Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
-				frcvbufarray(m).reference(temp);
-				Array<int,1> temp1(static_cast<int *>(rcvbuf(m)), buffsize/sizeof(int), neverDeleteData);
-				ircvbufarray(m).reference(temp1);
+				Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
+				frcvbufarray(m).reference(temp3);
+				Array<int,1> temp4(static_cast<int *>(rcvbuf(m)), buffsize/sizeof(int), neverDeleteData);
+				ircvbufarray(m).reference(temp4);
 			}
 		}
 
@@ -198,13 +210,20 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			if (bin->idnum == BASE::idnum) {
 				mtype(nmatch) = local;
 				local_match(nmatch) = bin;
+				match_names(nmatch) = bin->idprefix;
 				snd_tags(nmatch) = snd_tag;
 				rcv_tags(nmatch) = rcv_tag;
+				sndbuf(nmatch) = malloc(buffsize);
+				Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+				fsndbufarray(nmatch).reference(temp1);
+				Array<int,1> temp2(static_cast<int *>(sndbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+				isndbufarray(nmatch).reference(temp2);
+				
 				rcvbuf(nmatch) = malloc(buffsize);
-				Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
-				frcvbufarray(nmatch).reference(temp);
-				Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
-				ircvbufarray(nmatch).reference(temp1);
+				Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+				frcvbufarray(nmatch).reference(temp3);
+				Array<int,1> temp4(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+				ircvbufarray(nmatch).reference(temp4);
 				++nmatch;
 				return(0);
 			}
@@ -213,16 +232,23 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		}
 
 #ifdef MPISRC
-		int mpi_cnnct(int nproc, int snd_tag, int rcv_tag) {
+		int mpi_cnnct(int nproc, int snd_tag, int rcv_tag, std::string name) {
 			mtype(nmatch) = mpi;
 			mpi_match(nmatch) = nproc;
+			match_names(nmatch) = name;
 			snd_tags(nmatch) = snd_tag;
 			rcv_tags(nmatch) = rcv_tag;
+			sndbuf(nmatch) = malloc(buffsize);
+			Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+			fsndbufarray(nmatch).reference(temp1);
+			Array<int,1> temp2(static_cast<int *>(sndbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+			isndbufarray(nmatch).reference(temp2);
+			
 			rcvbuf(nmatch) = malloc(buffsize);
-			Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
-			frcvbufarray(nmatch).reference(temp);
-			Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
-			ircvbufarray(nmatch).reference(temp1);
+			Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+			frcvbufarray(nmatch).reference(temp3);
+			Array<int,1> temp4(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+			ircvbufarray(nmatch).reference(temp4);
 			++nmatch;
 			return(0);
 		}
@@ -276,11 +302,25 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				*BASE::x.gbl->log << "preparing to send these messages from "  << BASE::idprefix << "with type " << type << std::endl;
 				switch(sndtype()) {
 					case(boundary::flt_msg): {
-						*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+						if (use_one_send_buf) {
+							*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+						}
+						else {
+							for(int m=0;m<nmatch;++m) {
+								*BASE::x.gbl->log << fsndbufarray(m,Range(0,sndsize()-1)) << std::endl;
+							}
+						}
 						break;
 					}
 					case(boundary::int_msg): {
-						*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+						if (use_one_send_buf) {
+							*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+						}
+						else {
+							for(int m=0;m<nmatch;++m) {
+								*BASE::x.gbl->log << isndbufarray(m,Range(0,sndsize()-1)) << std::endl;
+							}
+						}
 
 						break;
 					}
@@ -384,13 +424,26 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 				switch(sndtype()) {
 					case(boundary::flt_msg): {
-						for(i=0;i<local_match(m)->sndsize();++i)
-							frcvbuf(m,i) = local_match(m)->fsndbuf(i);
+						if (use_one_send_buffer) {
+							for(i=0;i<local_match(m)->sndsize();++i)
+								frcvbuf(m,i) = local_match(m)->fsndbuf(i);
+						}
+						else {
+							for(i=0;i<local_match(m)->sndsize();++i)
+								frcvbuf(m,i) = local_match(m)->fsndbuf(m,i);
+						}
 						break;
 					}
 					case(boundary::int_msg): {
-						for(i=0;i<local_match(m)->sndsize();++i)
-							ircvbuf(m,i) = local_match(m)->isndbuf(i);
+						if (use_one_send_buffer) {
+							for(i=0;i<local_match(m)->sndsize();++i)
+								ircvbuf(m,i) = local_match(m)->isndbuf(i);
+						}
+						else {
+							for(i=0;i<local_match(m)->sndsize();++i)
+								ircvbuf(m,i) = local_match(m)->isndbuf(m,i);
+						}
+							
 						break;
 					}
 				}
@@ -404,17 +457,25 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 				switch(sndtype()) {
 					case(boundary::flt_msg): {
+						FLT *psndbuf = &fsndbufarray(m)(0);
+						if (use_one_send_buffer) {
+							psndbuf = &fsndbufarray(0)(0);
+						}
 #ifdef SINGLE
-						err = MPI_Isend(&fsndbufarray(0), msgsize, MPI_FLOAT,
+						err = MPI_Isend(psndbuf, msgsize, MPI_FLOAT,
 							mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
 #else
-						err = MPI_Isend(&fsndbufarray(0), msgsize, MPI_DOUBLE,
+						err = MPI_Isend(psndbuf, msgsize, MPI_DOUBLE,
 							mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
 #endif
 						break;
 					}
 					case(boundary::int_msg): {
-						err = MPI_Isend(&isndbufarray(0), msgsize, MPI_INT,
+						int *psndbuf = &isndbufarray(m)(0);
+						if (use_one_send_buffer) {
+							psndbuf = &isndbufarray(0)(0);
+						}
+						err = MPI_Isend(psndbuf, msgsize, MPI_INT,
 							mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
 						break;
 					}
@@ -520,19 +581,19 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 					switch(sndtype()) {
 						case(boundary::int_msg):
 							for(int j=0;j<sndsize();++j) {
-								isndbufarray(j) = ircvbuf(0,j);
+								isndbuf(j) = ircvbuf(0,j);
 							}
 #ifdef MPDEBUG
-							*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+							*BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 							break;
 
 						case(boundary::flt_msg):
 							for(int j=0;j<sndsize();++j) {
-								fsndbufarray(j) = frcvbuf(0,j);
+								fsndbuf(j) = frcvbuf(0,j);
 							}
 #ifdef MPDEBUG
-							*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+							*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 							break;
 					}
@@ -551,16 +612,16 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
-											fsndbufarray(j) += frcvbuf(m,j);
+											fsndbuf(j) += frcvbuf(m,j);
 										}
 									}
 									if (matches > 1 ) {
 										FLT mtchinv = 1./matches;
 										for(int j=0;j<sndsize();++j)
-											fsndbufarray(j) *= mtchinv;
+											fsndbuf(j) *= mtchinv;
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish average"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
@@ -575,13 +636,13 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
-											fsndbufarray(j) += frcvbuf(m,j);
+											fsndbuf(j) += frcvbuf(m,j);
 										}
 									}
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 
@@ -598,14 +659,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 
 										for(int j=0;j<sndsize();++j) {
-											fsndbufarray(j) = MAX(fsndbufarray(j),frcvbuf(m,j));
+											fsndbuf(j) = MAX(fsndbuf(j),frcvbuf(m,j));
 										}
 									}
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
@@ -621,14 +682,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 
 										for(int j=0;j<sndsize();++j) {
-											fsndbufarray(j) = MIN(fsndbufarray(j),frcvbuf(m,j));
+											fsndbuf(j) = MIN(fsndbuf(j),frcvbuf(m,j));
 										}
 									}
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 
@@ -645,14 +706,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 										
 										for(int j=0;j<sndsize();++j) {
-											fsndbufarray(j) = frcvbuf(m,j);
+											fsndbuf(j) = frcvbuf(m,j);
 										}
 									}
 									
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 										
@@ -677,14 +738,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
-											isndbufarray(j) += ircvbuf(m,j);
+											isndbuf(j) += ircvbuf(m,j);
 										}
 									}
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 
 										*BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
@@ -700,14 +761,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 
 										for(int j=0;j<sndsize();++j) {
-											isndbufarray(j) = MAX(isndbufarray(j),ircvbuf(m,j));
+											isndbuf(j) = MAX(isndbuf(j),ircvbuf(m,j));
 										}
 									}
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
@@ -723,14 +784,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 
 										for(int j=0;j<sndsize();++j) {
-											isndbufarray(j) = MIN(isndbufarray(j),ircvbuf(m,j));
+											isndbuf(j) = MIN(isndbuf(j),ircvbuf(m,j));
 										}
 									}
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
@@ -746,14 +807,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										++matches;
 										
 										for(int j=0;j<sndsize();++j) {
-											isndbufarray(j) = ircvbuf(m,j);
+											isndbuf(j) = ircvbuf(m,j);
 										}
 									}
 									
 									if (matches > 1 ) {
 #ifdef MPDEBUG
-										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
-										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+										*BASE::x.gbl->log << "finish replace"  << BASE::idprefix << std::endl;
+										*BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
 #endif
 										return(true);
 									}
