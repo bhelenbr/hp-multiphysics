@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
 			/* If there is a marks file then try to subdivide appended multiphysics mesh */
 			ifstream marks_file;
 			std::string marksfilename = std::string(argv[1]) +".marks";
-			marks_file.open(marksfilename);
+			marks_file.open(marksfilename.c_str());
 			if (marks_file) {
 				for(int i=0;i<zx.ntri;++i)
 					marks_file >> zx.tri(i).info;
