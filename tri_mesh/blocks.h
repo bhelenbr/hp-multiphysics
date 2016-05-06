@@ -103,7 +103,7 @@ class blocks {
 		size_t shared_mem_size;
 		blitz::Array<int,1> ishared_mem;
 		blitz::Array<FLT,1> fshared_mem;
-		int shared_mem_call_count = 0;
+		int shared_mem_call_count;
 #if defined(PTH)
 		pth_mutex_t shared_mem_mutex;
 #elif defined(BOOST)
@@ -116,7 +116,7 @@ class blocks {
 
 	public:
 		/** Initialize multiblock/mgrid mesh */
-		blocks() : nproc(1), myid(0) {}
+		blocks() : nproc(1), myid(0), shared_mem_call_count(0) {}
 
 		/** Initializes blocks using data from map */
 		void go(input_map& input);
