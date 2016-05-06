@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 		ofstream file;
 		std::string filename;
 		filename = std::string(argv[3]) +".marks";
-		file.open(filename);
+		file.open(filename.c_str());
 		for(int i=0;i<zx.ntri-zy.ntri;++i) {
 			file << 0 << std::endl;
 		}
