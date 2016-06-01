@@ -31,7 +31,7 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	if (npnt >= maxpst) {
-		*gbl->log << "need to use larger growth factor: too many vertices" << std::endl;
+		*gbl->log << "need to use larger growth factor: too many vertices " << npnt << std::endl;
 		output("error");
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
@@ -310,7 +310,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 	seg(nseg).tri(1) = trinumatbdry(i,ebdry(i)->nseg);
 	if (ebdry(i)->nseg >= ebdry(i)->maxseg) {
 		output("error");
-		*gbl->log << "need to use bigger growth factor (too many boundary sides)" << std::endl;
+		*gbl->log << "need to use bigger growth factor (too many boundary sides) " << ebdry(i)->idprefix << ' ' << ebdry(i)->nseg << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	ebdry(i)->seg(ebdry(i)->nseg++) = nseg;

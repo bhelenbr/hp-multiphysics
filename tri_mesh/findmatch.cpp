@@ -565,6 +565,7 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 				pnts(npnt)(n) = xin.pnts(i)(n);
 			xin.pnt(i).info = npnt;
 			pnt(npnt).info = i;
+			lngth(npnt) = xin.lngth(i);
 			++npnt;
 		}
 	}
