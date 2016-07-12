@@ -63,8 +63,8 @@ hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, std::string name) {
 
 class tri_hp_etype {
 public:
-	static const int ntypes = 4;
-	enum ids {unknown=-1,plain,symbolic_with_integration_by_parts,translating_surface};
+	static const int ntypes = 5;
+	enum ids {unknown=-1,plain,symbolic_with_integration_by_parts,translating_surface,partition};
 	static const char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -73,7 +73,7 @@ public:
 	}
 };
 
-const char tri_hp_etype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface"};
+const char tri_hp_etype::names[ntypes][40] = {"plain","symbolic_ibp","translating_surface","partition"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp::getnewedgeobject(int bnum, std::string name) {
@@ -84,10 +84,15 @@ hp_edge_bdry* tri_hp::getnewedgeobject(int bnum, std::string name) {
 	
 	
 	type = tri_hp_etype::getid(name.c_str());
+	
+	if (type == tri_hp_etype::plain && ebdry(bnum)->in_group(boundary::partitions)) {
+		type = tri_hp_etype::partition;
+	}
 	if (type == tri_hp_etype::unknown) {
 		*gbl->log << "unknown side type:" << keyword << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
+	
 	
 	switch(type) {
 		case tri_hp_etype::symbolic_with_integration_by_parts: {
@@ -104,6 +109,10 @@ hp_edge_bdry* tri_hp::getnewedgeobject(int bnum, std::string name) {
 				sim::abort(__LINE__,__FILE__,&std::cerr);
 				assert(0);
 			}
+			break;
+		}
+		case tri_hp_etype::partition: {
+			temp = new hp_partition(*this,*ebdry(bnum));
 			break;
 		}
 		default: {

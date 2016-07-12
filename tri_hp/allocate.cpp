@@ -274,12 +274,6 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		}
 		
 		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,20.0);
-		gbl->pstr = create();
-		gbl->pstr->init(*this,adapt_storage);
-
-		/* LET EACH BOUNDARY CONDITION DIRECTLY FIND ITS ADAPTATION STORAGE */
-		for(i=0;i<nebd;++i)
-			hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
 	}
 	
 #ifdef petsc
@@ -305,7 +299,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 
 	/* Initialize stuff for r_tri_mesh */
 	mmovement = inmesh.mmovement;
-	if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable)) && why==multigrid) 
+	if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
 		r_tri_mesh::init(in,why,sizereduce1d); 
 	else
 		tri_mesh::init(in,why,sizereduce1d);

@@ -136,6 +136,7 @@ int main(int argc, char *argv[]) {
 		zx.input(argv[1],in,100.0,inmap);
 		zy.input(argv[2],in,1.0,inmap);
 		zx.append(zy);
+		zx.cleanup_after_adapt();
 		zx.output(argv[3],out);
 		/* Output a marks file so you know which element came from where */
 		ofstream file;

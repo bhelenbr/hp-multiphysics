@@ -1828,3 +1828,155 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 	
 	return;
 }
+
+void hp_partition::init(input_map& inmap,void* gbl_in) {
+	epartition& tgt = dynamic_cast<epartition&>(base);
+	
+	hp_edge_bdry::init(inmap,gbl_in);
+	
+	/** Arrays for time history information for adaptation */
+	ugbd.resize(x.gbl->nadapt);
+	vrtxbd.resize(x.gbl->nadapt); //!< Highest level contains pre-summed unsteady mesh velocity source
+	for(int i=0;i<x.gbl->nadapt;++i) {
+		ugbd(i).v.resize(tgt.remote_halo.maxpst,x.NV);
+		ugbd(i).s.resize(tgt.remote_halo.maxpst,x.sm0,x.NV);
+		ugbd(i).i.resize(tgt.remote_halo.maxpst,x.im0,x.NV);
+		vrtxbd(i).resize(tgt.remote_halo.maxpst);
+	}
+	
+#ifndef PETSC
+	vug_frst.resize(tgt.remote_halo.maxpst,x.NV);
+	dres.resize(1);
+	dres(0).v.resize(tgt.remote_halo.maxpst,x.NV);
+#endif
+}
+
+void hp_partition::snd_solution() {
+	epartition& part = dynamic_cast<epartition&>(base);
+	base.sndsize() = 0;
+	for(int i=0;i<part.npnt_h;++i) {
+		const int pnt = part.pnt_h(i);
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int n=0;n<x.NV;++n) {
+				part.fsndbuf(part.sndsize()++) = x.ugbd(j).v(pnt,n);
+			}
+			for(int n=0;n<x.ND;++n) {
+				part.fsndbuf(part.sndsize()++) = x.vrtxbd(j)(pnt)(n);
+			}
+		}
+	}
+	
+	for (int i=0;i<part.nseg;++i) {
+		const int seg = part.seg(i);
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int m=0;m<x.sm0;++m) {
+				for(int n=0;n<x.NV;++n) {
+					part.fsndbuf(part.sndsize()++) = x.ugbd(j).s(seg,m,n);
+				}
+			}
+		}
+	}
+	
+	for (int i=0;i<part.nseg_bdry_h;++i) {
+		const int seg = part.seg_bdry_h(i);
+		if (part.sgn_bdry_h(i) > 0) {
+			for(int j=0;j<x.gbl->nadapt;++j) {
+				for(int m=0;m<x.sm0;++m) {
+					for(int n=0;n<x.NV;++n) {
+						part.fsndbuf(part.sndsize()++) = x.ugbd(j).s(seg,m,n);
+					}
+				}
+			}
+		}
+		else {
+			for(int j=0;j<x.gbl->nadapt;++j) {
+				int msgn = 1;
+				for(int m=0;m<x.sm0;++m) {
+					for(int n=0;n<x.NV;++n) {
+						part.fsndbuf(part.sndsize()++) = msgn*x.ugbd(j).s(seg,m,n);
+					}
+					msgn *= -1;
+				}
+			}
+		}
+	}
+	
+	for (int i=0;i<part.nseg_h;++i) {
+		const int seg = part.seg_h(i);
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int m=0;m<x.sm0;++m) {
+				for(int n=0;n<x.NV;++n) {
+					part.fsndbuf(part.sndsize()++) = x.ugbd(j).s(seg,m,n);
+				}
+			}
+		}
+	}
+	
+	/* Create Tri List */
+	for (int i=0;i<part.ntri_h;++i) {
+		const int tri = part.tri_h(i);
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int m=0;m<x.im0;++m) {
+				for(int n=0;n<x.NV;++n) {
+					part.fsndbuf(part.sndsize()++) = x.ugbd(j).i(tri,m,n);
+				}
+			}
+		}
+	}
+	
+	base.comm_prepare(boundary::partitions,0,boundary::symmetric);
+}
+
+void hp_partition::rcv_solution() {
+	
+	base.comm_wait(boundary::partitions,0,boundary::symmetric);
+	
+	epartition& part = dynamic_cast<epartition&>(base);
+	tri_mesh& halo = part.remote_halo;
+
+	int count = 0;
+	for(int i=0;i<halo.npnt;++i) {
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int n=0;n<x.NV;++n) {
+				ugbd(j).v(i,n) = part.frcvbuf(0,count++);
+			}
+			for(int n=0;n<x.ND;++n) {
+				vrtxbd(j)(i)(n) = part.frcvbuf(0,count++);
+			}
+		}
+	}
+	
+	for(int i=0;i<halo.nseg;++i) {
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int m=0;m<x.sm0;++m) {
+				for(int n=0;n<x.NV;++n) {
+					ugbd(j).s(i,m,n) = part.frcvbuf(0,count++);
+				}
+			}
+		}
+	}
+	
+	for(int i=0;i<halo.ntri;++i) {
+		for(int j=0;j<x.gbl->nadapt;++j) {
+			for(int m=0;m<x.im0;++m) {
+				for(int n=0;n<x.NV;++n) {
+					ugbd(j).i(i,m,n) = part.frcvbuf(0,count++);
+				}
+			}
+		}
+	}
+}
+
+void hp_partition::copy(const hp_edge_bdry &bin) {
+	hp_edge_bdry::copy(bin);
+	
+	const hp_partition& tgt = dynamic_cast<const hp_partition&>(bin);
+	
+	for(int j=0;j<x.gbl->nadapt;++j) {
+		ugbd(j).v = tgt.ugbd(j).v;
+		ugbd(j).s = tgt.ugbd(j).s;
+		ugbd(j).i = tgt.ugbd(j).i;
+		vrtxbd(j) = tgt.vrtxbd(j);
+	}
+}
+

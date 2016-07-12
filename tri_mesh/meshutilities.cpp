@@ -123,6 +123,7 @@ void tri_mesh::symmetrize() {
 
 	if (bnum > -1) {
 		zpart[0].append(zpart[1]);
+		zpart[0].cleanup_after_adapt();
 		zpart[0].output("appended");
 	}
 

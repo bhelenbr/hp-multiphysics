@@ -12,6 +12,7 @@
 
 #include "tri_hp.h"
 #include <symbolic_function.h>
+#include <tri_boundary.h>
 
 //#define DEBUG_JAC
 
@@ -202,10 +203,10 @@ public:
 	
 	
 	/* ADAPTATION FUNCTIONS */
-	virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
-	virtual void movepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
-	virtual void updatesdata_bdry(int bel,hp_edge_bdry *bin) {}
-	virtual void movesdata_bdry(int bel,hp_edge_bdry *tgt, int tgtel = -1) {
+	virtual void updatepdata_bdry(int bel,int endpt,const hp_edge_bdry *bin) {}
+	virtual void movepdata_bdry(int bel,int endpt,const hp_edge_bdry *bin) {}
+	virtual void updatesdata_bdry(int bel,const hp_edge_bdry *bin) {}
+	virtual void movesdata_bdry(int bel,const hp_edge_bdry *tgt, int tgtel = -1) {
 		int step,m,n;
 		
 		if (!curved || !x.sm0) return;
@@ -218,7 +219,7 @@ public:
 		for(step=0;step<x.gbl->nadapt;++step) {
 			for(m=0;m<x.sm0;++m) {
 				for(n=0;n<x.ND;++n) {
-					crdsbd(step,bel,m,n) = tgt->crdsbd(step,tgtel,m,n);
+					crdsbd(step,bel,m,n) = tgt->crvbd(step)(tgtel,m)(n); // crdsbd(step,tgtel,m,n); 
 				}
 			}
 		}
@@ -254,6 +255,41 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
+
+class hp_partition : public hp_edge_bdry {
+public:
+	/** Array for time history information */
+	Array<tri_hp::vsi,1> ugbd;
+	Array<Array<TinyVector<FLT,tri_mesh::ND>,1>,1> vrtxbd; //!< Highest level contains pre-summed unsteady mesh velocity source
+	Array<tri_hp::vsi,1> dres; //!< Driving term for multigrid
+	Array<FLT,2> vug_frst; //!< Solution on first entry to coarse mesh
+	
+	hp_partition(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {
+		mytype = "hp_partition";
+	}
+	hp_partition(const hp_partition& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {
+		epartition& tgt = dynamic_cast<epartition&>(base);
+		/** Arrays for time history information for adaptation */
+		ugbd.resize(x.gbl->nadapt);;
+		vrtxbd.resize(x.gbl->nadapt);; //!< Highest level contains pre-summed unsteady mesh velocity source
+		for(int i=0;i<x.gbl->nadapt;++i) {
+			ugbd(i).v.resize(tgt.remote_halo.maxpst,x.NV);
+			ugbd(i).s.resize(tgt.remote_halo.maxpst,x.sm0,x.NV);
+			ugbd(i).i.resize(tgt.remote_halo.maxpst,x.im0,x.NV);
+			vrtxbd(i).resize(tgt.remote_halo.maxpst);
+		}
+#ifndef PETSC
+		vug_frst.resize(tgt.remote_halo.maxpst,x.NV);
+		dres.resize(1);
+		dres(0).v.resize(tgt.remote_halo.maxpst,x.NV);
+#endif
+	}
+	hp_partition* create(tri_hp& xin, edge_bdry &bin) const {return new hp_partition(*this,xin,bin);}
+	void init(input_map& inmap,void* gbl_in);
+	void copy(const hp_edge_bdry& tgt);
+	void snd_solution();
+	void rcv_solution();
+};
 
 /* Special communication point at the intersection of blocks with different physics */
 class multi_physics_pnt : public hp_vrtx_bdry {

@@ -206,7 +206,7 @@ class tri_mesh : public multigrid_interface {
 		void checkintegrity(); /**< Checks data arrays for compatibility */
 		void checkintwk() const; /**< Makes sure intwk is all -1 */
 
-	protected:
+	public:
 
 		/** @name Setup routines */
 		//@{

@@ -105,8 +105,9 @@ void tri_mesh::append(const tri_mesh &z) {
 		ebdry(nebd++) = z.ebdry(i)->create(*this);
 		ebdry(nebd-1)->alloc(z.ebdry(i)->maxseg);
 		ebdry(nebd-1)->nseg = z.ebdry(i)->nseg;
-		for(j=0;j<z.ebdry(i)->nseg;++j)
+		for(j=0;j<z.ebdry(i)->nseg;++j) {
 			ebdry(nebd-1)->seg(j) = z.ebdry(i)->seg(j) +nseg;
+		}
 	}
 
 	/* MOVE TRI INFO */
@@ -133,18 +134,15 @@ void tri_mesh::append(const tri_mesh &z) {
 
 	setup_for_adapt();
 
-	std::vector<int> merged_bcs;
-	/* FIND MATCHING COMMUNICATION BOUNDARIES */
+	/* FIND MATCHING COMMUNICATION BOUNDARY */
 	for(i=0;i<nebd -z.nebd;++i) {
-		// if (!ebdry(i)->is_comm()) continue;
+		if (!ebdry(i)->is_comm()) continue;
 
 		for(j=0;j<z.nebd;++j) {
 			if (ebdry(i)->idnum == z.ebdry(j)->idnum) {
 				int bseg = ebdry(i)->nseg;
 				
 				assert(bseg == z.ebdry(j)->nseg);
-				
-				std::cout << "merging " << ebdry(i)->idprefix << std::endl;
 
 				/* DO FIRST POINT OF EDGE (IF NOT ALREADY DONE) */
 				sind1 = ebdry(i)->seg(bseg-1);
@@ -223,8 +221,6 @@ void tri_mesh::append(const tri_mesh &z) {
 						}
 					}
 				}
-
-				merged_bcs.push_back(i);
 				
 				/* Delete 1st boundary */
 				delete ebdry(i);
@@ -238,11 +234,12 @@ void tri_mesh::append(const tri_mesh &z) {
 					ebdry(k) = ebdry(k+1);
 				nebd -= 1;
 				
-				break;
+				goto DONE;
 			}
 		}
 	}
 	
+DONE:
 	/* DELETE VERTEX BOUNDARY CONDITION THAT REFERS TO DELETED POINT */
 	for(i=nvbd-z.nvbd;i<nvbd;++i) {
 		if (tri(vbdry(i)->pnt).info&PDLTE) {
@@ -253,7 +250,7 @@ void tri_mesh::append(const tri_mesh &z) {
 		}
 	}
 	
-	cleanup_after_adapt();
+	// cleanup_after_adapt();
 
 	return;
 }

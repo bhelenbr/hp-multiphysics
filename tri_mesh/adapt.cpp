@@ -88,6 +88,9 @@ void tri_mesh::adapt() {
 	/* REMOVE DELETED ENTITIES */
 	cleanup_after_adapt();
 	
+	/* Calculate halo's for adaptation interpolation */
+	calculate_halo();
+
 	// checkintegrity();
 	
 }
@@ -157,6 +160,8 @@ void tri_mesh::cleanup_after_adapt() {
 	/* THIS PROBABLY WON'T WORK FOR VERTICES.  WILL HAVE TO CHANGE A LITTLE */
 	/* DON'T HAVE ANY DIRECT WAY OF SAYING HOW BOUNDARY ENTITIES HAVE CHANGE POSITION */
 	for (i=0;i<nebd;++i) {
+		if (ebdry(i)->in_group(boundary::partitions)) continue;
+					
 		/* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
 		/* & LAST VERTEX SHOULD NEVER BE CHANGED */
 		sind = ebdry(i)->seg(0);
@@ -228,7 +233,6 @@ void tri_mesh::cleanup_after_adapt() {
 	}
 
 	cnt_nbor();
-	calculate_halo();
 	
 	return;
 }

@@ -35,6 +35,78 @@
 	return;
 }
 
+void tri_hp::transfer_halo_solutions() {
+	
+	for(int i=0;i<nebd;++i) {
+		if (hp_partition *tgt = dynamic_cast<hp_partition *>(hp_ebdry(i))) {
+			tgt->snd_solution();
+		}
+	}
+	
+	smsgpass(boundary::partitions, 0, boundary::symmetric);
+	
+	for(int i=0;i<nebd;++i) {
+		if (hp_partition *tgt = dynamic_cast<hp_partition *>(hp_ebdry(i))) {
+			tgt->rcv_solution();
+		}
+	}
+}
+
+void tri_hp::append_halos() {
+	
+	/* nebd can change during this loop because of appending process */
+	int i = 0;
+	while(i < nebd) {
+		if (epartition *tgt = dynamic_cast<epartition *>(ebdry(i))) {
+			/* Add solution values to mesh */
+			/* If values are appended first then tri_mesh::append will automatically move them */
+			hp_partition *hp_tgt = dynamic_cast<hp_partition *>(hp_ebdry(i));
+			for(int j=0;j<gbl->nadapt;++j) {
+				for(int i=0;i<tgt->remote_halo.npnt;++i) {
+					for(int n=0;n<NV;++n) {
+						ugbd(j).v(npnt+i,n) = hp_tgt->ugbd(j).v(i,n);
+					}
+					for(int n=0;n<ND;++n) {
+						vrtxbd(j)(npnt+i)(n) = hp_tgt->vrtxbd(j)(i)(n);
+					}
+				}
+			
+				for(int i=0;i<tgt->remote_halo.nseg;++i) {
+					for(int m=0;m<sm0;++m) {
+						for(int n=0;n<NV;++n) {
+							ugbd(j).s(nseg+i,m,n) = hp_tgt->ugbd(j).s(i,m,n);
+						}
+					}
+				}
+				
+				for(int i=0;i<tgt->remote_halo.ntri;++i) {
+					for(int m=0;m<im0;++m) {
+						for(int n=0;n<NV;++n) {
+							ugbd(j).i(ntri+i,m,n) = hp_tgt->ugbd(j).i(i,m,n);
+						}
+					}
+				}
+			}
+			
+			/* Append mesh */
+			append(tgt->remote_halo);
+			
+			/* Make hp B.C.'s the same */
+			delete hp_ebdry(i);
+			for(int j=i;j<nebd-1;++j) {
+				hp_ebdry(j) = hp_ebdry(j+1);
+			}
+			hp_ebdry(nebd-1) = getnewedgeobject(nebd-1,"plain");
+			
+			cleanup_after_adapt();
+
+			continue;
+		}
+		++i;
+	}
+}
+
+
 
 
 

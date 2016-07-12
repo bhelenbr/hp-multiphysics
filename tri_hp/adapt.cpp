@@ -15,9 +15,30 @@ void tri_hp::adapt() {
 
 		
 	treeinit();  // FIXME??
+	
+	/* Create storage for adaptation */
+	gbl->pstr = create();
+	gbl->pstr->init(*this,adapt_storage);
+	for(int i=0;i<nebd;++i)
+		hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
+	
+	/* Communicate halo information */
+	transfer_halo_solutions();
+	
+	/* Copy to storage for updating solution after adaptation */
 	gbl->pstr->copy(*this);
+
+	/* Append halo solution for partition meshes to make searching near partition boundaries work */
+	gbl->pstr->append_halos();
+	
+	gbl->pstr->checkintwk();
+	checkintwk();
+	
 	tri_mesh::adapt();
 	setinfo();
+	
+	/* Delete adaptation storage */
+	delete gbl->pstr;
 	
 #ifdef petsc
 	petsc_finalize();
@@ -292,10 +313,10 @@ void tri_hp::updatepdata(int v0) {
 void tri_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
 	int n,sind,sidloc,v0,step;
 	FLT psi;
-
+	
 	v0 = seg(ebdry(bnum)->seg(bel)).pnt(endpt);
-	gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pnts(v0),sidloc,psi);
-	sind = gbl->pstr->ebdry(bnum)->seg(sidloc);
+	hp_ebdry(bnum)->adapt_storage->findandmovebdrypt(pnts(v0),sidloc,psi);
+	sind = hp_ebdry(bnum)->adapt_storage->base.seg(sidloc);
 
 	for(step=0;step<gbl->nadapt;++step) {
 		gbl->pstr->ugtouht1d(sind,step);
@@ -317,7 +338,7 @@ void tri_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
 	}
 
 	/* FOR INTERNALLY STORED DATA */
-	hp_ebdry(bnum)->updatepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->updatepdata_bdry(bel,endpt,hp_ebdry(bnum)->adapt_storage);
 
 	return;
 }
@@ -338,7 +359,7 @@ void tri_hp::movepdata(int from, int to) {
 
 void tri_hp::movepdata_bdry(int bnum,int bel,int endpt) {
 	/* This is just for internal data (if any) */
-	hp_ebdry(bnum)->movepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->movepdata_bdry(bel,endpt,hp_ebdry(bnum)->adapt_storage);
 }
 
 
@@ -423,8 +444,8 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 		for(m=0;m<basis::tri(log2p)->gpx();++m) {
 			pt(0) = bdwk(0,0)(1,m);
 			pt(1) = bdwk(0,1)(1,m);
-			gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
-			stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
+			hp_ebdry(bnum)->adapt_storage->findandmovebdrypt(pt,stgt,psi);
+			stgt = hp_ebdry(bnum)->adapt_storage->base.seg(stgt);
 
 			for(step=0;step<gbl->nadapt;++step) {
 				gbl->pstr->ugtouht1d(stgt,step);
@@ -455,8 +476,8 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 			pt(1) = bdwk(0,1)(1,m);
 
 			/* FIND PSI */                
-			gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
-			stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
+			hp_ebdry(bnum)->adapt_storage->findandmovebdrypt(pt,stgt,psi);
+			stgt = hp_ebdry(bnum)->adapt_storage->base.seg(stgt);
 
 			/* CALCULATE VALUE OF SOLUTION AT POINT */
 			for(step=0;step<gbl->nadapt;++step) {
@@ -481,7 +502,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 	}
 
 	/* UPDATE INTERNAL INFORMATION */
-	hp_ebdry(bnum)->updatesdata_bdry(bel,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->updatesdata_bdry(bel,hp_ebdry(bnum)->adapt_storage);
 
 	return;
 }
@@ -498,9 +519,7 @@ void tri_hp::movesdata(int from, int to) {
 }
 
 void tri_hp::movesdata_bdry(int bnum,int bel) {
-
-	hp_ebdry(bnum)->movesdata_bdry(bel,gbl->pstr->hp_ebdry(bnum));
-
+	hp_ebdry(bnum)->movesdata_bdry(bel,hp_ebdry(bnum)->adapt_storage);
 	return;
 }
 

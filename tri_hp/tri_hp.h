@@ -101,7 +101,7 @@ class tri_hp : public r_tri_mesh  {
 			* Also used for backwards difference storage in tadvance 
 			* could be used for ug0 res and res_r as well? 
 			*/
-			tri_hp *pstr;  
+			tri_hp *pstr;
 			FLT curvature_sensitivity; /**<  sensitivity to boundary curvature  */
 			TinyVector<FLT,3> eanda, eanda_recv; /**< Storage for calculation of error energy and area for adaptation */
 			enum error_estimator_type {none,energy_norm,scale_independent};
@@ -227,6 +227,8 @@ class tri_hp : public r_tri_mesh  {
 		virtual void error_estimator() {};
 		void adapt();
 		void copy(const tri_hp &tgt);
+		void append_halos();
+		void transfer_halo_solutions();
 		void movepdata(int frm, int to);
 		void movepdata_bdry(int bnum,int bel,int endpt);
 		void updatepdata(int v);
