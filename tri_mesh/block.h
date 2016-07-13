@@ -233,11 +233,9 @@ class multigrid_interface {
 		/** Mesh adaptation routines */
 		virtual void adapt() {}
 	
-#ifdef METIS
 		/** Mesh partition routines */
 		virtual void setpartition(int nparts, blitz::Array<int,1> part_list) {}
 		virtual void partition(multigrid_interface& src, int part, int maxenum, int maxvnum) {}
-#endif
 
 		/* STUFF TO MATCH COMMUNICATION BOUNDARIES */
 		virtual int comm_entity_size() {return 0;}

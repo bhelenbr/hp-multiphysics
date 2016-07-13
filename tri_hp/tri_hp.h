@@ -211,9 +211,9 @@ class tri_hp : public r_tri_mesh  {
 		void minvrt_test();
 
 		/** Multigrid cycle */
-        void mg_setup_preconditioner();
-        void mg_preconditioner_snd();
-        void mg_preconditioner_rcv();
+    void mg_setup_preconditioner();
+    void mg_preconditioner_snd();
+    void mg_preconditioner_rcv();
 		void mg_restrict();
 		void mg_prolongate();
 		void mg_source();

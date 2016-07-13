@@ -1814,7 +1814,6 @@
 					"$(mpi_threads)",
 					MPISRC,
 					petsc,
-					METIS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				PRODUCT_NAME = tri_hp_petsc;
@@ -1830,7 +1829,6 @@
 					"$(mpi_threads)",
 					MPISRC,
 					petsc,
-					METIS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				PRODUCT_NAME = tri_hp_petsc;
