@@ -516,6 +516,19 @@ void tri_mesh::subpartition(int& nparts) {
 	
 	return;
 }
+#else
+void tri_mesh::setpartition(int npart) {
+	*gbl->log << "need metis to partition" << std::endl;
+	sim::abort(__LINE__,__FILE__,gbl->log);
+}
+void tri_mesh::setpartition(int nparts,blitz::Array<int,1> part_list) {
+	*gbl->log << "need metis to partition" << std::endl;
+	sim::abort(__LINE__,__FILE__,gbl->log);
+}
+void tri_mesh::subpartition(int& nparts) {
+	*gbl->log << "need metis to partition" << std::endl;
+	sim::abort(__LINE__,__FILE__,gbl->log);
+}
 #endif
 
 /* WHEN THIS ROUTINE EXITS */

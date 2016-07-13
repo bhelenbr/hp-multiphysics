@@ -162,11 +162,9 @@ class tri_mesh : public multigrid_interface {
 
 		/** @name Routines for parallel computations */
 		//@{
-#ifdef METIS
 		void setpartition(int npart); /**< Set partition of mesh (in tri(i).info) */
 		void setpartition(int nparts,blitz::Array<int,1> part_list); /**< Parallel partitioning of multiblock mesh */
 		void subpartition(int& nparts);  /**< routine to do parallel paritition of a multiphysics mesh */
-#endif
 		void partition(multigrid_interface& xmesh, int npart, int maxenum = 0, int maxvnum = 0); /**< Creates a partition from xmesh */
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */
 		int comm_entity_list(Array<int,1>& list);  /**< Returns list of communication entities */

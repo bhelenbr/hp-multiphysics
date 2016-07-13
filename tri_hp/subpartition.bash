@@ -27,6 +27,10 @@ BLKS=$(grep -E "^b[0-9]*_mesh:" $1 | wc -l | tr -d ' ')
 
 #mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt -stop_for_debugger
 mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt
+if [ "$?" -ne "0" ]; then
+	echo "partitioning failed"
+	exit 1
+fi
 
 for file in partition_b[0-9].bin; do
 	tri_mesh -x $file ${file%.bin}.grd
