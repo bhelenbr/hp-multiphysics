@@ -838,6 +838,8 @@ void tri_hp::input(const std::string& filename) {
 			input(fnmapp,reload_type,i);
 		}
 	}
+	
+	calculate_halo();
 
 	return;
 

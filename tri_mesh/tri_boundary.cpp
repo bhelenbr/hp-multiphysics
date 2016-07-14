@@ -473,10 +473,9 @@ void epartition::alloc(int size) {
 	remote_halo.ebdry(1)->alloc(size);
 	
 	pnt_h.resize(2*size);
-	seg_h.resize(2*size); 
+	seg_h.resize(2*size);
+	sgn_h.resize(2*size);
 	tri_h.resize(2*size);
-	seg_bdry_h.resize(size);
-	sgn_bdry_h.resize(size);
 }
 
 void epartition::copy(const edge_bdry& bin) {
@@ -485,13 +484,11 @@ void epartition::copy(const edge_bdry& bin) {
 	ntri_h = tgt.ntri_h;
 	nseg_h = tgt.nseg_h;
 	npnt_h = tgt.npnt_h;
-	nseg_bdry_h = tgt.nseg_bdry_h;
 	if (ntri_h) {
 		tri_h(Range(0,ntri_h-1)) = tgt.tri_h(Range(0,ntri_h-1)); 
-		seg_h(Range(0,nseg_h-1)) = tgt.seg_h(Range(0,nseg_h-1)); 
-		pnt_h(Range(0,npnt_h-1)) = tgt.pnt_h(Range(0,npnt_h-1)); 	
-		seg_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.seg_bdry_h(Range(0,nseg_bdry_h-1));
-		sgn_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.sgn_bdry_h(Range(0,nseg_bdry_h-1));
+		seg_h(Range(0,nseg_h-1)) = tgt.seg_h(Range(0,nseg_h-1));
+		sgn_h(Range(0,nseg_h-1)) = tgt.sgn_h(Range(0,nseg_h-1));
+		pnt_h(Range(0,npnt_h-1)) = tgt.pnt_h(Range(0,npnt_h-1));
 		remote_halo.copy(tgt.remote_halo);
 	}
 	
@@ -617,18 +614,13 @@ void epartition::calculate_halo() {
 	int tind,vn;
 	
 	nseg_h = 0;
-	nseg_bdry_h = 0;
-	ntri_h = 0;
-	
 	/* MARK BOUNDARY SO DON'T GET INSERTED */
 	/* FUNNY WAY OF MARKING SO CAN LEAVE gbl->intwk initialized to -1 */
 	for(int j=0;j<nseg;++j) {
 		int sind = seg(j);
-		SETSPEC(x.gbl->intwk(x.seg(sind).pnt(0)));
-		SETSPEC(x.gbl->intwk(x.seg(sind).pnt(1)));
+		seg_h(nseg_h++) = sind;
 		SETSSRCH(x.gbl->intwk(sind));
 	}
-		
 	
 	/* Find first side by going counter-clockwise */
 	int sind = seg(0);
@@ -645,7 +637,8 @@ void epartition::calculate_halo() {
 	/* Found first side */
 	seg_h(nseg_h++) = x.tri(tind).seg((vn +1)%3);
 	SETSSRCH(x.gbl->intwk(seg_h(nseg_h-1)));
-		
+	
+	ntri_h = 0;
 	for(int scnt=0;scnt<nseg+1;++scnt) {
 		tindnext = tind;
 		/* Now go clockwise for the rest */
@@ -661,37 +654,13 @@ void epartition::calculate_halo() {
 				
 				sind = x.tri(tind).seg(vn);
 				if (!ISSSRCH(x.gbl->intwk(sind))) {
-					int p1flag = ISSPEC(x.gbl->intwk(x.seg(sind).pnt(0)));
-					int p2flag = ISSPEC(x.gbl->intwk(x.seg(sind).pnt(1)));
-					switch(p1flag+p2flag) {
-						case 0:
-							/* Neither point is connected to boundary */
-							sgn_bdry_h(nseg_bdry_h) = x.tri(tind).sgn(vn);
-							seg_bdry_h(nseg_bdry_h++) = sind;
-							break;
-						default:
-							/* At least one point is connected to boundary and not boundary side */
-							seg_h(nseg_h++) = sind;
-							break;
-					}
+					seg_h(nseg_h++) = sind;
 					SETSSRCH(x.gbl->intwk(sind));
 				}
 
 				sind = x.tri(tind).seg((vn+2)%3);
 				if (!ISSSRCH(x.gbl->intwk(sind))) {
-					int p1flag = ISSPEC(x.gbl->intwk(x.seg(sind).pnt(0)));
-					int p2flag = ISSPEC(x.gbl->intwk(x.seg(sind).pnt(1)));
-					switch(p1flag+p2flag) {
-						case 0:
-							/* Neither point is connected to boundary */
-							sgn_bdry_h(nseg_bdry_h) = x.tri(tind).sgn(vn);
-							seg_bdry_h(nseg_bdry_h++) = sind;
-							break;
-						default:
-							/* At least one point is connected to boundary and not boundary side */
-							seg_h(nseg_h++) = sind;
-							break;
-					}
+					seg_h(nseg_h++) = sind;
 					SETSSRCH(x.gbl->intwk(sind));
 				}
 			}
@@ -706,58 +675,24 @@ void epartition::calculate_halo() {
 	for(int i=0;i<ntri_h;++i)
 		CLRTSRCH(x.gbl->intwk(tri_h(i)));
 	
-	for(int j=0;j<nseg;++j) {
-		sind = seg(j);
-		CLRSPEC(x.gbl->intwk(x.seg(sind).pnt(0)));
-		CLRSPEC(x.gbl->intwk(x.seg(sind).pnt(1)));
-		CLRSSRCH(x.gbl->intwk(sind));
-	}
-	
 	for (int j=0;j<nseg_h;++j) {
 		sind = seg_h(j);
 		CLRSSRCH(x.gbl->intwk(sind));
 	}
 	
-	for (int j=0;j<nseg_bdry_h;++j) {
-		sind = seg_bdry_h(j);
-		CLRSSRCH(x.gbl->intwk(sind));
-	}
-	
 	/* Extract Halo Mesh for sending to remote partition */
-	remote_halo.npnt = nseg +nseg_bdry_h +2;
-	remote_halo.nseg = nseg+nseg_bdry_h +nseg_h;
-	remote_halo.ntri = ntri_h;
-	
 	int pnt;
 	/* load points */
 	remote_halo.npnt = 0;
-	for (int j=0;j<nseg;++j) {
-		pnt = x.seg(seg(j)).pnt(0);
-		x.gbl->intwk(pnt) = remote_halo.npnt;
-		pnt_h(remote_halo.npnt) = pnt;
-		remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
-	}
-	pnt = x.seg(seg(nseg-1)).pnt(1);
-	x.gbl->intwk(pnt) = remote_halo.npnt;
-	pnt_h(remote_halo.npnt) = pnt;
-	remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
-	
-	/* Last interior side connects the two boundaries */
-	pnt = x.seg(seg_h(nseg_h-1)).pnt(1);
-	x.gbl->intwk(pnt) = remote_halo.npnt;
-	pnt_h(remote_halo.npnt) = pnt;
-	remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
-	
-	/* remember that sides may not be in ccw direction */
-	for (int j=nseg_bdry_h-1;j>=0;--j) {
-		pnt = x.seg(seg_bdry_h(j)).pnt(1);
+	for (int j=0;j<nseg_h;++j) {
+		int pnt = x.seg(seg_h(j)).pnt(0);
 		if (x.gbl->intwk(pnt) == -1) {
 			x.gbl->intwk(pnt) = remote_halo.npnt;
 			pnt_h(remote_halo.npnt) = pnt;
 			remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
 		}
 		
-		pnt = x.seg(seg_bdry_h(j)).pnt(0);
+		pnt = x.seg(seg_h(j)).pnt(1);
 		if (x.gbl->intwk(pnt) == -1) {
 			x.gbl->intwk(pnt) = remote_halo.npnt;
 			pnt_h(remote_halo.npnt) = pnt;
@@ -768,29 +703,11 @@ void epartition::calculate_halo() {
 	
 	/* Create Side List */
 	remote_halo.nseg = 0;
-	for (int j=0;j<nseg;++j) {
-		remote_halo.seg(remote_halo.nseg).pnt(0) = x.gbl->intwk(x.seg(seg(j)).pnt(0));
-		remote_halo.seg(remote_halo.nseg).pnt(1) = x.gbl->intwk(x.seg(seg(j)).pnt(1));
-		++remote_halo.nseg;
-	}
-	
-	for (int j=0;j<nseg_bdry_h;++j) {
-		if (sgn_bdry_h(j) > 0) {
-			remote_halo.seg(remote_halo.nseg).pnt(0) = x.gbl->intwk(x.seg(seg_bdry_h(j)).pnt(0));
-			remote_halo.seg(remote_halo.nseg).pnt(1) = x.gbl->intwk(x.seg(seg_bdry_h(j)).pnt(1));
-		}
-		else {
-			remote_halo.seg(remote_halo.nseg).pnt(1) = x.gbl->intwk(x.seg(seg_bdry_h(j)).pnt(0));
-			remote_halo.seg(remote_halo.nseg).pnt(0) = x.gbl->intwk(x.seg(seg_bdry_h(j)).pnt(1));
-		}
-		++remote_halo.nseg;
-	}	
-	
 	for (int j=0;j<nseg_h;++j) {
 		remote_halo.seg(remote_halo.nseg).pnt(0) = x.gbl->intwk(x.seg(seg_h(j)).pnt(0));
 		remote_halo.seg(remote_halo.nseg).pnt(1) = x.gbl->intwk(x.seg(seg_h(j)).pnt(1));
 		++remote_halo.nseg;
-	}	
+	}
 	
 	/* Create Tri List */
 	remote_halo.ntri = ntri_h;
@@ -799,10 +716,25 @@ void epartition::calculate_halo() {
 			remote_halo.tri(tind).pnt(vn) = x.gbl->intwk(x.tri(tri_h(tind)).pnt(vn));
 		}
 	}
-		
+
 	for(int j=0;j<npnt_h;++j)
 		x.gbl->intwk(pnt_h(j)) = -1;
-
+	
+	/* Fill in connections between seg and tri so can figure out what segs are on boundary */
+	remote_halo.createsegtri();
+	
+	for(int i=0;i<remote_halo.nseg;++i) {
+		if (remote_halo.seg(i).tri(0) < 0) {
+			/* Side is on boundary and direction must be reversed */
+			int temp = remote_halo.seg(i).pnt(0);
+			remote_halo.seg(i).pnt(0) = remote_halo.seg(i).pnt(1);
+			remote_halo.seg(i).pnt(1) = temp;
+			sgn_h(i) = -1;
+		}
+		else {
+			sgn_h(i) = 1;
+		}
+	}
 	
 	/* pack up to send messages */
 	sndtype() = boundary::flt_msg;
@@ -824,15 +756,6 @@ void epartition::calculate_halo() {
 		fsndbuf(sndsize()++) = remote_halo.tri(j).pnt(1)+100*FLT_EPSILON;
 		fsndbuf(sndsize()++) = remote_halo.tri(j).pnt(2)+100*FLT_EPSILON;
 	}
-	
-//	if (x.gbl->adapt_output) {	
-//		std::string adapt_file;
-//		std::ostringstream nstr;
-//		nstr << x.gbl->tstep << std::flush;
-//		adapt_file = "beforehalo" +nstr.str();
-//		remote_halo.output(adapt_file);
-//	}
-	
 }
 
 void epartition::receive_halo() {
@@ -858,6 +781,7 @@ void epartition::receive_halo() {
 		remote_halo.tri(j).pnt(1) = static_cast<int>(frcvbuf(0,cnt++));
 		remote_halo.tri(j).pnt(2) = static_cast<int>(frcvbuf(0,cnt++));
 	}
+	remote_halo.createsegtri();
 	
 	remote_halo.ebdry(0)->nseg = nseg;
 	cnt = 0;
@@ -865,15 +789,13 @@ void epartition::receive_halo() {
 		remote_halo.ebdry(0)->seg(i) = cnt++;
 	}
 	
-	remote_halo.ebdry(1)->nseg = remote_halo.npnt -nseg;
-	remote_halo.ebdry(1)->seg(0) = remote_halo.nseg-1;
-	cnt = remote_halo.ebdry(1)->nseg-3 +nseg;
-	for(int i=1;i<remote_halo.ebdry(1)->nseg-1;++i) {
-		remote_halo.ebdry(1)->seg(i) = cnt--;
+	remote_halo.ebdry(1)->nseg = 0;
+	for(int i=nseg;i<remote_halo.nseg;++i) {
+		if (remote_halo.seg(i).tri(1) < 0) {
+			remote_halo.ebdry(1)->seg(remote_halo.ebdry(1)->nseg++) = i;
+		}
 	}
-	remote_halo.ebdry(1)->seg(remote_halo.ebdry(1)->nseg-1) = remote_halo.nseg -remote_halo.npnt +1;
-
-	remote_halo.createsegtri();
+	
 	remote_halo.bdrylabel();
 	remote_halo.createtritri();
 	remote_halo.createpnttri();

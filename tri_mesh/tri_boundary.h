@@ -60,18 +60,15 @@ public:
 	int npnt_h; /**< number of points in halo */
 	int nseg_h; /**< number of interior segments in halo */
 	int ntri_h; /**< number of triangles in halo */
-	int nseg_bdry_h; /**< number of segments on interior surface of halo */
 	Array<int,1> pnt_h; /**< points in halo */
 	Array<int,1> seg_h; /**< interior segments in halo */
+	Array<int,1> sgn_h; /**< direction of segments relative to remote mesh */
 	Array<int,1> tri_h; /**< triangles in halo */
-	Array<int,1> seg_bdry_h; /**< segments on interior surface of halo */
-	Array<int,1> sgn_bdry_h; /**< direction of segments on interior surface of halo */
 
 public:
 	/* CONSTRUCTOR */
 	epartition(int inid, tri_mesh& xin) : ecomm(inid,xin) {add_to_group(boundary::partitions); mytype="partition";}
 	epartition(const epartition &inbdry, tri_mesh& xin) : ecomm(inbdry,xin) {}
-
 	epartition* create(tri_mesh& xin) const {return new epartition(*this,xin);}
 	void alloc(int size);
 	void copy(const edge_bdry& bin);

@@ -1866,20 +1866,9 @@ void hp_partition::snd_solution() {
 		}
 	}
 	
-	for (int i=0;i<part.nseg;++i) {
-		const int seg = part.seg(i);
-		for(int j=0;j<x.gbl->nadapt;++j) {
-			for(int m=0;m<x.sm0;++m) {
-				for(int n=0;n<x.NV;++n) {
-					part.fsndbuf(part.sndsize()++) = x.ugbd(j).s(seg,m,n);
-				}
-			}
-		}
-	}
-	
-	for (int i=0;i<part.nseg_bdry_h;++i) {
-		const int seg = part.seg_bdry_h(i);
-		if (part.sgn_bdry_h(i) > 0) {
+	for (int i=0;i<part.nseg_h;++i) {
+		const int seg = part.seg_h(i);
+		if (part.sgn_h(i) > 0) {
 			for(int j=0;j<x.gbl->nadapt;++j) {
 				for(int m=0;m<x.sm0;++m) {
 					for(int n=0;n<x.NV;++n) {
@@ -1896,17 +1885,6 @@ void hp_partition::snd_solution() {
 						part.fsndbuf(part.sndsize()++) = msgn*x.ugbd(j).s(seg,m,n);
 					}
 					msgn *= -1;
-				}
-			}
-		}
-	}
-	
-	for (int i=0;i<part.nseg_h;++i) {
-		const int seg = part.seg_h(i);
-		for(int j=0;j<x.gbl->nadapt;++j) {
-			for(int m=0;m<x.sm0;++m) {
-				for(int n=0;n<x.NV;++n) {
-					part.fsndbuf(part.sndsize()++) = x.ugbd(j).s(seg,m,n);
 				}
 			}
 		}

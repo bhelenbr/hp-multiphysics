@@ -96,7 +96,7 @@ void tri_mesh::createsegtri(void) {
 	}
 
 	for(i=0;i<nseg;++i)
-		seg(i).tri(1) = -1;
+		seg(i).tri = -1;
 
 	for(tind=0;tind<ntri;++tind) {
 		vout = tri(tind).pnt(0);
