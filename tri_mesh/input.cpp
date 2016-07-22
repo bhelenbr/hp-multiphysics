@@ -4,6 +4,12 @@
 #include <input_map.h>
 #include <iostream>
 #include <libbinio/binfile.h>
+#include <netcdf.h>
+
+/* Handle errors by printing an error message and exiting with a
+ * non-zero status. */
+#define ERR(e) {*gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,gbl->log);}
+
 
 /* NAMING CONVENTION */
 // pt, segment, triangle, tetrahedral
@@ -197,7 +203,11 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	else if (ending == "dat") {
 		filetype = tecplot;
 		grd_nm = grd_nm.substr(0,dotloc);
-	}		
+	}
+	else if (ending == "nc") {
+		filetype = netcdf;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
 	
 
 	switch (filetype) {
@@ -671,6 +681,148 @@ next1a:      continue;
 
 			break;
 		}
+		
+		case(netcdf): {
+			grd_app = grd_nm +".nc";
+			/* Create the file. The NC_CLOBBER parameter tells netCDF to
+			 * overwrite this file, if it already exists.*/
+			int retval, ncid, dim_id;
+			size_t dimreturn;
+			
+			if ((retval = nc_open(grd_app.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
+			
+			if ((retval = nc_inq_dimid(ncid, "npnt", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			npnt = dimreturn;
+			
+			if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			nseg = dimreturn;
+			
+			if ((retval = nc_inq_dimid(ncid, "ntri", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			ntri = dimreturn;
+			
+			if (!initialized) {
+				allocate(nseg + (int) (grwfac*nseg));
+				nebd = 0;
+				nvbd = 0;
+			}
+			else if (nseg > maxpst) {
+				*gbl->log << "mesh is too large" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			int var_id;
+			if ((retval = nc_inq_varid (ncid, "pnts", &var_id))) ERR(retval);
+			size_t index[2];
+			/* POINT INFO */
+			for(i=0;i<npnt;++i) {
+				index[0]= i;
+				for(n=0;n<ND;++n) {
+					index[1] = n;
+					nc_get_var1_double(ncid,var_id,index,&pnts(i)(n));
+				}
+				index[1] = 2;
+				nc_get_var1_double(ncid,var_id,index,&lngth(i));
+				
+			}
+			
+			/* SEG INFO */
+			if ((retval = nc_inq_varid (ncid, "segs", &var_id))) ERR(retval);
+			for(i=0;i<nseg;++i) {
+				index[0]= i;
+				for(n=0;n<2;++n) {
+					index[1] = n;
+					nc_get_var1_int(ncid,var_id,index,&seg(i).pnt(n));
+				}
+			}
+			
+			/* TRI INFO */
+			if ((retval = nc_inq_varid (ncid, "tris", &var_id))) ERR(retval);
+
+			for(i=0;i<ntri;++i) {
+				index[0]= i;
+				for(n=0;n<3;++n) {
+					index[1] = n;
+					nc_get_var1_int(ncid,var_id,index,&tri(i).pnt(n));
+				}
+			}
+			
+			/* CREATE TSIDE & STRI */
+			createsegtri();
+			
+			/* SIDE BOUNDARY INFO HEADER */
+			if ((retval = nc_inq_dimid(ncid, "nebd", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			int newnsbd1 = dimreturn;
+			
+			if (nebd == 0) {
+				nebd = newnsbd1;
+				ebdry.resize(nebd);
+				ebdry = 0;
+			}
+			else if (nebd != newnsbd1) {
+				*gbl->log << "reloading incompatible meshes" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			/* SIDE BOUNDARY INFO HEADER */
+			for(i=0;i<nebd;++i) {
+				ostringstream nstr;
+				int temp;
+				nstr << "edge" << i;
+				/* Get the varid of the data variable, based on its name. */
+				if ((retval = nc_inq_varid(ncid, nstr.str().c_str(), &var_id))) ERR(retval);
+				if ((retval = nc_get_att_int(ncid, var_id, "id", &temp))) ERR(retval);
+				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
+				
+				nstr.str("");
+				nstr << "edge" << i << "_nseg";
+				if ((retval = nc_inq_dimid(ncid, nstr.str().c_str(), &dim_id))) ERR(retval);
+				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+				ebdry(i)->nseg = dimreturn;
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
+	
+				/* Get the varid of the data variable, based on its name. */
+				if ((retval = nc_get_var_int(ncid, var_id, &ebdry(i)->seg(0)))) ERR(retval);
+			}
+
+			/* VERTEX BOUNDARY INFO HEADER */
+			if ((retval = nc_inq_dimid(ncid, "nvbd", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			int newnvbd1 = dimreturn;
+			
+			if (nvbd == 0) {
+				nvbd = newnvbd1;
+				vbdry.resize(nvbd);
+				vbdry = 0;
+			}
+			else if (nvbd != newnvbd1) {
+				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			if ((retval = nc_inq_varid(ncid, "vrtx", &var_id))) ERR(retval);
+			
+			for(i=0;i<nvbd;++i) {
+				index[0] = i;
+				index[1] = 0;
+				int temp;
+				nc_get_var1_int(ncid,var_id,index,&temp);
+				if (!vbdry(i)) {
+					vbdry(i) = getnewvrtxobject(temp,bdrymap);
+					vbdry(i)->alloc(4);
+				}
+				index[1] = 1;
+				nc_get_var1_int(ncid,var_id,index,&vbdry(i)->pnt);
+			}
+		
+			break;
+		}
+
+
+			
+			
 		case(text): {
 			if (!initialized) {
 				*gbl->log << "to read in point positions only must first load mesh structure" << std::endl;

@@ -9,9 +9,7 @@
 /* Begin PBXBuildFile section */
 		6F8B22250E352FBF005923AA /* symbolic_function.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F8B220A0E352D4C005923AA /* symbolic_function.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F8B22320E35307B005923AA /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8B22310E35307B005923AA /* libinput_map.a */; };
-		6F8B22370E3530AE005923AA /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8B22360E3530AE005923AA /* libmuparser.a */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
-		E6167CF9142E3E1C008668C9 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6167CF8142E3E1C008668C9 /* libblitz.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,9 +30,7 @@
 		6F14B7020E3E992A00716710 /* run.inpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.inpt; sourceTree = "<group>"; };
 		6F8B220A0E352D4C005923AA /* symbolic_function.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = symbolic_function.h; sourceTree = "<group>"; };
 		6F8B22310E35307B005923AA /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
-		6F8B22360E3530AE005923AA /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
 		8DD76F6C0486A84900D96B5E /* symbolic_function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = symbolic_function; sourceTree = BUILT_PRODUCTS_DIR; };
-		E6167CF8142E3E1C008668C9 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		E6FB90D811BD97CB00D9EB38 /* libinstall.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinstall.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -44,8 +40,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F8B22320E35307B005923AA /* libinput_map.a in Frameworks */,
-				6F8B22370E3530AE005923AA /* libmuparser.a in Frameworks */,
-				E6167CF9142E3E1C008668C9 /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,9 +87,7 @@
 		6F8B22330E353086005923AA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6F8B22360E3530AE005923AA /* libmuparser.a */,
 				6F8B22310E35307B005923AA /* libinput_map.a */,
-				E6167CF8142E3E1C008668C9 /* libblitz.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -195,6 +187,10 @@
 					../lib,
 					"$(PACKAGES)/lib",
 				);
+				OTHER_LDFLAGS = (
+					"-lmuparser",
+					"-lblitz",
+				);
 				PRODUCT_NAME = symbolic_function;
 			};
 			name = Debug;
@@ -206,6 +202,10 @@
 					"$(inherited)",
 					../lib,
 					"$(PACKAGES)/lib",
+				);
+				OTHER_LDFLAGS = (
+					"-lmuparser",
+					"-lblitz",
 				);
 				PRODUCT_NAME = symbolic_function;
 			};

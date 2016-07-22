@@ -4,12 +4,17 @@
 #include <fstream>
 #include <iomanip>
 #include <libbinio/binfile.h>
+#include <netcdf.h>
 
 // #define DATATANK
 
 #ifdef DATATANK
 #include <DTSource.h>
 #endif
+
+/* Handle errors by printing an error message and exiting with a
+ * non-zero status. */
+#define ERR(e) {*gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,gbl->log);}
 
 using namespace std;
 
@@ -43,6 +48,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 	}
 	else if (ending == "dat") {
 		filetype = tecplot;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "nc") {
+		filetype = netcdf;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
 
@@ -330,6 +339,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			}
 
 			/* HEADER LINES */
+			std::cout << bout.getFlag(binio::BigEndian) << ' ' << bout.getFlag(binio::FloatIEEE) << std::endl;
 			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 			bout.writeInt(npnt,sizeof(int));
@@ -374,7 +384,124 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			bout.close();
 
 			break;
+			
+		case(netcdf): {
+			fnmapp = grd_nm +".nc";
+			/* Create the file. The NC_CLOBBER parameter tells netCDF to
+			 * overwrite this file, if it already exists.*/
+			int retval, ncid, pntdims[2],segdims[2],tridims[2];
+			int one, two, three;
+			if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
+		 
+			/* some fixed dimensions */
+			if ((retval = nc_def_dim(ncid,"1",1,&one)));
+			if ((retval = nc_def_dim(ncid,"2",2,&two)));
+			if ((retval = nc_def_dim(ncid,"3",3,&three)));
 
+			
+			/* Define the dimensions. NetCDF will hand back an ID for each. */
+			int pnt_id;
+			if ((retval = nc_def_dim(ncid, "npnt", npnt, &pntdims[0]))) ERR(retval);
+			pntdims[1] = three;
+			if ((retval = nc_def_var(ncid, "pnts", NC_DOUBLE, 2, pntdims, &pnt_id))) ERR(retval);
+			
+			int seg_id;
+			if ((retval = nc_def_dim(ncid, "nseg", nseg, &segdims[0]))) ERR(retval);
+			segdims[1] = two;
+			if ((retval = nc_def_var(ncid, "segs", NC_INT, 2, segdims, &seg_id))) ERR(retval);
+			
+			int tri_id;
+			if ((retval = nc_def_dim(ncid, "ntri", ntri, &tridims[0]))) ERR(retval);
+			tridims[1] = three;
+			if ((retval = nc_def_var(ncid, "tris", NC_INT, 2, tridims, &tri_id))) ERR(retval);
+			
+			int nebd_id;
+			if ((retval = nc_def_dim(ncid, "nebd", nebd, &nebd_id))) ERR(retval);
+			
+			Array<int,2> ebdry_ids(nebd);
+			for(int i=0;i<nebd;++i) {
+				int temp;
+				std::ostringstream nstr;
+				nstr << "edge" << i << "_nseg";
+				if ((retval = nc_def_dim(ncid, nstr.str().c_str(),ebdry(i)->nseg,&segdims[0]))) ERR(retval);
+				nstr.str("");
+				nstr << "edge" << i;
+				if ((retval = nc_def_var(ncid, nstr.str().c_str(), NC_INT, 1, segdims, &ebdry_ids(i)))) ERR(retval);
+				if ((retval = nc_put_att_int (ncid, ebdry_ids(i), "id", NC_INT, 1, &ebdry(i)->idnum))) ERR(retval);
+			}
+			
+			
+			int nvbd_id,vrtx_id;
+			if ((retval = nc_def_dim(ncid, "nvbd", nvbd, &nvbd_id))) ERR(retval);
+			pntdims[0] = nvbd_id;
+			pntdims[1] = two;
+			if ((retval = nc_def_var(ncid, "vrtx", NC_INT, 2, pntdims, &vrtx_id))) ERR(retval);
+	
+			if ((retval = nc_enddef(ncid))) ERR(retval);
+			
+			size_t index[2];
+			/* POINT INFO */
+			for(i=0;i<npnt;++i) {
+				index[0]= i;
+				for(n=0;n<ND;++n) {
+					index[1] = n;
+					
+					nc_put_var1_double(ncid,pnt_id,index,&pnts(i)(n));
+				}
+				index[1] = 2;
+				nc_put_var1_double(ncid,pnt_id,index,&lngth(i));
+			}
+			
+			/* SEG INFO */
+			for(i=0;i<nseg;++i) {
+				index[0]= i;
+				for(n=0;n<2;++n) {
+					index[1] = n;
+					nc_put_var1_int(ncid,seg_id,index,&seg(i).pnt(n));
+				}
+			}
+			
+			/* TRI INFO */
+			for(i=0;i<ntri;++i) {
+				index[0]= i;
+				for(n=0;n<3;++n) {
+					index[1] = n;
+					nc_put_var1_int(ncid,tri_id,index,&tri(i).pnt(n));
+				}
+			}
+			
+			/* SIDE BOUNDARY INFO */
+			for(i=0;i<nebd;++i) {
+				nc_put_var_int(ncid,ebdry_ids(i),&ebdry(i)->seg(0));
+			}
+			
+			/* VRTX BOUNDARY INFO */
+			for(i=0;i<nvbd;++i) {
+				index[0] = i;
+				index[1] = 0;
+				nc_put_var1_int(ncid,vrtx_id,index,&vbdry(i)->idnum);
+				index[1] = 1;
+				nc_put_var1_int(ncid,vrtx_id,index,&vbdry(i)->pnt);
+			}
+			
+			
+			
+			if ((retval = nc_close(ncid))) ERR(retval);
+			
+			//			}
+			//
+			//			/* VERTEX BOUNDARY INFO HEADER */
+			//			bout.writeInt(nvbd,sizeof(int));
+			//			for(i=0;i<nvbd;++i) {
+			//				bout.writeInt(vbdry(i)->idnum,sizeof(int));
+			//				bout.writeInt(vbdry(i)->pnt,sizeof(int));
+			//			}
+			//
+			//			bout.close();
+			
+			break;
+		}
+		
 		case (datatank): {
 #ifdef DATATANK
 			DTMutableIntArray dt_tvrtx(3,ntri);

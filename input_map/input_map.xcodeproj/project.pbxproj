@@ -12,7 +12,6 @@
 		6FD651D10922EC6800D18689 /* input_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FD651CD0922EC6800D18689 /* input_map.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FD651F30922EFB000D18689 /* input_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CC0922EC6800D18689 /* input_map.cpp */; };
 		6FD651F40922EFB200D18689 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CE0922EC6800D18689 /* main.cpp */; };
-		E6019987167F689100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,7 +23,6 @@
 		6FD651CF0922EC6800D18689 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FD651F10922EF8E00D18689 /* mod_map */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mod_map; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC046055464E500DB518D /* libinput_map.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinput_map.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.4.dylib; path = ../../Packages/lib/libmuparser.2.2.4.dylib; sourceTree = "<group>"; };
 		E631981016DBA7ED00B5C23C /* mod_map.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = mod_map.bash; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -34,7 +32,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F99D04E0B5DE0FA00628456 /* libparseargs.a in Frameworks */,
-				E6019987167F689100C5C90E /* libmuparser.2.2.4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,7 +79,6 @@
 		6F99D0500B5DE10E00628456 /* Frameworks & Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				E601997F167F636000C5C90E /* libmuparser.2.2.4.dylib */,
 				6F99D04D0B5DE0FA00628456 /* libparseargs.a */,
 			);
 			name = "Frameworks & Libraries";
@@ -258,7 +254,7 @@
 					"$(SRCROOT)/../lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = "$(HOME)/Packages";
+				PACKAGES = /usr/local;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -282,7 +278,7 @@
 					"$(SRCROOT)/../lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = "$(HOME)/Packages";
+				PACKAGES = /usr/local;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
@@ -291,6 +287,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
+				OTHER_LDFLAGS = "-lmuparser";
 				PRODUCT_NAME = mod_map;
 			};
 			name = Debug;
@@ -300,6 +297,7 @@
 			buildSettings = {
 				DEPLOYMENT_LOCATION = NO;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-lmuparser";
 				PRODUCT_NAME = mod_map;
 			};
 			name = Release;

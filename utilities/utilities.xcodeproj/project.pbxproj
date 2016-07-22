@@ -289,6 +289,7 @@
 					"$(HOME)/Packages/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = /usr/local;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -305,6 +306,7 @@
 					"$(HOME)/Packages/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				PACKAGES = /usr/local;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
@@ -319,7 +321,7 @@
 					BZ_DEBUG,
 					f2cFortran,
 				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
+				HEADER_SEARCH_PATHS = "$(PACKAGES)/include";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = myblas;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -333,7 +335,7 @@
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
+				HEADER_SEARCH_PATHS = "$(PACKAGES)/include";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = myblas;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;

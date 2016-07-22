@@ -6,6 +6,9 @@
 # or
 #echo -n "text "
 
+#FTYPE="bin"
+FTYPE="nc"
+
 while getopts ":t" opt; do
 	case $opt in
 		t)
@@ -26,14 +29,15 @@ mod_map temp.inpt partition $2
 BLKS=$(grep -E "^b[0-9]*_mesh:" $1 | wc -l | tr -d ' ')
 
 #mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt -stop_for_debugger
+#mpiexec -np ${BLKS} valgrind ~/bin/tri_hp_petsc temp.inpt
 mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt
 if [ "$?" -ne "0" ]; then
 	echo "partitioning failed"
 	exit 1
 fi
 
-for file in partition_b[0-9].bin; do
-	tri_mesh -x $file ${file%.bin}.grd
+for file in partition_b[0-9].${FTYPE}; do
+	tri_mesh -x $file ${file%.${FTYPE}}.grd
 done
 
 LOG=$(mod_map -e $1 logfile)
@@ -50,7 +54,7 @@ done
 grep -E "b[0-9]*_matches" matches.inpt > block_matches.inpt
 grep -E "b[0-9]*_[s,v][0-9]*_matches" matches.inpt > boundary_matches.inpt
 
-let TOTAL=$(ls partition_b*.bin | wc -w | tr -d ' ')
+let TOTAL=$(ls partition_b*.${FTYPE} | wc -w | tr -d ' ')
 
 while read tgt src
 do
@@ -96,7 +100,7 @@ rename partition rstrt${RSTRT} partition*
 
 let b=0
 while [ $b -lt $TOTAL ]; do
-	mod_map temp.inpt b${b}_mesh rstrt${RSTRT}_b${b}.bin
+	mod_map temp.inpt b${b}_mesh rstrt${RSTRT}_b${b}.${FTYPE}
 	let b=$b+1
 done
 mod_map -d temp.inpt partition

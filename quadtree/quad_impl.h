@@ -54,7 +54,7 @@ template<int ND> void quadtree<ND>::init(TinyVector<FLT,ND> x1, TinyVector<FLT,N
     for(i=0;i<ND;++i) {
         if(x1[i] >= x2[i]) {
          	printf("quadtree initialization error: zero domain area %d %f %f\n",i,x1[i],x2[i]);
-            exit(1);
+            abort();
         }
     }
     
@@ -100,7 +100,7 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
         for(i=maxvrtx;i<tgt.maxvrtx;++i)
             if (tgt.indx[i] != NULL) {
                 printf("quadtree is too small for copy\n");
-                exit(1);
+                abort();
         }
     }
     else {
@@ -204,7 +204,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 		printf("Another possible cause is repeated insertion of the same point\n");
         output("quad_error",quadtree::text);
 		output("quad_error",quadtree::tecplot);
-        exit(1);
+        abort();
     }
     for (i=0;i<(1<<ND);++i)
         store[i] = qpt->node[i];
@@ -233,14 +233,14 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 //				std::cout << qpt->xmin[n] << ' ' << base->xmin[n] << std::endl;
 //				output("quad_error");
 //				output("quad_error",text);
-//				exit(1);
+//				abort();
 //			}
 //			if (vrtx[store[i]][n] > qpt->xmax[n]) {
 //				std::cout << "greater than max problem in quadtree " << store[i] << ' ' << vrtx[store[i]][n] << std::endl;
 //				std::cout << qpt->xmax[n] << ' ' << base->xmax[n] <<  std::endl;
 //				output("quad_error");
 //				output("quad_error",text);
-//				exit(1);
+//				abort();
 //			}
 //		}
 //	}
@@ -416,7 +416,7 @@ template<int ND> void quadtree<ND>::dltpt(int v0) {
     
     if (qpt == NULL) {
         printf("error: deleting point which isn't in tree %d\n",v0);
-        exit(1);
+        abort();
     }
     
     indx[v0] = NULL;
@@ -431,7 +431,7 @@ template<int ND> void quadtree<ND>::dltpt(int v0) {
     
     if (ind == -1) {
         printf("Couldn't find node to remove: %d\n",v0);
-        exit(1);
+        abort();
     }
     
     for(i=ind+1;i<qpt->num;++i)
@@ -456,7 +456,7 @@ template<int ND> void quadtree<ND>::output(const char *filename, FILETYPE type) 
             out = fopen(fnmapp,"w");
             if (out == NULL ) {
                 printf("couldn't open output file %s for output\n",fnmapp);
-                exit(1);
+                abort();
             }
             nsrch = 0;
             srchlst[nsrch++] = base;
@@ -497,7 +497,7 @@ template<int ND> void quadtree<ND>::output(const char *filename, FILETYPE type) 
             out = fopen(fnmapp,"w");
             if (out == NULL ) {
                 printf("couldn't open output file %s for output\n",fnmapp);
-                exit(1);
+                abort();
             }
             nsrch = 0;
             srchlst[nsrch++] = base;
@@ -547,12 +547,12 @@ template<int ND> void quadtree<ND>::movept(int from, int to) {
     
     if (qpt == NULL) {
         printf("error: moving point %d which isn't in tree to %d\n",from,to);
-        exit(1);
+        abort();
     }
     
     if (indx[to] != NULL) {
         printf("error: moving %d to a point which exists %d\n",from,to);
-        exit(1);
+        abort();
     }
     
     indx[to] = indx[from];

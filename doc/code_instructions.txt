@@ -13,6 +13,25 @@
 12 valgrind for debugging (skip!)
 13 probably need to install cmake (gui installer for OS X & Windows) (3D Only)
 
+########################
+#### FOR OS X       ####
+#### USING HOMEBREW ####
+########################
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install --build-from-source --HEAD blitz
+brew install libbinio
+brew install muparser
+brew install homebrew/science/petsc
+brew install pth
+brew install valgrind
+brew install homewbrew/science/madlib
+
+To update installed packages
+brew update
+brew outdated
+brew upgrade
+
+
 ###################################################################
 #### GET BLITZ 
 ###################################################################

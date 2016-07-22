@@ -94,8 +94,8 @@ OBJ += $(OBJBUOY)
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs
-LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lHYPRE -lscalapack -lsuperlu_dist_3.3 -ldl
+LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf
+LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lHYPRE -lscalapack -lsuperlu_dist -ldl
 
 ### Begin machine dependent
 

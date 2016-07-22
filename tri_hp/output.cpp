@@ -15,6 +15,11 @@
 #include <myblas.h>
 #include <libbinio/binwrap.h>
 #include <libbinio/binfile.h>
+#include <netcdf.h>
+
+#define ERR(e) {*gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,gbl->log);}
+
+
 //#define DATATANK
 
 #ifdef DATATANK
@@ -62,6 +67,42 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						}
 						bout.close();
 					}
+				}
+				else if (output_type(1) == tri_hp::netcdf) {
+					tri_mesh::output(fname,tri_mesh::netcdf);
+					fnmapp = namewdot +"_" +gbl->idprefix +".nc";
+					/* Create the file. The NC_CLOBBER parameter tells netCDF to
+					 * overwrite this file, if it already exists.*/
+					int retval, ncid, dims[3];
+					int one, two, three;
+					if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
+					
+					/* some fixed dimensions */
+					if ((retval = nc_def_dim(ncid,"1",1,&one)));
+					if ((retval = nc_def_dim(ncid,"2",2,&two)));
+					if ((retval = nc_def_dim(ncid,"3",3,&three)));
+					
+					/* Define the dimensions. NetCDF will hand back an ID for each. */
+					if ((retval = nc_def_dim(ncid, "nadapt", gbl->nadapt-1, &dims[0]))) ERR(retval);
+					if ((retval = nc_def_dim(ncid, "npnt", npnt, &dims[1]))) ERR(retval);
+					dims[2] = two;
+					
+					int vrtxbd_id;
+					if ((retval = nc_def_var(ncid, "vrtxbd", NC_DOUBLE, 3, dims, &vrtxbd_id))) ERR(retval);
+					if ((retval = nc_enddef(ncid))) ERR(retval);
+					
+					size_t index[3];
+					for(i=1;i<gbl->nadapt;++i) {
+						index[0] = i-1;
+						for (j=0;j<npnt;++j) {
+							index[1] = j;
+							index[2] = 0;
+							nc_put_var1_double(ncid,vrtxbd_id,index,&vrtxbd(i)(j)(0));
+							index[2] = 1;
+							nc_put_var1_double(ncid,vrtxbd_id,index,&vrtxbd(i)(j)(1));
+						}
+					}
+					if ((retval = nc_close(ncid))) ERR(retval);
 				}
 				else {
 					tri_mesh::output(fname,tri_mesh::grid);
@@ -175,6 +216,84 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			}
 			out.close();
 
+			break;
+		}
+			
+		case (netcdf): {
+			fnmapp = fname +".nc";
+			/* Create the file. The NC_CLOBBER parameter tells netCDF to
+			 * overwrite this file, if it already exists.*/
+			int retval, ncid, dims[3];
+			int one, two, three;
+			if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
+			
+			/* some fixed dimensions */
+			if ((retval = nc_def_dim(ncid,"1",1,&one)));
+			if ((retval = nc_def_dim(ncid,"2",2,&two)));
+			if ((retval = nc_def_dim(ncid,"3",3,&three)));
+			
+			/* Define the dimensions. NetCDF will hand back an ID for each. */
+			int npnt_id,nseg_id,ntri_id,NV_id,sm0_id,im0_id;
+			if ((retval = nc_def_dim(ncid, "npnt", npnt, &npnt_id))) ERR(retval);
+			if ((retval = nc_def_dim(ncid, "nseg", nseg, &nseg_id))) ERR(retval);
+			if ((retval = nc_def_dim(ncid, "ntri", ntri, &ntri_id))) ERR(retval);
+			if ((retval = nc_def_dim(ncid, "NV", NV, &NV_id))) ERR(retval);
+			if ((retval = nc_def_dim(ncid, "sm0", sm0, &sm0_id))) ERR(retval);
+			if ((retval = nc_def_dim(ncid, "im0", im0, &im0_id))) ERR(retval);
+			
+			int ugv_id,ugs_id,ugi_id;
+			dims[0] = npnt_id;
+			dims[1] = NV_id;
+			if ((retval = nc_def_var(ncid, "ugv", NC_DOUBLE, 2, dims, &ugv_id))) ERR(retval);
+			
+			dims[0] = nseg_id;
+			dims[1] = sm0_id;
+			dims[2] = NV_id;
+			if ((retval = nc_def_var(ncid, "ugs", NC_DOUBLE, 3, dims, &ugs_id))) ERR(retval);
+			
+			dims[0] = ntri_id;
+			dims[1] = im0_id;
+			dims[2] = NV_id;
+			if ((retval = nc_def_var(ncid, "ugi", NC_DOUBLE, 3, dims, &ugi_id))) ERR(retval);
+			
+			if ((retval = nc_enddef(ncid))) ERR(retval);
+			
+			size_t index[3];
+			for(i=0;i<npnt;++i) {
+				index[0] = i;
+				for(n=0;n<NV;++n) {
+					index[1] = n;
+					nc_put_var1_double(ncid,ugv_id,index,&ugbd(tlvl).v(i,n));
+				}
+			}
+			
+			
+			for(i=0;i<nseg;++i) {
+				index[0] = i;
+				for(m=0;m<sm0;++m) {
+					index[1] = m;
+					for(n=0;n<NV;++n) {
+						index[2] = n;
+						nc_put_var1_double(ncid,ugs_id,index,&ugbd(tlvl).s(i,m,n));
+					}
+				}
+			}
+			
+			for(i=0;i<ntri;++i) {
+				index[0] = i;
+				for(m=0;m<im0;++m) {
+					index[1] = m;
+					for(n=0;n<NV;++n) {
+						index[2] = n;
+						nc_put_var1_double(ncid,ugi_id,index,&ugbd(tlvl).i(i,m,n));
+					}
+				}
+			}
+			
+			
+			
+			if ((retval = nc_close(ncid))) ERR(retval);
+			
 			break;
 		}
 
@@ -800,6 +919,48 @@ void tri_hp::input(const std::string& filename) {
 			input(fnmapp,reload_type,i);
 		}
 	}
+	else if (reload_type == tri_hp::netcdf) {
+		fnmapp = fname +".nc";
+		fin.open(fnmapp.c_str(),ios::in);  // Check if there is a grid file for moving mesh / adaptive
+		if(fin.is_open()) {
+			fin.close();
+			input_map blank;
+			tri_mesh::input(fnmapp,tri_mesh::netcdf,1,blank);
+			setinfo();
+			
+			nstr.str("");
+			fnmapp = filename +"_v_" +gbl->idprefix +".nc";
+			
+			int retval, ncid;
+			if (!(retval = nc_open(fnmapp.c_str(), NC_NOWRITE, &ncid))) {
+				int vrtxbd_id;
+				if ((retval = nc_inq_varid (ncid, "vrtxbd", &vrtxbd_id))) ERR(retval);
+			
+				size_t index[3];
+				for(i=1;i<gbl->nadapt;++i) {
+					index[0] = i-1;
+					for (j=0;j<npnt;++j) {
+						index[1] = j;
+						index[2] = 0;
+						nc_get_var1_double(ncid,vrtxbd_id,index,&vrtxbd(i)(j)(0));
+						index[2] = 1;
+						nc_get_var1_double(ncid,vrtxbd_id,index,&vrtxbd(i)(j)(1));
+					}
+				}
+				if ((retval = nc_close(ncid))) ERR(retval);
+			}
+			else {
+				for(i=1;i<gbl->nadapt;++i)
+					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
+			}
+		}
+		for(i=0;i<gbl->nadapt;++i) {
+			nstr.str("");
+			nstr << i << std::flush;
+			fnmapp = filename +"_d" +nstr.str();
+			input(fnmapp,reload_type,i);
+		}
+	}
 	else {
 		fnmapp = fname +"_" +gbl->idprefix +".grd";
 		fin.open(fnmapp.c_str(),ios::in);
@@ -941,7 +1102,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			/* BOUNDARY INFO */
 			for(i=0;i<nebd;++i)
-				if (ebdry(i)->idnum == 3) hp_ebdry(i)->input(in,typ,tlvl);
+				hp_ebdry(i)->input(in,typ,tlvl);
 
 			for(i=0;i<nvbd;++i)
 				hp_vbdry(i)->input(in,typ,tlvl);
@@ -1030,6 +1191,116 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 				hp_vbdry(i)->input(in,typ,tlvl);
 
 			in.close();
+			break;
+		}
+			
+		case (netcdf): {
+			fnapp = fname +".nc";
+			/* Create the file. The NC_CLOBBER parameter tells netCDF to
+			 * overwrite this file, if it already exists.*/
+			int retval, ncid, dim_id;
+			size_t dimreturn;
+			
+			if ((retval = nc_open(fnapp.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
+			
+			if ((retval = nc_inq_dimid(ncid, "npnt", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			if (dimreturn  != npnt) {
+				*gbl->log << "mismatched pnt counts?" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			if (dimreturn  != nseg) {
+				*gbl->log << "mismatched seg counts" << std::endl;;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			if ((retval = nc_inq_dimid(ncid, "ntri", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			if (dimreturn  != ntri) {
+				*gbl->log << "mismatched tri counts?" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			if ((retval = nc_inq_dimid(ncid, "NV", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			if (dimreturn  != NV) {
+				*gbl->log << "mismatched variable counts?" << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
+			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+			pin = dimreturn+1;
+			pmin = MIN(p0,pin);
+			
+			int var_id;
+			if ((retval = nc_inq_varid (ncid, "ugv", &var_id))) ERR(retval);
+			size_t index[3];
+			/* POINT INFO */
+			for(i=0;i<npnt;++i) {
+				index[0]= i;
+				for(n=0;n<NV;++n) {
+					index[1] = n;
+					nc_get_var1_double(ncid,var_id,index,&ugbd(tlvl).v(i,n));
+				}
+			}
+			
+			if ((retval = nc_inq_varid (ncid, "ugs", &var_id))) ERR(retval);
+			for(i=0;i<nseg;++i) {
+				index[0] = i;
+				for(m=0;m<(pmin-1);++m) {
+					index[1] = m;
+					for(n=0;n<NV;++n) {
+						index[2] = n;
+						nc_get_var1_double(ncid,var_id,index,&ugbd(tlvl).s(i,m,n));
+					}
+				}
+				
+				for(m=pmin-1;m<p0-1;++m)
+					for(n=0;n<NV;++n)
+						ugbd(tlvl).s(i,m,n) = 0.0;
+			}
+			
+			if ((retval = nc_inq_varid (ncid, "ugi", &var_id))) ERR(retval);
+			for(i=0;i<ntri;++i) {
+				indx = 0;
+				index[0] = ntri;
+				index[1] = 0;
+				for(m=1;m<p0-1;++m) {
+					for(k=0;k<pmin-1-m;++k) {
+						for(n=0;n<NV;++n) {
+							index[2] = n;
+							nc_get_var1_double(ncid,var_id,index,&ugbd(tlvl).i(i,indx,n));
+						}
+						++indx;
+						++index[1];
+					}
+					
+					for(k=pmin-1-m;k<p0-1-m;++k) {
+						for(n=0;n<NV;++n)
+							ugbd(tlvl).i(i,indx,n) = 0.0;
+						++indx;
+					}
+					
+					for(k=0;k<pin-p0;++k) {
+						++index[1];
+					}
+				}
+			}
+			
+			// For now this is a little broken
+			// Fixme: works but isn't general
+			
+			
+			if ((retval = nc_close(ncid))) ERR(retval);
+			
+			for(int i=0;i<nebd;++i) {
+				hp_ebdry(i)->input(filename, netcdf);
+			}
+
 			break;
 		}
 

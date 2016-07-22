@@ -229,7 +229,7 @@
 					"$(PACKAGES)/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = "$(HOME)/Packages";
+				PACKAGES = /usr/local;
 			};
 			name = Debug;
 		};
@@ -246,7 +246,7 @@
 					"$(PACKAGES)/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = "$(HOME)/Packages";
+				PACKAGES = /usr/local;
 			};
 			name = Release;
 		};

@@ -80,14 +80,14 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	output_purposes(0) = "display_type";
 	defaults(0) = tri_hp::tecplot;
 	output_purposes(1) = "restart_type";
-	defaults(1) = tri_hp::binary;
+	defaults(1) = tri_hp::netcdf;
 	output_purposes(2) = "debug_type";
 	defaults(2) = tri_hp::tecplot;
 	for(int i=0;i<3;++i) {
 		if (!inmap.get(gbl->idprefix + "_" + output_purposes(i),ival)) inmap.getwdefault(output_purposes(i),ival,defaults(i));
 		output_type(i) = static_cast<filetype>(ival);
 	}
-	if (!inmap.get(gbl->idprefix + "_reload_type",ival)) inmap.getwdefault("reload_type",ival,static_cast<int>(tri_hp::binary));
+	if (!inmap.get(gbl->idprefix + "_reload_type",ival)) inmap.getwdefault("reload_type",ival,static_cast<int>(tri_hp::netcdf));
 	reload_type = static_cast<filetype>(ival); 
 
 	/* Check that static work arrays are big enough */
@@ -280,8 +280,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	inmap.getwdefault("under_relaxation",under_relax,1.0);
 	string petsc_options;
 	if (inmap.getline("petsc",petsc_options)) {
-		PetscErrorCode err = PetscOptionsInsertString(petsc_options.c_str());
-		//PetscErrorCode err = PetscOptionsInsertString(NULL,petsc_options.c_str());
+		//PetscErrorCode err = PetscOptionsInsertString(petsc_options.c_str());
+		PetscErrorCode err = PetscOptionsInsertString(NULL,petsc_options.c_str());
 		CHKERRABORT(MPI_COMM_WORLD,err);
 	}
 	petsc_initialize();

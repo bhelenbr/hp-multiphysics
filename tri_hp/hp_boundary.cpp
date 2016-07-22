@@ -10,7 +10,11 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 #include <libbinio/binwrap.h>
+#include <netcdf.h>
 #include <myblas.h>
+
+#define ERR(e) {*x.gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,x.gbl->log);}
+
 
 //#define MPDEBUG
 
@@ -211,10 +215,86 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 			}
 			break;
 			
+		case(tri_hp::netcdf):
+			if (curved) {
+				biniwstream bin(&fin);
+				
+				/* HEADER INFORMATION */
+				bin.setFlag(binio::BigEndian,bin.readInt(1));
+				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+				pmin = bin.readInt(sizeof(int));
+				
+				for(j=0;j<base.nseg;++j) {
+					for(m=0;m<pmin-1;++m) {
+						for(n=0;n<tri_mesh::ND;++n) {
+							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+						}
+					}
+					for(m=pmin-1;m<x.sm0;++m) {
+						for(n=0;n<tri_mesh::ND;++n)
+							crvbd(tlvl)(j,m)(n) = 0.0;
+					}
+				}
+			}
+			break;
+
+			
 		default:
 			break;
 	}
 }
+
+void hp_edge_bdry::input(const std::string& filename,tri_hp::filetype typ,int tlvl) {
+	int j,m,n;
+	std::string idin, mytypein;
+	switch(typ) {
+		case(tri_hp::netcdf): {
+			if (curved) {
+				std::string fname;
+				fname = filename +"_" +base.idprefix +".nc";
+				
+				int retval, ncid, dim_id;
+				size_t dimreturn;
+				if ((retval = nc_open(fname.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
+				
+				if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
+				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+				if (dimreturn  != base.nseg) {
+					*x.gbl->log << "mismatched seg counts?" << std::endl;
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
+				}
+				
+				if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
+				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+				int pmin = dimreturn+1;
+				
+				int var_id;
+				if ((retval = nc_inq_varid (ncid, "crvbd", &var_id))) ERR(retval);
+				size_t index[3];
+				for(j=0;j<base.nseg;++j) {
+					index[0] = j;
+					for(m=0;m<pmin-1;++m) {
+						index[1] = m;
+						for(n=0;n<tri_mesh::ND;++n) {
+							index[2] = n;
+							nc_get_var1_double(ncid,var_id,index,&crvbd(tlvl)(j,m)(n));
+						}
+					}
+					for(m=pmin-1;m<x.sm0;++m) {
+						for(n=0;n<tri_mesh::ND;++n)
+							crvbd(tlvl)(j,m)(n) = 0.0;
+					}
+				}
+				if ((retval = nc_close(ncid))) ERR(retval);
+			}
+			break;
+		}
+			
+		default:
+			break;
+	}
+}
+
 
 
 void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
@@ -264,6 +344,51 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 					}
 				}
 				fout.close();
+			}
+			break;
+		}
+			
+		case(tri_hp::netcdf): {
+			if (curved) {
+				std::string fname;
+				fname = filename +"_" +base.idprefix +".nc";
+
+				/* Create the file. The NC_CLOBBER parameter tells netCDF to
+				 * overwrite this file, if it already exists.*/
+				int retval, ncid, dims[3];
+				int one, two, three;
+				if ((retval = nc_create(fname.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
+				
+				/* some fixed dimensions */
+				if ((retval = nc_def_dim(ncid,"1",1,&one)));
+				if ((retval = nc_def_dim(ncid,"2",2,&two)));
+				if ((retval = nc_def_dim(ncid,"3",3,&three)));
+				
+				/* Define the dimensions. NetCDF will hand back an ID for each. */
+				int nseg_id,sm0_id;
+				if ((retval = nc_def_dim(ncid, "nseg", base.nseg, &nseg_id))) ERR(retval);
+				if ((retval = nc_def_dim(ncid, "sm0", x.sm0, &sm0_id))) ERR(retval);
+				
+				int crvbd_id;
+				dims[0] = nseg_id;
+				dims[1] = sm0_id;
+				dims[2] = two;
+				if ((retval = nc_def_var(ncid, "crvbd", NC_DOUBLE, 3, dims, &crvbd_id))) ERR(retval);
+				
+				if ((retval = nc_enddef(ncid))) ERR(retval);
+				
+				size_t index[3];
+				for(int i=0;i<base.nseg;++i) {
+					index[0] = i;
+					for(m=0;m<x.sm0;++m) {
+						index[1] = m;
+						for(n=0;n<tri_mesh::ND;++n) {
+							index[2] = n;
+							nc_put_var1_double(ncid,crvbd_id,index,&crvbd(tlvl)(i,m)(n));
+						}
+					}
+				}
+				if ((retval = nc_close(ncid))) ERR(retval);
 			}
 			break;
 		}

@@ -65,35 +65,35 @@ void tri_mesh::copy(const tri_mesh& tgt) {
 }
 
 void tri_mesh::append(const tri_mesh &z) {
-	int i,j,k,n,vrt,sind,flip;
+	int vrt,sind,flip;
 	int nvrtxold, nsideold,ntriold;
 	int sind1,tind1,v1b;
 	int v1a = 0; // To avoid may be used uninitialized warning
 	int sind2,tind2,v2a,v2b;
 
-	for(i=0;i<z.npnt;++i) {
-		for(n=0;n<ND;++n)
+	for(int i=0;i<z.npnt;++i) {
+		for(int n=0;n<ND;++n)
 			pnts(i+npnt)(n) = z.pnts(i)(n);
 	}
 
-	for(i=0;i<z.npnt;++i)
+	for(int i=0;i<z.npnt;++i)
 		lngth(i+npnt) = z.lngth(i);
 
-	for(i=0;i<z.npnt;++i) {
+	for(int i=0;i<z.npnt;++i) {
 		pnt(i+npnt).tri = z.pnt(i).tri +ntri;
 	}
 
 	/* MOVE BOUNDARY INFO */
 	if (z.nvbd > 0) vbdry.resizeAndPreserve(nvbd+z.nvbd);
-	for(i=0;i<z.nvbd;++i) {
+	for(int i=0;i<z.nvbd;++i) {
 		vbdry(nvbd) = z.vbdry(i)->create(*this);
 		vbdry(nvbd)->alloc(4);
 		vbdry(nvbd)->pnt = z.vbdry(i)->pnt +npnt;
 		++nvbd;
 	}
 
-	for(i=0;i<z.nseg;++i) {
-		for(n=0;n<2;++n) {
+	for(int i=0;i<z.nseg;++i) {
+		for(int n=0;n<2;++n) {
 			seg(i+nseg).pnt(n) = z.seg(i).pnt(n) +npnt;
 			seg(i+nseg).tri(n) = z.seg(i).tri(n) +ntri;
 		}
@@ -101,18 +101,18 @@ void tri_mesh::append(const tri_mesh &z) {
 
 	/* MOVE BOUNDARY INFO */
 	ebdry.resizeAndPreserve(nebd+z.nebd);
-	for(i=0;i<z.nebd;++i) {
+	for(int i=0;i<z.nebd;++i) {
 		ebdry(nebd++) = z.ebdry(i)->create(*this);
 		ebdry(nebd-1)->alloc(z.ebdry(i)->maxseg);
 		ebdry(nebd-1)->nseg = z.ebdry(i)->nseg;
-		for(j=0;j<z.ebdry(i)->nseg;++j) {
+		for(int j=0;j<z.ebdry(i)->nseg;++j) {
 			ebdry(nebd-1)->seg(j) = z.ebdry(i)->seg(j) +nseg;
 		}
 	}
 
 	/* MOVE TRI INFO */
-	for(i=0;i<z.ntri;++i) {
-		for(n=0;n<3;++n) {
+	for(int i=0;i<z.ntri;++i) {
+		for(int n=0;n<3;++n) {
 			tri(i+ntri).pnt(n) = z.tri(i).pnt(n) +npnt;
 			tri(i+ntri).seg(n) = z.tri(i).seg(n)+nseg;
 			tri(i+ntri).sgn(n) = z.tri(i).sgn(n);
@@ -135,10 +135,10 @@ void tri_mesh::append(const tri_mesh &z) {
 	setup_for_adapt();
 
 	/* FIND MATCHING COMMUNICATION BOUNDARY */
-	for(i=0;i<nebd -z.nebd;++i) {
+	for(int i=0;i<nebd -z.nebd;++i) {
 		if (!ebdry(i)->is_comm()) continue;
 
-		for(j=0;j<z.nebd;++j) {
+		for(int j=0;j<z.nebd;++j) {
 			if (ebdry(i)->idnum == z.ebdry(j)->idnum) {
 				int bseg = ebdry(i)->nseg;
 				
@@ -170,7 +170,7 @@ void tri_mesh::append(const tri_mesh &z) {
 
 
 				/* MERGE SIDES AND VERTICES ALONG MATCHING BOUNDARIES */
-				for(k=0;k<bseg;++k) {
+				for(int k=0;k<bseg;++k) {
 					/* Go backwards on this boundary */
 					sind1 = ebdry(i)->seg(bseg-k-1);
 					tind1 = seg(sind1).tri(0);
@@ -224,15 +224,32 @@ void tri_mesh::append(const tri_mesh &z) {
 				
 				/* Delete 1st boundary */
 				delete ebdry(i);
-				for(k=i;k<nebd-1;++k)
+				for(int k=i;k<nebd-1;++k)
 					ebdry(k) = ebdry(k+1);
 				nebd -= 1;
 				
 				/* Delete 2nd boundary */
 				delete ebdry(nebd-z.nebd+j);
-				for(k=nebd-z.nebd+j;k<nebd-1;++k)
+				for(int k=nebd-z.nebd+j;k<nebd-1;++k)
 					ebdry(k) = ebdry(k+1);
 				nebd -= 1;
+				
+				
+				
+//				/* Move deleted ebdry to end */
+//				/* FIXME: Moving to end rather than deleting to avoid hp_ebdry(i) having dangling reference */
+//				edge_bdry *temp = ebdry(i);
+//				for(int k=i;k<nebd-1;++k)
+//					ebdry(k) = ebdry(k+1);
+//				ebdry(nebd-1) = temp;
+//				nebd -= 1;
+//				
+//				/* Move 2nd boundary to end */
+//				temp = ebdry(nebd-z.nebd+j);
+//				for(int k=nebd-z.nebd+j;k<nebd;++k)
+//					ebdry(k) = ebdry(k+1);
+//				ebdry(nebd) = temp;
+//				nebd -= 1;
 				
 				goto DONE;
 			}
@@ -241,10 +258,10 @@ void tri_mesh::append(const tri_mesh &z) {
 	
 DONE:
 	/* DELETE VERTEX BOUNDARY CONDITION THAT REFERS TO DELETED POINT */
-	for(i=nvbd-z.nvbd;i<nvbd;++i) {
+	for(int i=nvbd-z.nvbd;i<nvbd;++i) {
 		if (tri(vbdry(i)->pnt).info&PDLTE) {
 			delete vbdry(i);
-			for(j=i+1;j<nvbd;++j)
+			for(int j=i+1;j<nvbd;++j)
 				vbdry(j-1) =vbdry(j);
 			--nvbd;
 		}

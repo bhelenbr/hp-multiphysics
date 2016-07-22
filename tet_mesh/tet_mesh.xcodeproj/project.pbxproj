@@ -33,15 +33,8 @@
 		6F2262C60867302A001017D0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6F2262C908673035001017D0 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
-		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
-		6F65646D0FAB452300428C3C /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646C0FAB452300428C3C /* libbinio.dylib */; };
-		6F65646E0FAB452400428C3C /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646C0FAB452300428C3C /* libbinio.dylib */; };
 		6F6564700FAB455200428C3C /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646F0FAB455200428C3C /* libspline++.a */; };
 		6F6564710FAB455200428C3C /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646F0FAB455200428C3C /* libspline++.a */; };
-		6F6564760FAB458A00428C3C /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564750FAB458A00428C3C /* libpth.a */; };
-		6F6564770FAB458A00428C3C /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564750FAB458A00428C3C /* libpth.a */; };
-		6F65647C0FAB459500428C3C /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564780FAB459500428C3C /* libmpi.1.dylib */; };
-		6F65647D0FAB459500428C3C /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564790FAB459500428C3C /* libmpi_cxx.1.dylib */; };
 		6F6564C10FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
 		6F6564C20FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
 		6F6564C30FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
@@ -75,7 +68,6 @@
 		6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
-		6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
 		6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
 		6FBD0E8D0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
 		6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
@@ -111,20 +103,15 @@
 		B24119870C623C2300EA7B1A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
 		B24119880C623C2300EA7B1A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
 		B2411AAA0C626D7600EA7B1A /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
-		B25713D20CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
-		B25713D40CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
 		B2DF8B4F0CD0FA7B00E24F1E /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
 		B2DF8C380CD249B700E24F1E /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
 		E63DFFAF161BDC6100C02744 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
 		E63DFFB0161BDC6100C02744 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
 		E63DFFB1161BDC7F00C02744 /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
 		E63DFFB2161BDC8000C02744 /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
-		E6FA5FD3182B440100568351 /* libMAdLib.1.3.svn-head.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCD182B435B00568351 /* libMAdLib.1.3.svn-head.dylib */; };
-		E6FA5FD4182B440100568351 /* libMAdLib.1.3.svn-head.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCD182B435B00568351 /* libMAdLib.1.3.svn-head.dylib */; };
-		E6FA5FD5182B440500568351 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCF182B437800568351 /* libmetis.dylib */; };
-		E6FA5FD6182B440600568351 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FCF182B437800568351 /* libmetis.dylib */; };
-		E6FA5FD7182B440A00568351 /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FD1182B439000568351 /* libmuparser.2.2.4.dylib */; };
-		E6FA5FD8182B440A00568351 /* libmuparser.2.2.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E6FA5FD1182B439000568351 /* libmuparser.2.2.4.dylib */; };
+		E6F8CDB81D3F30E70010D881 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */; };
+		E6F8CDBA1D3F31010010D881 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
+		E6F8CDBB1D3F31080010D881 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -135,17 +122,11 @@
 		6F14BE0A0FBA86FB006DD167 /* copy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = copy.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = "<group>"; };
 		6F2262C008672FAE001017D0 /* libtet_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
-		6F65646C0FAB452300428C3C /* libbinio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbinio.dylib; path = ../../Packages/lib/libbinio.dylib; sourceTree = SOURCE_ROOT; };
 		6F65646F0FAB455200428C3C /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = SOURCE_ROOT; };
-		6F6564720FAB457C00428C3C /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = ../../Packages/lib/libboost_thread.dylib; sourceTree = SOURCE_ROOT; };
-		6F6564750FAB458A00428C3C /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
-		6F6564780FAB459500428C3C /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = /Users/bhelenbr/Packages/lib/libmpi.1.dylib; sourceTree = "<absolute>"; };
-		6F6564790FAB459500428C3C /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = /Users/bhelenbr/Packages/lib/libmpi_cxx.1.dylib; sourceTree = "<absolute>"; };
 		6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
 		6F6565530FACD24700428C3C /* tet_prims.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tet_prims.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
-		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../../../../../../lib/libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
 		6F90CCE40FE1A135003B959F /* MAdLibInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAdLibInterface.h; sourceTree = "<group>"; };
 		6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MAdLibInterface.cpp; sourceTree = "<group>"; };
 		6F956D720FE65610009B5B29 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -167,9 +148,7 @@
 		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
 		E61FBFEE186248CC0035181D /* partition2.bash */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = partition2.bash; sourceTree = "<group>"; };
 		E642B18814437A1700F3CDC9 /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
-		E6FA5FCD182B435B00568351 /* libMAdLib.1.3.svn-head.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libMAdLib.1.3.svn-head.dylib"; path = "../../Packages/lib/libMAdLib.1.3.svn-head.dylib"; sourceTree = "<group>"; };
-		E6FA5FCF182B437800568351 /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../Packages/lib/libmetis.dylib; sourceTree = "<group>"; };
-		E6FA5FD1182B439000568351 /* libmuparser.2.2.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmuparser.2.2.4.dylib; path = ../../Packages/lib/libmuparser.2.2.4.dylib; sourceTree = "<group>"; };
+		E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libtri_mesh_mpi.a; sourceTree = "<group>"; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -178,6 +157,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6F8CDB81D3F30E70010D881 /* libtri_mesh_mpi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,17 +176,9 @@
 				6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */,
 				6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */,
 				6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */,
-				6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */,
-				B25713D40CEA55F200BAC009 /* libtri_mesh.a in Frameworks */,
-				6F65646E0FAB452400428C3C /* libbinio.dylib in Frameworks */,
+				E6F8CDBB1D3F31080010D881 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6564710FAB455200428C3C /* libspline++.a in Frameworks */,
-				6F6564770FAB458A00428C3C /* libpth.a in Frameworks */,
-				6F65647C0FAB459500428C3C /* libmpi.1.dylib in Frameworks */,
-				E6FA5FD4182B440100568351 /* libMAdLib.1.3.svn-head.dylib in Frameworks */,
-				E6FA5FD8182B440A00568351 /* libmuparser.2.2.4.dylib in Frameworks */,
-				6F65647D0FAB459500428C3C /* libmpi_cxx.1.dylib in Frameworks */,
 				6F956D740FE65610009B5B29 /* Accelerate.framework in Frameworks */,
-				E6FA5FD6182B440600568351 /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,17 +187,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */,
-				E6FA5FD7182B440A00568351 /* libmuparser.2.2.4.dylib in Frameworks */,
+				E6F8CDBA1D3F31010010D881 /* libtri_mesh.a in Frameworks */,
 				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
 				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
-				E6FA5FD3182B440100568351 /* libMAdLib.1.3.svn-head.dylib in Frameworks */,
 				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
-				E6FA5FD5182B440500568351 /* libmetis.dylib in Frameworks */,
-				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
-				B25713D20CEA55F200BAC009 /* libtri_mesh.a in Frameworks */,
-				6F65646D0FAB452300428C3C /* libbinio.dylib in Frameworks */,
 				6F6564700FAB455200428C3C /* libspline++.a in Frameworks */,
-				6F6564760FAB458A00428C3C /* libpth.a in Frameworks */,
 				6F956D730FE65610009B5B29 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -236,22 +202,14 @@
 		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6F956D720FE65610009B5B29 /* Accelerate.framework */,
-				6F65646C0FAB452300428C3C /* libbinio.dylib */,
-				6F56D55C09EEE7F900C97501 /* libblitz.a */,
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
 				B25713D10CEA55F200BAC009 /* libtri_mesh.a */,
+				E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
 				6F65646F0FAB455200428C3C /* libspline++.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
-				E6FA5FCD182B435B00568351 /* libMAdLib.1.3.svn-head.dylib */,
-				E6FA5FCF182B437800568351 /* libmetis.dylib */,
-				E6FA5FD1182B439000568351 /* libmuparser.2.2.4.dylib */,
-				6F6564720FAB457C00428C3C /* libboost_thread.dylib */,
-				6F6564750FAB458A00428C3C /* libpth.a */,
-				6F6564780FAB459500428C3C /* libmpi.1.dylib */,
-				6F6564790FAB459500428C3C /* libmpi_cxx.1.dylib */,
+				6F956D720FE65610009B5B29 /* Accelerate.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -614,7 +572,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					METIS,
-					BOOST,
+					PTH,
 				);
 				PRODUCT_NAME = tet_mesh;
 			};
@@ -681,6 +639,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
+				OTHER_LDFLAGS = (
+					"-lbinio",
+					"-lblitz",
+					"-lmetis",
+					"-lparmetis",
+					"-lmuparser",
+					"-lmpi",
+					"-lmpi_cxx",
+					"-lMAdLib",
+					"-lpetsc",
+				);
 				PRODUCT_NAME = tet_mesh_mpi;
 			};
 			name = Debug;
@@ -695,6 +664,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
+				OTHER_LDFLAGS = (
+					"-lbinio",
+					"-lblitz",
+					"-lmetis",
+					"-lparmetis",
+					"-lmuparser",
+					"-lmpi",
+					"-lmpi_cxx",
+					"-lMAdLib",
+					"-lpetsc",
+				);
 				PRODUCT_NAME = tet_mesh_mpi;
 			};
 			name = Release;
@@ -709,6 +689,14 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
+				OTHER_LDFLAGS = (
+					"-lbinio",
+					"-lblitz",
+					"-lmuparser",
+					"-lmetis",
+					"-lpth",
+					"-lMAdLib",
+				);
 				PRODUCT_NAME = tet_mesh;
 			};
 			name = Debug;
@@ -723,6 +711,14 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
+				OTHER_LDFLAGS = (
+					"-lbinio",
+					"-lblitz",
+					"-lmuparser",
+					"-lmetis",
+					"-lpth",
+					"-lMAdLib",
+				);
 				PRODUCT_NAME = tet_mesh;
 			};
 			name = Release;

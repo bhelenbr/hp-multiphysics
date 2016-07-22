@@ -71,7 +71,7 @@ void tri_hp::partition(multigrid_interface& xmesh, int npart, int maxenum, int m
 			}
 		}
 		else {
-			hp_ebdry(i) = new hp_edge_bdry(*this,*ebdry(i));
+			hp_ebdry(i) = new hp_partition(*this,*ebdry(i));
 		}
 	}
 	

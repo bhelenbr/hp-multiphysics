@@ -33,7 +33,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	fname = filename +"_" +base.idprefix;
 	
 	switch(typ) {
-		case(tri_hp::text): case(tri_hp::binary): {
+		case(tri_hp::text): case(tri_hp::netcdf): case(tri_hp::binary): {
 			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}

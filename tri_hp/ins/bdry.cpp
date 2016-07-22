@@ -21,7 +21,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	fname = filename +"_" +base.idprefix;
 
 	switch(typ) {
-		case(tri_hp::text): case(tri_hp::binary): {
+		case(tri_hp::text): case(tri_hp::binary): case(tri_hp::netcdf): {
 			hp_edge_bdry::output(filename,typ,tlvl);
 			break;
 		}
@@ -496,7 +496,6 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
 	}
 	pind = x.seg(sind).pnt(1)*vdofs;
-	std::cout << x.seg(sind).pnt(1) << std::endl;
 
 	for(int n=0;n<c0vars.extent(firstDim);++n)
 		base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));

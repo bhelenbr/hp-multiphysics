@@ -148,6 +148,7 @@ public:
 	
 	/** This is to read solution data **/
 	virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);
+	virtual void input(const std::string& fname,tri_hp::filetype typ,int tlvl = 0);
 	/* input output functions */
 	virtual void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 	void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);

@@ -538,8 +538,6 @@ void tri_mesh::subpartition(int& nparts) {
 /* pnt(sind).info = old pnt index */
 void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int maxvnum) {
 	tri_mesh& xin(dynamic_cast<tri_mesh&>(xmesh));
-
-
 	
 	for(int i=0;i<xin.npnt;++i)
 		xin.pnt(i).info = -1;
@@ -669,6 +667,7 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 			vbdry(nvbd)->pnt = xin.pnt(xin.vbdry(i)->pnt).info;
 			ostringstream nstr;
 			nstr << "b" << npart << "_v" << xin.vbdry(i)->idnum << std::flush;
+			vbdry(nvbd)->idprefix = nstr.str();
 			*gbl->log << nstr.str() << "_matches: " << xin.vbdry(i)->idprefix << std::endl;
 			nstr.clear();
 			++nvbd;
@@ -688,6 +687,7 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 				ostringstream nstr;
 				nstr << "b" << npart << "_s" << xin.ebdry(bcntr[i][0])->idnum << std::flush;
 				*gbl->log << nstr.str() << "_matches: " << ebdry(i)->idprefix << std::endl;
+				ebdry(i)->idprefix = nstr.str();
 				nstr.clear();
 			}
 		}
