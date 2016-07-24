@@ -441,9 +441,9 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			
 			size_t index[2];
 			/* POINT INFO */
-			for(i=0;i<npnt;++i) {
+			for(int i=0;i<npnt;++i) {
 				index[0]= i;
-				for(n=0;n<ND;++n) {
+				for(int n=0;n<ND;++n) {
 					index[1] = n;
 					
 					nc_put_var1_double(ncid,pnt_id,index,&pnts(i)(n));
@@ -453,30 +453,30 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			}
 			
 			/* SEG INFO */
-			for(i=0;i<nseg;++i) {
+			for(int i=0;i<nseg;++i) {
 				index[0]= i;
-				for(n=0;n<2;++n) {
+				for(int n=0;n<2;++n) {
 					index[1] = n;
 					nc_put_var1_int(ncid,seg_id,index,&seg(i).pnt(n));
 				}
 			}
 			
 			/* TRI INFO */
-			for(i=0;i<ntri;++i) {
+			for(int i=0;i<ntri;++i) {
 				index[0]= i;
-				for(n=0;n<3;++n) {
+				for(int n=0;n<3;++n) {
 					index[1] = n;
 					nc_put_var1_int(ncid,tri_id,index,&tri(i).pnt(n));
 				}
 			}
 			
 			/* SIDE BOUNDARY INFO */
-			for(i=0;i<nebd;++i) {
+			for(int i=0;i<nebd;++i) {
 				nc_put_var_int(ncid,ebdry_ids(i),&ebdry(i)->seg(0));
 			}
 			
 			/* VRTX BOUNDARY INFO */
-			for(i=0;i<nvbd;++i) {
+			for(int i=0;i<nvbd;++i) {
 				index[0] = i;
 				index[1] = 0;
 				nc_put_var1_int(ncid,vrtx_id,index,&vbdry(i)->idnum);

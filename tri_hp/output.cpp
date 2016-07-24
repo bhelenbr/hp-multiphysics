@@ -1267,7 +1267,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			if ((retval = nc_inq_varid (ncid, "ugi", &var_id))) ERR(retval);
 			for(i=0;i<ntri;++i) {
 				indx = 0;
-				index[0] = ntri;
+				index[0] = i;
 				index[1] = 0;
 				for(m=1;m<p0-1;++m) {
 					for(k=0;k<pmin-1-m;++k) {
@@ -1298,7 +1298,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			if ((retval = nc_close(ncid))) ERR(retval);
 			
 			for(int i=0;i<nebd;++i) {
-				hp_ebdry(i)->input(filename, netcdf);
+				hp_ebdry(i)->input(filename, netcdf, tlvl);
 			}
 
 			break;

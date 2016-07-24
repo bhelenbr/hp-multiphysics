@@ -230,6 +230,8 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 ./configure --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2-1.9 --with-debugging=0 --with-valgrind-dir=/share/apps
 
+./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 -with-fortran=0  --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
+
 # On stampede
 ./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
 
