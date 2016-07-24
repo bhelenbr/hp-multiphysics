@@ -519,7 +519,7 @@ void tri_hp::movesdata(int from, int to) {
 }
 
 void tri_hp::movesdata_bdry(int bnum,int bel) {
-	hp_ebdry(bnum)->movesdata_bdry(bel,hp_ebdry(bnum)->adapt_storage);
+	hp_ebdry(bnum)->movesdata_bdry(bel,hp_ebdry(bnum)->adapt_storage,-1);
 	return;
 }
 

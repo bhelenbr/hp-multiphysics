@@ -257,7 +257,7 @@ class tri_mesh : public multigrid_interface {
 		virtual void updatepdata_bdry(int bnum,int bel,int endpt) {} /**< Virtual routine so inheritors can automatically have new bondary point data updated */
 		void dltseg(int sind); /**< Removes leftover segment references */
 		virtual void movesdata(int frm, int to) {} /**< Virtual routine so inheritors can automatically have their segment data moved */
-		virtual void movesdata_bdry(int bnum,int bel, int sind = -1) {} /**< Virtual routine so inheritors can automatically have their boundry segment data moved  */
+		virtual void movesdata_bdry(int bnum,int bel) {} /**< Virtual routine so inheritors can automatically have their boundry segment data moved  */
 		virtual void updatesdata(int s) {} /**< Virtual routine so inheritors can update segment data */
 		virtual void updatesdata_bdry(int bnum,int bel) {} /**< Virtual routine so inheritors can update boundary segment data */
 		void dlttri(int tind); /**< Removes leftover triangle references */
