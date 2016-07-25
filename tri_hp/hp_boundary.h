@@ -119,7 +119,7 @@ public:
 	symbolic_function<2> l2norm;
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), curved(false), coupled(false), frozen(false), report_flag(false) {mytype = "plain"; type.resize(x.NV,natural);}
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), curved(false), coupled(false), frozen(false), report_flag(false), adapt_storage(NULL) {mytype = "plain"; type.resize(x.NV,natural);}
 	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc),
 	curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), derivative_fluxes(inbdry.derivative_fluxes) {
 		if (curved && !x.coarse_level) {
@@ -210,7 +210,7 @@ public:
 	virtual void movesdata_bdry(int bel,const hp_edge_bdry *tgt, int tgtel = -1) {
 		int step,m,n;
 		
-		if (!curved || !x.sm0) return;
+		if (!curved || !x.sm0 || tgt == NULL) return;
 		
 		if (tgtel < 0) {
 			/* Assumes that sind's are the same */

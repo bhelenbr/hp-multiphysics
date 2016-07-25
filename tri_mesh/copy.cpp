@@ -222,34 +222,35 @@ void tri_mesh::append(const tri_mesh &z) {
 					}
 				}
 				
-				/* Delete 1st boundary */
-				delete ebdry(i);
-				for(int k=i;k<nebd-1;++k)
-					ebdry(k) = ebdry(k+1);
-				nebd -= 1;
-				
-				/* Delete 2nd boundary */
-				delete ebdry(nebd-z.nebd+j);
-				for(int k=nebd-z.nebd+j;k<nebd-1;++k)
-					ebdry(k) = ebdry(k+1);
-				nebd -= 1;
+//				/* Delete 1st boundary */
+//				delete ebdry(i);
+//				for(int k=i;k<nebd-1;++k)
+//					ebdry(k) = ebdry(k+1);
+//				nebd -= 1;
+//				
+//				/* Delete 2nd boundary */
+//				delete ebdry(nebd-z.nebd+j);
+//				for(int k=nebd-z.nebd+j;k<nebd-1;++k)
+//					ebdry(k) = ebdry(k+1);
+//				nebd -= 1;
 				
 				
 				
 //				/* Move deleted ebdry to end */
 //				/* FIXME: Moving to end rather than deleting to avoid hp_ebdry(i) having dangling reference */
-//				edge_bdry *temp = ebdry(i);
-//				for(int k=i;k<nebd-1;++k)
-//					ebdry(k) = ebdry(k+1);
-//				ebdry(nebd-1) = temp;
-//				nebd -= 1;
-//				
-//				/* Move 2nd boundary to end */
-//				temp = ebdry(nebd-z.nebd+j);
-//				for(int k=nebd-z.nebd+j;k<nebd;++k)
-//					ebdry(k) = ebdry(k+1);
-//				ebdry(nebd) = temp;
-//				nebd -= 1;
+					/* Also to avoid deleting z halo mesh before being done with it. */
+				edge_bdry *temp = ebdry(i);
+				for(int k=i;k<nebd-1;++k)
+					ebdry(k) = ebdry(k+1);
+				ebdry(nebd-1) = temp;
+				nebd -= 1;
+				
+				/* Move 2nd boundary to end */
+				temp = ebdry(nebd-z.nebd+j);
+				for(int k=nebd-z.nebd+j;k<nebd;++k)
+					ebdry(k) = ebdry(k+1);
+				ebdry(nebd) = temp;
+				nebd -= 1;
 				
 				goto DONE;
 			}

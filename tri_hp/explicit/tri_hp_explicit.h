@@ -23,6 +23,7 @@ class tri_hp_explicit : public tri_hp_cd {
 
 	public:
 		void* create_global_structure() {return new global;}
+		void delete_global_structure() {delete gbl;}
 		tri_hp_explicit* create() { return new tri_hp_explicit(); }
 		void init(input_map& inmap, void *gin);
 		void init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d);

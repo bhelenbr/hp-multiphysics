@@ -405,6 +405,8 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 }
 
 tri_hp::~tri_hp() {
+	
+	delete helper;
 
 	for(int i=0;i<nvbd;++i)
 		delete hp_vbdry(i);

@@ -118,6 +118,7 @@ class tri_mesh : public multigrid_interface {
 		void allocate(int mxsize);  
 		/** Routine to allocate shared variables */
 		void* create_global_structure() {return new global;}
+		void delete_global_structure() {delete gbl;}
 		/** Routine to initialize with using information in map and shared resource in gbl_in */
 		void init(input_map& input, void *gbl_in);
 		/** Routine to initialze from another mesh with option of increasing or decreasing storage (compatible with block.h) */

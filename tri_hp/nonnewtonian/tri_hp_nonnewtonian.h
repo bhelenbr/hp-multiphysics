@@ -26,6 +26,7 @@ class tri_hp_nonnewtonian : public tri_hp_ins {
 		
 	public:
 		void* create_global_structure() {return new global;}
+		void delete_global_structure() {delete gbl;}
 		tri_hp_nonnewtonian* create() { return new tri_hp_nonnewtonian(); }
 		
 		void init(input_map& inmap, void *gin); 

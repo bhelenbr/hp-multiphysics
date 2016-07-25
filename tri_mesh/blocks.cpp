@@ -1562,3 +1562,7 @@ void block::adapt() {
 
 	return;
 }
+
+block::~block() {
+	if (gbl) grd(0)->delete_global_structure();
+}

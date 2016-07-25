@@ -46,6 +46,7 @@ class tri_hp_cns : public tri_hp {
 
     public:
 		void* create_global_structure() {return new global;}
+		void delete_global_structure() {delete gbl;}
 		tri_hp_cns* create() { return new tri_hp_cns(); }
 
 		void init(input_map& inmap, void *gin); 
