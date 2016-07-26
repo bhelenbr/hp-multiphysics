@@ -1564,5 +1564,9 @@ void block::adapt() {
 }
 
 block::~block() {
+	if (gbl->log != &std::cout) delete gbl->log;
 	if (gbl) grd(0)->delete_global_structure();
+	for(int i=ngrid-1;i>=0;--i) {
+		delete grd(i);
+	}
 }

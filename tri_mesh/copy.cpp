@@ -236,9 +236,8 @@ void tri_mesh::append(const tri_mesh &z) {
 				
 				
 				
-//				/* Move deleted ebdry to end */
-//				/* FIXME: Moving to end rather than deleting to avoid hp_ebdry(i) having dangling reference */
-					/* Also to avoid deleting z halo mesh before being done with it. */
+				/* Move deleted ebdry to end then delete */
+				/* Avoid deleting z halo mesh before being done with it. */
 				edge_bdry *temp = ebdry(i);
 				for(int k=i;k<nebd-1;++k)
 					ebdry(k) = ebdry(k+1);
@@ -267,6 +266,9 @@ DONE:
 			--nvbd;
 		}
 	}
+	
+	delete ebdry(nebd);
+	delete ebdry(nebd+1);
 	
 	// cleanup_after_adapt();
 

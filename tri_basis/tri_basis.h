@@ -512,6 +512,13 @@ template<int EP> class tri_basis_array {
 		tri_basis_interface* operator()(int i) {
 			return(tri(i));
 		}
+	
+	~tri_basis_array() {
+		delete tri(0);
+		delete tri(1);
+		delete tri(2);
+		//delete tri(3);
+	}
 };
 #endif
 

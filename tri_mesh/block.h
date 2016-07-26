@@ -196,7 +196,7 @@ class multigrid_interface {
 	public:
 		/** Initialization functions */
 		virtual void* create_global_structure() {return 0;}
-		virtual void delete_global_structure() {return 0;}
+		virtual void delete_global_structure() {return;}
 		virtual void init(input_map& input, void *gbl_in) {}
 		enum init_purpose {duplicate, multigrid, adapt_storage, user_defined};
 		virtual void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0) {}

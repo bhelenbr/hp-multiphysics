@@ -84,6 +84,8 @@ public:
 	void output(const char *filename, FILETYPE type=tecplot);
 	~quadtree() {
 		delete []srchlst;
+		delete []indx;
+		delete []base;
 	}
 };
 #endif
