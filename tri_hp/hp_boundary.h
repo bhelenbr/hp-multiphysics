@@ -38,7 +38,7 @@ protected:
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
 	
 public:
-	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain"; type.resize(x.NV,natural);}
+	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain";}
 	hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), coupled(inbdry.coupled), frozen(inbdry.frozen),report_flag(inbdry.report_flag),
 	type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy) {
 #ifdef petsc
@@ -104,9 +104,9 @@ public:
 class hp_edge_bdry : public egeometry_interface<2> {
 public:
 	/* Non-shared data */
+	std::string mytype;										/**< Class name */
 	tri_hp& x;														/**< Reference to parent */
 	edge_bdry &base;											/**< Reference to mesh boundary */
-	std::string mytype;										/**< Class name */
 	bool shared_owner, curved, coupled, frozen, report_flag;  /**< Various flags */
 	int jacobian_start;  /**< Index for rows of extra degrees of freedom (coupled) */
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
@@ -123,7 +123,7 @@ public:
 	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), mytype("plain"), shared_owner(true), curved(false), coupled(false), frozen(false), report_flag(false), adapt_storage(NULL) {}
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(true), curved(false), coupled(false), frozen(false), report_flag(false), ibc(x.gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
 	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage) {
 		
 		if (curved && !x.coarse_level) {
@@ -251,15 +251,16 @@ public:
 class symbolic_with_integration_by_parts : public hp_edge_bdry {
 	std::vector<vector_function *> derivative_fluxes;
 	public:
-		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), mytype("symbolic_with_integration_by_parts") {}
-	symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), mytype("symbolic_with_integration_by_parts"),  derivative_fluxes(inbdry.derivative_fluxes) {}
+		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "symbolic_with_integration_by_parts";}
+	symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), derivative_fluxes(inbdry.derivative_fluxes) {}
 		symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 		~symbolic_with_integration_by_parts() {
 			if (shared_owner) {
-			for (int n=0;n<x.NV;++n)
-				delete derivative_fluxes[n];
+				for (int n=0;n<x.NV;++n)
+					delete derivative_fluxes[n];
+			}
 		}
 	};
 

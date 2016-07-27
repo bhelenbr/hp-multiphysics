@@ -43,15 +43,16 @@ namespace bdry_ps {
 
 	class dirichlet : public neumann {        
 		public:
-			dirichlet(tri_hp_ps &xin, edge_bdry &bin) : neumann(xin,bin) {
-				mytype = "dirichlet";
+			dirichlet(tri_hp_ps &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "dirichlet";}
+			dirichlet(const dirichlet& inbdry, tri_hp_ps &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in) {
+				neumann::init(inmap,gbl_in);
 				for(int n=0;n<x.ND;++n) {
 					essential_indices.push_back(n);
 					type[n] = essential;
 				}
 			}
-			dirichlet(const dirichlet& inbdry, tri_hp_ps &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
-			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
 	};
 
 	class friction_wall : public hp_edge_bdry {

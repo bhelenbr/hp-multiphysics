@@ -24,7 +24,7 @@ brew install muparser
 brew install homebrew/science/petsc
 brew install pth
 brew install valgrind
-brew install homewbrew/science/madlib
+brew install homebrew/science/madlib
 
 To update installed packages
 brew update

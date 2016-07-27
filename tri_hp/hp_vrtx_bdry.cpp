@@ -30,6 +30,7 @@ void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
 	report_flag = false;
 	inmap.get(keyword,report_flag);
 	
+	type.resize(x.NV,natural);
 	Array<int,1> atemp(x.NV);
 	if (inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
 		for (int n=0;n<x.NV;++n) {

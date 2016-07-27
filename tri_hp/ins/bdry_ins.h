@@ -78,15 +78,16 @@ namespace bdry_ins {
 
 	class inflow : public generic {  
 		public:
-			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {
-				mytype = "inflow";
+			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "inflow";}
+			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
+			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in) {
+				generic::init(inmap,gbl_in);
 				for (int n=0;n<x.NV-1;++n) {
 					essential_indices.push_back(n);
 					type[n] = essential;
 				}
 			}
-			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
-			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 	};
 
 

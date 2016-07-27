@@ -29,7 +29,6 @@ public:
 	/* non shared data */
 	int NV; //!< number of manifold variables
 	bool is_master; //!< master slave relationship for b.c. pairs
-	bool is_loop;  //!< true if boundary is a loop
 
 	/* Stuff needed for a surface variable */
 	//		/** Stores vertex, side coefficients of solution */
@@ -54,8 +53,8 @@ public:
 	/* Could make a structure of constants, then just keep a reference sort of like gbl now except don't have to keep inheriting globals?? */
 	/* That's a little weird too, what would subclasses name their structures of globals? */
 	struct global {
-		
-		
+		bool is_loop;  //!< true if boundary is a loop
+
 		/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 		Array<FLT,2> vug0; //!< vertex solution on entry to multigrid (pnts,NV)
 		Array<FLT,3> sug0; //!< side solution on entry to multigrid (segs,mode,NV)

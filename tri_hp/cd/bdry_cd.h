@@ -30,13 +30,14 @@ namespace bdry_cd {
 
 	class dirichlet : public generic {
 		public:
-			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {
-				mytype = "dirichlet";
+			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "dirichlet";}
+			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
+			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in) {
+				generic::init(inmap,gbl_in);
 				type[0] = essential;
 				essential_indices.push_back(0);
 			}
-			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
-			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 	};
 
 	class characteristic : public generic {
