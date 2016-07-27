@@ -123,7 +123,7 @@ public:
 	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(true), curved(false), coupled(false), frozen(false), report_flag(false), ibc(x.gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(false), curved(false), coupled(false), frozen(false), report_flag(false), ibc(x.gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
 	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage) {
 		
 		if (curved && !x.coarse_level) {

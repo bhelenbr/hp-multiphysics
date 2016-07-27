@@ -139,6 +139,8 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 		}
 	}
 	
+	shared_owner = true;
+	
 	return;
 }
 
