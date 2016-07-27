@@ -148,7 +148,7 @@ public:
 	void find_matching_boundary_name(input_map& inmap, std::string& blockname, std::string& sidename);
 	virtual void copy(const hp_edge_bdry& tgt);
 	virtual ~hp_edge_bdry() {
-		if (shared_ownder) {
+		if (shared_owner) {
 			for(int n=0;n<x.NV;++n) {
 				delete fluxes[n];
 			}
