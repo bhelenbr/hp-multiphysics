@@ -29,6 +29,7 @@ class surface2 : public hp_coupled_bdry {
 		} *gbl;
 		
 		void* create_global_structure() {return new global;}
+		void delete_global_structure() { if(shared_owner) delete gbl;}
 		surface2(tri_hp_ins &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin), x(xin) {mytype = "surface2";}
 		surface2(const surface2& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : hp_coupled_bdry(inbdry,xin,bin), x(xin) {
 			gbl = inbdry.gbl;

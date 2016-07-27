@@ -46,6 +46,7 @@ public:
 #endif
 	}
 	virtual void* create_global_structure() {return 0;}
+	virtual void delete_global_structure() {return;}
 	virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
 	virtual void init(input_map& inmap,void* gbl_in); /**< This is to read definition data only (not solution data) */
 	virtual void copy(const hp_vrtx_bdry& tgt) {}
@@ -102,26 +103,29 @@ public:
 
 class hp_edge_bdry : public egeometry_interface<2> {
 public:
-	std::string mytype;										/**< Class name */
+	/* Non-shared data */
 	tri_hp& x;														/**< Reference to parent */
 	edge_bdry &base;											/**< Reference to mesh boundary */
-	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
-	init_bdry_cndtn *ibc; /**< pointer to initial boundary condition function */
-	bool curved, coupled, frozen, report_flag;  /**< Various flags */
+	std::string mytype;										/**< Class name */
+	bool shared_owner, curved, coupled, frozen, report_flag;  /**< Various flags */
 	int jacobian_start;  /**< Index for rows of extra degrees of freedom (coupled) */
-	enum bctypes {essential, natural};
-	std::vector<bctypes> type;
-	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
-	std::vector<vector_function *> fluxes, derivative_fluxes;
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 	Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 	Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
-	symbolic_function<2> l2norm;
+	
+	/* Shared data */
+	enum bctypes {essential, natural};
+	std::vector<bctypes> type;
+	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
+	std::vector<vector_function *> fluxes;
+	symbolic_function<2> *l2norm;
+	init_bdry_cndtn *ibc; /**< pointer to initial boundary condition function */
+	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), curved(false), coupled(false), frozen(false), report_flag(false), adapt_storage(NULL) {mytype = "plain"; type.resize(x.NV,natural);}
-	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc),
-	curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), derivative_fluxes(inbdry.derivative_fluxes) {
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), mytype("plain"), shared_owner(true), curved(false), coupled(false), frozen(false), report_flag(false), adapt_storage(NULL) {}
+	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storate) {
+		
 		if (curved && !x.coarse_level) {
 			crv.resize(base.maxseg,x.sm0);
 			crvbd.resize(x.gbl->nhist+1);
@@ -129,8 +133,6 @@ public:
 				crvbd(i).resize(base.maxseg,x.sm0);
 			crvbd(0).reference(crv);
 		}
-		if (report_flag)
-			l2norm = inbdry.l2norm;
 		
 		dxdt.resize(x.log2pmax+1,base.maxseg);
 #ifndef petsc
@@ -141,10 +143,20 @@ public:
 	}
 	virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 	virtual void* create_global_structure() {return 0;}
+	virtual void delete_global_structure() {}
 	virtual void init(input_map& inmap,void* gbl_in);
 	void find_matching_boundary_name(input_map& inmap, std::string& blockname, std::string& sidename);
 	virtual void copy(const hp_edge_bdry& tgt);
-	virtual ~hp_edge_bdry() {}
+	virtual ~hp_edge_bdry() {
+		if (shared_ownder) {
+			for(int n=0;n<x.NV;++n) {
+				delete fluxes[n];
+			}
+			if (ibc != x.gbl->ibc) {
+				delete ibc;
+			}
+		}
+	}
 	
 	/** This is to read solution data **/
 	virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);
@@ -237,24 +249,21 @@ public:
 };
 
 class symbolic_with_integration_by_parts : public hp_edge_bdry {
+	std::vector<vector_function *> derivative_fluxes;
 	public:
-		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "symbolic_with_integration_by_parts"; derivative_fluxes.resize(x.NV);
-			Array<string,1> names(4);
-			Array<int,1> dims(4);
-			dims = x.ND;
-			names(0) = "u";
-			dims(0) = x.NV;
-			names(1) = "x";
-			names(2) = "xt";
-			names(3) = "n";
+		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), mytype("symbolic_with_integration_by_parts") {}
+		symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {
+			derivative_fluxes.resize(x.NV);
 			for(int n=0;n<x.NV;++n) {
-				derivative_fluxes[n] = new vector_function(4,dims,names);
-			}
+				derivative_fluxes[n] = new vector_function(inbdry.derivative_fluxes[n]);
 		}
-		symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {}
 		symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
+		~symbolic_with_integration_by_parts() {
+			for (int n=0;n<x.NV;++n)
+				delete derivative_fluxes[n];
+		}
 	};
 
 class hp_partition : public hp_edge_bdry {

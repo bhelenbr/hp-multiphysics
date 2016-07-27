@@ -25,9 +25,12 @@
 /* Non-deforming coupled boundary with variables on boundary */
 class hp_coupled_bdry : public hp_edge_bdry {
 public:
+	
+	/* non shared data */
 	int NV; //!< number of manifold variables
 	bool is_master; //!< master slave relationship for b.c. pairs
-	
+	bool is_loop;  //!< true if boundary is a loop
+
 	/* Stuff needed for a surface variable */
 	//		/** Stores vertex, side coefficients of solution */
 	//		struct vs {
@@ -44,9 +47,14 @@ public:
 	const hp_coupled_bdry *fine, *coarse;  //!< Pointers to coarse and fine mesh objects for multigrid transfers
 	Array<FLT,1> ksprg;  //!< For tangential deforming boundary equation
 	
+	/* shared data */
+	/* Is this the right way to do this?  Can just make these a member of class and then have other objects reference these */
+	/* Only problem with that is that constants become a little weird.  Would have to have pointers to doubles instead of an actual double :-( */
+	/* Should distinguish those that can be changed i.e. physical parameters and those that can't i.e. NV */
+	/* Could make a structure of constants, then just keep a reference sort of like gbl now except don't have to keep inheriting globals?? */
+	/* That's a little weird too, what would subclasses name their structures of globals? */
 	struct global {
 		
-		bool is_loop;  //!< true if boundary is a loop
 		
 		/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 		Array<FLT,2> vug0; //!< vertex solution on entry to multigrid (pnts,NV)
@@ -80,6 +88,7 @@ public:
 	
 public:
 	void* create_global_structure() {return new global;}
+	void delete_global_structure() { if(shared_owner) delete gbl;}
 	hp_coupled_bdry(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "hp_coupled_bdry"; is_master = base.is_frst();}
 	hp_coupled_bdry(const hp_coupled_bdry& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), NV(inbdry.NV), is_master(inbdry.is_master), gbl(inbdry.gbl) {
 		fine = &inbdry;

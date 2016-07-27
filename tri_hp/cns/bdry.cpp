@@ -134,7 +134,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 #ifdef L2_ERROR
 					xpt(0) = x.crd(0)(0,i);
 					xpt(1) = x.crd(1)(0,i);
-					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
+					l2error += jcb*l2norm->Eval(xpt,x.gbl->time);
 #endif
 					
 					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';

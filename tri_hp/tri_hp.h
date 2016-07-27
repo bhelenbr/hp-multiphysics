@@ -170,7 +170,13 @@ class tri_hp : public r_tri_mesh  {
 		tri_hp() : r_tri_mesh() {}
 		virtual tri_hp* create() {return new tri_hp;}
 		void* create_global_structure() {return new global;}
-		void delete_global_structure() {delete gbl;}
+		void delete_global_structure() {
+			delete gbl->helper;
+			delete gbl;
+			for(int i=0;i<nebd;++i) {
+				hp_ebdry(i)->delete_global_structure();
+			}
+		}
 		void init(input_map& inmap, void *gin);
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);

@@ -52,6 +52,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	report_flag = false;
 	inmap.get(keyword,report_flag);
 	
+	type.resize(x.NV,natural);
 	Array<int,1> atemp(x.NV);
 	if (inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
 		for (int n=0;n<x.NV;++n) {
@@ -95,7 +96,8 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	if (inmap.find(base.idprefix+"_norm") == inmap.end())	{
 		inmap[base.idprefix+"_norm"] = "0.0";
 	}
-	l2norm.init(inmap,base.idprefix+"_norm");
+	l2norm = new symbolic_function<2>();
+	l2norm->init(inmap,base.idprefix+"_norm");
 	
 #ifndef petsc
 	base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
@@ -448,7 +450,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 					
 					xpt(0) = x.crd(0)(0,i);
 					xpt(1) = x.crd(1)(0,i);
-					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
+					l2error += jcb*l2norm->Eval(xpt,x.gbl->time);
 					
 					jcb = 1./(arclength*(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i)));
 					
@@ -1871,6 +1873,20 @@ void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
 	zeromap["zero"] = "0.0";
 	
 	hp_edge_bdry::init(inmap,gbl_in);
+	
+	derivative_fluxes.resize(x.NV);
+	Array<string,1> names(4);
+	Array<int,1> dims(4);
+	dims = x.ND;
+	names(0) = "u";
+	dims(0) = x.NV;
+	names(1) = "x";
+	names(2) = "xt";
+	names(3) = "n";
+	for(int n=0;n<x.NV;++n) {
+		derivative_fluxes[n] = new vector_function(4,dims,names);
+	}
+
 	for (int n=0;n<x.NV;++n) {
 		if (type[n] == natural) {
 			nstr.str("");
