@@ -124,7 +124,7 @@ public:
 	
 public:
 	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), mytype("plain"), shared_owner(true), curved(false), coupled(false), frozen(false), report_flag(false), adapt_storage(NULL) {}
-	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storate) {
+	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage) {
 		
 		if (curved && !x.coarse_level) {
 			crv.resize(base.maxseg,x.sm0);
@@ -252,15 +252,12 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 	std::vector<vector_function *> derivative_fluxes;
 	public:
 		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), mytype("symbolic_with_integration_by_parts") {}
-		symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin) {
-			derivative_fluxes.resize(x.NV);
-			for(int n=0;n<x.NV;++n) {
-				derivative_fluxes[n] = new vector_function(inbdry.derivative_fluxes[n]);
-		}
+	symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), mytype("symbolic_with_integration_by_parts"),  derivative_fluxes(inbdry.derivative_fluxes) {}
 		symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 		~symbolic_with_integration_by_parts() {
+			if (shared_owner) {
 			for (int n=0;n<x.NV;++n)
 				delete derivative_fluxes[n];
 		}
