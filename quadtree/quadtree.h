@@ -57,6 +57,10 @@ private:
 	
 public:
 	quadtree() : maxvrtx(0), vrtx(0), size(0), current(0) {};
+	quadtree(const class quadtree& tgt) {
+		size = 0;
+		copy(tgt);
+	}
 	void copy(const class quadtree& tgt);
 	void allocate(Array<TinyVector<FLT,ND>,1> v,int mxv);
 	inline void init(Array<TinyVector<FLT,ND>,1> v, int mxv, TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2) { allocate(v,mxv); init(x1,x2);}
