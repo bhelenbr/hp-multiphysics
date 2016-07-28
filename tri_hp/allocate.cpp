@@ -405,10 +405,11 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 }
 
 void tri_hp::delete_global_structure() {
-	delete gbl;
 	for(int i=0;i<nebd;++i) {
 		hp_ebdry(i)->delete_global_structure();
 	}
+	delete gbl->ibc;
+	delete gbl;
 }
 
 tri_hp::~tri_hp() {

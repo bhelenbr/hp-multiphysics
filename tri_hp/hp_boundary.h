@@ -155,6 +155,7 @@ public:
 			if (ibc != x.gbl->ibc) {
 				delete ibc;
 			}
+			delete l2norm;
 		}
 	}
 	
