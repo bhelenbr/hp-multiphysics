@@ -409,7 +409,8 @@ void tri_hp::delete_global_structure() {
 		hp_ebdry(i)->delete_global_structure();
 	}
 	delete gbl->ibc;
-	delete gbl;
+	
+	/* This is generic physics classes must delete gbl pointer */
 }
 
 tri_hp::~tri_hp() {

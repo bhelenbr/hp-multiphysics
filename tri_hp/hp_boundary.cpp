@@ -27,6 +27,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	/* FIND INITIAL CONDITION TYPE */
 	keyword = base.idprefix + "_ibc";
 	if (inmap.get(keyword,ibcname)) {
+		ibc_owner = true;
 		ibc = x.getnewibc(ibcname);
 		ibc->init(inmap,keyword);
 	}

@@ -30,7 +30,7 @@ class tri_hp_swe : public tri_hp_ins {
 
 	public:
 		void* create_global_structure() {return new global;}
-		void delete_global_structure() {delete gbl;}
+		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_swe* create() { return new tri_hp_swe(); }
 
 		void init(input_map& inmap, void *gin);  
