@@ -455,10 +455,10 @@ class force_coupling : public tri_hp_helper {
 			tri_hp_helper* create(tri_hp& xin) {return new force_coupling(*this, dynamic_cast<tri_hp_ins&>(xin));}
 			
 			/* DECOUPLING THE FLOW & BOUNDARY MOVEMENT EQUATIONS */
-			int dofs(int dofs) {
+			int dofs(int ndofs) {
 				return(0);  // Nothing in Jacobian
 				/* For full jacobian (not working yet) */
-				jacobian_start = dofs;
+				jacobian_start = ndofs;
 				return(2*(vertical+horizontal+rotational));
 			}
 			void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi) {		

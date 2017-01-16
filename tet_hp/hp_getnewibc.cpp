@@ -59,7 +59,7 @@ const char ibc_type::names[ntypes][40] = {"symbolic"};
 
 
 init_bdry_cndtn *tet_hp::getnewibc(std::string ibcname) {
-	init_bdry_cndtn *temp;
+	init_bdry_cndtn *temp = NULL;
 	int type;
 
 	type = ibc_type::getid(ibcname.c_str());

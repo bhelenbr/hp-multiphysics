@@ -529,7 +529,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				pnt(i).info = -1;
 			}
 
-			while (in.get() == '#');
+			while (in.get() == '#')
 				in.ignore(80,'\n');
 	
 			for(int i=0;i<ntet;++i) {

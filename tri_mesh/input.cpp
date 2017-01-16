@@ -1015,7 +1015,7 @@ next1c:      continue;
 				pnt(i).info = -1;
 			}
 			in.ignore(80,'\n');
-			while (in.get() == '#');
+			while (in.get() == '#')
 				in.ignore(80,'\n');
 
 			for(i=0;i<ntri;++i) {

@@ -286,9 +286,10 @@ void tet_basis::outputstuff(int check) {
 			}
 			myfile2 << std::endl << std::endl;		
 		//}
+			myfile2.close();
+
 		break;
 		
-		myfile2.close();
 
 
 

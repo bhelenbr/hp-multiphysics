@@ -224,9 +224,7 @@ int main(int argc, char *argv[]) {
 		
 		for(int i=0;i<zx.ntet;++i)
 			zx.tet(i).info = zx.gbl->fltwk(i)-1;
-				
-		tet_mesh *zpart;
-		
+						
 		Array<int,2> blist;
 		Array<int,1> bnum;
 		

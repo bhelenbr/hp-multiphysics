@@ -117,7 +117,7 @@ const char ibc_type::names[ntypes][40] = {"symbolic","communication_test","splin
 
 init_bdry_cndtn *tri_hp::getnewibc(std::string name) {
 	std::string keyword,ibcname;
-	init_bdry_cndtn *temp;
+	init_bdry_cndtn *temp = NULL;
 	int type;
 
 	type = ibc_type::getid(name.c_str());

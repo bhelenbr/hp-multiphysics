@@ -24,7 +24,8 @@ brew install muparser
 brew install homebrew/science/petsc
 brew install pth
 brew install valgrind
-brew install homebrew/science/madlib
+brew install graphviz
+brew install doxygen
 
 To update installed packages
 brew update

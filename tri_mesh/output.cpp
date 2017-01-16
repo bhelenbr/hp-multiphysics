@@ -394,9 +394,9 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
 		 
 			/* some fixed dimensions */
-			if ((retval = nc_def_dim(ncid,"1",1,&one)));
-			if ((retval = nc_def_dim(ncid,"2",2,&two)));
-			if ((retval = nc_def_dim(ncid,"3",3,&three)));
+			if ((retval = nc_def_dim(ncid,"1",1,&one))) ERR(retval);
+			if ((retval = nc_def_dim(ncid,"2",2,&two))) ERR(retval);
+			if ((retval = nc_def_dim(ncid,"3",3,&three))) ERR(retval);
 
 			
 			/* Define the dimensions. NetCDF will hand back an ID for each. */
@@ -420,7 +420,6 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			
 			Array<int,2> ebdry_ids(nebd);
 			for(int i=0;i<nebd;++i) {
-				int temp;
 				std::ostringstream nstr;
 				nstr << "edge" << i << "_nseg";
 				if ((retval = nc_def_dim(ncid, nstr.str().c_str(),ebdry(i)->nseg,&segdims[0]))) ERR(retval);

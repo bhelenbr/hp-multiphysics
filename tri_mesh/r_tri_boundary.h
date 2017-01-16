@@ -400,8 +400,8 @@ class r_deforming : public r_fixed {
 
 		void init(input_map& inmap) {
 			r_fixed::init(inmap);
-			inmap.get(base.idprefix+"_r_do_left",do_left);
-			inmap.get(base.idprefix+"_r_do_right",do_right);
+			inmap.getwdefault(base.idprefix+"_r_do_left",do_left,false);
+			inmap.getwdefault(base.idprefix+"_r_do_right",do_right,false);
 		}
 		
 		void tadvance() {

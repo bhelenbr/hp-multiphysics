@@ -263,6 +263,13 @@ void tri_mesh::coarsen2(FLT factor, const class tri_mesh &inmesh, FLT size_reduc
 
 	cleanup_after_adapt();
 	qtree.reinit();  // REMOVES UNUSED QUADS
+	
+	/* PRINT SOME GENERAL DEBUGGING INFO */
+	*gbl->log << "#" << std::endl << "#COARSE MESH " << std::endl;
+	*gbl->log << "#MAXVST:" << maxpst << " POINTS:" << npnt << " SIDES:" << nseg << " ELEMENTS:" << ntri << std::endl;
+	/* PRINT BOUNDARY INFO */
+	for(i=0;i<nebd;++i)
+		*gbl->log << "#" << ebdry(i)->idprefix << " " << ebdry(i)->mytype << " " << ebdry(i)->nseg << std::endl;
 
 	return;
 }

@@ -67,8 +67,8 @@ public:
 
 public:
 	/* CONSTRUCTOR */
-	epartition(int inid, tri_mesh& xin) : ecomm(inid,xin) {add_to_group(boundary::partitions); mytype="partition";}
-	epartition(const epartition &inbdry, tri_mesh& xin) : ecomm(inbdry,xin) {}
+	epartition(int inid, tri_mesh& xin) : ecomm(inid,xin), npnt_h(0), nseg_h(0), ntri_h(0) {add_to_group(boundary::partitions); mytype="partition";}
+	epartition(const epartition &inbdry, tri_mesh& xin) : ecomm(inbdry,xin), npnt_h(0), nseg_h(0), ntri_h(0) {}
 	epartition* create(tri_mesh& xin) const {return new epartition(*this,xin);}
 	void alloc(int size);
 	void copy(const edge_bdry& bin);

@@ -1211,6 +1211,7 @@ void tet_hp::minvrt_direct() {
 						}
 					}
 					sind = 4+basis::tet(log2p).em*dind+m;
+					lcl = 0.0;
 					for(int k = 0; k < 4; ++k){
 						lcl += basis::tet(log2p).mm(sind,k)*ug.v(tet(tind).pnt(k),n);
 					}

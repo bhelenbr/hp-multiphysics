@@ -15,7 +15,7 @@
 #define SIGN(a) ( ( (a) < 0 )  ?  -1   : ( (a) > 0 ) )
 #endif
 
-
+// i2wk_lst1 has the ordered list of (side indices +1) is negative if clockwise
 
 void tri_mesh::triangulate(int nsd) {
 	int i,j,n,vcnt,sck,dirck,stest,nv,vtry;
@@ -48,10 +48,16 @@ void tri_mesh::triangulate(int nsd) {
 		sind = abs(gbl->i2wk_lst1(i)) -1;
 		dir = (1 -SIGN(gbl->i2wk_lst1(i)))/2;
 		seg(sind).tri(dir) = -1;
+		// Using pnt.nnbor to keep pointer to preceding side
+		pnt(seg(sind).pnt(1-dir)).nnbor = sind;
+		// i2wk_lst1(nv) is the following side
 		gbl->i2wk_lst2(nv++) = seg(sind).pnt(dir);
 	}
 
 	/* SETUP SIDE POINTER INFO */
+	/* pnt(minp).info points to side connected to that point */
+	/* seg(sind).info point to next side connected to that point */
+	/* In the end each seg is associated with its minimum vertex */
 	for(i=0;i<nv;++i)
 		pnt(gbl->i2wk_lst2(i)).info = -1;
 
@@ -125,6 +131,24 @@ void tri_mesh::triangulate(int nsd) {
 				height = dx2(0)*(xcen(1) -xmid(1)) -dx2(1)*(xcen(0) -xmid(0));
 
 				if (height > hmin) continue;
+				
+				/* Check that new sides aren't coming from back of boundary sides adjacent to point*/
+				/* Help is difficult case with poorly defined boundaries that self intersect */
+				/* Boundary sides are assumed to be ccw defined */
+				int snext = abs(gbl->i2wk_lst1(i))-1;
+				int sprev = pnt(vtry).nnbor;
+				if (area(seg(sprev).pnt(0),seg(sprev).pnt(1),seg(snext).pnt(1)) > 0.0) {
+					/* If sides are acute then must make positive triangles with both edges */
+					if (area(snext,v(0)) < 0.0 || area(sprev,v(0)) < 0.0) continue;
+					if (area(snext,v(1)) < 0.0 || area(sprev,v(1)) < 0.0) continue;
+				}
+				else {
+					/* If sides are obtuse then must make positive area with either */
+					if (area(snext,v(0)) < 0.0 && area(sprev,v(0)) < 0.0) continue;
+					if (area(snext,v(1)) < 0.0 && area(sprev,v(1)) < 0.0) continue;
+				}
+				
+
 
 				/* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
 				/* WITH ALL OTHER BOUNDARY SIDES */

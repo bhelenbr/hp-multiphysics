@@ -17,7 +17,8 @@
 //#define DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
-extern int adapt_count;
+//extern int adapt_count;
+int adapt_count = 0;
 static std::string adapt_file;
 #endif
 
@@ -414,7 +415,8 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 				for(int vn=0;vn<3;++vn) {
 					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
 					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
-						badpnt[nbadpnt++] = tri(tind).pnt(vn);
+						badpnt.push_back(tri(tind).pnt(vn));
+						++nbadpnt;
 					}
 				}
 			}
@@ -490,7 +492,8 @@ void tri_mesh::bdry_yaber1() {
 				for(int vn=0;vn<3;++vn) {
 					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
 					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
-						badpnt[nbadpnt++] = tri(tind).pnt(vn);
+						badpnt.push_back(tri(tind).pnt(vn));
+						nbadpnt++;
 					}
 				}
 			}

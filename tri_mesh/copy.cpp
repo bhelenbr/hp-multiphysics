@@ -102,12 +102,13 @@ void tri_mesh::append(const tri_mesh &z) {
 	/* MOVE BOUNDARY INFO */
 	ebdry.resizeAndPreserve(nebd+z.nebd);
 	for(int i=0;i<z.nebd;++i) {
-		ebdry(nebd++) = z.ebdry(i)->create(*this);
-		ebdry(nebd-1)->alloc(z.ebdry(i)->maxseg);
-		ebdry(nebd-1)->nseg = z.ebdry(i)->nseg;
+		ebdry(nebd) = z.ebdry(i)->create(*this);
+		ebdry(nebd)->alloc(z.ebdry(i)->maxseg);
+		ebdry(nebd)->nseg = z.ebdry(i)->nseg;
 		for(int j=0;j<z.ebdry(i)->nseg;++j) {
-			ebdry(nebd-1)->seg(j) = z.ebdry(i)->seg(j) +nseg;
+			ebdry(nebd)->seg(j) = z.ebdry(i)->seg(j) +nseg;
 		}
+		++nebd;
 	}
 
 	/* MOVE TRI INFO */
@@ -251,24 +252,25 @@ void tri_mesh::append(const tri_mesh &z) {
 				ebdry(nebd) = temp;
 				nebd -= 1;
 				
+				/* DELETE VERTEX BOUNDARY CONDITION THAT REFERS TO DELETED POINT */
+				for(int i=nvbd-z.nvbd;i<nvbd;++i) {
+					if (tri(vbdry(i)->pnt).info&PDLTE) {
+						delete vbdry(i);
+						for(int j=i+1;j<nvbd;++j)
+							vbdry(j-1) =vbdry(j);
+						--nvbd;
+					}
+				}
+				
+				delete ebdry(nebd);
+				delete ebdry(nebd+1);
+				
 				goto DONE;
 			}
 		}
 	}
 	
 DONE:
-	/* DELETE VERTEX BOUNDARY CONDITION THAT REFERS TO DELETED POINT */
-	for(int i=nvbd-z.nvbd;i<nvbd;++i) {
-		if (tri(vbdry(i)->pnt).info&PDLTE) {
-			delete vbdry(i);
-			for(int j=i+1;j<nvbd;++j)
-				vbdry(j-1) =vbdry(j);
-			--nvbd;
-		}
-	}
-	
-	delete ebdry(nebd);
-	delete ebdry(nebd+1);
 	
 	// cleanup_after_adapt();
 

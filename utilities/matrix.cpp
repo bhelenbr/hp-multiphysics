@@ -606,7 +606,6 @@ void sparse_row_major::unpack(Array<FLT,2> tgt) {
     
     tgt = 0.0;
     for (int i=_offset;i<_offset+_nrow;++i) {
-        FLT lclax = 0.0;
         for (int j=_cpt(i);j<_cpt(i+1);++j)
             tgt(i,_col(j)) = _val(j);
     }

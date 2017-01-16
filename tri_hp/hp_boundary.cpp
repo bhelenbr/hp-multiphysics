@@ -365,9 +365,9 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 				if ((retval = nc_create(fname.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
 				
 				/* some fixed dimensions */
-				if ((retval = nc_def_dim(ncid,"1",1,&one)));
-				if ((retval = nc_def_dim(ncid,"2",2,&two)));
-				if ((retval = nc_def_dim(ncid,"3",3,&three)));
+				if ((retval = nc_def_dim(ncid,"1",1,&one))) ERR(retval);
+				if ((retval = nc_def_dim(ncid,"2",2,&two))) ERR(retval);
+				if ((retval = nc_def_dim(ncid,"3",3,&three))) ERR(retval);
 				
 				/* Define the dimensions. NetCDF will hand back an ID for each. */
 				int nseg_id,sm0_id;

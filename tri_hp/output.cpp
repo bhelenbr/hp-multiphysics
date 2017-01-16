@@ -78,9 +78,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
 					
 					/* some fixed dimensions */
-					if ((retval = nc_def_dim(ncid,"1",1,&one)));
-					if ((retval = nc_def_dim(ncid,"2",2,&two)));
-					if ((retval = nc_def_dim(ncid,"3",3,&three)));
+					if ((retval = nc_def_dim(ncid,"1",1,&one))) ERR(retval);
+					if ((retval = nc_def_dim(ncid,"2",2,&two))) ERR(retval);
+					if ((retval = nc_def_dim(ncid,"3",3,&three))) ERR(retval);
 					
 					/* Define the dimensions. NetCDF will hand back an ID for each. */
 					if ((retval = nc_def_dim(ncid, "nadapt", gbl->nadapt-1, &dims[0]))) ERR(retval);
@@ -228,9 +228,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if ((retval = nc_create(fnmapp.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
 			
 			/* some fixed dimensions */
-			if ((retval = nc_def_dim(ncid,"1",1,&one)));
-			if ((retval = nc_def_dim(ncid,"2",2,&two)));
-			if ((retval = nc_def_dim(ncid,"3",3,&three)));
+			if ((retval = nc_def_dim(ncid,"1",1,&one))) ERR(retval);
+			if ((retval = nc_def_dim(ncid,"2",2,&two))) ERR(retval);
+			if ((retval = nc_def_dim(ncid,"3",3,&three))) ERR(retval);
 			
 			/* Define the dimensions. NetCDF will hand back an ID for each. */
 			int npnt_id,nseg_id,ntri_id,NV_id,sm0_id,im0_id;

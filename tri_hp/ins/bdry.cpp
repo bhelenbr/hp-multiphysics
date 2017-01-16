@@ -408,7 +408,7 @@ int actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
 	if (!base.is_comm()) return(0);
 	
 	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-	int j,k,m,n,count,countdn,countup,offset,sind,sign;
+	int j,k,m,n,count = 0,countdn,countup,offset,sind,sign;
 	FLT mtchinv;
 	
 	/* ASSUMES REVERSE ORDERING OF SIDES */

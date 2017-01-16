@@ -338,7 +338,7 @@ FLT tet_mesh::area(int find) {
 	int N1 = tri(find).pnt(0);
 	int N2 = tri(find).pnt(1);
 	int N3 = tri(find).pnt(2);
-	double ax, ay, az, area;
+	double ax, ay, az;
 	
 	/* Calculate normal to face */
 	ax = (pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(2)-pnts(N1)(2))-(pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(1)-pnts(N1)(1));
@@ -352,7 +352,6 @@ void tet_mesh::face_normal(int find,TinyVector<FLT,ND> normal) {
 	int N1 = tri(find).pnt(0);
 	int N2 = tri(find).pnt(1);
 	int N3 = tri(find).pnt(2);
-	double ax, ay, az, area;
 	
 	/* Calculate normal to face */
 	normal(0) = (pnts(N2)(1)-pnts(N1)(1))*(pnts(N3)(2)-pnts(N1)(2))-(pnts(N2)(2)-pnts(N1)(2))*(pnts(N3)(1)-pnts(N1)(1));

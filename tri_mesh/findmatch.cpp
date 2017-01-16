@@ -332,12 +332,8 @@ void tri_mesh::setpartition(int nparts, Array<int,1> part_list) {
 	
 	/* Input parameters for ParMetis */
 	idx_t ncon = 1;
-	idx_t wgtflag = 3;
-	idx_t numflag = 0;
-	idx_t edgecut;
 	real_t tpwgts[nparts];
 	real_t ubvec[ncon];
-	idx_t nparts_idx = nparts;
 	Array<idx_t,1> part(ntri), adjwgt(6*ntri), xadj(ntri+1), adjncy(6*ntri), vwgt(ntri);
 	idx_t options[3];
 	options[0] = 0;
@@ -369,6 +365,10 @@ void tri_mesh::setpartition(int nparts, Array<int,1> part_list) {
 	xadj(ntri) = count;
 	
 #ifdef MPISRC
+	idx_t wgtflag = 3;
+	idx_t numflag = 0;
+	idx_t edgecut;
+	idx_t nparts_idx = nparts;
 	MPI_Comm comm;
 	MPI_Comm_dup(MPI_COMM_WORLD,&comm);
 	
@@ -443,7 +443,6 @@ void tri_mesh::subpartition(int& nparts) {
 	idx_t ncon = 1;
 	idx_t objval;
 	idx_t ntri_idx = ntri;
-	idx_t npnt_idx = npnt;
 	idx_t nparts_idx = nparts;
 	Array<idx_t,1> iwk1(ntri), adjwgt(6*ntri), xadj(ntri+1), adjncy(6*ntri), vwgt(ntri);
 	idx_t options[METIS_NOPTIONS];
@@ -730,7 +729,6 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 	
 
 	sim::blks.begin_use_shared_memory();
-	std::cout << "maxvnum " << maxvnum << std::endl;
 
 	/* unpack current boundary information into usable form */
 	int count = 0;
@@ -765,9 +763,7 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 		}
 	}
 #endif
-	
-	std::cout << "maxvnum " << maxvnum << std::endl;
-	
+		
 #ifdef MPISRC
 	/* CREATE COMMUNICATION ENDPOINT BOUNDARIES FOR PHYSICAL COMM BOUNDARIES */
 	for(int i=0;i<nebd;++i) {

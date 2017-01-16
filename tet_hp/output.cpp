@@ -1078,7 +1078,6 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						in >> ugbd(tlvl).e(i,m,n);
 				}
-				indx += p0 -pmin;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)
@@ -1177,7 +1176,6 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					for(n=0;n<NV;++n)
 						ugbd(tlvl).e(i,m,n) = bin.readFloat(binio::Double);
 				}
-				indx += p0 -pmin;
 
 				for(m=0;m<(pin-p0);++m) {
 					for(n=0;n<NV;++n)

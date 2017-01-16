@@ -296,11 +296,8 @@ class tet_hp : public tet_mesh  {
 		Array<int,1> dirichlet_rows;
 		int row_counter;
 
-#endif	
-
-#ifndef petsc
-	
-		bool sparse_resized;	
+#else
+		bool sparse_resized;
 		Array<FLT,1> res_vec;//residual vector
 		Array<FLT,1> ug_vec;// solution vector
 		//Array<int,1> ija; //sparse matrix integer storage
@@ -327,10 +324,7 @@ class tet_hp : public tet_mesh  {
 	
 		double nrm2(int n,Array<double,1> x); // performs l2 norm of blitz array
 		double dotprod(int n,Array<double,1> x, Array<double,1> y); // dot product of two blitz arrays
-
-
 #endif
-	
 #endif
 
 

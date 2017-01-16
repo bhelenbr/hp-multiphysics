@@ -53,8 +53,11 @@ void edge_bdry::copy(const edge_bdry& bin) {
 
 	nseg = bin.nseg;
 
-	for(i=0;i<nseg;++i)
+	for(i=0;i<nseg;++i) {
 		seg(i) = bin.seg(i);
+		prev(i) = bin.prev(i);
+		next(i) = bin.next(i);
+	}
 
 	return;
 }
@@ -681,7 +684,6 @@ void epartition::calculate_halo() {
 	}
 	
 	/* Extract Halo Mesh for sending to remote partition */
-	int pnt;
 	/* load points */
 	remote_halo.npnt = 0;
 	for (int j=0;j<nseg_h;++j) {
