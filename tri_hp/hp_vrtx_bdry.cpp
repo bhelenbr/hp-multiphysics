@@ -176,7 +176,7 @@ void hp_vrtx_bdry::element_jacobian(Array<FLT,2>& K) {
 #ifdef petsc
 void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return;
+	if (!base.in_group(boundary::all_phased)) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
@@ -194,7 +194,7 @@ void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 
 int hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return(0);
+	if (!base.in_group(boundary::all_phased)) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
@@ -251,7 +251,7 @@ void hp_vrtx_bdry::petsc_jacobian() {
 
 void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 	
-	if (!base.is_comm()) return;
+	if (!base.in_group(boundary::all_phased)) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
@@ -277,7 +277,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 #endif
 		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
-			*x.gbl->log << x.J._col(col) << ' ';
+			*x.gbl->log << x.J._col(col) << ' ' << x.J._val(col) << ' ';
 #endif
 			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
@@ -290,7 +290,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 
 int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
+	if (!base.in_group(boundary::all_phased) || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	const int rowbase = base.pnt*vdofs;
@@ -300,6 +300,7 @@ int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	assert(jacobian_start == static_cast<int>(base.fsndbuf(count++)));
 	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 		int row = static_cast<int>(base.fsndbuf(count++));
+		x.J.zero_row(row);
 		int ncol = static_cast<int>(base.fsndbuf(count++));
 		for (int k = 0;k<ncol;++k) {
 			int col = static_cast<int>(base.fsndbuf(count++));
@@ -341,7 +342,7 @@ int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 				if (col < INT_MAX-10 && col > -1) {
 					col += Jstart_mpi;
 #ifdef MPDEBUG
-					*x.gbl->log  << col << ' ';
+					*x.gbl->log  << col << ' ' << val << ' ';
 #endif
 					(*pJ_mpi).add_values(row,col,val);
 				}
@@ -487,7 +488,7 @@ int multi_physics_pnt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero
 
 int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
+	if (!base.in_group(boundary::all_phased) || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	const int rowbase = base.pnt*vdofs;

@@ -182,10 +182,12 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			
 			/* SET GROUP MEMBERSHIP FLAGS */
 			/* For each group and each bdry match there is a phase */
-			inmap.getlinewdefault(BASE::idprefix + "_group",gs,"0 1"); // DEFAULT IS FIRST 2 GROUPS
-			gd.str(gs);
-			while(gd >> m) {
-				add_to_group(m);  // ADD AS UNPHASED GROUP FIRST
+			if (inmap.getline(BASE::idprefix + "_group",gs)) {
+				groupmask = 0;
+				gd.str(gs);
+				while(gd >> m) {
+					add_to_group(m);  // ADD AS UNPHASED GROUP FIRST
+				}
 			}
 			
 			/* SKIP FIRST GROUP (NEVER PHASED) */

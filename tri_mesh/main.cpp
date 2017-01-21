@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	
-#ifdef MPISRC
+#if (defined(MPISRC) && !defined(petsc))
 	if (Debugger) {
 		int size;
 		/*

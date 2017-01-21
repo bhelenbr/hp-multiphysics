@@ -818,7 +818,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #ifdef MPISRC
 					else {
@@ -829,7 +829,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #endif
 
@@ -859,7 +859,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #ifdef MPISRC
 					else {
@@ -870,7 +870,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #endif
 
@@ -902,7 +902,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " face: " << binfo[b2].fcomm[j].nfbd << " tag: " << sim::blks.tagid(3,b1,b2,i,j) << ' ' << sim::blks.tagid(3,b2,b1,j,i) << " idnum: " << binfo[b2].fcomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\tlocal match to block: " << b2 << " face: " << binfo[b2].fcomm[j].nfbd << " tag: " << sim::blks.tagid(3,b1,b2,i,j) << ' ' << sim::blks.tagid(3,b2,b1,j,i) << " idnum: " << binfo[b2].fcomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #ifdef MPISRC
 					else {
@@ -913,7 +913,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 							bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
 							first_found = true;
 						}
-						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " face: " << binfo[b2].fcomm[j].nfbd << " tag: " << sim::blks.tagid(3,b1,b2,i,j) << ' ' << sim::blks.tagid(3,b2,b1,j,i) << " idnum: " << binfo[b2].fcomm[j].idnum << std::endl;
+						*gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " face: " << binfo[b2].fcomm[j].nfbd << " tag: " << sim::blks.tagid(3,b1,b2,i,j) << ' ' << sim::blks.tagid(3,b2,b1,j,i) << " idnum: " << binfo[b2].fcomm[j].idnum << " first: " << bp1->is_frst() << std::endl;
 					}
 #endif
 

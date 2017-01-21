@@ -68,13 +68,16 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	
 	gbl = static_cast<global *>(gbl_in);
 	
-	const int NVtot = NV +x.NV;
-	gbl->vdt.resize(base.maxseg+1,NVtot,NVtot);
-	gbl->vpiv.resize(base.maxseg+1,NVtot);
-	gbl->sdt.resize(base.maxseg,NVtot,NVtot);
-	gbl->spiv.resize(base.maxseg,NVtot);
-	gbl->sdt2.resize(base.maxseg,x.sm0,NVtot,NVtot);
-	gbl->spiv2.resize(base.maxseg,x.sm0,NVtot);
+	int NVcoupled = NV;
+	if (!inmap.get(base.idprefix + "_NVcoupled",NVcoupled)) {
+		NVcoupled = NV; // Default is two variables (x,y)
+	}
+	gbl->vdt.resize(base.maxseg+1,NVcoupled,NVcoupled);
+	gbl->vpiv.resize(base.maxseg+1,NVcoupled);
+	gbl->sdt.resize(base.maxseg,NVcoupled,NVcoupled);
+	gbl->spiv.resize(base.maxseg,NVcoupled);
+	gbl->sdt2.resize(base.maxseg,x.sm0,NVcoupled,NVcoupled);
+	gbl->spiv2.resize(base.maxseg,x.sm0,NVcoupled);
 	gbl->meshc.resize(base.maxseg,NV);
 	gbl->field_is_coupled = false;
 	
@@ -99,16 +102,13 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
 	else gbl->is_loop = false;
-	
-	ksprg.resize(base.maxseg);
 
 #ifndef SYMMETRIC
 	if (!is_master) return;   /* This is all that is necessary for a slave boundary */
 #endif
 	
-	vdres.resize(x.log2pmax,base.maxseg,NV);
-	sdres.resize(x.log2pmax,base.maxseg,x.sm0,NV);
-	
+	ksprg.resize(base.maxseg);
+
 	gbl->vug0.resize(base.maxseg+1,NV);
 	gbl->sug0.resize(base.maxseg,x.sm0,NV);
 	
@@ -155,10 +155,15 @@ void hp_coupled_bdry::tadvance() {
 	/* Fixme: Need to fill in stuff for extra variables here */
 	
 	if (x.gbl->substep == 0) {
-		/* SET SPRING CONSTANTS */
-		for(j=0;j<base.nseg;++j) {
-			sind = base.seg(j);
-			ksprg(j) = 1.0/x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1));
+#ifndef SYMMETRIC
+		if (is_master)
+#endif
+		{
+			/* SET SPRING CONSTANTS */
+			for(j=0;j<base.nseg;++j) {
+				sind = base.seg(j);
+				ksprg(j) = 1.0/x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1));
+			}
 		}
 		
 #ifndef SYMMETRIC
@@ -538,7 +543,7 @@ void hp_coupled_bdry::minvrt() {
 	
 	
 	/* SOLVE FOR VERTEX MODES */
-	/* FIXME: THIS IS NOT GENERAL ONLY FOR coupled RIGHT NOW */
+	/* FIXME: THIS IS NOT GENERAL ONLY FOR 2 RIGHT NOW */
 	for(i=0;i<base.nseg+1;++i) {
 		temp                     = gbl->vres(i,0)*gbl->vdt(i,0,0) +gbl->vres(i,1)*gbl->vdt(i,0,1);
 		gbl->vres(i,1) = gbl->vres(i,0)*gbl->vdt(i,1,0) +gbl->vres(i,1)*gbl->vdt(i,1,1);
@@ -1867,6 +1872,48 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 		wall_type = vertical;
 		position = x.pnts(base.pnt)(0);
 	}
+	
+	/* Find tangent to wall and use to constrain motion */
+	int bnumwall = base.ebdry(1-surfbdry);
+	TinyVector<FLT,tri_mesh::ND> rp;
+	if (surfbdry == 0) {
+		int sindwall = x.ebdry(bnumwall)->seg(0);
+		x.crdtocht1d(sindwall);
+		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
+	}
+	else {
+		int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
+		x.crdtocht1d(sindwall);
+		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
+	}
+	FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
+	wall_normal /= length;
+	FLT temp = wall_normal(0);
+	wall_normal(0) = wall_normal(1);
+	wall_normal(1) = -temp;
+}
+
+void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
+	if (surface->is_master) {
+		switch(wall_type) {
+			case vertical: {
+				x.pnts(base.pnt)(0) = position;
+				break;
+			}
+			case horizontal: {
+				x.pnts(base.pnt)(1)  = position;
+				break;
+			}
+			case curved: {
+				int bnumwall = base.ebdry(1-surfbdry);
+				TinyVector<FLT,tri_mesh::ND> tgt = x.pnts(base.pnt);
+				x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, tgt);
+				break;
+			}
+		}
+	}
+	
+	return;
 }
 
 void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {

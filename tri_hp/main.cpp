@@ -8,7 +8,6 @@
  */
 #ifdef MPISRC
 #include <mpi.h>
-#include <unistd.h>
 #endif
 
 #include <blocks.h>
@@ -17,6 +16,24 @@
 #include <petscksp.h>
 static char help[] = "How am I supposed to know???\n\n";
 #endif
+
+#include <parseargs.h>
+static GBool Debugger = gFalse;
+GBool printHelp = gFalse;
+
+static ArgDesc argDesc[] = {
+	{"-h",        argFlag,      &printHelp,      0,
+		"print usage information"},
+	{"-help",    argFlag,      &printHelp,      0,
+		"print usage information"},
+	{"-stop_for_debugger"  ,argFlag,     &Debugger,            0,
+		"Stop for Debugger"},
+	{NULL}
+};
+
+#include <thread>
+#include <unistd.h>
+
 
 void ctrlc(int signal);
 
@@ -46,6 +63,46 @@ int main(int argc, char **argv) {
 #ifdef petsc
 	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
 	CHKERRABORT(MPI_COMM_WORLD,err);
+#endif
+	
+	// parse args
+	GBool ok = parseArgs(argDesc, &argc, argv);
+	if (!ok || printHelp) {
+		fprintf(stderr, "tri_hp ");
+		printUsage("tri_hp", "<inputfile>]", argDesc);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
+	}
+	
+	
+#if (defined(MPISRC) && !defined(petsc))
+	if (Debugger) {
+		int size;
+		/*
+		 we have to make sure that all processors have opened
+		 connections to all other processors, otherwise once the
+		 debugger has stated it is likely to receive a SIGUSR1
+		 and kill the program.
+		 */
+		int ierr = MPI_Comm_size(MPI_COMM_WORLD,&size);
+		if (ierr != MPI_SUCCESS) {
+			exit(1);
+		}
+		if (size > 2) {
+			int dummy = 0;
+			MPI_Status status;
+			for (int i=0; i<size; i++) {
+				if (myid != i) {
+					ierr = MPI_Send(&dummy,1,MPI_INT,i,109,MPI_COMM_WORLD);
+				}
+			}
+			for (int i=0; i<size; i++) {
+				if (myid != i) {
+					ierr = MPI_Recv(&dummy,1,MPI_INT,i,109,MPI_COMM_WORLD,&status);				}
+			}
+		}
+		std::cout << "Waiting for debugger.  Process id is " << getpid() << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+	}
 #endif
 
 

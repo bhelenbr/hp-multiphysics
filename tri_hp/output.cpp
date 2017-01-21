@@ -141,7 +141,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 	fname = filename +"_" +gbl->idprefix;
 
 	switch (typ) {
-		case (text):
+		case (text): {
 			fnmapp = fname +".txt";
 			out.open(fnmapp.c_str());
 			if (!out) {
@@ -178,6 +178,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.close();
 
 			break;
+		}
 
 		case (binary): {
 			fnmapp = fname +".bin";
@@ -297,7 +298,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 		}
 
-		case (vtk):
+		case (vtk): {
 			fnmapp = fname +".vtk";
 			out.open(fnmapp.c_str());
 			if (!out) {
@@ -480,8 +481,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			
 			out.close();
 			break;
+		}
 			
-		case(tecplot):
+		case(tecplot): {
 			fnmapp = fname +".dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
@@ -622,7 +624,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			}
 			out.close();
 
-			break; 
+			break;
+		}
 
 #ifdef DATATANK
 		case (datatank): {
@@ -954,6 +957,10 @@ void tri_hp::input(const std::string& filename) {
 					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 			}
 		}
+		else {
+			for(i=1;i<gbl->nadapt;++i)
+				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
+		}
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
@@ -1020,7 +1027,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 	switch(typ) {
 
-		case (text):
+		case (text): {
 			fnapp = fname +".txt";
 			in.open(fnapp.c_str());
 			if (!in) {
@@ -1109,7 +1116,8 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			in.close();
 			break;
-
+		}
+			
 		case (binary): {
 			fnapp = fname +".bin";
 			in.open(fnapp.c_str());
@@ -1304,7 +1312,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			break;
 		}
 
-		case(tecplot):
+		case(tecplot): {
 			/* CAN ONLY DO THIS IF HAVE MESH FILE */
 			fnapp = fname +".dat";
 			in.open(fnapp.c_str());
@@ -1439,7 +1447,8 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			}                
 
 			break;
-
+		}
+			
 		default:
 			*gbl->log << "can't input a tri_hp from that filetype" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);

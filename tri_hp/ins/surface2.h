@@ -48,9 +48,7 @@ class surface_outflow2 : public hp_deformable_free_pnt {
 		/* For a surface point sliding on a vertical or horizontal surface */
 		/* For periodic wall have tri_mesh vertex type be comm */
 	protected:
-		surface2* surface;
 		FLT contact_angle;
-		TinyVector<FLT,tri_mesh::ND> wall_normal;
 		
 	public:
 		surface_outflow2(tri_hp_ins &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin) {mytype = "surface_outflow2";}

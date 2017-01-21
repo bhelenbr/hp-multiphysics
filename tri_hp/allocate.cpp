@@ -163,10 +163,13 @@ void tri_hp::init(input_map& inmap, void *gin) {
 
 	/* GET HELPER FUNCTION */
 	std::string helpername;
-	if (!inmap.get(gbl->idprefix + "_helper",helpername))
-		inmap.getwdefault("helper",helpername,std::string("plain"));
+	keyword = gbl->idprefix + "_helper";
+	if (!inmap.get(keyword,helpername)) {
+		keyword = "helper";
+		inmap.getwdefault(keyword,helpername,std::string("plain"));
+	}
 	helper = getnewhelper(helpername);
-	helper->init(inmap,helpername);
+	helper->init(inmap,keyword);
 
 	/* UNSTEADY SOURCE TERMS */
 	dugdt.resize(log2pmax+1);

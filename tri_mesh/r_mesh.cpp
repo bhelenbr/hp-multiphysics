@@ -83,7 +83,7 @@ void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizer
 	for(int i=0;i<nebd;++i)
 		r_sbdry(i) = inmesh.r_sbdry(i)->create(*this,*ebdry(i));
 
-	r_vbdry.resize(nebd);
+	r_vbdry.resize(nvbd);
 	for(int i=0;i<nvbd;++i)
 		r_vbdry(i) = inmesh.r_vbdry(i)->create(*this,*vbdry(i));
 
@@ -92,10 +92,11 @@ void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizer
 
 
 r_tri_mesh::~r_tri_mesh() {
-	for(int i=0;i<nebd;++i)
+	
+	for(int i=0;i<r_sbdry.size();++i)
 		delete r_sbdry(i);
 
-	for(int i=0;i<nvbd;++i)
+	for(int i=0;i<r_vbdry.size();++i)
 		delete r_vbdry(i);
 }
 

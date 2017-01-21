@@ -54,6 +54,10 @@ void surface2::init(input_map& inmap,void* gin) {
 				is_master = true;
 				master_block = x.gbl->idprefix;
 			}
+			else {
+				is_master = false;
+				master_block = matching_block;
+			}
 		}
 		else if (x.gbl->rho > gbl->rho2) {
 			is_master = true;
@@ -80,6 +84,7 @@ void surface2::init(input_map& inmap,void* gin) {
 	
 	return;
 }
+
 void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	if (!is_master) return;
@@ -170,6 +175,10 @@ void surface2::setup_preconditioner() {
 	int last_phase, mp_phase;
 	
 	hp_coupled_bdry::setup_preconditioner();
+
+#ifndef SYMMETRIC
+	if (!is_master) return;
+#endif
 	
 	drho = x.gbl->rho -gbl->rho2;
 	srho = x.gbl->rho +gbl->rho2;
@@ -382,9 +391,10 @@ void surface2::setup_preconditioner() {
 		}
 	}
 	
+	int NVcoupled = gbl->vdt.length(secondDim);
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,NVcoupled*NVcoupled,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,NVcoupled*NVcoupled,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -394,8 +404,8 @@ void surface2::setup_preconditioner() {
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,NVcoupled*NVcoupled,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,NVcoupled*NVcoupled,0);
 	}
 	
 	if (gbl->is_loop) {
@@ -443,38 +453,21 @@ void surface2::setup_preconditioner() {
 
 void surface_outflow2::init(input_map& inmap,void* gbl_in) {
 	hp_deformable_free_pnt::init(inmap,gbl_in);
-	surface = dynamic_cast<surface2 *>(hp_deformable_free_pnt::surface);
 	
 	if (surface->is_master) {
 		inmap.getwdefault(base.idprefix +"_contact_angle",contact_angle,90.0);
 		contact_angle *= M_PI/180.0;
-		
-		/* Find tangent to wall and use to constrain motion */
-		int bnumwall = base.ebdry(1-surfbdry);
-		TinyVector<FLT,tri_mesh::ND> rp;
-		if (surfbdry == 0) {
-			int sindwall = x.ebdry(bnumwall)->seg(0);
-			x.crdtocht1d(sindwall);
-			basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
-		}
-		else {
-			int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
-			x.crdtocht1d(sindwall);
-			basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
-		}
-		FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
-		wall_normal /= length;
-		FLT temp = wall_normal(0);
-		wall_normal(0) = wall_normal(1);
-		wall_normal(1) = -temp;
 	}
 }
 
 void surface_outflow2::element_rsdl(Array<FLT,1> lf) {
 	TinyVector<FLT,tri_mesh::ND> tangent;
+	surface2 *surf2 = dynamic_cast<surface2 *>(surface);
+
 	
 	lf = 0.0;
 	hp_deformable_free_pnt::element_rsdl(lf);
+	
 	
 	if (surface->is_master) {
 		/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
@@ -492,15 +485,15 @@ void surface_outflow2::element_rsdl(Array<FLT,1> lf) {
 			/* Surf-boundary then point then wall (in ccw sense) */
 			tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
 			tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-			lf(0) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(0);
-			lf(1) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(1);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(1);
 		}
 		else {
 			/* Wall then point then Surf-boundary (in ccw sense) */
 			tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
 			tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-			lf(0) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(0);
-			lf(1) -= RAD(x.pnts(base.pnt)(0))*surface->gbl->sigma*tangent(1);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(1);
 		}
 	}
 	

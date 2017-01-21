@@ -91,7 +91,9 @@ public:
 	hp_coupled_bdry(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "hp_coupled_bdry"; is_master = base.is_frst();}
 	hp_coupled_bdry(const hp_coupled_bdry& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), NV(inbdry.NV), is_master(inbdry.is_master), gbl(inbdry.gbl) {
 		fine = &inbdry;
+#ifndef SYMMETRIC
 		if (!is_master) return;
+#endif
 		/* default initializer for p=1 multigrid (overriddent in init for fine level) */
 		ksprg.resize(base.maxseg);
 		vug_frst.resize(base.maxseg+1,NV);
@@ -164,6 +166,7 @@ class hp_deformable_free_pnt : public hp_deformable_fixed_pnt {
 protected:
 	FLT position;
 	enum {vertical, horizontal, curved} wall_type;
+	TinyVector<FLT,tri_mesh::ND> wall_normal;
 	
 public:
 	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "hp_deformable_free_pnt";}
@@ -174,6 +177,7 @@ public:
 	void element_rsdl(Array<FLT,1> lf);
 	void rsdl(int stage);
 	void vdirichlet() {hp_vrtx_bdry::vdirichlet();}
+	void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt);
 #ifdef petsc
 	void petsc_jacobian();
 	void petsc_jacobian_dirichlet() {hp_vrtx_bdry::petsc_jacobian_dirichlet();}
