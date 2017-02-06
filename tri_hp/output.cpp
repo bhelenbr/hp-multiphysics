@@ -1209,7 +1209,10 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			int retval, ncid, dim_id;
 			size_t dimreturn;
 			
-			if ((retval = nc_open(fnapp.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
+			if ((retval = nc_open(fnapp.c_str(), NC_NOWRITE, &ncid))) {
+				*gbl->log << "couldn't open netcdf input file " << fnapp << std::endl;
+				ERR(retval);
+			}
 			
 			if ((retval = nc_inq_dimid(ncid, "npnt", &dim_id))) ERR(retval);
 			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
@@ -1457,3 +1460,121 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 	return;
 }
+
+void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype typ) {
+	// outputs either array of eigenvalues or coefficient vectors
+	switch(typ) {
+		case(tri_hp::binary): {
+			std::string fname = filename +".bin";
+			binofstream bout;
+			bout.open(fname.c_str());
+			if (bout.error()) {
+				*gbl->log << "couldn't open coefficient output file " << filename << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+			
+			for (int l=0;l<size;++l)
+				bout.writeFloat(list(l),binio::Double);
+			
+			bout.close();
+			break;
+		}
+		case(tri_hp::netcdf): {
+			std::string fname = filename +".nc";
+			
+			int retval, ncid, dims[1];
+			if ((retval = nc_create(fname.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval);
+			
+			/* Define the dimensions. NetCDF will hand back an ID for each. */
+			if ((retval = nc_def_dim(ncid, "nlist", size, &dims[0]))) ERR(retval);
+			
+			int list_id;
+			if ((retval = nc_def_var(ncid, "list", NC_DOUBLE, 1, dims, &list_id))) ERR(retval);
+			if ((retval = nc_enddef(ncid))) ERR(retval);
+			
+			size_t index;
+			for (int l=0;l<size;++l) {
+				index = l;
+				nc_put_var1_double(ncid,list_id,&index,&list(l));
+				
+			}
+			if ((retval = nc_close(ncid))) ERR(retval);
+			break;
+		}
+		default: {
+			std::string fname = filename +".txt";
+			ofstream fout;
+			fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+			for (int l=0;l<size;++l)
+				fout << list(l) << std::endl;
+			fout.close();
+			break;
+		}
+	}
+}
+
+void tri_hp::input(int size,Array<FLT,1> list, std::string filename,filetype typ) {
+	// outputs either array of eigenvalues or coefficient vectors
+	switch(typ) {
+		case(tri_hp::binary): {
+			std::string fname = filename +".bin";
+			ifstream in;
+			in.open(fname.c_str());
+			if (!in) {
+				*gbl->log << "couldn't open binary input file " << fname << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			biniwstream bin(&in);
+			
+			/* HEADER INFORMATION */
+			bin.setFlag(binio::BigEndian,bin.readInt(1));
+			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+			
+			for(int i=0;i<size;++i) {
+					list(i) = bin.readFloat(binio::Double);
+			}
+			in.close();
+			break;
+		}
+		case(tri_hp::netcdf): {
+			std::string fname = filename +".nc";
+			
+			int retval, ncid;
+			if (!(retval = nc_open(fname.c_str(), NC_NOWRITE, &ncid))) {
+				int list_id;
+				if ((retval = nc_inq_varid (ncid, "list", &list_id))) ERR(retval);
+				
+				size_t index;
+				for (int l=0;l<size;++l) {
+					index = l;
+					nc_get_var1_double(ncid,list_id,&index,&list(l));
+				}
+				if ((retval = nc_close(ncid))) ERR(retval);
+			}
+			break;
+		}
+		case(tri_hp::text): {
+			std::string fname = filename +".txt";
+			ifstream in;
+			in.open(fname.c_str());
+			if (!in) {
+				*gbl->log << "couldn't open text input file " << fname << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			for(int i=0;i<size;++i) {
+				in >> list(i);
+			}
+			in.close();
+			break;
+		}
+		default: {
+			*gbl->log << "can't input a list from that filetype" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+			break;
+		}
+	}
+}
+

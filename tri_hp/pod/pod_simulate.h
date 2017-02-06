@@ -10,6 +10,7 @@
 #ifndef _POD_SIMULATE_H_
 #define _POD_SIMULATE_H_
 
+#define POD_BDRY
 
 #ifdef POD_BDRY
 template<class BASE> class pod_sim_edge_bdry;
@@ -64,6 +65,7 @@ template<class BASE> class pod_sim_edge_bdry {
 		int pod_id;
 		int bindex; 
 		bool active;
+		typedef typename BASE::vsi vsi;
 
 		struct vs {
 			Array<FLT,2> v;
@@ -75,6 +77,7 @@ template<class BASE> class pod_sim_edge_bdry {
 	public:
 		pod_sim_edge_bdry(pod_simulate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
 		void init(input_map& inmap);
+		void input(vs& target,std::string filename,typename BASE::filetype typ);
 		void rsdl();
 		void addto2Dsolution(struct tri_hp::vsi ug);
 		void addto2Dsolution(struct tri_hp::vsi ug, int mode, FLT coeff);

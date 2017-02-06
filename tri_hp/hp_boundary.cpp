@@ -1083,9 +1083,9 @@ void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 	return;
 }
 
-int hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int hp_edge_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return(0);
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
@@ -1717,9 +1717,9 @@ void tri_hp::vc0load(int phase, FLT *pdata, int vrtstride) {
 	
 	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
 	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
+		hp_ebdry(i)->pmatchsolution_snd(pdata,vrtstride);
 	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
+		hp_vbdry(i)->pmatchsolution_snd(pdata,vrtstride);
 	
 	for(i=0;i<nebd;++i)
 		ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);

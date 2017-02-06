@@ -192,9 +192,9 @@ void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 }
 
 
-int hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int hp_vrtx_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.in_group(boundary::all_phased)) return(0);
+	if (!base.in_group(boundary::all_phased) || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
@@ -420,30 +420,53 @@ void multi_physics_pnt::init(input_map& inmap,void* gbl_in) {
 		base.match_name(m,match_name);
 		istringstream nstr;
 		std::string vals;
-		if (!inmap.getline(base.idprefix+'_' +match_name +"_matching",vals)) {
-			for(int n=0;n<vdofs;++n) {
-				match_pairs[m].push_back(std::pair<int,int>(n,n));
+		if (base.idprefix <= match_name) {
+			if (!inmap.getline(base.idprefix +'_' +match_name +"_matching",vals)) {
+				for(int n=0;n<vdofs;++n) {
+					match_pairs[m].push_back(std::pair<int,int>(n,n));
+				}
+				denom += 1.0;  // All matched
 			}
-			denom += 1.0;  // All matched
+			else {
+				nstr.str(vals);
+				int idx1, idx2;
+				while(nstr >> idx1 >> idx2) {
+					match_pairs[m].push_back(std::pair<int,int>(idx1,idx2));
+					denom(idx1) += 1.0;
+				}
+			}
 		}
 		else {
-			nstr.str(vals);
-			int idx1, idx2;
-			while(nstr >> idx1 >> idx2) {
-				match_pairs[m].push_back(std::pair<int,int>(idx1,idx2));
-				denom(idx1) += 1.0;
+			if (!inmap.getline(match_name +'_' +base.idprefix +"_matching",vals)) {
+				for(int n=0;n<vdofs;++n) {
+					match_pairs[m].push_back(std::pair<int,int>(n,n));
+				}
+				denom += 1.0;  // All matched
+			}
+			else {
+				nstr.str(vals);
+				int idx1, idx2;
+				while(nstr >> idx2 >> idx1) {
+					match_pairs[m].push_back(std::pair<int,int>(idx1,idx2));
+					denom(idx1) += 1.0;
+				}
 			}
 		}
 	}
 }
 
 void multi_physics_pnt::pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {
+	
+	if (!base.in_group(boundary::all_phased)) return;
+
 	int offset = base.pnt*vrtstride*x.NV;
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> counts(vdofs);
 	
 	counts = 1.;
 	for(int m=0;m<base.nmatches();++m) {
+		if(base.matchphase(boundary::all_phased,m) != phase) continue;
+		
 		for(std::vector<std::pair<int,int> >::const_iterator it = match_pairs[m].begin();it != match_pairs[m].end()-(vdofs-x.NV); ++it) {
 #ifdef MPDEBUG
 			*x.gbl->log << it->first << ' ' << base.fsndbuf(it->first) << ' ' << it->second << ' ' << base.frcvbuf(m,it->second) << std::endl;
@@ -458,9 +481,13 @@ void multi_physics_pnt::pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride)
 	}
 }
 
+// FIXME: Phasing of vertices with sides is possibly messed up.
 
 #ifdef petsc
-int multi_physics_pnt::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int multi_physics_pnt::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.in_group(boundary::all_phased) || base.matchphase(boundary::all_phased,0) != phase) return(0);
+	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	
 	/* Reload to avoid overlap with sides */
@@ -497,8 +524,9 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 	int count = 0;
 	assert(x.jacobian_start == static_cast<int>(base.fsndbuf(count++)));
 	assert(jacobian_start == static_cast<int>(base.fsndbuf(count++)));
-	for(int n=0;n<vdofs;++n) {
+	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 		int row = static_cast<int>(base.fsndbuf(count++));
+		x.J.zero_row(row);
 		int ncol = static_cast<int>(base.fsndbuf(count++));
 		for (int k = 0;k<ncol;++k) {
 			int col = static_cast<int>(base.fsndbuf(count++));
@@ -512,7 +540,10 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 	}
 
 	for (int m=0;m<base.nmatches();++m) {
-		int Jstart_mpi = static_cast<int>(base.frcvbuf(m, 0)); // Start of jacobian on matching block
+		int count = 0;
+		int Jstart_mpi = static_cast<int>(base.frcvbuf(m, count++)); // Start of jacobian on matching block
+		count++; // int Jstart_mpi_vrtx_unknowns = static_cast<int>(base.frcvbuf(m, count++)); // Start of vertex unknowns on mathcing block (not used typically)
+		
 		sparse_row_major *pJ_mpi;
 		if (base.is_local(m)) {
 			pJ_mpi = &x.J;
@@ -526,13 +557,13 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 		for(std::vector<std::pair<int,int> >::const_iterator it = match_pairs[m].begin();it != match_pairs[m].end(); ++it) {
 			int row = rowbase + it->first;
 			/* Skip communication that is unrelated */
-			count = 2;
+			count = 2; // Go back to beginning and scan through list
 			for(int j=0;j<it->second;++j) {
-				count++;
+				count++;  // row_mpi
 				int ncol = static_cast<int>(base.frcvbuf(m,count++));
 				for (int k = 0;k<ncol;++k) {
-					count++;
-					count++;
+					count++; // column
+					count++; // value
 				}
 			}
 			
@@ -548,7 +579,7 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 				if (col < INT_MAX-10 && col > -1) {
 					col += Jstart_mpi;
 #ifdef MPDEBUG
-					*x.gbl->log  << col << ' ';
+					*x.gbl->log  << col << ' ' << val << ' ';
 #endif
 					(*pJ_mpi).add_values(row,col,val);
 				}

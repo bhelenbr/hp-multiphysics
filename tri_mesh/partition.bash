@@ -25,7 +25,7 @@ FTYP=$(grep ^filetype $1 | cut -d: -f 2)
 BLKS=$(grep ^nblock $1 | cut -d: -f 2)
 echo "Partitioning ${MESH} of type ${FTYP} into ${BLKS} parts"
 
-cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh > partition.inpt
+cat $1 | grep -v nblock | grep -v filetype | grep -v b0_mesh | grep -v partition: > partition.inpt
 
 #echo "text \c"
 # or
@@ -81,9 +81,10 @@ RMV=$(grep '_v' partition.inpt | grep ': comm' | cut -d _ -f2 | sort | uniq -c |
 
 cp partition.inpt temp.inpt
 for line in ${RMV}; do
-#	echo ${line}
-	grep -v ${line} temp.inpt > temp1.inpt
-	mv temp1.inpt temp.inpt
+	if ! grep -q "_${line}_is_loop" temp.inpt ; then
+		grep -v ${line} temp.inpt > temp1.inpt
+		mv temp1.inpt temp.inpt
+	fi
 done
 mv temp.inpt partition.inpt
 sed 's/partition$/comm/g' partition.inpt > comm.inpt

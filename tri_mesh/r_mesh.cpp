@@ -607,6 +607,14 @@ void r_tri_mesh::rsdl() {
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
 			res(i)(n) += src(i)(n);
+	
+	/* Communicate */
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
+		pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+		last_phase = true;
+		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl->res.data(),0,1,2);
+	}
 
 	/* APPLY DIRICHLET BOUNDARY CONDITIONS FOR FIXING POSITION */
 	for(i=0;i<nebd;++i)
@@ -616,13 +624,7 @@ void r_tri_mesh::rsdl() {
 	for(i=0;i<nvbd;++i)
 		r_vbdry(i)->dirichlet();
 
-	/* Communicate */
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
-		pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
-		last_phase = true;
-		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl->res.data(),0,1,2);
-	}
+
 
 	return;
 }

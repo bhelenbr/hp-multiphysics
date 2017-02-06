@@ -11,6 +11,12 @@
 #include "pod_generate.h"
 #include <myblas.h>
 #include <libbinio/binfile.h>
+#include <netcdf.h>
+
+#define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
+
+#define LOW_NOISE_DOT
+
 
 extern "C" {
 	double dlamch_(const char *cmach);
@@ -41,7 +47,29 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 	/* Initialize base class */
 	BASE::init(inmap,gin);
 	
-	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
+#ifdef DIRECT_METHOD
+	*BASE::gbl->log << "DIRECT_METHOD is defined\n";
+#else
+	*BASE::gbl->log << "DIRECT_METHOD is not defined\n";
+#endif
+
+#ifdef USING_MASS_MATRIX // This uses the mass matrix to form inner products rather than numerically evaluate them
+	*BASE::gbl->log << "USING_MASS_MATRIX is defined\n";
+#else
+	*BASE::gbl->log << "USING_MASS_MATRIX is not defined\n";
+#endif
+	
+#ifdef LOW_NOISE_DOT // This uses the mass matrix to form inner products rather than numerically evaluate them
+	*BASE::gbl->log << "LOW_NOISE_DOT is defined\n";
+#else
+	*BASE::gbl->log << "LOW_NOISE_DOT is not defined\n";
+#endif
+	
+	std::string mystring;
+	inmap.getlinewdefault(BASE::gbl->idprefix +"_groups",mystring,std::string("0"));
+	istringstream data;
+	data.str(mystring);
+	data >> pod_id;   // First group is pod_id.  Other groups are for pod boundary conditions
 	
 	if (!inmap.get("snapshots",nsnapshots)) {
 		*BASE::gbl->log << "# Couldn't find number of snapshots" << std::endl;
@@ -120,7 +148,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		nstr.str("");
 		nstr << k*restart_interval +restartfile << std::flush;
 		filename = "rstrt" +nstr.str() +"_d0";
-		BASE::input(filename, BASE::binary);
+		BASE::input(filename, BASE::reload_type);
 		
 #ifdef POD_BDRY
 		/* ZERO SNAPSHOTS ON POD BOUNDARY'S */
@@ -131,7 +159,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		nstr.str("");
 		nstr << k << std::flush;
 		filename = "temp" +nstr.str();
-		BASE::output(filename, BASE::binary);
+		BASE::output(filename, BASE::output_type(1));
 	}
 	
 	if (nsets != 1) {
@@ -204,7 +232,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str();
-			BASE::input(filename, BASE::binary); // Loads into ug
+			BASE::input(filename, BASE::output_type(1)); // Loads into ug
 			time_average(BASE::ug,mass_times_timeaverage);
 		}
 		mass_times_timeaverage /= static_cast<FLT>(nsnapshots);
@@ -301,7 +329,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str();
-			BASE::input(filename, BASE::binary); // Loads into ug
+			BASE::input(filename, BASE::output_type(1)); // Loads into ug
 #ifdef WEIGHTED_DPOD
 			BASE::ug.v *= sqrt ( set_eigenvalues(k) );
 			BASE::ug.s *= sqrt ( set_eigenvalues(k) );
@@ -313,7 +341,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::binary);
+				BASE::input(filename, BASE::output_type(1));
 #ifdef WEIGHTED_DPOD
 				BASE::ug.v *= sqrt ( set_eigenvalues(l) );
 				BASE::ug.s *= sqrt ( set_eigenvalues(l) );
@@ -422,7 +450,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::binary);
+				BASE::input(filename, BASE::output_type(1));
 #ifdef WEIGHTED_DPOD
 				modes(start+k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,k)*BASE::ug.v(Range(0,BASE::npnt-1)) * sqrt ( set_eigenvalues(l) );
 				modes(start+k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,k)*BASE::ug.s(Range(0,BASE::nseg-1)) * sqrt ( set_eigenvalues(l) );
@@ -449,7 +477,10 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			modes(start+k).v(Range(0,BASE::npnt-1)) /= norm;
 			modes(start+k).s(Range(0,BASE::nseg-1)) /= norm;
 			modes(start+k).i(Range(0,BASE::ntri-1)) /= norm;
-			output(modes(start+k),start+k);
+			nstr.str("");
+			nstr << start+k << std::flush;
+			filename = "mode" +nstr.str();
+			output(modes(start+k),filename);
 		}
 		
 		/* To test normalization */
@@ -472,7 +503,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				nstr.str("");
 				nstr << k << std::flush;
 				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::binary);
+				BASE::input(filename, BASE::output_type(1));
 				project_to_gauss(BASE::ug);
 				
 				for(int l=start;l<nmodes_per_deflation+start;++l) {
@@ -487,7 +518,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				nstr.str("");
 				nstr << k << std::flush;
 				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::binary);
+				BASE::input(filename, BASE::output_type(1));
 				
 				for(int l=start;l<nmodes_per_deflation+start;++l) {
 					BASE::ug.v(Range(0,BASE::npnt-1)) -= psimatrix_recv(psi1dcounter)*modes(l).v(Range(0,BASE::npnt-1));
@@ -495,8 +526,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					BASE::ug.i(Range(0,BASE::ntri-1)) -= psimatrix_recv(psi1dcounter)*modes(l).i(Range(0,BASE::ntri-1));
 					++psi1dcounter;
 				}
-				BASE::output(filename, BASE::binary);
-				// BASE::output(filename, BASE::tecplot);
+				BASE::output(filename, BASE::output_type(1));
+				// BASE::output(filename, BASE::output_type(0));
 			}
 		}
 	}
@@ -504,27 +535,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	/* OUTPUT EIGENVALUES VECTOR */
 	*BASE::gbl->log << "eigenvalues: "<<  eigenvalues << std::endl;
 	
-	filename = "eigenvalues_" +BASE::gbl->idprefix +".bin";
-	binofstream bout;
-	bout.open(filename.c_str());
-	if (bout.error()) {
-		*BASE::gbl->log << "couldn't open eigenvalues output file " << filename;
-		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-	}
-	bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-	bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-	
-	filename = "eigenvalues_" +BASE::gbl->idprefix +".txt";
-	ofstream out;
-	out.open(filename.c_str());
-	out.precision(16);
-	
-	for (int l=0;l<nmodes;++l) {
-		bout.writeFloat(eigenvalues(l),binio::Double);
-		out << eigenvalues(l) << std::endl;
-	}
-	bout.close();
-	out.close();
+	filename = "eigenvalues_" +BASE::gbl->idprefix;
+	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(1));
+	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(0));
 	
 	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS */
 	const int ncoefficients = (coefficient_end-coefficient_start)/coefficient_interval*nmodes;
@@ -538,7 +551,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		nstr.str("");
 		nstr << k << std::flush;
 		filename = "rstrt" +nstr.str() +"_d0";
-		BASE::input(filename, BASE::binary);
+		BASE::input(filename, BASE::reload_type);
 		project_to_gauss(BASE::ug);
 		for(int l=0;l<nmodes;++l) {
 			psimatrix(psi1dcounter) = inner_product_with_projection(modes(l));
@@ -552,28 +565,10 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/* OUTPUT COEFFICIENT VECTOR */
 		nstr.str("");
 		nstr << k << std::flush;
-		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-		binofstream bout;
-		bout.open(filename.c_str());
-		if (bout.error()) {
-			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-		}
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
-		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".txt";
-		ofstream out;
-		out.open(filename.c_str());
-		out.precision(16);
-		
-		for (int l=0;l<nmodes;++l) {
-			bout.writeFloat(psimatrix_recv(psi1dcounter),binio::Double);
-			out << psimatrix_recv(psi1dcounter) << std::endl;
-			++psi1dcounter;
-		}
-		bout.close();
-		out.close();
+		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix;
+		BASE::output(nmodes,psimatrix_recv(Range(psi1dcounter,psi1dcounter+nmodes-1)),filename,BASE::output_type(1));
+		BASE::output(nmodes,psimatrix_recv(Range(psi1dcounter,psi1dcounter+nmodes-1)),filename,BASE::output_type(0));
+		psi1dcounter += nmodes;
 	}
 	
 #ifdef POD_BDRY
@@ -689,7 +684,7 @@ template<class BASE> void pod_generate<BASE>::create_mass_matrix(sparse_row_majo
 				mass.add_values(gindx(m),gindx(k),gsign(k)*BASE::lf(0)(k));
 		}
 	}
-	mass.check_for_unused_entries();
+	mass.check_for_unused_entries(*BASE::gbl->log);
 	
 	return;
 }
@@ -712,7 +707,7 @@ template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 		nstr.str("");
 		nstr << k << std::flush;
 		filename = "mode" +nstr.str();
-		BASE::input(filename, BASE::binary);
+		BASE::input(filename, BASE::output_type(1));
 		project_to_gauss(BASE::ug);
 		
 		for(int l=0;l<nmodes;++l) {
@@ -720,7 +715,7 @@ template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 			nstr.str("");
 			nstr << l << std::flush;
 			filename = "mode" +nstr.str();
-			BASE::input(filename, BASE::binary);
+			BASE::input(filename, BASE::output_type(1));
 			psimatrix(psi1dcounter) = inner_product_with_projection(BASE::ug);
 			++psi1dcounter;
 		}
@@ -781,8 +776,6 @@ template<class BASE> void pod_generate<BASE>::project_to_gauss(vsi& target) {
 	
 	return;
 }
-
-// #define LOW_NOISE_DOT
 
 template<class BASE> FLT pod_generate<BASE>::inner_product_with_projection(vsi& target) {
 	const int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
@@ -975,24 +968,13 @@ template<class BASE> void pod_generate<BASE>::output(vsi& target,std::string fil
 	BASE::ugbd(0).s.reference(target.s);
 	BASE::ugbd(0).i.reference(target.i);
 	
-	BASE::output(filename, BASE::binary);
-	BASE::output(filename, BASE::tecplot);
+	BASE::output(filename, BASE::output_type(0));
+	BASE::output(filename, BASE::output_type(1));
 	
 	BASE::ugbd(0).v.reference(ugstore.v);
 	BASE::ugbd(0).s.reference(ugstore.s);
 	BASE::ugbd(0).i.reference(ugstore.i);
 	
-	return;
-}
-
-template<class BASE> void pod_generate<BASE>::output(vsi& target,int filenumber) {
-	std::ostringstream nstr;
-	std::string filename;
-	
-	nstr.str("");
-	nstr << filenumber << std::flush;
-	filename = "mode" +nstr.str();
-	output(target,filename);
 	return;
 }
 
@@ -1018,7 +1000,7 @@ template<class BASE> void gram_schmidt<BASE>::tadvance() {
 			nstr.str("");
 			nstr << l*nsnapshots_per_set + eig_ct << std::flush;
 			filename = "mode" +nstr.str();
-			BASE::input(filename, BASE::binary);
+			BASE::input(filename, BASE::output_type(1));
 			project_to_gauss(BASE::ug);
 			
 			FLT dotp, dotp_recv;
@@ -1026,7 +1008,7 @@ template<class BASE> void gram_schmidt<BASE>::tadvance() {
 				nstr.str("");
 				nstr << k*nsnapshots_per_set + eig_ct << std::flush;
 				filename2 = "mode" +nstr.str();
-				BASE::input(filename2, BASE::binary, 1);
+				BASE::input(filename2, BASE::output_type(1), 1);
 				dotp = inner_product_with_projection(BASE::ugbd(1));
 				sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 				BASE::ug.v(Range(0,BASE::npnt-1)) -= dotp_recv*BASE::ugbd(1).v(Range(0,BASE::npnt-1));
@@ -1046,8 +1028,8 @@ template<class BASE> void gram_schmidt<BASE>::tadvance() {
 			BASE::ug.i(Range(0,BASE::ntri-1)) /= norm;
 			
 			/* OUTPUT RENORMALIZED MODE */
-			BASE::output(filename, BASE::binary);
-			BASE::output(filename, BASE::tecplot);
+			BASE::output(filename, BASE::output_type(0));
+			BASE::output(filename, BASE::output_type(1));
 		}
 	}
 	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
@@ -1140,11 +1122,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		nstr.str("");
 		nstr << k*x.restart_interval +x.restartfile << std::flush;
 		filename = "rstrt" +nstr.str() +"_d0";
-		x.input(filename, BASE::binary);
+		x.input(filename, x.BASE::reload_type);
 		nstr.str("");
 		nstr << k << std::flush;
 		filename = "temp" +nstr.str();
-		x.BASE::output(filename, BASE::binary);
+		x.BASE::output(filename, x.BASE::output_type(1));
 	}
 	
 	
@@ -1159,13 +1141,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str();
-			x.input(filename, x.binary);
+			x.input(filename, x.BASE::output_type(1));
 			
 			for(l=k;l<x.nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str();
-				x.input(filename, x.binary, 1);
+				x.input(filename, x.BASE::output_type(1), 1);
 				
 				/* PERFORM 1D INTEGRATION */
 				int bsind = 0;
@@ -1221,7 +1203,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		
-		*x.gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
+		*x.gbl->log << base.idprefix << " eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
 		
 		
 		/*************************************/
@@ -1236,7 +1218,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr.str("");
 			nstr << l << std::flush;
 			filename = "temp" +nstr.str();
-			x.input(filename, x.binary, 1);
+			x.input(filename, x.output_type(1), 1);
 			
 			int bsind = 0;
 			do {
@@ -1297,38 +1279,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		nstr.str("");
 		nstr << eig_ct << std::flush;
 		filename = "mode" +nstr.str();
-		x.BASE::output(filename, x.tecplot);
+		x.BASE::output(filename, x.BASE::output_type(0));
 		
-		/* 1D OUTPUT RENORMALIZED MODE */
-		filename = "mode" +nstr.str() + "_" + base.idprefix +".bin";
-		binofstream bout;
-		bout.open(filename.c_str());
-		if (bout.error()) {
-			*x.gbl->log << "couldn't open coefficient output file " << filename;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
-		int bsind = 0;
-		do {
-			sind = base.seg(bsind);
-			v0 = x.seg(sind).pnt(0);
-			for (n=0;n<x.NV;++n)
-				bout.writeFloat(x.ug.v(v0,n),binio::Double);
-		} while(++bsind < base.nseg);
-		v0 = x.seg(sind).pnt(1);
-		for (n=0;n<x.NV;++n)
-			bout.writeFloat(x.ug.v(v0,n),binio::Double);
-		
-		for (int bsind=0;bsind<base.nseg;++bsind) {
-			sind = base.seg(bsind);
-			for (int m=0;m<x.sm0;++m)
-				for (n=0;n<x.NV;++n)
-					bout.writeFloat(x.ug.s(sind,m,n),binio::Double);
-		}
-		bout.close();
-		
+		/* 1D OUTPUT */
+		output(x.ug,filename,x.BASE::output_type(0));
+		output(x.ug,filename,x.BASE::output_type(1));
 		
 		/***************************************/
 		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
@@ -1339,7 +1294,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str();
-			x.input(filename, x.binary, 1);
+			x.input(filename, x.output_type(1), 1);
 			
 			/* PERFORM 1D INTEGRATION */
 			for(int bsind=0;bsind<base.nseg;++bsind) {
@@ -1382,32 +1337,217 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 			x.ugbd(1).v(Range(0,x.npnt-1)) -= dotp_recv*x.ug.v(Range(0,x.npnt-1));
 			x.ugbd(1).s(Range(0,x.nseg-1)) -= dotp_recv*x.ug.s(Range(0,x.nseg-1));
-			x.BASE::output(filename, x.binary, 1);
+			x.BASE::output(filename, x.BASE::output_type(1), 1);
 			coeff(k,eig_ct) = dotp_recv;
 		}
 	}
 	
-	/*****************************/
-	/* OUTPUT COEFFICIENT VECTOR */
-	/*****************************/
+	/* Output coefficient vectors */
 	for (k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
 		nstr << k*x.restart_interval +x.restartfile << std::flush;
-		filename = "coeff" +nstr.str() + "_" +base.idprefix +".bin";
-		binofstream bout;
-		bout.open(filename.c_str());
-		if (bout.error()) {
-			*x.gbl->log << "couldn't open coefficient output file " << filename << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
-		for (l=0;l<nmodes;++l)
-			bout.writeFloat(coeff(k,l),binio::Double);
-		
-		bout.close();
+		filename = "coeff" +nstr.str() + "_" +base.idprefix;
+		x.BASE::output(nmodes,coeff(k,Range::all()),filename,x.output_type(1));
+		x.BASE::output(nmodes,coeff(k,Range::all()),filename,x.output_type(0));
 	}
 }
+
+template<class BASE> void pod_gen_edge_bdry<BASE>::output(vsi& target,std::string filename, typename BASE::filetype typ) {
+	
+	switch(typ) {
+		case(tri_hp::text): {
+			std::string fname;
+			fname = filename +"_" +base.idprefix +".txt";
+			ofstream fout;
+			fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+			
+			int bsind = 0;
+			int sind,v0;
+			do {
+				sind = base.seg(bsind);
+				v0 = x.seg(sind).pnt(0);
+				for (int n=0;n<x.NV;++n)
+					fout << x.ug.v(v0,n) << ' ';
+				fout << std::endl;
+			} while(++bsind < base.nseg);
+			v0 = x.seg(sind).pnt(1);
+			for (int n=0;n<x.NV;++n)
+				fout << x.ug.v(v0,n) << ' ';
+			fout << std::endl;
+			
+			for (int bsind=0;bsind<base.nseg;++bsind) {
+				sind = base.seg(bsind);
+				for (int m=0;m<x.sm0;++m) {
+					for (int n=0;n<x.NV;++n)
+						fout << x.ug.s(sind,m,n) << ' ';
+					fout << std::endl;
+				}
+			}
+			fout.close();
+			
+			break;
+		}
+			
+		case(tri_hp::binary): {
+			/* 1D OUTPUT RENORMALIZED MODE */
+			std::string fname = filename + "_" + base.idprefix +".bin";
+			binofstream bout;
+			bout.open(fname.c_str());
+			if (bout.error()) {
+				*x.gbl->log << "couldn't open coefficient output file " << filename;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+			
+			int bsind = 0;
+			int sind,v0;
+			do {
+				sind = base.seg(bsind);
+				v0 = x.seg(sind).pnt(0);
+				for (int n=0;n<x.NV;++n)
+					bout.writeFloat(x.ug.v(v0,n),binio::Double);
+			} while(++bsind < base.nseg);
+			v0 = x.seg(sind).pnt(1);
+			for (int n=0;n<x.NV;++n)
+				bout.writeFloat(x.ug.v(v0,n),binio::Double);
+			
+			for (int bsind=0;bsind<base.nseg;++bsind) {
+				sind = base.seg(bsind);
+				for (int m=0;m<x.sm0;++m)
+					for (int n=0;n<x.NV;++n)
+						bout.writeFloat(x.ug.s(sind,m,n),binio::Double);
+			}
+			bout.close();
+			break;
+		}
+			
+		case(tri_hp::netcdf): {
+			std::string fname = filename + "_" + base.idprefix +".nc";
+			
+			/* Create the file. The NC_CLOBBER parameter tells netCDF to
+			 * overwrite this file, if it already exists.*/
+			int retval, ncid, dims[3];
+			int one, two, three;
+			if ((retval = nc_create(fname.c_str(), NC_CLOBBER|NC_NETCDF4, &ncid))) ERR(retval,x.gbl->log);
+			
+			/* some fixed dimensions */
+			if ((retval = nc_def_dim(ncid,"1",1,&one))) ERR(retval,x.gbl->log);
+			if ((retval = nc_def_dim(ncid,"2",2,&two))) ERR(retval,x.gbl->log);
+			if ((retval = nc_def_dim(ncid,"3",3,&three))) ERR(retval,x.gbl->log);
+			
+			/* Define the dimensions. NetCDF will hand back an ID for each. */
+			int npnt_id,nseg_id,sm0_id,NV_id;
+			if ((retval = nc_def_dim(ncid, "npnt", base.nseg+1, &npnt_id))) ERR(retval,x.gbl->log);
+			if ((retval = nc_def_dim(ncid, "nseg", base.nseg, &nseg_id))) ERR(retval,x.gbl->log);
+			if ((retval = nc_def_dim(ncid, "sm0", x.sm0, &sm0_id))) ERR(retval,x.gbl->log);
+			if ((retval = nc_def_dim(ncid, "NV", x.NV, &NV_id))) ERR(retval,x.gbl->log);
+			
+			int ugv_id;
+			dims[0] = npnt_id;
+			dims[1] = NV_id;
+			if ((retval = nc_def_var(ncid, "ugv", NC_DOUBLE, 2, dims, &ugv_id))) ERR(retval,x.gbl->log);
+			
+			int ugs_id;
+			dims[0] = nseg_id;
+			dims[1] = sm0_id;
+			dims[2] = NV_id;
+			if ((retval = nc_def_var(ncid, "ugs", NC_DOUBLE, 3, dims, &ugs_id))) ERR(retval,x.gbl->log);
+			
+			if ((retval = nc_enddef(ncid))) ERR(retval,x.gbl->log);
+
+			size_t index[3];
+			int bsind = 0;
+			int sind,v0;
+			do {
+				sind = base.seg(bsind);
+				index[0] = bsind;
+				v0 = x.seg(sind).pnt(0);
+				for (int n=0;n<x.NV;++n) {
+					index[1] = n;
+					nc_put_var1_double(ncid,ugv_id,index,&x.ug.v(v0,n));
+				}
+			} while(++bsind < base.nseg);
+			index[0] = bsind;
+			v0 = x.seg(sind).pnt(1);
+			for (int n=0;n<x.NV;++n) {
+				index[1] = n;
+				nc_put_var1_double(ncid,ugv_id,index,&x.ug.v(v0,n));
+			}
+	
+			for(int i=0;i<base.nseg;++i) {
+				index[0] = i;
+				for(int m=0;m<x.sm0;++m) {
+					index[1] = m;
+					for(int n=0;n<x.NV;++n) {
+						index[2] = n;
+						nc_put_var1_double(ncid,ugs_id,index,&x.ug.s(base.seg(i),m,n));
+					}
+				}
+			}
+			if ((retval = nc_close(ncid))) ERR(retval,x.gbl->log);
+			
+			break;
+		}
+			
+		case(tri_hp::tecplot): {
+			std::string fname = filename + "_" + base.idprefix +".dat";
+			std::ofstream fout;
+			fout.open(fname.c_str());
+			
+			fout << "VARIABLES=\"S\",\"X\",\"Y\",";
+			for(int n=0;n<x.NV;++n)
+				fout << "\"V" << n << "\",";
+			fout << "\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
+			
+			FLT circumference = 0.0;
+			int ind = 0;
+			do {
+				int sind = base.seg(ind);
+				int tind = x.seg(sind).tri(0);
+				
+				int seg;
+				for(seg=0;seg<3;++seg)
+					if (x.tri(tind).seg(seg) == sind) break;
+				assert(seg != 3);
+				
+				x.crdtocht(tind);
+				for(int m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
+					for(int n=0;n<tri_mesh::ND;++n)
+						x.cht(n,m) = 0.0;
+				
+				for(int n=0;n<tri_mesh::ND;++n)
+					basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+				
+				x.ugtouht(tind);
+				for(int n=0;n<x.NV;++n)
+					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+				
+				for (int i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					FLT arclength = sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*arclength;
+					circumference += jcb;
+					
+					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					
+					for (int n=0;n<x.NV;++n) {
+						/* Output value, tangent, and normal derivatives */
+						fout << x.u(n)(0,i) << ' ';
+						
+					}
+					fout << std::endl;
+				}
+			} while (++ind < base.nseg);
+			fout.close();
+			
+			break;
+		}
+			
+		default:
+			break;
+	}
+	return;
+}
+
 #endif
 

@@ -53,22 +53,61 @@ namespace ibc_ins {
 
 	class sphere : public init_bdry_cndtn {
 		private:
-			FLT speed,angle,inner,outer;
+			FLT rho,speed,angle,inner,outer;
 			TinyVector<FLT,tri_mesh::ND> vel;
 
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
-				FLT r;
+				FLT r = sqrt(x(0)*x(0) +x(1)*x(1));
+				FLT costheta = x(0)/r;
+				FLT sintheta = x(1)/r;
+				
+				FLT cost = costheta*cos(angle)+sintheta*sin(angle);
+				FLT sint = sintheta*cos(angle)-costheta*sin(angle);
+				
+				/* This is stokes flow over a solid sphere */
+				r /= 2*inner;
+				FLT ur = -(16.0*r*r*r -12.0*r*r +1.)/(r*r*r)*cost/16.0;
+				FLT ut = sint*(32.0*r*r*r -12.0*r*r -1.)/(r*r*r)/32.0;
+				ur *= -speed;
+				ut *= -speed;
+				r *= 2*inner;
+				
+				FLT ux = ur*costheta-ut*sintheta;
+				FLT uy = ur*sintheta+ut*costheta;
+				//FLT p = speed*mu_g/2*cost/(2*r*r);
+				
+				FLT p = rho*0.5*(speed*speed -(ux*ux+uy*uy));  //  assume high Re for pressure.
 
-				r = sqrt(x(0)*x(0) +x(1)*x(1));
+				
 				switch(n) {
-					case(0):case(1): 
+					case(0): {
 						if (r < inner) 
 							return(0.0);
 						else if (r < outer)
-							return(vel(n)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
+							return(ux);
 						else
-							return(vel(n));
+							return(vel(0));
+						break;
+					}
+					case(1): {
+						if (r < inner)
+							return(0.0);
+						else if (r < outer)
+							return(uy);
+						else
+							return(vel(1));
+						break;
+					}
+					case(2): {
+						if (r < inner)
+							return(0.5*speed*speed);
+						else if (r < outer)
+							return(p);
+						else
+							return(0.0);
+						break;
+					}
 				}
 				return(0.0);
 			}
@@ -76,6 +115,10 @@ namespace ibc_ins {
 			void init(input_map &blockdata,std::string idnty) {
 				std::string keyword,val;
 				std::istringstream data;
+				
+				keyword = idnty +"_rho";
+				if (!blockdata.get(keyword,rho))
+					blockdata.getwdefault("rho",rho,1.0);
 
 				keyword = idnty +"_flowspeed";
 				if (!blockdata.get(keyword,speed)) 
@@ -379,7 +422,7 @@ namespace ibc_ins {
 			}
 	};
 
-	static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
+// static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
 
 class force_coupling : public tri_hp_helper {
 		protected:

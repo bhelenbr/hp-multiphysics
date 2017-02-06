@@ -144,7 +144,7 @@ public:
 	// Array<FLT,1>& operator*(Array<FLT,1>&);
 	
 	FLT& operator()(int row, int col);
-	void check_for_unused_entries();
+	void check_for_unused_entries(std::ostream &log);
 	friend ostream &operator<<(ostream &stream, sparse_row_major mat);
 	void output_row(ostream &stream,int row);
 	

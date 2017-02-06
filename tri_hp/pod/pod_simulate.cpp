@@ -9,8 +9,14 @@
 
 #include <myblas.h>
 #include <libbinio/binfile.h>
+#include <libbinio/binwrap.h>
+#include <netcdf.h>
+
+#define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
+
 
 #define FULL_JACOBIAN
+#define LOW_NOISE_DOT
 
 // #define DEBUG
 
@@ -30,6 +36,18 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 	/* Initialize base class */
 	/* If restart is not equal to 0, this will load DNS data */
 	BASE::init(inmap,gin);
+	
+#ifdef FULL_JACOBIAN
+	*BASE::gbl->log << "FULL_JACOBIAN is defined\n";
+#else
+	*BASE::gbl->log << "FULL_JACOBIAN is not defined\n";
+#endif
+	
+#ifdef LOW_NOISE_DOT
+	*BASE::gbl->log << "LOW_NOISE_DOT is defined\n";
+#else
+	*BASE::gbl->log << "LOW_NOISE_DOT is not defined\n";
+#endif
 
 	inmap.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
@@ -55,7 +73,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 		BASE::ugbd(0).v.reference(modes(i).v);
 		BASE::ugbd(0).s.reference(modes(i).s);
 		BASE::ugbd(0).i.reference(modes(i).i);
-		BASE::input(filename, BASE::binary);
+		BASE::input(filename, BASE::reload_type);
 	}
 	BASE::ugbd(0).v.reference(ugstore.v);
 	BASE::ugbd(0).s.reference(ugstore.s);
@@ -64,7 +82,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 #ifdef POD_BDRY
 	pod_ebdry.resize(BASE::nebd);
 	/* Count how many boundary modes there are so we can size arrays before initializing boundaries */
-	/* For each mesh block that is part of this pod block need to know
+	/* For each mesh block that is part of this pod block need to know */
 	/* # of pod boundaries, ids, and # of pod modes for each unique id */
 
 	/* First need to know what block # I am and how many total blocks there are in this pod group */
@@ -171,27 +189,18 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 		/* This loads coefficient vector made by pod_generate for this timestep */
 		nstr.str("");
 		nstr << load_coeffs << std::flush;
-		filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
-		binifstream bin;
-		bin.open(filename.c_str());
-		if (bin.error()) {
-				*BASE::gbl->log << "couldn't open coefficient input file " << filename << std::endl;
-				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-		}
-		bin.setFlag(binio::BigEndian,bin.readInt(1));
-		bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+		filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix;
+		BASE::input(nmodes,coeffs,filename,BASE::reload_type);
 		/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 		BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
 		BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
 		BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
 		
 		for (int l=0;l<nmodes;++l) {
-			coeffs(l) = bin.readFloat(binio::Double); 
 			BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
 			BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
 			BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
 		}
-		bin.close();
 	}
 	else {
 		/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
@@ -437,7 +446,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
 	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
 
-//	*BASE::gbl->log << jacobian << std::endl;
+//  *BASE::gbl->log << jacobian << std::endl;
 //	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
 	
 #ifdef FULL_JACOBIAN
@@ -540,7 +549,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 			jacobian_send(modeloop1,modeloop) = dot(phi1D,JPhi);
 		}
 	}
-	sim::blks.allreduce(jacobian_send.data(),jacobian.data(),tmodes*tmodes,blocks::flt_msg,blocks::sum,pod_id);
+	sim::blks.allreduce(jacobian_send.data(),jacobian.data(),nmodes*nmodes,blocks::flt_msg,blocks::sum,pod_id);
 
 #ifdef POD_BDRY
 	/* CREATE JACOBIAN FOR BOUNDARY MODES */
@@ -765,60 +774,140 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& inmap) {
 	for(i=0;i<nmodes;++i) {
 		nstr.str("");
 		nstr << i << std::flush;
-		filename = "mode" +nstr.str() +"_" +base.idprefix;
+		filename = "mode" +nstr.str();
 		nstr.clear();
 		modes(i).v.resize(base.maxseg+1,x.NV);
 		modes(i).s.resize(base.maxseg,x.sm0,x.NV);
-
-		/* INPUT 1D MODE */
-		filename = "mode" +nstr.str() + "_" + base.idprefix +".bin";
-		binifstream bin;
-		bin.open(filename.c_str());
-		if (bin.error()) {
-			*x.gbl->log << "couldn't open input file " << filename << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-		bin.setFlag(binio::BigEndian,bin.readInt(1));
-		bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-		for (int bsind=0;bsind<base.nseg;++bsind)
-			for (int n=0;n<x.NV;++n)
-				modes(i).v(bsind,n) = bin.readFloat(binio::Double);
-		for (int n=0;n<x.NV;++n)
-			modes(i).v(base.nseg,n) = bin.readFloat(binio::Double);
-
-		for (int bsind=0;bsind<base.nseg;++bsind) {
-			for (int m=0;m<x.sm0;++m)
-				for (int n=0;n<x.NV;++n)
-					modes(i).s(bsind,m,n) = bin.readFloat(binio::Double);
-		}
-		bin.close();
+		input(modes(i),filename,x.output_type(1));
 	}
+	
 
 	int initfile;
 	inmap.getwdefault("initfile",initfile,1);
 	nstr.str("");
 	nstr << initfile << std::flush;
-	filename = "coeff" +nstr.str() +"_" +base.idprefix +".bin";
-	binifstream bin;
-	bin.open(filename.c_str());
-	if (bin.error()) {
-		*x.gbl->log << "couldn't open coefficient input file " << filename << std::endl;
-		sim::abort(__LINE__,__FILE__,x.gbl->log);
-	}
-	bin.setFlag(binio::BigEndian,bin.readInt(1));
-	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
-	for (int l=0;l<nmodes;++l) {
-		x.coeffs(bindex+l) = bin.readFloat(binio::Double); 
-	}
-	bin.close();
+	filename = "coeff" +nstr.str() +"_" +base.idprefix;
+	x.input(nmodes,x.coeffs(Range(bindex,bindex+nmodes-1)),filename,x.output_type(1));
 
 	addto2Dsolution(x.ug);
 
 	return;
 }
+
+template<class BASE> void pod_sim_edge_bdry<BASE>::input(vs& target,std::string filename, typename BASE::filetype typ) {
+	
+	switch(typ) {
+		case(tri_hp::text): {
+			std::string fname;
+			fname = filename +"_" +base.idprefix +".txt";
+			ifstream in;
+			in.open(fname.c_str());
+			if (!in) {
+				*x.gbl->log << "couldn't open text input file " << fname << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			int bsind = 0;
+			do {
+				for (int n=0;n<x.NV;++n)
+					in >> target.v(bsind,n);
+			} while(++bsind < base.nseg);
+			for (int n=0;n<x.NV;++n)
+				in >> target.v(bsind,n);
+			
+			for (int bsind=0;bsind<base.nseg;++bsind) {
+				for (int m=0;m<x.sm0;++m) {
+					for (int n=0;n<x.NV;++n)
+						in >> target.s(bsind,m,n);
+				}
+			}
+			in.close();
+			
+			break;
+		}
+			
+		case(tri_hp::binary): {
+			/* 1D OUTPUT RENORMALIZED MODE */
+			std::string fname = filename + "_" + base.idprefix +".bin";
+			ifstream in;
+			in.open(fname.c_str());
+			if (!in) {
+				*x.gbl->log << "couldn't open binary input file " << fname << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			biniwstream bin(&in);
+			
+			/* HEADER INFORMATION */
+			bin.setFlag(binio::BigEndian,bin.readInt(1));
+			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+	
+			int bsind = 0;
+			do {
+				for (int n=0;n<x.NV;++n)
+					target.v(bsind,n) = bin.readFloat(binio::Double);
+			} while(++bsind < base.nseg);
+			for (int n=0;n<x.NV;++n)
+				target.v(bsind,n) = bin.readFloat(binio::Double);
+			
+			for (int bsind=0;bsind<base.nseg;++bsind) {
+				for (int m=0;m<x.sm0;++m)
+					for (int n=0;n<x.NV;++n)
+						target.s(bsind,m,n) = bin.readFloat(binio::Double);
+			}
+			in.close();
+			break;
+		}
+			
+		case(tri_hp::netcdf): {
+			std::string fname = filename + "_" + base.idprefix +".nc";
+			
+			int retval, ncid;
+			if (!(retval = nc_open(fname.c_str(), NC_NOWRITE, &ncid))) {
+				int ugv_id;
+				if ((retval = nc_inq_varid(ncid, "ugv", &ugv_id))) ERR(retval,x.gbl->log);
+				
+				int ugs_id;
+				if ((retval = nc_inq_varid(ncid, "ugs", &ugs_id))) ERR(retval,x.gbl->log);
+	
+				size_t index[3];
+				int bsind = 0;
+				do {
+					index[0] = bsind;
+					for (int n=0;n<x.NV;++n) {
+						index[1] = n;
+						nc_get_var1_double(ncid,ugv_id,index,&target.v(bsind,n));
+					}
+				} while(++bsind < base.nseg);
+				index[0] = bsind;
+				for (int n=0;n<x.NV;++n) {
+					index[1] = n;
+					nc_get_var1_double(ncid,ugv_id,index,&target.v(bsind,n));
+				}
+				
+				for(int bsind=0;bsind<base.nseg;++bsind) {
+					index[0] = bsind;
+					for(int m=0;m<x.sm0;++m) {
+						index[1] = m;
+						for(int n=0;n<x.NV;++n) {
+							index[2] = n;
+							nc_get_var1_double(ncid,ugs_id,index,&target.s(bsind,m,n));
+						}
+					}
+				}
+				if ((retval = nc_close(ncid))) ERR(retval,x.gbl->log);
+			}
+			break;
+		}
+		
+		default: {
+			*x.gbl->log << "can't input a list from that filetype" << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+			break;
+		}
+	}
+	return;
+}
+
+
 
 
 template<class BASE> void pod_sim_edge_bdry<BASE>::loadbuff(Array<FLT,1>& sdata) {
@@ -935,39 +1024,14 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 	
 	switch(why) {
 		case(block::display): {
-			ofstream out;
-			out.setf(std::ios::scientific, std::ios::floatfield);
-			out.precision(4);
-			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix +".txt";
-			out.open(fnmapp.c_str());
-			if (!out) {
-				*BASE::gbl->log << "couldn't open text output file " << fname;
-				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-			}
-			
-			for (int l=0;l<nmodes;++l) 
-				out << coeffs(l) << std::endl;
-			
-			out.close();
+			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix;
+			BASE::output(nmodes,coeffs(Range::all()),fnmapp,BASE::output_type(0));
 			return;
 		}
 		case(block::restart): {
 			/* Output list of coefficents */
-			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix +".bin";
-			binofstream bout;
-			bout.open(fnmapp.c_str());
-			if (bout.error()) {
-				*BASE::gbl->log << "couldn't open coefficient output file " << fname;
-				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-			}
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-			
-			for (int l=0;l<nmodes;++l) 
-				bout.writeFloat(coeffs(l),binio::Double);
-			
-			bout.close();
-			
+			fnmapp = fname +"_coeff_" +BASE::gbl->idprefix;
+			BASE::output(nmodes,coeffs(Range::all()),fnmapp,BASE::output_type(1));
 			return;
 		}
 		case(block::debug): {
@@ -976,9 +1040,6 @@ template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, b
 	}
 	return;
 }
- 
-#define LOW_NOISE_DOT
-
 
 template<class BASE> void pod_simulate<BASE>::calc_coeffs() {	
 	int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();

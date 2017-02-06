@@ -975,7 +975,12 @@ void tri_mesh::partition(multigrid_interface& xmesh, int npart, int maxenum, int
 			
 		nextv2:
 			sind = ebdry(i)->seg(ebdry(i)->nseg-1);
+			int pold = p0;
 			p0 = seg(sind).pnt(1);
+			if (pold == p0) {
+				*gbl->log << vbdry(nvbd-1)->idprefix << "_is_loop: 1\n";
+			}
+			
 			for(int j=0;j<nvbd;++j)
 				if (vbdry(j)->pnt == p0) goto nextv3;
 			

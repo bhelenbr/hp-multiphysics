@@ -335,14 +335,14 @@ void sparse_row_major::zero_rows(int nrows,const Array<int,1>& rows) {
 			_val(j) = 0.0;
 }
 
-void sparse_row_major::check_for_unused_entries() {
+void sparse_row_major::check_for_unused_entries(std::ostream &log) {
 	
 	for(int i=_offset;i<_offset+_nrow;++i) {
 		for (int j=_cpt(i);j<_cpt(i+1);++j) {
 			if (_col(j) == INT_MAX-1) {
-				std::cerr << "unused entry for row " << i << " allocated " << _cpt(i+1) -_cpt(i) << std::endl;
+				log << "unused entry for row " << i << " allocated " << _cpt(i+1) -_cpt(i) << std::endl;
 				Array<int,1> used(_col(Range(_cpt(i),j-1)));
-				std::cerr << "used " << used << " unused " << _col(j) << std::endl;
+				log << "used " << used << " unused " << _col(j) << std::endl;
 				assert(0);
 			}
 		}

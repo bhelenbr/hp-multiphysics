@@ -183,10 +183,12 @@ class tri_hp : public r_tri_mesh  {
 		filetype reload_type;
 		void input(const std::string &name);
 		void input(const std::string &name, filetype type, int tlvl = 0);
-
+		void input(int size,Array<FLT,1> list, std::string filename,filetype typ); // inputs 1D FLT array
+	
 		/** Outputs solution in various filetypes */
 		void output(const std::string &name, block::output_purpose why);
 		void output(const std::string &name, filetype type = tecplot, int tlvl = 0);
+		void output(int size,Array<FLT,1> list, std::string filename, filetype type);  // outputs 1D FLT array
 
 		/** Shift to next implicit time step */
 		void tadvance();

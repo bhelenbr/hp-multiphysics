@@ -75,10 +75,8 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 		if (!inmap.get(x.gbl->idprefix + "_conductivity",gbl->k_l)) inmap.getwdefault("conductivity",gbl->k_l,0.7*mu);
 	}
 	
+	inmap[base.idprefix+"_is_coupled"] = "1";
 	hp_coupled_bdry::init(inmap,gbl_in);
-#ifdef PRECONDITION
-	gbl->field_is_coupled = true;
-#endif
 	
 	keyword = liquid_block + "_Lf";
 	if (!inmap.get(keyword,gbl->Lf)) {
@@ -395,8 +393,8 @@ void melt_cd::setup_preconditioner() {
 	}	
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -406,8 +404,8 @@ void melt_cd::setup_preconditioner() {
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
 	}
 	
 	if (gbl->is_loop) {
@@ -420,7 +418,7 @@ void melt_cd::setup_preconditioner() {
 	for(indx=0;indx<base.nseg+1;++indx) {
 		/* INVERT 3x3 VERTEX MATRICES */
 		int info;
-		GETRF(3,3,&gbl->vdt(indx,0,0),x.NV+NV,&gbl->vpiv(indx,0),info);
+		GETRF(3,3,&gbl->vdt(indx,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(indx,0),info);
 		if (info != 0) {
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -432,7 +430,7 @@ void melt_cd::setup_preconditioner() {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT 3x3 SIDE MATRIX */
 			int info;
-			GETRF(3,3,&gbl->sdt(indx,0,0),x.NV+NV,&gbl->spiv(indx,0),info);
+			GETRF(3,3,&gbl->sdt(indx,0,0),gbl->sdt.length(thirdDim),&gbl->spiv(indx,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -651,9 +649,11 @@ void melt_facet_pt2::element_rsdl(Array<FLT,1> lf) {
 /* Routine to add surface tension stress or endpoint movement residual */
 void melt_facet_pt2::rsdl(int stage) {
 	
+#ifdef petsc
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	r_gbl->res(base.pnt)(0) = 0.0;
 	r_gbl->res(base.pnt)(1) = 0.0;
+#endif
 	
 #ifndef SYMMETRIC
 	if (!surface->is_master) return;
@@ -682,9 +682,11 @@ void melt_facet_pt2::rsdl(int stage) {
 	// FIXME: These should be deleted eventually
 	surface->gbl->vres(endpt,0) = lf(x.NV);
 	surface->gbl->vres(endpt,1) = lf(x.NV+1);
-	
+
+#ifdef petsc
 	r_gbl->res(base.pnt)(0) = lf(x.NV);
 	r_gbl->res(base.pnt)(1) = lf(x.NV+1);
+#endif
 	
 }
 

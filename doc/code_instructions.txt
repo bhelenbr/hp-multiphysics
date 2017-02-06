@@ -24,8 +24,15 @@ brew install muparser
 brew install homebrew/science/petsc
 brew install pth
 brew install valgrind
+
+# These are not necessary but I put it here
+# as a reminder of nice things to install
+brew tap homebrew/science
 brew install graphviz
 brew install doxygen
+brew install numpy
+brew install scipy
+brew install matplotlib
 
 To update installed packages
 brew update

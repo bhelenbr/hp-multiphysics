@@ -118,32 +118,38 @@ void tri_hp::petsc_initialize(){
 	/* a_ii (u_r -u_l) = 0 */
 	Array<int,1> nnzero_mpi(jacobian_size);
 	nnzero_mpi = 0;
-	for(int i=0;i<nebd;++i) 
-		hp_ebdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
-		
-	for(int i=0;i<nvbd;++i) 
-		hp_vbdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
-		
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
-	for(int i=0;i<nvbd;++i)
-		vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
 	
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
-	for(int i=0;i<nvbd;++i)
-		vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
-
-	for(int i=0;i<nebd;++i)
-		ebdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-	for(int i=0;i<nvbd;++i)
-		vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-		
-	for(int i=0;i<nebd;++i) 
-		hp_ebdry(i)->non_sparse_rcv(nnzero,nnzero_mpi);
 	
-	for(int i=0;i<nvbd;++i) 
-		hp_vbdry(i)->non_sparse_rcv(nnzero,nnzero_mpi);		
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */
+	for(int last_phase = false, phase = 0; !last_phase; ++phase) {
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
+		
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
+		
+		for(int i=0;i<nebd;++i)
+			ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+		
+		for(int i=0;i<nvbd;++i)
+			vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+		
+		pmsgpass(boundary::all_phased,phase,boundary::symmetric);
+		
+		last_phase = true;
+		for(int i=0;i<nebd;++i) {
+			last_phase &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+		}
+		for(int i=0;i<nvbd;++i) {
+			last_phase &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+		}
+		
+		for(int i=0;i<nebd;++i)
+			hp_ebdry(i)->non_sparse_rcv(phase,nnzero,nnzero_mpi);
+		
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->non_sparse_rcv(phase,nnzero,nnzero_mpi);
+	}
 
 	helper->non_sparse(nnzero,nnzero_mpi);
 	
@@ -269,8 +275,8 @@ void tri_hp::petsc_setup_preconditioner() {
 		*gbl->log << J_mpi << std::endl;
 		(*gbl->log).precision(oldprecision);
 	}
-	J.check_for_unused_entries();
-	J_mpi.check_for_unused_entries();
+	J.check_for_unused_entries(*gbl->log);
+	J_mpi.check_for_unused_entries(*gbl->log);
 
 #ifndef MPISRC
 	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);

@@ -1197,6 +1197,9 @@ void block::init(input_map &input) {
 
 	/* LOAD FINE MESH INFORMATION */
 	grd(0)->init(input,gbl);
+	if (gbl->adapt_output) {
+		output("before_matched",block::display,0);
+	}
 	grd(0)->matchboundaries();
 	if (gbl->adapt_output) {
 		output("matched0",block::display,0);
@@ -1226,7 +1229,7 @@ void block::init(input_map &input) {
 
 
 
-void block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
+FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 	int vcount,extra_count = 0;
 	int gridlevel,gridlevelp;
 	FLT error,maxerror = 0.0;
@@ -1242,29 +1245,36 @@ void block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 
 		for(int iter=0;iter<itercrsn;++iter)
 			grd(gridlevel)->update();
+		
+		if (lvl+vcount == 0) {
+			*gbl->log << gbl->iteration << ' ';
+			error = maxres(0);
+			*gbl->log << std::endl;
+		}
 
 		/* THIS IS TO RUN A TWO-LEVEL ITERATION */
 		/* OR TO CONVERGE THE SOLUTION ON THE COARSEST MESH */
 		if (error_control_level == lvl) {
-			*gbl->log << "#error_control ";
+			*gbl->log << "#error_control " << extra_count << ' ';
 			error = maxres(gridlevel);
 			maxerror = MAX(error,maxerror);
 			*gbl->log << ' ' << error/maxerror << std::endl;
-			if (error/maxerror > error_control_tolerance) vcount = vw-2;
+			if (error/maxerror > error_control_tolerance && error > absolute_tolerance && extra_count < ncycle) vcount = vw-2;
 			if (debug_output) {
 				if (extra_count % debug_output == 0) {
 					std::string outname;
 					std::ostringstream nstr("");
 					nstr.str("");
-					nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count++ << std::flush;
+					nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count << std::flush;
 					outname = "coarse_debug" +nstr.str();
 					output(outname,block::debug,gridlevel);
 				}
 			}
+			++extra_count;
 			if (lvl == mglvls-1) continue;
 		}
 
-		if (lvl == mglvls-1) return;
+		if (lvl == mglvls-1) return(error);
 
 		grd(gridlevel)->rsdl();
 
@@ -1280,11 +1290,10 @@ void block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 			grd(gridlevel)->update();
 	}
 
-	return;
+	return(error);
 }
 
 void block::go(input_map input) {
-	int i;
 	std::string outname;
 	std::ostringstream nstr;
 	clock_t begin_time, end_time;
@@ -1346,16 +1355,14 @@ void block::go(input_map input) {
 			tadvance();
 
 			maxerror = 0.0;
-			for(i=0;i<ncycle;++i) {
-				cycle(vw,0,!(i%prcndtn_intrvl));
-				*gbl->log << i << ' ';
-				error = maxres();
+			for(gbl->iteration=0;gbl->iteration<ncycle;++gbl->iteration) {
+				error = cycle(vw,0,!(gbl->iteration%prcndtn_intrvl));
 				maxerror = MAX(error,maxerror);
-				*gbl->log << std::endl << std::flush;
+
 				if (debug_output) {
-					if (i % debug_output == 0) {
+					if (gbl->iteration % debug_output == 0) {
 						nstr.str("");
-						nstr << gbl->tstep << '_' << gbl->substep << '_' << i << std::flush;
+						nstr << gbl->tstep << '_' << gbl->substep << '_' << gbl->iteration << std::flush;
 						outname = "debug" +nstr.str();
 						output(outname,block::debug);
 					}

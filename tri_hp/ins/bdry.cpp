@@ -507,9 +507,9 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	return;
 }
 
-int actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int actuator_disc::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return(0);
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;

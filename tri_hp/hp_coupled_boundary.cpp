@@ -68,10 +68,15 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	
 	gbl = static_cast<global *>(gbl_in);
 	
-	int NVcoupled = NV;
-	if (!inmap.get(base.idprefix + "_NVcoupled",NVcoupled)) {
+	int NVcoupled;
+	inmap.getwdefault(base.idprefix + "_is_coupled",gbl->field_is_coupled,false);
+	if (gbl->field_is_coupled) {
+		NVcoupled = NV +c0_indices.size();
+	}
+	else {
 		NVcoupled = NV; // Default is two variables (x,y)
 	}
+
 	gbl->vdt.resize(base.maxseg+1,NVcoupled,NVcoupled);
 	gbl->vpiv.resize(base.maxseg+1,NVcoupled);
 	gbl->sdt.resize(base.maxseg,NVcoupled,NVcoupled);
@@ -79,7 +84,6 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	gbl->sdt2.resize(base.maxseg,x.sm0,NVcoupled,NVcoupled);
 	gbl->spiv2.resize(base.maxseg,x.sm0,NVcoupled);
 	gbl->meshc.resize(base.maxseg,NV);
-	gbl->field_is_coupled = false;
 	
 	gbl->cfl.resize(x.log2p+1,NV);
 	double CFLdflt[3] = {2.5, 1.5, 1.0};
@@ -278,6 +282,7 @@ void hp_coupled_bdry::rsdl(int stage) {
 	}
 	
 	
+#ifdef petsc
 	/* Store vertex mesh residual in r_mesh residual vector? */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	int i = 0;
@@ -290,6 +295,8 @@ void hp_coupled_bdry::rsdl(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	r_gbl->res(v0)(0) = gbl->vres(i,0);
 	r_gbl->res(v0)(1) = gbl->vres(i,1);
+#endif
+	
 }
 
 void hp_coupled_bdry::maxres() {
@@ -345,7 +352,7 @@ void hp_coupled_bdry::update(int stage) {
 		minvrt();
 		
 #ifdef DEBUG
-		//   if (x.coarse_flag) {
+//		if (x.coarse_flag) {
 		for(int i=0;i<base.nseg+1;++i)
 			*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i,0,0) << ' ' << gbl->vdt(i,0,1) << ' ' << gbl->vdt(i,1,0) << ' ' << gbl->vdt(i,1,1) << '\n';
 		
@@ -384,7 +391,7 @@ void hp_coupled_bdry::update(int stage) {
 		for(int i=0;i<base.nseg;++i)
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 				*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
-		// }
+//		}
 #endif
 		
 		i = 0;
@@ -412,7 +419,7 @@ void hp_coupled_bdry::update(int stage) {
 		x.hp_vbdry(base.vbdry(0))->mvpttobdry(x.pnts(v0));
 		
 #ifdef DEBUG
-		//   if (x.coarse_flag) {
+//		if (x.coarse_flag) {
 		i = 0;
 		do {
 			sind = base.seg(i);
@@ -425,7 +432,7 @@ void hp_coupled_bdry::update(int stage) {
 		for(int i=0;i<base.nseg;++i)
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 				*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
-		// }
+//		}
 #endif
 
 #ifndef SYMMETRIC
@@ -1046,13 +1053,13 @@ void hp_coupled_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_
 	return;
 }
 
-int hp_coupled_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
-	if (!base.is_comm()) return(0);
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 
 	const int sm=basis::tri(x.log2p)->sm();
 	
-	int count = hp_edge_bdry::non_sparse_rcv(nnzero, nnzero_mpi);
+	int count = hp_edge_bdry::non_sparse_rcv(phase, nnzero, nnzero_mpi);
 	
 	/* Last thing to receive is nnzero for edge equations */
 	if (sm) {
@@ -1455,7 +1462,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 				
 				int info;
 				char trans[] = "T";
-				GETRS(trans,ncoupled,1,&gbl->sdt2(j,m,0,0),NV+x.NV,&gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
+				GETRS(trans,ncoupled,1,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
 				if (info != 0) {
 					*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1516,7 +1523,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 
 			int info;
 			char trans[] = "T";
-			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),NV+x.NV,&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1545,7 +1552,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 		
 		int info;
 		char trans[] = "T";
-		GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),NV+x.NV,&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+		GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
 		if (info != 0) {
 			*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1625,7 +1632,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 #endif
 
 				int info;
-				GETRF(ncoupled,ncoupled,&gbl->sdt2(j,m,0,0),x.NV+NV,&gbl->spiv2(j,m,0),info);
+				GETRF(ncoupled,ncoupled,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),info);
 				if (info != 0) {
 					*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1633,9 +1640,9 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 				Array<FLT,2> A = gbl->sdt2(j,m,Range::all(),Range::all());
 				Array<int,1> ipiv = gbl->spiv2(j,m,Range::all());
 				x.J.match_patterns(ncoupled,row_ind);
-				x.J.combine_rows(ncoupled, row_ind, A, x.NV+NV, ipiv);
+				x.J.combine_rows(ncoupled, row_ind, A, gbl->sdt2.length(thirdDim), ipiv);
 				x.J_mpi.match_patterns(ncoupled, row_ind);
-				x.J_mpi.combine_rows(ncoupled, row_ind, A, x.NV+NV, ipiv);
+				x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->sdt2.length(thirdDim), ipiv);
 				row0 += NV;
 				row1 += x.NV;
 			}
@@ -1677,7 +1684,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			}
 #endif
 			int info;
-			GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),x.NV+NV,&gbl->vpiv(i,0),info);
+			GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1685,9 +1692,9 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			Array<FLT,2> A = gbl->vdt(i,Range::all(),Range::all());
 			Array<int,1> vpiv = gbl->vpiv(i,Range::all());
 			x.J.match_patterns(ncoupled, row_ind);
-			x.J.combine_rows(ncoupled, row_ind, A, x.NV+NV, vpiv);
+			x.J.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
 			x.J_mpi.match_patterns(ncoupled, row_ind);
-			x.J_mpi.combine_rows(ncoupled, row_ind, A, x.NV+NV, vpiv);
+			x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
 			
 		} while (++i < base.nseg);
 		int row = x.seg(sind).pnt(1)*vdofs;
@@ -1716,7 +1723,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		}
 #endif
 		int info;
-		GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),x.NV+NV,&gbl->vpiv(i,0),info);
+		GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
 		if (info != 0) {
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1724,9 +1731,9 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		Array<FLT,2> A = gbl->vdt(i,Range::all(),Range::all());
 		Array<int,1> vpiv = gbl->vpiv(i,Range::all());
 		x.J.match_patterns(ncoupled, row_ind);
-		x.J.combine_rows(ncoupled, row_ind, A, x.NV+NV, vpiv);
+		x.J.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
 		x.J_mpi.match_patterns(ncoupled, row_ind);
-		x.J_mpi.combine_rows(ncoupled, row_ind, A, x.NV+NV, vpiv);
+		x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
 	}
 }
 #endif
@@ -1736,7 +1743,8 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 	std::istringstream data;
 	std::string filename;
 	
-	hp_vrtx_bdry::init(inmap,gbl_in);
+	multi_physics_pnt::init(inmap,gbl_in);
+
 	
 	if ((surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(0))))) {
 		surfbdry = 0;
@@ -1748,7 +1756,7 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 		surfbdry = -1;  // Just a fixed point (used for mesh touching complicated point in 3-phase flow with free-surface)
 		surface = 0;
 	}
-	
+
 	/* Check if set manually already, otherwise use other boundary to get defaults */
 	Array<int,1> atemp(x.NV);
 	if (!inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
@@ -1768,19 +1776,13 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 			}
 		}
 	}
-	
-	if (!inmap.getline(base.idprefix +"_c0_indices",val) && surface) {
-		/* Get from surface */
-		c0_indices = surface->c0_indices;
-		c0_indices_xy = surface->c0_indices_xy;
-	}
 }
 
 void hp_deformable_fixed_pnt::vdirichlet() {
 	const int nfix = tri_mesh::ND;
 	
 	// APPLY FLOW B.C.'S
-	hp_vrtx_bdry::vdirichlet();
+	multi_physics_pnt::vdirichlet();
 	
 	if (surface) {
 		if (surface->is_master) {
@@ -1796,16 +1798,18 @@ void hp_deformable_fixed_pnt::vdirichlet() {
 			}
 		}
 	}
+#ifdef petsc
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	for(int n=0;n<nfix;++n) {
 		r_gbl->res(base.pnt)(n) = 0.0;
 	}
+#endif
 }
 
 #ifdef petsc
 void hp_deformable_fixed_pnt::petsc_jacobian_dirichlet() {
 	
-	hp_vrtx_bdry::petsc_jacobian_dirichlet();
+	multi_physics_pnt::petsc_jacobian_dirichlet();
 	
 	const int nfix = tri_mesh::ND;
 	/* BOTH X & Y ARE FIXED */
@@ -1960,9 +1964,11 @@ void hp_deformable_free_pnt::rsdl(int stage) {
 	else
 		endpt = 0;
 	
+#ifdef petsc
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	/* equation for tangential poistion */
 	r_gbl->res(base.pnt)(0) = lf(x.NV);
+#endif
 	
 	// FIXME: This should be deleted eventually
 	surface->gbl->vres(endpt,0) = lf(x.NV);
@@ -1984,7 +1990,7 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 #endif
 
 	/* Use Jacobian routine to fill in Jacobian terms */
-	hp_vrtx_bdry::petsc_jacobian();
+	multi_physics_pnt::petsc_jacobian();
 }
 #endif
 
@@ -2226,8 +2232,8 @@ void translating_surface::setup_preconditioner() {
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -2237,8 +2243,8 @@ void translating_surface::setup_preconditioner() {
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
 	}
 	
 	if (gbl->is_loop) {
@@ -2293,10 +2299,12 @@ void translating_surface::setup_preconditioner() {
 
 /* Routine to make sure r_gbl residual doesn't get screwed up at triple junction */
 void hp_deformable_follower_pnt::rsdl(int stage) {
+#ifdef petsc
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	/* equation for tangential poistion */
 	r_gbl->res(base.pnt)(0) = 0.0;
 	r_gbl->res(base.pnt)(1) = 0.0;
+#endif
 	
 	if (!surface->is_master) return;
 		
@@ -2328,7 +2336,7 @@ void hp_deformable_follower_pnt::petsc_jacobian() {
 	MatZeroRow(x.petsc_J,row+1,PETSC_NULL);
 #endif
 	
-	hp_vrtx_bdry::petsc_jacobian();
+	multi_physics_pnt::petsc_jacobian();
 }
 #endif
 

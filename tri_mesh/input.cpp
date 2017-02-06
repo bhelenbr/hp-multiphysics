@@ -87,7 +87,7 @@ void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizered
 
 	if (!initialized) {
 		gbl = inmesh.gbl;
-		maxpst =  MAX((int) (inmesh.maxpst/(sizereduce1d*sizereduce1d)),10);
+		maxpst =  MAX((int) (inmesh.maxpst/(sizereduce1d*sizereduce1d)),20);
 		allocate(maxpst);
 		nebd = inmesh.nebd;
 		ebdry.resize(nebd);
@@ -216,14 +216,14 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			grd_app = grd_nm + ".s";
 			in.open(grd_app.c_str());
 			if (!in) {
-					  *gbl->log << "error: couldn't open file: " << grd_app << std::endl;
-					  sim::abort(__LINE__,__FILE__,gbl->log);
+				*gbl->log << "error: couldn't open file: " << grd_app << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (!(in >> nseg)) {
 				*gbl->log << "error: in segment file: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			if (!initialized) {
 				allocate(nseg + (int) (grwfac*nseg));
 			}
@@ -231,7 +231,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				*gbl->log << "error: mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<nseg;++i) {
 				in.ignore(80,':');
 				in >> seg(i).pnt(0) >> seg(i).pnt(1) >> seg(i).tri(0) >> seg(i).tri(1) >> seg(i).info;
@@ -240,13 +240,13 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
-
+			
 			/* Don't Trust File So Will Calculate tri myself */
 			for(i=0;i<maxpst;++i) {
 				seg(i).tri(0) = -1;
 				seg(i).tri(1) = -1;
 			}
-
+			
 			/* COUNT BOUNDARY GROUPS */
 			nebd = 0;
 			for(i=0;i<nseg;++i) {
@@ -261,9 +261,9 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 					gbl->intwk(nebd) = seg(i).info;
 					gbl->i2wk(nebd++) = 1;
 				}
-next1:        continue;
+			next1:        continue;
 			}
-
+			
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
@@ -272,8 +272,8 @@ next1:        continue;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
 			}
-
-
+			
+			
 			for(i=0;i<nseg;++i) {
 				if (seg(i).info) {
 					for (j = 0; j <nebd;++j) {
@@ -285,20 +285,20 @@ next1:        continue;
 					*gbl->log << "Big error\n";
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
-next1a:      continue;
+			next1a:      continue;
 			}
 			in.close();
-
+			
 			/* LOAD VERTEX INFORMATION                    */
 			grd_app = grd_nm + ".n";
 			in.open(grd_app.c_str());
 			if (!in) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
-
+			
 			if(!(in >> npnt)) {
 				*gbl->log << "1: error in grid: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<npnt;++i) {
 				in.ignore(80,':');
 				for(n=0;n<ND;++n) {
@@ -308,13 +308,13 @@ next1a:      continue;
 				if (in.fail())  { *gbl->log << "2b: error in grid" << std::endl; sim::abort(__LINE__,__FILE__,gbl->log); }
 			}
 			in.close();
-
+			
 			/* COUNT VERTEX BOUNDARY GROUPS  */
 			nvbd = 0;
 			for(i=0;i<npnt;++i)
 				if (pnt(i).info) ++nvbd;
 			vbdry.resize(nvbd);
-
+			
 			nvbd = 0;
 			for(i=0;i<npnt;++i) {
 				if (pnt(i).info) {
@@ -325,7 +325,7 @@ next1a:      continue;
 					++nvbd;
 				}
 			}
-
+			
 			/* LOAD ELEMENT INFORMATION */
 			grd_app = grd_nm + ".e";
 			in.open(grd_app.c_str());
@@ -337,26 +337,26 @@ next1a:      continue;
 				*gbl->log << "error in file " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<ntri;++i) {
 				in.ignore(80,':');
-				 in >> v(0) >> v(1) >> v(2) >> e(0) >> e(1) >> e(2) >> s(0) >> s(1) >> s(2) >> fltskip >> fltskip >> tri(i).info;
-
-				 for (j=0;j<3;++j) {
-					  tri(i).pnt(j) = v(j);
-					  if(seg(s(j)).pnt(0) == v((j+1)%3)) {
-							/* SIDE DEFINED IN SAME DIRECTION */
-							seg(s(j)).tri(0) = i;
-							tri(i).seg(j) = s(j);
-							tri(i).sgn(j) = 1;
-					  }
-					  else {
-							/* SIDE DEFINED IN OPPOSITE DIRECTION */
-							seg(s(j)).tri(1) = i;
-							tri(i).seg(j) = s(j);
-							tri(i).sgn(j) = -1;
-					  }
-				 }
+				in >> v(0) >> v(1) >> v(2) >> e(0) >> e(1) >> e(2) >> s(0) >> s(1) >> s(2) >> fltskip >> fltskip >> tri(i).info;
+				
+				for (j=0;j<3;++j) {
+					tri(i).pnt(j) = v(j);
+					if(seg(s(j)).pnt(0) == v((j+1)%3)) {
+						/* SIDE DEFINED IN SAME DIRECTION */
+						seg(s(j)).tri(0) = i;
+						tri(i).seg(j) = s(j);
+						tri(i).sgn(j) = 1;
+					}
+					else {
+						/* SIDE DEFINED IN OPPOSITE DIRECTION */
+						seg(s(j)).tri(1) = i;
+						tri(i).seg(j) = s(j);
+						tri(i).sgn(j) = -1;
+					}
+				}
 			}
 			in.close();
 			break;
@@ -365,13 +365,13 @@ next1a:      continue;
 			grd_app = grd_nm +".FDNEUT";
 			in.open(grd_app.c_str());
 			if (!in) {
-					  *gbl->log << "trouble opening " << grd_nm << std::endl;
-					  sim::abort(__LINE__,__FILE__,gbl->log);
+				*gbl->log << "trouble opening " << grd_nm << std::endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<5;++i)
 				in.ignore(160,'\n');
-
+			
 			in >> npnt >> i >> nebd;
 			nebd -= 1;
 			ebdry.resize(nebd);
@@ -385,10 +385,10 @@ next1a:      continue;
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<8;++i)
 				in.ignore(160,'\n');
-
+			
 			/* READ VERTEX DATA */
 			for(i=0;i<npnt;++i) {
 				in >> intskip;
@@ -396,25 +396,25 @@ next1a:      continue;
 					in >> pnts(i)(n);
 				pnt(i).info = -1;
 			}
-
+			
 			for(i=0;i<3;++i)
-				 in.ignore(160,'\n');
-
+				in.ignore(160,'\n');
+			
 			/* READ ELEMENT DATA */
 			// fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^\n]\n",&ntri); TEMPORARY
 			in.ignore(160,'\n');
-
+			
 			for(i=0;i<ntri;++i) {
 				in >> intskip >> tri(i).pnt(0) >> tri(i).pnt(1) >> tri(i).pnt(2);
-				 --tri(i).pnt(0);
-				 --tri(i).pnt(1);
-				 --tri(i).pnt(2);
-				 tri(i).info = 0;
+				--tri(i).pnt(0);
+				--tri(i).pnt(1);
+				--tri(i).pnt(2);
+				tri(i).info = 0;
 			}
-
+			
 			/* READ BOUNDARY DATA STORE TEMPORARILY */
 			svrtxbtemp.resize(10);
-
+			
 			for(i=0;i<nebd;++i) {
 				// fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); // FIXME
 				count = 0;
@@ -423,11 +423,11 @@ next1a:      continue;
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
 				ebdry(i)->alloc(static_cast<int>(count*4*grwfac));
 				ebdry(i)->nseg = count;
-
+				
 				in.ignore(160,'\n');
-
+				
 				svrtxbtemp(i).resize(ebdry(i)->nseg);
-
+				
 				for(j=0;j<ebdry(i)->nseg;++j) {
 					in >> intskip >> svrtxbtemp(i)(j)(0) >> svrtxbtemp(i)(j)(1);
 					--svrtxbtemp(i)(j)(0);
@@ -436,19 +436,19 @@ next1a:      continue;
 					pnt(svrtxbtemp(i)(j)(1)).info = ebdry(i)->idnum;
 				}
 			}
-
+			
 			/* CREATE SIDE INFORMATION */
 			createseg();
-
+			
 			/* FIND ALL BOUNDARY SIDES */
 			/* STORE LOCATION BY VERTEX NUMBER */
 			for(i=0;i<nseg;++i)
 				if (seg(i).tri(1) < 0)
 					pnt(seg(i).pnt(0)).info = i;
-
+			
 			for(i=0;i<nseg;++i)
 				seg(i).info = 0;
-
+			
 			/* MATCH BOUNDARY SIDES TO GROUPS */
 			for(i=0;i<nebd;++i) {
 				for(j=0;j<ebdry(i)->nseg;++j) {
@@ -469,13 +469,13 @@ next1a:      continue;
 					}
 				}
 			}
-
+			
 			for(i=0;i<npnt;++i)
 				pnt(i).info = 0;
-
+			
 			in.close();
 			~svrtxbtemp;
-
+			
 			break;
 		}
 		case(grid): {
@@ -492,7 +492,7 @@ next1a:      continue;
 			in >> nseg;
 			in.ignore(10,':');
 			in >> ntri;
-
+			
 			if (!initialized) {
 				allocate(nseg + (int) (grwfac*nseg));
 				nebd = 0;
@@ -502,29 +502,29 @@ next1a:      continue;
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* VRTX INFO */
 			for(i=0;i<npnt;++i) {
 				in.ignore(80,':');
 				for(n=0;n<ND;++n)
 					in >> pnts(i)(n);
 			}
-
+			
 			/* SIDE INFO */
 			for(i=0;i<nseg;++i) {
 				in.ignore(80,':');
 				in >> seg(i).pnt(0) >> seg(i).pnt(1);
 			}
-
+			
 			/* THEN TRI INFO */
 			for(i=0;i<ntri;++i) {
 				in.ignore(80,':');
 				in >> tri(i).pnt(0) >> tri(i).pnt(1) >> tri(i).pnt(2);
 			}
-
+			
 			/* CREATE TSIDE & STRI */
 			createsegtri();
-
+			
 			/* SIDE BOUNDARY INFO HEADER */
 			in.ignore(80,':');
 			int newnsbd;
@@ -538,7 +538,7 @@ next1a:      continue;
 				*gbl->log << "reloading incompatible meshes" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			count = 0;
 			for(i=0;i<nebd;++i) {
 				in.ignore(80,':');
@@ -554,7 +554,7 @@ next1a:      continue;
 					in.ignore(80,'\n');
 				}
 			}
-
+			
 			/* VERTEX BOUNDARY INFO HEADER */
 			in.ignore(80,':');
 			int newnvbd;
@@ -568,7 +568,7 @@ next1a:      continue;
 				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<nvbd;++i) {
 				in.ignore(80,':');
 				in >> temp;
@@ -580,10 +580,10 @@ next1a:      continue;
 				in >> vbdry(i)->pnt;
 			}
 			in.close();
-
+			
 			break;
 		}
-
+			
 		case(binary): {
 			grd_app = grd_nm + ".bin";
 			bin.open(grd_app.c_str());
@@ -591,13 +591,13 @@ next1a:      continue;
 				*gbl->log << "couldn't open grid file: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			bin.setFlag(binio::BigEndian,bin.readInt(1));
 			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
 			npnt = bin.readInt(sizeof(int));
 			nseg = bin.readInt(sizeof(int));
 			ntri = bin.readInt(sizeof(int));
-
+			
 			if (!initialized) {
 				allocate(nseg + (int) (grwfac*nseg));
 				nebd = 0;
@@ -607,30 +607,30 @@ next1a:      continue;
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* VRTX INFO */
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<ND;++n)
 					pnts(i)(n) = bin.readFloat(binio::Double);
 				lngth(i) = bin.readFloat(binio::Double);
 			}
-
+			
 			/* SIDE INFO */
 			for(i=0;i<nseg;++i) {
 				seg(i).pnt(0) = bin.readInt(sizeof(int));
 				seg(i).pnt(1) = bin.readInt(sizeof(int));
 			}
-
+			
 			/* THEN TRI INFO */
 			for(i=0;i<ntri;++i) {
 				tri(i).pnt(0) = bin.readInt(sizeof(int));
 				tri(i).pnt(1) = bin.readInt(sizeof(int));
 				tri(i).pnt(2) = bin.readInt(sizeof(int));
 			}
-
+			
 			/* CREATE TSIDE & STRI */
 			createsegtri();
-
+			
 			/* SIDE BOUNDARY INFO HEADER */
 			in.ignore(80,':');
 			int newnsbd1;
@@ -644,7 +644,7 @@ next1a:      continue;
 				*gbl->log << "reloading incompatible meshes" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			count = 0;
 			for(i=0;i<nebd;++i) {
 				temp = bin.readInt(sizeof(int));
@@ -655,7 +655,7 @@ next1a:      continue;
 				for(int j=0;j<ebdry(i)->nseg;++j)
 					ebdry(i)->seg(j) = bin.readInt(sizeof(int));
 			}
-
+			
 			/* VERTEX BOUNDARY INFO HEADER */
 			int newnvbd1;
 			newnvbd1 = bin.readInt(sizeof(int));
@@ -668,7 +668,7 @@ next1a:      continue;
 				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<nvbd;++i) {
 				temp = bin.readInt(sizeof(int));
 				if (!vbdry(i)) {
@@ -678,10 +678,10 @@ next1a:      continue;
 				vbdry(i)->pnt = bin.readInt(sizeof(int));
 			}
 			bin.close();
-
+			
 			break;
 		}
-		
+			
 		case(netcdf): {
 			grd_app = grd_nm +".nc";
 			/* Create the file. The NC_CLOBBER parameter tells netCDF to
@@ -740,7 +740,7 @@ next1a:      continue;
 			
 			/* TRI INFO */
 			if ((retval = nc_inq_varid (ncid, "tris", &var_id))) ERR(retval);
-
+			
 			for(i=0;i<ntri;++i) {
 				index[0]= i;
 				for(n=0;n<3;++n) {
@@ -783,11 +783,11 @@ next1a:      continue;
 				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
 				ebdry(i)->nseg = dimreturn;
 				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
-	
+				
 				/* Get the varid of the data variable, based on its name. */
 				if ((retval = nc_get_var_int(ncid, var_id, &ebdry(i)->seg(0)))) ERR(retval);
 			}
-
+			
 			/* VERTEX BOUNDARY INFO HEADER */
 			if ((retval = nc_inq_dimid(ncid, "nvbd", &dim_id))) ERR(retval);
 			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
@@ -816,11 +816,11 @@ next1a:      continue;
 				index[1] = 1;
 				nc_get_var1_int(ncid,var_id,index,&vbdry(i)->pnt);
 			}
-		
+			
 			break;
 		}
-
-
+			
+			
 			
 			
 		case(text): {
@@ -828,12 +828,12 @@ next1a:      continue;
 				*gbl->log << "to read in point positions only must first load mesh structure" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* LOAD VERTEX POSITIONS                    */
 			grd_app = grd_nm + ".txt";
 			in.open(grd_app.c_str());
 			if (!in) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
-
+			
 			if(!(in >> temp)) {
 				*gbl->log << "1: error in grid " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
@@ -842,7 +842,7 @@ next1a:      continue;
 				*gbl->log << "grid doesn't match point list" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* ERROR %lf SHOULD BE FLT */
 			for(i=0;i<npnt;++i) {
 				in.ignore(80,':');
@@ -851,29 +851,29 @@ next1a:      continue;
 				if (in.fail()) { *gbl->log << "2c: error in grid" << std::endl; sim::abort(__LINE__,__FILE__,gbl->log); }
 			}
 			in.close();
-
+			
 			treeinit();
-
+			
 			return;
 		}
-
+			
 #ifdef CAPRI
 		case(BRep): {
-
+			
 			/* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
 			sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
 			status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
 			*gbl->log << " gi_uGetVolume status =" << status << std::endl;
 			if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
 			*gbl->log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
-
+			
 			status = gi_dTesselFace(cpri_vol, cpri_face, &ntri, &cpri_tris, &cpri_tric, &npnt, &cpri_points,
-				&cpri_ptype, &cpri_pindex, &cpri_uv);
+															&cpri_ptype, &cpri_pindex, &cpri_uv);
 			if (status != CAPRI_SUCCESS) {
 				*gbl->log << "gi_dTesselFace status = " << status << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* ALLOCATE BASIC STORAGE */
 			if (!initialized) {
 				maxpst = static_cast<int>((grwfac*3*ntri)/2);
@@ -883,26 +883,26 @@ next1a:      continue;
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* LOAD VERTEX INFO */
 			for (i=0;i<npnt;++i)
 				for(n=0;n<ND;++n)
 					pnts(i)(n) = cpri_points[i*3+n];
-
+			
 			/* LOAD TRI INFORMATION */
 			for (i=0;i<ntri;++i)
 				for(n=0;n<3;++n)
 					tri(i).pnt(n) = cpri_tris[i*3+n] -1;
-
+			
 			/* CREATE SIDE INFORMATION */
 			createseg();
-
+			
 			nvbd = 0;
 			for(i=0;i<npnt;++i)
 				if (cpri_ptype[i] == 0)
 					++nvbd;
 			vbdry.resize(nvbd);
-
+			
 			nvbd = 0;
 			/* CREATE VERTEX BOUNDARIES */
 			for(i=0;i<npnt;++i) {
@@ -917,10 +917,10 @@ next1a:      continue;
 					}
 				}
 			}
-
+			
 			for(i=0;i<nseg;++i)
 				seg(i).info = 0;
-
+			
 			/* COUNT BOUNDARY GROUPS */
 			nebd = 0;
 			for(i=0;i<nseg;++i) {
@@ -950,9 +950,9 @@ next1a:      continue;
 					gbl->intwk(nebd) = seg(i).info;
 					gbl->i2wk(nebd++) = 1;
 				}
-next1b:        continue;
+			next1b:        continue;
 			}
-
+			
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
@@ -961,7 +961,7 @@ next1b:        continue;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
 			}
-
+			
 			for(i=0;i<nseg;++i) {
 				if (seg(i).info) {
 					for (j = 0; j <nebd;++j) {
@@ -973,13 +973,13 @@ next1b:        continue;
 					*gbl->log << "Big error\n";
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
-next1c:      continue;
+			next1c:      continue;
 			}
-
+			
 			break;
 		}
 #endif
-
+			
 		case(tecplot): {
 			grd_app = grd_nm +".dat";
 			in.open(grd_app.c_str());
@@ -987,7 +987,7 @@ next1c:      continue;
 				*gbl->log << "couldn't open tecplot file: " << grd_app << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* HEADER LINES */
 			in.ignore(80,',');
 			in.ignore(80,',');
@@ -995,7 +995,7 @@ next1c:      continue;
 			in >> npnt;
 			in.ignore(80,'=');
 			in >> ntri;
-
+			
 			/* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
 			/* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
 			if (!initialized) {
@@ -1006,7 +1006,7 @@ next1c:      continue;
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			/* READ VERTEX DATA */
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<ND;++n)
@@ -1017,7 +1017,7 @@ next1c:      continue;
 			in.ignore(80,'\n');
 			while (in.get() == '#')
 				in.ignore(80,'\n');
-
+			
 			for(i=0;i<ntri;++i) {
 				in >> tri(i).pnt(0) >> tri(i).pnt(1) >> tri(i).pnt(2);
 				--tri(i).pnt(0);
@@ -1025,17 +1025,17 @@ next1c:      continue;
 				--tri(i).pnt(2);
 				tri(i).info = 0;
 			}
-
-
-
+			
+			
+			
 			/* CREATE SIDE INFORMATION */
 			createseg();
-
+			
 			/* FIND ALL BOUNDARY SIDES */
 			count = 0;
 			for(i=0;i<nseg;++i)
 				if (seg(i).tri(1) < 0) ++count;
-
+			
 			nebd = 1;
 			ebdry.resize(1);
 			ebdry(0) = getnewedgeobject(1,bdrymap);
@@ -1044,10 +1044,10 @@ next1c:      continue;
 			count = 0;
 			for(i=0;i<nseg;++i)
 				if (seg(i).tri(1) < 0) ebdry(0)->seg(count++) = i;
-
+			
 			nvbd = 0;
 			in.close();
-
+			
 			break;
 		}
 		case(boundary): {
@@ -1058,44 +1058,49 @@ next1c:      continue;
 				*gbl->log << "couldn't open " << grd_app << "for reading\n";
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			in >> npnt;
-
+			
 			maxpst = static_cast<int>(grwfac*npnt*npnt);
 			allocate(maxpst);
 			initialized = 1;
 			std::string symbolic_string;
-            istringstream data;
+			istringstream data;
 			for(i=0;i<npnt;++i) {
 				in.ignore(80,':');
 				for(n=0;n<ND;++n) {
-                    in >> symbolic_string;
-                    data.str(symbolic_string);
-                    if (data >> pnts(i)(n) && data.eof()) continue;
-                    bdrymap["temp_formula"] = symbolic_string;
-                    if (!bdrymap.get("temp_formula",pnts(i)(n))) {
-                        *gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
-                        sim::abort(__LINE__,__FILE__,gbl->log);
-                    }
+					in >> symbolic_string;
+					data.str(symbolic_string);
+					if (!(data >> pnts(i)(n)) || !data.eof()) {
+						bdrymap["mesh_formula"] = symbolic_string;
+						if (!bdrymap.get("mesh_formula",pnts(i)(n))) {
+							*gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
+							sim::abort(__LINE__,__FILE__,gbl->log);
+						}
+					}
+					data.clear();
 				}
-                in >> symbolic_string;
-                data.str(symbolic_string);
-                if (data >> lngth(i) && data.eof()) continue;
-                bdrymap["temp_formula"] = symbolic_string;
-                if (!bdrymap.get("temp_formula",lngth(i))) {
-                    *gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
-                    sim::abort(__LINE__,__FILE__,gbl->log);
-                }
+				in >> symbolic_string;
+				data.str(symbolic_string);
+				if (!(data >> lngth(i)) || !data.eof()) {
+					bdrymap["mesh_formula"] = symbolic_string;
+					if (!bdrymap.get("mesh_formula",lngth(i))) {
+						*gbl->log << "couldn't read formula " << symbolic_string << "from .d file\n";
+						sim::abort(__LINE__,__FILE__,gbl->log);
+					}
+				}
+				data.clear();
 				in >> pnt(i).info;
 			}
-
+			
+			
 			/* COUNT VERTEX BOUNDARY GROUPS  */
 			nvbd = 0;
 			for(i=0;i<npnt;++i)
 				if (pnt(i).info)
 					++nvbd;
 			vbdry.resize(nvbd);
-
+			
 			nvbd = 0;
 			for(i=0;i<npnt;++i) {
 				if (pnt(i).info) {
@@ -1106,14 +1111,14 @@ next1c:      continue;
 					++nvbd;
 				}
 			}
-
+			
 			in >> nseg;
-
+			
 			for(i=0;i<nseg;++i) {
 				in.ignore(80,':');
 				in >> seg(i).pnt(0) >> seg(i).pnt(1) >> seg(i).info;
 			}
-
+			
 			/* COUNT BOUNDARY GROUPS */
 			nebd = 0;
 			for(i=0;i<nseg;++i) {
@@ -1132,10 +1137,10 @@ next1c:      continue;
 					*gbl->log << "All sides should be boundary sides in a .d file" << std::endl;
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
-				bdnext1:        continue;
+			bdnext1:        continue;
 			}
-
-
+			
+			
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
@@ -1144,7 +1149,7 @@ next1c:      continue;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
 			}
-
+			
 			for(i=0;i<nseg;++i) {
 				if (seg(i).info) {
 					for (j = 0; j <nebd;++j) {
@@ -1156,27 +1161,27 @@ next1c:      continue;
 					*gbl->log << "Big error\n";
 					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
-				bdnext1a:      continue;
+			bdnext1a:      continue;
 			}
-
+			
 			for(i=0;i<nseg;++i)
 				gbl->i2wk_lst1(i) = i+1;
-
+			
 			ntri = 0;
 			triangulate(nseg);
 			
 			int bpnt = 0;
 			for (i=0;i<nebd;++i)
 				bpnt += ebdry(i)->nseg;
-				
+			
 			interior_pts = npnt - bpnt;
 			npnt = bpnt;
-
+			
 			in.close();
-
+			
 			break;
 		}
-		
+			
 		case(vlength): {
 			grd_app = grd_nm +".lngth";
 			in.open(grd_app.c_str());
@@ -1184,13 +1189,13 @@ next1c:      continue;
 				*gbl->log << "couldn't open vlength input file" << grd_app  << endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-
+			
 			for(i=0;i<npnt;++i)
 				in >> lngth(i);
-
+			
 			return;
 		}
-
+			
 		default: {
 			*gbl->log << "That filetype is not supported" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);

@@ -61,6 +61,7 @@ struct block_global {
 	FLT time; /**< Simulation time */
 	int tstep; /**< Simulation time step */
 	int substep; /**< For schemes requiring multiple solves per step */
+	int iteration; /**< Iterative counter within substep */
 	bool time_relaxation; /**< For relaxation schemes with adjustable time implicit term */
 	symbolic_function<2> dti_function;
 	FLT g;  /**< gravity */
@@ -183,7 +184,7 @@ class block {
 		void iterate(int mglvl, int niter);
 
 		/** Multigrid cycle */
-		void cycle(int vw, int lvl = 0, bool evaluate_preconditioner=true);
+		FLT cycle(int vw, int lvl, bool evaluate_preconditioner=true);
 		FLT maxres(int lvl = 0);
 
 		/** Mesh adaptation routines */

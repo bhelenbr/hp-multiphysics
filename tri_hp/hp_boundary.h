@@ -62,7 +62,7 @@ public:
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
 		x.gbl->res.v(base.pnt,*n)= 0.0;
 	}
-	virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
+	virtual void pmatchsolution_snd(FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
 	
 	/* FOR COUPLED DYNAMIC BOUNDARIES */
@@ -88,7 +88,7 @@ public:
 #ifdef petsc
 	virtual void non_sparse(Array<int,1> &nnzero) {}
 	virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
-	virtual int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	virtual int non_sparse_rcv(int phase,Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	virtual void petsc_jacobian();
 	virtual void petsc_matchjacobian_snd();
 	virtual int petsc_matchjacobian_rcv(int phase);
@@ -177,7 +177,7 @@ public:
 	virtual void maxres() {}
 	virtual void vdirichlet();
 	virtual void sdirichlet(int mode);
-	virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
+	virtual void pmatchsolution_snd(FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
 	virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride);
 	virtual int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
@@ -200,7 +200,7 @@ public:
 #ifdef petsc
 	virtual void non_sparse(Array<int,1> &nnzero) {}
 	virtual void non_sparse_snd(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
-	virtual int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	virtual int non_sparse_rcv(int phase,Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	virtual void petsc_jacobian();
 	virtual void petsc_matchjacobian_snd();
 	virtual int petsc_matchjacobian_rcv(int phase);
@@ -313,7 +313,7 @@ public:
 	multi_physics_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new multi_physics_pnt(*this,xin,bin);}
 	void init(input_map& inmap,void* gbl_in);
 	void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
-	int non_sparse_rcv(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
+	int non_sparse_rcv(int phase,Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	int petsc_matchjacobian_rcv(int phase);
 };
 #endif

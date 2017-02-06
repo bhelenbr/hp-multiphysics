@@ -119,7 +119,7 @@ public:
 #ifdef petsc
 	void non_sparse(Array<int,1> &nnzero);
 	void non_sparse_snd(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
-	int non_sparse_rcv(Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
+	int non_sparse_rcv(int phase, Array<int, 1> &nnzero, Array<int, 1> &nnzero_mpi);
 	void petsc_jacobian();
 	void petsc_matchjacobian_snd();
 	int petsc_matchjacobian_rcv(int phase);
@@ -128,15 +128,15 @@ public:
 #endif
 };
 
-class hp_deformable_fixed_pnt : public hp_vrtx_bdry {
+class hp_deformable_fixed_pnt : public multi_physics_pnt {
 	/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 protected:
 	hp_coupled_bdry *surface;
 	int surfbdry;
 	
 public:
-	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
-	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
+	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : multi_physics_pnt(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
+	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : multi_physics_pnt(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
 		if (surfbdry > -1) {
 			if (!(surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
 				*x.gbl->log << base.idprefix << " something's wrong can't find surface boundary " << surfbdry << ' ' << base.ebdry(surfbdry) << ' ' << x.ebdry(base.ebdry(surfbdry))->idprefix << std::endl;
