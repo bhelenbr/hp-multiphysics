@@ -1297,6 +1297,55 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 		*x.gbl->log << std::endl;
 #endif
 	}
+	
+	
+	// If phased communication, will need to send J_mpi for endpoints only. This not working.
+//	sind = base.seg(0);
+//	int rowbase = x.seg(sind).pnt(0)*vdofs;
+//	
+//	/* Send continuous variables */
+//	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+//		row = rowbase + *n;
+//		/* attach diagonal column # to allow continuity enforcement */
+//		base.fsndbuf(base.sndsize()++) = row +0.1;
+//		base.fsndbuf(base.sndsize()++) = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row) +0.1;
+//#ifdef MPDEBUG
+//		*x.gbl->log << "sending " << x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row) << " J_mpi entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+//#endif
+//		for (int col=x.J_mpi._cpt(row);col<x.J_mpi._cpt(row+1);++col) {
+//#ifdef MPDEBUG
+//			*x.gbl->log << x.J_mpi._col(col) << ' ';
+//#endif
+//			base.fsndbuf(base.sndsize()++) = x.J_mpi._col(col) +0.1;
+//			base.fsndbuf(base.sndsize()++) = x.J_mpi._val(col);
+//		}
+//#ifdef MPDEBUG
+//		*x.gbl->log << std::endl;
+//#endif
+//	}
+//
+//	/* LAST POINT */
+//	int rowbase = x.seg(sind).pnt(1)*vdofs;
+//	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+//		row = rowbase + *n;
+//		/* attach diagonal # to allow continuity enforcement */
+//		base.fsndbuf(base.sndsize()++) = row +0.1;
+//		base.fsndbuf(base.sndsize()++) = x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row) +0.1;
+//#ifdef MPDEBUG
+//		*x.gbl->log << "sending " << x.J_mpi._cpt(row+1) -x.J_mpi._cpt(row) << " J_mpi entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+//#endif
+//		for (int col=x.J_mpi._cpt(row);col<x.J_mpi._cpt(row+1);++col) {
+//#ifdef MPDEBUG
+//			*x.gbl->log << x.J_mpi._col(col) << ' ';
+//#endif
+//			base.fsndbuf(base.sndsize()++) = x.J_mpi._col(col) +0.1;
+//			base.fsndbuf(base.sndsize()++) = x.J_mpi._val(col);
+//		}
+//		
+//#ifdef MPDEBUG
+//		*x.gbl->log << std::endl;
+//#endif
+//	}
 }
 
 

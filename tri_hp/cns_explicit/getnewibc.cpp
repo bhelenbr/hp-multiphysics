@@ -285,8 +285,8 @@ namespace ibc_cns_explicit {
 	
 	class helper_type {
 		public:
-			const static int ntypes = 4;
-			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling};
+			const static int ntypes = 3;
+			enum ids {parameter_changer,unsteady_body_force,force_coupling};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -295,7 +295,7 @@ namespace ibc_cns_explicit {
 				return(-1);
 			}
 	};
-	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
+	const char helper_type::names[ntypes][40] = {"parameter_changer","unsteady_body_force","force_coupling"};
 
 	class ibc_type {
 		public:

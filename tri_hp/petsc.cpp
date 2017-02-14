@@ -271,7 +271,9 @@ void tri_hp::petsc_setup_preconditioner() {
 
 	if (gbl->jac_debug)	{
 		streamsize oldprecision = (*gbl->log).precision(2);
+		*gbl->log << "J:\n";
 		*gbl->log << J << std::endl;
+		*gbl->log << "J_mpi:\n";
 		*gbl->log << J_mpi << std::endl;
 		(*gbl->log).precision(oldprecision);
 	}
@@ -347,8 +349,9 @@ void tri_hp::petsc_jacobian() {
 	
 #ifdef MY_SPARSE
 	J._val = 0.0;
+	J.reset_columns();
 	J_mpi._val = 0.0;
-	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
+	J_mpi.reset_columns();
 #endif
 	
 	int gindx;

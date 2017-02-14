@@ -638,7 +638,6 @@
 		6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = l2error.cpp; sourceTree = "<group>"; };
 		6FB40ADD091AF516002BAA09 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = ins/length.cpp; sourceTree = "<group>"; };
 		6FB40ADE091AF516002BAA09 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = cd/length.cpp; sourceTree = "<group>"; };
-		6FB40ADF091AF516002BAA09 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FB40AE0091AF516002BAA09 /* setup_preconditioner.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = setup_preconditioner.cpp; sourceTree = "<group>"; };
 		6FB40AE1091AF516002BAA09 /* movco.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movco.cpp; sourceTree = "<group>"; };
 		6FB40AE2091AF516002BAA09 /* movfin.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movfin.cpp; sourceTree = "<group>"; };
@@ -677,6 +676,7 @@
 		E6224AB91A52C407002E3CD6 /* surface2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = surface2.h; path = ins/surface2.h; sourceTree = "<group>"; };
 		E62CDC4112B7114C0042211D /* bdry_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy.h; path = buoyancy/bdry_buoyancy.h; sourceTree = "<group>"; };
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
+		E6367B551E3F9B9B00695A3D /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_vrtx_bdry.cpp; sourceTree = "<group>"; };
 		E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_getnewbdry.cpp; sourceTree = "<group>"; };
 		E658002813E2CFC400A01E99 /* tri_hp_nonnewtonian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_nonnewtonian.h; path = nonnewtonian/tri_hp_nonnewtonian.h; sourceTree = "<group>"; };
@@ -853,7 +853,6 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6FB40ADF091AF516002BAA09 /* makefile */,
 				8DD76F6C0486A84900D96B5E /* tri_hp */,
 				6FB91AA80ACCB04500792B04 /* tri_hp_mpi */,
 				E67EBAFA12D603C50011EB69 /* tri_hp_petsc */,
@@ -1056,6 +1055,7 @@
 		E6E096191CC9C7EE00B1F871 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				E6367B551E3F9B9B00695A3D /* makefile */,
 				E6E0961A1CC9C81500B1F871 /* Doxyfile */,
 				E6E0961B1CC9C81500B1F871 /* subpartition.bash */,
 			);
