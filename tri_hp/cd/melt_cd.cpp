@@ -567,14 +567,14 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	return;
 }
 
-void melt_facet_pt2::element_rsdl(Array<FLT,1> lf) {
+void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	
 	const int Tindx = c0_indices[0];
 	
 	hp_deformable_free_pnt::element_rsdl(lf);
 	
 #ifndef SYMMETRIC
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 #endif
 	
 	TinyVector<FLT,tri_mesh::ND> aPoint,us;
@@ -630,8 +630,8 @@ void melt_facet_pt2::element_rsdl(Array<FLT,1> lf) {
 	}
 	
 	FLT jcb = sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
-	FLT DT = surface->ibc->f(Tindx, xp, x.gbl->time) -u(Tindx);
-	bdry_cd::melt_cd *surf1 = dynamic_cast<bdry_cd::melt_cd *>(surface);
+	FLT DT = surf->ibc->f(Tindx, xp, x.gbl->time) -u(Tindx);
+	bdry_cd::melt_cd *surf1 = dynamic_cast<bdry_cd::melt_cd *>(surf);
 	
 	/* This is to allow the general expression at the triple point */
 	//     anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
@@ -647,7 +647,7 @@ void melt_facet_pt2::element_rsdl(Array<FLT,1> lf) {
 
 
 /* Routine to add surface tension stress or endpoint movement residual */
-void melt_facet_pt2::rsdl(int stage) {
+void melt_facet_pt::rsdl(int stage) {
 	
 #ifdef petsc
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
@@ -656,7 +656,7 @@ void melt_facet_pt2::rsdl(int stage) {
 #endif
 	
 #ifndef SYMMETRIC
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 #endif
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
@@ -680,8 +680,8 @@ void melt_facet_pt2::rsdl(int stage) {
 	x.gbl->res.v(base.pnt,Range::all()) += lf(Range(0,x.NV-1));
 	
 	// FIXME: These should be deleted eventually
-	surface->gbl->vres(endpt,0) = lf(x.NV);
-	surface->gbl->vres(endpt,1) = lf(x.NV+1);
+	surf->gbl->vres(endpt,0) = lf(x.NV);
+	surf->gbl->vres(endpt,1) = lf(x.NV+1);
 
 #ifdef petsc
 	r_gbl->res(base.pnt)(0) = lf(x.NV);
@@ -692,10 +692,10 @@ void melt_facet_pt2::rsdl(int stage) {
 
 #ifdef petsc
 
-void melt_facet_pt2::petsc_jacobian() {
+void melt_facet_pt::petsc_jacobian() {
 	
 #ifndef SYMMETRIC
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 #endif
 	
 	const int sm = basis::tri(x.log2p)->sm();
@@ -801,7 +801,7 @@ void melt_facet_pt2::petsc_jacobian() {
 	}
 	
 	int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
-	int gindxND = surface->jacobian_start +seg*tri_mesh::ND*sm;
+	int gindxND = surf->jacobian_start +seg*tri_mesh::ND*sm;
 	for(int mode = 0; mode < sm; ++mode) {
 		for(int var = 0; var < x.NV; ++var)
 			cols(ind++) = gindxNV++;

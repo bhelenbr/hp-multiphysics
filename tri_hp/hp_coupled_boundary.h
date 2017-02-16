@@ -131,21 +131,21 @@ public:
 class hp_deformable_fixed_pnt : public multi_physics_pnt {
 	/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 protected:
-	hp_coupled_bdry *surface;
+	hp_coupled_bdry *surf;
 	int surfbdry;
 	
 public:
 	hp_deformable_fixed_pnt(tri_hp &xin, vrtx_bdry &bin) : multi_physics_pnt(xin,bin) {mytype = "hp_deformable_fixed_pnt";}
 	hp_deformable_fixed_pnt(const hp_deformable_fixed_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : multi_physics_pnt(inbdry,xin,bin), surfbdry(inbdry.surfbdry) {
 		if (surfbdry > -1) {
-			if (!(surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
+			if (!(surf = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
 				*x.gbl->log << base.idprefix << " something's wrong can't find surface boundary " << surfbdry << ' ' << base.ebdry(surfbdry) << ' ' << x.ebdry(base.ebdry(surfbdry))->idprefix << std::endl;
 				x.tri_mesh::output("darn");
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 		}
 		else {
-			surface = 0;  // Not a surface endpoint just a mesh fixed point
+			surf = 0;  // Not a surface endpoint just a mesh fixed point
 		}
 	}
 	hp_deformable_fixed_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_fixed_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}

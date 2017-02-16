@@ -1746,15 +1746,15 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 	multi_physics_pnt::init(inmap,gbl_in);
 
 	
-	if ((surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(0))))) {
+	if ((surf = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(0))))) {
 		surfbdry = 0;
 	}
-	else if ((surface = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(1))))) {
+	else if ((surf = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(1))))) {
 		surfbdry = 1;
 	}
 	else {
 		surfbdry = -1;  // Just a fixed point (used for mesh touching complicated point in 3-phase flow with free-surface)
-		surface = 0;
+		surf = 0;
 	}
 
 	/* Check if set manually already, otherwise use other boundary to get defaults */
@@ -1784,16 +1784,16 @@ void hp_deformable_fixed_pnt::vdirichlet() {
 	// APPLY FLOW B.C.'S
 	multi_physics_pnt::vdirichlet();
 	
-	if (surface) {
-		if (surface->is_master) {
+	if (surf) {
+		if (surf->is_master) {
 			if (surfbdry == 0) {
 				for(int n=0;n<nfix;++n) {
-					surface->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;  
+					surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;
 				}
 			}
 			else if (surfbdry == 1) {
 				for(int n=0;n<nfix;++n) {
-					surface->gbl->vres(0,n) = 0.0;
+					surf->gbl->vres(0,n) = 0.0;
 				}
 			}
 		}
@@ -1833,18 +1833,18 @@ void hp_deformable_fixed_pnt::setup_preconditioner() {
 	x.r_tri_mesh::gbl->diag(base.pnt) = 1.0;
 	
 	/* Turn off side preconditioner as well */
-	if (surface) {
-		if (surface->is_master) {
+	if (surf) {
+		if (surf->is_master) {
 			if (surfbdry == 0) {
 				for(int n=0;n<nfix;++n) {
-					surface->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,Range::all()) = 0.0;
-					surface->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,n) = 1.0;
+					surf->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,Range::all()) = 0.0;
+					surf->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,n) = 1.0;
 				}
 			}
 			else if (surfbdry == 1) {
 				for(int n=0;n<nfix;++n) {
-					surface->gbl->vdt(0,n,Range::all()) = 0.0;
-					surface->gbl->vdt(0,n,n) = 1.0;
+					surf->gbl->vdt(0,n,Range::all()) = 0.0;
+					surf->gbl->vdt(0,n,n) = 1.0;
 				}
 			}
 		}
@@ -1898,7 +1898,7 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 }
 
 void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-	if (surface->is_master) {
+	if (surf->is_master) {
 		switch(wall_type) {
 			case vertical: {
 				x.pnts(base.pnt)(0) = position;
@@ -1922,7 +1922,7 @@ void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 
 void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 	lf = 0.0;
-	if (surface->is_master) {
+	if (surf->is_master) {
 		switch(wall_type) {
 			case vertical: {
 				lf(x.NV) = x.pnts(base.pnt)(0) -position;
@@ -1950,7 +1950,7 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 /* Routine to add surface tension stress or endpoint movement residual */
 void hp_deformable_free_pnt::rsdl(int stage) {
 	
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> lf(vdofs);
@@ -1971,7 +1971,7 @@ void hp_deformable_free_pnt::rsdl(int stage) {
 #endif
 	
 	// FIXME: This should be deleted eventually
-	surface->gbl->vres(endpt,0) = lf(x.NV);
+	surf->gbl->vres(endpt,0) = lf(x.NV);
 }
 
 #ifdef petsc
@@ -2112,7 +2112,7 @@ void translating_surface::setup_preconditioner() {
 			/* |a| dx/2 dv/dx  dx/2 dpsi */
 			/* |a| dx/2 2/dx dv/dpsi  dpsi */
 			/* |a| dv/dpsi  dpsi */
-			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
 			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
 		}
 		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
@@ -2149,7 +2149,7 @@ void translating_surface::setup_preconditioner() {
 		/* |a| dx/2 dv/dx  dx/2 dpsi */
 		/* |a| dx/2 2/dx dv/dpsi  dpsi */
 		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
 		gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
 #endif
 		
@@ -2306,7 +2306,7 @@ void hp_deformable_follower_pnt::rsdl(int stage) {
 	r_gbl->res(base.pnt)(1) = 0.0;
 #endif
 	
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 		
 	int endpt;
 	if (surfbdry == 0)
@@ -2315,8 +2315,8 @@ void hp_deformable_follower_pnt::rsdl(int stage) {
 		endpt = 0;
 	
 	// FIXME: This should be deleted eventually
-	surface->gbl->vres(endpt,0) = 0.0;
-	surface->gbl->vres(endpt,1) = 0.0;
+	surf->gbl->vres(endpt,0) = 0.0;
+	surf->gbl->vres(endpt,1) = 0.0;
 }
 
 #ifdef petsc

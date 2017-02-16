@@ -27,9 +27,6 @@ class tri_hp_cd : public tri_hp {
 
 			/* SOURCE FUNCTION & FLOW FIELDS */
 			init_bdry_cndtn *src, *a;
-
-			/* ADAPTATION LIMITS */
-			FLT minlngth, maxlngth;
 			
 			//vsi	stiff_diag; // Stuff for Mike's minvrt
 

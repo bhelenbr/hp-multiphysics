@@ -55,11 +55,11 @@ namespace bdry_cd {
 		FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
 	};
 	
-	class melt_facet_pt2 : public hp_deformable_free_pnt {
+	class melt_facet_pt : public hp_deformable_free_pnt {
 	public:
-		melt_facet_pt2(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin) {mytype = "melt_facet_pt";}
-		melt_facet_pt2(const melt_facet_pt2& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
-		melt_facet_pt2* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt2(*this,xin,bin);}
+		melt_facet_pt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(xin,bin) {mytype = "melt_facet_pt";}
+		melt_facet_pt(const melt_facet_pt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
+		melt_facet_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt(*this,xin,bin);}
 		
 		void rsdl(int stage);
 		void element_rsdl(Array<FLT,1> lf);

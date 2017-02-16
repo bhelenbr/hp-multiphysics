@@ -157,11 +157,8 @@ void tri_hp::length() {
 //		}
 		
 		/* NOW RESCALE AT VERTICES */
-		for (int pind=0;pind<npnt;++pind) {
+		for (int pind=0;pind<npnt;++pind)
 			lngth(pind) *= gbl->res.v(pind,0);
-			lngth(pind) = MIN(lngth(pind),gbl->max_length);
-			lngth(pind) = MAX(lngth(pind),gbl->min_length);
-		}
 		
 		/* LIMIT BOUNDARY CURVATURE */
 		for(int i=0;i<nebd;++i) {
@@ -261,6 +258,12 @@ void tri_hp::length() {
 	//		++nsweep;
 	//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
 	//	} while(count > 0 && nsweep < 5);
+		
+		/* NOW APPLY LIMITS */
+		for (int pind=0;pind<npnt;++pind) {
+			lngth(pind) = MIN(lngth(pind),gbl->max_length);
+			lngth(pind) = MAX(lngth(pind),gbl->min_length);
+		}
 	}
 
 	return;

@@ -7,7 +7,7 @@
 using namespace bdry_buoyancy;
 
 void surface_marangoni::init(input_map& inmap,void* gbl_in) {
-	bdry_ins::surface2::init(inmap,gbl_in);
+	bdry_ins::surface::init(inmap,gbl_in);
 	
 	if (!is_master) return;
 	
@@ -120,11 +120,11 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 }
 
 void triple_junction::init(input_map& inmap,void* gbl_in) {
-	melt_facet_pt2::init(inmap, gbl_in);
+	melt_facet_pt::init(inmap, gbl_in);
 	inmap.getwdefault(base.idprefix +"_growth_angle",growth_angle,0.0);
 	growth_angle *= M_PI/180.0;
 	
-	if (!dynamic_cast<melt_buoyancy *>(surface)) {
+	if (!dynamic_cast<melt_buoyancy *>(surf)) {
 		*x.gbl->log << "Did not make triple junction point general with respect to orientation of surfaces\n";
 		sim::abort(__LINE__, __FILE__, x.gbl->log);
 	}
@@ -135,7 +135,7 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 	
 	hp_vrtx_bdry::element_rsdl(lf);
 	
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 
 	/* Solidification kinetics at nucleation point */
 	/* Calculate temperature from velocity of point & 2D nucleation coefficient only */
@@ -181,8 +181,8 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 	}
 	
 	FLT jcb = sqrt(dxpdpsi(0)*dxpdpsi(0)+dxpdpsi(1)*dxpdpsi(1));
-	FLT DT = surface->ibc->f(2, xp, x.gbl->time) -u(2);
-	melt_buoyancy *surf1 = dynamic_cast<melt_buoyancy *>(surface);
+	FLT DT = surf->ibc->f(2, xp, x.gbl->time) -u(2);
+	melt_buoyancy *surf1 = dynamic_cast<melt_buoyancy *>(surf);
 	
 	/* This is to allow the general expression at the triple point */
 	//     anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
@@ -217,7 +217,7 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 #ifdef petsc
 void triple_junction::petsc_jacobian() {
 	
-	if (!surface->is_master) return;
+	if (!surf->is_master) return;
 	
 	const int sm = basis::tri(x.log2p)->sm();
 	const int vdofs = x.NV+x.ND;
@@ -383,7 +383,7 @@ void triple_junction::petsc_jacobian() {
 	}
 	
 	int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
-	int gindxND = surface->jacobian_start +seg*tri_mesh::ND*sm;
+	int gindxND = surf->jacobian_start +seg*tri_mesh::ND*sm;
 	for(int mode = 0; mode < sm; ++mode) {
 		for(int var = 0; var < x.NV; ++var)
 			cols(ind++) = gindxNV++;

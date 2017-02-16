@@ -24,7 +24,7 @@ using namespace bdry_buoyancy;
 class tri_hp_buoyancy_vtype {
 public:
 	static const int ntypes = 2;
-	enum ids {unknown=-1,melt_facet_pt2,triple_junction};
+	enum ids {unknown=-1,melt_facet_pt,triple_junction};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -33,7 +33,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_facet_pt2","triple_junction"};
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_facet_pt","triple_junction"};
 
 hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
@@ -43,8 +43,8 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 	
 	type = tri_hp_buoyancy_vtype::getid(name.c_str());
 	switch(type) {
-		case tri_hp_buoyancy_vtype::melt_facet_pt2: {
-			temp = new bdry_cd::melt_facet_pt2(*this,*vbdry(bnum));
+		case tri_hp_buoyancy_vtype::melt_facet_pt: {
+			temp = new bdry_cd::melt_facet_pt(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_buoyancy_vtype::triple_junction: {
@@ -64,7 +64,7 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 class tri_hp_buoyancy_etype {
 public:
 	static const int ntypes = 4;
-	enum ids {unknown=-1,surface_marangoni,solid_fluid,characteristic,melt2};
+	enum ids {unknown=-1,surface_marangoni,solid_fluid,characteristic,melt};
 	static const char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i)
@@ -73,7 +73,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_etype::names[ntypes][40] = {"surface_marangoni","solid_fluid","characteristic","melt2"};
+const char tri_hp_buoyancy_etype::names[ntypes][40] = {"surface_marangoni","solid_fluid","characteristic","melt"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
@@ -112,7 +112,7 @@ hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_buoyancy_etype::melt2: {
+		case tri_hp_buoyancy_etype::melt: {
 			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 				temp = new melt_buoyancy(*this,*ebdry(bnum));
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;

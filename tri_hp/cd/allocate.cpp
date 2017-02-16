@@ -59,13 +59,6 @@ void tri_hp_cd::init(input_map& inmap, void *gin) {
 			}
 		}
 	}
-
-	keyword = gbl->idprefix + "_minlngth";
-	if (!inmap.get(keyword,gbl->minlngth)) inmap.getwdefault("minlngth",gbl->minlngth,-1.0);
-
-	keyword = gbl->idprefix + "_maxlngth";
-	if (!inmap.get(keyword,gbl->maxlngth)) inmap.getwdefault("maxlngth",gbl->maxlngth,1.0e99);    
-
 	gbl->tau.resize(maxpst);
 
 	/* FIND INITIAL CONDITION TYPE */

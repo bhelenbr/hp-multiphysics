@@ -1,12 +1,12 @@
 //
-//  surface22.cpp
+//  surface.cpp
 //  tri_hp
 //
 //  Created by Brian Helenbrook on 12/30/14.
 //
 //
 
-#include "surface2.h"
+#include "surface.h"
 
 #include "bdry_ins.h"
 #include <myblas.h>
@@ -23,7 +23,7 @@ using namespace bdry_ins;
 // extern FLT body[ND];
 
 
-void surface2::init(input_map& inmap,void* gin) {
+void surface::init(input_map& inmap,void* gin) {
 	std::string keyword,matching_block,side_id,master_block,master_id;
 	std::istringstream data;
 	std::string filename;
@@ -85,7 +85,7 @@ void surface2::init(input_map& inmap,void* gin) {
 	return;
 }
 
-void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
+void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	if (!is_master) return;
 	
@@ -128,7 +128,7 @@ void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
 		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 		
-		/* surface2 TENSION SOURCE TERM X-DIRECTION */
+		/* surface TENSION SOURCE TERM X-DIRECTION */
 		res(4,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(0);
 #ifdef AXISYMMETRIC
 		res(4,i) += gbl->sigma*jcb;
@@ -137,14 +137,14 @@ void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		res(5,i) = +RAD(crd(0,i))*gbl->sigma*norm(1)/jcb;
 		
 		
-		/* surface2 TENSION SOURCE TERM Y-DIRECTION */
+		/* surface TENSION SOURCE TERM Y-DIRECTION */
 		res(6,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(1);
 		/* AND INTEGRATION BY PARTS TERM */
 		res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
 	}
 	
 	lf = 0.0;
-	/* INTEGRATE & STORE surface2 TENSION SOURCE TERM */
+	/* INTEGRATE & STORE surface TENSION SOURCE TERM */
 	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(4,0));
 	basis::tri(x.log2p)->intgrtx1d(&lf(0)(0),&res(5,0));
 	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(6,0));
@@ -158,7 +158,7 @@ void surface2::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	return;
 }
 
-void surface2::setup_preconditioner() {
+void surface::setup_preconditioner() {
 	int indx,m,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
@@ -190,7 +190,7 @@ void surface2::setup_preconditioner() {
 		nu2 = 0.0;
 	
 	/**************************************************/
-	/* DETERMINE surface2 MOVEMENT TIME STEP              */
+	/* DETERMINE surface MOVEMENT TIME STEP              */
 	/**************************************************/
 	gbl->vdt(0,Range::all(),Range::all()) = 0.0;
 	
@@ -252,7 +252,7 @@ void surface2::setup_preconditioner() {
 			/* |a| dx/2 dv/dx  dx/2 dpsi */
 			/* |a| dx/2 2/dx dv/dpsi  dpsi */
 			/* |a| dv/dpsi  dpsi */
-			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
 			// gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
 			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
 		}
@@ -308,7 +308,7 @@ void surface2::setup_preconditioner() {
 		/* |a| dx/2 dv/dx  dx/2 dpsi */
 		/* |a| dx/2 2/dx dv/dpsi  dpsi */
 		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface2 WAVE CASE */
+		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
 		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
 		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
 #endif
@@ -450,25 +450,25 @@ void surface2::setup_preconditioner() {
 	return;
 }
 
-void surface_outflow2::init(input_map& inmap,void* gbl_in) {
+void surface_outflow::init(input_map& inmap,void* gbl_in) {
 	hp_deformable_free_pnt::init(inmap,gbl_in);
 	
-	if (surface->is_master) {
+	if (surf->is_master) {
 		inmap.getwdefault(base.idprefix +"_contact_angle",contact_angle,90.0);
 		contact_angle *= M_PI/180.0;
 	}
 }
 
-void surface_outflow2::element_rsdl(Array<FLT,1> lf) {
+void surface_outflow::element_rsdl(Array<FLT,1> lf) {
 	TinyVector<FLT,tri_mesh::ND> tangent;
-	surface2 *surf2 = dynamic_cast<surface2 *>(surface);
+	surface *surf2 = dynamic_cast<surface *>(surf);
 
 	
 	lf = 0.0;
 	hp_deformable_free_pnt::element_rsdl(lf);
 	
 	
-	if (surface->is_master) {
+	if (surf->is_master) {
 		/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 		/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
 		if (wall_type == curved) {
