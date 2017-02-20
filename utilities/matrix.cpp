@@ -478,7 +478,8 @@ void sparse_row_major::match_patterns(int row1, int row2) {
 	int nnz2 = _cpt(row2+1) -_cpt(row2);
 	/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 	if (nnz1 != nnz2) {
-		std::cerr << "sparseness problem in match patterns" << nnz1 << ' ' << nnz2 << std::endl;
+		std::cerr << "sparseness problem in match patterns" << nnz1 << ' ' << nnz2 << '\n';
+		std::cerr << "row1 " << row1 << "row2 " << row2 << std::endl;
 		assert(0);
 	}
 	
@@ -510,7 +511,11 @@ void sparse_row_major::match_patterns(int nrows,const Array<int,1>& rows) {
 
 		/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 		if (nnz1 != nnz) {
-			std::cerr << "sparseness problem in match patterns" << nnz << ' ' << nnz1 << std::endl;
+			std::cerr << "sparseness problem in match patterns" << nnz << ' ' << nnz1 << '\n';
+			std::cerr << "nrows " << nrows << '\n';
+			std::cerr << rows << std::endl;
+
+
 			assert(0);
 		}
 		

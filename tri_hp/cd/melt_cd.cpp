@@ -248,6 +248,9 @@ void melt_cd::setup_preconditioner() {
 	TinyVector<FLT,tri_mesh::ND> nrm,mvel,us,aPoint,dXdXi,dXdEta,dX;
 	FLT h,hsm,vslp,vnrm,dttang,dtnorm,sign_dir;
 	const int Tvar = c0_indices[0];
+	
+	hp_coupled_bdry::setup_preconditioner();
+	if (!gbl->symmetric && !is_master) return;
 
 	aPoint = 0.0;
 	if (x.NV > 1) {
@@ -265,7 +268,7 @@ void melt_cd::setup_preconditioner() {
 		for (int n=0;n<tri_mesh::ND;++n)
 			us(n) = gbl->a(n, aPoint, 0.0);
 #endif
-		sign_dir = -1;
+		sign_dir = -1.0;
 	}
 	
 	/**************************************************/
@@ -362,18 +365,6 @@ void melt_cd::setup_preconditioner() {
 		
 		gbl->vdt(indx,Range::all(),Range::all()) += gbl->vdt(indx+1,Range::all(),Range::all());
 		gbl->vdt(indx,0,0) = x.gbl->vprcn(v0,c0_indices[0]);
-		
-#ifdef TEST_WITH_DIAG
-		gbl->vdt(indx,Range::all(),Range::all()) = 0.0;
-		gbl->vdt(indx,0,0) = 1.0;
-		gbl->vdt(indx,1,1) = 1.0;
-		gbl->vdt(indx,2,2) = 1.0;
-		
-		gbl->vdt(indx+1,Range::all(),Range::all()) = 0.0;
-		gbl->vdt(indx+1,0,0) = 1.0;
-		gbl->vdt(indx+1,1,1) = 1.0;
-		gbl->vdt(indx+1,2,2) = 1.0;
-#endif
 
 		if (basis::tri(x.log2p)->sm()) {
 			
@@ -420,6 +411,7 @@ void melt_cd::setup_preconditioner() {
 		int info;
 		GETRF(3,3,&gbl->vdt(indx,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(indx,0),info);
 		if (info != 0) {
+			*x.gbl->log << indx << ' ' << gbl->vdt(indx,Range::all(),Range::all()) << std::endl;
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
@@ -438,25 +430,6 @@ void melt_cd::setup_preconditioner() {
 		}
 	}
 	
-#ifndef TEST_WITH_DIAG
-	// Set Field Preconditioners to 1
-	int i = 0;
-	int sind;
-	do {
-		sind = base.seg(i);
-		int pnt = x.seg(sind).pnt(0);
-		x.r_tri_mesh::gbl->diag(pnt) = 1.0;
-		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-			x.gbl->vprcn(pnt,*n) = 1.0;
-		x.gbl->vprcn(pnt,c0_indices[0]) = 1.0;
-	} while (++i < base.nseg);
-	int pnt = x.seg(sind).pnt(1);
-	x.r_tri_mesh::gbl->diag(pnt) = 1.0;
-	for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-		x.gbl->vprcn(pnt,*n) = 1.0;
-	x.gbl->vprcn(pnt,c0_indices[0]) = 1.0;
-#endif
-	
 	return;
 }
 
@@ -465,9 +438,7 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	const int Tindx = c0_indices[0];
 	int sign_dir;
 	
-#ifndef SYMMETRIC
-	if (!is_master) return;
-#endif
+	if (!gbl->symmetric && !is_master) return;
 	
 	aPoint = 0.0;
 	if (x.NV > 1) {
@@ -573,9 +544,7 @@ void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	
 	hp_deformable_free_pnt::element_rsdl(lf);
 	
-#ifndef SYMMETRIC
-	if (!surf->is_master) return;
-#endif
+	if (!surf->gbl->symmetric && !surf->is_master) return;
 	
 	TinyVector<FLT,tri_mesh::ND> aPoint,us;
 	aPoint = 0.0;
@@ -655,9 +624,7 @@ void melt_facet_pt::rsdl(int stage) {
 	r_gbl->res(base.pnt)(1) = 0.0;
 #endif
 	
-#ifndef SYMMETRIC
-	if (!surf->is_master) return;
-#endif
+	if (!surf->gbl->symmetric  && !surf->is_master) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> lf(vdofs);
@@ -694,9 +661,7 @@ void melt_facet_pt::rsdl(int stage) {
 
 void melt_facet_pt::petsc_jacobian() {
 	
-#ifndef SYMMETRIC
-	if (!surf->is_master) return;
-#endif
+	if (!surf->gbl->symmetric && !surf->is_master) return;
 	
 	const int sm = basis::tri(x.log2p)->sm();
 	const int vdofs = x.NV+x.ND;

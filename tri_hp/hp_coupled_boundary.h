@@ -15,11 +15,6 @@
 //#define MPDEBUG
 //#define DEBUG
 //#define DETAILED_MINV
-//#define ONE_SIDED
-//#define SYMMETRIC
-//#define PRECONDITION
-
-// PRECONDITION CAN ONLY BE USED WITH SYMMETRIC OR ONE_SIDED
 
 
 /* Non-deforming coupled boundary with variables on boundary */
@@ -54,6 +49,13 @@ public:
 	/* That's a little weird too, what would subclasses name their structures of globals? */
 	struct global {
 		bool is_loop;  //!< true if boundary is a loop
+		//  Different ways of treating continuity between sides of boundary in iteration
+		//  traditional way is that vertex variable equations are duplicated and side modes are treated with explicit constraint
+		//  one_sided - all c0 variables (vertex & side modes) are just forced to be continuous with an explicit constraint
+		//  symmetric - equations are duplicated for both sides of the boundary
+		//  precondition - premultiplys jacobian and residual to increase diagonal dominance before inverting
+		//                 this can only be done with symmetric or one sided approach (not traditional)
+		bool one_sided, symmetric, precondition;
 
 		/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 		Array<FLT,2> vug0; //!< vertex solution on entry to multigrid (pnts,NV)
@@ -91,9 +93,7 @@ public:
 	hp_coupled_bdry(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "hp_coupled_bdry"; is_master = base.is_frst();}
 	hp_coupled_bdry(const hp_coupled_bdry& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), NV(inbdry.NV), is_master(inbdry.is_master), gbl(inbdry.gbl) {
 		fine = &inbdry;
-#ifndef SYMMETRIC
-		if (!is_master) return;
-#endif
+		if (!gbl->symmetric && !is_master) return;
 		/* default initializer for p=1 multigrid (overriddent in init for fine level) */
 		ksprg.resize(base.maxseg);
 		vug_frst.resize(base.maxseg+1,NV);
@@ -110,10 +110,8 @@ public:
 	void minvrt();  //FIXME: NOT GENERAL YET
 	void mg_restrict();
 	void mg_source();
-#ifdef SYMMETRIC
 	void smatchsolution_snd(FLT *sdata, int bgn, int end, int stride);
 	int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
-#endif
 	
 	void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc

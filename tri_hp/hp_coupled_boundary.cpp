@@ -15,24 +15,6 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	std::istringstream data;
 	std::string filename;
 
-#ifdef ONE_SIDED
-	*x.gbl->log << "#ONE_SIDED is defined\n";
-#else
-	*x.gbl->log << "#ONE_SIDED is not defined\n";
-#endif
-	
-#ifdef SYMMETRIC
-	*x.gbl->log << "#SYMMETRIC is defined\n";
-#else
-	*x.gbl->log << "#SYMMETRIC is not defined\n";
-#endif
-	
-#ifdef PRECONDITION
-	*x.gbl->log << "#PRECONDITION IS DEFINED\n";
-#else
-	*x.gbl->log << "#PRECONDITION IS NOT DEFINED\n";
-#endif
-	
 	if (!inmap.get(base.idprefix + "_NV",NV)) {
 		NV = 2; // Default is two variables (x,y)
 	}
@@ -67,6 +49,46 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 //	}
 	
 	gbl = static_cast<global *>(gbl_in);
+	
+	std::string side_id, matching_block, matching_boundary;
+	find_matching_boundary_name(inmap, matching_block, side_id);
+	matching_boundary = matching_block +"_" +side_id;
+
+	// These only matter for petsc
+	if (!inmap.get(base.idprefix + "_one_sided",gbl->one_sided)) {
+		if (!inmap.get(matching_boundary + "_one_sided",gbl->one_sided)) {
+			gbl->one_sided = false;
+		}
+	}
+	else if (inmap.get(matching_boundary + "_one_sided",gbl->one_sided)) {
+		*x.gbl->log << "only specify one_sided for one or the other side.  doesn't matter which" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	
+	if (!inmap.get(base.idprefix + "_symmetric",gbl->symmetric)) {
+		if (!inmap.get(matching_boundary + "_symmetric",gbl->symmetric)) {
+			gbl->symmetric = false;
+		}
+	}
+	else if (inmap.get(matching_boundary + "_symmetric",gbl->symmetric)) {
+		*x.gbl->log << "only specify symmetric for one or the other side.  doesn't matter which" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+	
+	if (!inmap.get(base.idprefix + "_precondition",gbl->precondition)) {
+		if (!inmap.get(matching_boundary + "_precondition",gbl->precondition)) {
+			gbl->precondition = false;
+		}
+	}
+	else if (inmap.get(matching_boundary + "_precondition",gbl->precondition)) {
+		*x.gbl->log << "only specify precondition for one or the other side.  It doesn't matter which" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+
+	if (gbl->precondition && (!gbl->one_sided && !gbl->symmetric)) {
+		*x.gbl->log << "precondition can only be used with symmetric or one_sided" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
 	
 	int NVcoupled;
 	inmap.getwdefault(base.idprefix + "_is_coupled",gbl->field_is_coupled,false);
@@ -106,10 +128,8 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
 	else gbl->is_loop = false;
-
-#ifndef SYMMETRIC
-	if (!is_master) return;   /* This is all that is necessary for a slave boundary */
-#endif
+	
+	if (!gbl->symmetric && !is_master) return;   /* This is all that is necessary for a slave boundary */
 	
 	ksprg.resize(base.maxseg);
 
@@ -159,10 +179,7 @@ void hp_coupled_bdry::tadvance() {
 	/* Fixme: Need to fill in stuff for extra variables here */
 	
 	if (x.gbl->substep == 0) {
-#ifndef SYMMETRIC
-		if (is_master)
-#endif
-		{
+		if (gbl->symmetric || is_master) {
 			/* SET SPRING CONSTANTS */
 			for(j=0;j<base.nseg;++j) {
 				sind = base.seg(j);
@@ -170,8 +187,35 @@ void hp_coupled_bdry::tadvance() {
 			}
 		}
 		
-#ifndef SYMMETRIC
-		if (is_master) {
+		if (!gbl->symmetric) {
+			if (is_master) {
+				/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
+				/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
+				if (!x.coarse_level) {
+					for(i=0;i<base.nseg+1;++i)
+						vdres(x.log2p,i,0) = 0.0;
+					
+					for(i=0;i<base.nseg;++i)
+						for(m=0;m<basis::tri(x.log2p)->sm();++m)
+							sdres(x.log2p,i,m,0) = 0.0;
+					
+					rsdl(x.gbl->nstage);
+					
+					for(i=0;i<base.nseg+1;++i)
+						vdres(x.log2p,i,0) = -gbl->vres(i,0);
+					
+					for(i=0;i<base.nseg;++i)
+						for(m=0;m<basis::tri(x.log2p)->sm();++m)
+							sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
+				}
+			}
+			else {
+				if (!x.coarse_level) {
+					rsdl(x.gbl->nstage);  // Matching call by slave for communication
+				}
+			}
+		}
+		else {
 			/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
 			/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
 			if (!x.coarse_level) {
@@ -192,41 +236,13 @@ void hp_coupled_bdry::tadvance() {
 						sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
 			}
 		}
-		else {
-			if (!x.coarse_level) {
-				rsdl(x.gbl->nstage);  // Matching call by slave for communication
-			}
-		}
-#else
-		/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
-		/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
-		if (!x.coarse_level) {
-			for(i=0;i<base.nseg+1;++i)
-				vdres(x.log2p,i,0) = 0.0;
-			
-			for(i=0;i<base.nseg;++i)
-				for(m=0;m<basis::tri(x.log2p)->sm();++m)
-					sdres(x.log2p,i,m,0) = 0.0;
-			
-			rsdl(x.gbl->nstage);
-			
-			for(i=0;i<base.nseg+1;++i)
-				vdres(x.log2p,i,0) = -gbl->vres(i,0);
-			
-			for(i=0;i<base.nseg;++i)
-				for(m=0;m<basis::tri(x.log2p)->sm();++m)
-					sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
-		}
-#endif
 	}
 	return;
 }
 
 void hp_coupled_bdry::rsdl(int stage) {
 	
-#ifndef SYMMETRIC
-	if (!is_master) return;
-#endif
+	if (!gbl->symmetric && !is_master) return;
 	
 	int m,n,sind,indx,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
@@ -300,9 +316,7 @@ void hp_coupled_bdry::rsdl(int stage) {
 }
 
 void hp_coupled_bdry::maxres() {
-#ifndef SYMMETRIC
-	if (!is_master) return;
-#endif
+	if (!gbl->symmetric && !is_master) return;
 	
 	int i,n;
 	TinyVector<FLT,tri_mesh::ND> mxr;
@@ -321,10 +335,7 @@ void hp_coupled_bdry::maxres() {
 
 void hp_coupled_bdry::update(int stage) {
 	
-#ifndef SYMMETRIC
-	if (is_master)
-#endif
-	{
+	if (gbl->symmetric || is_master) {
 		int i,sind,v0;
 		
 		if (stage < 0) {
@@ -434,67 +445,70 @@ void hp_coupled_bdry::update(int stage) {
 				*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
 //		}
 #endif
+	}
 
-#ifndef SYMMETRIC
-		if (base.is_comm()) {
-			int count = 0;
-			i = 0;
-			do {
-				sind = base.seg(i);
-				v0 = x.seg(sind).pnt(0);
+	if (!gbl->symmetric) {
+		if (is_master) {
+			if (base.is_comm()) {
+				int count = 0;
+				int i = 0;
+				int sind;
+				do {
+					sind = base.seg(i);
+					int v0 = x.seg(sind).pnt(0);
+					for(int n=0;n<tri_mesh::ND;++n)
+						base.fsndbuf(count++) = x.pnts(v0)(n);
+				} while(++i < base.nseg);
+				int v0 = x.seg(sind).pnt(1);
 				for(int n=0;n<tri_mesh::ND;++n)
 					base.fsndbuf(count++) = x.pnts(v0)(n);
-			} while(++i < base.nseg);
-			v0 = x.seg(sind).pnt(1);
-			for(int n=0;n<tri_mesh::ND;++n)
-				base.fsndbuf(count++) = x.pnts(v0)(n);
-			
-			for(int i=0;i<base.nseg;++i) {
-				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-					for(int n=0;n<tri_mesh::ND;++n)
-						base.fsndbuf(count++) = crv(i,m)(n);
+				
+				for(int i=0;i<base.nseg;++i) {
+					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+						for(int n=0;n<tri_mesh::ND;++n)
+							base.fsndbuf(count++) = crv(i,m)(n);
+					}
 				}
+				base.sndsize() = count;
+				base.sndtype() = boundary::flt_msg;
+				base.comm_prepare(boundary::all,0,boundary::master_slave);
+				base.comm_exchange(boundary::all,0,boundary::master_slave);
+				base.comm_wait(boundary::all,0,boundary::master_slave);
 			}
-			base.sndsize() = count;
-			base.sndtype() = boundary::flt_msg;
+		}
+		else {
+			int i,msgn,sind,v0;
+			
+			if (stage < 0) return;
+			
 			base.comm_prepare(boundary::all,0,boundary::master_slave);
 			base.comm_exchange(boundary::all,0,boundary::master_slave);
 			base.comm_wait(boundary::all,0,boundary::master_slave);
-		}
-	}
-	else {
-		int i,msgn,sind,v0;
-		
-		if (stage < 0) return;
-		
-		base.comm_prepare(boundary::all,0,boundary::master_slave);
-		base.comm_exchange(boundary::all,0,boundary::master_slave);
-		base.comm_wait(boundary::all,0,boundary::master_slave);
-		
-		int count = 0;
-		i = base.nseg-1;
-		do {
-			sind = base.seg(i);
-			v0 = x.seg(sind).pnt(1);
+			
+			int count = 0;
+			i = base.nseg-1;
+			do {
+				sind = base.seg(i);
+				v0 = x.seg(sind).pnt(1);
+				for(int n=0;n<tri_mesh::ND;++n)
+					x.pnts(v0)(n) = base.frcvbuf(0,count++);
+			} while (--i >= 0);
+			v0 = x.seg(sind).pnt(0);
 			for(int n=0;n<tri_mesh::ND;++n)
 				x.pnts(v0)(n) = base.frcvbuf(0,count++);
-		} while (--i >= 0);
-		v0 = x.seg(sind).pnt(0);
-		for(int n=0;n<tri_mesh::ND;++n)
-			x.pnts(v0)(n) = base.frcvbuf(0,count++);
-		
-		if (basis::tri(x.log2p)->sm() > 0) {
-			for(i=base.nseg-1;i>=0;--i) {
-				sind = base.seg(i);
-				msgn = 1;
-				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-					for(int n=0;n<tri_mesh::ND;++n)
-						crds(i,m,n) = msgn*base.frcvbuf(0,count++);
-					msgn *= -1;
+			
+			if (basis::tri(x.log2p)->sm() > 0) {
+				for(i=base.nseg-1;i>=0;--i) {
+					sind = base.seg(i);
+					msgn = 1;
+					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+						for(int n=0;n<tri_mesh::ND;++n)
+							crds(i,m,n) = msgn*base.frcvbuf(0,count++);
+						msgn *= -1;
+					}
 				}
 			}
 		}
-#endif
 	}
 	
 	return;
@@ -602,9 +616,7 @@ void hp_coupled_bdry::minvrt() {
 
 void hp_coupled_bdry::mg_restrict() {
 	
-#ifndef SYMMETRIC
-	if (!is_master) return;
-#endif
+	if (!gbl->symmetric && !is_master) return;
 
 	int i,bnum,indx,tind,v0,snum,sind;
 	
@@ -646,9 +658,7 @@ void hp_coupled_bdry::mg_source() {
 	/* MODIFY SURFACE RESIDUALS ON COARSER MESHES    */
 	/************************************************/
 	
-#ifndef SYMMETRIC
-	if(!is_master) return;
-#endif
+	if(!gbl->symmetric && !is_master) return;
 
 	if(x.coarse_flag) {
 		if (x.isfrst) {
@@ -674,32 +684,18 @@ void hp_coupled_bdry::mg_source() {
 }
 
 
-#ifdef SYMMETRIC
 // This matches residual only
 // Need to rewrite naming to make more general
 void hp_coupled_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	
 	hp_edge_bdry::smatchsolution_snd(sdata, bgn, end, stride);
+	if (!gbl->symmetric) return;
 	
 	const int sm = basis::tri(x.log2p)->sm();
-	if (base.is_frst()) {
-		for(int i=0;i<base.nseg;++i) {
-			for(int m=0;m<sm;++m) {
-				for(int n=0;n<NV;++n) {
-					base.fsndbuf(base.sndsize()++) = gbl->sres(i,m,n);
-				}
-			}
-		}
-	}
-	else {
-		for(int i=base.nseg-1;i>=0;--i) {
-			int msgn = 1;
-			for(int m=0;m<sm;++m) {
-				for(int n=0;n<NV;++n) {
-					base.fsndbuf(base.sndsize()++) = msgn*gbl->sres(i,m,n);
-
-				}
-				msgn *= -1;
+	for(int i=0;i<base.nseg;++i) {
+		for(int m=0;m<sm;++m) {
+			for(int n=0;n<NV;++n) {
+				base.fsndbuf(base.sndsize()++) = gbl->sres(i,m,n);
 			}
 		}
 	}
@@ -709,32 +705,22 @@ void hp_coupled_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int strid
 
 int hp_coupled_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 	int count = hp_edge_bdry::smatchsolution_rcv(sdata, bgn, end, stride);
+	if (!gbl->symmetric) return(count);
 	
 	const int sm = basis::tri(x.log2p)->sm();
 
-	if (base.is_frst()) {
-		for(int i=0;i<base.nseg;++i) {
-			for(int m=0;m<sm;++m) {
-				for(int n=0;n<NV;++n) {
-					gbl->sres(i,m,n) = base.fsndbuf(count++);
-				}
+	for(int i=base.nseg-1;i>=0;--i) {
+		int msgn = 1;
+		for(int m=0;m<sm;++m) {
+			for(int n=0;n<NV;++n) {
+				gbl->sres(i,m,n) = 0.5*(gbl->sres(i,m,n) +msgn*base.frcvbuf(0,count++));
 			}
+			msgn *= -1;
 		}
 	}
-	else {
-		for(int i=base.nseg-1;i>=0;--i) {
-			int msgn = 1;
-			for(int m=0;m<sm;++m) {
-				for(int n=0;n<NV;++n) {
-					gbl->sres(i,m,n) = msgn*base.fsndbuf(count++);
-				}
-				msgn *= -1;
-			}
-		}
-	}
+	
 	return(count);
 }
-#endif
 
 void hp_coupled_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();
@@ -856,10 +842,7 @@ void hp_coupled_bdry::petsc_jacobian() {
     MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
 #endif
 
-#ifndef SYMMETRIC
-    if (is_master)
-#endif
-		{
+    if (gbl->symmetric || is_master) {
         /* This is effect of variables u,v,p,x,y on */
         /* source terms added to flow residuals */
         /* and x,y mesh movement equations */
@@ -1011,19 +994,20 @@ void hp_coupled_bdry::non_sparse(Array<int,1> &nnzero) {
 			
 			for(int endpt=0;endpt<2;++endpt) {
 				int pind = x.seg(sind).pnt(endpt);
-#ifndef SYMMETRIC
-				if (is_master) {
-					// if I am the master all equations affected by side modes including x,y
-					nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
+				if (gbl->one_sided) {
+					if (is_master) {
+						 // if I am the master all equations affected by side modes including x,y
+						nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
+					}
+					else {
+						// Only flow equations have dependence on local side modes
+						// Vertex equations are just zero then copied from other side
+						nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += NV*sm;
+					}
 				}
 				else {
-					// Only flow equations have dependence on local side modes
-					// Vertex equations are just zero then copied from other side
-					nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += NV*sm;
+					nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
 				}
-#else
-				nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
-#endif
 			}
 		}
 	}
@@ -1072,53 +1056,53 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 		}
 	}
 	
-#ifndef SYMMETRIC
-	if (is_master) {
-		/* Add to mpi to allow preconditioning */
-		if (sm && !gbl->field_is_coupled) {
-			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
-		}
-	}
-	else {
-		/* For anything other than SYMMETRIC, slave side modes are just followers */
-		if (sm) {
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
-			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
-		}
-		
-#ifdef ONE_SIDED
-		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-
-		/* If ONE_SIDED all c0 variables are followers */
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(1)*vdofs;
-			for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
-				nnzero_mpi(pind+*it) = 1;  // Just continuity constraint
-				count++;
+	if (!gbl->symmetric) {
+		if (is_master) {
+			/* Add to mpi to allow preconditioning */
+			if (sm && !gbl->field_is_coupled) {
+				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
 			}
 		}
-		int sind = base.seg(0);
-		int pind = x.seg(sind).pnt(0)*vdofs;
-		for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
-			nnzero_mpi(pind+*it) = 1; // Just continuity constraint
-			count++;
-		}
-		
-		if (sm) {
-			const int begin_seg = x.npnt*vdofs;
-			for (int i=0;i<base.nseg;++i) {
-				int sind = base.seg(i);
-				for (int mode=0;mode<sm;++mode) {
-					for(std::vector<int>::iterator it=c0_indices.begin();it!=c0_indices.end();++it) {
-						nnzero_mpi(begin_seg+sind*x.NV*sm +mode*x.NV +*it) = 1;  // Just continuity constraint
+		else {
+			/* For anything other than symmetric, slave side modes are just followers */
+			if (sm) {
+				nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
+				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
+			}
+			
+			if (gbl->one_sided) {
+				const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
+				/* If one_sided all c0 variables are followers */
+				for (int i=base.nseg-1;i>=0;--i) {
+					int sind = base.seg(i);
+					int pind = x.seg(sind).pnt(1)*vdofs;
+					for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+						nnzero_mpi(pind+*it) = 1;  // Just continuity constraint
+						count++;
+					}
+				}
+				int sind = base.seg(0);
+				int pind = x.seg(sind).pnt(0)*vdofs;
+				for(std::vector<int>::iterator it=c0_indices_xy.begin();it!=c0_indices_xy.end();++it) {
+					nnzero_mpi(pind+*it) = 1; // Just continuity constraint
+					count++;
+				}
+				
+				if (sm) {
+					const int begin_seg = x.npnt*vdofs;
+					for (int i=0;i<base.nseg;++i) {
+						int sind = base.seg(i);
+						for (int mode=0;mode<sm;++mode) {
+							for(std::vector<int>::iterator it=c0_indices.begin();it!=c0_indices.end();++it) {
+								nnzero_mpi(begin_seg+sind*x.NV*sm +mode*x.NV +*it) = 1;  // Just continuity constraint
+							}
+						}
 					}
 				}
 			}
 		}
-#endif
 	}
-#endif
 	
 	// make sure flow and coupled side variables have same number of entries
 	if (is_master && gbl->field_is_coupled) {
@@ -1161,14 +1145,26 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 void hp_coupled_bdry::petsc_matchjacobian_snd() {
 	
 	hp_edge_bdry::petsc_matchjacobian_snd();
+	if (!gbl->symmetric) return;
 	
+
 	/* This is extra stuff for symmetric matching not used otherwise */
 	const int sm = basis::tri(x.log2p)->sm();
 	if (sm) {
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+
 		// Send extra stuff for edge modes */
 		int row = jacobian_start;
 		for(int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			int rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
 			for(int m=0;m<sm;++m) {
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					/* attach diagonal column # to allow continuity enforcement */
+					base.fsndbuf(base.sndsize()++) = rowbase +*n +0.1;
+				}
+				rowbase += x.NV;
+
 				/* Send side variables */
 				for(int n=0;n<NV;++n) {
 					/* attach diagonal column # to allow continuity enforcement */
@@ -1208,32 +1204,97 @@ int hp_coupled_bdry::petsc_matchjacobian_rcv(int phase) {
 		count = hp_edge_bdry::petsc_matchjacobian_rcv(phase);
 	}
 	else {
-#ifndef ONE_SIDED
-		count = hp_edge_bdry::petsc_matchjacobian_rcv(phase);
-#else
-		/* Apply matching constraint for c0 vars */
-		/* This just skips the information sent and puts a -1 in J_mpi */
-		
-		int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++)); // Start of jacobian on matching block
-		count++; // Skip index of boundary unknowns on mathcing block.   Not used in this routine
-		
-		sparse_row_major *pJ_mpi;
-		if (base.is_local(0)) {
-			pJ_mpi = &x.J;
-			Jstart_mpi = 0;
+		if (!gbl->one_sided) {
+			count = hp_edge_bdry::petsc_matchjacobian_rcv(phase);
 		}
 		else {
-			pJ_mpi = &x.J_mpi;
-		}
-		
-		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-		
-		/* Now do stuff for communication boundaries */
-		int row;
-		/* Now Receive Information */
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int rowbase = x.seg(sind).pnt(1)*vdofs;
+			/* Apply matching constraint for c0 vars */
+			/* This just skips the information sent and puts a -1 in J_mpi */
+			
+			int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++)); // Start of jacobian on matching block
+			count++; // Skip index of boundary unknowns on mathcing block.   Not used in this routine
+			
+			sparse_row_major *pJ_mpi;
+			if (base.is_local(0)) {
+				pJ_mpi = &x.J;
+				Jstart_mpi = 0;
+			}
+			else {
+				pJ_mpi = &x.J_mpi;
+			}
+			
+			const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+			
+			/* Now do stuff for communication boundaries */
+			int row;
+			/* Now Receive Information */
+			for (int i=base.nseg-1;i>=0;--i) {
+				int sind = base.seg(i);
+				int rowbase = x.seg(sind).pnt(1)*vdofs;
+				vector<int> row_mpi_storage;
+				for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+					row = rowbase + *n;
+					int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+					row_mpi_storage.push_back(row_mpi);
+					int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+					*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
+#endif
+					for (int k = 0;k<ncol;++k) {
+						count++; // skip column number
+						count++; // skip value;
+					}
+				}
+				/* Set equality constraint */
+				std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+				for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+					row = rowbase + *n;
+					pJ_mpi->zero_row(row);
+					x.J.zero_row(row);
+					x.J.set_values(row, row, 1.0);
+					pJ_mpi->set_values(row,*row_mpi,-1.0);
+					++row_mpi;
+				}
+				row_mpi_storage.clear();
+				
+				/* Now receive side Jacobian information */
+				rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+				for(int mode=0;mode<x.sm0;++mode) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						row = rowbase +*n;
+						int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+						row_mpi_storage.push_back(row_mpi);
+						int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+						*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << *n << std::endl;
+#endif
+						for (int k = 0;k<ncol;++k) {
+							count++; // Skip column number
+							count++; // Skip value
+						}
+					}
+					rowbase += x.NV;
+				}
+				
+				/* Equality of C0_vars */
+				rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+				row_mpi=row_mpi_storage.begin();
+				int sgn_mpi = 1;
+				for(int mode=0;mode<x.sm0;++mode) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						row = rowbase +mode*x.NV +*n;
+						pJ_mpi->zero_row(row);
+						x.J.zero_row(row);
+						x.J.set_values(row, row, 1.0);
+						pJ_mpi->set_values(row,*row_mpi,-sgn_mpi);
+						++row_mpi;
+					}
+					sgn_mpi *= -1;
+				}
+				row_mpi_storage.clear();
+			}
+			int sind = base.seg(0);
+			int rowbase = x.seg(sind).pnt(0)*vdofs;
 			vector<int> row_mpi_storage;
 			for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 				row = rowbase + *n;
@@ -1259,179 +1320,181 @@ int hp_coupled_bdry::petsc_matchjacobian_rcv(int phase) {
 				++row_mpi;
 			}
 			row_mpi_storage.clear();
-			
-			/* Now receive side Jacobian information */
-			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
-			for(int mode=0;mode<x.sm0;++mode) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					row = rowbase +*n;
-					int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-					row_mpi_storage.push_back(row_mpi);
-					int ncol = static_cast<int>(base.frcvbuf(0,count++));
-#ifdef MPDEBUG
-					*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << *n << std::endl;
-#endif
-					for (int k = 0;k<ncol;++k) {
-						count++; // Skip column number
-						count++; // Skip value
-					}
-				}
-				rowbase += x.NV;
-			}
-			
-			/* Equality of C0_vars */
-			rowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
-			row_mpi=row_mpi_storage.begin();
-			int sgn_mpi = 1;
-			for(int mode=0;mode<x.sm0;++mode) {
-				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					row = rowbase +mode*x.NV +*n;
-					pJ_mpi->zero_row(row);
-					x.J.zero_row(row);
-					x.J.set_values(row, row, 1.0);
-					pJ_mpi->set_values(row,*row_mpi,-sgn_mpi);
-					++row_mpi;
-				}
-				sgn_mpi *= -1;
-			}
-			row_mpi_storage.clear();
 		}
-		int sind = base.seg(0);
-		int rowbase = x.seg(sind).pnt(0)*vdofs;
-		vector<int> row_mpi_storage;
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			row = rowbase + *n;
-			int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-			row_mpi_storage.push_back(row_mpi);
-			int ncol = static_cast<int>(base.frcvbuf(0,count++));
-#ifdef MPDEBUG
-			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << *n << std::endl;
-#endif
-			for (int k = 0;k<ncol;++k) {
-				count++; // skip column number
-				count++; // skip value;
-			}
-		}
-		/* Set equality constraint */
-		std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
-		for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
-			row = rowbase + *n;
-			pJ_mpi->zero_row(row);
-			x.J.zero_row(row);
-			x.J.set_values(row, row, 1.0);
-			pJ_mpi->set_values(row,*row_mpi,-1.0);
-			++row_mpi;
-		}
-		row_mpi_storage.clear();
-#endif
 	}
 
-#ifndef SYMMETRIC
-	/* Apply matching curvature constraint */
-	if (sm && !is_master) {
-		int Jstart_mpi = static_cast<int>(base.frcvbuf(0,0));
-		sparse_row_major *pJ_mpi;
-		if (base.is_local(0)) {
-			pJ_mpi = &x.J;
-			Jstart_mpi = 0;
-		}
-		else {
-			pJ_mpi = &x.J_mpi;
-		}
-		
-		int ind = jacobian_start;
-		int ind_mpi = static_cast<int>(base.frcvbuf(0,1)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
-		for(int i=0;i<base.nseg;++i) {
-			int sgn = 1;
-			for(int mode=0;mode<x.sm0;++mode) {
-				for (int n=0;n<x.ND;++n) {
-					x.J(ind,ind) = 1.0;
-					(*pJ_mpi)(ind,ind_mpi) = -1.0*sgn;
-					++ind;
-					++ind_mpi;
-				}
-				sgn *= -1;
+	if (!gbl->symmetric) {
+		/* Apply matching curvature constraint */
+		if (sm && !is_master) {
+			int Jstart_mpi = static_cast<int>(base.frcvbuf(0,0));
+			sparse_row_major *pJ_mpi;
+			if (base.is_local(0)) {
+				pJ_mpi = &x.J;
+				Jstart_mpi = 0;
 			}
-			ind_mpi -= 2*sm*x.ND;
-		}
-	}
-#else
-	/* symmetric jacobian transmission of side mode equations */
-	if (sm) {
-		int Jstart_mpi = static_cast<int>(base.frcvbuf(0, 0)); // Start of jacobian on matching block
-		sparse_row_major *pJ_mpi;
-		if (base.is_local(0)) {
-			pJ_mpi = &x.J;
-			Jstart_mpi = 0;
-		}
-		else {
-			pJ_mpi = &x.J_mpi;
-		}
-		vector<int> row_mpi_storage;
-		
-		// Receive extra stuff for edge modes */
-		for (int i=base.nseg-1;i>=0;--i) {
-			int row = jacobian_start +i*x.sm0*NV;
-			int sgn = 1;
-			for(int m=0;m<x.sm0;++m) {
-				/* Receive side variables */
-				for(int n=0;n<NV;++n) {
-					int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
-					row_mpi_storage.push_back(row_mpi);
-					int ncol = static_cast<int>(base.frcvbuf(0,count++));
-#ifdef MPDEBUG
-					*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << i << " and variable " << n << std::endl;
-#endif
-					for (int k = 0;k<ncol;++k) {
-						int col = static_cast<int>(base.frcvbuf(0,count++));
-						FLT val = sgn*base.frcvbuf(0,count++);
-						if (col < INT_MAX-10 && col > -1) {
-							col += Jstart_mpi;
-#ifdef MPDEBUG
-							*x.gbl->log  << col << ' ';
-#endif
-							(*pJ_mpi).add_values(row,col,val);
-						}
-					}
-#ifdef MPDEBUG
-					*x.gbl->log << std::endl;
-#endif
-					++row;
-				}
-				sgn *= -1;
+			else {
+				pJ_mpi = &x.J_mpi;
 			}
 			
-			int rowbase = jacobian_start +i*x.sm0*NV;;
-			for(int mode=0;mode<x.sm0;++mode) {
-				for(int n=0;n<NV;++n) {
-					row = rowbase +mode*NV +n;
-					int sgn_mpi = 1;
-					std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
-					for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
-						for(int n_mpi=0;n_mpi<NV;++n_mpi) {
-#ifdef MPDEBUG
-							*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*NV +n_mpi << std::endl;
-#endif
-#ifdef DEBUG_JAC
-							if (!x.gbl->jac_debug)
-#endif
-							{
-								FLT dval = (*pJ_mpi)(row,*row_mpi);
-								(*pJ_mpi)(row,*row_mpi) = 0.0;
-								x.J(row,rowbase +mode_mpi*NV +n_mpi) += sgn_mpi*dval;
-							}
-							++row_mpi;
-						}
-						sgn_mpi *= -1;
+			int ind = jacobian_start;
+			int ind_mpi = static_cast<int>(base.frcvbuf(0,1)) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
+			for(int i=0;i<base.nseg;++i) {
+				int sgn = 1;
+				for(int mode=0;mode<x.sm0;++mode) {
+					for (int n=0;n<x.ND;++n) {
+						x.J(ind,ind) = 1.0;
+						(*pJ_mpi)(ind,ind_mpi) = -1.0*sgn;
+						++ind;
+						++ind_mpi;
 					}
-					x.J.multiply_row(row,0.5);
-					x.J_mpi.multiply_row(row,0.5);
+					sgn *= -1;
 				}
+				ind_mpi -= 2*sm*x.ND;
 			}
-			row_mpi_storage.clear();
 		}
 	}
+	else {
+		/* symmetric jacobian transmission of side mode equations */
+		if (sm) {
+			int Jstart_mpi = static_cast<int>(base.frcvbuf(0, 0)); // Start of jacobian on matching block
+			sparse_row_major *pJ_mpi;
+			if (base.is_local(0)) {
+				pJ_mpi = &x.J;
+				Jstart_mpi = 0;
+			}
+			else {
+				pJ_mpi = &x.J_mpi;
+			}
+			vector<int> row_mpi_storage;
+			
+			const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+			
+			// Receive extra stuff for edge modes */
+			for (int i=base.nseg-1;i>=0;--i) {
+				int row = jacobian_start +i*x.sm0*NV;
+				int sgn = 1;
+				for(int m=0;m<x.sm0;++m) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						/* diagonal column # to allow continuity enforcement */
+						int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+						row_mpi_storage.push_back(row_mpi);
+					}
+					
+					/* Receive side variables */
+					for(int n=0;n<NV;++n) {
+						int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
+						row_mpi_storage.push_back(row_mpi);
+						int ncol = static_cast<int>(base.frcvbuf(0,count++));
+#ifdef MPDEBUG
+						*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << i << " and variable " << n << std::endl;
 #endif
+						for (int k = 0;k<ncol;++k) {
+							int col = static_cast<int>(base.frcvbuf(0,count++));
+							FLT val = sgn*base.frcvbuf(0,count++);
+							if (col < INT_MAX-10 && col > -1) {
+								col += Jstart_mpi;
+#ifdef MPDEBUG
+								*x.gbl->log  << col << ' ';
+#endif
+								(*pJ_mpi).add_values(row,col,val);
+							}
+						}
+#ifdef MPDEBUG
+						*x.gbl->log << std::endl;
+#endif
+						++row;
+					}
+					sgn *= -1;
+				}
+				
+				int rowbase = jacobian_start +i*x.sm0*NV;
+				int sind = base.seg(i);
+				int flowbase = x.npnt*vdofs +sind*x.NV*x.sm0;
+
+				for(int mode=0;mode<x.sm0;++mode) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						row = flowbase +mode*x.NV+*n;
+						
+						int sgn_mpi = 1;
+						std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+						for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+							for(std::vector<int>::iterator n_mpi=c0_indices.begin();n_mpi != c0_indices.end();++n_mpi) {
+#ifdef MPDEBUG
+								*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << flowbase +mode_mpi*x.NV +*n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+								if (!x.gbl->jac_debug)
+#endif
+								{
+									FLT dval = (*pJ_mpi)(row,*row_mpi);
+									(*pJ_mpi)(row,*row_mpi) = 0.0;
+									x.J(row,flowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+								}
+								++row_mpi;
+							}
+							
+							for(int n_mpi=0;n_mpi<NV;++n_mpi) {
+#ifdef MPDEBUG
+								*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*NV +n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+								if (!x.gbl->jac_debug)
+#endif
+								{
+									FLT dval = (*pJ_mpi)(row,*row_mpi);
+									(*pJ_mpi)(row,*row_mpi) = 0.0;
+									x.J(row,rowbase +mode_mpi*NV +n_mpi) += sgn_mpi*dval;
+								}
+								++row_mpi;
+							}
+							sgn_mpi *= -1;
+						}
+					}
+
+					for(int n=0;n<NV;++n) {
+						row = rowbase +mode*NV +n;
+						int sgn_mpi = 1;
+						std::vector<int>::iterator row_mpi=row_mpi_storage.begin();
+						for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+							for(std::vector<int>::iterator n_mpi=c0_indices.begin();n_mpi != c0_indices.end();++n_mpi) {
+#ifdef MPDEBUG
+								*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << flowbase +mode_mpi*x.NV +*n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+								if (!x.gbl->jac_debug)
+#endif
+								{
+									FLT dval = (*pJ_mpi)(row,*row_mpi);
+									(*pJ_mpi)(row,*row_mpi) = 0.0;
+									x.J(row,flowbase +mode_mpi*x.NV +*n_mpi) += sgn_mpi*dval;
+								}
+								++row_mpi;
+							}
+
+							for(int n_mpi=0;n_mpi<NV;++n_mpi) {
+#ifdef MPDEBUG
+								*x.gbl->log << "side swapping " << row << ',' << *row_mpi << " for " << row << ',' << rowbase +mode_mpi*NV +n_mpi << std::endl;
+#endif
+#ifdef DEBUG_JAC
+								if (!x.gbl->jac_debug)
+#endif
+								{
+									FLT dval = (*pJ_mpi)(row,*row_mpi);
+									(*pJ_mpi)(row,*row_mpi) = 0.0;
+									x.J(row,rowbase +mode_mpi*NV +n_mpi) += sgn_mpi*dval;
+								}
+								++row_mpi;
+							}
+							sgn_mpi *= -1;
+						}
+						x.J.multiply_row(row,0.5);
+						x.J_mpi.multiply_row(row,0.5);
+					}
+				}
+				row_mpi_storage.clear();
+			}
+		}
+	}
 	return(count);
 }
 
@@ -1442,10 +1505,8 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
 	Array<FLT,1> res_vec(ncoupled);
 	
-#ifndef SYMMETRIC
-	if (is_master)
-#endif
-	{
+
+	if (gbl->symmetric || is_master) {
 		for(int j=0;j<base.nseg;++j) {
 			int ind1 = x.npnt*vdofs +base.seg(j)*sm*x.NV;
 
@@ -1481,31 +1542,25 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			}
 		}
 	}
-#ifndef SYMMETRIC
 	else {
-		/* Equality constraint */
+		/* Side mode equality constraint */
 		for(int j=0;j<base.nseg;++j) {
-#ifdef ONE_SIDED
 			int ind1 = x.npnt*vdofs +base.seg(j)*sm*x.NV;
-#endif
 			for(int m=0;m<sm;++m) {
 				for(int n=0;n<NV;++n)
 					res(ind++) = 0.0; // all local variables assumed to be equal on both sides
-#ifdef ONE_SIDED
-				for(std::vector<int>::iterator it = c0_indices.begin();it != c0_indices.end();++it)
-					res(ind1+*it) = 0.0;
-				ind1 += x.NV;
-#endif
+				
+				if (gbl->one_sided) {  // if one_sided then continuous flow variables are forced to be continuous
+					for(std::vector<int>::iterator it = c0_indices.begin();it != c0_indices.end();++it)
+						res(ind1+*it) = 0.0;
+					ind1 += x.NV;
+				}
 			}
 		}
 	}
-#endif
 	
 	/* Swap kinetic and energy vertex residuals */
-#ifdef ONE_SIDED
-	if (is_master)
-#endif
-	{
+	if (!gbl->one_sided || is_master) {
 		int i = 0;
 		int sind;
 		do {
@@ -1568,7 +1623,6 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			res(row +n +x.NV) = res_vec(indx++);
 		}
 	}
-#ifdef ONE_SIDED
 	else {
 		/* SET ALL C0 VARS TO FOLLOW */
 		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
@@ -1586,7 +1640,6 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			res(row+*n) = 0.0;
 		}
 	}
-#endif
 }
 
 void hp_coupled_bdry::petsc_premultiply_jacobian() {
@@ -1595,10 +1648,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 	Array<int,1> row_ind(ncoupled);
 	
 	/* Swap side equations */
-#ifndef SYMMETRIC
-	if (is_master)
-#endif
-	{
+	if (gbl->symmetric || is_master) {
 		int row0 = jacobian_start; // Index of motion equations
 		
 		const int sm = basis::tri(x.log2p)->sm();
@@ -1618,18 +1668,19 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 
 				// Store Jacobian
 				gbl->sdt2(j,m,Range::all(),Range::all()) = 0.0;
-#ifdef PRECONDITION
-				for(int row=0;row<ncoupled;++row) {
-					for(int col=0;col<ncoupled;++col) {
-						gbl->sdt2(j,m,row,col) = x.J(row_ind(row),row_ind(col));
+				if (gbl->precondition) {
+					for(int row=0;row<ncoupled;++row) {
+						for(int col=0;col<ncoupled;++col) {
+							gbl->sdt2(j,m,row,col) = x.J(row_ind(row),row_ind(col));
+						}
 					}
 				}
-#else
-				// To shut off preconditioning
-				for(int row=0;row<ncoupled;++row) {
-					gbl->sdt2(j,m,row,row) = 1.0;
+				else {
+					// To shut off preconditioning
+					for(int row=0;row<ncoupled;++row) {
+						gbl->sdt2(j,m,row,row) = 1.0;
+					}
 				}
-#endif
 
 				int info;
 				GETRF(ncoupled,ncoupled,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),info);
@@ -1649,10 +1700,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		}
 	}
 	
-#ifdef ONE_SIDED
-	if (is_master)
-#endif
-	{
+	if (!gbl->one_sided || is_master) {
 		/* Swap rows */
 		int i = 0;
 		int sind;
@@ -1671,18 +1719,19 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 
 			// Store Jacobian
 			gbl->vdt(i,Range::all(),Range::all()) = 0.0;
-#ifdef PRECONDITION
-			for(int row=0;row<ncoupled;++row) {
-				for(int col=0;col<ncoupled;++col) {
-					gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+			if (gbl->precondition) {
+				for(int row=0;row<ncoupled;++row) {
+					for(int col=0;col<ncoupled;++col) {
+						gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+					}
 				}
 			}
-#else
-			// To shut off preconditioning
-			for(int row=0;row<ncoupled;++row) {
-				gbl->vdt(i,row,row) = 1.0;
+			else {
+				// To shut off preconditioning
+				for(int row=0;row<ncoupled;++row) {
+					gbl->vdt(i,row,row) = 1.0;
+				}
 			}
-#endif
 			int info;
 			GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
 			if (info != 0) {
@@ -1710,18 +1759,19 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		
 		// Store Jacobian
 		gbl->vdt(i,Range::all(),Range::all()) = 0.0;
-#ifdef PRECONDITION
-		for(int row=0;row<ncoupled;++row) {
-			for(int col=0;col<ncoupled;++col) {
-				gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+		if (gbl->precondition) {
+			for(int row=0;row<ncoupled;++row) {
+				for(int col=0;col<ncoupled;++col) {
+					gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+				}
 			}
 		}
-#else
-		// To shut off preconditioning
-		for(int row=0;row<ncoupled;++row) {
-			gbl->vdt(i,row,row) = 1.0;
+		else {
+			// To shut off preconditioning
+			for(int row=0;row<ncoupled;++row) {
+				gbl->vdt(i,row,row) = 1.0;
+			}
 		}
-#endif
 		int info;
 		GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
 		if (info != 0) {
@@ -1734,6 +1784,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		x.J.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
 		x.J_mpi.match_patterns(ncoupled, row_ind);
 		x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
+	
 	}
 }
 #endif
@@ -1898,7 +1949,7 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 }
 
 void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-	if (surf->is_master) {
+	if (surf->is_master || surf->gbl->symmetric) {
 		switch(wall_type) {
 			case vertical: {
 				x.pnts(base.pnt)(0) = position;
@@ -1922,7 +1973,7 @@ void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 
 void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 	lf = 0.0;
-	if (surf->is_master) {
+	if (surf->is_master || surf->gbl->symmetric) {
 		switch(wall_type) {
 			case vertical: {
 				lf(x.NV) = x.pnts(base.pnt)(0) -position;
@@ -1950,7 +2001,7 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 /* Routine to add surface tension stress or endpoint movement residual */
 void hp_deformable_free_pnt::rsdl(int stage) {
 	
-	if (!surf->is_master) return;
+	if (!surf->is_master && !surf->gbl->symmetric) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> lf(vdofs);

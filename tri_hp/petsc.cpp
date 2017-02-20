@@ -28,8 +28,7 @@
 
 #define DEBUG_TOL 1.0e-9
 #define DEBUG_ABS_TOL 1.0e-5
-#define DEBUG_REL_TOL 1.0e-1
-#define WBC
+#define DEBUG_REL_TOL 1.0e-2
 
 
 void tri_hp::petsc_initialize(){
@@ -880,16 +879,11 @@ void tri_hp::test_jacobian() {
 	int dof = jacobian_size;
 	PetscScalar *array;
 	
-#ifdef WBC
 	petsc_rsdl();
 	VecGetArray(petsc_f,&array);
 	Array<FLT,1> rbar(array, shape(jacobian_size), duplicateData);
 	VecRestoreArray(petsc_f, &array);
-#else
-	rsdl();
-	petsc_make_1D_rsdl_vector(rbar);
-#endif
-	
+
 	const PetscInt *ranges;
 	VecGetOwnershipRanges(petsc_f,&ranges);
 	for(int proc=0;proc < sim::blks.nproc;++proc) {
@@ -916,19 +910,13 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.v(pind,n);
 						ug.v(pind,n) += dw(n);
-						// enforce_continuity(ug,pnts);
 						
-#ifdef WBC
 						petsc_rsdl();
 						VecGetArray(petsc_f,&array);
 						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.v(pind,n)-stored_value);
 						VecRestoreArray(petsc_f, &array);
-#else
-						rsdl();
-						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.v(pind,n)-stored_value);
-#endif
+
 						
 						
 						++ind;
@@ -941,19 +929,11 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.v(pind,n);
 						ug.v(pind,n) += dw(n);
-						// enforce_continuity(ug,pnts);
-						
-#ifdef WBC
 						petsc_rsdl();
 						VecGetArray(petsc_f,&array);
 						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.v(pind,n)-stored_value);
 						VecRestoreArray(petsc_f, &array);
-#else
-						rsdl();
-						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.v(pind,n)-stored_value);
-#endif
 						++ind;
 						ug.v(pind,n) = stored_value;
 					}
@@ -961,19 +941,11 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<ND;++n) {
 						FLT stored_value = pnts(pind)(n);
 						pnts(pind)(n) += dx;
-						// enforce_continuity(ug,pnts);
-						
-#ifdef WBC
 						petsc_rsdl();
 						VecGetArray(petsc_f,&array);
 						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 						testJ(Range::all(),ind) = (rtemp-rbar)/(pnts(pind)(n)-stored_value);
 						VecRestoreArray(petsc_f, &array);
-#else
-						rsdl();
-						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(pnts(pind)(n)-stored_value);
-#endif
 						++ind;
 						pnts(pind)(n) = stored_value;
 					}
@@ -985,19 +957,11 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.s(sind,m,n);
 						ug.s(sind,m,n) += dw(n);
-						// enforce_continuity(ug,pnts);
-						
-#ifdef WBC
 						petsc_rsdl();
 						VecGetArray(petsc_f,&array);
 						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.s(sind,m,n) -stored_value);
 						VecRestoreArray(petsc_f, &array);
-#else
-						rsdl();
-						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.s(sind,m,n) -stored_value);
-#endif
 						++ind;
 						ug.s(sind,m,n) = stored_value;
 					}
@@ -1009,19 +973,11 @@ void tri_hp::test_jacobian() {
 					for(int n=0;n<NV;++n) {
 						FLT stored_value = ug.i(tind,m,n);
 						ug.i(tind,m,n) += dw(n);
-						// enforce_continuity(ug,pnts);
-						
-#ifdef WBC
 						petsc_rsdl();
 						VecGetArray(petsc_f,&array);
 						Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 						testJ(Range::all(),ind) = (rtemp-rbar)/(ug.i(tind,m,n)-stored_value);
 						VecRestoreArray(petsc_f, &array);
-#else
-						rsdl();
-						petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-						testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(ug.i(tind,m,n)-stored_value);
-#endif
 						++ind;
 						ug.i(tind,m,n) = stored_value;
 					}
@@ -1036,18 +992,11 @@ void tri_hp::test_jacobian() {
 						for(int n=0;n<ND;++n) {
 							FLT stored_value = hp_ebdry(i)->crds(j,m,n);
 							hp_ebdry(i)->crds(j,m,n) += dx;
-							// enforce_continuity(ug, pnts);
-#ifdef WBC
 							petsc_rsdl();
 							VecGetArray(petsc_f,&array);
 							Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 							testJ(Range::all(),ind) = (rtemp-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
 							VecRestoreArray(petsc_f, &array);
-#else
-							rsdl();
-							petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-							testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/(hp_ebdry(i)->crds(j,m,n)-stored_value);
-#endif
 							++ind;
 							hp_ebdry(i)->crds(j,m,n) = stored_value;
 						}

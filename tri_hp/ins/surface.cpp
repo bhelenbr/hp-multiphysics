@@ -176,9 +176,7 @@ void surface::setup_preconditioner() {
 	
 	hp_coupled_bdry::setup_preconditioner();
 
-#ifndef SYMMETRIC
-	if (!is_master) return;
-#endif
+	if (!gbl->symmetric && !is_master) return;
 	
 	drho = x.gbl->rho -gbl->rho2;
 	srho = x.gbl->rho +gbl->rho2;
