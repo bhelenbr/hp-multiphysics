@@ -1290,7 +1290,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 						++index[1];
 					}
 					
-					for(k=pmin-1-m;k<p0-1-m;++k) {
+					for(k=max(pmin-1-m,0);k<p0-1-m;++k) {
 						for(n=0;n<NV;++n)
 							ugbd(tlvl).i(i,indx,n) = 0.0;
 						++indx;

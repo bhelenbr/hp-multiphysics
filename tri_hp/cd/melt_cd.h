@@ -18,6 +18,8 @@
 //#define OLDKINETICS
 //#define TWOFACETS
 
+// #define ANALYTIC_JACOBIAN
+
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {
 	class melt_cd : public hp_coupled_bdry {
@@ -52,6 +54,9 @@ namespace bdry_cd {
 		void output(const std::string& filename, tri_hp::filetype typ,int tlvl);
 		void setup_preconditioner();
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
+#if defined(petsc) && defined(ANALYTIC_JACOBIAN)
+		void element_jacobian(int indx, Array<FLT,2>& K);
+#endif
 		FLT calculate_kinetic_coefficients(FLT DT,FLT sint);
 	};
 	

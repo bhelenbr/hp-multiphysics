@@ -27,7 +27,7 @@
 #include <r_tri_boundary.h>
 
 #define DEBUG_TOL 1.0e-9
-#define DEBUG_ABS_TOL 1.0e-5
+#define DEBUG_ABS_TOL 1.0e-9
 #define DEBUG_REL_TOL 1.0e-2
 
 

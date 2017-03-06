@@ -20,9 +20,6 @@
 #include "myblas.h"
 #include "melt_cd.h"
 
-//#define MPDEBUG
-//#define DETAILED_DT
-
 using namespace bdry_cd;
 
 void melt_cd::init(input_map& inmap,void* gbl_in) {
@@ -103,9 +100,12 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	inmap.getwdefault(liquid_block + "_Ksn",gbl->Ksn,0.0);
 	inmap.getwdefault(liquid_block + "_K2Dn",gbl->K2Dn,0.0);
 #ifdef OLDKINETICS
-	inmap.getwdefault(liquid_block + "_K2Dn_max",gbl->K2Dn_max,300.0);
+	inmap.getwdefault(liquid_block + "_K2Dn_max",gbl->K2Dn_max,5e4);
 #else
-	inmap.getwdefault(liquid_block + "_K2Dn_DT_min",gbl->K2Dn_DT_min,1.0);
+	const int Tindx = c0_indices[0];
+	TinyVector<FLT,tri_mesh::ND> aPoint = 0.0;
+	FLT Tm = ibc->f(Tindx, aPoint, 0.0);
+	inmap.getwdefault(liquid_block + "_K2Dn_DT_min",gbl->K2Dn_DT_min,Tm*3.6248/1685.);  // This makes K2D_max = 5e4
 #endif
 	inmap.getwdefault(liquid_block + "_A2Dn",gbl->A2Dn,1.0);
 	inmap.getwdefault(liquid_block + "_surge_time",gbl->surge_time,1.0);
@@ -230,7 +230,7 @@ void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			const int sind = base.seg(seg);
 			const int v0 = x.seg(sind).pnt(1);
 			TinyVector<FLT,4> up;
-			basis::tri(x.log2p)->ptprobe1d(4,up.data(),1.0,&x.uht(0)(0),MXTM);
+			basis::tri(x.log2p)->ptprobe1d(x.NV,up.data(),1.0,&x.uht(0)(0),MXTM);
 			FLT DT = ibc->f(c0_indices[0], x.pnts(v0), x.gbl->time) -up(c0_indices[0]);
 			FLT K = calculate_kinetic_coefficients(DT,0.0);
 			fout << s << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' << K << ' ' << DT << ' ' << 0.0 << std::endl;
@@ -337,7 +337,7 @@ void melt_cd::setup_preconditioner() {
 		const FLT DTcool = ibc->f(c0_indices[0], aPoint, x.gbl->time) -Tm;
 		const FLT Kc = calculate_kinetic_coefficients(DTcool, sint);
 		// Numerically calculate derivatives
-		const FLT dKcdT = (calculate_kinetic_coefficients(DTcool +1.0e-6*Tm, sint) -Kc)/(1.0e-6*Tm);
+		const FLT dKcdT = (calculate_kinetic_coefficients(DTcool +1.0e-6*Tm, sint) -Kc)/(1.0e-6*Tm +eps_r);
 		// const FLT dKcDsint = (calculate_kinetic_coefficients(DTcool, sint +1.0e-6*gbl->Ksn/(gbl->Krough +FLT_EPSILON)) -Kc)/(1.0e-6*gbl->Ksn/(gbl->Krough +FLT_EPSILON));
 		
 		
@@ -349,9 +349,9 @@ void melt_cd::setup_preconditioner() {
 		
 		// Energy Equation
 		gbl->vdt(indx+1,Range::all(),Range::all()) = 0.0;
-		gbl->vdt(indx+1,0,0) = x.gbl->vprcn(v1,c0_indices[0]);  // Energy equation diaganol;
-		gbl->vdt(indx+1,0,1) = dtnorm*nrm(0);
-		gbl->vdt(indx+1,0,2) = dtnorm*nrm(1);
+		gbl->vdt(indx+1,0,0) = 0.0;  // Energy equation diaganol (Should be 1, but with 0 here it drives the normal motion with the energy equation like original version);
+		gbl->vdt(indx+1,0,1) = -dtnorm*nrm(0)/x.gbl->vprcn(v1,c0_indices[0]);
+		gbl->vdt(indx+1,0,2) = -dtnorm*nrm(1)/x.gbl->vprcn(v1,c0_indices[0]);
 		
 		// Tangent Equation
 		gbl->vdt(indx+1,1,0) = 0.0;
@@ -359,25 +359,24 @@ void melt_cd::setup_preconditioner() {
 		gbl->vdt(indx+1,1,2) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
 		
 		// Kinetic Equation
-		gbl->vdt(indx+1,2,0) = (-dKcdT*vnrm +h)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
+		gbl->vdt(indx+1,2,0) = (-dKcdT*vnrm +h)*gbl->rho_s*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		gbl->vdt(indx+1,2,1) = (-Kc*x.gbl->bd(0))*nrm(0)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));  // Missing term here for dK/dTheta
 		gbl->vdt(indx+1,2,2) = (-Kc*x.gbl->bd(0))*nrm(1)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0))); // Missing term here for dK/dTheta
 		
 		gbl->vdt(indx,Range::all(),Range::all()) += gbl->vdt(indx+1,Range::all(),Range::all());
-		gbl->vdt(indx,0,0) = x.gbl->vprcn(v0,c0_indices[0]);
 
 		if (basis::tri(x.log2p)->sm()) {
 			
-			gbl->sdt(indx,0,0) = x.gbl->sprcn(sind,c0_indices[0]); // Energy equation diagonal for side modes;
-			gbl->sdt(indx,0,1) = dtnorm*nrm(0);
-			gbl->sdt(indx,0,2) = dtnorm*nrm(1);
+			gbl->sdt(indx,0,0) = 0.0; // Energy equation diaganol (Should be 1, but with 0 here it drives the normal motion with the energy equation like original version);
+			gbl->sdt(indx,0,1) = -dtnorm*nrm(0)/x.gbl->sprcn(sind,c0_indices[0]);
+			gbl->sdt(indx,0,2) = -dtnorm*nrm(1)/x.gbl->sprcn(sind,c0_indices[0]);
 			
 			gbl->sdt(indx,1,0) = 0.0;
 			gbl->sdt(indx,1,1) = -dttang*nrm(1);
 			gbl->sdt(indx,1,2) =  dttang*nrm(0);
 			
 			// Kinetic Equation
-			gbl->sdt(indx,2,0) = (-dKcdT*vnrm +h)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
+			gbl->sdt(indx,2,0) = (-dKcdT*vnrm +h)*gbl->rho_s*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 			gbl->sdt(indx,2,1) = (-Kc*x.gbl->bd(0))*nrm(0)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));  // Missing term here for dK/dTheta
 			gbl->sdt(indx,2,2) = (-Kc*x.gbl->bd(0))*nrm(1)*gbl->rho_l*RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0))); // Missing term here for dK/dTheta
 		}
@@ -402,11 +401,15 @@ void melt_cd::setup_preconditioner() {
 	if (gbl->is_loop) {
 		for(int m=0;m<tri_mesh::ND;++m)
 			for(int n=0;n<tri_mesh::ND;++n)
-				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
-		gbl->vdt(base.nseg+1,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
+				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg,m,n));
+		gbl->vdt(base.nseg,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
 	}
 	
+	
+	
 	for(indx=0;indx<base.nseg+1;++indx) {
+		// *x.gbl->log << gbl->vdt(indx,Range::all(),Range::all()) << std::endl;
+		
 		/* INVERT 3x3 VERTEX MATRICES */
 		int info;
 		GETRF(3,3,&gbl->vdt(indx,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(indx,0),info);
@@ -538,10 +541,230 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	return;
 }
 
+#if defined(petsc) && defined(ANALYTIC_JACOBIAN) 
+void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
+	
+	/* This is an analytic expression for the jacobian with kinetics */
+	/* This overrides the numerical derivative */
+	/* I was worried about precision because of the non-linear kinetics */
+	TinyVector<FLT,tri_mesh::ND> aPoint,us;
+	const int Tindx = c0_indices[0];
+	int sign_dir;
+	
+	
+	
+	if (!gbl->symmetric && !is_master) {
+		hp_coupled_bdry::element_jacobian(indx, K);
+		return;
+	}
+	
+	/* For testing */
+#ifdef TEST_ANALYTIC_JACOBIAN
+	hp_coupled_bdry::element_jacobian(indx, K);
+	*x.gbl->log << indx << std::endl;
+	*x.gbl->log << K << std::endl;
+#endif
+	
+	aPoint = 0.0;
+	if (x.NV > 1) {
+		// get solid velocity
+		for (int n=0;n<tri_mesh::ND;++n)
+			us(n) = ibc->f(n, aPoint, 0.0);
+		sign_dir = 1.0;
+	}
+	else {
+		tri_hp_cd& xcd = dynamic_cast<tri_hp_cd&>(x);
+#ifdef CONST_A
+		us(0) = xcd.gbl->ax;
+		us(1) = xcd.gbl->ay;
+#else
+		for (int n=0;n<tri_mesh::ND;++n)
+			us(n) = gbl->a(n, aPoint, 0.0);
+#endif
+		sign_dir = -1;
+	}
+	
+	
+	int i,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp, aloc, anorm, amv;
+	Array<FLT,1> ubar(x.NV);
+	FLT jcb,sint;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,8,MXGP> res;
+	Array<FLT,3> dres(5,3,MXGP);
+	
+	sind = base.seg(indx);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	
+	x.crdtocht1d(sind);
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+	
+	x.ugtouht1d(sind);
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));
+	
+	const int sm = basis::tri(x.log2p)->sm();
+	for (int m=0;m<sm+2;++m) {
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+			
+			/* This part is actually m independent and could be done ahead of time */
+			norm(0) =  dcrd(1,i);
+			norm(1) = -dcrd(0,i);
+			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+			
+			Array<FLT,1> au(x.NV), flx(x.NV);
+			aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
+			
+			amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)));
+			amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+			amv(0) += x.gbl->mesh_ref_vel(0);
+			amv(1) += x.gbl->mesh_ref_vel(1);
+#endif
+			anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
+			
+			/* This is from Weinsteins expression */
+			sint = sign_dir*(-gbl->facetdir(0)*anorm(1) +gbl->facetdir(1)*anorm(0));
+			FLT DT = ibc->f(Tindx, aloc, x.gbl->time) -u(Tindx)(i);
+			FLT Kc = calculate_kinetic_coefficients(DT,sint);
+			/* Calculate relative velocity */
+			amv = us-amv;
+			
+			
+			/* TANGENTIAL SPACING */
+			// res(0,i) = -ksprg(indx)*sign_dir*jcb;
+			/* NORMAL FLUX */
+			res(1,i) = RAD(crd(0,i))*gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1));
+			/* Kinetic equation for surface temperature */
+			res(2,i) = RAD(crd(0,i))*gbl->rho_s*(-DT)*jcb +Kc*res(1,i);
+			/* Heat source */
+			// res(3,i) =  -(is_master)*gbl->Lf*res(1,i) +(!base.is_comm())*(RAD(crd(0,i))*flx(Tindx)*jcb +gbl->rho_s*gbl->cp_s*u(Tindx)(i)*res(1,i));
+			
+			/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */
+			//		res(4,i) = -res(3,i)*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*gbl->meshc(indx);
+			
+			/* UPWINDING KINETIC EQUATION BASED ON TANGENTIAL VELOCITY */
+			// res(4,i) = -res(2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*gbl->meshc(indx);
+			
+			/* This is a linearization of Gibbs-Thomson for a horizontal surface */
+			// res(4,i) += RAD(crd(0,i))*gbl->Kgt*anorm(0);
+			
+			TinyVector<FLT,tri_mesh::ND> dsintdanorm,djcbdnorm,djcbdcht,dsintdcht;
+			TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dnormdcht,danormdcht;
+			
+			dsintdanorm(0) = sign_dir*gbl->facetdir(1);
+			dsintdanorm(1) = -sign_dir*gbl->facetdir(0);
+//			FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
+//			
+//			if (sint == 0.0) {
+//				K = K2Dn_exp;
+//			}
+//			else {
+//				K = pow(pow(gbl->Krough,p) + pow(gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
+//			}
+			FLT dKdsint,dKdT;
+			const int p=2;
+			if (sint == 0.0) {
+				dKdsint = 0.0;
+				dKdT = Kc*gbl->A2Dn/(DT*DT);
+			}
+			else {
+				dKdsint = 1.0/p*pow(Kc,1.-p)*p*pow(gbl->Ksn/(fabs(sint) +EPSILON),p-1.)*gbl->Ksn/pow(fabs(sint) +EPSILON,2.0)*(sint > 0 ? -1 : 1);
+				dKdT = 0.0;
+			}
+			djcbdnorm(0) = 1/jcb*norm(0);
+			djcbdnorm(1) = 1/jcb*norm(1);
+			dnormdcht(0,0) = 0.0;
+			dnormdcht(1,1) = 0.0;
+			
+			/* This is the m-dependent stuff */
+			FLT dxdcht = basis::tri(x.log2p)->gx(i,m+1);
+			dnormdcht(0,1) = basis::tri(x.log2p)->dgx(i,m+1);
+			dnormdcht(1,0) = -basis::tri(x.log2p)->dgx(i,m+1);
+			djcbdcht(0) = djcbdnorm(1)*dnormdcht(1,0);
+			djcbdcht(1) = djcbdnorm(0)*dnormdcht(0,1);
+			danormdcht(0,0) = -norm(0)/(jcb*jcb)*djcbdcht(0);
+			danormdcht(0,1) = dnormdcht(0,1)/jcb -norm(0)/(jcb*jcb)*djcbdcht(1);
+			danormdcht(1,0) = dnormdcht(1,0)/jcb -norm(1)/(jcb*jcb)*djcbdcht(0);
+			danormdcht(1,1) = -norm(1)/(jcb*jcb)*djcbdcht(1);
+			FLT damvdcht =  -x.gbl->bd(0)*dxdcht;
+
+			for (int n=0;n<tri_mesh::ND;++n) {
+				dsintdcht(n) = dsintdanorm(0)*danormdcht(0,n) +dsintdanorm(1)*danormdcht(1,n);
+				dres(0,n,i) = -ksprg(indx)*sign_dir*djcbdcht(n);
+			}
+			dres(1,0,i) = (1-RAD(0))*dxdcht*gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1)) +
+										RAD(crd(0,i))*gbl->rho_s*sign_dir*(damvdcht*norm(0) +amv(1)*dnormdcht(1,0));
+			dres(1,1,i) = RAD(crd(0,i))*gbl->rho_s*sign_dir*(amv(0)*dnormdcht(0,1) +damvdcht*norm(1));
+			dres(2,0,i) =  (1-RAD(0))*dxdcht*gbl->rho_s*(-DT)*jcb
+										+RAD(crd(0,i))*gbl->rho_s*(-DT)*djcbdcht(0)
+										+dKdsint*dsintdcht(0)*res(1,i) +Kc*dres(1,0,i);
+			dres(2,1,i) = RAD(crd(0,i))*gbl->rho_s*(-DT)*djcbdcht(1)
+										+dKdsint*dsintdcht(1)*res(1,i) +Kc*dres(1,1,i);
+			dres(2,2,i) = (RAD(crd(0,i))*gbl->rho_s*jcb +dKdT*res(1,i))*basis::tri(x.log2p)->gx(i,m+1);
+			
+			for (int n=0;n<tri_mesh::ND;++n) {
+				dres(3,n,i) = -(is_master)*gbl->Lf*dres(1,n,i);
+			}
+			
+			/* UPWINDING KINETIC EQUATION BASED ON TANGENTIAL VELOCITY */
+			dres(4,0,i) = -dres(2,0,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*gbl->meshc(indx)
+										-res(2,i)*sign_dir*(-dnormdcht(1,0)*amv(0) -norm(1)*damvdcht)/jcb*gbl->meshc(indx)
+										+res(2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/(jcb*jcb)*djcbdcht(0)*gbl->meshc(indx);
+			dres(4,1,i) = -dres(2,1,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*gbl->meshc(indx)
+										-res(2,i)*sign_dir*(dnormdcht(0,1)*amv(1) +norm(0)*damvdcht)/jcb*gbl->meshc(indx)
+										+res(2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/(jcb*jcb)*djcbdcht(1)*gbl->meshc(indx);
+			dres(4,2,i) = -dres(2,2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*gbl->meshc(indx);
+			
+			dres(4,0,i) += (1-RAD(0))*dxdcht*gbl->Kgt*anorm(0) +RAD(crd(0,i))*gbl->Kgt*danormdcht(0,0);
+			dres(4,1,i) += RAD(crd(0,i))*gbl->Kgt*danormdcht(0,1);
+		}
+		
+		Array<TinyVector<FLT,MXTM>,1> lf(x.NV+NV);
+		/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
+		for (int n=0;n<tri_mesh::ND;++n) {
+			lf = 0.0;
+			basis::tri(x.log2p)->intgrt1d(&lf(Tindx)(0),&dres(3,n,0)); // heat flux
+			//	basis::tri(x.log2p)->intgrtx1d(&lf(Tindx)(0),&res(4,0)); // surface energy balance upwinded (not used)
+			
+			if (x.NV > 1) basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&dres(1,n,0)); // mass flux
+			basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&dres(0,n,0)); // tangent
+			basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&dres(2,n,0)); // kinetic equation
+			basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&dres(4,n,0)); // kinetic equation upwinded
+			//	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1)(0),&res(4,0)); // mass flux upwinded
+			
+			int kcol = m*(x.NV+NV) +x.NV +n;
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int neq=0;neq<x.NV+NV;++neq)
+					K(krow++,kcol) = lf(neq)(k);
+		}
+		lf = 0.0;
+		basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&dres(2,2,0)); // kinetic equation
+		basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&dres(4,2,0)); // kinetic equation upwinded
+		int kcol = m*(x.NV+NV) +Tindx;
+		int krow = 0;
+		for(int k=0;k<sm+2;++k)
+			for(int neq=0;neq<x.NV+NV;++neq)
+				K(krow++,kcol) = lf(neq)(k);
+	}
+	
+#ifdef TEST_ANALYTIC_JACOBIAN
+	*x.gbl->log << indx << ' ' << sint << std::endl;
+	*x.gbl->log << K << std::endl;
+#endif
+	
+	return;
+}
+#endif
+
 void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	
 	const int Tindx = c0_indices[0];
-	
+
 	hp_deformable_free_pnt::element_rsdl(lf);
 	
 	if (!surf->gbl->symmetric && !surf->is_master) return;
@@ -608,7 +831,7 @@ void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	//     FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
 	
 	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
-	FLT res1 = jcb*RAD(xp(0))*surf1->gbl->rho_s*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
+	FLT res1 = RAD(xp(0))*surf1->gbl->rho_s*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1))*jcb;
 	/* Kinetic equation for surface temperature */
 	lf(x.NV+1) = RAD(xp(0))*surf1->gbl->rho_s*(-DT)*jcb +res1*K;  // -gbl->K_gt*kappa?;
 }
@@ -628,6 +851,7 @@ void melt_facet_pt::rsdl(int stage) {
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> lf(vdofs);
+	lf = 0.0;
 	
 	int endpt,seg,sind;
 	const int bnum = base.ebdry(surfbdry);

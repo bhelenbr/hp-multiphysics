@@ -185,7 +185,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../lib,
-					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				OTHER_LDFLAGS = (
 					"-lmuparser",
@@ -201,7 +201,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../lib,
-					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				OTHER_LDFLAGS = (
 					"-lmuparser",
@@ -237,7 +237,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";
-				USER_HEADER_SEARCH_PATHS = "$(PACKAGES)/include ../include";
+				USER_HEADER_SEARCH_PATHS = "/usr/local/include ../include";
 			};
 			name = Debug;
 		};
@@ -264,7 +264,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PACKAGES = "$(HOME)/Packages";
-				USER_HEADER_SEARCH_PATHS = "$(PACKAGES)/include ../include";
+				USER_HEADER_SEARCH_PATHS = "/usr/local/include ../include";
 			};
 			name = Release;
 		};

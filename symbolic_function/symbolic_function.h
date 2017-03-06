@@ -85,6 +85,12 @@ template<int N> class symbolic_function {
 		assert(nchild_temp == nchildren);
 	}
 	
+	~symbolic_function() {
+		for (int n=0;n<nchildren;++n) {
+			delete children(n);
+		}
+	}
+	
 	void operator=(const symbolic_function& tgt) {
 		/* Delete Children */
 		for(int n=0;n<nchildren;++n)
@@ -450,6 +456,11 @@ public:
 		// vector_function(); // Why doesn't this work????
 		set_arguments(nargs_,dims_,names_);
 	}
+	
+	~vector_function() {
+		for(int n=0;n<nchildren;++n)
+			delete children(n);
+	}	
 	
 	double Eval(blitz::Array<double,1> a0, double t = 0.0) {
 		assert(nargs == 1);

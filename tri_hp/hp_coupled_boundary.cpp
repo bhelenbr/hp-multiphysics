@@ -364,11 +364,28 @@ void hp_coupled_bdry::update(int stage) {
 		
 #ifdef DEBUG
 //		if (x.coarse_flag) {
-		for(int i=0;i<base.nseg+1;++i)
-			*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i,0,0) << ' ' << gbl->vdt(i,0,1) << ' ' << gbl->vdt(i,1,0) << ' ' << gbl->vdt(i,1,1) << '\n';
-		
-		for(int i=0;i<base.nseg;++i)
-			*x.gbl->log << "sdt: " << i << ' ' << gbl->sdt(i,0,0) << ' ' << gbl->sdt(i,0,1) << ' ' << gbl->sdt(i,1,0) << ' ' << gbl->sdt(i,1,1) << '\n';
+		const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+
+		for(int i=0;i<base.nseg+1;++i) {
+			for(int row=0;row<ncoupled;++row) {
+				*x.gbl->log << "vdt: " << i << ' ' << row << ' ';
+				for(int col=0;col<ncoupled;++col) {
+					*x.gbl->log << gbl->vdt(i,row,col) << ' ';
+				}
+				*x.gbl->log << std::endl;
+			}
+		}
+		if (basis::tri(x.log2p)->sm() > 0) {
+			for(int i=0;i<base.nseg;++i) {
+				for(int row=0;row<ncoupled;++row) {
+					*x.gbl->log << "sdt: " << i << ' ' << row << ' ';
+					for(int col=0;col<ncoupled;++col) {
+						*x.gbl->log << gbl->sdt(i,row,col) << ' ';
+					}
+					*x.gbl->log << std::endl;
+				}
+			}
+		}
 		
 		for(int i=0;i<base.nseg+1;++i) {
 			*x.gbl->log << "vres: " << i << ' ';
@@ -405,22 +422,49 @@ void hp_coupled_bdry::update(int stage) {
 //		}
 #endif
 		
+		const FLT cflalpha = x.gbl->alpha(stage)*x.gbl->cfl(x.log2p);		
 		i = 0;
 		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
 			for (int n=0;n<NV;++n)
-				x.pnts(v0)(n) = gbl->vug0(i,n) -x.gbl->alpha(stage)*gbl->vres(i,n);
+				x.pnts(v0)(n) = gbl->vug0(i,n) -cflalpha*gbl->vres(i,n);
 		} while (++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (int n=0;n<NV;++n)
-			x.pnts(v0)(n) = gbl->vug0(base.nseg,n) -x.gbl->alpha(stage)*gbl->vres(base.nseg,n);
+			x.pnts(v0)(n) = gbl->vug0(base.nseg,n) -cflalpha*gbl->vres(base.nseg,n);
 		
 		if (basis::tri(x.log2p)->sm() > 0) {
 			for(int i=0;i<base.nseg;++i)
 				for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 					for(int n=0;n<tri_mesh::ND;++n)
-						crv(i,m)(n) = gbl->sug0(i,m,n) -x.gbl->alpha(stage)*gbl->sres(i,m,n);
+						crv(i,m)(n) = gbl->sug0(i,m,n) -cflalpha*gbl->sres(i,m,n);
+		}
+		
+		if (gbl->field_is_coupled) {
+			i = 0;
+			do {
+				sind = base.seg(i);
+				v0 = x.seg(sind).pnt(0);
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -cflalpha*x.gbl->res.v(v0,*n);
+				}
+			} while (++i < base.nseg);
+			v0 = x.seg(sind).pnt(1);
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -cflalpha*x.gbl->res.v(v0,*n);
+			}
+			
+			if (basis::tri(x.log2p)->sm() > 0) {
+				for(int i=0;i<base.nseg;++i) {
+					sind = base.seg(i);
+					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+							x.ug.s(sind,m,*n) = x.gbl->ug0.s(sind,m,*n) -cflalpha*x.gbl->res.s(sind,m,*n);
+						}
+					}
+				}
+			}
 		}
 		
 		/* FIX POINTS THAT SLIDE ON CURVE */
@@ -469,6 +513,32 @@ void hp_coupled_bdry::update(int stage) {
 							base.fsndbuf(count++) = crv(i,m)(n);
 					}
 				}
+				if (gbl->field_is_coupled) {
+					i = 0;
+					do {
+						sind = base.seg(i);
+						v0 = x.seg(sind).pnt(0);
+						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+							base.fsndbuf(count++) = x.ug.v(v0,*n);
+						}
+					} while (++i < base.nseg);
+					v0 = x.seg(sind).pnt(1);
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						base.fsndbuf(count++) = x.ug.v(v0,*n);
+					}
+					
+					if (basis::tri(x.log2p)->sm() > 0) {
+						for(int i=0;i<base.nseg;++i) {
+							sind = base.seg(i);
+							for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+								for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+									base.fsndbuf(count++) = x.ug.s(sind,m,*n);
+								}
+							}
+						}
+					}
+				}
+
 				base.sndsize() = count;
 				base.sndtype() = boundary::flt_msg;
 				base.comm_prepare(boundary::all,0,boundary::master_slave);
@@ -508,6 +578,31 @@ void hp_coupled_bdry::update(int stage) {
 					}
 				}
 			}
+			
+			if (gbl->field_is_coupled) {
+				i = base.nseg-1;
+				do {
+					sind = base.seg(i);
+					v0 = x.seg(sind).pnt(1);
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n)
+						x.ug.v(v0,*n) = base.frcvbuf(0,count++);
+				} while (--i >= 0);
+				v0 = x.seg(sind).pnt(0);
+				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n)
+					x.ug.v(v0,*n) = base.frcvbuf(0,count++);
+				
+				if (basis::tri(x.log2p)->sm() > 0) {
+					for(i=base.nseg-1;i>=0;--i) {
+						sind = base.seg(i);
+						msgn = 1;
+						for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+							for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n)
+								x.ug.s(sind,m,*n) = msgn*base.frcvbuf(0,count++);
+							msgn *= -1;
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -518,20 +613,23 @@ void hp_coupled_bdry::minvrt() {
 	int i,m,n,indx;
 	int last_phase, mp_phase;
 	FLT temp;
+	const int sm = basis::tri(x.log2p)->sm();
 	
 	/* INVERT MASS MATRIX */
 	/* LOOP THROUGH SIDES */
-	if (basis::tri(x.log2p)->sm() > 0) {
+	if (sm > 0) {
 		for(indx = 0; indx<base.nseg; ++indx) {
 			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */
-			for (m=0; m <basis::tri(x.log2p)->sm(); ++m) {
-				for(n=0;n<NV;++n)
+			for (m=0; m < sm; ++m) {
+				for(n=0;n<NV;++n) {
 					gbl->vres(indx,n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m,n);
-				for(n=0;n<NV;++n)
 					gbl->vres(indx+1,n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m,n);
+				}
 			}
 		}
+		// This is not necessary for flow vars because flow update will do this (sort of)
 	}
+	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vres(0,0),0,1,0);
 		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vres(base.nseg,0),0,1,0);
@@ -552,27 +650,120 @@ void hp_coupled_bdry::minvrt() {
 	
 	if (gbl->is_loop) {
 		for(int n=0;n<NV;++n) {
-			gbl->vres(0,n) = 0.5*(gbl->vres(0,n) +gbl->vres(base.nseg+1,n));
-			gbl->vres(base.nseg+1,n) = gbl->vres(0,n);
+			gbl->vres(0,n) = 0.5*(gbl->vres(0,n) +gbl->vres(base.nseg,n));
+			gbl->vres(base.nseg,n) = gbl->vres(0,n);
 		}
-		//		FIXME: Going to need to make a loop boundary condition vertex to make this general
-		//		gbl->vres(0)(0) = 0.0;
-		//		gbl->vres(base.nseg+1)(0) = 0.0;
+		gbl->vres(0,0) = 0.0;
+		gbl->vres(base.nseg,0) = 0.0;
 	}
 	x.hp_vbdry(base.vbdry(0))->vdirichlet();
 	x.hp_vbdry(base.vbdry(1))->vdirichlet();
 	
-	
 	/* SOLVE FOR VERTEX MODES */
-	/* FIXME: THIS IS NOT GENERAL ONLY FOR 2 RIGHT NOW */
-	for(i=0;i<base.nseg+1;++i) {
-		temp                     = gbl->vres(i,0)*gbl->vdt(i,0,0) +gbl->vres(i,1)*gbl->vdt(i,0,1);
-		gbl->vres(i,1) = gbl->vres(i,0)*gbl->vdt(i,1,0) +gbl->vres(i,1)*gbl->vdt(i,1,1);
-		gbl->vres(i,0) = temp;
+	if (gbl->field_is_coupled) {
+		int info;
+		char trans[] = "T";
+		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+		const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+		Array<FLT,1> res_vec(ncoupled);
+
+		for(i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			int v0 = x.seg(sind).pnt(0);
+			int indx = 0;
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				res_vec(indx++) = x.gbl->res.v(v0,*n);
+			}
+			for(int n=0;n<NV;++n) {
+				res_vec(indx++) = gbl->vres(i,n);
+			}
+
+			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+			if (info != 0) {
+				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			}
+			indx = 0;
+			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+				x.gbl->res.v(v0,*n) = res_vec(indx++);
+			}
+			for(int n=0;n<NV;++n) {
+			 gbl->vres(i,n) = res_vec(indx++);
+			}
+		}
+		int sind = base.seg(base.nseg-1);
+		int v0 = x.seg(sind).pnt(1);
+		int indx = 0;
+		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+			res_vec(indx++) = x.gbl->res.v(v0,*n);
+		}
+		for(int n=0;n<NV;++n) {
+			res_vec(indx++) = gbl->vres(base.nseg,n);
+		}
+		
+		GETRS(trans,ncoupled,1,&gbl->vdt(base.nseg,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(base.nseg,0),res_vec.data(),ncoupled,info);
+		if (info != 0) {
+			*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
+		}
+		
+		indx = 0;
+		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+			x.gbl->res.v(v0,*n) = res_vec(indx++);
+		}
+		for(int n=0;n<NV;++n) {
+			 gbl->vres(base.nseg,n) = res_vec(indx++);
+		}
+		
+		if (sm > 0) {
+			for(int j=0;j<base.nseg;++j) {
+				const int sind = base.seg(j);
+				
+				for(int m=0;m<sm;++m) {
+					int indx = 0;
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						res_vec(indx++) = x.gbl->res.s(sind,m,*n);
+					}
+					for(int n=0;n<NV;++n) {
+						res_vec(indx++) = gbl->sres(j,m,n);
+					}
+					
+					int info;
+					char trans[] = "T";
+					GETRS(trans,ncoupled,1,&gbl->sdt(j,0,0),gbl->sdt.length(secondDim),&gbl->spiv(j,0),res_vec.data(),ncoupled,info);
+					if (info != 0) {
+						*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
+					}
+					
+					indx = 0;
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						x.gbl->res.s(sind,m,*n) = res_vec(indx++);
+					}
+					for(int n=0;n<NV;++n) {
+						gbl->sres(j,m,n) = res_vec(indx++);
+					}
+				}
+			}
+			
+			// FIXME: THIS IS MESSED UP.  MINVRT FOR THE FLOW SCREWS THIS ALL UP
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+				for(n=0;n<NV;++n) {
+					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx,n);
+					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1,n);
+				}
+			}
+		}
 	}
-	
-	/* SOLVE FOR SIDE MODES */
-	if (basis::tri(x.log2p)->sm() > 0) {
+	else {
+		// FIXME: THIS ONLY WORKS FOR 2 DECOUPLED SIDE VARIABLES (X & Y)
+		for(i=0;i<base.nseg+1;++i) {
+			temp                     = gbl->vres(i,0)*gbl->vdt(i,0,0) +gbl->vres(i,1)*gbl->vdt(i,0,1);
+			gbl->vres(i,1) = gbl->vres(i,0)*gbl->vdt(i,1,0) +gbl->vres(i,1)*gbl->vdt(i,1,1);
+			gbl->vres(i,0) = temp;
+		}
+
+		/* SOLVE FOR SIDE MODES */
 		for(indx = 0; indx<base.nseg; ++indx) {
 			
 #ifdef DETAILED_MINV
@@ -592,7 +783,6 @@ void hp_coupled_bdry::minvrt() {
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 #else
-			
 			/* INVERT SIDE MODES */
 			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0,0)),NV);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {

@@ -1,9 +1,6 @@
 #include "melt_buoyancy.h"
 #include <myblas.h>
 
-//#define MPDEBUG
-//#define DEBUG
-
 using namespace bdry_buoyancy;
 
 void surface_marangoni::init(input_map& inmap,void* gbl_in) {
