@@ -18,7 +18,7 @@
 //#define OLDKINETICS
 //#define TWOFACETS
 
-// #define ANALYTIC_JACOBIAN
+#define ANALYTIC_JACOBIAN
 
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {
@@ -66,6 +66,7 @@ namespace bdry_cd {
 		melt_facet_pt(const melt_facet_pt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
 		melt_facet_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt(*this,xin,bin);}
 		
+		void init(input_map& inmap, void* gbl_in);
 		void rsdl(int stage);
 		void element_rsdl(Array<FLT,1> lf);
 #ifdef petsc

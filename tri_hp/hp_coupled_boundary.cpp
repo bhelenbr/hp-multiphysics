@@ -610,18 +610,16 @@ void hp_coupled_bdry::update(int stage) {
 }
 
 void hp_coupled_bdry::minvrt() {
-	int i,m,n,indx;
-	int last_phase, mp_phase;
 	FLT temp;
 	const int sm = basis::tri(x.log2p)->sm();
 	
 	/* INVERT MASS MATRIX */
 	/* LOOP THROUGH SIDES */
 	if (sm > 0) {
-		for(indx = 0; indx<base.nseg; ++indx) {
+		for(int indx = 0; indx<base.nseg; ++indx) {
 			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */
-			for (m=0; m < sm; ++m) {
-				for(n=0;n<NV;++n) {
+			for (int m=0; m < sm; ++m) {
+				for(int n=0;n<NV;++n) {
 					gbl->vres(indx,n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m,n);
 					gbl->vres(indx+1,n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m,n);
 				}
@@ -630,7 +628,7 @@ void hp_coupled_bdry::minvrt() {
 		// This is not necessary for flow vars because flow update will do this (sort of)
 	}
 	
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vres(0,0),0,1,0);
 		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vres(base.nseg,0),0,1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
@@ -663,11 +661,10 @@ void hp_coupled_bdry::minvrt() {
 	if (gbl->field_is_coupled) {
 		int info;
 		char trans[] = "T";
-		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 		const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
 		Array<FLT,1> res_vec(ncoupled);
 
-		for(i=0;i<base.nseg;++i) {
+		for(int i=0;i<base.nseg;++i) {
 			int sind = base.seg(i);
 			int v0 = x.seg(sind).pnt(0);
 			int indx = 0;
@@ -747,8 +744,8 @@ void hp_coupled_bdry::minvrt() {
 			}
 			
 			// FIXME: THIS IS MESSED UP.  MINVRT FOR THE FLOW SCREWS THIS ALL UP
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-				for(n=0;n<NV;++n) {
+			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+				for(int n=0;n<NV;++n) {
 					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx,n);
 					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1,n);
 				}
@@ -757,14 +754,14 @@ void hp_coupled_bdry::minvrt() {
 	}
 	else {
 		// FIXME: THIS ONLY WORKS FOR 2 DECOUPLED SIDE VARIABLES (X & Y)
-		for(i=0;i<base.nseg+1;++i) {
+		for(int i=0;i<base.nseg+1;++i) {
 			temp                     = gbl->vres(i,0)*gbl->vdt(i,0,0) +gbl->vres(i,1)*gbl->vdt(i,0,1);
 			gbl->vres(i,1) = gbl->vres(i,0)*gbl->vdt(i,1,0) +gbl->vres(i,1)*gbl->vdt(i,1,1);
 			gbl->vres(i,0) = temp;
 		}
 
 		/* SOLVE FOR SIDE MODES */
-		for(indx = 0; indx<base.nseg; ++indx) {
+		for(int indx = 0; indx<base.nseg; ++indx) {
 			
 #ifdef DETAILED_MINV
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
@@ -785,14 +782,14 @@ void hp_coupled_bdry::minvrt() {
 #else
 			/* INVERT SIDE MODES */
 			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0,0)),NV);
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 				temp                             = gbl->sres(indx,m,0)*gbl->sdt(indx,0,0) +gbl->sres(indx,m,1)*gbl->sdt(indx,0,1);
 				gbl->sres(indx,m,1) = gbl->sres(indx,m,0)*gbl->sdt(indx,1,0) +gbl->sres(indx,m,1)*gbl->sdt(indx,1,1);
 				gbl->sres(indx,m,0) = temp;
 			}
 			
-			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-				for(n=0;n<NV;++n) {
+			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+				for(int n=0;n<NV;++n) {
 					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx,n);
 					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1,n);
 				}

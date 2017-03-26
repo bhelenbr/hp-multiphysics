@@ -20,6 +20,8 @@
 #include "myblas.h"
 #include "melt_cd.h"
 
+//#define TEST_ANALYTIC_JACOBIAN
+
 using namespace bdry_cd;
 
 void melt_cd::init(input_map& inmap,void* gbl_in) {
@@ -564,6 +566,8 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 	*x.gbl->log << indx << std::endl;
 	*x.gbl->log << K << std::endl;
 #endif
+	K=0.0;  // make sure derivatives with respect to u,v,p are 0
+
 	
 	aPoint = 0.0;
 	if (x.NV > 1) {
@@ -760,6 +764,29 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 	return;
 }
 #endif
+
+void melt_facet_pt::init(input_map& inmap,void* gbl_in) {
+	std::string keyword;
+	
+	if (x.NV == 1) {
+		/* Let temperature be continuous */
+		inmap[base.idprefix +"_c0_indices"] = "0";
+		keyword = base.idprefix + "_hp_typelist";
+		inmap[keyword] = "1";
+	}
+	else {
+		/* Let temperature be continuous */
+		inmap[base.idprefix +"_c0_indices"] = "2";
+		
+		/* Make u & v dirichlet B.C.'s */
+		keyword = base.idprefix + "_hp_typelist";
+		inmap[keyword] = "0 0 1 1";
+	}
+	
+	hp_deformable_free_pnt::init(inmap,gbl_in);
+
+}
+	
 
 void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	
