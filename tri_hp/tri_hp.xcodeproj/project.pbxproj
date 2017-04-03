@@ -259,6 +259,8 @@
 		E63D72EF1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72F01CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72F11CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E6402C8E1E8D5CEB00202FC8 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6402C8B1E8D5B8200202FC8 /* rsdl.cpp */; };
+		E6402C901E8D615000202FC8 /* mass_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6402C8F1E8D615000202FC8 /* mass_matrix.cpp */; };
 		E64A35DF1AACD76B008BAE74 /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
 		E64A35E21AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
@@ -678,6 +680,9 @@
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
 		E6367B551E3F9B9B00695A3D /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_vrtx_bdry.cpp; sourceTree = "<group>"; };
+		E6402C8B1E8D5B8200202FC8 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = dani/rsdl.cpp; sourceTree = "<group>"; };
+		E6402C8C1E8D5B8200202FC8 /* tri_hp_dani.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_dani.h; path = dani/tri_hp_dani.h; sourceTree = "<group>"; };
+		E6402C8F1E8D615000202FC8 /* mass_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mass_matrix.cpp; path = dani/mass_matrix.cpp; sourceTree = "<group>"; };
 		E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_getnewbdry.cpp; sourceTree = "<group>"; };
 		E658002813E2CFC400A01E99 /* tri_hp_nonnewtonian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_nonnewtonian.h; path = nonnewtonian/tri_hp_nonnewtonian.h; sourceTree = "<group>"; };
 		E658002913E2CFC400A01E99 /* tri_hp_nonnewtonian.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tri_hp_nonnewtonian.cpp; path = nonnewtonian/tri_hp_nonnewtonian.cpp; sourceTree = "<group>"; };
@@ -800,6 +805,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				6FB40B1F091AF64E002BAA09 /* Conv-Diff */,
+				E6402C8A1E8D5B1500202FC8 /* Dani */,
 				6FB40B1E091AF5F2002BAA09 /* Incompressible */,
 				6F681E390F533020005F5783 /* Compressible */,
 				6F1F0B16113E051900F200CC /* Compressible_cv */,
@@ -1041,6 +1047,16 @@
 			children = (
 			);
 			name = Documentation;
+			sourceTree = "<group>";
+		};
+		E6402C8A1E8D5B1500202FC8 /* Dani */ = {
+			isa = PBXGroup;
+			children = (
+				E6402C8C1E8D5B8200202FC8 /* tri_hp_dani.h */,
+				E6402C8B1E8D5B8200202FC8 /* rsdl.cpp */,
+				E6402C8F1E8D615000202FC8 /* mass_matrix.cpp */,
+			);
+			name = Dani;
 			sourceTree = "<group>";
 		};
 		E658002313E2CF6200A01E99 /* NonNewtonian */ = {
@@ -1427,6 +1443,7 @@
 			files = (
 				E67EBAB012D603C50011EB69 /* main.cpp in Sources */,
 				E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */,
+				E6402C8E1E8D5CEB00202FC8 /* rsdl.cpp in Sources */,
 				E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */,
 				E67EBAB312D603C50011EB69 /* hp_boundary.cpp in Sources */,
 				E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */,
@@ -1439,6 +1456,7 @@
 				E60E814D180AE3A00067E2E7 /* setup_preconditioner.cpp in Sources */,
 				E67EBABA12D603C50011EB69 /* tobasis.cpp in Sources */,
 				E67EBABB12D603C50011EB69 /* getnewblock.cpp in Sources */,
+				E6402C901E8D615000202FC8 /* mass_matrix.cpp in Sources */,
 				E67EBABC12D603C50011EB69 /* hp_getnewibc.cpp in Sources */,
 				E67EBABD12D603C50011EB69 /* allocate.cpp in Sources */,
 				E67EBABE12D603C50011EB69 /* copy.cpp in Sources */,
@@ -1802,6 +1820,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lslepc",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
@@ -1826,6 +1845,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lslepc",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";

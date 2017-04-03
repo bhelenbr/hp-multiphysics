@@ -21,6 +21,7 @@
 
 #include <limits.h>
 #include <petsctime.h>
+#include <slepceps.h>
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
@@ -182,6 +183,10 @@ void tri_hp::petsc_initialize(){
 	J_mpi.resize(jacobian_size,nnzero_mpi); //,jacobian_start);
 	err = MatCreate(PETSC_COMM_SELF,&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
+#ifdef EIGENVALUE
+	err = MatCreate(PETSC_COMM_SELF,&petsc_M);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+#endif
 #else
 #ifndef MPISRC
 	err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
@@ -253,6 +258,169 @@ void tri_hp::petsc_finalize(){
 	return;
 }
 
+void tri_hp::eigenvalues() {
+	EPS                eps;             /* eigenproblem solver context */
+	PetscErrorCode err;
+
+	/* Not sure if I have to delete it each time or not */
+	err = MatDestroy(&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+
+	err = MatDestroy(&petsc_M);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+
+	/***************/
+	/* Mass matrix */
+	/***************/
+	create_mass_matrix(M);
+	
+//	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
+//	for(int i=0;i<nebd;++i)
+//		hp_ebdry(i)->petsc_jacobian();
+//	
+//	for(int i=0;i<nvbd;++i)
+//		hp_vbdry(i)->petsc_jacobian();
+//	
+//	/* SEND COMMUNICATIONS TO ADJACENT MESHES */
+//	for(int last_phase = false, phase = 0; !last_phase; ++phase) {
+//		for(int i=0;i<nebd;++i)
+//			hp_ebdry(i)->petsc_matchjacobian_snd();
+//		
+//		for(int i=0;i<nvbd;++i)
+//			hp_vbdry(i)->petsc_matchjacobian_snd();
+//		
+//		for(int i=0;i<nebd;++i)
+//			ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+//		
+//		for(int i=0;i<nvbd;++i)
+//			vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+//		
+//		pmsgpass(boundary::all_phased,phase,boundary::symmetric);
+//		
+//		last_phase = true;
+//		for(int i=0;i<nebd;++i) {
+//			last_phase &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+//		}
+//		for(int i=0;i<nvbd;++i) {
+//			last_phase &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+//		}
+//		
+//		for(int i=0;i<nebd;++i)
+//			hp_ebdry(i)->petsc_matchjacobian_rcv(phase);
+//		
+//		for(int i=0;i<nvbd;++i)
+//			hp_vbdry(i)->petsc_matchjacobian_rcv(phase);
+//		
+//	}
+//	
+//	for(int i=0;i<nebd;++i)
+//		hp_ebdry(i)->petsc_jacobian_dirichlet();
+//	
+//	for(int i=0;i<nvbd;++i)
+//		hp_vbdry(i)->petsc_jacobian_dirichlet();
+//
+//	petsc_premultiply_jacobian();
+//	
+//	M = J;
+//	M_mpi = J_mpi;
+	M.check_for_unused_entries(*gbl->log);
+	Array<int,1> nnzero_mpi(jacobian_size);
+	nnzero_mpi = 0;
+	M_mpi.resize(jacobian_size,nnzero_mpi); //,jacobian_start);
+	M_mpi.check_for_unused_entries(*gbl->log);
+	
+	/***************/
+	/* Jacobian    */
+	/***************/
+	petsc_jacobian();
+	petsc_premultiply_jacobian();
+	
+	if (gbl->jac_debug)	{
+		streamsize oldprecision = (*gbl->log).precision(2);
+		*gbl->log << "J:\n";
+		*gbl->log << J << std::endl;
+		*gbl->log << "J_mpi:\n";
+		*gbl->log << J_mpi << std::endl;
+		(*gbl->log).precision(oldprecision);
+	}
+	J.check_for_unused_entries(*gbl->log);
+	J_mpi.check_for_unused_entries(*gbl->log);
+	
+	/***********************/
+	/* Create Petsc Arrays */
+	/***********************/
+#ifndef MPISRC
+	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,M._cpt.data(),M._col.data(),M._val.data(),&petsc_M);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+#else
+	int total_size;
+	sim::blks.allreduce(&jacobian_size, &total_size, 1, blocks::int_msg, blocks::sum);
+	err =  MatCreateMPIAIJWithSplitArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
+																				J._cpt.data(),J._col.data(),J._val.data(),J_mpi._cpt.data(),J_mpi._col.data(),J_mpi._val.data(),&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err =  MatCreateMPIAIJWithSplitArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
+																				M._cpt.data(),M._col.data(),M._val.data(),M_mpi._cpt.data(),M_mpi._col.data(),M_mpi._val.data(),&petsc_M);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+#endif
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+							Create the eigensolver and set various options
+	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	EPSCreate(PETSC_COMM_WORLD,&eps);
+	EPSSetOperators(eps,petsc_J,petsc_M);
+	EPSSetFromOptions(eps);
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+										Solve the eigensystem
+	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	EPSSolve(eps);
+	
+	PetscReal      error,re,im;
+	PetscScalar    kr,ki;
+	Vec            xr,xi;
+	PetscInt       n=30,i,nev,nconv;
+	EPSGetConverged(eps,&nconv);
+	PetscPrintf(PETSC_COMM_WORLD," Number of converged eigenpairs: %D\n\n",nconv);
+	
+	MatCreateVecs(petsc_J,NULL,&xr);
+	MatCreateVecs(petsc_J,NULL,&xi);
+	
+	
+	if (nconv>0) {
+		/* Display eigenvalues and relative errors */
+		PetscPrintf(PETSC_COMM_WORLD,
+							 "           k          ||Ax-kx||/||kx||\n"
+							 "   ----------------- ------------------\n");
+	 
+		for (i=0;i<nconv;i++) {
+			/* Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part) */
+			EPSGetEigenpair(eps,i,&kr,&ki,xr,xi);
+			/* Compute the relative error associated to each eigenpair */
+			EPSComputeError(eps,i,EPS_ERROR_RELATIVE,&error);
+		 
+#if defined(PETSC_USE_COMPLEX)
+			re = PetscRealPart(kr);
+			im = PetscImaginaryPart(kr);
+#else
+			re = kr;
+			im = ki;
+#endif
+			if (im != 0.0) {
+				*gbl->log << (double) re << ' ' << (double) im << ' ' << (double) error << std::endl;
+			}
+			else {
+				*gbl->log << (double) re << ' ' << (double) error << std::endl;
+			}
+		}
+		PetscPrintf(PETSC_COMM_WORLD,"\n");
+ }
+}
+
 
 void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
@@ -261,7 +429,6 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscTime(&time1);
 	
 #ifdef MY_SPARSE
-
 	/* Not sure if I have to delete it each time or not */
 	err = MatDestroy(&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);

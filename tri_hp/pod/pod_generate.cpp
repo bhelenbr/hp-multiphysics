@@ -190,7 +190,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
 	
 #ifdef USING_MASS_MATRIX
-	create_mass_matrix(mass);
+	BASE::create_mass_matrix(mass);
 #endif
 	
 #ifdef DIRECT_METHOD
@@ -581,114 +581,6 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	
 	return;
 }
-
-
-template<class BASE> void pod_generate<BASE>::create_mass_matrix(sparse_row_major& mass) {
-	
-	/* Calculate Storage for Sparse Mass Matrix */
-	const int sm=basis::tri(BASE::log2p)->sm();
-	const int im=basis::tri(BASE::log2p)->im();
-	const int tm=basis::tri(BASE::log2p)->tm();
-	const int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
-	
-	/* rank of mass matrix */
-	const int size = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
-	
-	/* find number of non-zeros for each row */
-	Array<int,1> nnzero(size);
-	const int begin_seg = BASE::npnt;
-	const int begin_tri = begin_seg+BASE::nseg*sm;
-	const int ndofs = begin_tri +BASE::ntri*im;
-	
-	/* SELF CONNECTIONS */
-	nnzero(Range(0,begin_seg-1)) = 1;
-	if (sm) {
-		nnzero(Range(begin_seg,begin_tri-1)) = (2 +sm);
-	}
-	if (im) nnzero(Range(begin_tri,ndofs-1)) = tm;
-	
-	/* edges and vertices connected to a vertex */
-	for(int i=0; i<BASE::npnt; ++i)
-		nnzero(i) += BASE::pnt(i).nnbor*(sm+1);
-	
-	for(int i=0; i<BASE::ntri; ++i) {
-		/* interior and opposing side mode for each vertex */
-		for(int j=0;j<3;++j)
-			nnzero(BASE::tri(i).pnt(j)) += (im+sm);
-		
-		
-		/* interior modes,opposing side modes, and opposing vertex to each side */
-		for(int j=0;j<3;++j)
-			for(int m=0;m<sm;++m)
-				nnzero(begin_seg+BASE::tri(i).seg(j)*sm+m) += im +2*sm +1;
-	}
-	mass.resize(size,nnzero);
-	
-	/* Calculate Sparse Mass Matrix */
-	BASE::uht(0) = 0.0;
-	
-	for(int tind=0;tind<BASE::ntri;++tind) {
-		
-		/* Create vector of global indices */
-		Array<int,1> gindx(tm),gsign(tm);
-		gsign=1;
-		
-		/* VERTEX MODES */
-		int indx = 0;
-		for (int m=0; m<3; ++m) {
-			gindx(indx++) = BASE::tri(tind).pnt(m);
-		}
-		
-		if (sm > 0) {
-			/* SIDE MODES */
-			for(int i=0;i<3;++i) {
-				int sind = BASE::npnt +BASE::tri(tind).seg(i)*sm;
-				int sgn = BASE::tri(tind).sgn(i);
-				int msgn = 1;
-				for (int m = 0; m < sm; ++m) {
-					gindx(indx) = sind;
-					gsign(indx++) = msgn;
-					msgn *= sgn;
-					++sind;
-				}
-			}
-			
-			int iind = BASE::npnt +BASE::nseg*sm +tind*im;
-			for(int m=0;m<im;++m) {
-				gindx(indx++) = iind++;
-			}
-		}
-		
-		/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-		BASE::crdtocht(tind);
-		
-		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(int n=0;n<BASE::ND;++n)
-			basis::tri(BASE::log2p)->proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-		
-		for(int m=0;m<tm;++m) {
-			BASE::uht(0)(m) = 1.0*gsign(m);
-			basis::tri(BASE::log2p)->proj(&BASE::uht(0)(0),&BASE::u(0)(0,0),MXGP);
-			
-			
-			for(int i=0;i<lgpx;++i) {
-				for(int j=0;j<lgpn;++j) {
-					BASE::u(0)(i,j) *= RAD(BASE::crd(0)(i,j))*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-				}
-			}
-			basis::tri(BASE::log2p)->intgrt(&BASE::lf(0)(0),&BASE::u(0)(0,0),MXGP);
-			BASE::uht(0)(m) = 0.0;
-			
-			/* store in mass matrix */
-			for(int k=0;k<tm;++k)
-				mass.add_values(gindx(m),gindx(k),gsign(k)*BASE::lf(0)(k));
-		}
-	}
-	mass.check_for_unused_entries(*BASE::gbl->log);
-	
-	return;
-}
-
 
 template<class BASE> void pod_generate<BASE>::test_orthogonality() {
 	/* CALCULATE POD MODES ORTHOGONALITY */

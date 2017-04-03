@@ -9,11 +9,13 @@
 #ifdef MPISRC
 #include <mpi.h>
 #endif
+#define EIGENVALUE
 
 #include <blocks.h>
 #include <signal.h>
 #ifdef petsc
 #include <petscksp.h>
+#include <slepceps.h>
 static char help[] = "How am I supposed to know???\n\n";
 #endif
 
@@ -61,7 +63,11 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef petsc
+#ifdef EIGENVALUE
+	PetscErrorCode err = SlepcInitialize(&argc,&argv,(char *)0,help);
+#else
 	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
+#endif
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
 	
@@ -121,7 +127,11 @@ int main(int argc, char **argv) {
 	sim::blks.go(argv[1]);
 
 #ifdef petsc
+#ifdef EIGENVALUE
+	SlepcFinalize();
+#else
 	PetscFinalize();
+#endif
 #endif
 #ifdef PTH
 	pth_exit(NULL);

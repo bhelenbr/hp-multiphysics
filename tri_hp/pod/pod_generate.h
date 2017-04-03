@@ -54,7 +54,6 @@ template<class BASE> class pod_generate : public BASE {
 		void init(input_map& inmap, void *gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
-		void create_mass_matrix(sparse_row_major& mass);
 		void project_to_gauss(vsi& target);
 		void time_average(vsi& target, Array<FLT,2> correlation_matrix);
 		FLT inner_product_with_projection(vsi& target);

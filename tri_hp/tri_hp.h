@@ -16,6 +16,8 @@
 #include <blocks.h>
 #include <myblas.h>
 
+#define EIGENVALUE
+
 #ifdef petsc
 #include <petscksp.h>
 #endif
@@ -199,6 +201,8 @@ class tri_hp : public r_tri_mesh  {
 
 		/** Setup preconditioner */
 		void setup_preconditioner();
+		void eigenvalues();
+		virtual void create_mass_matrix(sparse_row_major& mass);
 
 		/** Calculate residuals */
 		void rsdl() {rsdl(gbl->nstage);}
@@ -283,14 +287,14 @@ class tri_hp : public r_tri_mesh  {
 		
 		int jacobian_start;
 		int jacobian_size;
-		Mat  petsc_J;           /* Jacobian matrix */
+		Mat  petsc_J,petsc_M;           /* Jacobian matrix */
 		Vec  petsc_u,petsc_f,petsc_du;  /* solution,residual */
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
 		
 #ifdef MY_SPARSE
-		sparse_row_major J; // This block's Jacobian
-		sparse_row_major J_mpi; // Coupling to other blocks
+		sparse_row_major J,M; // This block's Jacobian
+		sparse_row_major J_mpi,M_mpi; // Coupling to other blocks
 #endif
 #endif	
 
