@@ -212,8 +212,8 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					../include,
-					"$(HOME)/Packages/include",
 				);
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = quadtree;
@@ -227,8 +227,8 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
+					"${inherited}",
 					../include,
-					"$(HOME)/Packages/include",
 				);
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = quadtree;
