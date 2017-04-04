@@ -22,6 +22,7 @@ brew install --build-from-source --HEAD blitz
 brew install libbinio
 brew install muparser
 brew install homebrew/science/petsc
+brew install slepc
 brew install pth
 brew install valgrind
 
@@ -38,6 +39,7 @@ To update installed packages
 brew update
 brew outdated
 brew upgrade
+brew cleanup (wait until you are sure everything works)
 
 
 ###################################################################
