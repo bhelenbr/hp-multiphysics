@@ -323,7 +323,11 @@ void tri_hp::eigenvalues() {
 //	
 //	M = J;
 //	M_mpi = J_mpi;
+	for(int i=0;i<nebd;++i) {
+		hp_ebdry(i)->petsc_jacobian_dirichlet(M);
+	}
 	M.check_for_unused_entries(*gbl->log);
+	
 	Array<int,1> nnzero_mpi(jacobian_size);
 	nnzero_mpi = 0;
 	M_mpi.resize(jacobian_size,nnzero_mpi); //,jacobian_start);
@@ -333,7 +337,7 @@ void tri_hp::eigenvalues() {
 	/* Jacobian    */
 	/***************/
 	petsc_jacobian();
-	petsc_premultiply_jacobian();
+	// petsc_premultiply_jacobian();
 	
 	if (gbl->jac_debug)	{
 		streamsize oldprecision = (*gbl->log).precision(2);
@@ -341,6 +345,11 @@ void tri_hp::eigenvalues() {
 		*gbl->log << J << std::endl;
 		*gbl->log << "J_mpi:\n";
 		*gbl->log << J_mpi << std::endl;
+		
+		*gbl->log << "M:\n";
+		*gbl->log << M << std::endl;
+		*gbl->log << "M_mpi:\n";
+		*gbl->log << M_mpi << std::endl;
 		(*gbl->log).precision(oldprecision);
 	}
 	J.check_for_unused_entries(*gbl->log);
@@ -383,23 +392,32 @@ void tri_hp::eigenvalues() {
 	PetscReal      error,re,im;
 	PetscScalar    kr,ki;
 	Vec            xr,xi;
-	PetscInt       n=30,i,nev,nconv;
-	EPSGetConverged(eps,&nconv);
-	PetscPrintf(PETSC_COMM_WORLD," Number of converged eigenpairs: %D\n\n",nconv);
-	
+	PetscInt       nconv;
+	ostringstream nstr;
+
 	MatCreateVecs(petsc_J,NULL,&xr);
 	MatCreateVecs(petsc_J,NULL,&xi);
+	
+	EPSGetConverged(eps,&nconv);
+	*gbl->log << " Number of converged eigenpairs: " << nconv << std::endl;
+	
+
 	
 	
 	if (nconv>0) {
 		/* Display eigenvalues and relative errors */
-		PetscPrintf(PETSC_COMM_WORLD,
-							 "           k          ||Ax-kx||/||kx||\n"
-							 "   ----------------- ------------------\n");
-	 
-		for (i=0;i<nconv;i++) {
+		*gbl-> log << "           k          ||Ax-kx||/||kx||\n   ----------------- ------------------\n";
+		streamsize oldprecision = gbl->log->precision(10);
+		for (int i=0;i<nconv;i++) {
 			/* Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part) */
 			EPSGetEigenpair(eps,i,&kr,&ki,xr,xi);
+			petsc_to_ug(xr);
+			
+			nstr.str("");
+			nstr << i << std::flush;
+			std::string filename = "data" +nstr.str();
+			output(filename,output_type(0));
+			
 			/* Compute the relative error associated to each eigenpair */
 			EPSComputeError(eps,i,EPS_ERROR_RELATIVE,&error);
 		 
@@ -890,7 +908,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 }
 
 /* temp fix can I input petsc vectors ? */
-void tri_hp::petsc_to_ug(){
+void tri_hp::petsc_to_ug(Vec& petsc_u){
 	PetscScalar *array;
 	PetscErrorCode err;
 	int ind = 0;

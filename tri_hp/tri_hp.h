@@ -281,7 +281,10 @@ class tri_hp : public r_tri_mesh  {
 		void petsc_initialize();
 		void petsc_finalize();
 		void r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop);  // Interface to Jacobian for r_tri_mesh (for now)
-		void petsc_to_ug();
+		void petsc_to_ug(Vec& U);
+		void petsc_to_ug() {
+			petsc_to_ug(petsc_u);
+		}
 		void ug_to_petsc();
 		void petsc_make_1D_rsdl_vector(Array<FLT,1>);
 		

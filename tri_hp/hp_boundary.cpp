@@ -1536,7 +1536,7 @@ int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 	return(count);
 }
 
-void hp_edge_bdry::petsc_jacobian_dirichlet() {
+void hp_edge_bdry::petsc_jacobian_dirichlet(sparse_row_major& J) {
 	int sm=basis::tri(x.log2p)->sm();
 	int nessentials = essential_indices.size();
 	Array<int,1> indices((base.nseg+1)*nessentials +base.nseg*sm*nessentials);
@@ -1573,11 +1573,11 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 	}
 	
 #ifdef MY_SPARSE
-	x.J.zero_rows(counter,indices);
-	x.J_mpi.zero_rows(counter,indices);
-	x.J.set_diag(counter,indices,1.0);
+	J.zero_rows(counter,indices);
+	//J_mpi.zero_rows(counter,indices); FIXME
+	J.set_diag(counter,indices,1e8);
 #else
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#WARNING This doesn't work
 #endif
 }
 

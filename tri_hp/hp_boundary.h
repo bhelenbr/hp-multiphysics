@@ -204,7 +204,10 @@ public:
 	virtual void petsc_jacobian();
 	virtual void petsc_matchjacobian_snd();
 	virtual int petsc_matchjacobian_rcv(int phase);
-	virtual void petsc_jacobian_dirichlet();
+	virtual void petsc_jacobian_dirichlet() {
+		petsc_jacobian_dirichlet(x.J);
+	}
+	virtual void petsc_jacobian_dirichlet(sparse_row_major& J);
 	virtual void petsc_premultiply_jacobian() {}
 	virtual int petsc_to_ug(PetscScalar *array);
 	virtual void ug_to_petsc(int& ind);
