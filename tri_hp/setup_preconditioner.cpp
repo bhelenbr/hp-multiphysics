@@ -90,7 +90,6 @@ void tri_hp::setup_preconditioner() {
 #ifdef petsc
 #ifdef EIGENVALUE
 	eigenvalues();
-	sim::finalize(__LINE__,__FILE__,gbl->log);
 #else
 	petsc_setup_preconditioner();
 #endif

@@ -403,40 +403,47 @@ void tri_hp::eigenvalues() {
 	
 
 	
+	PetscInt nev;
+	PetscBool found;
+	err = PetscOptionsGetInt(NULL,NULL,"-eps_nev",&nev,&found);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	if (found) {
+		nconv = MIN(nev,nconv);
+	}
 	
 	if (nconv>0) {
 		/* Display eigenvalues and relative errors */
 		*gbl-> log << "           k          ||Ax-kx||/||kx||\n   ----------------- ------------------\n";
-		streamsize oldprecision = gbl->log->precision(10);
+		streamsize oldprecision = gbl->log->precision(14);
 		for (int i=0;i<nconv;i++) {
 			/* Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part) */
 			EPSGetEigenpair(eps,i,&kr,&ki,xr,xi);
 			petsc_to_ug(xr);
 			
 			nstr.str("");
-			nstr << i << std::flush;
+			nstr << gbl->tstep << '.' << i << std::flush;
 			std::string filename = "data" +nstr.str();
 			output(filename,output_type(0));
 			
 			/* Compute the relative error associated to each eigenpair */
 			EPSComputeError(eps,i,EPS_ERROR_RELATIVE,&error);
 		 
-#if defined(PETSC_USE_COMPLEX)
+	#if defined(PETSC_USE_COMPLEX)
 			re = PetscRealPart(kr);
 			im = PetscImaginaryPart(kr);
-#else
+	#else
 			re = kr;
 			im = ki;
-#endif
+	#endif
 			if (im != 0.0) {
-				*gbl->log << (double) re << ' ' << (double) im << ' ' << (double) error << std::endl;
+				*gbl->log << "eig " << i << ' ' << (double) re << ' ' << (double) im << ' ' << (double) error << std::endl;
 			}
 			else {
-				*gbl->log << (double) re << ' ' << (double) error << std::endl;
+				*gbl->log << "eig " << i << ' ' << (double) re << ' ' << (double) error << std::endl;
 			}
 		}
-		PetscPrintf(PETSC_COMM_WORLD,"\n");
- }
+		gbl->log->precision(oldprecision);
+	}
 }
 
 
@@ -707,6 +714,8 @@ void tri_hp::petsc_premultiply_jacobian() {
 void tri_hp::petsc_update() {
 	PetscInt its;
 	PetscErrorCode err;
+	
+	return;
 	
 	PetscLogDouble time1,time2;
 	

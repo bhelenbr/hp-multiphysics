@@ -1575,7 +1575,8 @@ void hp_edge_bdry::petsc_jacobian_dirichlet(sparse_row_major& J) {
 #ifdef MY_SPARSE
 	J.zero_rows(counter,indices);
 	//J_mpi.zero_rows(counter,indices); FIXME
-	J.set_diag(counter,indices,1e8);
+	if (&J == &x.M) J.set_diag(counter,indices,1);
+	else J.set_diag(counter,indices,1e10);
 #else
 #WARNING This doesn't work
 #endif
