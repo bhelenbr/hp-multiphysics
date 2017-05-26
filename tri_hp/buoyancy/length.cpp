@@ -94,13 +94,13 @@ void tri_hp_buoyancy::error_estimator() {
 //				FLT dtdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-				energy = rho*(gbl->cp*u(2)(i,j) +0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))) +u(NV-1)(i,j);	
+//				energy = rho*(gbl->cp*u(2)(i,j) +0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))) +u(NV-1)(i,j);
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+//				energy += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				
 				
-				denergy = rhol*(gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
-				denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+//				denergy = rhol*(gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
+//				denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
 				
 				/* INVISCID PARTS TO ERROR MEASURE */

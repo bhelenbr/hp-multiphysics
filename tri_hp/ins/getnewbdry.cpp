@@ -88,7 +88,7 @@ hp_edge_bdry* tri_hp_ins::getnewedgeobject(int bnum, std::string name) {
 	std::string keyword,val;
 	std::istringstream data;
 	int type;          
-	hp_edge_bdry *temp;  
+	hp_edge_bdry *temp;
 
 
 	type = tri_hp_ins_etype::getid(name.c_str());
@@ -141,10 +141,10 @@ hp_edge_bdry* tri_hp_ins::getnewedgeobject(int bnum, std::string name) {
 			temp = new actuator_disc(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_ins_etype::unknown: {
+		default: {
 			return(tri_hp::getnewedgeobject(bnum,name));
 		}
-	}    
+	}
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 
 	return(temp);

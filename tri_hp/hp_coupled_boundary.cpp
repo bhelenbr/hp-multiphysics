@@ -108,22 +108,15 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	gbl->meshc.resize(base.maxseg,NV);
 	
 	gbl->cfl.resize(x.log2p+1,NV);
-	double CFLdflt[3] = {2.5, 1.5, 1.0};
 	for (int n=0;n<NV;++n) {
-			stringstream nstr;
-			nstr << n;
-			if (inmap.getline(base.idprefix+"_cfl"+nstr.str(),val)) {
-					data.str(val);
-					for (int m=0;m<x.log2p+1;++m) {
-							data >> gbl->cfl(m,n);
-					}
-					data.clear();
-			}
-			else {
-					for (int m=0;m<x.log2p+1;++m) {
-							gbl->cfl(m,n) = CFLdflt[m];
-					}
-			}
+		stringstream nstr;
+		nstr << n;
+		inmap.getlinewdefault(base.idprefix+"_cfl"+nstr.str(),val,std::string("2.5 1.5 1.0"));
+		data.str(val);
+		for (int m=0;m<x.log2p+1;++m) {
+				data >> gbl->cfl(m,n);
+		}
+		data.clear();
 	}
 	
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
@@ -569,7 +562,6 @@ void hp_coupled_bdry::update(int stage) {
 			
 			if (basis::tri(x.log2p)->sm() > 0) {
 				for(i=base.nseg-1;i>=0;--i) {
-					sind = base.seg(i);
 					msgn = 1;
 					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 						for(int n=0;n<tri_mesh::ND;++n)
@@ -2248,17 +2240,14 @@ void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> l
 	/* Calculate any specified fluxes to be added */
 	hp_edge_bdry::element_rsdl(indx, lf);
 	
-	int i,n,sind,v0,v1;
+	int i,n,sind;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	FLT jcb;
 	TinyVector<FLT,tri_mesh::ND> u;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 	
-	sind = base.seg(indx);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
-	
+	sind = base.seg(indx);	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));

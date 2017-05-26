@@ -331,7 +331,6 @@ void actuator_disc::output(const std::string& filename, tri_hp::filetype typ,int
 			
 			power = 0.0;
 			
-			ind = 0;
 			for (ind=0;ind<base.nseg;++ind) {
 				sind = base.seg(ind);
 				

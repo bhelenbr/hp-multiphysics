@@ -12,7 +12,7 @@
 #include <myblas.h>
 
 void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
-	int tind,i,j,m,n,indx,v0,v1,sind,info;
+	int tind,i,j,m,n,v0,v1,sind,info;
 	char uplo[] = "U";
 	TinyVector<FLT,2> pt;
 	
@@ -52,7 +52,6 @@ void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 			for(n=0;n<NV;++n)
 				basis::tri(log2p)->intgrt1d(&lf(n)(0),&res(n)(0,0));
 			
-			indx = sind;
 			for(n=0;n<NV;++n) {
 				PBTRS(uplo,basis::tri(log2p)->sm(),basis::tri(log2p)->sbwth(),1,(double *) &basis::tri(log2p)->sdiag1d(0,0),basis::tri(log2p)->sbwth()+1,&lf(n)(2),basis::tri(log2p)->sm(),info);
 				for(m=0;m<basis::tri(log2p)->sm();++m)

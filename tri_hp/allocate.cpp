@@ -463,10 +463,10 @@ void tri_hp::setinfo() {
 FLT tri_hp::maxres() {
 	int i,n;
 	Array<FLT,1> mxr(NV);
-	FLT mesherror, flowerror;
+	FLT flowerror;
 
 	/* THIS ROUTINE WILL HAVE TO BE OVERWRITTEN TO GET CORRECT DIMENSIONAL NORM FOR EACH SYSTEM */
-	if (mmovement == coupled_deformable) mesherror = r_tri_mesh::maxres();
+	if (mmovement == coupled_deformable) r_tri_mesh::maxres();
 
 	for(n=0;n<NV;++n)
 		mxr(n) = 0.0;

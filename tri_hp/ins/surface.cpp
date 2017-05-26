@@ -89,7 +89,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
 	if (!is_master) return;
 	
-	int i,n,sind,v0,v1;
+	int i,n,sind;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
 	FLT jcb;
@@ -97,10 +97,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
 	
-	sind = base.seg(indx);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
-	
+	sind = base.seg(indx);	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
@@ -164,7 +161,7 @@ void surface::setup_preconditioner() {
 	FLT h, hsm;
 	FLT dttang, dtnorm;
 	FLT vslp, strss;
-	FLT drho, srho, smu;
+	FLT drho;
 	FLT nu1, nu2;
 	FLT qmax, gam1, gam2;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
@@ -179,8 +176,6 @@ void surface::setup_preconditioner() {
 	if (!gbl->symmetric && !is_master) return;
 	
 	drho = x.gbl->rho -gbl->rho2;
-	srho = x.gbl->rho +gbl->rho2;
-	smu = x.gbl->mu +gbl->mu2;
 	nu1 = x.gbl->mu/x.gbl->rho;
 	if (gbl->rho2 > 0.0)
 		nu2 = gbl->mu2/gbl->rho2;

@@ -490,7 +490,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 }
 
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
-	int j,k,m,n,v0,v1,sind,indx,info;
+	int j,k,m,n,v0,v1,sind,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
 	char uplo[] = "U";
 	
@@ -541,7 +541,6 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indic
 			for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n)
 				basis::tri(x.log2p)->intgrt1d(&x.lf(*n)(0),&x.res(*n)(0,0));
 			
-			indx = sind*x.sm0;
 			for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n) {
 				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(*n)(2),basis::tri(x.log2p)->sm(),info);
 				for(m=0;m<basis::tri(x.log2p)->sm();++m)
@@ -1956,7 +1955,7 @@ void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
 }
 
 void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
-	int i,n,sind,v0,v1;
+	int i,n,sind;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV),flx(x.NV);
 	FLT jcb;
@@ -1967,10 +1966,7 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 	
 	lf = 0.0;
 	
-	sind = base.seg(indx);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
-	
+	sind = base.seg(indx);	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));

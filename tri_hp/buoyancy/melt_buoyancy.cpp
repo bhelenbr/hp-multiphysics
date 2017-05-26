@@ -27,7 +27,7 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 	
 	if (!is_master) return;
 
-	int i,n,sind,v0,v1;
+	int i,n,sind;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV),flx(x.NV);
 	FLT jcb;
@@ -37,9 +37,6 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND),au(x.NV);
 	
 	sind = base.seg(indx);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
-	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
@@ -142,25 +139,21 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 	TinyVector<FLT, 2> xp, dxpdpsi, mvel, anorm;
 	
 
-	int endpt,seg,sind;
-	int endpt_surf,seg_surf,sind_surf;
+	int seg,sind;
+	int seg_surf,sind_surf;
 	const int bnum = base.ebdry(surfbdry);
 	const int bnum_surf = base.ebdry(1-surfbdry);
 	if (surfbdry == 0) {
 		seg = x.ebdry(bnum)->nseg-1;
 		sind = x.ebdry(bnum)->seg(seg);
-		endpt = x.ebdry(bnum)->nseg;
 		seg_surf = 0;
 		sind_surf = x.ebdry(bnum_surf)->seg(seg_surf);
-		endpt_surf = 0;
 	}
 	else {
 		seg = 0;
 		sind = x.ebdry(bnum)->seg(seg);
-		endpt = 0;
 		seg_surf = x.ebdry(bnum_surf)->nseg-1;
 		sind_surf = x.ebdry(bnum_surf)->seg(seg_surf);
-		endpt_surf = x.ebdry(bnum_surf)->nseg;
 	}
 	
 	x.crdtocht1d(sind);

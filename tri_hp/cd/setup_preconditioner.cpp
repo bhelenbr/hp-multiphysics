@@ -41,7 +41,6 @@ void tri_hp_cd::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
-		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 
 		qmax = 0.0;
 		for(j=0;j<3;++j) {

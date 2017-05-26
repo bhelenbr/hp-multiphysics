@@ -18,7 +18,7 @@ void tri_hp_swe::rsdl(int stage) {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT cjcb, oneminusbeta;
+	FLT cjcb;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,ND> vel,pt;
@@ -28,7 +28,6 @@ void tri_hp_swe::rsdl(int stage) {
 
 	// FIXME: THIS IS OUT OF DATE
 	tri_hp::rsdl(stage);
-	oneminusbeta = 1.0-gbl->beta(stage);
 
 	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */

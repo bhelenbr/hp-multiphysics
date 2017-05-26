@@ -17,15 +17,10 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	FLT visc[ND][ND][ND][ND], tres[NV];
 	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
 	FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
-	FLT oneminusbeta;
 	TinyVector<FLT,ND> pt;
 	TinyVector<int,3> v;
-	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+	const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
-
-
-	oneminusbeta = 1.0-gbl->beta(stage);
-
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -78,8 +73,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	}
 
 	/* CONVECTION */
-	for(i=0;i<basis::tri(log2p)->gpx();++i) {
-		for(j=0;j<basis::tri(log2p)->gpn();++j) {
+	for(i=0;i<lgpx;++i) {
+		for(j=0;j<lgpn;++j) {
 
 #ifdef CONST_A
 			fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ax -mvel(0)(i,j))*u(0)(i,j);
@@ -102,8 +97,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	if (gbl->beta(stage) > 0.0) {
 
 		/* TIME DERIVATIVE TERMS */
-		for(i=0;i<basis::tri(log2p)->gpx();++i) {
-			for(j=0;j<basis::tri(log2p)->gpn();++j) {
+		for(i=0;i<lgpx;++i) {
+			for(j=0;j<lgpn;++j) {
 				pt(0) = crd(0)(i,j);
 				pt(1) = crd(1)(i,j);
 				cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
@@ -114,8 +109,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		basis::tri(log2p)->intgrt(&lf_re(0)(0),&res(0)(0,0),MXGP);
 
 		/* DIFFUSIVE TERMS  */
-		for(i=0;i<basis::tri(log2p)->gpx();++i) {
-			for(j=0;j<basis::tri(log2p)->gpn();++j) {
+		for(i=0;i<lgpx;++i) {
+			for(j=0;j<lgpn;++j) {
 
 				cjcb(i,j) = gbl->kcond*RAD(crd(0)(i,j))/cjcb(i,j);
 
@@ -137,8 +132,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		basis::tri(log2p)->derivs(cv01[0],&res(0)(0,0),MXGP);
 
 		/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-		for(i=0;i<basis::tri(log2p)->gpx();++i) {
-			for(j=0;j<basis::tri(log2p)->gpn();++j) {
+		for(i=0;i<lgpx;++i) {
+			for(j=0;j<lgpn;++j) {
 				pt(0) = crd(0)(i,j);
 				pt(1) = crd(1)(i,j);
 				tres[0] = gbl->tau(tind)*res(0)(i,j);

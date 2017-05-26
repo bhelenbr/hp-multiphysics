@@ -19,14 +19,13 @@ void tri_hp_ps::rsdl(int stage) {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lmu = gbl->mu, cjcb, cjcbi, oneminusbeta;
+	FLT lmu = gbl->mu, cjcb, cjcbi;
 	FLT visc[ND][ND][ND][ND], tres[NV];
 	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 	FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
 	// FIXME: THIS IS OUT OF DATE
 	tri_hp::rsdl(stage);    
-	oneminusbeta = 1.0-gbl->beta(stage);
 
 	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
