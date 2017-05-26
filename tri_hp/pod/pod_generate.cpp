@@ -35,6 +35,12 @@ extern "C" {
 	/* Subroutine */ int dspgv_(int *ITYPE, char *jobz, char *uplo, int *n,
 															double *ap, double *ab, double *w, double *z__,
 															int *ldz, double *work, int *info);
+
+	/* Subroutine */ int dgesvd_(char *JOBU, char *JOBVT, int *m, int *n, double *A, int *LDA, double *s, double *U, int *LDU,
+															double *VT, int *LDVT, double *work, int *iwork, int *info);	
+
+	/* Subroutine */ //int dspev_(char *jobz, char *uplo, int *n, double *ap, double *w, double *z__, int *ldz, double *work, 
+								//							int *info);	
 }
 
 
@@ -82,12 +88,21 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 	inmap.getwdefault("coefficient_interval",coefficient_interval,restart_interval);
 	inmap.getwdefault("coefficient_end",coefficient_end,restart_interval*nsnapshots +restartfile);
 	
-	inmap.getwdefault("Number_sets",nsets,1);
-	if ( nsnapshots % nsets != 0 ) {
-		*BASE::gbl->log << "# Number of snapshots and sets are not compatible." << std::endl;
+	std::string job_name;
+	inmap.getlinewdefault("job",job_name,std::string("snapshot"));  //job = R-POD
+	if (job_name == "direct") {
+		job_id = direct;
+	}
+	else if (job_name == "snapshot") {
+		job_id = snapshot;
+	}
+	else if (job_name == "mPOD") {
+		job_id = mPOD;
+	}
+	else {
+		*BASE::gbl->log << "Undefined job." << std::endl;
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
-	nsnapshots_per_set = nsnapshots / nsets;
 	
 	inmap.getwdefault("podmodes",nmodes,nsnapshots);
 	if ( nmodes > nsnapshots ) {
@@ -102,6 +117,15 @@ template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) 
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 	nmodes_per_deflation = nmodes/ndeflation;
+	
+	inmap.getwdefault("MinEigen",MinEigen,1e-8);
+
+	inmap.getwdefault("M",M,nsnapshots);
+	if ( M > nsnapshots ) {
+		*BASE::gbl->log << "#MaxSize can't be more than number of snapshots. MaxSize replaced with snapshots." << std::endl;
+		M = nsnapshots;
+	}
+
 	
 	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 	scaling.resize(BASE::NV);
@@ -162,383 +186,525 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		BASE::output(filename, BASE::output_type(1));
 	}
 	
-	if (nsets != 1) {
-		set_eigenvalues.resize(nsnapshots);
-		for (int set=0;set<nsets;++set)	{
-			nstr.str("");
-			nstr << set << std::flush;
-			filename = "eigenvalue_set" +nstr.str() +".bin";
-			
-			binifstream bin;
-			bin.open(filename.c_str());
-			if (bin.error()) {
-				*BASE::gbl->log << "couldn't open eigenvalues input file " << filename << std::endl;
-				sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-			}
-			bin.setFlag(binio::BigEndian,bin.readInt(1));
-			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-			
-			for (int l=0;l<nsnapshots_per_set;++l)
-				set_eigenvalues(set*nsnapshots_per_set+l) = bin.readFloat(binio::Double);
-			bin.close();
-		}
-		*BASE::gbl->log << "set_eigenvalues"<< set_eigenvalues << std::endl;
-	}
 	BASE::tadvance();
 	
 	int psi1dcounter;
 	Array<FLT,1> psimatrix(nsnapshots*nsnapshots),psimatrix_recv(nsnapshots*nsnapshots);
-	
+	Array<FLT,1> eigenvalues(nmodes);
+
 #ifdef USING_MASS_MATRIX
 	create_mass_matrix(mass);
 #endif
 	
-#ifdef DIRECT_METHOD
-	const int sm = basis::tri(BASE::log2p)->sm();
-	const int im = basis::tri(BASE::log2p)->im();
-	const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
-	int ntotal = ndofs*BASE::NV;
-	Array<FLT,2> mass_times_timeaverage(ntotal,ntotal);
-	Array<FLT,1> packed_mass_times_timeaverage((ntotal+1)*ntotal/2),packed_mass((ntotal+1)*ntotal/2);
-#endif
 	
-	Array<FLT,1> eigenvalues(nmodes);
-	for (int deflation_count=0; deflation_count<ndeflation;++deflation_count) {
-		int start = nmodes_per_deflation*deflation_count;
-		/* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
-#ifdef DIRECT_METHOD
+	switch (job_id) {
 		/////////////////////
-		// DIRECT METHOD //
+		// DIRECT METHOD   //
 		/////////////////////
-		
-		/* Make packed storage version of block mass matrix for Lapack routine */
-		for(int n=0;n<BASE::NV;++n) {
-			for(int m=0;m<BASE::NV;++m) {
-				Array<FLT,2> mass_block = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),Range(m*ndofs,(m+1)*ndofs-1));  // Reference to data, not a copy
-				mass.unpack(mass_block);
-			}
-		}
-		
-		// Store block mass matrix in packed format
-		psi1dcounter = 0;
-		for (int k=0;k<ntotal;++k) {
-			for(int l=k;l<ntotal;++l) {
-				packed_mass(psi1dcounter++) = mass_times_timeaverage(k,l);
-			}
-		}
-		
-		mass_times_timeaverage = 0;
-		for (int k=0;k<nsnapshots;++k) {
-			nstr.str("");
-			nstr << k << std::flush;
-			filename = "temp" +nstr.str();
-			BASE::input(filename, BASE::output_type(1)); // Loads into ug
-			time_average(BASE::ug,mass_times_timeaverage);
-		}
-		mass_times_timeaverage /= static_cast<FLT>(nsnapshots);
-		
-		/* Left multiply time average blocks by mass matrix */
-		Array<FLT,1> subarray(ndofs);
-		for(int n=0;n<BASE::NV;++n){
-			for(int i=0;i<ndofs*BASE::NV;++i) {
-				// Copies data for this section of time average so it can be repeatedly multiplied
-				subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-				// Makes reference to data so can be stored in correct location
-				Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-				mass.mmult(subarray,mass_times_timeaverage_subarray);
-			}
-		}
-		
-		/* Right multiply time average blocks by mass matrix (done by transposing as M is symmetric) */
-		mass_times_timeaverage.transposeSelf(secondDim, firstDim);
-		for(int n=0;n<BASE::NV;++n){
-			for(int i=0;i<ndofs*BASE::NV;++i) {
-				// Copies data for this section of time average so it can be repeatedly multiplied
-				subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-				// Makes reference to data so can be stored in correct location
-				Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
-				mass.mmult(subarray,mass_times_timeaverage_subarray);
-			}
-		}
-		
-		// Fixme:  not sure how this is going to work in parallel
-		// *BASE::gbl->log << "mass_times_timeaverage" << std::endl;
-		// sim::blks.allreduce(psimatrix2.data(),psimatrix_recv2.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
-		
-		// Store in packed format
-		psi1dcounter = 0;
-		for (int k=0;k<ndofs*BASE::NV;++k) {
-			for(int l=k;l<ndofs*BASE::NV;++l) {
-				packed_mass_times_timeaverage(psi1dcounter++) = mass_times_timeaverage(k,l);
-			}
-		}
-		
-		// generalized eigenvalue problem
-		int info;
-		int ITYPE = 1;
-		char jobz[2] = "V", uplo[2] = "L";
-		Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
-		Array<FLT,2> eigenvectors(ntotal,nmodes_per_deflation,ColumnMajorArray<2>());
-		// Compute only some eigenvectors
-		char range[2] = "I";
-		int il=ntotal-nmodes_per_deflation+1, iu=ntotal;
-		double vl=0, vu=1e18;
-		int neig;
-		Array<int,1> iwork(5*ntotal);
-		Array<double,1> work(8*ntotal);
-		Array<int,1> ifail(ntotal);
-		double abstol = 2.*dlamch_("Safe minimum");
-		
-		dspgvx_(&ITYPE, jobz, range, uplo, &ntotal, packed_mass_times_timeaverage.data(), packed_mass.data(), &vl, &vu, &il, &iu, &abstol,
-						&neig, eigenvalues_subarray.data(), eigenvectors.data(), &ntotal, work.data(), iwork.data(), ifail.data(), &info);
-		
-		if (info != 0) {
-			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-		}
-		
-		/* Reorder largest to smallest */
-		if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
-			eigenvalues_subarray.reverseSelf(firstDim);
-			eigenvectors.reverseSelf(secondDim);
-		}
-		
-		// Put eigenvector back into modes */
-		for(int k=0;k<nmodes_per_deflation;++k)	{
-			eigenvalues(start+k) = eigenvalues_subarray(k);
-			int ind = 0;
-			for(int n=0;n<BASE::NV;++n) {
-				for (int i=0;i<BASE::npnt;++i)
-					modes(start+k).v(i,n) = eigenvectors(ind++,k);
+		case(direct): {
+			const int sm = basis::tri(BASE::log2p)->sm();
+			const int im = basis::tri(BASE::log2p)->im();
+			const int ndofs = BASE::npnt +BASE::nseg*sm +BASE::ntri*im;
+			int ntotal = ndofs*BASE::NV;
+			Array<FLT,2> mass_times_timeaverage(ntotal,ntotal);
+			Array<FLT,1> packed_mass_times_timeaverage((ntotal+1)*ntotal/2),packed_mass((ntotal+1)*ntotal/2);
+			
+			for (int deflation_count=0; deflation_count<ndeflation;++deflation_count) {
+				int start = nmodes_per_deflation*deflation_count;
+
 				
-				for (int i=0;i<BASE::nseg;++i)
-					for(int m=0;m<sm;++m)
-						modes(start+k).s(i,m,n) = eigenvectors(ind++,k);
+				/* Make packed storage version of block mass matrix for Lapack routine */
+				for(int n=0;n<BASE::NV;++n) {
+					for(int m=0;m<BASE::NV;++m) {
+						Array<FLT,2> mass_block = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),Range(m*ndofs,(m+1)*ndofs-1));  // Reference to data, not a copy
+						mass.unpack(mass_block);
+					}
+				}
 				
-				for (int i=0;i<BASE::ntri;++i)
-					for(int m=0;m<im;++m)
-						modes(start+k).i(i,m,n) = eigenvectors(ind++,k);
+				// Store block mass matrix in packed format
+				psi1dcounter = 0;
+				for (int k=0;k<ntotal;++k) {
+					for(int l=k;l<ntotal;++l) {
+						packed_mass(psi1dcounter++) = mass_times_timeaverage(k,l);
+					}
+				}
+				
+				mass_times_timeaverage = 0;
+				for (int k=0;k<nsnapshots;++k) {
+					nstr.str("");
+					nstr << k << std::flush;
+					filename = "temp" +nstr.str();
+					BASE::input(filename, BASE::output_type(1)); // Loads into ug
+					time_average(BASE::ug,mass_times_timeaverage);
+				}
+				mass_times_timeaverage /= static_cast<FLT>(nsnapshots);
+				
+				/* Left multiply time average blocks by mass matrix */
+				Array<FLT,1> subarray(ndofs);
+				for(int n=0;n<BASE::NV;++n){
+					for(int i=0;i<ndofs*BASE::NV;++i) {
+						// Copies data for this section of time average so it can be repeatedly multiplied
+						subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+						// Makes reference to data so can be stored in correct location
+						Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+						mass.mmult(subarray,mass_times_timeaverage_subarray);
+					}
+				}
+				
+				/* Right multiply time average blocks by mass matrix (done by transposing as M is symmetric) */
+				mass_times_timeaverage.transposeSelf(secondDim, firstDim);
+				for(int n=0;n<BASE::NV;++n){
+					for(int i=0;i<ndofs*BASE::NV;++i) {
+						// Copies data for this section of time average so it can be repeatedly multiplied
+						subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+						// Makes reference to data so can be stored in correct location
+						Array<FLT,1> mass_times_timeaverage_subarray = mass_times_timeaverage(Range(n*ndofs,(n+1)*ndofs-1),i);
+						mass.mmult(subarray,mass_times_timeaverage_subarray);
+					}
+				}
+				
+				// Fixme:  not sure how this is going to work in parallel
+				// *BASE::gbl->log << "mass_times_timeaverage" << std::endl;
+				// sim::blks.allreduce(psimatrix2.data(),psimatrix_recv2.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
+				
+				// Store in packed format
+				psi1dcounter = 0;
+				for (int k=0;k<ndofs*BASE::NV;++k) {
+					for(int l=k;l<ndofs*BASE::NV;++l) {
+						packed_mass_times_timeaverage(psi1dcounter++) = mass_times_timeaverage(k,l);
+					}
+				}
+				
+				// generalized eigenvalue problem
+				int info;
+				int ITYPE = 1;
+				char jobz[2] = "V", uplo[2] = "L";
+				Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
+				Array<FLT,2> eigenvectors(ntotal,nmodes_per_deflation,ColumnMajorArray<2>());
+				// Compute only some eigenvectors
+				char range[2] = "I";
+				int il=ntotal-nmodes_per_deflation+1, iu=ntotal;
+				double vl=0, vu=1e18;
+				int neig;
+				Array<int,1> iwork(5*ntotal);
+				Array<double,1> work(8*ntotal);
+				Array<int,1> ifail(ntotal);
+				double abstol = 2.*dlamch_("Safe minimum");
+				
+				dspgvx_(&ITYPE, jobz, range, uplo, &ntotal, packed_mass_times_timeaverage.data(), packed_mass.data(), &vl, &vu, &il, &iu, &abstol,
+								&neig, eigenvalues_subarray.data(), eigenvectors.data(), &ntotal, work.data(), iwork.data(), ifail.data(), &info);
+				
+				if (info != 0) {
+					*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+					sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+				}
+				
+				/* Reorder largest to smallest */
+				if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
+					eigenvalues_subarray.reverseSelf(firstDim);
+					eigenvectors.reverseSelf(secondDim);
+				}
+				
+				// Put eigenvector back into modes */
+				for(int k=0;k<nmodes_per_deflation;++k)	{
+					eigenvalues(start+k) = eigenvalues_subarray(k);
+					int ind = 0;
+					for(int n=0;n<BASE::NV;++n) {
+						for (int i=0;i<BASE::npnt;++i)
+							modes(start+k).v(i,n) = eigenvectors(ind++,k);
+						
+						for (int i=0;i<BASE::nseg;++i)
+							for(int m=0;m<sm;++m)
+								modes(start+k).s(i,m,n) = eigenvectors(ind++,k);
+						
+						for (int i=0;i<BASE::ntri;++i)
+							for(int m=0;m<im;++m)
+								modes(start+k).i(i,m,n) = eigenvectors(ind++,k);
+					}
+				}
+				
+				/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
+				for(int k=0;k<nmodes_per_deflation;++k) {
+					psimatrix(k) = norm2(modes(start+k));
+				}
+				sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+				//*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
+				
+				/* RENORMALIZE MODES & OUTPUT */
+				for (int k=0;k<nmodes_per_deflation;++k) {
+					FLT norm = sqrt(psimatrix_recv(k));
+					modes(start+k).v(Range(0,BASE::npnt-1)) /= norm;
+					modes(start+k).s(Range(0,BASE::nseg-1)) /= norm;
+					modes(start+k).i(Range(0,BASE::ntri-1)) /= norm;
+					nstr.str("");
+					nstr << start+k << std::flush;
+					filename = "mode" +nstr.str();
+					output(modes(start+k),filename);
+				}
+				
+				/* To test normalization */
+				//		psimatrix = 0.0;
+				//		psimatrix_recv = 0.0;
+				//		/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
+				//		for(int k=0;k<nmodes_per_deflation;++k) {
+				//			psimatrix(k) = norm2(modes(start+k));
+				//		}
+				//		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+				//		*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
+				
+				/***************************************/
+				/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
+				/***************************************/
+				if (deflation_count+1 < ndeflation) {
+					psi1dcounter = 0;
+					for (int k=0;k<nsnapshots;++k) {
+						/* LOAD SNAPSHOT */
+						nstr.str("");
+						nstr << k << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+						project_to_gauss(BASE::ug);
+						
+						for(int l=start;l<nmodes_per_deflation+start;++l) {
+							psimatrix(psi1dcounter++) = inner_product_with_projection(modes(l));
+						}
+					}
+					sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+					
+					psi1dcounter = 0;
+					for (int k=0;k<nsnapshots;++k) {
+						/* LOAD SNAPSHOT */
+						nstr.str("");
+						nstr << k << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+						
+						for(int l=start;l<nmodes_per_deflation+start;++l) {
+							BASE::ug.v(Range(0,BASE::npnt-1)) -= psimatrix_recv(psi1dcounter)*modes(l).v(Range(0,BASE::npnt-1));
+							BASE::ug.s(Range(0,BASE::nseg-1)) -= psimatrix_recv(psi1dcounter)*modes(l).s(Range(0,BASE::nseg-1));
+							BASE::ug.i(Range(0,BASE::ntri-1)) -= psimatrix_recv(psi1dcounter)*modes(l).i(Range(0,BASE::ntri-1));
+							++psi1dcounter;
+						}
+						BASE::output(filename, BASE::output_type(1));
+						// BASE::output(filename, BASE::output_type(0));
+					}
+				}
 			}
+			break;
 		}
-#else
+			
 		/////////////////////
 		// SNAPSHOT METHOD //
 		/////////////////////
-		psi1dcounter = 0;
-		for (int k=0;k<nsnapshots;++k) {
-			nstr.str("");
-			nstr << k << std::flush;
-			filename = "temp" +nstr.str();
-			BASE::input(filename, BASE::output_type(1)); // Loads into ug
-#ifdef WEIGHTED_DPOD
-			BASE::ug.v *= sqrt ( set_eigenvalues(k) );
-			BASE::ug.s *= sqrt ( set_eigenvalues(k) );
-			BASE::ug.i *= sqrt ( set_eigenvalues(k) );
-#endif
-			project_to_gauss(BASE::ug);
-			
-			for(int l=k;l<nsnapshots;++l) {
-				nstr.str("");
-				nstr << l << std::flush;
-				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::output_type(1));
-#ifdef WEIGHTED_DPOD
-				BASE::ug.v *= sqrt ( set_eigenvalues(l) );
-				BASE::ug.s *= sqrt ( set_eigenvalues(l) );
-				BASE::ug.i *= sqrt ( set_eigenvalues(l) );
-#endif
-				psimatrix(psi1dcounter) = inner_product_with_projection(BASE::ug);
-				++psi1dcounter;
-			}
-		}
-		// *BASE::gbl->log << "psimatrix" << psimatrix << std::endl;
-		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
-		
-		if(nsets == 1) {
-			psimatrix_recv = psimatrix_recv/nsnapshots;
-		}
-		else {
-			psimatrix_recv = psimatrix_recv/nsets;
-		}
-		
-		int info;
-		char jobz[2] = "V", uplo[2] = "L";
-		int ITYPE=3;
-		Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
-		Array<FLT,2> eigenvectors(nsnapshots,nmodes_per_deflation,ColumnMajorArray<2>());
-		
-		if(nmodes_per_deflation == nsnapshots) {
-			// Compute all eigenvectors
-			
-			Array<FLT,1> work(3*nsnapshots);
-			if (nsets == 1) {
-				// normal eigenvalue problem
-				DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues_subarray.data(),eigenvectors.data(),nsnapshots,work.data(),info);
-			}
-			else {
-				// generalized eigenvalue problem
-				Array<FLT,1> psimatrix_B(nsnapshots * (nsnapshots+1)/2);
-				psimatrix_B = 0.0;
-				for(int k=0;k<nsnapshots;++k)	{
-					psimatrix_B (k + (k)*(2*nsnapshots-k-1)/2) = set_eigenvalues(k);
+		case(snapshot): {
+			for (int deflation_count=0; deflation_count<ndeflation;++deflation_count) {
+				int start = nmodes_per_deflation*deflation_count;
+
+				psi1dcounter = 0;
+				for (int k=0;k<nsnapshots;++k) {
+					nstr.str("");
+					nstr << k << std::flush;
+					filename = "temp" +nstr.str();
+					BASE::input(filename, BASE::output_type(1)); // Loads into ug
+					project_to_gauss(BASE::ug);
+				
+					for(int l=k;l<nsnapshots;++l) {
+						nstr.str("");
+						nstr << l << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+						psimatrix(psi1dcounter) = inner_product_with_projection(BASE::ug);
+						++psi1dcounter;
+					}
 				}
-				
-				dspgv_(&ITYPE, jobz, uplo, &nsnapshots, psimatrix_recv.data(), psimatrix_B.data(), eigenvalues_subarray.data(), eigenvectors.data(), &nsnapshots, work.data(), &info);
-			}
-		}
-		else {
-			// Compute only some eigenvectors
-			char range[2] = "I";
-			int il=nsnapshots-nmodes_per_deflation+1, iu=nsnapshots;
-			double vl, vu;
-			int neig;
-			Array<int,1> iwork(5*nsnapshots);
-			Array<double,1> work(8*nsnapshots);
-			Array<int,1> ifail(nsnapshots);
-			double abstol = 2.*dlamch_("Safe minimum");
+				// *BASE::gbl->log << "psimatrix" << psimatrix << std::endl;
+				sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
+				psimatrix_recv = psimatrix_recv/nsnapshots;
 			
-			/* To compute needed sizes
-			 Array<int,1> isuppz(2*nsnapshots);
-			 int lwork = 30*nsnapshots;
-			 Array<FLT,1> work(lwork);
-			 Array<int,1> iwork(lwork);
-			 dsyevr_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
-			 &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info);
-			 std::cout << "optimal sizes:" <<  work(0) << ' ' << iwork(0) << std::endl;
-			 */
+				int info;
+				char jobz[2] = "V", uplo[2] = "L";
+				Array<FLT,1> eigenvalues_subarray(nmodes_per_deflation);
+				Array<FLT,2> eigenvectors(nsnapshots,nmodes_per_deflation,ColumnMajorArray<2>());
 			
-			if (nsets == 1) {
-				// normal eigenvalue problem
-				dspevx_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(),&vl, &vu, &il, &iu, &abstol,
-								&neig, eigenvalues_subarray.data(), eigenvectors.data(), &nsnapshots, work.data(), iwork.data(), ifail.data(), &info);
-			}
-			else {
-				// generalized eigenvalue problem
-				Array<FLT,1> psimatrix_B(nsnapshots * (nsnapshots+1)/2);
-				psimatrix_B = 0.0;
-				for(int k=0;k<nsnapshots;++k)	{
-					psimatrix_B (k + (k)*(2*nsnapshots-k-1)/2) = set_eigenvalues(k);
+				if(nmodes_per_deflation == nsnapshots) {
+					// Compute all eigenvectors
+					Array<FLT,1> work(3*nsnapshots);
+					// normal eigenvalue problem
+					DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues_subarray.data(),eigenvectors.data(),nsnapshots,work.data(),info);
 				}
+				else {
+					// Compute only some eigenvectors
+					char range[2] = "I";
+					int il=nsnapshots-nmodes_per_deflation+1, iu=nsnapshots;
+					double vl, vu;
+					int neig;
+					Array<int,1> iwork(5*nsnapshots);
+					Array<double,1> work(8*nsnapshots);
+					Array<int,1> ifail(nsnapshots);
+					double abstol = 2.*dlamch_("Safe minimum");
 				
-				Array<int,1> iwork(5*nsnapshots);
-				Array<double,1> work(8*nsnapshots);
-				Array<int,1> ifail(nsnapshots);
-				dspgvx_(&ITYPE, jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), psimatrix_B.data(), &vl, &vu, &il, &iu, &abstol,
-								&neig, eigenvalues_subarray.data(), eigenvectors.data(), &nsnapshots, work.data(), iwork.data(), ifail.data(), &info);
-			}
-		}
-		
-		if (info != 0) {
-			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-		}
-		/* Reorder largest to smallest */
-		if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
-			eigenvalues_subarray.reverseSelf(firstDim);
-			eigenvectors.reverseSelf(secondDim);
-		}
-		
-		/* construct POD MODES */
-		for(int k=0;k<nmodes_per_deflation;++k)	{
-			eigenvalues(start+k) = eigenvalues_subarray(k);
-			modes(start+k).v(Range(0,BASE::npnt-1)) = 0.0;
-			modes(start+k).s(Range(0,BASE::nseg-1)) = 0.0;
-			modes(start+k).i(Range(0,BASE::ntri-1)) = 0.0;
+					/* To compute needed sizes
+					 Array<int,1> isuppz(2*nsnapshots);
+					 int lwork = 30*nsnapshots;
+					 Array<FLT,1> work(lwork);
+					 Array<int,1> iwork(lwork);
+					 dsyevr_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
+					 &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info);
+					 std::cout << "optimal sizes:" <<  work(0) << ' ' << iwork(0) << std::endl;
+					 */
+					 
+					// normal eigenvalue problem
+					dspevx_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(),&vl, &vu, &il, &iu, &abstol,
+									&neig, eigenvalues_subarray.data(), eigenvectors.data(), &nsnapshots, work.data(), iwork.data(), ifail.data(), &info);
+				}
 			
-			/* LOAD SNAPSHOTS AND CALCULATE MODE */
-			for(int l=0;l<nsnapshots;++l)	{
-				nstr.str("");
-				nstr << l << std::flush;
-				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::output_type(1));
-#ifdef WEIGHTED_DPOD
-				modes(start+k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,k)*BASE::ug.v(Range(0,BASE::npnt-1)) * sqrt ( set_eigenvalues(l) );
-				modes(start+k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,k)*BASE::ug.s(Range(0,BASE::nseg-1)) * sqrt ( set_eigenvalues(l) );
-				modes(start+k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,k)*BASE::ug.i(Range(0,BASE::ntri-1)) * sqrt ( set_eigenvalues(l) );
-#else
-				modes(start+k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,k)*BASE::ug.v(Range(0,BASE::npnt-1));
-				modes(start+k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,k)*BASE::ug.s(Range(0,BASE::nseg-1));
-				modes(start+k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,k)*BASE::ug.i(Range(0,BASE::ntri-1));
-#endif
-			}
-		}
-#endif
-		
-		/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
-		for(int k=0;k<nmodes_per_deflation;++k) {
-			psimatrix(k) = norm2(modes(start+k));
-		}
-		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
-		//*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
-		
-		/* RENORMALIZE MODES & OUTPUT */
-		for (int k=0;k<nmodes_per_deflation;++k) {
-			FLT norm = sqrt(psimatrix_recv(k));
-			modes(start+k).v(Range(0,BASE::npnt-1)) /= norm;
-			modes(start+k).s(Range(0,BASE::nseg-1)) /= norm;
-			modes(start+k).i(Range(0,BASE::ntri-1)) /= norm;
-			nstr.str("");
-			nstr << start+k << std::flush;
-			filename = "mode" +nstr.str();
-			output(modes(start+k),filename);
-		}
-		
-		/* To test normalization */
-		//		psimatrix = 0.0;
-		//		psimatrix_recv = 0.0;
-		//		/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
-		//		for(int k=0;k<nmodes_per_deflation;++k) {
-		//			psimatrix(k) = norm2(modes(start+k));
-		//		}
-		//		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
-		//		*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
-		
-		/***************************************/
-		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
-		/***************************************/
-		if (deflation_count+1 < ndeflation) {
-			psi1dcounter = 0;
-			for (int k=0;k<nsnapshots;++k) {
-				/* LOAD SNAPSHOT */
-				nstr.str("");
-				nstr << k << std::flush;
-				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::output_type(1));
-				project_to_gauss(BASE::ug);
+				if (info != 0) {
+					*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+					sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+				}
+				/* Reorder largest to smallest */
+				if (eigenvalues_subarray(nmodes_per_deflation-1) > eigenvalues_subarray(0)) {
+					eigenvalues_subarray.reverseSelf(firstDim);
+					eigenvectors.reverseSelf(secondDim);
+				}
+			
+				/* construct POD MODES */
+				for(int k=0;k<nmodes_per_deflation;++k)	{
+					eigenvalues(start+k) = eigenvalues_subarray(k);
+					modes(start+k).v(Range(0,BASE::npnt-1)) = 0.0;
+					modes(start+k).s(Range(0,BASE::nseg-1)) = 0.0;
+					modes(start+k).i(Range(0,BASE::ntri-1)) = 0.0;
 				
-				for(int l=start;l<nmodes_per_deflation+start;++l) {
-					psimatrix(psi1dcounter++) = inner_product_with_projection(modes(l));
+					/* LOAD SNAPSHOTS AND CALCULATE MODE */
+					for(int l=0;l<nsnapshots;++l)	{
+						nstr.str("");
+						nstr << l << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+						modes(start+k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,k)*BASE::ug.v(Range(0,BASE::npnt-1));
+						modes(start+k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,k)*BASE::ug.s(Range(0,BASE::nseg-1));
+						modes(start+k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,k)*BASE::ug.i(Range(0,BASE::ntri-1));
+					}
+				}
+			
+				/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
+				for(int k=0;k<nmodes_per_deflation;++k) {
+					psimatrix(k) = norm2(modes(start+k));
+				}
+				sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+				//*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
+			
+				/* RENORMALIZE MODES & OUTPUT */
+				for (int k=0;k<nmodes_per_deflation;++k) {
+					FLT norm = sqrt(psimatrix_recv(k));
+					modes(start+k).v(Range(0,BASE::npnt-1)) /= norm;
+					modes(start+k).s(Range(0,BASE::nseg-1)) /= norm;
+					modes(start+k).i(Range(0,BASE::ntri-1)) /= norm;
+					nstr.str("");
+					nstr << start+k << std::flush;
+					filename = "mode" +nstr.str();
+					output(modes(start+k),filename);
+				}
+			
+				/* To test normalization */
+				//		psimatrix = 0.0;
+				//		psimatrix_recv = 0.0;
+				//		/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
+				//		for(int k=0;k<nmodes_per_deflation;++k) {
+				//			psimatrix(k) = norm2(modes(start+k));
+				//		}
+				//		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+				//		*BASE::gbl->log << psimatrix_recv(Range(0,nmodes_per_deflation-1)) << std::endl;
+			
+				/***************************************/
+				/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
+				/***************************************/
+				if (deflation_count+1 < ndeflation) {
+					psi1dcounter = 0;
+					for (int k=0;k<nsnapshots;++k) {
+						/* LOAD SNAPSHOT */
+						nstr.str("");
+						nstr << k << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+						project_to_gauss(BASE::ug);
+					
+						for(int l=start;l<nmodes_per_deflation+start;++l) {
+							psimatrix(psi1dcounter++) = inner_product_with_projection(modes(l));
+						}
+					}
+					sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
+				
+					psi1dcounter = 0;
+					for (int k=0;k<nsnapshots;++k) {
+						/* LOAD SNAPSHOT */
+						nstr.str("");
+						nstr << k << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::output_type(1));
+					
+						for(int l=start;l<nmodes_per_deflation+start;++l) {
+							BASE::ug.v(Range(0,BASE::npnt-1)) -= psimatrix_recv(psi1dcounter)*modes(l).v(Range(0,BASE::npnt-1));
+							BASE::ug.s(Range(0,BASE::nseg-1)) -= psimatrix_recv(psi1dcounter)*modes(l).s(Range(0,BASE::nseg-1));
+							BASE::ug.i(Range(0,BASE::ntri-1)) -= psimatrix_recv(psi1dcounter)*modes(l).i(Range(0,BASE::ntri-1));
+							++psi1dcounter;
+						}
+						BASE::output(filename, BASE::output_type(1));
+						// BASE::output(filename, BASE::output_type(0));
+					}
 				}
 			}
-			sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes_per_deflation,blocks::flt_msg,blocks::sum,pod_id);
-			
-			psi1dcounter = 0;
-			for (int k=0;k<nsnapshots;++k) {
-				/* LOAD SNAPSHOT */
-				nstr.str("");
-				nstr << k << std::flush;
-				filename = "temp" +nstr.str();
-				BASE::input(filename, BASE::output_type(1));
-				
-				for(int l=start;l<nmodes_per_deflation+start;++l) {
-					BASE::ug.v(Range(0,BASE::npnt-1)) -= psimatrix_recv(psi1dcounter)*modes(l).v(Range(0,BASE::npnt-1));
-					BASE::ug.s(Range(0,BASE::nseg-1)) -= psimatrix_recv(psi1dcounter)*modes(l).s(Range(0,BASE::nseg-1));
-					BASE::ug.i(Range(0,BASE::ntri-1)) -= psimatrix_recv(psi1dcounter)*modes(l).i(Range(0,BASE::ntri-1));
-					++psi1dcounter;
-				}
-				BASE::output(filename, BASE::output_type(1));
-				// BASE::output(filename, BASE::output_type(0));
-			}
+			break;
 		}
+		case(mPOD): {
+			/******************************************************************************/
+			/**************************  mPOD         *************************************/
+			/******************************************************************************/
+			std::string write_name = "temp";
+			
+			/* For first level eigenvalues are just 1 */
+			eigenvalues.resize(nsnapshots);
+			eigenvalues = 1;
+			
+			Array<FLT,1> next_eigenvalues;
+			next_eigenvalues.resize(nsnapshots);
+			
+			int npartitions = ceil(nsnapshots/M);  //  Calculate initial number of partitions
+			int nlevel = 0;
+			
+			while (true) { //  do while loop implemented with a break statement at end
+				*BASE::gbl->log << "level = " << nlevel << ", npartitions = " << npartitions << ", M = " << M << ", Lam_min = " << MinEigen << std::endl;
+
+				if (npartitions == 1) write_name = "mode";
+				
+				 // counter of number of modes for next level
+				int next_nsnapshots = 0;
+						
+				//  Loop over each partition (this loop could be parallelized...)
+				for (int np=0;np<npartitions;++np) { 		
+
+					// index of beginning of set by eq. 15
+					int I0 = np*M;
+					// index of end of set avoiding integer errors
+					int I1 = min((np+1)*M,nsnapshots);
+					// M for this set, again avoiding integer errors
+					int Mp = I1-I0;					
+						
+					psimatrix.resize(Mp*(Mp+1)/2);  //  this is the snapshot matrix (see eq. 17)
+					psimatrix_recv.resize(Mp*(Mp+1)/2);  // % this is the snapshot matrix (see eq. 17) for mpi communications
+					psimatrix = 0.0;
+					psimatrix_recv = 0.0;
+					psi1dcounter = 0;
+					for (int k=I0;k<I1;++k) {
+						nstr.str("");
+						nstr << k << std::flush;
+						filename = "temp" +nstr.str();
+						BASE::input(filename, BASE::reload_type); 
+						project_to_gauss(BASE::ug);
+						
+						for(int l=k;l<I1;++l) {
+							nstr.str("");
+							nstr << l << std::flush;
+							filename = "temp"+nstr.str();
+							BASE::input(filename, BASE::reload_type);
+							psimatrix(psi1dcounter) = inner_product_with_projection(BASE::ug);
+							++psi1dcounter;
+						}
+					}
+					sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots * (nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
+					
+					psimatrix=0.;
+					for (int i = 0;i<Mp;++i) {
+						psimatrix(i + i*(2*Mp-i-1)/2) = eigenvalues(I0+i);
+					}
+					
+					// Compute all eigenvectors
+					int info;
+					char jobz[2] = "V", uplo[2] = "L";
+					int ITYPE=3;
+					Array<FLT,1> work;
+					work.resize(3*Mp);
+					Array<FLT,1> eigenvalues_p(Mp);
+					Array<FLT,2> eigenvectors_p(Mp,Mp,ColumnMajorArray<2>());
+					dspgv_(&ITYPE, jobz, uplo, &Mp, psimatrix_recv.data(), psimatrix.data(), eigenvalues_p.data(), eigenvectors_p.data(), &Mp, work.data(), &info);
+					if (info != 0) {
+						*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+						sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+					}
+
+					/* Reorder largest to smallest */
+					if (eigenvalues_p(Mp-1) > eigenvalues_p(0)) {
+						eigenvalues_p.reverseSelf(firstDim);
+						eigenvectors_p.reverseSelf(secondDim);
+					}
+					*BASE::gbl->log << "eigenvalues of partition "<<  np << " in decomposition level " << nlevel <<  " are "<<  eigenvalues_p << std::endl;
+					int modes_p = first(eigenvalues_p < MinEigen);
+					if (modes_p < 0) modes_p = Mp;
+					
+					*BASE::gbl->log << "the index of first eigenvalue below "<<  MinEigen << " in the partition " <<  np << " is "<<  modes_p << std::endl;
+
+					if (modes_p > 0) {
+						eigenvalues(Range(next_nsnapshots,next_nsnapshots+modes_p-1)) = eigenvalues_p(Range(0,modes_p-1));
+				
+						/* construct POD MODES */
+						for(int k=0;k<modes_p;++k) {
+							modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
+							modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
+							modes(k).i(Range(0,BASE::ntri-1)) = 0.0;
+						
+							/* LOAD SNAPSHOTS AND CALCULATE MODE */
+							for(int l=0;l<Mp;++l) {
+								nstr.str("");
+								nstr << I0 +l << std::flush;
+								filename = "temp" +nstr.str();
+								BASE::input(filename, BASE::reload_type);
+								modes(k).v(Range(0,BASE::npnt-1)) += eigenvectors_p(l,k)*BASE::ug.v(Range(0,BASE::npnt-1));
+								modes(k).s(Range(0,BASE::nseg-1)) += eigenvectors_p(l,k)*BASE::ug.s(Range(0,BASE::nseg-1));
+								modes(k).i(Range(0,BASE::ntri-1)) += eigenvectors_p(l,k)*BASE::ug.i(Range(0,BASE::ntri-1));
+							}
+						}
+		
+						/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
+						for(int k=0;k<modes_p;++k) {
+							psimatrix(k) = norm2(modes(k));
+						}
+						sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots,blocks::flt_msg,blocks::sum,pod_id);
+				
+						/* RENORMALIZE MODES & OUTPUT */
+						for (int k=0;k<modes_p;++k) {
+							FLT norm = sqrt(psimatrix_recv(k));
+							modes(k).v(Range(0,BASE::npnt-1)) /= norm;
+							modes(k).s(Range(0,BASE::nseg-1)) /= norm;
+							modes(k).i(Range(0,BASE::ntri-1)) /= norm;
+							nstr.str("");
+							nstr << k << std::flush;
+							filename = write_name +nstr.str();
+							output(modes(k),filename);
+						}
+						next_nsnapshots += modes_p;
+					}
+				}
+				nsnapshots = next_nsnapshots;
+				
+				if (npartitions == 1)  {
+					break;
+				}
+					
+				++nlevel;
+				npartitions = ceil(min(npartitions/2,nsnapshots/M));
+				M = ceil(nsnapshots/npartitions);
+			}
+			nmodes = nsnapshots;
+		}
+		break;
 	}
-	
+
 	/* OUTPUT EIGENVALUES VECTOR */
 	*BASE::gbl->log << "eigenvalues: "<<  eigenvalues << std::endl;
-	
 	filename = "eigenvalues_" +BASE::gbl->idprefix;
 	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(1));
 	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(0));
-	
+
 	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS */
 	const int ncoefficients = (coefficient_end-coefficient_start)/coefficient_interval*nmodes;
 	psimatrix.resize(ncoefficients);
@@ -559,7 +725,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 	}
 	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),ncoefficients,blocks::flt_msg,blocks::sum,pod_id);
-	
+
 	psi1dcounter = 0;
 	for (int k=coefficient_start;k<coefficient_end;k+=coefficient_interval) {
 		/* OUTPUT COEFFICIENT VECTOR */
@@ -570,7 +736,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		BASE::output(nmodes,psimatrix_recv(Range(psi1dcounter,psi1dcounter+nmodes-1)),filename,BASE::output_type(0));
 		psi1dcounter += nmodes;
 	}
-	
+
 #ifdef POD_BDRY
 	/* NOW GENERATE BDRY POD MODES */
 	for (int i=0;i<BASE::nebd;++i)
@@ -977,66 +1143,6 @@ template<class BASE> void pod_generate<BASE>::output(vsi& target,std::string fil
 	
 	return;
 }
-
-template<class BASE> void gram_schmidt<BASE>::tadvance() {
-	std::string filename,filename2;
-	std::ostringstream nstr;
-	
-	const int& nsnapshots_per_set = pod_generate<BASE>::nsnapshots_per_set;
-	const int& nsets = pod_generate<BASE>::nsets;
-	const int& pod_id = pod_generate<BASE>::pod_id;
-	const int& nsnapshots = pod_generate<BASE>::nsnapshots;
-	Array<FLT,2> coeff(nsnapshots,nsnapshots);
-	
-	if (BASE::gbl->substep != 0) return;
-	
-	BASE::tadvance();
-	
-	/*************************************/
-	/* LOAD SNAPSHOTS AND CALCULATE MODE */
-	/*************************************/
-	for(int eig_ct=0;eig_ct < nsnapshots_per_set;++eig_ct)	{
-		for(int l=1;l<nsets-1;++l) {
-			nstr.str("");
-			nstr << l*nsnapshots_per_set + eig_ct << std::flush;
-			filename = "mode" +nstr.str();
-			BASE::input(filename, BASE::output_type(1));
-			project_to_gauss(BASE::ug);
-			
-			FLT dotp, dotp_recv;
-			for (int k=0;k<l;++k) {
-				nstr.str("");
-				nstr << k*nsnapshots_per_set + eig_ct << std::flush;
-				filename2 = "mode" +nstr.str();
-				BASE::input(filename2, BASE::output_type(1), 1);
-				dotp = inner_product_with_projection(BASE::ugbd(1));
-				sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
-				BASE::ug.v(Range(0,BASE::npnt-1)) -= dotp_recv*BASE::ugbd(1).v(Range(0,BASE::npnt-1));
-				BASE::ug.s(Range(0,BASE::nseg-1)) -= dotp_recv*BASE::ugbd(1).s(Range(0,BASE::nseg-1));
-				BASE::ug.i(Range(0,BASE::ntri-1)) -= dotp_recv*BASE::ugbd(1).i(Range(0,BASE::ntri-1));
-				coeff(k*nsnapshots_per_set + eig_ct,l*nsnapshots_per_set + eig_ct) = dotp_recv;
-			}
-			
-			FLT norm, norm_recv;
-			norm = norm2(BASE::ug);
-			sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum,pod_id);
-			
-			/* DIVIDE BY NORM */
-			norm = sqrt(norm_recv);
-			BASE::ug.v(Range(0,BASE::npnt-1)) /= norm;
-			BASE::ug.s(Range(0,BASE::nseg-1)) /= norm;
-			BASE::ug.i(Range(0,BASE::ntri-1)) /= norm;
-			
-			/* OUTPUT RENORMALIZED MODE */
-			BASE::output(filename, BASE::output_type(0));
-			BASE::output(filename, BASE::output_type(1));
-		}
-	}
-	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
-	
-	return;
-}
-
 
 #ifdef POD_BDRY
 /***********************/

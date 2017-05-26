@@ -26,6 +26,7 @@ template<class BASE> class pod_gen_vrtx_bdry;
 
 template<class BASE> class pod_generate : public BASE {
 	public:
+		enum job_ids {direct,snapshot,mPOD} job_id;  // Can be either direct, snapshot, or mPod
 		int nsnapshots; // number of snapshots used to make modes
 		int nmodes;  // nmodes to output
 		int restartfile; // number of first snapshot
@@ -33,9 +34,8 @@ template<class BASE> class pod_generate : public BASE {
 		int coefficient_start,coefficient_interval,coefficient_end; // restart numbering to output coefficient files
 		int pod_id;  // For problems with separate PODs on groups of blocks
 		int ndeflation, nmodes_per_deflation;  // To use the deflation method
-		int nsets, nsnapshots_per_set; // For combining modes each with their own vector of eigenvalue weights
-		
-		Array<double,1> set_eigenvalues;
+		int M; // Number of snapshots per group for mPOD
+		FLT MinEigen;  // Minimum eigenvalue for mPOD
 		Array<FLT,1> scaling;
     
 #ifdef USING_MASS_MATRIX
@@ -61,18 +61,6 @@ template<class BASE> class pod_generate : public BASE {
 		FLT norm2(vsi& target);
 		void test_orthogonality();
 		void output(vsi& target,std::string filename);
-};
-/*template<class BASE> class wdpod_generate : public pod_generate<BASE>{
-	public:
-		int nsets;
-		int ntruncation;
-		Array<double,1> set_eigenvalues ;
-}*/
-
-template<class BASE> class gram_schmidt : public pod_generate<BASE> {
-	public:
-		gram_schmidt<BASE>* create() { return new gram_schmidt<BASE>();}
-		void tadvance();
 };
 
 
