@@ -611,7 +611,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 							++psi1dcounter;
 						}
 					}
-					sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots * (nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
+					sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),Mp*(Mp+1)/2,blocks::flt_msg,blocks::sum,pod_id);
 					
 					psimatrix=0.;
 					for (int i = 0;i<Mp;++i) {
@@ -668,7 +668,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 						for(int k=0;k<modes_p;++k) {
 							psimatrix(k) = norm2(modes(k));
 						}
-						sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots,blocks::flt_msg,blocks::sum,pod_id);
+						sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),modes_p,blocks::flt_msg,blocks::sum,pod_id);
 				
 						/* RENORMALIZE MODES & OUTPUT */
 						for (int k=0;k<modes_p;++k) {
@@ -685,7 +685,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					}
 				}
 				nsnapshots = next_nsnapshots;
-				
+				nmodes = nsnapshots;
+
 				if (npartitions == 1)  {
 					break;
 				}
@@ -694,7 +695,6 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				npartitions = ceil(min(npartitions/2,nsnapshots/M));
 				M = ceil(nsnapshots/npartitions);
 			}
-			nmodes = nsnapshots;
 		}
 		break;
 	}
