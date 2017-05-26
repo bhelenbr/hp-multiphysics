@@ -564,10 +564,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			
 			/* For first level eigenvalues are just 1 */
 			eigenvalues.resize(nsnapshots);
-			eigenvalues = 1;
-			
-			Array<FLT,1> next_eigenvalues;
-			next_eigenvalues.resize(nsnapshots);
+			eigenvalues = 1./nsnapshots;
 			
 			int npartitions = ceil(nsnapshots/M);  //  Calculate initial number of partitions
 			int nlevel = 0;
@@ -677,7 +674,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 							modes(k).s(Range(0,BASE::nseg-1)) /= norm;
 							modes(k).i(Range(0,BASE::ntri-1)) /= norm;
 							nstr.str("");
-							nstr << k << std::flush;
+							nstr << k +next_nsnapshots << std::flush;
 							filename = write_name +nstr.str();
 							output(modes(k),filename);
 						}
@@ -700,7 +697,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	}
 
 	/* OUTPUT EIGENVALUES VECTOR */
-	*BASE::gbl->log << "eigenvalues: "<<  eigenvalues << std::endl;
+	*BASE::gbl->log << "eigenvalues: "<<  eigenvalues(Range(0,nmodes-1)) << std::endl;
 	filename = "eigenvalues_" +BASE::gbl->idprefix;
 	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(1));
 	BASE::output(nmodes,eigenvalues,filename,BASE::output_type(0));
