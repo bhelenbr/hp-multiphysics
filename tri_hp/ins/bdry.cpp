@@ -248,9 +248,13 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	FLT s,um,v,c,den,lam0,lam1,lam2,hmax;
 	FLT nu,gam,qmax;
 	Array<FLT,1> ub(x.NV), uvp(x.NV);
+	
+	flx = 0.0;
+	/* This allows for nonzero diffusive fluxes */
+	hp_edge_bdry::flux(u, xpt, mv, norm, side_length, flx);
 
-	/* CHARACTERISTIC FAR-FIELD B.C. */   
 
+	/* CHARACTERISTIC FAR-FIELD B.C. */
 	rho = x.gbl->rho;
 	nu = x.gbl->mu/x.gbl->rho;
 	rhoi = 1./rho;
@@ -308,10 +312,10 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
 
 	for(int n=0;n<tri_mesh::ND;++n)
-		flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
+		flx(n) += flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
 
 	for(int n=tri_mesh::ND;n<x.NV-1;++n)
-		flx(n) = flx(x.NV-1)*ub(n);
+		flx(n) += flx(x.NV-1)*ub(n);
 	
 //	*x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
 //	*x.gbl->log << ul << ' ' << vl << ' ' << pl << ' ' << ur << ' ' << vr << ' ' << pr << ' '<< uvp << '\n';

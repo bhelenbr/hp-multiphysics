@@ -45,6 +45,9 @@ namespace bdry_cd {
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				FLT vel;
 
+				flx = 0.0;
+				hp_edge_bdry::flux(u,xpt,mv,norm,side_length,flx);
+				
 #ifdef CONST_A
 				vel =  (x.gbl->ax-mv(0))*norm(0) +(x.gbl->ay -mv(1))*norm(1);        
 #else
@@ -52,9 +55,9 @@ namespace bdry_cd {
 #endif
 
 				if (vel > 0.0)
-					flx(0) = x.gbl->rhocv*vel*u(0);
+					flx(0) += x.gbl->rhocv*vel*u(0);
 				else
-					flx(0) = x.gbl->rhocv*vel*ibc->f(0, xpt, x.gbl->time);
+					flx(0) += x.gbl->rhocv*vel*ibc->f(0, xpt, x.gbl->time);
 			}
 			characteristic(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}

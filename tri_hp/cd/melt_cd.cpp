@@ -21,6 +21,7 @@
 #include "melt_cd.h"
 
 //#define TEST_ANALYTIC_JACOBIAN
+//#define TWOFACETS
 
 using namespace bdry_cd;
 
@@ -169,6 +170,17 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	const int p = 2;
 	
 	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
+
+#ifdef TWOFACETS
+	// Hack to get other facet angle
+	// Theta is defined as angle between outward liquid normal and facet direction (outward from solid)
+	// This inconsistency makes counterclockwise rotations negative
+	const int p = 2;
+	FLT theta = asin(sint);
+	theta -= 70.0*M_PI/180.0;
+	K = pow(pow(gbl->Krough,p) + 1./(pow(sint/gbl->Ksn,p) +pow(1./K2Dn_exp,p)) +1./(pow(fabs(sin(theta))/gbl->Ksn,p) +pow(1./K2Dn_exp,p)),1.0/p);
+	return(K);
+#endif
 	
 	if (sint == 0.0) {
 		K = K2Dn_exp;

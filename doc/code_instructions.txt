@@ -20,15 +20,16 @@
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install --build-from-source --HEAD blitz
 brew install libbinio
-brew install muparser
-brew install homebrew/science/petsc
-brew install slepc
 brew install pth
 brew install valgrind
+brew install muparser
+brew tap homebrew/science
+brew install petsc
+brew install slepc
+
 
 # These are not necessary but I put it here
 # as a reminder of nice things to install
-brew tap homebrew/science
 brew install graphviz
 brew install doxygen
 brew install numpy
@@ -41,6 +42,10 @@ brew outdated
 brew upgrade
 brew cleanup (wait until you are sure everything works)
 
+############################################################
+# THE FOLLOWING PACKAGES ARE UNNECESSARY IF USING HOMEBREW #
+# SKIP TO THE PART ABOUT BUILDING MY CODE                  #
+############################################################
 
 ###################################################################
 #### GET BLITZ 
@@ -291,19 +296,26 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 NOW DOWNLOAD MY CODE
 ###################################################################
 [cd]
-"ssh-keygen" (Hit return twice, i.e. use no passphrase)
-"cd ~/.ssh"
-"cat id_rsa.pub > ~/Desktop/id.txt"
-send id.txt file on desktop to Brian so he can give you access to repository
-[cd]
-
-now get all of my stuff:
-git clone ssh://git@balin.camp.clarkson.edu/~/GitRepo Codes
-
+git clone https://github.com/bhelenbr/hp-multiphysics.git Codes
 [mkdir bin] # (if not already there)
 [cd Codes]
 [mkdir include lib] # (if not already there)
 
+#################################################################
+# THIS IS OLD WAY USING MY SSH SERVER WHICH REQUIRES A PASSCODE #
+# [cd]
+# “ssh-keygen" (Hit return twice, i.e. use no passphrase)
+# “cd ~/.ssh"
+# “cat id_rsa.pub > ~/Desktop/id.txt"
+# send id.txt file on desktop to Brian so he can give you access to repository
+# [cd]
+
+now get all of my stuff:
+git clone ssh://git@balin.camp.clarkson.edu/~/GitRepo Codes
+[mkdir bin] # (if not already there)
+[cd Codes]
+[mkdir include lib] # (if not already there)
+#################################################################
 
 ###################################################################	
 #### UNIX ####
