@@ -19,10 +19,19 @@
 ########################
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install --build-from-source --HEAD blitz
-brew install libbinio
 brew install pth
-brew install valgrind
 brew install muparser
+brew install netcdf
+brew install libbinio
+brew install openmpi
+brew install pdftohtml
+brew install cmake
+brew install scalapack
+brew install metis
+
+
+
+
 brew tap homebrew/science
 brew install petsc
 brew install slepc
@@ -63,7 +72,7 @@ unpack & cd into directory
 
 METHOD 2 - from repository
 cd ~/Packages
-hg clone http://blitz.hg.sourceforge.net/hgweb/blitz blitz
+git clone https://github.com/blitzpp/blitz.git blitz
 cd blitz
 autoreconf -fiv
 ./configure --prefix=${HOME}/Packages
@@ -197,29 +206,24 @@ xcode-select --install
 xcode-select --install  (To install Xcode command line tools)
 tar --use-compress-program bzip2 valgrindXXX.tar.bz2
 ./configure --prefix=/share/apps (for cluster)
-./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc (for OS X)
-./configure --prefix=${HOME}/Packages (for ubuntu)
+./configure --prefix=${HOME}/Packages (for ubuntu & for OS X with homebrew installed openmpi)
 make
 make install
 
-or from svn (for newest which is sometimes necessary)
-svn co svn://svn.valgrind.org/valgrind/trunk valgrind
+or from git (for newest which is sometimes necessary)
+git clone git://sourceware.org/git/valgrind.git
+To build the cloned code, follow the instructions in the README file that the clone should give you. Alternatively, the following should work:
+
+cd valgrind
 ./autogen.sh
-./configure --prefix=${HOME}/Packages --with-mpicc=${HOME}/Packages/bin/mpicc
+./configure --prefix=...
 make
 make install
 
 ###################################################################
 ######## FOR PETSC ############
 ###################################################################
-download current version at
-	http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
-move to Packages, extract
-	[mv petsc-XX ../Packages]
-	[cd petsc-XX]
-	[tar zxvf petsc-XX]
-
-# OR from repository
+cd ~/Packages
 git clone -b maint https://bitbucket.org/petsc/petsc petsc
 
 # OR to update
@@ -228,6 +232,9 @@ git pull
 git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
+# On High Sierra with most packages installed using homebrew
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --with-valgrind-dir=${HOME}/Packages --with-scalapack-dir=/usr/local
+
 # with superlu
 # ON LION (For 3.2-p5 remove --download-metis=1)
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-mpi-dir=${HOME}/Packages --with-valgrind-dir=${HOME}/Packages
@@ -245,7 +252,10 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 ./configure --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2-1.9 --with-debugging=0 --with-valgrind-dir=/share/apps
 
-./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 -with-fortran=0  --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
+./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
+
+# Simplified version for Orion cluster
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
 
 # On stampede
 ./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps

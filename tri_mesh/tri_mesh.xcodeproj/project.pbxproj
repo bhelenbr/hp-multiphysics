@@ -918,18 +918,20 @@
 				HEADER_SEARCH_PATHS = (
 					../include,
 					"$(PACKAGES)/include",
+					/usr/local/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"-fno-inline",
 					"$(OTHER_CFLAGS)",
 				);
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 				mpi_threads = NONE;
 				threads = BOOST;
 			};
@@ -957,14 +959,16 @@
 				HEADER_SEARCH_PATHS = (
 					../include,
 					"$(PACKAGES)/include",
+					/usr/local/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 				mpi_threads = NONE;
 				threads = BOOST;
 			};

@@ -133,7 +133,9 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		std::cout << "Waiting for debugger.  Process id is " << getpid() << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+#if __cplusplus >= 199711L
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+#endif
 	}
 #endif
 	

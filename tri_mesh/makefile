@@ -52,7 +52,7 @@ DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 LIB = -L../../lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
 LIB += -lbinio -lm -lmuparser -lmetis -lparmetis -lpth -lblitz -lparseargs -lnetcdf
 
-CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
+CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
 
 ### Begin machine dependent
 

@@ -1665,13 +1665,15 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PACKAGES)/include",
 					../include,
+					"$(PACKAGES)/include",
+					/usr/local/include,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"$(PACKAGES)/lib",
 					../lib,
+					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
@@ -1681,7 +1683,7 @@
 					"-lbinio",
 					"-lnetcdf",
 				);
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				threads = PTH;
@@ -1711,13 +1713,15 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PACKAGES)/include",
 					../include,
+					"$(PACKAGES)/include",
+					/usr/local/include,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"$(PACKAGES)/lib",
 					../lib,
+					"$(PACKAGES)/lib",
+					/usr/local/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
@@ -1727,7 +1731,7 @@
 					"-lbinio",
 					"-lnetcdf",
 				);
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 				mpi_threads = NONE;
 				threads = PTH;
@@ -1785,7 +1789,6 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lparmetis",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
@@ -1809,7 +1812,6 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lparmetis",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
@@ -1834,7 +1836,6 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lparmetis",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
@@ -1858,7 +1859,6 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lparmetis",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
