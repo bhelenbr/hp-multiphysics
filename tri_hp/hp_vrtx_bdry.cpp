@@ -8,6 +8,8 @@
 
 #include "hp_boundary.h"
 
+//#define MPDEBUG
+
 void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
 	std::string keyword,ibcname;
 	
@@ -63,7 +65,7 @@ void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
 	}
 	
 #ifdef petsc
-	base.resize_buffers((x.NV+x.ND)*60*(3 +3*x.sm0+x.im0));  // Allows for 10 elements of jacobian entries to be sent
+	base.resize_buffers((x.NV+x.ND)*120*(3 +3*x.sm0+x.im0));  // Allows for 10 elements of jacobian entries to be sent
 #endif
 }
 
@@ -300,7 +302,7 @@ int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	assert(jacobian_start == static_cast<int>(base.fsndbuf(count++)));
 	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 		int row = static_cast<int>(base.fsndbuf(count++));
-		x.J.zero_row(row);
+		x.J.reset_row(row);
 		int ncol = static_cast<int>(base.fsndbuf(count++));
 		for (int k = 0;k<ncol;++k) {
 			int col = static_cast<int>(base.fsndbuf(count++));
@@ -311,6 +313,7 @@ int hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 			}
 		}
 		x.J_mpi.multiply_row(row, 0.0);
+		x.J_mpi.reset_row(row);
 	}
 	
 	for (int m=0;m<base.nmatches();++m) {
@@ -526,7 +529,7 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 	assert(jacobian_start == static_cast<int>(base.fsndbuf(count++)));
 	for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
 		int row = static_cast<int>(base.fsndbuf(count++));
-		x.J.zero_row(row);
+		x.J.reset_row(row);
 		int ncol = static_cast<int>(base.fsndbuf(count++));
 		for (int k = 0;k<ncol;++k) {
 			int col = static_cast<int>(base.fsndbuf(count++));
@@ -537,6 +540,7 @@ int multi_physics_pnt::petsc_matchjacobian_rcv(int phase)	{
 			}
 		}
 		x.J_mpi.multiply_row(row, 0.0);
+		x.J_mpi.reset_row(row);
 	}
 
 	for (int m=0;m<base.nmatches();++m) {
