@@ -131,6 +131,8 @@ public:
 	void set_diag(int nels,const Array<int,1>& rows, const Array<FLT,1>& vals, int offset=0);
 	void zero_row(int row);
 	void zero_rows(int nrows,const Array<int,1>& rows);
+	void reset_row(int row);
+	void reset_rows(int nrows,const Array<int,1>& rows);
 	void multiply_row(int row, FLT val);
 	void match_patterns(int row1, int row2);
 	void match_patterns(int nrows,const Array<int,1>& rows);

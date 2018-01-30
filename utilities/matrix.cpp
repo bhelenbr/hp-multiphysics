@@ -141,11 +141,11 @@ FLT& sparse_row_major::operator()(int row, int col) {
 	
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
+		std::cerr << "Too many entries for row " << row << " and col " << col ;
+		std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+		Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+		std::cerr << "Current usage " << colinds << std::endl;
+		assert(0);
 	}
 #endif
 	
@@ -175,11 +175,11 @@ void sparse_row_major::add_values(int row, int col, double val) {
 	
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
+		std::cerr << "Too many entries for add_values for row " << row << " and col " << col ;
+		std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+		Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+		std::cerr << "Current usage " << colinds << std::endl;
+		assert(0);
 	}
 #endif
 	
@@ -245,11 +245,11 @@ void sparse_row_major::set_values(int row, int col, double val) {
 	
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1) || _col(_cpt(row+1)-1) != INT_MAX-1) {
-			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
-			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
-			std::cerr << "Current usage " << colinds << std::endl;
-			assert(0);
+		std::cerr << "Too many entries for set_values for row " << row << " and col " << col ;
+		std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+		Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+		std::cerr << "Current usage " << colinds << std::endl;
+		assert(0);
 	}
 #endif
 	
@@ -334,6 +334,25 @@ void sparse_row_major::zero_rows(int nrows,const Array<int,1>& rows) {
 		for(int j=_cpt(rows(i));j<_cpt(rows(i)+1);++j)
 			_val(j) = 0.0;
 }
+
+void sparse_row_major::reset_row(int row) {
+	for(int j=_cpt(row);j<_cpt(row+1);++j) {
+		_val(j) = 0.0;
+		_col(j) = INT_MAX-1;
+	}
+}
+
+
+void sparse_row_major::reset_rows(int nrows,const Array<int,1>& rows) {
+	for(int i=0;i<nrows;++i) {
+		for(int j=_cpt(rows(i));j<_cpt(rows(i)+1);++j) {
+			_val(j) = 0.0;
+			_col(j) = INT_MAX-1;
+		}
+	}
+}
+
+
 
 void sparse_row_major::check_for_unused_entries(std::ostream &log) {
 	
