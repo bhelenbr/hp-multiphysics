@@ -116,7 +116,15 @@ void tri_hp_cns::project_new_variables(){
 		
 		/* invert 1d mass matrix */
 		for(int n=0;n<NV;++n) {
+#ifdef F2CFortran
 			PBTRS(uplo,basis::tri(log2p)->sm(),basis::tri(log2p)->sbwth(),1,(double *) &basis::tri(log2p)->sdiag1d(0,0),basis::tri(log2p)->sbwth()+1,&rcoef(n)(2),basis::tri(log2p)->sm(),info);
+#else
+            const int one = 1;
+            const int sbwth = basis::tri(log2p)->sbwth();
+            const int sbp1 = sbwth+1;
+            const int sm = basis::tri(log2p)->sm();
+            dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(log2p)->sdiag1d(0,0),&sbp1,&rcoef(n)(2),&sm,&info);
+#endif
 			for(int m=0;m<basis::tri(log2p)->sm();++m) 
 				gbl->res.s(sind,m,n) = -rcoef(n)(m+2);
 			
@@ -220,7 +228,14 @@ void tri_hp_cns::project_new_variables(){
 
 		for(int n=0;n<NV;++n) {
 			basis::tri(log2p)->intgrt(&rcoef(n)(0),&temp2d(n)(0,0),MXGP);
+#ifdef F2CFortran
 			DPBTRS(uplo,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),1,(double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,&rcoef(n)(basis::tri(log2p)->bm()),basis::tri(log2p)->im(),info);
+#else
+            const int ibwth = basis::tri(log2p)->ibwth(), one = 1, im = basis::tri(log2p)->im();
+            const int ibp1 = ibwth +1;
+            dpbtrs_(uplo,&im,&ibwth,&one,(double *) &basis::tri(log2p)->idiag(0,0),&ibp1,&rcoef(n)(basis::tri(log2p)->bm()),&im,&info);
+#endif
+            
 			for(int i=0;i<basis::tri(log2p)->im();++i)
 				gbl->res.i(tind,i,n) = -rcoef(n)(basis::tri(log2p)->bm()+i);
 		}
@@ -441,7 +456,15 @@ void tri_hp_cns::project_res_side(int mode) {
 		
 		/* invert 1d mass matrix */
 		for(int n=0;n<NV;++n) {
+#ifdef F2CFortran
 			PBTRS(uplo,basis::tri(log2p)->sm(),basis::tri(log2p)->sbwth(),1,(double *) &basis::tri(log2p)->sdiag1d(0,0),basis::tri(log2p)->sbwth()+1,&rcoef(n)(2),basis::tri(log2p)->sm(),info);
+#else
+            const int one = 1;
+            const int sbwth = basis::tri(log2p)->sbwth();
+            const int sbp1 = sbwth+1;
+            const int sm = basis::tri(log2p)->sm();
+            dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(log2p)->sdiag1d(0,0),&sbp1,&rcoef(n)(2),&sm,&info);
+#endif
 			//			for(int m=0;m<basis::tri(log2p)->sm();++m) 
 			//				gbl->res.s(sind,m,n) = -rcoef(n)(m+2);
 			gbl->res.s(sind,mode,n) = -rcoef(n)(mode+2);
@@ -544,7 +567,13 @@ void tri_hp_cns::project_res_interior() {
 		
 		for(int n=0;n<NV;++n) {
 			basis::tri(log2p)->intgrt(&rcoef(n)(0),&temp2d(n)(0,0),MXGP);
+#ifdef F2CFortran
 			DPBTRS(uplo,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),1,(double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,&rcoef(n)(basis::tri(log2p)->bm()),basis::tri(log2p)->im(),info);
+#else
+            const int ibwth = basis::tri(log2p)->ibwth(), one = 1, im = basis::tri(log2p)->im();
+            const int ibp1 = ibwth +1;
+            dpbtrs_(uplo,&im,&ibwth,&one,(double *) &basis::tri(log2p)->idiag(0,0),&ibp1,&rcoef(n)(basis::tri(log2p)->bm()),&im,&info);
+#endif
 			for(int i=0;i<basis::tri(log2p)->im();++i)
 				gbl->res.i(tind,i,n) = -rcoef(n)(basis::tri(log2p)->bm()+i);
 		}

@@ -685,12 +685,24 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 				++ind1;
 			}
 
-			GETRF((_sm+1)*(_sm+2)/2-1,(_sm+1)*(_sm+2)/2-1,&mwk(0,0),_tm,&ipiv(0),info);
+
+#ifdef F2CFortran
+            GETRF((_sm+1)*(_sm+2)/2-1,(_sm+1)*(_sm+2)/2-1,&mwk(0,0),_tm,&ipiv(0),info);
+#else
+            const int lda = (_sm+1)*(_sm+2)/2-1;
+            const int tm = _tm;
+            dgetrf_(&lda,&lda,&mwk(0,0),&tm,&ipiv(0),&info);
+#endif
 			if (info != 0) {
 				printf("DGETRF FAILED - VRTX info:%d _sm:%d i:%d\n",info,(_sm+2),i);
 				exit(1);
 			}
+#ifdef F2CFortran
 			GETRS(trans,(_sm+1)*(_sm+2)/2-1,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
+#else
+            const int one = 1;
+            dgetrs_(trans,&lda,&one,&mwk(0,0),&tm,&ipiv(0),&vwk(0),&tm,&info);
+#endif
 													
 			/* STORE INTERIOR VALUES */
 			for(k=0;k<_im;++k)
@@ -761,13 +773,24 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 					++ind1;
 				}
 
+#ifdef F2CFortran
 				GETRF(_im,_im,&mwk(0,0),_tm,&ipiv(0),info);
+#else
+                const int im = _im, tm = _tm;
+                dgetrf_(&im,&im,&mwk(0,0),&tm,&ipiv(0),&info);
+#endif
 				if (info != 0) {
 					printf("DGETRF FAILED SIDE info:%d (_sm+2):%d k:%d\n",info,(_sm+2),k);
 					exit(1);
 				}
-				else
+                else {
+#ifdef F2CFortran
 					GETRS(trans,_im,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
+#else
+                    static const int one = 1;
+                    dgetrs_(trans,&im,&one,&mwk(0,0),&tm,&ipiv(0),&vwk(0),&tm,&info);
+#endif
+                }
 
 				for(j=0;j<_im;++j)
 					_ifmb(i*_sm+3+k,j) = vwk(j);
@@ -780,13 +803,25 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 					mwk(j,k) = mm(k+_bm,j+_bm);
 			}
 
-			GETRF(_im,_im,&mwk(0,0),_tm,&ipiv(0),info);
+#ifdef F2CFortran
+            GETRF(_im,_im,&mwk(0,0),_tm,&ipiv(0),info);
+#else
+            const int im = _im, tm = _tm;
+            dgetrf_(&im,&im,&mwk(0,0),&tm,&ipiv(0),&info);
+#endif
 			if (info != 0) {
 				printf("GETRF FAILED info: %d cond: %f\n",info,rcond);
 				exit(1);
 			}
-			GETRS(trans,_im,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
-
+            else {
+#ifdef F2CFortran
+                GETRS(trans,_im,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
+#else
+                static const int one = 1;
+                dgetrs_(trans,&im,&one,&mwk(0,0),&tm,&ipiv(0),&vwk(0),&tm,&info);
+#endif
+            }
+            
 			for(j=0;j<_im;++j)
 				_ifmb(i*_sm +_sm +2,j) = vwk(j);
 		}
@@ -833,8 +868,13 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 				_idiag(j,k) = mm(i+_bm,j+_bm);
 			}
 		}
-		
+#ifdef F2CFortran
 		PBTRF(uplo,_im,_ibwth,&_idiag(0,0),_ibwth+1,info);
+#else
+        static const int ibwthplus = _ibwth+1;
+        const int im = _im, ibwth = _ibwth;
+        dpbtrf_(uplo,&im,&ibwth,&_idiag(0,0),&ibwthplus,&info);
+#endif
 		if (info != 0) {
 			printf("1:PBTRF FAILED info: %d\n", info);
 			exit(1);
@@ -845,7 +885,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 			for(j=0; j<_im; ++j ) {
 				_bfmi(i,j) = mm(i,j+_bm);
 			}
+#ifdef F2CFortran
 			PBTRS(uplo,_im,_ibwth,1,&_idiag(0,0),_ibwth+1,&_bfmi(i,0),_im,info);
+#else
+            static const int one = 1;
+            dpbtrs_(uplo,&im,&ibwth,&one,&_idiag(0,0),&ibwthplus,&_bfmi(i,0),&im,&info);
+#endif
 		}
 		
 		/* TEST INVERSE 
@@ -885,7 +930,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv(void) {
 			_msi(j,k) = mwk(i,j);
 		}
 	}
+#ifdef F2CFortran
 	PBTRF(uplo,_bm,_bm-1,&_msi(0,0),_bm,info);
+#else
+    const int bm = _bm, bmm1 = _bm-1;
+    dpbtrf_(uplo,&bm,&bmm1,&_msi(0,0),&bm,&info);
+#endif
 	if (info != 0) {
 		printf("2:PBTRF FAILED info: %d\n", info);
 		exit(1);
@@ -1066,8 +1116,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv1d() {
 				_sdiag1d(j,k) = mm(i+2,j+2);
 			}
 		}
-
-		PBTRF(uplo,_sm,_sbwth,&_sdiag1d(0,0),_sbwth+1,info);
+#ifdef F2CFortran
+        PBTRF(uplo,_sm,_sbwth,&_sdiag1d(0,0),_sbwth+1,info);
+#else
+        const int sm = _sm, sbwth = _sbwth, sbp1 = _sbwth+1;
+        dpbtrf_(uplo,&sm,&sbwth,&_sdiag1d(0,0),&sbp1,&info);
+#endif
 		if (info != 0 || rcond < 100.*EPSILON) {
 			printf("PBTRF FAILED - 1D (_sm+2) : %d info: %d cond: %f\n",(_sm+2), info,rcond);
 			exit(1);
@@ -1078,7 +1132,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv1d() {
 			for(j=0; j<_sm; ++j) {
 				_vfms1d(i,j) = mm(i,j+2);
 			}
+#ifdef F2CFortran
 			PBTRS(uplo,_sm,_sbwth,1,&_sdiag1d(0,0),_sbwth+1,&_vfms1d(i,0),(_sm+2)-2,info);
+#else
+            const int one = 1;
+            dpbtrs_(uplo,&sm,&sbwth,&one,&_sdiag1d(0,0),&sbp1,&_vfms1d(i,0),&sm,&info);
+#endif
 		}
 
 		/* MATRIX TO REMOVE SIDE MODES FROM VERTICES */	   
@@ -1095,12 +1154,25 @@ template<int _p, int ep> void tri_basis<_p,ep>::lumpinv1d() {
 					mwk(m+1,k) = mm(m+2,k+2);
 				}
 			}
+
+#ifdef F2CFortran
 			GETRF(_sm,_sm,&mwk(0,0),_tm,&ipiv(0),info);
+#else
+            const int sm = _sm, tm = _tm;
+            dgetrf_(&sm,&sm,&mwk(0,0),&tm,&ipiv(0),&info);
+#endif
 			if (info != 0) {
 				printf("1D DGETRF FAILED - VRTX info:%d (_sm+2):%d i:%d\n",info,(_sm+2),i);
 				exit(1);
 			}
-			GETRS(trans,_sm,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
+            else {
+#ifdef F2CFortran
+                GETRS(trans,_sm,1,&mwk(0,0),_tm,&ipiv(0),&vwk(0),_tm,info);
+#else
+                static const int one = 1;
+                dgetrs_(trans,&sm,&one,&mwk(0,0),&tm,&ipiv(0),&vwk(0),&tm,&info);
+#endif
+            }
 
 			/* STORE MATRIX */
 			for(k=0;k<_sm;++k)
@@ -1300,7 +1372,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::legtobasis(const FLT *data, FLT 
 		for(n=0;n<_sm;++n)
 			matrix(n,m) = _lgrnge1d(m+2,n+1);
 
+#ifdef F2CFortran
 	GETRF(_sm,_sm,matrix.data(),_tm,ipiv.data(),info);
+#else
+    const int sm = _sm, tm = _tm;
+    dgetrf_(&sm,&sm,matrix.data(),&tm,ipiv.data(),&info);
+#endif
 	if (info != 0) {
 		printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
 		exit(1);
@@ -1319,7 +1396,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::legtobasis(const FLT *data, FLT 
 		for(m=0;m<_sm;++m) {
 			u1d(m+1) -= data[count1++];
 		}
+#ifdef F2CFortran
 		GETRS(trans,_sm,1,matrix.data(),_tm,ipiv.data(),u1d.data()+1,_tm,info);
+#else
+        static const int one = 1;
+        dgetrs_(trans,&sm,&one,matrix.data(),&tm,ipiv.data(),u1d.data()+1,&tm,&info);
+#endif
 		for(m=0;m<_sm;++m)
 			coeff[count2++] = -u1d(1+m);
 	}
@@ -1333,8 +1415,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::legtobasis(const FLT *data, FLT 
 			}
 		}
 	}
-
+#ifdef F2CFortran
 	GETRF(_im,_im,matrix.data(),_tm,ipiv.data(),info);
+#else
+    const int im = _im;
+    dgetrf_(&im,&im,matrix.data(),&tm,ipiv.data(),&info);
+#endif
 	if (info != 0) {
 		printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
 		exit(1);
@@ -1354,7 +1440,12 @@ template<int _p, int ep> void tri_basis<_p,ep>::legtobasis(const FLT *data, FLT 
 			++m;
 		}
 	}
+#ifdef F2CFortran
 	GETRS(trans,_im,1,matrix.data(),_tm,ipiv.data(),uht.data(),_tm,info);
+#else
+    static const int one = 1;
+    dgetrs_(trans,&im,&one,matrix.data(),&tm,ipiv.data(),uht.data(),&tm,&info);
+#endif
 	for(m=0;m<_im;++m)
 		coeff[m+_bm] = -uht(m);
 		

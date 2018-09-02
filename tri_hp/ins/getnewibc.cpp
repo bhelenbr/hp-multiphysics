@@ -982,8 +982,12 @@ class force_coupling : public tri_hp_helper {
 				
 				/* Invert J */
 				int info;
-				int size = 6;				
+				int size = 6;
+#ifdef F2CFortran
 				GETRF(size,size,J.data(),size,ipiv.data(),info);
+#else
+                dgetrf_(&size,&size,J.data(),&size,ipiv.data(),&info);
+#endif
 				if (info) {
 					*x.gbl->log << "Error inverting Jacobian for solid body coupling " << info << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1000,7 +1004,12 @@ class force_coupling : public tri_hp_helper {
 					int info;
 					char trans[] = "T";	
 					int size = 6;
+#ifdef F2CFortran
 					GETRS(trans,size,1,J.data(),size,ipiv.data(),res.data(),size,info);
+#else
+                    const int one = 1;
+                    dgetrs_(trans,&size,&one,J.data(),&size,ipiv.data(),res.data(),&size,&info);
+#endif
 					if (info) {
 						*x.gbl->log << "Error with Jacobian product for solid body coupling" << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);

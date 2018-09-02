@@ -67,7 +67,11 @@ void matrix_absolute_value(Array<double,2> &A) {
 	double work[lwork];
 	
 	/* find eigenvalues and eigenvectors */
+#ifdef F2CFortran
 	GEEV(nchar,vchar, n, A.data(), n, lambda_real.data(), lambda_imag.data(), temp.data(), n, VR.data(), n, work, lwork, info);
+#else
+    dgeev_(nchar,vchar, &n, A.data(), &n, lambda_real.data(), lambda_imag.data(), temp.data(), &n, VR.data(), &n, work, &lwork, &info);
+#endif
 	
 	if (info != 0) {
 		std::cerr << "DGEEV FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
@@ -84,7 +88,11 @@ void matrix_absolute_value(Array<double,2> &A) {
 			temp(j,i)=lambda_real(i)*VR(i,j);
 	
 	/*  LU factorization  */
+#ifdef F2CFortran
 	GETRF(n,  n, VR.data(), n, ipiv, info);
+#else
+    dgetrf_(&n,&n,VR.data(),&n,ipiv,&info);
+#endif
 	
 	if (info != 0) {
 		std::cerr << "DGETRF FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
@@ -92,7 +100,11 @@ void matrix_absolute_value(Array<double,2> &A) {
 	}
 	
 	/* Solve transposed system temp = inv(VR)*temp */
+#ifdef F2CFortran
 	GETRS(trans,n,n,VR.data(),n,ipiv,temp.data(),n,info);
+#else
+    dgetrs_(trans,&n,&n,VR.data(),&n,ipiv,temp.data(),&n,&info);
+#endif
 	
 	if (info != 0) {
 		std::cerr << "DGETRS FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
@@ -482,7 +494,12 @@ void sparse_row_major::combine_rows(int nrows, const Array<int, 1> &rows,const A
 		
 		int info;
 		char trans[] = "T";
+#ifdef F2CFortran
 		GETRS(trans,nrows,nnz0,const_cast<FLT *>(A.data()),LDA,const_cast<int *>(ipiv.data()),_val_store.data(),nrows,info);
+#else
+        dgetrs_(trans,&nrows,&nnz0,A.data(),&LDA,ipiv.data(),_val_store.data(),&nrows,&info);
+#endif
+
 		
 		for(int i=0;i<nrows;++i) {
 			int row = rows(i);

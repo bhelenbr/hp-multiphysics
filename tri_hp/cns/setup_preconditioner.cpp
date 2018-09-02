@@ -478,7 +478,11 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 
 	/*  LU factorization  */
 	int info,ipiv[NV];
+#ifdef F2CFortran
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
+#else
+    dgetrf_(&NV,&NV,Tinv.data(),&NV,ipiv,&info);
+#endif
 	
 	if (info != 0) {
 		cout << "P " << P << endl;
@@ -492,7 +496,11 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 	/* Solve transposed system temp' = inv(Tinv')*temp' */
 	char trans[] = "T";
+#ifdef F2CFortran
 	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+#else
+    dgetrs_(trans,&NV,&NV,Tinv.data(),&NV,ipiv,temp.data(),&NV,&info);
+#endif
 	
 	if (info != 0) {
 		*gbl->log << "DGETRS FAILED FOR CNS TSTEP" << std::endl;

@@ -31,10 +31,10 @@ brew install metis
 
 
 
-
-brew tap homebrew/science
-brew install petsc
-brew install slepc
+% This doesn't work anymore
+% brew tap homebrew/science
+% brew install petsc
+% brew install slepc
 
 
 # These are not necessary but I put it here
@@ -216,7 +216,7 @@ To build the cloned code, follow the instructions in the README file that the cl
 
 cd valgrind
 ./autogen.sh
-./configure --prefix=...
+./configure --prefix=..
 make
 make install
 

@@ -1341,7 +1341,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 				for(n=0;n<basis::tri(log2p)->sm();++n)
 					matrix[n][m] = basis::tri(log2p)->lgrnge1d(m+2,n+1);
 
+#ifdef F2CFortran
 			GETRF(basis::tri(log2p)->sm(),basis::tri(log2p)->sm(),matrix[0],MXTM,ipiv,info);
+#else
+            const int sm = basis::tri(log2p)->sm(), mx = MXTM;
+            dgetrf_(&sm,&sm,matrix[0],&mx,ipiv,&info);
+#endif
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
@@ -1361,7 +1366,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 						}
 					}
 					for(n=0;n<NV;++n) {
+#ifdef F2CFortran
 						GETRS(trans,basis::tri(log2p)->sm(),1,matrix[0],MXTM,ipiv,&u(n)(0,1),MXTM,info);
+#else
+                        const int sm = basis::tri(log2p)->sm(), one = 1, mx = MXTM;
+                        dgetrs_(trans,&sm,&one,matrix[0],&mx,ipiv,&u(n)(0,1),&mx,&info);
+#endif
 						for(m=0;m<basis::tri(log2p)->sm();++m)
 							ugbd(tlvl).s(sind,m,n) = -u(n)(0,1+m);
 					}
@@ -1387,7 +1397,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 						}
 					}
 					for(n=0;n<NV;++n) {
+#ifdef F2CFortran
 						GETRS(trans,basis::tri(log2p)->sm(),1,matrix[0],MXTM,ipiv,&u(n)(0,1),MXTM,info);
+#else
+                        const int sm = basis::tri(log2p)->sm(), one = 1, mx = MXTM;
+                        dgetrs_(trans,&sm,&one,matrix[0],&mx,ipiv,&u(n)(0,1),&mx,&info);
+#endif
 						for(m=0;m<basis::tri(log2p)->sm();++m)
 							ugbd(tlvl).s(sind,m,n) = -u(n)(0,1+m);
 					}
@@ -1395,7 +1410,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					bnum = getbdrynum(seg(sind).tri(1));
 					indx = getbdryseg(seg(sind).tri(1));
 					for(n=0;n<ND;++n) {
+#ifdef F2CFortran
 						GETRS(trans,basis::tri(log2p)->sm(),1,matrix[0],MXTM,ipiv,&crd(n)(0,1),MXTM,info);
+#else
+                        const int sm = basis::tri(log2p)->sm(), one = 1, mx = MXTM;
+                        dgetrs_(trans,&sm,&one,matrix[0],&mx,ipiv,&crd(n)(0,1),&mx,&info);
+#endif
 						for(m=0;m<basis::tri(log2p)->sm();++m)
 							hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n) = -crd(n)(0,1+m);
 					}
@@ -1417,8 +1437,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					}
 				}
 			}
-
+#ifdef F2CFortran
 			GETRF(basis::tri(log2p)->im(),basis::tri(log2p)->im(),matrix[0],MXTM,ipiv,info);
+#else
+            const int im = basis::tri(log2p)->im();
+            dgetrf_(&im,&im,matrix[0],&mx,ipiv,&info);
+#endif
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
@@ -1443,7 +1467,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 					}
 				}
 				for(n=0;n<NV;++n) {
+#ifdef F2CFortran
 					GETRS(trans,basis::tri(log2p)->im(),1,matrix[0],MXTM,ipiv,&uht(n)(0),MXTM,info);
+#else
+                    const int im = basis::tri(log2p)->im(), one = 1, mx = MXTM;
+                    dgetrs_(trans,&im,&one,matrix[0],&mx,ipiv,&uht(n)(0),&mx,&info);
+#endif
 					for(m=0;m<basis::tri(log2p)->im();++m)
 						ugbd(tlvl).i(tind,m,n) = -uht(n)(m);
 				}

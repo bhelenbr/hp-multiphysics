@@ -472,40 +472,40 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	if (!base.is_comm()) return;
 	
-	const int sm=basis::tri(x.log2p)->sm();
-	const int NV = x.NV;
-	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-
-	int begin_seg = x.npnt*vdofs;
+    const int sm=basis::tri(x.log2p)->sm();
+    const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
+    const int begin_seg = x.npnt*vdofs;
 		
-	Array<int,1> c0vars(vdofs-1);
-	for(int n=0;n<x.NV-1;++n) {
-		c0vars(n) = n;
-	}
-	for(int n=x.NV;n<vdofs;++n) {
-		c0vars(n-1) = n;
-	}		
-	
 	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
 	/* Send number of non-zeros to matches */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::int_msg;
-	int sind = -2;
-	int pind;
 	for (int i=start_pt_open;i<base.nseg-end_pt_open;++i) {
-		sind = base.seg(i);
-		pind = x.seg(sind).pnt(0)*vdofs;
-		for(int n=0;n<c0vars.extent(firstDim);++n)
-			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+        for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+            base.isndbuf(base.sndsize()++) = nnzero(pind +*n);
+        }
 	}
+    int sind = base.seg(base.nseg-1-end_pt_open);
+    int pind = x.seg(sind).pnt(1)*vdofs;
+    for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+        base.isndbuf(base.sndsize()++) = nnzero(pind+*n);
+    }
+    
 	pind = x.seg(sind).pnt(1)*vdofs;
 
-	for(int n=0;n<c0vars.extent(firstDim);++n)
-		base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
-	
-	/* Last thing to send is nnzero for edges (all the same) */
-	if (sm)
-		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+    /* Last thing to send is nnzero for edges */
+    if (sm) {
+        for (int i=0;i<base.nseg;++i) {
+            int sind = base.seg(i);
+            for (int m=0;m<sm;++m) {
+                for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+                    base.isndbuf(base.sndsize()++) = nnzero(begin_seg +sind*sm*x.NV +m*x.NV +*n);
+                }
+            }
+        }
+    }
 	
 	return;
 }
@@ -515,59 +515,54 @@ int actuator_disc::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> 
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
 	
 	const int sm=basis::tri(x.log2p)->sm();
-	const int NV = x.NV;
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-
-	int begin_seg = x.npnt*vdofs;
+	const int begin_seg = x.npnt*vdofs;
 	
-	Array<int,1> c0vars(vdofs-1);
-	for(int n=0;n<x.NV-1;++n) {
-		c0vars(n) = n;
-	}
-	for(int n=x.NV;n<vdofs;++n) {
-		c0vars(n-1) = n;
-	}	
+    /* if local match then entries will go in to local jacobian */
+    Array<int,1> target;
+    if (base.is_local(0))  // only 1 matching boundary
+        target.reference(nnzero);
+    else
+        target.reference(nnzero_mpi);
 	
-	int count = 0;
+    int count = 0;
+    for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
+        int sind = base.seg(i);
+        int pind = x.seg(sind).pnt(1)*vdofs;
+        for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+            target(pind +*n) += base.ircvbuf(0,count++);
+        }
+    }
+    int sind = base.seg(start_pt_open);
+    int pind = x.seg(sind).pnt(0)*vdofs;
+    for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+        target(pind+*n) += base.ircvbuf(0,count++);
+    }
+    
+    /* Now add to side degrees of freedom */
+    if (sm) {
+        for (int i=base.nseg-1;i>=0;--i) {
+            int sind = base.seg(i);
+            for (int mode=0;mode<sm;++mode) {
+                for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+                    target(begin_seg +sind*sm*x.NV +mode*x.NV +*n) += base.ircvbuf(0,count++);
+                }
+            }
+        }
+    }
+    
 	if (base.is_local(0)) {
-		int pind, sind=-2;
-		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
-			sind = base.seg(i);
-			pind = x.seg(sind).pnt(1)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n) {
-				nnzero(pind+c0vars(n)) += base.ircvbuf(0,count++);
-			}
-		}
-		pind = x.seg(sind).pnt(0)*vdofs;
-		for(int n=0;n<c0vars.extent(firstDim);++n) {
-			nnzero(pind +c0vars(n)) += base.ircvbuf(0,count++);
-		}
-		
-		
-		
-		/* Now add to side degrees of freedom */
-		if (sm) {
-			int toadd = base.ircvbuf(0,count++); 
-			for (int i=0;i<base.nseg;++i) {
-				int sind = base.seg(i);
-				for (int mode=0;mode<sm;++mode) {
-					for(int n=0;n<x.NV-1;++n) {
-						nnzero(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
-					}
-				}
-			}
-		}
-		
-		/* Correct 2nd last point and last edge if end points are open */
+        /* Correct 2nd last point and last edge if end points are open */
 		if (end_pt_open) {
 			sind = base.seg(base.nseg-1);
 			pind = x.seg(sind).pnt(0)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n) {
-				nnzero(pind +c0vars(n)) -= vdofs;
-			}
+            for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+                target(pind +*n) -= vdofs;
+            }
+            
 			for (int mode=0;mode<sm;++mode) {
-				for(int n=0;n<x.NV-1;++n) {
-					nnzero(begin_seg+sind*NV*sm +mode*NV +n) -= vdofs;
+                for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+					nnzero(begin_seg+sind*x.NV*sm +mode*x.NV +*n) -= vdofs;
 				}
 			}
 		}
@@ -575,44 +570,17 @@ int actuator_disc::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> 
 		if (start_pt_open) {
 			sind = base.seg(0);
 			pind = x.seg(sind).pnt(1)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n) {
-				nnzero(pind +c0vars(n)) -= vdofs;
-			}
+            for(std::vector<int>::iterator n=c0_indices_xy.begin();n != c0_indices_xy.end();++n) {
+                target(pind +*n) -= vdofs;
+            }
 			for (int mode=0;mode<sm;++mode) {
-				for(int n=0;n<x.NV-1;++n) {
-					nnzero(begin_seg+sind*NV*sm +mode*NV +n) -= vdofs;
-				}
+                for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+                    target(begin_seg+sind*x.NV*sm +mode*x.NV +*n) -= vdofs;
+                }
 			}
 		}
 	}
-	else {
-		int pind, sind=-2;
-		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
-			sind = base.seg(i);
-			pind = x.seg(sind).pnt(1)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n) {
-				nnzero_mpi(pind+c0vars(n)) += base.ircvbuf(0,count++);
-			}
-		}
-		pind = x.seg(sind).pnt(0)*vdofs;
-		for(int n=0;n<c0vars.extent(firstDim);++n) {
-			nnzero_mpi(pind +c0vars(n)) += base.ircvbuf(0,count++);
-		}
-		
-		
-		/* Now add to side degrees of freedom */
-		if (sm) {
-			int toadd = base.ircvbuf(0,count++); 
-			for (int i=0;i<base.nseg;++i) {
-				int sind = base.seg(i);
-				for (int mode=0;mode<sm;++mode) {
-					for(int n=0;n<x.NV-1;++n) {
-						nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
-					}
-				}
-			}
-		}
-	}
+
 	return(count);
 }
 

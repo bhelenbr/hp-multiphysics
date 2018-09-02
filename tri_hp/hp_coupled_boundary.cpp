@@ -667,7 +667,13 @@ void hp_coupled_bdry::minvrt() {
 				res_vec(indx++) = gbl->vres(i,n);
 			}
 
+#ifdef F2CFortran
 			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+#else
+            const int one = 1;
+            const int length = gbl->vdt.length(secondDim);
+            dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+#endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -690,7 +696,13 @@ void hp_coupled_bdry::minvrt() {
 			res_vec(indx++) = gbl->vres(base.nseg,n);
 		}
 		
-		GETRS(trans,ncoupled,1,&gbl->vdt(base.nseg,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(base.nseg,0),res_vec.data(),ncoupled,info);
+#ifdef F2CFortran
+        GETRS(trans,ncoupled,1,&gbl->vdt(base.nseg,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(base.nseg,0),res_vec.data(),ncoupled,info);
+#else
+        const int one = 1;
+        const int length = gbl->vdt.length(secondDim);
+        dgetrs_(trans,&ncoupled,&one,&gbl->vdt(base.nseg,0,0),&length,&gbl->vpiv(base.nseg,0),res_vec.data(),&ncoupled,&info);
+#endif
 		if (info != 0) {
 			*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -719,7 +731,13 @@ void hp_coupled_bdry::minvrt() {
 					
 					int info;
 					char trans[] = "T";
+#ifdef F2CFortran
 					GETRS(trans,ncoupled,1,&gbl->sdt(j,0,0),gbl->sdt.length(secondDim),&gbl->spiv(j,0),res_vec.data(),ncoupled,info);
+#else
+                    const int one = 1;
+                    const int length = gbl->sdt.length(secondDim);
+                    dgetrs_(trans,&ncoupled,&one,&gbl->sdt(j,0,0),&length,&gbl->spiv(j,0),res_vec.data(),&ncoupled,&info);
+#endif
 					if (info != 0) {
 						*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1173,7 +1191,7 @@ void hp_coupled_bdry::non_sparse(Array<int,1> &nnzero) {
 			
 			for(int endpt=0;endpt<2;++endpt) {
 				int pind = x.seg(sind).pnt(endpt);
-				if (gbl->one_sided) {
+				if (!gbl->symmetric) {
 					if (is_master) {
 						 // if I am the master all equations affected by side modes including x,y
 						nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
@@ -1237,7 +1255,7 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 	
 	if (!gbl->symmetric) {
 		if (is_master) {
-			/* Add to mpi to allow preconditioning */
+				/* Add to mpi (below) to allow preconditioning otherwise zero is fine */
 			if (sm && !gbl->field_is_coupled) {
 				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
 			}
@@ -1284,7 +1302,7 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 	}
 	
 	// make sure flow and coupled side variables have same number of entries
-	if (is_master && gbl->field_is_coupled) {
+	if (is_master && gbl->field_is_coupled && gbl->precondition) {
 		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 		const int c0var = c0_indices[0];
 		
@@ -1685,39 +1703,55 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	Array<FLT,1> res_vec(ncoupled);
 	
 
-	if (gbl->symmetric || is_master) {
-		for(int j=0;j<base.nseg;++j) {
-			int ind1 = x.npnt*vdofs +base.seg(j)*sm*x.NV;
+	if ((gbl->symmetric || is_master)) {
+		if (gbl->precondition)  {
+			for(int j=0;j<base.nseg;++j) {
+				int ind1 = x.npnt*vdofs +base.seg(j)*sm*x.NV;
 
-			for(int m=0;m<sm;++m) {
-				int indx = 0;
-				if (gbl->field_is_coupled) {
-					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-						res_vec(indx++) = res(ind1+*n);
+				for(int m=0;m<sm;++m) {
+					int indx = 0;
+					if (gbl->field_is_coupled) {
+						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+							res_vec(indx++) = res(ind1+*n);
+						}
+					}
+					for(int n=0;n<NV;++n) {
+						res_vec(indx++) = gbl->sres(j,m,n);
+					}
+					
+					int info;
+					char trans[] = "T";
+#ifdef F2CFortran
+					GETRS(trans,ncoupled,1,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
+#else
+                    const int one = 1, length = gbl->sdt2.length(thirdDim);
+                    dgetrs_(trans,&ncoupled,&one,&gbl->sdt2(j,m,0,0),&length,&gbl->spiv2(j,m,0),res_vec.data(),&ncoupled,&info);
+#endif
+					if (info != 0) {
+						*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
+					}
+
+					indx = 0;
+					if (gbl->field_is_coupled) {
+						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+							res(ind1+*n) = res_vec(indx++);
+						}
+					}
+					for(int n=0;n<NV;++n) {
+						res(ind++) = res_vec(indx++);
+					}
+					ind1 += x.NV;
+				}
+			}
+		}
+		else {
+			for(int j=0;j<base.nseg;++j) {
+				for(int m=0;m<sm;++m) {
+					for(int n=0;n<NV;++n) {
+						res(ind++) = gbl->sres(j,m,n);
 					}
 				}
-				for(int n=0;n<NV;++n) {
-					res_vec(indx++) = gbl->sres(j,m,n);
-				}
-				
-				int info;
-				char trans[] = "T";
-				GETRS(trans,ncoupled,1,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
-				if (info != 0) {
-					*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
-				}
-
-				indx = 0;
-				if (gbl->field_is_coupled) {
-					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-						res(ind1+*n) = res_vec(indx++);
-					}
-				}
-				for(int n=0;n<NV;++n) {
-					res(ind++) = res_vec(indx++);
-				}
-				ind1 += x.NV;
 			}
 		}
 	}
@@ -1739,12 +1773,47 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	}
 	
 	/* Swap kinetic and energy vertex residuals */
-	if (!gbl->one_sided || is_master) {
-		int i = 0;
-		int sind;
-		do {
-			sind = base.seg(i);
-			int row = x.seg(sind).pnt(0)*vdofs;
+	if ((!gbl->one_sided || is_master)) {
+		if (gbl->precondition) {
+			int i = 0;
+			int sind;
+			do {
+				sind = base.seg(i);
+				int row = x.seg(sind).pnt(0)*vdofs;
+				int indx = 0;
+				if (gbl->field_is_coupled) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						res_vec(indx++) = res(row +*n);
+					}
+				}
+				for(int n=0;n<NV;++n) {
+					res_vec(indx++) = res(row +n +x.NV);
+				}
+
+				int info;
+				char trans[] = "T";
+#ifdef F2CFortran
+				GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+#else
+                const int one = 1, length = gbl->vdt.length(secondDim);
+                dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+#endif
+				if (info != 0) {
+					*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
+				}
+				
+				indx = 0;
+				if (gbl->field_is_coupled) {
+					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
+						res(row +*n) = res_vec(indx++);
+					}
+				}
+				for(int n=0;n<NV;++n) {
+					res(row +n +x.NV) = res_vec(indx++);
+				}
+			} while (++i < base.nseg);
+			int row = x.seg(sind).pnt(1)*vdofs;
 			int indx = 0;
 			if (gbl->field_is_coupled) {
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
@@ -1757,7 +1826,12 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 
 			int info;
 			char trans[] = "T";
+#ifdef F2CFortran
 			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+#else
+            const int one = 1, length = gbl->vdt.length(secondDim);
+            dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+#endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1772,34 +1846,6 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			for(int n=0;n<NV;++n) {
 				res(row +n +x.NV) = res_vec(indx++);
 			}
-		} while (++i < base.nseg);
-		int row = x.seg(sind).pnt(1)*vdofs;
-		int indx = 0;
-		if (gbl->field_is_coupled) {
-			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				res_vec(indx++) = res(row +*n);
-			}
-		}
-		for(int n=0;n<NV;++n) {
-			res_vec(indx++) = res(row +n +x.NV);
-		}
-		
-		int info;
-		char trans[] = "T";
-		GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
-		if (info != 0) {
-			*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
-		}
-		
-		indx = 0;
-		if (gbl->field_is_coupled) {
-			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				res(row +*n) = res_vec(indx++);
-			}
-		}
-		for(int n=0;n<NV;++n) {
-			res(row +n +x.NV) = res_vec(indx++);
 		}
 	}
 	else {
@@ -1827,7 +1873,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 	Array<int,1> row_ind(ncoupled);
 	
 	/* Swap side equations */
-	if (gbl->symmetric || is_master) {
+	if ((gbl->symmetric || is_master) && gbl->precondition) {
 		int row0 = jacobian_start; // Index of motion equations
 		
 		const int sm = basis::tri(x.log2p)->sm();
@@ -1862,7 +1908,12 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 				}
 
 				int info;
+#ifdef F2CFortran
 				GETRF(ncoupled,ncoupled,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),info);
+#else
+                const int length = gbl->sdt2.length(thirdDim);
+                dgetrf_(&ncoupled,&ncoupled,&gbl->sdt2(j,m,0,0),&length,&gbl->spiv2(j,m,0),&info);
+#endif
 				if (info != 0) {
 					*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1879,7 +1930,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		}
 	}
 	
-	if (!gbl->one_sided || is_master) {
+	if ((!gbl->one_sided || is_master) && gbl->precondition) {
 		/* Swap rows */
 		int i = 0;
 		int sind;
@@ -1912,7 +1963,13 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 				}
 			}
 			int info;
+#ifdef F2CFortran
 			GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
+#else
+            const int length = gbl->vdt.length(secondDim);
+            dgetrf_(&ncoupled,&ncoupled,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),&info);
+
+#endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
@@ -1952,7 +2009,12 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			}
 		}
 		int info;
+#ifdef F2CFortran
 		GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
+#else
+        const int length = gbl->vdt.length(secondDim);
+        dgetrf_(&ncoupled,&ncoupled,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),&info);
+#endif
 		if (info != 0) {
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);

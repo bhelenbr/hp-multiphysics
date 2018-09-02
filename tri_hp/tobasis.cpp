@@ -53,8 +53,14 @@ void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 				basis::tri(log2p)->intgrt1d(&lf(n)(0),&res(n)(0,0));
 			
 			for(n=0;n<NV;++n) {
+#ifdef F2CFortran
 				PBTRS(uplo,basis::tri(log2p)->sm(),basis::tri(log2p)->sbwth(),1,(double *) &basis::tri(log2p)->sdiag1d(0,0),basis::tri(log2p)->sbwth()+1,&lf(n)(2),basis::tri(log2p)->sm(),info);
-				for(m=0;m<basis::tri(log2p)->sm();++m)
+#else
+                const int sbwth = basis::tri(log2p)->sbwth(), one = 1, sm = basis::tri(log2p)->sm();
+                const int sbp1 = sbwth +1;
+                dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(log2p)->sdiag1d(0,0),&sbp1,&lf(n)(2),&sm,&info);
+#endif
+                for(m=0;m<basis::tri(log2p)->sm();++m)
 					ugbd(tlvl).s(sind,m,n) = -lf(n)(2+m);
 			}
 		}
@@ -87,7 +93,13 @@ void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 				
 				for(n=0;n<NV;++n) {
 					basis::tri(log2p)->intgrt(&lf(n)(0),&u(n)(0,0),MXGP);
+#ifdef F2CFortran
 					DPBTRS(uplo,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),1,(double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,&lf(n)(basis::tri(log2p)->bm()),basis::tri(log2p)->im(),info);
+#else
+                    const int ibwth = basis::tri(log2p)->ibwth(), one = 1, im = basis::tri(log2p)->im();
+                    const int ibp1 = ibwth +1;
+                    dpbtrs_(uplo,&im,&ibwth,&one,(double *) &basis::tri(log2p)->idiag(0,0),&ibp1,&lf(n)(basis::tri(log2p)->bm()),&im,&info);
+#endif
 					for(i=0;i<basis::tri(log2p)->im();++i)
 						ugbd(tlvl).i(tind,i,n) = -lf(n)(basis::tri(log2p)->bm()+i);
 				}

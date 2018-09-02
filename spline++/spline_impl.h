@@ -384,14 +384,26 @@ template<int ND> int spline3<ND>::read(std::string filename) {
 
 	int info;
 	char uplo[] = "U";
+#ifdef F2CFortran
 	DPBTRF(uplo,npts,1,band_matrix.data(),2,info);
+#else
+    const int one = 1, two = 2;
+    dpbtrf_(uplo,&npts,&one,band_matrix.data(),&two,&info);
+#endif
 	if (info != 0) {
 		printf("1:PBTRF FAILED info: %d\n", info);
 		exit(1);
 	}
 	
-	for (int n=0;n<ND;++n)
-		DPBTRS(uplo,npts,1,1,band_matrix.data(),2,rhs(n).data(),npts,info);
+    for (int n=0;n<ND;++n) {
+#ifdef F2CFortran
+        DPBTRS(uplo,npts,1,1,band_matrix.data(),2,rhs(n).data(),npts,info);
+#else
+        const int one = 1, two = 2;
+        dpbtrs_(uplo,&npts,&one,&one,band_matrix.data(),&two,rhs(n).data(),&npts,&info);
+#endif
+
+    }
 	
 	for(int seg=0;seg<npts-1;++seg) {
 		for(int n=0;n<ND;++n) {

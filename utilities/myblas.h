@@ -10,21 +10,44 @@
 #ifndef _myblas_h_
 #define _myblas_h_
 
+#ifdef F2CFortran
 #include<cfortran.h>
+#endif
 
-extern "C" void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs);
-extern "C" void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
-extern "C" void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
-extern "C" void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
-extern "C" void DGETLS(double *abd, int stride, int ordr, double *b);
-extern "C" void DGETUS(double *abd, int stride, int ordr, double *b);
-extern "C" void BLCKTRI(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2]);
-extern "C" void BLCKTRI2(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2], double (*e)[2]);
-extern "C" int recur(int n,int ipoly, double al, double be, double *a, double *b);
-extern "C" int radau(int n,double *alpha,double *beta, double end,double *zero,double *weight,double *e, double *a, double *b);
-extern "C" int lob(int n,double *alpha,double *beta, double left, double right,double *zero,double *weight,double *e, double *a, double *b);
-extern "C" int gauss(int n, const double *alpha,const double *beta, double eps, double *zero, double *weight, double *e);
+extern "C" {
+    void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs);
+    void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
+    void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
+    void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
+    void DGETLS(double *abd, int stride, int ordr, double *b);
+    void DGETUS(double *abd, int stride, int ordr, double *b);
+    void BLCKTRI(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2]);
+    void BLCKTRI2(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2], double (*e)[2]);
+    int recur(int n,int ipoly, double al, double be, double *a, double *b);
+    int radau(int n,double *alpha,double *beta, double end,double *zero,double *weight,double *e, double *a, double *b);
+    int lob(int n,double *alpha,double *beta, double left, double right,double *zero,double *weight,double *e, double *a, double *b);
+    int gauss(int n, const double *alpha,const double *beta, double eps, double *zero, double *weight, double *e);
+#ifndef F2CFortran
+    extern int dgetrf_(const int *,const int *,double *,const int *,int *,int *);
+    extern int dgetrs_(const char *,const int *,const int *,const double *,const int *,const int *,double *,const int *,int *);
+    extern int dpbtrf_(const char *,const int *,const int *,double *,const int *,int *);
+    extern int dpbtrs_(const char *,const int *,const int *,const int *,const double *,const int *,double *,const int *,int *);
+    extern int dpbco_(double *,const int *,const int *,const int *,double *,double *,int *);
+    extern int dpbsl_(const double *,const int *,const int *,const int *,double *);
+    extern int dpoco_(double *,const int *,const int *,double *,double *,int *);
+    extern int dposl_(const double *,const int *,const int *,double *);
+    // extern int dsics_(int *,int *,int *,int *,double *,int *,int *,int *,int *,double *,double *,double *,int *);
+    // extern int sllti2_(int *,double *,double *,int *,int *,int *,double *,double *);
+    extern int dgels_(const char *,const int *,const int *,const int *,double *,const int *,double *,const int *,double *,const int *,int *);
+    extern int dgeev_(const char *,const char *,const int *,double *,const int *,double *,double *,double *,const int *,double *,const int *,double *,const int *,int *);
+    extern int dgecon_(const char *,const int *,const double *,const int *,const double *,double *,double *,int *,int *);
+    extern int dpotrf_(const char *,const int *,double *,const int *,int *);
+    extern int dpotrs_(const char *,const int *,const int *,const double *,const int *,double *,const int *,int *);
+    extern int dspev_(const char *,const char *,const int *,double *,double *,double *,const int *,double *,int *);
+#endif
+}
 
+#ifdef F2CFortran
 PROTOCCALLSFSUB6(DGETRF,dgetrf,INT,INT,DOUBLEV,INT,INTV,PINT)
 #define DGETRF(M,N,A,LDA,IPIV,INFO) CCALLSFSUB6(DGETRF,dgetrf,INT,INT,DOUBLEV,INT,INTV,PINT,M,N,A,LDA,IPIV,INFO)
 
@@ -72,6 +95,8 @@ PROTOCCALLSFSUB8(DPOTRS,dpotrs,STRING,INT,INT,DOUBLEV,INT,DOUBLEV,INT,PINT)
 
 PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBLEV,PINT)
 #define DSPEV(JOBZ, UPLO, N, AP, W, Z, LDZ, WORK, INFO) CCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBLEV,PINT,JOBZ, UPLO, N, AP, W, Z, LDZ, WORK, INFO)
+#endif
+
 
 #ifdef SINGLE
 #define GETRF SGETRF

@@ -276,7 +276,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
-		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,20.0);
+		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,0.0);
 	}
 	
 #ifdef petsc

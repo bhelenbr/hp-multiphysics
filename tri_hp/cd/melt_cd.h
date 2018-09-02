@@ -18,7 +18,7 @@
 //#define OLDKINETICS
 //#define TWOFACETS
 
-#define ANALYTIC_JACOBIAN
+//#define ANALYTIC_JACOBIAN
 
 // Put shared routines in this class and let buoyancy class add extra things
 namespace bdry_cd {

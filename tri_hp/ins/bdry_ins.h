@@ -361,6 +361,14 @@ namespace bdry_ins {
 			
 			/* To read in data */
 			void init(input_map& inmap,void* gbl_in) {
+                
+                /* Let pressure be discontinuous */
+                ostringstream vars;
+                for(int n=0;n<x.NV-1;++n) {
+                    vars << n << ' ';
+                }
+                inmap[base.idprefix +"_c0_indices"] = vars.str();
+                
 				generic::init(inmap,gbl_in);
 				
 				/* LOAD PRESSURE JUMP FUNCTION */

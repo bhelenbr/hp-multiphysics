@@ -297,9 +297,14 @@ void inflow::modify_boundary_residual() {
 			
 			for(n=1;n<x.NV;++n){
 				basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-				
+#ifdef F2CFortran
 				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
-				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
+#else
+                const int sbwth = basis::tri(x.log2p)->sbwth(), one = 1, sm = basis::tri(x.log2p)->sm();
+                const int sbp1 = sbwth +1;
+                dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.lf(n)(2),&sm,&info);
+#endif
+                for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
 				
 			}								
@@ -396,8 +401,13 @@ void adiabatic::modify_boundary_residual() {
 			
 			for(n=1;n<x.NV-1;++n){
 				basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-				
+#ifdef F2CFortran
 				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
+#else
+                const int sbwth = basis::tri(x.log2p)->sbwth(), one = 1, sm = basis::tri(x.log2p)->sm();
+                const int sbp1 = sbwth +1;
+                dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.lf(n)(2),&sm,&info);
+#endif
 				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 					x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
 				
@@ -423,7 +433,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	/* Rotate Coordinate System */
 	FLT ul =  pvu(1)*norm(0) +pvu(2)*norm(1);
 	FLT vl = -pvu(1)*norm(1) +pvu(2)*norm(0);
-	pvu(1) = ul, pvu(2) = vl;
+    pvu(1) = ul; pvu(2) = vl;
 	
 	/* Roe Variables */
 	Rl(0) = sqrt(pvu(0)/pvu(x.NV-1)); // sqrt(rho)
@@ -438,7 +448,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	/* Rotate Coordinate System */
 	FLT ur =  ub(1)*norm(0) +ub(2)*norm(1);
 	FLT vr = -ub(1)*norm(1) +ub(2)*norm(0);
-	ub(1) = ur, ub(2) = vr;
+    ub(1) = ur; ub(2) = vr;
 	
 	/* Roe Variables */
 	Rr(0) = sqrt(ub(0)/ub(x.NV-1));

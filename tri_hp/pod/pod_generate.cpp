@@ -430,7 +430,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					// Compute all eigenvectors
 					Array<FLT,1> work(3*nsnapshots);
 					// normal eigenvalue problem
+#ifdef F2CFortran
 					DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues_subarray.data(),eigenvectors.data(),nsnapshots,work.data(),info);
+#else
+                    dspev_(jobz,uplo,&nsnapshots,psimatrix_recv.data(),eigenvalues_subarray.data(),eigenvectors.data(),&nsnapshots,work.data(),&info);
+#endif
 				}
 				else {
 					// Compute only some eigenvectors

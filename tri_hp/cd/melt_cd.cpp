@@ -77,6 +77,7 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	
 	inmap[base.idprefix+"_is_coupled"] = "1";
 	hp_coupled_bdry::init(inmap,gbl_in);
+	if (!gbl->precondition) gbl->field_is_coupled = false;
 	
 	keyword = liquid_block + "_Lf";
 	if (!inmap.get(keyword,gbl->Lf)) {
@@ -423,14 +424,22 @@ void melt_cd::setup_preconditioner() {
 		gbl->vdt(base.nseg,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
 	}
 	
-	
+#ifdef petsc
+	if (!gbl->precondition) return;
+#endif
 	
 	for(indx=0;indx<base.nseg+1;++indx) {
 		// *x.gbl->log << gbl->vdt(indx,Range::all(),Range::all()) << std::endl;
 		
 		/* INVERT 3x3 VERTEX MATRICES */
 		int info;
+#ifdef F2CFortran
 		GETRF(3,3,&gbl->vdt(indx,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(indx,0),info);
+#else
+        const int three = 3;
+        const int length = gbl->vdt.length(secondDim);
+        dgetrf_(&three,&three,&gbl->vdt(indx,0,0),&length,&gbl->vpiv(indx,0),&info);
+#endif
 		if (info != 0) {
 			*x.gbl->log << indx << ' ' << gbl->vdt(indx,Range::all(),Range::all()) << std::endl;
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
@@ -443,7 +452,13 @@ void melt_cd::setup_preconditioner() {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT 3x3 SIDE MATRIX */
 			int info;
-			GETRF(3,3,&gbl->sdt(indx,0,0),gbl->sdt.length(thirdDim),&gbl->spiv(indx,0),info);
+#ifdef F2CFortran
+            GETRF(3,3,&gbl->sdt(indx,0,0),gbl->sdt.length(thirdDim),&gbl->spiv(indx,0),info);
+#else
+            const int three = 3;
+            const int length = gbl->sdt.length(thirdDim);
+            dgetrf_(&three,&three,&gbl->sdt(indx,0,0),&length,&gbl->spiv(indx,0),&info);
+#endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);

@@ -624,10 +624,7 @@ double t_(double y)
 
 
 
-int radau(n, alpha, beta, end, zero, weight, e, a, b)
-int n;
-double *alpha, *beta, end, *zero, *weight;
-double *e, *a, *b;
+int radau(int n, double *alpha,double *beta,double end,double *zero,double *weight,double *e,double *a,double *b)
 {
     /* System generated locals */
     int i__1;

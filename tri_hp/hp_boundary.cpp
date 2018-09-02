@@ -542,7 +542,16 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indic
 				basis::tri(x.log2p)->intgrt1d(&x.lf(*n)(0),&x.res(*n)(0,0));
 			
 			for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n) {
+#ifdef F2CFortran
 				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(*n)(2),basis::tri(x.log2p)->sm(),info);
+#else
+                const int sm = basis::tri(x.log2p)->sm();
+                const int sbwth = basis::tri(x.log2p)->sbwth();
+                const int sbp1 = sbwth +1;
+                const int one = 1;
+                
+                dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.lf(*n)(2),&sm,&info);
+#endif
 				for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					x.ug.s(sind,m,*n) = -x.lf(*n)(2+m);
 			}
@@ -590,8 +599,13 @@ void hp_edge_bdry::curv_init(int tlvl) {
 		
 		for(n=0;n<tri_mesh::ND;++n) {
 			basis::tri(x.log2p)->intgrt1d(&x.cf(n,0),&x.crd(n)(0,0));
+#ifdef F2CFortran
 			DPBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.cf(n,2),basis::tri(x.log2p)->sm(),info);
-			
+#else
+            const int sbwth = basis::tri(x.log2p)->sbwth(), one = 1, sm = basis::tri(x.log2p)->sm();
+            const int sbp1 = sbwth +1;
+            dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.cf(n,2),&sm,&info);
+#endif
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
 				crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2);
 		}
