@@ -356,7 +356,7 @@ namespace bdry_ins {
 		}
 		public:
 			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "actuator_disc";}
-			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dp(inbdry.dp) {}
+			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), start_pt_open(inbdry.start_pt_open), end_pt_open(inbdry.end_pt_open), dp(inbdry.dp) {}
 			actuator_disc* create(tri_hp& xin, edge_bdry &bin) const {return new actuator_disc(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			/* To read in data */
@@ -375,8 +375,8 @@ namespace bdry_ins {
 				dp.init(inmap,base.idprefix+"_jump");
 				
 				/* Default is for axisymmetric case with one point on centerline */
-				inmap.getwdefault(base.idprefix + "_start_open",start_pt_open,false);
-				inmap.getwdefault(base.idprefix + "_end_open",start_pt_open,true);
+				inmap.getwdefault(base.idprefix + "_start_open",start_pt_open,true);
+                inmap.getwdefault(base.idprefix + "_end_open",end_pt_open,false);
 				
 				if (base.is_frst()) {
 					bool temp = start_pt_open;
@@ -389,7 +389,6 @@ namespace bdry_ins {
 #ifdef petsc
 			void petsc_matchjacobian_snd();
 			int petsc_matchjacobian_rcv(int phase);
-			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 			int non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 #endif
 			void pmatchsolution_snd(FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
