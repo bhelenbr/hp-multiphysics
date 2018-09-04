@@ -272,8 +272,12 @@ void tet_hp_cns_explicit::calculate_preconditioner_tau_timestep(Array<double,1> 
 	
 	/*  LU factorization  */
 	int info,ipiv[NV];
+#ifdef F2CFortran
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
-	
+#else
+    dgetrf_(&NV, &NV, Tinv.data(), &NV, ipiv, &info);
+#endif
+
 	if (info != 0) {
 		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
@@ -285,7 +289,11 @@ void tet_hp_cns_explicit::calculate_preconditioner_tau_timestep(Array<double,1> 
 	
 	/* Solve transposed system temp' = inv(Tinv')*temp' */
 	char trans[] = "T";
+#ifdef F2CFortran
 	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+#else
+    dgetrs_(trans,&NV,&NV,Tinv.data(),&NV,ipiv,temp.data(),&NV,&info);
+#endif
 	
 	if (info != 0) {
 		*gbl->log << "DGETRS FAILED FOR CNS EXPLICIT TSTEP" << std::endl;

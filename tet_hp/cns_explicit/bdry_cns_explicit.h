@@ -110,7 +110,7 @@ namespace bdry_cns_explicit {
 			for (int n=1;n<x.NV;++n)
 				dirichlets(n-1) = n;
 		}
-		inflow(const inflow& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		inflow(const inflow& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
 		
 		void vdirichlet();
@@ -140,7 +140,7 @@ namespace bdry_cns_explicit {
 			for (int n=1;n<x.NV-1;++n)
 				dirichlets(n-1) = n;
 		}
-		adiabatic(const adiabatic& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		adiabatic(const adiabatic& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		adiabatic* create(tet_hp& xin, face_bdry &bin) const {return new adiabatic(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
 		
 		void vdirichlet();

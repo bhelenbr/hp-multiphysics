@@ -37,7 +37,8 @@ void tet_basis::outputstuff(int check) {
 	FLT f,r,s,t,x,y,z;
 	FLT N,sum;
 	ofstream myfile2,fout;
-	
+    const int one = 1;
+
 	int stridey = gpz;
 	int stridex = gpz*gpy;
 	Array<int,1> ipiv(2*tm);
@@ -690,10 +691,14 @@ void tet_basis::outputstuff(int check) {
 		intgrt(rslt1.data(), f1.data(), stridex, stridey);
 		
 	 //	cout << rslt1 << endl;
-		
+#ifdef F2CFortran
 		GETRF(tm,tm,&rsltm(0,0),tm,&ipiv(0),info);
 
 		GETRS(trans,tm,1,&rsltm(0,0),tm,&ipiv(0),&rslt1(0),tm,info);
+#else
+            dgetrf_(&tm,&tm,&rsltm(0,0),&tm,&ipiv(0),&info);
+            dgetrs_(trans,&tm,&one,&rsltm(0,0),&tm,&ipiv(0),&rslt1(0),&tm,&info);
+#endif
 		
 	 //	cout << rslt1 << endl;
 		

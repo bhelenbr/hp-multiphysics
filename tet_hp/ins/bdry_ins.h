@@ -139,7 +139,7 @@ namespace bdry_ins {
 			for (int n=0;n<x.NV-1;++n)
 				dirichlets(n) = n;
 		}
-		inflow(const inflow& inbdry, tet_hp_ins &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+        inflow(const inflow& inbdry, tet_hp_ins &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
 		
 		void vdirichlet() {

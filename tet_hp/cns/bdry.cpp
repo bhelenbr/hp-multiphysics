@@ -501,7 +501,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	/* align u to the normal */
 	vec1 = norm;
 	/* find random vector different than norm */
-	vecr(0) = vec1(1),	vecr(1) = vec1(2), vecr(2) = vec1(0);
+    vecr(0) = vec1(1);	vecr(1) = vec1(2); vecr(2) = vec1(0);
 	vec2 = cross(norm, vecr);
 	vec3 = cross(norm, vec2);
 	
@@ -672,9 +672,9 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	
 	/* CHANGE BACK TO X,Y,Z COORDINATES */
 	FLT temp2 = 1.0/(1.0-norm(2)*norm(1)-norm(1)*norm(0)-norm(0)*norm(2))/(1.0+norm(2)*norm(1)+norm(1)*norm(0)+norm(0)*norm(2));
-	vec1(0) = norm(0), vec1(1) = temp2*(norm(1)*norm(0)-norm(2)*norm(2)), vec1(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(1)*norm(1)*norm(1)-norm(2)*norm(2)*norm(1)+norm(0)*norm(0)*norm(2));
-	vec2(0) = norm(1), vec2(1) = temp2*(norm(2)*norm(1)-norm(0)*norm(0)), vec2(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(2)*norm(2)*norm(2)-norm(0)*norm(0)*norm(2)+norm(1)*norm(1)*norm(0));
-	vec3(0) = norm(2), vec3(1) = temp2*(norm(2)*norm(0)-norm(1)*norm(1)), vec3(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(0)*norm(0)*norm(0)-norm(1)*norm(1)*norm(0)+norm(2)*norm(2)*norm(1));
+    vec1(0) = norm(0); vec1(1) = temp2*(norm(1)*norm(0)-norm(2)*norm(2)); vec1(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(1)*norm(1)*norm(1)-norm(2)*norm(2)*norm(1)+norm(0)*norm(0)*norm(2));
+    vec2(0) = norm(1); vec2(1) = temp2*(norm(2)*norm(1)-norm(0)*norm(0)); vec2(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(2)*norm(2)*norm(2)-norm(0)*norm(0)*norm(2)+norm(1)*norm(1)*norm(0));
+    vec3(0) = norm(2); vec3(1) = temp2*(norm(2)*norm(0)-norm(1)*norm(1)); vec3(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(0)*norm(0)*norm(0)-norm(1)*norm(1)*norm(0)+norm(2)*norm(2)*norm(1));
 	
 	flx(0) = fluxtemp(0);
 	flx(1) = fluxtemp(1)*vec1(0) + fluxtemp(2)*vec1(1) + fluxtemp(3)*vec1(2);

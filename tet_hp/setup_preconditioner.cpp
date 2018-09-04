@@ -179,8 +179,12 @@ void tet_hp::minvrt() {
 				for(int spk = 0; spk < pnt(vind).nspk; ++spk){
 					spkres(spk) = wkseg(spklink(vind)(spk)(0),0,n)(spklink(vind)(spk)(1));
 				}
-				
-				GETRS(trans,pnt(vind).nspk,1,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),&spkres(0),pnt(vind).nspk,info); 
+#ifdef F2CFortran
+				GETRS(trans,pnt(vind).nspk,1,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),&spkres(0),pnt(vind).nspk,info);
+#else
+                const int one = 1;
+                dgetrs_(trans,&pnt(vind).nspk,&one,&spkmass(vind)(0,0),&pnt(vind).nspk,&spkpiv(vind)(0),&spkres(0),&pnt(vind).nspk,&info);
+#endif
 				if (info != 0) {
 					printf("DGETRS FAILED - VERTEX BALL info:%d vertex:%d \n",info,vind);
 					sim::abort(__LINE__,__FILE__,gbl->log);
@@ -561,8 +565,11 @@ void tet_hp::spoke(){
 					spkmass(vind)(e0(j),e0(k)) += jcb*basis::tet(log2p).odiag;
 			}
 		}
-
-		GETRF(pnt(vind).nspk,pnt(vind).nspk,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),info); 
+#ifdef F2CFortran
+		GETRF(pnt(vind).nspk,pnt(vind).nspk,&spkmass(vind)(0,0),pnt(vind).nspk,&spkpiv(vind)(0),info);
+#else
+        dgetrf_(&pnt(vind).nspk,&pnt(vind).nspk,&spkmass(vind)(0,0),&pnt(vind).nspk,&spkpiv(vind)(0),&info);
+#endif
 		if (info != 0) {
 			printf("DGETRF FAILED - VERTEX BALL info:%d vertex:%d \n",info,vind);
 			sim::abort(__LINE__,__FILE__,gbl->log);

@@ -202,8 +202,11 @@ void tet_hp_cns::minvrt() {
 			for(int j=0;j<NV;++j)
 				for(int k=0;k<NV;++k)
 					P(j,k) = gbl->vpreconditioner(i,j,k);
-				
+#ifdef F2CFortran
 			GETRF(NV, NV, P.data(), NV, ipiv, info);
+#else
+            dgetrf_(&NV, &NV, P.data(), &NV, ipiv, &info);
+#endif
 
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR CNS MINVRT" << std::endl;
@@ -211,7 +214,12 @@ void tet_hp_cns::minvrt() {
 			}
 			
 			char trans[] = "T";
+#ifdef F2CFortran
 			GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+#else
+            const int one = 1;
+            dgetrs_(trans,&NV,&one,P.data(),&NV,ipiv,lclres.data(),&NV,&info);
+#endif
 		}
 		
 		for(int n = 0; n < NV; ++n)
@@ -268,16 +276,23 @@ void tet_hp_cns::minvrt() {
 		}
 		else {
 			int info,ipiv[NV];
-			
+#ifdef F2CFortran
 			GETRF(NV, NV, P.data(), NV, ipiv, info);
-			
+#else
+            dgetrf_(&NV, &NV, P.data(), &NV, ipiv, &info);
+#endif
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR CNS MINVRT EDGE" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			char trans[] = "T";
+#ifdef F2CFortran
 			GETRS(trans,NV,1,P.data(),NV,ipiv,lclres.data(),NV,info);
+#else
+            const int one = 1;
+            dgetrs_(trans,&NV,&one,P.data(),&NV,ipiv,lclres.data(),&NV,&info);
+#endif
 		}
 		
 		for(int n = 0; n < NV; ++n)

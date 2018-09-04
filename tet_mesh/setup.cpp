@@ -149,12 +149,12 @@ void tet_mesh::create_seg_from_tet() {
 		pnt(i).info = -1;
 	}
  
-	vs(0,0)=2, vs(0,1)=3; 
-	vs(1,0)=3, vs(1,1)=1; 
-	vs(2,0)=2, vs(2,1)=1;
-	vs(3,0)=1, vs(3,1)=0;
-	vs(4,0)=2, vs(4,1)=0; 
-	vs(5,0)=3, vs(5,1)=0;
+	vs(0,0)=2; vs(0,1)=3; 
+	vs(1,0)=3; vs(1,1)=1; 
+	vs(2,0)=2; vs(2,1)=1;
+	vs(3,0)=1; vs(3,1)=0;
+	vs(4,0)=2; vs(4,1)=0; 
+	vs(5,0)=3; vs(5,1)=0;
 
 
 	ne=0;
@@ -227,12 +227,12 @@ void tet_mesh::match_tet_and_seg() {
 		tet(i).sgn = 1;
 	}
 	
-	vs(0,0)=2, vs(0,1)=3; 
-	vs(1,0)=3, vs(1,1)=1; 
-	vs(2,0)=2, vs(2,1)=1;
-	vs(3,0)=1, vs(3,1)=0;
-	vs(4,0)=2, vs(4,1)=0; 
-	vs(5,0)=3, vs(5,1)=0;
+    vs(0,0)=2; vs(0,1)=3;
+    vs(1,0)=3; vs(1,1)=1;
+    vs(2,0)=2; vs(2,1)=1;
+    vs(3,0)=1; vs(3,1)=0;
+    vs(4,0)=2; vs(4,1)=0;
+    vs(5,0)=3; vs(5,1)=0;
 
 
 	for(int j = 0; j < nseg; ++j) {
@@ -304,10 +304,10 @@ void tet_mesh::create_tri_from_tet() {
 	TinyMatrix<int,4,3> vf;
 	TinyVector<int,3> v,a;
 
-	vf(0,0)=1, vf(0,2)=2, vf(0,1)=3;
-	vf(1,0)=0, vf(1,2)=3, vf(1,1)=2;
-	vf(2,0)=0, vf(2,2)=1, vf(2,1)=3;
-	vf(3,0)=0, vf(3,2)=2, vf(3,1)=1; 
+    vf(0,0)=1; vf(0,2)=2; vf(0,1)=3;
+    vf(1,0)=0; vf(1,2)=3; vf(1,1)=2;
+    vf(2,0)=0; vf(2,2)=1; vf(2,1)=3;
+    vf(3,0)=0; vf(3,2)=2; vf(3,1)=1;
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
@@ -380,10 +380,10 @@ void tet_mesh::match_tet_and_tri() {
 	TinyVector<int,3> v,a;
 
 	/* Indices of vertices for each face */
-	vf(0,0)=1, vf(0,1)=3, vf(0,2)=2; 
-	vf(1,0)=0, vf(1,1)=2, vf(1,2)=3; 
-	vf(2,0)=0, vf(2,1)=3, vf(2,2)=1; 
-	vf(3,0)=0, vf(3,1)=1, vf(3,2)=2;   
+	vf(0,0)=1; vf(0,1)=1; vf(0,2)=2; 
+	vf(1,0)=1; vf(1,1)=1; vf(1,2)=3; 
+	vf(2,0)=1; vf(2,1)=1; vf(2,2)=1; 
+	vf(3,0)=1; vf(3,1)=1; vf(3,2)=2;   
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
@@ -491,14 +491,14 @@ void tet_mesh::match_tri_and_seg() {
 	TinyMatrix<int,3,2> vs;
 	TinyVector<int,3> v;
 
-	sf(0,0)=0, sf(0,2)=1, sf(0,1)=2;
-	sf(1,0)=0, sf(1,2)=4, sf(1,1)=5;
-	sf(2,0)=1, sf(2,2)=5, sf(2,1)=3;
-	sf(3,0)=2, sf(3,2)=3, sf(3,1)=4;
+	sf(0,0)=1; sf(0,2)=1; sf(0,1)=2;
+	sf(1,0)=1; sf(1,2)=1; sf(1,1)=5;
+	sf(2,0)=1; sf(2,2)=1; sf(2,1)=3;
+	sf(3,0)=1; sf(3,2)=1; sf(3,1)=4;
 
-	vs(0,0)=1, vs(0,1)=2;
-	vs(1,0)=2, vs(1,1)=0;
-	vs(2,0)=0, vs(2,1)=1;
+	vs(0,0)=1; vs(0,1)=2;
+	vs(1,0)=1; vs(1,1)=0;
+	vs(2,0)=1; vs(2,1)=1;
 	
 	for(find = 0; find < ntri; ++find) {
 		tind = tri(find).tet(0);
@@ -577,10 +577,10 @@ void tet_mesh::match_tri_and_seg() {
 //	TinyVector<int,3> v,a;
 //
 //	// may need rearrangment to correspond to my standard element
-//	vf(0,0)=1, vf(0,1)=2, vf(0,2)=3;
-//	vf(1,0)=0, vf(1,1)=3, vf(1,2)=2;
-//	vf(2,0)=0, vf(2,1)=1, vf(2,2)=3;
-//	vf(3,0)=0, vf(3,1)=2, vf(3,2)=1;  
+//	vf(0,0)=1; vf(0,1)=1; vf(0,2)=3;
+//	vf(1,0)=1; vf(1,1)=1; vf(1,2)=2;
+//	vf(2,0)=1; vf(2,1)=1; vf(2,2)=3;
+//	vf(3,0)=1; vf(3,1)=1; vf(3,2)=1;  
 //	
 //	for(tind = 0; tind < ntet; ++tind) {
 //		for(i = 0; i < 4; ++i) {

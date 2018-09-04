@@ -88,7 +88,7 @@ vrtx_bdry* tet_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
 class etype {
 	public:
 		static const int ntypes = 12;
-		enum ids {plain=1, comm, partition, prdc, symbolic, symbolic_comm, coupled_symbolic, 
+		enum ids {plain=1, comm, partition, prdc, symbolic, symbolic_comm, coupled_symbolic,
 			coupled_symbolic_comm, spline,circle, naca, ellipse};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {

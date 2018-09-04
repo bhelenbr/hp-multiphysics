@@ -81,7 +81,7 @@ namespace bdry_cns {
 			for (int n=1;n<x.NV;++n)
 				dirichlets(n-1) = n;
 		}
-		inflow(const inflow& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+        inflow(const inflow& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void vdirichlet();
@@ -111,7 +111,7 @@ namespace bdry_cns {
 			for (int n=1;n<x.NV-1;++n)
 				dirichlets(n-1) = n;
 		}
-		adiabatic(const adiabatic& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+        adiabatic(const adiabatic& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		adiabatic* create(tet_hp& xin, face_bdry &bin) const {return new adiabatic(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void vdirichlet();
@@ -213,7 +213,7 @@ namespace bdry_cns {
 			for (int n=1;n<x.NV;++n)
 				dirichlets(n-1) = n;
 		}
-		inflow_edge(const inflow_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		inflow_edge(const inflow_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		inflow_edge* create(tet_hp& xin, edge_bdry &bin) const {return new inflow_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void vdirichlet3d();
@@ -240,7 +240,7 @@ namespace bdry_cns {
 			for (int n=1;n<x.NV-1;++n)
 				dirichlets(n-1) = n;
 		}
-		adiabatic_edge(const adiabatic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		adiabatic_edge(const adiabatic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : neumann_edge(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		adiabatic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new adiabatic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void vdirichlet3d();
@@ -266,7 +266,7 @@ namespace bdry_cns {
 			for (int n=1;n<x.NV;++n)
 				dirichlets(n-1) = n;
 		}
-		inflow_pt(const inflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		inflow_pt(const inflow_pt& inbdry, tet_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets); dirichlets=inbdry.dirichlets;}
 		inflow_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void tadvance() {

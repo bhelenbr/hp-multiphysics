@@ -211,7 +211,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	char jobz[2] = "V", uplo[2] = "L";
 	Array<FLT,1> work(3*nsnapshots);//3->4 fix me temp?
-	DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
+#ifdef F2CFortran
+    DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
+#else
+    dspev_(jobz,uplo,&nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),&nsnapshots,work.data(),&info);
+#endif
 
 	if (info != 0) {
 		*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;

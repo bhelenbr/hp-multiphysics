@@ -729,22 +729,26 @@ void tet_basis::lumpinv(void) {
 		for(int i = bm; i < tm; ++i)
 			dind(3,++ind)=i;//interior
 
-		for(int i = 0; i < 4; ++i){
-			for(int j = 0; j < ltm; ++j)
+		for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < ltm; ++j)
 				for(int k = 0; k < vdof; ++k)
 					mwk(j,k)=mm(lind(j),dind(i,k));		
-				vwk = 0;
-				vwk(i) = 1;
-				for(int j = 0; j < vdof; ++j)
-					mwk(i,j) = 0;
-				mwk(i,0) = 1;		
-						
-				GETRF(ltm,vdof,&mwk(0,0),MXTM,&ipiv(0),info);
-				GETRS(trans,ltm,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
+            vwk = 0;
+            vwk(i) = 1;
+            for(int j = 0; j < vdof; ++j)
+                mwk(i,j) = 0;
+            mwk(i,0) = 1;
+#ifdef F2CFortran
+            GETRF(ltm,vdof,&mwk(0,0),MXTM,&ipiv(0),info);
+            GETRS(trans,ltm,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
+#else
+            const int one = 1, mx = MXTM;
+            dgetrf_(&ltm,&vdof,&mwk(0,0),&mx,&ipiv(0),&info);
+            dgetrs_(trans,&ltm,&one,&mwk(0,0),&mx,&ipiv(0),&vwk(0),&mx,&info);
+#endif
 				
-				for(int k=0;k<im;++k)
-					ifmb(i,k) = -vwk(k+3*em+3*fm+1);
-					
+            for(int k=0;k<im;++k)
+                ifmb(i,k) = -vwk(k+3*em+3*fm+1);
 //				cout << vwk << endl;
 //				
 //          for(int j = 0; j < ltm; ++j)
@@ -763,7 +767,7 @@ void tet_basis::lumpinv(void) {
 //				cout << wk << endl;
 //			}
 //			cout << endl << endl;
-				
+        
 		}
 		
 	
@@ -842,19 +846,19 @@ void tet_basis::lumpinv(void) {
 		ediag(j)=1/ediag(j);
 	
 	if(p == 3){	
-		edgecone(0)(0)(0)=2,edgecone(0)(1)(0)=4,edgecone(0)(2)(0)=6;
-		edgecone(1)(0)(0)=3,edgecone(1)(1)(0)=4,edgecone(1)(2)(0)=5;
-		edgecone(2)(0)(0)=2,edgecone(2)(1)(0)=4,edgecone(2)(2)(0)=6;
-		edgecone(3)(0)(0)=1,edgecone(3)(1)(0)=5,edgecone(3)(2)(0)=6;
-		edgecone(4)(0)(0)=2,edgecone(4)(1)(0)=4,edgecone(4)(2)(0)=6;
-		edgecone(5)(0)(0)=3,edgecone(5)(1)(0)=4,edgecone(5)(2)(0)=5;
+		edgecone(0)(0)(0)=2;edgecone(0)(1)(0)=4;edgecone(0)(2)(0)=6;
+		edgecone(1)(0)(0)=3;edgecone(1)(1)(0)=4;edgecone(1)(2)(0)=5;
+		edgecone(2)(0)(0)=2;edgecone(2)(1)(0)=4;edgecone(2)(2)(0)=6;
+		edgecone(3)(0)(0)=1;edgecone(3)(1)(0)=5;edgecone(3)(2)(0)=6;
+		edgecone(4)(0)(0)=2;edgecone(4)(1)(0)=4;edgecone(4)(2)(0)=6;
+		edgecone(5)(0)(0)=3;edgecone(5)(1)(0)=4;edgecone(5)(2)(0)=5;
 		
-		edgecone(0)(0)(1)=3,edgecone(0)(1)(1)=4,edgecone(0)(2)(1)=5;
-		edgecone(1)(0)(1)=1,edgecone(1)(1)(1)=5,edgecone(1)(2)(1)=6;
-		edgecone(2)(0)(1)=1,edgecone(2)(1)(1)=5,edgecone(2)(2)(1)=6;
-		edgecone(3)(0)(1)=1,edgecone(3)(1)(1)=2,edgecone(3)(2)(1)=3;
-		edgecone(4)(0)(1)=1,edgecone(4)(1)(1)=2,edgecone(4)(2)(1)=3;
-		edgecone(5)(0)(1)=1,edgecone(5)(1)(1)=2,edgecone(5)(2)(1)=3;
+		edgecone(0)(0)(1)=3;edgecone(0)(1)(1)=4;edgecone(0)(2)(1)=5;
+		edgecone(1)(0)(1)=1;edgecone(1)(1)(1)=5;edgecone(1)(2)(1)=6;
+		edgecone(2)(0)(1)=1;edgecone(2)(1)(1)=5;edgecone(2)(2)(1)=6;
+		edgecone(3)(0)(1)=1;edgecone(3)(1)(1)=2;edgecone(3)(2)(1)=3;
+		edgecone(4)(0)(1)=1;edgecone(4)(1)(1)=2;edgecone(4)(2)(1)=3;
+		edgecone(5)(0)(1)=1;edgecone(5)(1)(1)=2;edgecone(5)(2)(1)=3;
 		
 //		ind = 0;
 //		for(int m = 0; m < 6; ++m)
@@ -969,13 +973,24 @@ void tet_basis::lumpinv(void) {
 					
 				for(int j = 0; j < 3; ++j)
 					vwk(j) = -mm(lind(j),4+i*em);
-						
+#ifdef F2CFortran
 				GETRF(3,3,&mwk(0,0),MXTM,&ipiv(0),info);
+#else
+                const int three = 3, mx = MXTM;
+                dgetrf_(&three,&three,&mwk(0,0),&mx,&ipiv(0),&info);
+#endif
+
 				if (info != 0) {
 					printf("DGETRF FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
 					exit(1);
 				}
+#ifdef F2CFortran
 				GETRS(trans,3,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
+#else
+                const int one = 1;
+                dgetrs_(trans,&three,&one,&mwk(0,0),&mx,&ipiv(0),&vwk(0),&mx,&info);
+#endif
+
 				if (info != 0) {
 					printf("DGETRS FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
 					exit(1);
@@ -1147,19 +1162,19 @@ void tet_basis::lumpinv(void) {
    /*******************************************************/
    if(p == 4){
    
-   		edgecone(0)(0)(0)=2,edgecone(0)(1)(0)=4,edgecone(0)(2)(0)=6;
-		edgecone(1)(0)(0)=3,edgecone(1)(1)(0)=4,edgecone(1)(2)(0)=5;
-		edgecone(2)(0)(0)=2,edgecone(2)(1)(0)=4,edgecone(2)(2)(0)=6;
-		edgecone(3)(0)(0)=1,edgecone(3)(1)(0)=5,edgecone(3)(2)(0)=6;
-		edgecone(4)(0)(0)=2,edgecone(4)(1)(0)=4,edgecone(4)(2)(0)=6;
-		edgecone(5)(0)(0)=3,edgecone(5)(1)(0)=4,edgecone(5)(2)(0)=5;
+   		edgecone(0)(0)(0)=2;edgecone(0)(1)(0)=4;edgecone(0)(2)(0)=6;
+		edgecone(1)(0)(0)=3;edgecone(1)(1)(0)=4;edgecone(1)(2)(0)=5;
+		edgecone(2)(0)(0)=2;edgecone(2)(1)(0)=4;edgecone(2)(2)(0)=6;
+		edgecone(3)(0)(0)=1;edgecone(3)(1)(0)=5;edgecone(3)(2)(0)=6;
+		edgecone(4)(0)(0)=2;edgecone(4)(1)(0)=4;edgecone(4)(2)(0)=6;
+		edgecone(5)(0)(0)=3;edgecone(5)(1)(0)=4;edgecone(5)(2)(0)=5;
 		
-		edgecone(0)(0)(1)=3,edgecone(0)(1)(1)=4,edgecone(0)(2)(1)=5;
-		edgecone(1)(0)(1)=1,edgecone(1)(1)(1)=5,edgecone(1)(2)(1)=6;
-		edgecone(2)(0)(1)=1,edgecone(2)(1)(1)=5,edgecone(2)(2)(1)=6;
-		edgecone(3)(0)(1)=1,edgecone(3)(1)(1)=2,edgecone(3)(2)(1)=3;
-		edgecone(4)(0)(1)=1,edgecone(4)(1)(1)=2,edgecone(4)(2)(1)=3;
-		edgecone(5)(0)(1)=1,edgecone(5)(1)(1)=2,edgecone(5)(2)(1)=3;
+		edgecone(0)(0)(1)=3;edgecone(0)(1)(1)=4;edgecone(0)(2)(1)=5;
+		edgecone(1)(0)(1)=1;edgecone(1)(1)(1)=5;edgecone(1)(2)(1)=6;
+		edgecone(2)(0)(1)=1;edgecone(2)(1)(1)=5;edgecone(2)(2)(1)=6;
+		edgecone(3)(0)(1)=1;edgecone(3)(1)(1)=2;edgecone(3)(2)(1)=3;
+		edgecone(4)(0)(1)=1;edgecone(4)(1)(1)=2;edgecone(4)(2)(1)=3;
+       edgecone(5)(0)(1)=1;edgecone(5)(1)(1)=2;edgecone(5)(2)(1)=3;
 		
 													   
 		// find all degrees of freedom for edges
@@ -1250,7 +1265,7 @@ void tet_basis::lumpinv(void) {
 					
 				for(int j = 0; j < 10; ++j)
 					vwk(j+12) = -mm(lind(j),4+i*em);
-						
+#ifdef F2CFortran
 				GETRF(9,10,&mwk(0,0),MXTM,&ipiv(0),info);
 				if (info != 0) {
 					printf("DGETRF FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
@@ -1261,6 +1276,19 @@ void tet_basis::lumpinv(void) {
 					printf("DGETRS FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
 					exit(1);
 				}
+#else
+                const int one = 1, nine = 9, ten = 10, mx = MXTM;
+                dgetrf_(&nine,&ten,&mwk(0,0),&mx,&ipiv(0),&info);
+                if (info != 0) {
+                    printf("DGETRF FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
+                    exit(1);
+                }
+                dgetrs_(trans,&ten,&one,&mwk(0,0),&mx,&ipiv(0),&vwk(0),&mx,&info);
+                if (info != 0) {
+                    printf("DGETRS FAILED - EDGE MODES info:%d EDGE:%d \n",info,i);
+                    exit(1);
+                }
+#endif
 				
 //				cout << vwk << endl;
 //				exit(0);
@@ -1472,19 +1500,25 @@ void tet_basis::lumpinv(void) {
 			for(int j = 0; j < 4; ++j)
 				for(int k = 0; k < 4; ++k)
 					mwk(j,k)=mm(lind(j),dind(i,k));		
-				vwk = 0;
-				vwk(i) = 1;
-				for(int j = 0; j < 4; ++j)
-					mwk(i,j) = 0;
-				mwk(i,0) = 1;		
-						
-				GETRF(4,4,&mwk(0,0),MXTM,&ipiv(0),info);
-				GETRS(trans,4,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
+            vwk = 0;
+            vwk(i) = 1;
+            for(int j = 0; j < 4; ++j)
+                mwk(i,j) = 0;
+            mwk(i,0) = 1;
+            
+#ifdef F2CFortran
+            GETRF(4,4,&mwk(0,0),MXTM,&ipiv(0),info);
+            GETRS(trans,4,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
+#else
+            const int one = 1, four = 4, mx = MXTM;
+            dgetrf_(&four,&four,&mwk(0,0),&mx,&ipiv(0),&info);
+            dgetrs_(trans,&four,&one,&mwk(0,0),&mx,&ipiv(0),&vwk(0),&mx,&info);
+#endif
 				
-				for(int k=0;k<im;++k)
-					ifmb(i+4*im+6*im,k) = -vwk(k+fm);
-					
-				//cout << vwk << endl;
+            for(int k=0;k<im;++k)
+                ifmb(i+4*im+6*im,k) = -vwk(k+fm);
+            
+            //cout << vwk << endl;
 				
 //          for(int j = 0; j < ltm; ++j)
 //				for(int k = 0; k < vdof; ++k)

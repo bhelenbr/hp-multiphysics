@@ -213,7 +213,7 @@ void tet_hp::particle() {
 	double S=965.0;//density ratio
 	double Re=9588.0;//Reynolds number	
 	
-	x0(0)=6.0,x0(1)=12.0,x0(2)=.000000001;//initial position
+    x0(0)=6.0;x0(1)=12.0;x0(2)=.000000001;//initial position
 
 	/* dependent variables */
 	double C=1.0/tau;// 1/tau
@@ -251,7 +251,7 @@ void tet_hp::particle() {
 	myfile.open("x.dat");
 	myfile.precision(15);	
 
-	g(0)=gp,g(1)=0.0,g(2)=0.0;// gravity
+    g(0)=gp;g(1)=0.0;g(2)=0.0;// gravity
 	xp=x0;
 	getu(xp, tind, uout);
 	up=uout; // initialize particle velocity with fluid velocity	
@@ -380,7 +380,7 @@ void tet_hp::particle() {
 		for(int i = 1; i < 3; ++i){
 			xp(i)=xp(i)+dt*up(i);
 		}
-		myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << ' ' << sqrt(uout(0)*uout(0)+uout(1)*uout(1)+uout(2)*uout(2)) << endl,++t;
+        myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << ' ' << sqrt(uout(0)*uout(0)+uout(1)*uout(1)+uout(2)*uout(2)) << endl; ++t;
 	}
 	myfile << "0 0 " << t+1 <<  " 0 0" << endl;
 	
@@ -420,7 +420,7 @@ void tet_hp::particle() {
 		//cout << tind+1 << ", " ;
 	}
 	//cout << endl;
-	if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << ' ' << sqrt(uout(0)*uout(0)+uout(1)*uout(1)+uout(2)*uout(2)) << endl,++t;
+	if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << ' ' << sqrt(uout(0)*uout(0)+uout(1)*uout(1)+uout(2)*uout(2)) << endl; ++t;
 	myfile << "0 0 " << t+1 <<  " 0 0" << endl;
 
 
@@ -468,7 +468,7 @@ void tet_hp::particle() {
 ////			xp(i)=xp(i)+dt*uout(i);			
 ////		myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl;
 ////	}
-////	//if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl,++t;
+////	//if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl; ++t;
 ////	myfile << "0 0 " << t <<  " 0" << endl;
 //	
 //	/* Runge Kutta Streamlines */
@@ -501,7 +501,7 @@ void tet_hp::particle() {
 //			//cout << tind+1 << ", " ;
 //		}
 //	    //cout << endl;
-//		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl,++t;
+//		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl; ++t;
 //		myfile << "0 0 " << t+1 <<  " 0" << endl;
 //	}
 //
@@ -576,7 +576,7 @@ void tet_hp::particle() {
 ////			//cout << tind+1 << ", " ;
 ////		}
 ////		//cout << endl;
-////		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl,++t;
+////		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl; ++t;
 ////		myfile << "0 0 " << t+1 <<  " 0" << endl;
 ////
 ////	}
@@ -629,7 +629,7 @@ void tet_hp::particle() {
 //			//cout << tind+1 << ", " ;
 //		}
 //		//cout << endl;
-//		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl,++t;
+//		if(tind < 0) myfile << xp(0) << ' ' << xp(1) << ' ' << xp(2) << ' ' << tind << endl; ++t;
 //		myfile << "0 0 " << t+1 <<  " 0" << endl;
 //
 //	}

@@ -12,18 +12,11 @@
 
 
 void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
-	int i,j,n;
-	FLT fluxx,fluxy;
 	FLT visc[ND][ND][ND][ND], tres[NV];
 	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
 	FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
-	TinyVector<FLT,ND> pt;
-	TinyVector<int,3> v;
 	const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
-
-	/* LOAD INDICES OF VERTEX POINTS */
-	v = tri(tind).pnt;
 
 	/* IF TINFO > -1 IT IS CURVED ELEMENT */
 	if (tri(tind).info > -1) {
@@ -31,18 +24,22 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		crdtocht(tind);
 
 		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(n=0;n<ND;++n)
+		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 	}
 	else {
+		/* LOAD INDICES OF VERTEX POINTS */
+		TinyVector<int,3> v;
+		v = tri(tind).pnt;
+		
 		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(n=0;n<ND;++n)
+		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 
 		/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
-		for(i=0;i<basis::tri(log2p)->gpx();++i) {
-			for(j=0;j<basis::tri(log2p)->gpn();++j) {
-				for(n=0;n<ND;++n) {
+		for(int i=0;i<basis::tri(log2p)->gpx();++i) {
+			for(int j=0;j<basis::tri(log2p)->gpn();++j) {
+				for(int n=0;n<ND;++n) {
 					dcrd(n,0)(i,j) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
 					dcrd(n,1)(i,j) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 				}
@@ -51,8 +48,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	}
 
 	/* CALCULATE MESH VELOCITY */
-	for(i=0;i<lgpx;++i) {
-		for(j=0;j<lgpn;++j) {
+	for(int i=0;i<lgpx;++i) {
+		for(int j=0;j<lgpn;++j) {
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
@@ -65,25 +62,25 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	basis::tri(log2p)->proj(&uht(0)(0),&u(0)(0,0),&du(0,0)(0,0),&du(0,1)(0,0),MXGP);
 
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
-	for(n=0;n<NV;++n){
-		for(i=0;i<basis::tri(log2p)->tm();++i){
+	for(int n=0;n<NV;++n){
+		for(int i=0;i<basis::tri(log2p)->tm();++i){
 			lf_re(n)(i) = 0.0;
 			lf_im(n)(i) = 0.0;	
 		}
 	}
 
 	/* CONVECTION */
-	for(i=0;i<lgpx;++i) {
-		for(j=0;j<lgpn;++j) {
+	for(int i=0;i<lgpx;++i) {
+		for(int j=0;j<lgpn;++j) {
 
 #ifdef CONST_A
-			fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ax -mvel(0)(i,j))*u(0)(i,j);
-			fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ay -mvel(1)(i,j))*u(0)(i,j);
+			FLT fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ax -mvel(0)(i,j))*u(0)(i,j);
+			FLT fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ay -mvel(1)(i,j))*u(0)(i,j);
 #else
 			pt(0) = crd(0)(i,j);
 			pt(1) = crd(1)(i,j);
-			fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(0,pt,gbl->time) -mvel(0)(i,j))*u(0)(i,j);
-			fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(1,pt,gbl->time) -mvel(1)(i,j))*u(0)(i,j);
+			FLT fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(0,pt,gbl->time) -mvel(0)(i,j))*u(0)(i,j);
+			FLT fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(1,pt,gbl->time) -mvel(1)(i,j))*u(0)(i,j);
 #endif
 			cv00[i][j] = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
 			cv01[i][j] = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
@@ -97,10 +94,9 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	if (gbl->beta(stage) > 0.0) {
 
 		/* TIME DERIVATIVE TERMS */
-		for(i=0;i<lgpx;++i) {
-			for(j=0;j<lgpn;++j) {
-				pt(0) = crd(0)(i,j);
-				pt(1) = crd(1)(i,j);
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
+                TinyVector<FLT,ND> pt(crd(0)(i,j),crd(1)(i,j));
 				cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 				res(0)(i,j) = gbl->rhocv*RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p)(tind,0,i,j);
 				res(0)(i,j) -= RAD(crd(0)(i,j))*cjcb(i,j)*gbl->src->f(0,pt,gbl->time);
@@ -109,8 +105,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		basis::tri(log2p)->intgrt(&lf_re(0)(0),&res(0)(0,0),MXGP);
 
 		/* DIFFUSIVE TERMS  */
-		for(i=0;i<lgpx;++i) {
-			for(j=0;j<lgpn;++j) {
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
 
 				cjcb(i,j) = gbl->kcond*RAD(crd(0)(i,j))/cjcb(i,j);
 
@@ -132,10 +128,9 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		basis::tri(log2p)->derivs(cv01[0],&res(0)(0,0),MXGP);
 
 		/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-		for(i=0;i<lgpx;++i) {
-			for(j=0;j<lgpn;++j) {
-				pt(0) = crd(0)(i,j);
-				pt(1) = crd(1)(i,j);
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
+				TinyVector<FLT,ND> pt(crd(0)(i,j),crd(1)(i,j));
 				tres[0] = gbl->tau(tind)*res(0)(i,j);
 
 #ifdef CONST_A
@@ -153,8 +148,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		}
 		basis::tri(log2p)->intgrtrs(&lf_re(0)(0),e00[0],e01[0],MXGP); 
 
-		for(n=0;n<NV;++n)
-			for(i=0;i<basis::tri(log2p)->tm();++i)
+		for(int n=0;n<NV;++n)
+			for(int i=0;i<basis::tri(log2p)->tm();++i)
 				lf_re(n)(i) *= gbl->beta(stage);
 
 	}

@@ -449,7 +449,12 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	/* FACTORIZE PRECONDITIONER */
 	int info;
+#ifdef F2CFortran
 	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
+#else
+    dgetrf_(&tmodes,&tmodes,jacobian.data(),&tmodes,ipiv.data(),&info);
+#endif
+
 	if (info != 0) {
 		printf("DGETRF FAILED FOR POD JACOBIAN %d\n",info);
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
@@ -463,7 +468,12 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	rsdl(BASE::gbl->nstage);
 
+#ifdef F2CFortran
 	GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
+#else
+    const int one = 1;
+    dgetrs_(trans,&tmodes,&one,jacobian.data(),&tmodes,ipiv.data(),rsdls_recv.data(),&tmodes,&info);
+#endif
 	if (info != 0) {
 		printf("DGETRS FAILED FOR POD UPDATE\n");
 		sim::abort(__LINE__,__FILE__,BASE::gbl->log);

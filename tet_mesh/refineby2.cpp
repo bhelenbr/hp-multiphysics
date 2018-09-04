@@ -86,51 +86,51 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 			case(0):
 				// repeated seg2 seg5 010 101 
 				//(e4,e5,e0,e2)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][0];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[1][0][0];tet(ind).pnt(3)=ijind[0][1][0];
 				//(e4,e5,e2,e3)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[0][1][0],tet(ind).pnt(3)=ijind[0][1][1];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[0][1][0];tet(ind).pnt(3)=ijind[0][1][1];
 				//(e5,e2,e1,e0)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[0][1][0];tet(ind).pnt(2)=ijind[1][1][0];tet(ind).pnt(3)=ijind[1][0][0];
 				//(e5,e2,e3,e1)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][0],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[0][1][0];tet(ind).pnt(2)=ijind[0][1][1];tet(ind).pnt(3)=ijind[1][1][0];
 				
 			case(1):
 				// repeated seg1 seg4 110 001
 				//(e4,e5,e0,e1)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[1][1][0];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[1][0][0];tet(ind).pnt(3)=ijind[1][1][0];
 				//(e4,e5,e1,e3)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[0][1][1];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[1][1][0];tet(ind).pnt(3)=ijind[0][1][1];
 				//(e5,e4,e1,e0)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[0][0][1];tet(ind).pnt(2)=ijind[1][1][0];tet(ind).pnt(3)=ijind[1][0][0];
 				//(e5,e4,e3,e1)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[0][0][1];tet(ind).pnt(2)=ijind[0][1][1];tet(ind).pnt(3)=ijind[1][1][0];
 				
 			case(2):
 				// repeated seg0 seg3 100 011
 				//(e4,e5,e0,e3)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][1];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[1][0][0];tet(ind).pnt(3)=ijind[0][1][1];
 				//(e4,e5,e0,e3)
-				tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][1];
+				tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[1][0][0];tet(ind).pnt(3)=ijind[0][1][1];
 				//(e5,e3,e1,e0)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[0][1][1],tet(ind).pnt(2)=ijind[1][1][0],tet(ind).pnt(3)=ijind[1][0][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[0][1][1];tet(ind).pnt(2)=ijind[1][1][0];tet(ind).pnt(3)=ijind[1][0][0];
 				//(e5,e0,e3,e1)
-				tet(++ind).pnt(0)=ijind[1][0][1],tet(ind).pnt(1)=ijind[1][0][0],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[1][1][0];
+				tet(++ind).pnt(0)=ijind[1][0][1];tet(ind).pnt(1)=ijind[1][0][0];tet(ind).pnt(2)=ijind[0][1][1];tet(ind).pnt(3)=ijind[1][1][0];
 				
 		}
 		
 
 		
 		/* single tet */
-		tet(++ind).pnt(0)=ijind[0][0][0],tet(ind).pnt(1)=ijind[0][0][1],tet(ind).pnt(2)=ijind[1][0][0],tet(ind).pnt(3)=ijind[0][1][0];
+		tet(++ind).pnt(0)=ijind[0][0][0];tet(ind).pnt(1)=ijind[0][0][1];tet(ind).pnt(2)=ijind[1][0][0];tet(ind).pnt(3)=ijind[0][1][0];
 	
 		/* single tet */
-		tet(++ind).pnt(0)=ijind[0][0][1],tet(ind).pnt(1)=ijind[1][0][1],tet(ind).pnt(2)=ijind[0][1][1],tet(ind).pnt(3)=ijind[0][0][2];
+		tet(++ind).pnt(0)=ijind[0][0][1];tet(ind).pnt(1)=ijind[1][0][1];tet(ind).pnt(2)=ijind[0][1][1];tet(ind).pnt(3)=ijind[0][0][2];
 		
 		/* single tet */
-		tet(++ind).pnt(0)=ijind[0][1][0],tet(ind).pnt(1)=ijind[1][1][0],tet(ind).pnt(2)= ijind[0][2][0],tet(ind).pnt(3)=ijind[0][1][1];
+		tet(++ind).pnt(0)=ijind[0][1][0];tet(ind).pnt(1)=ijind[1][1][0];tet(ind).pnt(2)= ijind[0][2][0];tet(ind).pnt(3)=ijind[0][1][1];
 
 		/* single tet */
-		tet(tind).pnt(0)=ijind[1][0][0],tet(tind).pnt(1)=ijind[2][0][0],tet(tind).pnt(2)=ijind[1][1][0],tet(tind).pnt(3)=ijind[1][0][1];
+		tet(tind).pnt(0)=ijind[1][0][0];tet(tind).pnt(1)=ijind[2][0][0];tet(tind).pnt(2)=ijind[1][1][0];tet(tind).pnt(3)=ijind[1][0][1];
 	}
 	
 	
@@ -139,10 +139,10 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 		ind=fbdry(i)->ntri;
 		for(int j = 0; j < fbdry(i)->ntri; ++j) {
 			find = fbdry(i)->tri(j).gindx;
-			fbdry(i)->tri(j).pnt(0)=npnt+tri(find).seg(0),fbdry(i)->tri(j).pnt(1)=npnt+tri(find).seg(1),fbdry(i)->tri(j).pnt(2)=npnt+tri(find).seg(2);
-			fbdry(i)->tri(++ind).pnt(0)=tri(find).pnt(0),fbdry(i)->tri(ind).pnt(1)=npnt+tri(find).seg(2),fbdry(i)->tri(ind).pnt(2)=npnt+tri(find).seg(1);
-			fbdry(i)->tri(++ind).pnt(0)=npnt+tri(find).seg(2),fbdry(i)->tri(ind).pnt(1)=tri(find).pnt(1),fbdry(i)->tri(ind).pnt(2)=npnt+tri(find).seg(0);
-			fbdry(i)->tri(++ind).pnt(0)=npnt+tri(find).seg(1),fbdry(i)->tri(ind).pnt(1)=npnt+tri(find).seg(0),fbdry(i)->tri(ind).pnt(2)=tri(find).pnt(2);
+			fbdry(i)->tri(j).pnt(0)=npnt+tri(find).seg(0);fbdry(i)->tri(j).pnt(1)=npnt+tri(find).seg(1);fbdry(i)->tri(j).pnt(2)=npnt+tri(find).seg(2);
+			fbdry(i)->tri(++ind).pnt(0)=tri(find).pnt(0);fbdry(i)->tri(ind).pnt(1)=npnt+tri(find).seg(2);fbdry(i)->tri(ind).pnt(2)=npnt+tri(find).seg(1);
+			fbdry(i)->tri(++ind).pnt(0)=npnt+tri(find).seg(2);fbdry(i)->tri(ind).pnt(1)=tri(find).pnt(1);fbdry(i)->tri(ind).pnt(2)=npnt+tri(find).seg(0);
+			fbdry(i)->tri(++ind).pnt(0)=npnt+tri(find).seg(1);fbdry(i)->tri(ind).pnt(1)=npnt+tri(find).seg(0);fbdry(i)->tri(ind).pnt(2)=tri(find).pnt(2);
 		}
 	}
 	

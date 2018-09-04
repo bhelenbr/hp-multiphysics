@@ -151,12 +151,12 @@ void edge_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 	FLT psiloc;
 	
 	TinyMatrix<int,6,2> vs;    
-	vs(0,0)=2, vs(0,1)=3; 
-	vs(1,0)=3, vs(1,1)=1; 
-	vs(2,0)=2, vs(2,1)=1;
-	vs(3,0)=1, vs(3,1)=0;
-	vs(4,0)=2, vs(4,1)=0; 
-	vs(5,0)=3, vs(5,1)=0;
+    vs(0,0)=2; vs(0,1)=3;
+    vs(1,0)=3; vs(1,1)=1;
+    vs(2,0)=2; vs(2,1)=1;
+    vs(3,0)=1; vs(3,1)=0;
+    vs(4,0)=2; vs(4,1)=0;
+    vs(5,0)=3; vs(5,1)=0;
 		
 	for(k=1;k<nseg;++k) {
 		p0 = x.seg(seg(k).gindx).pnt(0);
@@ -798,10 +798,10 @@ void face_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 	
 	// vertices of each face on a tet
 	TinyMatrix<int,4,3> vf1;
-	vf1(0,0)=1, vf1(0,1)=2, vf1(0,2)=3;
-	vf1(1,0)=0, vf1(1,1)=3, vf1(1,2)=2;
-	vf1(2,0)=0, vf1(2,1)=1, vf1(2,2)=3;
-	vf1(3,0)=0, vf1(3,1)=2, vf1(3,2)=1;
+    vf1(0,0)=1; vf1(0,1)=2; vf1(0,2)=3;
+    vf1(1,0)=0; vf1(1,1)=3; vf1(1,2)=2;
+    vf1(2,0)=0; vf1(2,1)=1; vf1(2,2)=3;
+    vf1(3,0)=0; vf1(3,1)=2; vf1(3,2)=1;
 		
 	for(j=0;j<npnt;++j) {
 		p0 = pnt(j).gindx;
