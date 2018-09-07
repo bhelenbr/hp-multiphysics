@@ -1,0 +1,14 @@
+# Name of file for output: 
+logfile: generate
+# flag for mesh adaptation: 
+adapt: 1
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 8000.0
+# Name of mesh without extension: 
+b0_mesh: ./timleft.d
+# Input mesh filetype
+# easymesh=0, gambit=1, tecplot=2, grid=3, text=4, binary=5, boundary=8: 
+# Side type specifiers: 
+b0_s5_type: circle
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5

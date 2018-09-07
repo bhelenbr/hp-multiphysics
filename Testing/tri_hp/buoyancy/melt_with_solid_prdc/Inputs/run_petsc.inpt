@@ -1,0 +1,111 @@
+# Name of file for output: 
+logfile: out
+# log 2 of polynomial order (0,1,2): 
+log2p: 2
+# interval for outputting restart files: 
+restart_interval: 50
+# Iterative stuff: 
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+nblock: 1 1
+ncycle: 15
+itercrsn: 1
+#jac_debug: 1
+#rsdl_debug: 1
+#under_relaxation: 1.0e-1
+# For multigrid solver: value
+#ncycle: 300
+#itercrsn: 2
+#iterrfne: 2
+#ngrid: 2
+#vwcycle: 2
+#ngrid: 1
+#extra_finest_levels: 2
+#iterative convergence tolerances: 
+relative_tolerance: 1.0e-6
+absolute_tolerance: 1.0e-10
+#debug_output: 1
+#adapt_output: 1
+# mesh adaptation stuff: 
+# flag to turn mesh adaptation on or off: 
+adapt: 1
+# error_estimator: energy_norm
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-5
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 0.0
+# This sets maximum size of mesh based on input mesh (50 x): 
+growth factor: 10
+mesh_movement: coupled_deformable
+# Dimensionaless Variables: 
+H0: 0.2
+HF: 0.4
+sx: 0.0
+sy: 0.0
+cp: 1
+rho: 1
+rho_vs_T: rho
+# inverse stefan number (Large means slow moving interface): 
+lambda: 2.0
+gam: 1/(lambda*sqrt(_pi)*erf(lambda)*exp(lambda^2))
+b0_s3_Lf: gam
+Pr: 7e-4*1000/64
+lam: 22/64
+mu: Pr*conductivity
+conductivity: gam
+dtinv: ntstep/(tf-t0)
+ntstep: 4
+# I.C. and B.C. Info: 
+b0_ibc: symbolic
+b0_ibc0: sx
+b0_ibc1: sy
+b0_ibc2: 1-erf(lambda*x1/H)/erf(lambda)
+t0: (H0/(2*lambda))^2/gam
+tf: (HF/(2*lambda))^2/gam
+H: 2*lambda*sqrt((t+t0)*gam)
+b0_ibc3: 0.0
+b0_type: buoyancy
+b0_mesh: ./rstrt1_b0.grd
+b0_helper: l2error
+b0_s1_hp_type: characteristic
+b0_s2_type: prdc
+# Freezing Surface: 
+b0_s3_hp_type: melt
+b0_s3_type: coupled_symbolic_comm
+b0_s3_report: 1
+b0_s3_ibc: symbolic
+b0_s3_ibc0: sx
+b0_s3_ibc1: sy
+b0_s3_ibc2: 0.0
+b0_s3_ibc3: 0.0
+b0_s3_h: x1-0.2
+b0_s3_dhdx0: 0.0
+b0_s3_dhdx1: 1.0
+b1_type: cd
+b1_mesh_movement: coupled_deformable
+b1_mesh: ./rstrt1_b1.grd
+b1_ax: sx
+b1_ay: sy
+b1_nu: lam*conductivity
+b1_src: zero
+b1_s3_hp_type: melt
+b1_s3_type: coupled_symbolic_comm
+b1_s3_h: b0_s3_h
+b1_s3_dhdx0: b0_s3_dhdx0
+b1_s3_dhdx1: b0_s3_dhdx1
+b1_s3_ibc: symbolic
+b1_s3_ibc0: 0.0
+b1_s6_hp_type: dirichlet
+b1_s5_type: prdc
+b1_ibc: symbolic
+b1_ibc0: 0.0
+#b0_s3_phase1: 1
+#b1_s3_phase1: 1
+b0_v1_hp_type: hp_deformable_free_pnt
+b1_v1_hp_type: hp_deformable_free_pnt
+b0_v1_type: prdc
+b1_v1_type: prdc
+#b0_v1_group: 0 1 3
+b0_v1_b1_v1_matching: 2 0 4 1 5 2

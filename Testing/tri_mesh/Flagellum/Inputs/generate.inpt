@@ -1,0 +1,46 @@
+logfile: generate
+# number of geometric multigrid levels: 
+ngrid: 1
+# Number of time steps in simulation: 
+ntstep: 1
+# number of iterative multigrid cycles per time step: 
+ncycle: 0
+# inverse time step: 
+dtinv: 4000.0
+nblock: 1
+tolerance: 1.25
+adapt_output: 1
+preconditioner_interval: -1
+b0_mesh: flagellum.d
+b0_growth factor: 1000.0
+b0_adapt: 1
+b0_s1_type: plain
+b0_s2_type: plain
+b0_s3_type: plain
+b0_s4_type: plain
+b0_s5_type: circle
+b0_s5_radius: 1.000000000000000
+b0_s5_center: c0 0
+b0_s6_r_type: deforming
+b0_s6_type: symbolic
+b0_s6_h: h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)+s*(1-exp(-(x0-ex0)^2/denom^2))*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)-x1
+b0_s6_dhdx0: 2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k+2*s*(x0-ex0)/denom^2*exp(-(x0-ex0)^2/denom^2)*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)+s*(1-exp(-(x0-ex0)^2/denom^2))/(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)*(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)*(2*h*ke^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^4*x0^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^2*x0*exp(-ke^2*x0^2)*sin(k*x0-w*t)*k-h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)*k^2)
+b0_s6_dhdx1: -1
+b0_s7_r_type: deforming
+b0_s7_type: symbolic
+b0_s7_h: h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)-s*(1-exp(-(x0-ex0)^2/denom^2))*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)-x1
+b0_s7_dhdx0: 2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k-2*s*(x0-ex0)/denom^2*exp(-(x0-ex0)^2/denom^2)*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)-s*(1-exp(-(x0-ex0)^2/denom^2))/(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)*(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)*(2*h*ke^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^4*x0^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^2*x0*exp(-ke^2*x0^2)*sin(k*x0-w*t)*k-h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)*k^2)
+b0_s7_dhdx1: -1
+b0_v11_r_type: moving
+b0_v11_type: symbolic
+b0_v11_locx0: ex0
+b0_v11_locx1: h*(1-exp(-ke^2*ex0^2))*cos(k*ex0-w*t)
+c0: -sqrt(b0_s5_radius^2-s^2)
+ts: t-2/dtinv
+s: 0.100000000000000
+h: 0.700000000000000
+w: 3.141592653589793
+ke: 1.300000000000000
+k: 1.300000000000000
+denom: 0.700000000000000
+ex0: 7.000000000000000

@@ -1,0 +1,5 @@
+nblock: 1
+b0_growth factor: 100.0
+b0_mesh: column.d
+b0_adapt: 1
+adapt: 1

@@ -1,0 +1,305 @@
+# Name of file for output: 
+logfile: out
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 2
+# interval for outputting restart files: 
+restart_interval: 10
+# Iterative stuff: 
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+nblock: 1 1 1
+ncycle: 20
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+#under_relaxation: 0.25
+extrapolate: 1
+#preconditioner_interval: 10
+# For multigrid solver: 
+#nblock: 2
+#ncycle: 300
+#itercrsn: 2
+#iterrfne: 2
+#ngrid: 2
+#vwcycle: 2
+#ngrid: 1
+#extra_finest_levels: 0
+#iterative convergence tolerances: 
+relative_tolerance: -1.0e-5
+absolute_tolerance: 1.0e-9
+#debug_output: 1
+# mesh adaptation stuff: 
+# flag to turn mesh adaptation on or off: 
+adapt: 0
+length_smoothing_steps: 1
+error_estimator: scale_independent
+energy_scaling: 1e-7
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-8
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 2.0
+# This sets maximum size of mesh based on input mesh (50 x): 
+growth factor: 10
+# Non-dimensionalization Variables (SI UNITS): 
+# Melt & Solid Density: 
+rho0: 2530
+# Liquid specific heat: 
+cp0: 1000
+# Equilibrium interface temperature: 
+T0: 1685
+# Thermal conductivity of melt: 
+k0: 64.0
+# Depth of melt: 
+d0: 0.013
+# Thermal diffusivity: 
+alpha0: k0/(rho0*cp0)
+# Time scale inverse based on depth and thermal diffusivity: 
+tsi: alpha0/d0^2
+# Dimensionaless Variables: 
+# Depth of melt: 
+d: 0.013/d0
+# Pull Speed: 
+sx: 300.0e-6/(d0*tsi)
+# Equilibrium interface temperature: 
+Tm: 1685/T0
+# Bottom and inlet temperature: 
+DTl: 0*5/T0
+# Bottom heat flux from heater 8: 
+q8: 0*16e4/(k0*T0/d0)
+w8: 0.015/d0
+#Radiation Heat Flux parameters: 
+epsl: 0.2
+epss: 0.6
+# View Factor Stuff: 
+sb: 0*5.67e-8*T0^4/(rho0*cp0*T0*d0*tsi)
+# Cold plate Temp: 
+Tc: 300/T0
+#Tc: 0.99*Tm
+# Width of cold plate: 
+wrad: 0.025/d0
+# Height of cold plate: 
+hrad: 0.005/d0
+# View factor: http://www.engr.uky.edu/rtl/Catalog/sectionb/B-71.html
+xwci: 0.0
+sinphi1: (-wrad/2-(x0-xwci))/sqrt((-wrad/2-(x0-xwci))^2+hrad^2)
+sinphi2: (wrad/2-(x0-xwci))/sqrt((wrad/2-(x0-xwci))^2+hrad^2)
+Fc: 0.5*(sinphi2-sinphi1)
+# heatflux without emissivity: 
+radiation: sb*Fc*(Tm^4-Tc^4)
+# Time Step: 
+ntstep: 1
+dtinv: 0.0
+###################: 
+###################: 
+# b0 is the liquid: 
+b0_type: buoyancy
+# Melt Density: 
+b0_rho: 2530/rho0
+b0_rho_vs_T: b0_rho
+# Liquid specific heat: 
+b0_cp: 1000/cp0
+# Thermal conductivity of melt: 
+b0_conductivity: 64.0/k0
+# Liquid viscosity: 
+b0_mu: 7.0e-4/(k0/cp0)
+# Initial Conditions and inlet Temperature profile): 
+b0_ibc: symbolic
+#b0_ibc0: sx*(1-(x1/d)^2)
+b0_ibc0: sx
+b0_ibc1: 0.0
+b0_ibc2: Tm+DTl
+b0_ibc3: 0.0
+b0_mesh: ./rstrt1_b0.grd
+###################: 
+# Bottom is dirchlet B.C. & no slip: 
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 0 1
+b0_s1_flux2: -q8*exp(-((x0-xwci)/w8)^2*ln(2))
+b0_s1_flux3: b0_rho*(u0*n0 +u1*n1)
+###################: 
+# Right side is outflow B.C. and no Temperature gradient: 
+b0_s2_hp_type: outflow
+b0_s2_r_type: fixed
+b0_s2_r_dir: 0 0
+###################: 
+# Solid/Liquid Surface: 
+b0_s3_type: symbolic_comm
+b0_s3_hp_typelist: 0 0 0 1
+b0_s3_c0_indices: 2
+b0_s3_ibc: symbolic
+b0_s3_ibc0: sx
+b0_s3_ibc1: 0.0
+b0_s3_ibc2: Tm
+b0_s3_ibc3: 0
+b0_s3_rho_s: b1_rho
+b0_s3_cp_s: b1_cp
+# Shape of Initial Seed: 
+b0_s3_facet_angle: 35
+xle: 0.0
+tseed: 0.21
+slope: tan((90-b0_s3_facet_angle)*_pi/180)
+b0_s3_h: x1 +tseed*(1-exp(-x0*slope/tseed))
+b0_s3_dhdx0: slope*exp(-x0*slope/tseed)
+b0_s3_dhdx1: 1.0
+b0_s3_flux2: 0.0
+b0_s3_report: 1
+###################: 
+# Free-Surface is just a slip B.C. with heat flux given by: 
+b0_s4_type: comm
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 1 0 1 1
+b0_s4_c0_indices: 0 1 2
+b0_s4_flux0: 0.0
+#b0_s4_flux1: u3*n1
+b0_s4_flux2: radiation*epsl
+b0_s4_flux3: 0.0
+b0_s4_r_type: fixed
+b0_s4_r_dir: 1 1
+b0_s4_report: 1
+###################: 
+# Inlet is u,v fixed at sx,0 and zero temperature gradient in T.: 
+# Convective flux of T is determined by T function (above) and sx: 
+b0_s5_hp_type: characteristic
+###################: 
+# Vertex B.C.'s: 
+b0_v2_type: comm
+b0_v2_c0_indices: 2
+b0_v2_hp_typelist: 0 0 0 1
+b0_v2_ibc: symbolic
+b0_v2_ibc0: sx
+b0_v2_ibc1: 0.0
+b0_v2_ibc2: Tm
+b0_v2_ibc3: 0.0
+###################: 
+###################: 
+# Solid Info and B.C.'s are next: 
+b1_type: cd
+b1_rho: b0_rho
+b1_cv: b0_cp
+b1_mesh: ./rstrt1_b1.grd
+b1_ibc: symbolic
+b1_ibc0: Tm
+b1_a: symbolic
+b1_a0: sx
+b1_a1: 0.0
+# Convective speed in solid: 
+b1_ax: sx
+b1_ay: 0.0
+# Thermal conductivity in solid: 
+b1_nu: 22/k0
+b1_src: zero
+###################: 
+# Solid/Liquid Surface: 
+b1_s3_type: symbolic_comm
+b1_s3_hp_typelist: 0
+b1_s3_h: b0_s3_h
+b1_s3_dhdx0: b0_s3_dhdx0
+b1_s3_dhdx1: b0_s3_dhdx1
+b1_s3_r_type: fixed
+b1_s3_ibc: symbolic
+b1_s3_ibc0: Tm
+###################: 
+# Exit of solid is convective B.C.: 
+b1_s6_hp_type: plain
+b1_s6_flux0: b1_rho*b1_cv*u*sx*n0
+###################: 
+# Top surface of solid heat flux: 
+# Basically convection and radiation: 
+# but also added some heat removal downstream so solid doesn't meltback: 
+b1_s7_type: comm
+b1_s7_hp_type: plain
+b1_s7_flux0: radiation*epss
+b1_s7_r_type: fixed
+b1_s7_r_dir: 1 1
+b1_s7_report: 1
+b1_s3_report: 1
+###################: 
+# Triple junction communication: 
+b1_v2_type: comm
+b1_v2_hp_typelist: 0
+###################: 
+###################: 
+# b2 is gas block: 
+b2_type: buoyancy
+# Gas Density: 
+b2_rho: (1.015e5/(8314/4*T0))/rho0
+b2_rho_vs_T: b2_rho/x
+# Gas specific Heat: 
+b2_cp: 5/3*8314/4/cp0
+# Thermal conductivity of Gas: 
+b2_conductivity: 0.142/k0
+# Liquid viscosity: 
+b2_mu: 1.9e-5/(k0/cp0)
+# I.C. and B.C. Info: 
+b2_ibc: symbolic
+#Q: 0.001*(3e-3/60/0.01)/(d0^2*tsi)*10^((t-1)/6)
+Q: 0.01*(3e-3/60/0.01)/(d0^2*tsi)
+wslot: 150e-6/d0
+vslot: Q/wslot
+hslot: 2.0e-3/d0
+b2_ibc0: (t > 0.0 ? 0.0 : (x1 <= hslot+1.0e-4 && x0^2+(x1-hslot)^2 > wslot^2/4 ?  Q*x0/(x0^2+(x1-hslot)^2): 0.0))
+b2_ibc1: (t > 0.0 ? 0.0 : (x1 <= hslot+1.0e-4 && x0^2+(x1-hslot)^2 > wslot^2/4 ? Q*(x1-hslot)/(x0^2+(x1-hslot)^2): -vslot*2*(1 - (2*x0/wslot)^2)))
+b2_ibc2: Tc
+b2_ibc3: 0.0
+b2_mesh: ./rstrt1_b2.grd
+###################: 
+# Bottom is dirchlet B.C. & no slip: 
+b2_s9_hp_type: inflow
+b2_s11_hp_type: inflow
+###################: 
+# Right side is outflow B.C. and no Temperature gradient: 
+b2_s8_hp_type: characteristic
+###################: 
+# Free-Surface: 
+b2_s4_type: comm
+b2_s4_hp_type: plain
+b2_s4_hp_typelist: 1 0 1 1
+b2_s4_c0_indices: 0 1 2
+b2_s4_flux0: 0.0
+#b2_s4_flux1: u3*n1
+b2_s4_flux2: 0.0
+b2_s4_flux3: 0.0
+b2_s4_r_type: fixed
+b2_s4_r_dir: 1 1
+b2_s4_report: 1
+###################: 
+# Solid-Surface: 
+b2_s7_type: comm
+b2_s7_hp_type: plain
+b2_s7_hp_typelist: 0 0 1 1
+b2_s7_c0_indices: 2
+b2_s7_ibc: symbolic
+b2_s7_ibc0: sx
+b2_s7_ibc1: 0.0
+b2_s7_ibc2: Tm
+b2_s7_ibc3: 0.0
+#b2_s7_flux0: 0.0
+#b2_s7_flux1: u3*n1
+b2_s7_flux2: 0.0
+b2_s7_flux3: 0.0
+b2_s7_r_type: fixed
+b2_s7_r_dir: 1 1
+b2_s7_report: 1
+###################: 
+# Slot Inlet: 
+b2_s10_hp_type: plain
+b2_s10_hp_typelist: 0 0 0 1
+b2_s10_ibc: symbolic
+b2_s10_ibc0: 0.0
+b2_s10_ibc1: -vslot*2*(1 - (2*x0/wslot)^2)
+b2_s10_ibc2: Tc
+b2_s10_ibc3: 0.0
+b2_s10_flux3: b2_rho/b2_s10_ibc2*b2_s10_ibc1
+###################: 
+# Triple junction communication: 
+b2_v2_type: comm
+b2_v2_hp_typelist: 0 0 0 1
+b2_v2_c0_indices: 2
+b2_v2_ibc: symbolic
+b2_v2_ibc0: sx
+b2_v2_ibc1: 0.0
+b2_v2_ibc2: Tm
+b2_v2_ibc3: 0.0

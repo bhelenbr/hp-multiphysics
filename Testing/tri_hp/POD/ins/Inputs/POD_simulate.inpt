@@ -1,0 +1,36 @@
+log2p: 2
+ncycle: 5
+logfile: out
+ntstep: 30
+nmodes: 4
+dtinv: 15/period
+petsc: -ksp_type preonly -pc_type none
+absolute_tolerance: 1.0e-12
+relative_tolerance: 1.0e-6
+output_interval: 1
+restart_interval: 1
+restart: 45
+nblock: 1
+ibc: symbolic
+A: 0.1
+period: 1.00
+ibc0: 0.0
+ibc1: (x0^2 +x1^2 >5 ? 1 +A*sin(2*_pi*t/period):0)
+ibc2: -2*_pi/period*A*cos(2*_pi*t/period)*x1
+b0_type: pod_ins_sim
+b0_filetype: 3
+b0_growth factor: 10.0
+b0_mesh: ./sphere.grd
+b0_rho: 1.0
+b0_mu: 5.2896579431334433e-002
+b0_s1_hp_type: inflow
+b0_s2_hp_type: characteristic
+b0_s3_hp_type: characteristic
+b0_s4_hp_type: symmetry
+b0_s5_type: circle
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5
+b0_s5_hp_type: inflow
+b0_s5_curved: 1
+b0_s5_report: 1
+b0_s6_hp_type: symmetry

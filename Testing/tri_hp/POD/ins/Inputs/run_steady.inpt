@@ -1,0 +1,40 @@
+logfile: out_steady
+log2p: 2
+#These lines for multigrid: 
+#extra_finest_levels: 2
+#ngrid: 4
+#itercrsn: 1
+#iterrfne: 2
+ncycle: 100
+#vwcycle: 2
+#end of multigrid stuff: 
+# These lines are for petsc: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+# end of petsc stuff: 
+ncycle: 100
+ntstep: 1
+dtinv: 0.0
+adapt: 0
+error: 1.0e-5
+absolute_tolerance: 1.0e-9
+b0_ibc: stokes_drop_gas
+b0_type: ins
+b0_filetype: 3
+b0_mesh: sphere
+b0_rho: 1.0
+b0_mu: 5.2896579431334433e-002
+b0_s1_hp_type: inflow
+b0_s2_hp_type: characteristic
+b0_s3_hp_type: characteristic
+b0_s4_hp_type: symmetry
+b0_s5_type: circle
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5
+b0_s5_hp_type: inflow
+b0_s5_curved: 1
+b0_s5_report: 1
+b0_s6_hp_type: symmetry

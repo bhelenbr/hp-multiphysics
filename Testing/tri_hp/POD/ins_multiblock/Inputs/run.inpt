@@ -1,0 +1,63 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 2
+# petsc keywords: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 100
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-9
+relative_tolerance: 5.0e-4
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 5
+# inverse of timestep 0=steady state: 
+dtinv: 10.0
+# adapatation flag: 
+adapt: 0
+# target error for mesh adaptation (smaller = finer mesh): 
+error_target: 5.0e-5
+# Uncomment if you want to restart from a previous time step: 
+#restart: 5
+# Flag to see what is happening during iterations (for debugging convergence): 
+#debug_output: 1
+# Flag to see adaptation processes: 
+#adapt_output: 1
+# Log file name: 
+logfile: simulation
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+ibc: sphere
+# Sphere initial/boundary condition gives velocity = 1 outside of outer_radius: 
+# and 0 inside inner radius with smooth transition in between: 
+# Angle controls angle of free-stream: 
+angle: 4.0
+inner_radius: 0.8
+outer_radius: 48.0
+# Viscosity (1/Reynolds Number): 
+mu: 1.0e-1
+# Physics type (incompressible Navier-Stokes): 
+blocktype: ins
+#Memory allocation factor to allow mesh to get refine (times initial number of vertices): 
+b0_growth factor: 10.0
+# Mesh name: 
+b0_mesh: rstrt1_b0.grd
+# Boundary geometry types: 
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s3_hp_type: outflow
+b0_s4_hp_type: inflow
+b0_s5_thickness: 1.200e-01
+b0_s5_type: naca
+b0_s5_report: 1
+b0_s5_curved: 1
+b0_s5_hp_type: inflow
+b0_s5_center: -0.25 0.0
+b0_s5_theta: 0.0
+b0_s6_thickness: 1.200e-01
+b0_s6_type: naca
+b0_s6_report: 1
+b0_s6_curved: 1
+b0_s6_hp_type: inflow
+b0_s6_sign: -1.0
+b0_s6_center: -0.25 0.0
+b0_s6_theta: 0.0

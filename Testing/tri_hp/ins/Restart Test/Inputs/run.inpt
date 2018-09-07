@@ -1,0 +1,48 @@
+log2p: 0
+extra_finest_levels: 0
+ngrid: 1
+ncycle: 20
+vwcycle: 2
+itercrsn: 2
+iterrfne: 2
+restart_type: 1
+reload_type: 1
+C: 1.0
+cfls: C*2.5 C*1.5 C*1.0
+diagonal_preconditioner: 1
+ntstep: 4
+dtinv: 0.0
+output_interval: 1
+relative_tolerance: 1.0e-8
+nblock: 1
+ibc: freestream
+flowangle: 0.0
+flowspeed: 1.0
+perturb_amplitude: 0.01
+#mesh_movement: coupled_deformable
+b0_type: ins
+b0_filetype: 3
+b0_growth factor: 2.0
+b0_mesh: ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square4
+b0_rho: 1.0
+b0_mu: 0.0
+b0_s4_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s1_type: prdc
+b0_s1_dir: 1
+b0_s4_r_type: translating
+b0_s4_r_translate: 0.02 0.0
+b0_s1_r_type: fixed
+b0_s1_r_dir: 1 1
+b0_s2_r_type: fixed
+#b0_s4_type: symbolic
+#b0_s4_curved: 1
+A: 0.2
+b0_s4_h: x0-A*sin(2*_pi*x1)
+b0_s4_dhdx1: -A*2*_pi*cos(2*_pi*x1)
+b0_s4_dhdx0: 1
+_s4_type: symbolic
+_s4_curved: 1
+_s4_h: x0-A*sin(2*_pi*x1)
+_s4_dhdx1: -A*2*_pi*cos(2*_pi*x1)
+_s4_dhdx0: 1

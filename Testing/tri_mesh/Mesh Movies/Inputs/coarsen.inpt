@@ -1,0 +1,9 @@
+logfile: coarsen
+nblock: 1
+adapt: 1
+b0_growth factor: 100.0
+b0_mesh: ./generate_b0.grd
+b0_s5_type: circle
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5
+tolerance: 1.25

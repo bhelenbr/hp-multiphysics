@@ -1,0 +1,28 @@
+log2p: 0
+ncycle: 10
+ntstep: 1
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+dtinv: 0.0
+output_interval: 100
+relative_tolerance: 1.0e-8
+nblock: 1
+ibc: freestream
+flowangle: 0.0
+flowspeed: 1.0
+perturb_amplitude: 0.01
+b0_type: ins
+#mesh_movement: coupled_deformable
+b0_filetype: 3
+b0_growth factor: 2.0
+b0_mesh: ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square16
+b0_rho: 1.0
+b0_mu: 0.0
+b0_s4_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s1_hp_type: inflow
+b0_s1_dir: 1
+b0_s4_r_type: translating
+b0_s4_r_translate: 0.02 0.0
+b0_s1_r_type: fixed
+b0_s1_r_dir: 1 1
+b0_s2_r_type: fixed

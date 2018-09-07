@@ -1,0 +1,106 @@
+# sets the polynomial order of the basis (use 2): 
+log2p: 2
+# extra levels for p multigrid (usually same as log2p): 
+extra_finest_levels: 2
+# number of geometric multigrid levels: 
+ngrid: 2
+# iterations on coarsening/refinement in multigrid cycle: 
+itercrsn: 2
+iterrfne: 2
+preconditioner_interval: 1
+# number of iterative multigrid cycles per time step: 
+ncycle: 200
+# relative cut-off for iteration (set negative for no cut-off): 
+relative_tolerance: 1.0e-4
+# absolute cut-off for iteration (set negative for no cut-off): 
+absolute_tolerance: 1.0e-10
+# v or w multigrid cycle (1 or 2): 
+vwcycle: 2
+# Number of time steps in simulation: 
+ntstep: 2
+# Inverse of time step: 
+dtinv: 32.0
+# gravity: 
+gravity: 0.0
+# flag for mesh adaptation: 
+adapt: 0
+# Truncation error target for mesh adaptation: 
+#error: 1.0e-6
+# Start from previous time step: 
+#restart: 15
+#output_interval: 5
+# Restart interval (multiplied by output interval): 
+restart_interval: 1000
+# Turn this on to output files during iteration process: 
+#debug_output: 1
+# Turn this on to output files during adaptation process: 
+#adapt_output: 1
+# Name of file for output: 
+logfile: out
+# Number of mesh blocks for each processor: 
+nblock: 2
+# Mesh movement type: fixed, (un)coupled_rigid, (un)coupled_deformable
+mesh_movement: coupled_deformable
+# Default initial condition for all blocks (can be overridden block by block)
+# ibcN is initial condition for the nth variable
+# Variable for incompressible flow with heat transfer are u,v,T,p: 
+b0_ibc: symbolic
+b0_ibc0: 1.0
+b0_ibc1: 0.0
+b0_ibc2: 0.0
+# Physics type of block: 
+b0_type: ins
+# Input mesh filetype
+# easymesh=0, gambit=1, tecplot=2, grid=3, text=4, binary=5, boundary=8: 
+b0_filetype: 3
+# Factor to increase memory allocation for mesh adaptation: 
+b0_growth factor: 10.0
+# Name of mesh without extension: 
+b0_mesh: ./bot1
+# Some physical parameters: 
+b0_rho: 1.0
+b0_mu: 1.0e-1
+# Boundary side specifications
+# This is the underlying mesh type used for a free-surface: 
+b0_s2_type: prdc
+b0_s2_r_type: fixed
+b0_s2_phase1: 1
+b0_s3_hp_type: outflow
+b0_s5_type: coupled_symbolic_comm
+b0_s5_h: x1-A*sin(2.*_pi*x0)
+b0_s5_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
+b0_s5_dhdx1: 1.0
+b0_s5_hp_type: surface
+#b0_s5_matching_block: b1
+b0_s5_sigma: 0.0
+b0_s5_norm: (x1 -A*sin(2.*_pi*(x0-t)))^2
+# Block 1 information: 
+b1_type: ins
+b1_ibc: symbolic
+b1_ibc0: 1.0
+b1_ibc1: 0.0
+b1_ibc2: 0.0
+b1_filetype: 3
+b1_growth factor: 10.0
+b1_mesh: ./top1
+b1_rho: b0_rho
+b1_mu: b0_mu
+b1_s5_type: coupled_symbolic_comm
+b1_s5_h: x1-A*sin(2.*_pi*x0)
+b1_s5_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
+b1_s5_dhdx1: 1.0
+b1_s5_hp_type: surface
+b1_s1_type: prdc
+b1_s1_phase1: 1
+b1_s3_hp_type: inflow
+A: 0.025
+b0_v1_type: prdc
+b0_v1_group: 3
+b0_v1_hp_type: hp_deformable_free_pnt
+#b0_v1_type: prdc
+#b1_v1_type: prdc
+b0_v1_b1_v1_matching: 0 0 1 1 3 3 4 4
+RES: 0.25
+#r_fadd: 0.0
+#hp_fadd: 0.0
+#b0_s5_fadd: 0.0 0.0

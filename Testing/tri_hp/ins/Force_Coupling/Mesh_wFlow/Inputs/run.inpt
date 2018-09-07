@@ -1,0 +1,69 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 2
+# COMMENT FROM HERE FOR PETSC: 
+# p-multigrid levels in iteration (should usually be same as log2p): 
+#extra_finest_levels: 2
+## Number of geometric multigrid levels: 
+## Each level has a factor of 2 mesh resolution reduction: 
+## Turn on adapt_output flag to see if coarse levels are ok: 
+#ngrid: 3
+## multigrid iterative parameters (leave alone): 
+## Number of multigrid cycles (enough to reduce error): 
+#vwcycle: 2
+#itercrsn: 2
+#iterrfne: 2
+##cfl: 0.0 0.0 0.0
+# TO HERE FOR PETSC: 
+ncycle: 200
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-7
+relative_tolerance: 5.0e-4
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 10
+# inverse of timestep 0=steady state: 
+dtinv: 100/(2*_pi)
+#dtinv_prev: 0.0
+# adapatation flag: 
+#adapt: 1
+# target error for mesh adaptation (smaller = finer mesh): 
+#error_target: 0.2
+#curvature_sensitivity: 0.0
+# Uncomment if you want to restart from a previous time step: 
+#restart: 1
+restart_interval: 1000
+# Flag to see what is happening during iterations: 
+#debug_output: 1
+# Flag to see adaptation processes: 
+#adapt_output: 1
+# Log file name: 
+logfile: simulation
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+ibc: symbolic
+ibc0: 0.0
+ibc1: 0.0
+ibc2: 0.0
+# Viscosity (1/Reynolds Number): 
+mu: 0.1
+# Physics type (incompressible Navier-Stokes): 
+b0_type: ins
+# Mesh name: 
+b0_mesh: circle.grd
+# Helper function for special tasks: 
+# Comment out helper for solution without airfoil motion: 
+helper: force_coupling
+nboundary: 1
+force_boundaries: 2
+horizontal: 1
+x0: 1.0
+dx0dt: 0.0
+k_linear0: 1.0
+mass: 1.0
+# Boundary geometry types: 
+b0_s1_hp_type: characteristic
+b0_s1_type: circle
+b0_s1_radius: 25
+b0_s2_hp_type: force_coupling
+b0_s2_type: circle
+b0_s2_radius: 0.5

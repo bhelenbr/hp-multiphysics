@@ -1,0 +1,93 @@
+# number of physical blocks in simulation: 
+nblock: 1
+# order of polynomials (0 is linears, 1 is quadratics): 
+log2p: 1
+# for p-multigrid solver, usually set the same as log2p: 
+extra_finest_levels: 1
+# iterative cfl for p-multigrid solver for p=0 and p=1 multigrid levels: 
+cfl: 0.5 0.25
+# number of time steps in simulation: 
+ntstep: 1
+restart_interval: 10
+# inverse of time step of simulation: 
+#dtinv: conductivity/(rho*cv*l^2)
+dtinv: 0.0
+# uncomment following output solution files during iteration: 
+#debug_output: 1
+# Iterative converge tolerances (for terminating iteration & moving to next time step: 
+relative_tolerance: 1.0e-6
+absolute_tolerance: 1.0e-12
+# maximum number of iterations before moving to next time step: 
+ncycle: 100
+# type of multigrid cycle: 
+vwcycle: 2
+itercrsn: 2
+iterrfne: 2
+nstage: 1
+alpha: 1.0 1.0
+beta: 1.0 1.0
+# name of logfile for ouput: 
+logfile: output
+# Nondimensional constants: 
+# Initial and boundary condition function type (symbolic expression): 
+# can do this by block too as bXX_ibc: symbolic and bXX_ibc0: ...:
+ibc: symbolic
+# symbolic expression for evaluation of initial and boundary conditions: 
+flux: 2/(1/Material0_conductivity +1/Material1_conductivity)
+ibc0: (x0 < 0.5 ? 1-flux/Material0_conductivity*x0 :  flux/Material1_conductivity*(1-x0))+0.01*x0*(1-x0)*(t > 0 ? 0 : 1)
+# These are for convection.  Set them to zero: 
+ax: 0
+ay: 0
+az: 0
+# The type of physics: 
+blocktype: cd_multi
+#blocktype: cd
+conductivity: 1
+rho: 1
+cv: 1
+# The name of the mesh file for b0: 
+b0_mesh: two_box.msh
+src: symbolic
+src0: 0.0
+helper: l2error
+# The thermal diffusivity of the block: 
+# b0 material is silicon: 
+# thermal conductivity for silicon is 63e-6 W/(um*K): 
+Material0_conductivity: 1.0
+# density for silicon is 2.33e3 kg/(m^3): 
+Material0_rho: 1.0
+# specific heat for silicon is 710 J/(kg*K): 
+Material0_cv: 1.0
+# thermal conductivity for Tungsten is 174 W/(m*K): 
+Material1_conductivity: 1.0
+# density for Tungsten is 19.25e-15 kg/(um^3): 
+Material1_rho: 1.0
+# specific heat for Tungsten is 130 J/(kg*K): 
+Material1_cv: 1.0
+# These are the boundary conditions for the faces of block 2: 
+b0_f301_hp_type: dirichlet
+b0_f303_hp_type: dirichlet
+b0_e101_hp_type: dirichlet
+b0_e102_hp_type: dirichlet
+b0_e103_hp_type: dirichlet
+b0_e104_hp_type: dirichlet
+b0_e109_hp_type: dirichlet
+b0_e110_hp_type: dirichlet
+b0_e111_hp_type: dirichlet
+b0_e112_hp_type: dirichlet
+b0_v1_hp_type: dirichlet
+b0_v2_hp_type: dirichlet
+b0_v3_hp_type: dirichlet
+b0_v4_hp_type: dirichlet
+b0_v9_hp_type: dirichlet
+b0_v10_hp_type: dirichlet
+b0_v11_hp_type: dirichlet
+b0_v12_hp_type: dirichlet
+b0_f304_hp_type: adiabatic
+b0_f305_hp_type: adiabatic
+b0_f306_hp_type: adiabatic
+b0_f307_hp_type: adiabatic
+b0_f308_hp_type: adiabatic
+b0_f309_hp_type: adiabatic
+b0_f310_hp_type: adiabatic
+b0_f311_hp_type: adiabatic

@@ -1,0 +1,41 @@
+log2p: 2
+ncycle: 200
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+relative_tolerance: 1.0e-5
+absolute_tolerance: 1.0e-9
+ntstep: 2
+dtinv: 10.0
+gravity: 1.0
+adapt: 1
+adapt_output: 1
+length_smoothing_steps: 1
+error_estimator: scale_independent
+error_target: 1.0e-5
+logfile: output
+nblock: 1
+RES: 1/32
+ibc: freestream
+flowangle: 0.0
+flowspeed: 1.0
+perturb_amplitude: 0.0
+b0_type: ins
+b0_mesh_movement: coupled_deformable
+growth factor: 100.0
+b0_mesh: rstrt1_b0.grd
+b0_rho: 1.0
+b0_mu: 0.05
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s2_r_dir: 0 0
+b0_s4_hp_type: inflow
+A: 0.025
+b0_s3_type: coupled_symbolic
+b0_s3_h: x1-A*sin(2.*_pi*x0)
+b0_s3_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
+b0_s3_dhdx1: 1.0
+b0_s3_hp_type: surface
+b0_s3_sigma: 0.1
+b0_v1_hp_type: hp_deformable_fixed_pnt
+b0_v2_hp_type: surface_outflow
+b0_v2_contact_type: fixed_angle
+b0_v2_contact_angle: 90

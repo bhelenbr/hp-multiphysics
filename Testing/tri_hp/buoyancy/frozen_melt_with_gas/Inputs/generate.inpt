@@ -1,0 +1,27 @@
+b0_mesh: ./geometry_b0.d
+b1_mesh: ./geometry_b1.d
+b2_mesh: ./geometry_b2.d
+logfile: generate
+growth factor: 4000.0
+nblock: 3
+adapt: 1
+xle: 0.0
+tseed: 0.21
+slope: tan(55*_pi/180)
+b0_s3_type: symbolic_comm
+b0_s3_h: x1 +tseed*(1-exp(-x0*slope/tseed))
+b0_s3_dhdx0: slope*exp(-x0*slope/tseed)
+b0_s3_dhdx1: 1.0
+b1_s3_type: symbolic_comm
+b1_s3_h: b0_s3_h
+b1_s3_dhdx0: b0_s3_dhdx0
+b1_s3_dhdx1: b0_s3_dhdx1
+b0_s4_type: comm
+b2_s4_type: comm
+b1_s7_type: comm
+b2_s7_type: comm
+LU: 4.0
+LD: 4.0
+SW: 150e-6/0.013
+H: 2e-3/0.013
+D: 1

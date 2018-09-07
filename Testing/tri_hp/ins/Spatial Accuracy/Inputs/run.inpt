@@ -1,0 +1,49 @@
+log2p: 2
+nblock: 1
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+ncycle: 15
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+extra_finest_levels: 0
+# For multigrid solver: 
+ngrid: 1
+ncycle: 5
+vwcycle: 1
+itercrsn: 1
+iterrfne: 0
+ntstep: 1
+dtinv: 0.0
+absolute_tolerance: 1.0e-10
+ibc: symbolic
+re: 1.0/b0_mu
+lda: .5*re - sqrt(re^2/4+ 4*_pi^2)
+ibc0: 1.0 - cos(2*_pi*x1)*exp(lda*x0)
+ibc1: lda/(2*_pi)*sin(2*_pi*x1)*exp(lda*x0)
+ibc2: -.5*exp(2.*lda*x0)
+b0_type: ins
+b0_filetype: 3
+b0_growth factor: 1.0
+b0_mesh: ${HOME}/Codes/grids/SQUARE/INOUT/square32
+helper: l2error
+b0_rho: 1.0
+b0_mu: 0.025
+b0_s4_type: symbolic
+b0_s4_curved: 1
+A: 0.0
+b0_s4_h: x0-A*sin(2*_pi*x1)
+b0_s4_dhdx1: -A*2*_pi*cos(2*_pi*x1)
+b0_s4_dhdx0: 1
+b0_s4_hp_type: inflow
+b0_s8_hp_type: applied_stress
+b0_s8_stress0: 2*b0_mu*(-lda*cos(2*_pi*x1)*exp(lda*x0))
+b0_s8_stress1: b0_mu*(sin(2*_pi*x1)*exp(lda*x0)*(2*_pi+lda^2/(2*_pi)))
+b0_s640_hp_type: inflow
+b0_s640_dir: 1
+_s4_type: symbolic
+_s4_curved: 1
+_s4_h: x0-A*sin(2*_pi*x1)
+_s4_dhdx1: -A*2*_pi*cos(2*_pi*x1)
+_s4_dhdx0: 1

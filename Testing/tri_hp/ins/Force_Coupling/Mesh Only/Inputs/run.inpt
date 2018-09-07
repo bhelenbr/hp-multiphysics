@@ -1,0 +1,84 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 2
+# p-multigrid levels in iteration (should usually be same as log2p): 
+extra_finest_levels: 0
+# Number of geometric multigrid levels: 
+# Each level has a factor of 2 mesh resolution reduction: 
+# Turn on adapt_output flag to see if coarse levels are ok: 
+ngrid: 2
+# multigrid iterative parameters (leave alone): 
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 2
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-7
+relative_tolerance: 5.0e-4
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 10
+cfl: 0.0 0.0 0.0
+# inverse of timestep 0=steady state: 
+dtinv: 10/(2*_pi)
+#dtinv_prev: 0.0
+# adapatation flag: 
+#adapt: 1
+# target error for mesh adaptation (smaller = finer mesh): 
+#error_target: 0.2
+#curvature_sensitivity: 0.0
+# Uncomment if you want to restart from a previous time step: 
+#restart: 1
+# Flag to see what is happening during iterations: 
+#debug_output: 1
+# Flag to see adaptation processes: 
+#adapt_output: 1
+# Log file name: 
+logfile: simulation
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+ibc: sphere
+# Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
+# and 0 inside inner radius with smooth transition in between: 
+inner_radius: 5.0
+outer_radius: 10.0
+# Viscosity (1/Reynolds Number): 
+mu: 0
+# Physics type (incompressible Navier-Stokes): 
+b0_type: ins
+# Grid type 3 = .grd: 
+b0_filetype: 3
+#Memory allocation factor (times initial number of vertices): 
+b0_growth factor: 200.0
+# Mesh name: 
+b0_mesh: naca
+# Helper function for special tasks: 
+# Comment out helper for solution without airfoil motion: 
+helper: force_coupling
+nboundary: 2
+force_boundaries: 5 6
+vertical: 1
+x1: 0.0
+dx1dt: 0.3
+k_linear1: 1.0
+mass: 1.0
+rotational: 1
+theta: 0.0
+dthetadt: 2*_pi/8
+I: 1.0
+k_torsion: 1.0
+# Boundary geometry types: 
+b0_s1_hp_type: characteristic
+b0_s2_hp_type: characteristic
+b0_s3_hp_type: characteristic
+b0_s4_hp_type: inflow
+b0_s5_type: naca
+b0_s5_report: 1
+b0_s5_curved: 1
+b0_s5_hp_type: force_coupling
+b0_s5_center: -0.25 0.0
+b0_s5_theta: 0.0
+b0_s6_type: naca
+b0_s6_report: 1
+b0_s6_curved: 1
+b0_s6_hp_type: force_coupling
+b0_s6_sign: -1.0
+b0_s6_center: -0.25 0.0
+b0_s6_theta: 0.0

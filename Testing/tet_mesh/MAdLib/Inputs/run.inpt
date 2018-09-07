@@ -1,0 +1,9 @@
+ntstep: 1
+logfile: output
+ngrid: 2
+adapt: 0
+adapt_output: 1
+nblock: 1
+b0_filetype: 8
+b0_mesh: ./spheres_mod.msh
+growth factor: 20.0

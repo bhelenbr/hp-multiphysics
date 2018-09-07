@@ -1,0 +1,262 @@
+partition: 5
+# Name of file for output: 
+logfile: out
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 2
+# interval for outputting restart files: 
+restart_interval: 1
+# Iterative stuff: 
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+nblock: 1 1
+ncycle: 8
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+#under_relaxation: 0.25
+extrapolate: 1
+preconditioner_interval: 3
+# For multigrid solver: 
+#nblock: 2
+#ncycle: 300
+#itercrsn: 2
+#iterrfne: 2
+#ngrid: 2
+#vwcycle: 2
+#ngrid: 1
+#extra_finest_levels: 0
+#iterative convergence tolerances: 
+relative_tolerance: 1.0e-5
+absolute_tolerance: 1.0e-9
+#debug_output: 1
+# mesh adaptation stuff: 
+# flag to turn mesh adaptation on or off: 
+adapt: 1
+#adapt_output: 1
+length_smoothing_steps: 1
+minimum_length: 8e-4*d
+error_estimator: scale_independent
+energy_scaling: 1e-7
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-8
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 2.0
+# This sets maximum size of mesh based on input mesh (50 x): 
+growth factor: 100
+mesh_movement: coupled_deformable
+# Non-dimensionalization Variables (SI UNITS): 
+# Melt & Solid Density: 
+rho0: 2530
+# Liquid specific heat: 
+cp0: 1000
+# Equilibrium interface temperature: 
+T0: 1685
+# Thermal conductivity of melt: 
+k0: 64.0
+# Depth of melt: 
+d0: 0.01
+# Thermal diffusivity: 
+alpha0: k0/(rho0*cp0)
+# Time scale inverse based on depth and thermal diffusivity: 
+tsi: alpha0/d0^2
+# Dimensionaless Variables: 
+# Melt & Solid Density: 
+rho: 2530/rho0
+#rho: 2470/rho0
+# Liquid specific heat: 
+cp: 1000/cp0
+#cp: 1030/cp0
+# Thermal conductivity of melt: 
+conductivity: 64.0/k0
+# Depth of melt: 
+d: 0.013/d0
+# Length of domain: 
+L: 4*d
+# Pull Speed: 
+sx: 21609.711851e-7/(d0*tsi)
+# Liquid viscosity: 
+mu: 7.0e-4/(k0/cp0)
+# Latent Heat of Fusion: 
+b0_s3_Lf: 1.8e6/(cp0*T0)
+# Surface tension: 
+sigma: 0.735/(rho0*d0^3*tsi^2)
+# Surface tension change with temperature: 
+dsigmadT: -4.1e-4*T0/(rho0*d0^3*tsi^2)
+# Equilibrium interface temperature: 
+Tm: 1685/T0
+# Bottom and inlet temperature: 
+DTl: 5/T0
+# Bottom heat flux from heater 8: 
+q8: 1000/900*22e4/(k0*T0/d0)
+# Pass through flux
+Qpass: 2e4/(k0*T0/d0)
+# Convective heat flux parameters (double Gaussian profile): 
+Q_He: 7.43*1e-3/60*1e2*rho_He/mu_He
+h_He: 3e-3
+w_He: 150e-6
+ar_He: h_He/w_He
+rho_He: 0.1
+mu_He: 3.0e-5
+DT_He: 1685-373
+K_He: 0.3
+# Peak convective heat transfer: 
+maxq: 0.155*Q_He/sqrt(ar_He)*(K_He*DT_He/w_He)/(k0*T0/d0)
+# Conductive component of wcs: 
+base: 1.25/ar_He*(K_He*DT_He/w_He)/(k0*T0/d0)
+# Width of Gaussian Peak: 
+w: 3.3/sqrt(Q_He)*sqrt(ar_He)*w_He/d0
+# Width of bottom: 
+wb: 0.48*ar_He*w_He/d0
+# Fractional split between bottom and peak: 
+frac: 0.55
+# Location of center of Gaussian: 
+xwci: -2.6e-3/d0
+# Convective flux Gaussian form: 
+convflux: maxq*((1-frac)*exp(-(x0/w)^2*ln(2)) +frac*exp(-(x0/wb)^2*ln(2))) +base*Fc +(1-Fc)*Qpass
+#Radiation Heat Flux parameters: 
+epsl: 0.2
+epss: 0.6
+# View Factor Stuff: 
+sb: 5.67e-8*T0^4/(rho0*cp0*T0*d0*tsi)
+# Cold plate Temp: 
+Tc: 300/T0
+# Width of cold plate: 
+wrad: 0.05/d0
+# Height of cold plate: 
+hrad: h_He/d0
+# View factor: http://www.engr.uky.edu/rtl/Catalog/sectionb/B-71.html
+sinphi1: (-wrad/2-x0)/sqrt((-wrad/2-x0)^2+hrad^2)
+sinphi2: (wrad/2-x0)/sqrt((wrad/2-x0)^2+hrad^2)
+Fc: 0.5*(sinphi2-sinphi1)
+# heatflux without emissivity: 
+radiation: sb*Fc*(Tm^4-Tc^4)
+# Time Step: 
+ntstep: 2
+dtinv1: sx/d
+dtinv2: conductivity/(rho*cp*d^2)
+dtinv3: conductivity*DTl/(d^2*rho*b0_s3_Lf)
+dtinv: 1600.0/tsi
+dtinv_prev: 800.0/tsi
+#implicit_relaxation: 1
+dtinv_function: (t > restart+1 ? 1e4*x0 : 1e4)
+# I.C. and B.C. Info: 
+ibc: symbolic
+# Initial Conditions and inlet Temperature profile): 
+ibc0: sx*(1-(x1/d)^2)
+ibc1: 0.0
+ibc2: Tm+DTl-Qpass/conductivity*x1
+ibc3: 0.0
+# b0 is liquid: 
+b0_type: buoyancy
+b0_mesh: ./rstrt1_b0.grd
+b0_rho_vs_T: rho
+# Bottom is dirchlet B.C. & no slip: 
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 1 1
+b0_s1_flux2: -q8*Fc -Qpass*(1-Fc)
+b0_s1_flux3: rho*(u0*n0 +u1*n1)
+# Right side is outflow B.C. and no Temperature gradient: 
+b0_s2_hp_type: outflow
+b0_s2_r_type: fixed
+b0_s2_r_dir: 0 0
+# Freezing Surface: 
+b0_s3_hp_type: melt
+#b0_s3_hp_type: melt
+b0_s3_Krough: d0*tsi/(0.0126*T0)
+b0_s3_A2Dn: 140/T0
+b0_s3_K2Dn: d0*tsi/(T0*1.5e10)
+b0_s3_K2Dn_DT_min: 0.0
+b0_s3_Ksn: 91*d0*tsi/(T0*0.63)
+b0_s3_facet_angle: 35
+b0_s3_type: coupled_symbolic_comm
+b0_v1_hp_type: hp_deformable_free_pnt
+b0_v2_hp_type: triple_junction
+b0_v2_wall_type: horizontal
+b0_s3_ibc: symbolic
+b0_s3_ibc0: sx
+b0_s3_ibc1: 0.0
+b0_s3_ibc2: Tm
+b0_s3_ibc3: 0
+b0_s3_rho_s: rho
+b0_s3_cp_s: cp
+# Shape of Initial Seed: 
+xle: 0.0
+tseed: 0.2*d
+slope: tan((90-b0_s3_facet_angle)*_pi/180)
+b0_s3_h: x1 +tseed*(1-exp(-(x0-xwci)*slope/tseed))
+b0_s3_dhdx0: slope*exp(-(x0-xwci)*slope/tseed)
+b0_s3_dhdx1: 1.0
+b0_s3_flux2: 0.0
+b0_s3_report: 1
+# Free-Surface is just a slip B.C. with heat flux given by: 
+b0_s4_hp_type: surface_marangoni
+b0_s4_flux2: convflux+radiation*epsl
+b0_s4_report: 1
+# Inlet is u,v fixed at sx,0 and zero temperature gradient in T.: 
+# Convective flux of T is determined by T function (above) and sx: 
+b0_s5_hp_type: plain
+b0_s5_hp_typelist: 0 0 0 1
+b0_s5_flux2: rho*(u0*n0 +u1*n1)*cp*Th
+b0_s5_flux3: rho*(u0*n0 +u1*n1)
+b0_s5_r_type: fixed
+b0_s5_r_dir: 0 0
+# Solid Info and B.C.'s are next: 
+b1_type: cd
+b1_rho: rho
+b1_cv: cp
+b1_mesh: ./rstrt1_b1.grd
+b1_ibc: symbolic
+b1_ibc0: Tm
+b1_a: symbolic
+b1_a0: sx
+b1_a1: 0.0
+# Convective speed in solid: 
+b1_ax: sx
+b1_ay: 0.0
+# Thermal conductivity in solid: 
+b1_nu: 22/k0
+b1_src: zero
+b1_s3_hp_type: melt
+b1_s3_type: coupled_symbolic_comm
+b1_s3_h: b0_s3_h
+b1_s3_dhdx0: b0_s3_dhdx0
+b1_s3_dhdx1: b0_s3_dhdx1
+b1_s3_r_type: fixed
+b1_s3_ibc: symbolic
+b1_s3_ibc0: Tm
+# Exit of solid is convective B.C.: 
+b1_s6_hp_type: plain
+b1_s6_flux0: b1_rho*b1_cv*u*sx*n0
+b1_s6_r_type: fixed
+b1_s6_r_dir: 0 0
+# Top surface of solid heat flux: 
+# Basically convection and radiation: 
+# but also added some heat removal downstream so solid doesn't meltback: 
+b1_s7_hp_type: translating_surface
+b1_s7_flux0: convflux+radiation*epss
+b1_s7_r_type: fixed
+b1_s7_r_dir: 1 1
+b1_s7_report: 1
+b1_s3_report: 1
+b1_v1_hp_type: plain
+b1_v2_hp_type: hp_deformable_follower_pnt
+restart: 2300
+gravity: 9.8/(d0*tsi^2)
+capillary_length: sqrt(sigma/(rho*gravity))
+triple_junction_depth: capillary_length*tan(b0_v2_growth_angle*_pi/180)
+b0_s4_type: coupled_symbolic
+b0_s4_h: x1+triple_junction_depth*exp((x0-xwci)/capillary_length)
+b0_s4_dhdx0: triple_junction_depth*exp((x0-xwci)/capillary_length)/capillary_length
+b0_s4_dhdx1: 1.0
+b0_s4_sigma_vs_T: sigma +dsigmadT*x
+b0_v2_growth_angle: 0
+b0_v3_hp_type: hp_deformable_fixed_pnt
+b1_s7_type: coupled_symbolic
+b1_s7_velx: sx
+b1_s7_h: x1+triple_junction_depth
+b1_s7_dhdx0: 0.0
+b1_s7_dhdx1: 1.0
+b1_v4_hp_type: hp_deformable_free_pnt

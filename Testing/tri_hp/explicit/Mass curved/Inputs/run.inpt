@@ -1,0 +1,76 @@
+# Sets log_2(p) for the basis: 
+log2p: 2
+# Sets the number of time steps: 
+ncycle: 10
+# Makes a simple 1 step explicit time advancement scheme: 
+nstage: 1
+alpha: 1.0
+beta: 1.0
+# Sets the cfl for the scheme: 
+# only the first entry matters: 
+cfl: 1.0 1.0 1.0 1.0
+# Set the ouput interval here: 
+#debug_output: 1
+# This shuts off automatic termination of  the simulation when the residual hits this value: 
+absolute_tolerance: -1.0
+# Name of the logfile: 
+logfile: output
+# Implicit time step (can be used to add a dtinv*T term to the equations: 
+dtinv: 1.0
+# This adds a helper that calculates the norm of the difference between the soution and the ibc0 function: 
+helper: l2error
+#Initial and boundary condition function: 
+ibc: symbolic
+ibc0: (t > 0.0 ? sin(2.*_pi*x0) : 0.0)
+src: symbolic
+src0: sin(2.*_pi*x0)
+b0_type: explicit
+# Set diffusivity and convective velocities if you want them: 
+nu: 0.0
+ax: 0.0
+ay: 0.0
+# The name of the mesh: 
+b0_mesh: ./square1
+# For each boundary set type: 
+# Boundaries are number ccw from bottom: 
+# 0 is essential 1 is natural: 
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 1
+b0_s2_hp_type: plain
+b0_s2_hp_typelist: 1
+b0_s3_hp_type: plain
+b0_s3_hp_typelist: 1
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 1
+b0_s1_type: circle
+b0_s1_center: 0.5 0.5
+b0_s1_radius: sqrt(2.)/2.
+b0_s1_curved: 1
+b0_s2_type: circle
+b0_s2_center: 0.5 0.5
+b0_s2_radius: sqrt(2.)/2.
+b0_s2_curved: 1
+b0_s3_type: circle
+b0_s3_radius: sqrt(2.)/2.
+b0_s3_center: 0.5 0.5
+b0_s3_curved: 1
+b0_s4_type: circle
+b0_s4_center: 0.5 0.5
+b0_s4_radius: sqrt(2.)/2.
+b0_s4_curved: 1
+_s1_type: circle
+_s1_center: 0.5 0.5
+_s1_radius: sqrt(2.)/2.
+_s1_curved: 1
+_s2_type: circle
+_s2_center: 0.5 0.5
+_s2_radius: sqrt(2.)/2.
+_s2_curved: 1
+_s3_type: circle
+_s3_radius: sqrt(2.)/2.
+_s3_center: 0.5 0.5
+_s3_curved: 1
+_s4_type: circle
+_s4_center: 0.5 0.5
+_s4_radius: sqrt(2.)/2.
+_s4_curved: 1

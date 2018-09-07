@@ -1,0 +1,33 @@
+log2p: 2
+ntstep: 10
+ncycle: 10000
+vwcycle: 2
+logfile: output
+#debug_output: 1
+ibc: symbolic
+ibc0: (.25-x0^2)/lambda
+b0_type: cd
+#gambit: 
+#error_control_level: 1
+#error_control_tolerance: 5.5e-5
+b0_filetype: 2
+b0_growth factor: 1
+b0_mesh: m4.FDNEUT
+b0_src: symbolic
+lambda: 5
+b0_src0: -exp(-lambda*t)*(.25-x0^2-2*nu/lambda)
+ax: 0
+ay: 0
+az: 0
+nu: 1
+b0_f0_hp_type: adiabatic
+b0_f1_hp_type: adiabatic
+b0_f2_hp_type: dirichlet
+b0_f3_hp_type: dirichlet
+b0_f4_hp_type: adiabatic
+b0_f5_hp_type: adiabatic
+#restart: 0
+restart_interval: 100000
+dtinv: 100
+extra_finest_levels: 2
+relative_tolerance: 1.0e-4

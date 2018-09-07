@@ -1,0 +1,45 @@
+log2p: 2
+extra_finest_levels: 2
+ngrid: 2
+ncycle: 200
+vwcycle: 2
+itercrsn: 2
+iterrfne: 2
+relative_tolerance: 1.0e-3
+ntstep: 2
+dtinv: 10.0
+gravity: 1.0
+adapt: 0
+error_target: 1.0e-3
+logfile: output
+#debug_output: 1
+nblock: 1
+ibc: freestream
+flowangle: 0.0
+flowspeed: 1.0
+perturb_amplitude: 0.0
+b0_type: ins
+b0_mesh_movement: coupled_deformable
+b0_filetype: 3
+b0_growth factor: 32.0
+b0_mesh: ./square4
+b0_rho: 1.0
+b0_mu: 0.05
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s2_r_dir: 0 0
+b0_s4_hp_type: inflow
+A: 0.025
+b0_s3_type: coupled_symbolic
+b0_s3_h: x1-A*sin(2.*_pi*x0)
+b0_s3_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
+b0_s3_dhdx1: 1.0
+b0_s3_hp_type: surface
+b0_s3_sigma: 0.1
+b0_s3_cfl0: 2.5 1.5 1.0
+b0_s3_cfl1: 2.0 1.25 0.75
+#b0_v1_hp_type: surface_inflow
+b0_v1_hp_type: hp_deformable_fixed_pnt
+b0_v2_hp_type: surface_outflow
+b0_v2_contact_type: fixed_angle
+b0_v2_contact_angle: 90

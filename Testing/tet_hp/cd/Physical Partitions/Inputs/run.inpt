@@ -1,0 +1,57 @@
+# number of physical blocks in simulation: 
+nblock: 2
+# order of polynomials (0 is linears, 1 is quadratics): 
+log2p: 1
+# for p-multigrid solver, usually set the same as log2p: 
+extra_finest_levels: 1
+# iterative cfl for p-multigrid solver for p=0 and p=1 multigrid levels: 
+cfl: 1.0 0.5
+# number of time steps in simulation: 
+ntstep: 1
+# inverse of time step of simulation: 
+dtinv: 0.0
+# uncomment following output solution files during iteration: 
+#debug_output: 1
+# Iterative converge tolerances (for terminating iteration & moving to next time step: 
+relative_tolerance: 1.0e-4
+absolute_tolerance: 1.0e-12
+# maximum number of iterations before moving to next time step: 
+ncycle: 5
+# type of multigrid cycle: 
+vwcycle: 1
+# name of logfile for ouput: 
+logfile: output
+# Initial and boundary condition function type (symbolic expression): 
+# can do this by block too as b0_ibc: symbolic and b0_ibc0: ...:
+ibc: symbolic
+# symbolic expression for evaluation of initial and boundary conditions: 
+ibc0: 1.0
+# These are for convection.  Set them to zero: 
+ax: 0
+ay: 0
+az: 0
+# This sets the default source to be zero: 
+src: zero
+# The name of the mesh file for b0: 
+b0_mesh: sharedface.msh
+# The type of phyiscs for b0 (convection-diffusion): 
+b0_type: cd
+# The thermal diffusivity of the block: 
+# beware that there is no density and c_v in this formulation: 
+# so this should be thermal diffusivty not thermal condutivity: 
+# Also any source should be divided by rho c_v: 
+b0_nu: 1
+# These are the boundary conditions for the faces of block 0: 
+b0_f1_hp_type: adiabatic
+b0_f3_hp_type: adiabatic
+b0_f4_hp_type: dirichlet
+b0_f5_hp_type: adiabatic
+b0_f6_hp_type: adiabatic
+# This is similar for b1: 
+b1_type: cd
+b1_nu: 0.5
+b1_f21_hp_type: adiabatic
+b1_f22_hp_type: dirichlet
+b1_f23_hp_type: adiabatic
+b1_f25_hp_type: adiabatic
+b1_f26_hp_type: adiabatic

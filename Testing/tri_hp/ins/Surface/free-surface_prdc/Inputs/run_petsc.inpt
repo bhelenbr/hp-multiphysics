@@ -1,0 +1,40 @@
+log2p: 2
+ncycle: 200
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+#ngrid: 2
+#extra_finest_levels: 2
+#vwcycle: 2
+#itercrsn: 2
+#iterrfne: 2
+relative_tolerance: 1.0e-3
+ntstep: 2
+extrapolate: 1
+dtinv: 10.0
+gravity: 1.0
+adapt: 0
+error_target: 1.0e-3
+logfile: output
+nblock: 1
+ibc: freestream
+flowangle: 0.0
+flowspeed: 0.0
+perturb_amplitude: 0.0
+b0_type: ins
+b0_mesh_movement: coupled_deformable
+b0_filetype: 3
+b0_growth factor: 32.0
+b0_mesh: ./square4
+b0_rho: 1.0
+b0_mu: 0.05
+b0_s1_hp_type: inflow
+b0_s2_type: prdc
+A: 0.025
+b0_s3_type: coupled_symbolic
+b0_s3_h: x1-A*sin(2.*_pi*x0)
+b0_s3_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
+b0_s3_dhdx1: 1.0
+b0_s3_hp_type: surface
+# Either of the following work: 
+# Can also uncomment prdc all together: 
+b0_v1_type: prdc
+b0_v1_hp_type: hp_deformable_free_pnt

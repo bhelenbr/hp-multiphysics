@@ -1,0 +1,36 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 2
+# p-multigrid levels in iteration (should usually be same as log2p): 
+extra_finest_levels: 0
+nmodes: 6
+# multigrid iterative parameters (leave alone): 
+itercrsn: 1
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 1000
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-12
+relative_tolerance: -5.0e-4
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 19
+# inverse of timestep 0=steady state: 
+dtinv: 40
+restart: 1
+# Log file name: 
+logfile: output
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+b0_ibc: symbolic
+b0_ibc0: exp(-100*(x0-.3)^2)*exp(-100*(x1-.5)^2)
+nu: 0
+ax: 1.0
+ay: 0.0
+b0_src: zero
+# Physics type: 
+b0_type: pod_cd_sim
+# Mesh name: 
+b0_mesh: ../square16.grd
+b0_s1_hp_type: adiabatic
+b0_s3_hp_type: adiabatic
+b0_s4_hp_type: adiabatic
+b0_s2_hp_type: characteristic

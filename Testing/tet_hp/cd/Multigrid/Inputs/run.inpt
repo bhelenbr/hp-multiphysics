@@ -1,0 +1,35 @@
+log2p: 0
+extra_finest_levels: 0
+ngrid: 2
+nstage: 1
+alpha: 1.0
+beta: 1.0
+cfl: 0.5 0.25 0.1
+#hp_fadd: 0.0
+itercrsn: 3
+iterrfne: 3
+adapt_output: 1
+ntstep: 1
+restart_interval: 1
+dtinv: 0.0
+relative_tolerance: 1.0e-4
+absolute_tolerance: 1.0e-12
+ncycle: 10
+vwcycle: 1
+logfile: output
+#debug_output: 1
+b0_ibc: symbolic
+b0_ibc0: if(t > 0.0,0.0,sin(_pi*x2))
+src: zero
+ax: 0
+ay: 0
+az: 0
+nu: 1
+nblock: 1
+b0_type: cd
+growth factor: 2.1
+error_control_level: 1
+error_control_tolerance: 1.0e-2
+b0_mesh: tet8.msh
+b0_f5_hp_type: dirichlet
+b0_f27_hp_type: dirichlet

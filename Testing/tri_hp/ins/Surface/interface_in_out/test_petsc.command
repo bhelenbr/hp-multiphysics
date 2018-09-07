@@ -1,0 +1,26 @@
+#!/bin/bash
+# Runs an interfacial flow case with a fixed point at the inflow
+# and outflow point at the outflow.  Flow is a free-stream flow
+# surface tension is included
+
+cd "$(dirname "$0")"
+
+if [ -e Results_petsc ]; then
+	cd Results_petsc
+else
+	mkdir Results_petsc
+	cd Results_petsc
+fi
+rm *
+
+cp ../Inputs/* .
+
+HP="mpiexec -np 2 tri_hp_petsc"
+
+#PETSC="-stop_for_debugger"
+
+${HP} run_petsc.inpt ${PETSC}
+
+cd ..
+
+opendiff Baseline_petsc/ Results_petsc/

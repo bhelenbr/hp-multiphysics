@@ -1,0 +1,8 @@
+logfile: generate
+adapt: 1
+b0_mesh: square_hole.d
+b0_growth factor: 8000.0
+b0_s5_type: symbolic
+b0_s5_h: x0^2+x1^2 -1.0
+b0_s5_dhdx0: 2*x0
+b0_s5_dhdx1: 2*x1

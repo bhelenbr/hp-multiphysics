@@ -1,0 +1,9 @@
+nblock: 2
+logfile: adapt
+adapt: 1
+b0_growth factor: 2.0
+b0_mesh: cut0
+b0_16777216_type: comm
+b1_growth factor: 2.0
+b1_mesh: cut1
+b1_16777216_type: comm

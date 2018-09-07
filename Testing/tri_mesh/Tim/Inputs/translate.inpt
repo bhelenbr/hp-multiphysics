@@ -1,0 +1,41 @@
+# logfile: 
+logfile: translate
+# number of geometric multigrid levels: 
+ngrid: 3
+# iterations on coarsening in multigrid cycle: 
+itercrsn: 3
+# Number of time steps in simulation: 
+ntstep: 4
+# Restart interval (multiplied by output interval default of 1): 
+restart_interval: 1
+# number of iterative multigrid cycles per time step: 
+ncycle: 200
+vwcycle: 2
+#absolute_tolerance: -1.0
+# Name of file for output: 
+logfile: translate
+# Number of mesh blocks for each processor: 
+nblock: 2
+# flag for mesh adaptation: 
+adapt: 1
+# Switch output to Datatank output: 
+#r_output_type: 11
+adapt_output: 1
+r_cfl: 0.25
+# Input mesh filetype
+# easymesh=0, gambit=1, tecplot=2, grid=3, text=4, binary=5, boundary=8: 
+b0_filetype: 3
+b0_growth factor: 10.0
+b0_mesh: ./coarsen_b0
+b0_s4_type: comm
+b0_s5_type: symbolic
+b0_s5_h: (x0-0.1*t)^2+x1^2 -.25
+b0_s5_dhdx0: 2*(x0-0.1*t)
+b0_s5_dhdx1: 2*x1
+b0_s5_r_type: translating
+b0_s5_r_do_left: 1
+b0_s5_r_translate: 0.1 0.0
+b1_filetype: 3
+b1_growth factor: 10.0
+b1_mesh: ./coarsen_b1
+b1_s4_type: comm

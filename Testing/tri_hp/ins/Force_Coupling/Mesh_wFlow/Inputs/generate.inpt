@@ -1,0 +1,8 @@
+logfile: generate
+adapt: 1
+b0_growth factor: 5000.0
+b0_mesh: ./circle.d
+b0_s1_type: circle
+b0_s1_radius: 25
+b0_s2_type: circle
+b0_s2_radius: 0.5

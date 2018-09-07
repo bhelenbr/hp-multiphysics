@@ -1,0 +1,28 @@
+ngrid: 3
+ntstep: 2
+ncycle: 100
+vwcycle: 2
+logfile: output
+adapt: 1
+adapt_output: 1
+nblock: 2
+b0_mesh: ${HOME}/Codes/grids/WIND/PRDC/top8
+b0_filetype: 3
+b0_growth factor: 4.0
+b0_v320_type: prdc
+b0_v320_dir: 0
+b0_s1026_type: comm
+b0_s65856_type: prdc
+b0_s65856_dir: 0
+b0_s8_r_type: fixed
+b1_type: 1
+b1_mesh: ${HOME}/Codes/grids/WIND/PRDC/bot8
+b1_filetype: 3
+b1_growth factor: 4.0
+b1_v320_type: prdc
+b1_v320_dir: 0
+b1_s1026_type: comm
+b1_s320_type: prdc
+b1_s320_dir: 0
+b1_s4_r_type: translating
+b1_s4_r_translate: 0.0 0.1

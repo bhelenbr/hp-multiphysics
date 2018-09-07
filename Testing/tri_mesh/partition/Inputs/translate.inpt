@@ -1,0 +1,34 @@
+# Number of mesh blocks for each processor: 
+nblock: 1
+# logfile: 
+logfile: translate
+# number of geometric multigrid levels: 
+ngrid: 3
+# iterations on coarsening in multigrid cycle: 
+itercrsn: 3
+# number of iterative multigrid cycles per time step: 
+ncycle: 20
+vwcycle: 2
+preconditioner_interval: -1
+# Number of time steps in simulation: 
+ntstep: 1
+# Restart interval (multiplied by output interval default of 1): 
+restart_interval: 1
+#absolute_tolerance: -1.0
+# flag for mesh adaptation: 
+adapt: 1
+adapt_output: 1
+tolerance: 1.25
+# Input mesh filetype
+# easymesh=0, gambit=1, tecplot=2, grid=3, text=4, binary=5, boundary=8: 
+b0_filetype: 3
+b0_growth factor: 10.0
+b0_mesh: ../square_hole.grd
+b0_s5_type: symbolic
+dx: 0.15
+b0_s5_h: (x0-dx*t)^2+x1^2 -1.0
+b0_s5_dhdx0: 2*(x0-dx*t)
+b0_s5_dhdx1: 2*x1
+b0_s5_r_type: deforming
+b0_s5_r_do_left: 1
+b0_s5_r_do_right: 1

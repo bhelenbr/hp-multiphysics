@@ -1,0 +1,33 @@
+#polynomial degree log2(p): 
+log2p: 2
+# Starting snapshot: 
+restart: 45
+# Number of snapshots is 30: 
+snapshots: 30
+# Definition of inner product for u,v,p: 
+scale_vector: 1.0 1.0 1.0
+# logfile output: 
+logfile: out
+# MESH & OTHER STUFF: 
+# DOESN"T MATTER FOR MODES (EXCEPT CURVED BOUNDARY): 
+ibc: sphere
+job: mPOD
+M: 15
+MinEigen: 1e-7
+angle: 90
+perturb_amplitude: 0.00
+b0_type: pod_ins_gen
+b0_filetype: 3
+b0_mesh: sphere
+#b0_rho: 1.0
+#b0_mu: 10.0
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s3_hp_type: outflow
+b0_s4_hp_type: symmetry
+b0_s5_type: circle
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5
+b0_s5_hp_type: inflow
+b0_s5_curved: 1
+b0_s6_hp_type: symmetry

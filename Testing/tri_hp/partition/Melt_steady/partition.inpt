@@ -1,0 +1,358 @@
+# Name of file for output: 
+logfile: out
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 2
+# interval for outputting restart files: 
+restart_interval: 1
+# Iterative stuff: 
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+ncycle: 100
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+#under_relaxation: 0.25
+extrapolate: 1
+#preconditioner_interval: 10
+# For multigrid solver: 
+#ncycle: 300
+#itercrsn: 2
+#iterrfne: 2
+#ngrid: 2
+#vwcycle: 2
+#ngrid: 1
+#extra_finest_levels: 0
+#iterative convergence tolerances: 
+relative_tolerance: -1.0e-5
+absolute_tolerance: 1.0e-9
+#debug_output: 1
+# mesh adaptation stuff: 
+# flag to turn mesh adaptation on or off: 
+adapt: 0
+#adapt_output: 1
+length_smoothing_steps: 1
+minimum_length: 8e-4*d
+error_estimator: scale_independent
+energy_scaling: 1e-7
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-8
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 2.0
+# This sets maximum size of mesh based on input mesh (50 x): 
+growth factor: 3
+mesh_movement: coupled_deformable
+# Non-dimensionalization Variables (SI UNITS): 
+# Melt & Solid Density: 
+rho0: 2530
+# Liquid specific heat: 
+cp0: 1000
+# Equilibrium interface temperature: 
+T0: 1685
+# Thermal conductivity of melt: 
+k0: 64.0
+# Depth of melt: 
+d0: 0.01
+# Thermal diffusivity: 
+alpha0: k0/(rho0*cp0)
+# Time scale inverse based on depth and thermal diffusivity: 
+tsi: alpha0/d0^2
+# Dimensionaless Variables: 
+# Melt & Solid Density: 
+rho: 2530/rho0
+#rho: 2470/rho0
+# Liquid specific heat: 
+cp: 1000/cp0
+#cp: 1030/cp0
+# Thermal conductivity of melt: 
+conductivity: 64.0/k0
+# Depth of melt: 
+d: 0.013/d0
+# Length of domain: 
+L: 4*d
+# Pull Speed: 
+sx: 5250.000000e-7/(d0*tsi)
+# Liquid viscosity: 
+mu: 7.0e-4/(k0/cp0)
+# Latent Heat of Fusion: 
+# Surface tension: 
+sigma: 0.735/(rho0*d0^3*tsi^2)
+# Surface tension change with temperature: 
+dsigmadT: -0.0*7e-5*T0/(rho0*d0^3*tsi^2)
+# Equilibrium interface temperature: 
+Tm: 1685/T0
+# Bottom and inlet temperature: 
+DTl: 5/T0
+# Bottom heat flux from heater 8: 
+q8: 1000/900*22e4/(k0*T0/d0)
+# Pass through flux
+Qpass: 2e4/(k0*T0/d0)
+# Convective heat flux parameters (double Gaussian profile): 
+Q_He: 7.43*1e-3/60*1e2*rho_He/mu_He
+h_He: 3e-3
+w_He: 150e-6
+ar_He: h_He/w_He
+rho_He: 0.1
+mu_He: 3.0e-5
+DT_He: 1685-373
+K_He: 0.3
+# Peak convective heat transfer: 
+maxq: 0.155*Q_He/sqrt(ar_He)*(K_He*DT_He/w_He)/(k0*T0/d0)
+# Conductive component of wcs: 
+base: 1.25/ar_He*(K_He*DT_He/w_He)/(k0*T0/d0)
+# Width of Gaussian Peak: 
+w: 3.3/sqrt(Q_He)*sqrt(ar_He)*w_He/d0
+# Width of bottom: 
+wb: 0.48*ar_He*w_He/d0
+# Fractional split between bottom and peak: 
+frac: 0.55
+# Location of center of Gaussian: 
+xwci: -2.6e-3/d0
+# Convective flux Gaussian form: 
+convflux: maxq*((1-frac)*exp(-(x0/w)^2*ln(2)) +frac*exp(-(x0/wb)^2*ln(2))) +base*Fc +(1-Fc)*Qpass
+#Radiation Heat Flux parameters: 
+epsl: 0.2
+epss: 0.6
+# View Factor Stuff: 
+sb: 5.67e-8*T0^4/(rho0*cp0*T0*d0*tsi)
+# Cold plate Temp: 
+Tc: 300/T0
+# Width of cold plate: 
+wrad: 0.05/d0
+# Height of cold plate: 
+hrad: h_He/d0
+# View factor: http://www.engr.uky.edu/rtl/Catalog/sectionb/B-71.html
+sinphi1: (-wrad/2-x0)/sqrt((-wrad/2-x0)^2+hrad^2)
+sinphi2: (wrad/2-x0)/sqrt((wrad/2-x0)^2+hrad^2)
+Fc: 0.5*(sinphi2-sinphi1)
+# heatflux without emissivity: 
+radiation: sb*Fc*(Tm^4-Tc^4)
+# Time Step: 
+ntstep: 1
+dtinv1: sx/d
+dtinv2: conductivity/(rho*cp*d^2)
+dtinv: 0.0
+#implicit_relaxation: 1
+dtinv_function: (t > restart+1 ? 1e4*x0 : 1e4)
+# I.C. and B.C. Info: 
+ibc: symbolic
+# Initial Conditions and inlet Temperature profile): 
+ibc0: sx*(1-(x1/d)^2)
+ibc1: 0.0
+ibc2: Tm+DTl-Qpass/conductivity*x1
+ibc3: 0.0
+# Bottom is dirchlet B.C. & no slip: 
+# Right side is outflow B.C. and no Temperature gradient: 
+# Freezing Surface: 
+# Shape of Initial Seed: 
+xle: 0.0
+tseed: 0.2*d
+# Free-Surface is just a slip B.C. with heat flux given by: 
+# Inlet is u,v fixed at sx,0 and zero temperature gradient in T.: 
+# Convective flux of T is determined by T function (above) and sx: 
+# Solid Info and B.C.'s are next: 
+# Convective speed in solid: 
+# Thermal conductivity in solid: 
+# Exit of solid is convective B.C.: 
+# Top surface of solid heat flux: 
+# Basically convection and radiation: 
+# but also added some heat removal downstream so solid doesn't meltback: 
+restart: 508
+b0_v1_hp_type: hp_deformable_free_pnt
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 1 1
+b0_s1_flux2: -q8*Fc -Qpass*(1-Fc)
+b0_s1_flux3: rho*(u0*n0 +u1*n1)
+#b0_s4_hp_type: symbolic_ibp
+#b0_s4_hp_typelist: 1 0 1 1
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 1 0 1 1
+b0_s4_flux0: 0.0
+b0_s4_dflux0: sigma +dsigmadT*(u2-Tm)
+b0_s4_flux1: u3*n1
+b0_s4_flux2: convflux+radiation*epsl
+b0_s4_flux3: 0.0
+b0_s4_r_type: fixed
+b0_s4_r_dir: 1 1
+b0_s4_report: 1
+b0_s5_hp_type: plain
+b0_s5_hp_typelist: 0 0 0 1
+b0_s5_flux2: rho*(u0*n0 +u1*n1)*cp*Th
+b0_s5_flux3: rho*(u0*n0 +u1*n1)
+b0_s5_r_type: fixed
+b0_s5_r_dir: 0 0
+b0_s2_hp_type: outflow
+b0_s2_r_type: fixed
+b0_s2_r_dir: 0 0
+b0_s8_Lf: 1.8e6/(cp0*T0)
+dtinv3: conductivity*DTl/(d^2*rho*b0_s8_Lf)
+b0_s8_hp_type: melt
+#b0_s8_hp_type: melt
+b0_s8_Krough: d0*tsi/(0.0126*T0)
+b0_s8_A2Dn: 140/T0
+b0_s8_b2Dn: d0*tsi/(T0*1.5e10)
+b0_s8_b2Dn_DT_min: 0.0
+b0_s8_Ksn: 91*d0*tsi/(T0*0.63)
+b0_s8_facet_angle: 35
+b0_s8_type: coupled_symbolic_comm
+b0_s8_ibc: symbolic
+b0_s8_ibc0: sx
+b0_s8_ibc1: 0.0
+b0_s8_ibc2: Tm
+b0_s8_ibc3: 0
+b0_s8_rho_s: rho
+b0_s8_cp_s: cp
+slope: tan((90-b0_s8_facet_angle)*_pi/180)
+b0_s8_h: x1 +tseed*(1-exp(-(x0-xwci)*slope/tseed))
+b0_s8_dhdx0: slope*exp(-(x0-xwci)*slope/tseed)
+b0_s8_dhdx1: 1.0
+b0_s8_flux2: 0.0
+b0_s8_report: 1
+b1_v2_hp_type: melt_facet_pt
+b1_v2_wall_type: horizontal
+#b1_s4_hp_type: symbolic_ibp
+#b1_s4_hp_typelist: 1 0 1 1
+b1_s4_hp_type: plain
+b1_s4_hp_typelist: 1 0 1 1
+b1_s4_flux0: 0.0
+b1_s4_dflux0: sigma +dsigmadT*(u2-Tm)
+b1_s4_flux1: u3*n1
+b1_s4_flux2: convflux+radiation*epsl
+b1_s4_flux3: 0.0
+b1_s4_r_type: fixed
+b1_s4_r_dir: 1 1
+b1_s4_report: 1
+b1_s11_Lf: 1.8e6/(cp0*T0)
+dtinv3: conductivity*DTl/(d^2*rho*b1_s11_Lf)
+b1_s11_hp_type: melt
+#b1_s11_hp_type: melt
+b1_s11_Krough: d0*tsi/(0.0126*T0)
+b1_s11_A2Dn: 140/T0
+b1_s11_b2Dn: d0*tsi/(T0*1.5e10)
+b1_s11_b2Dn_DT_min: 0.0
+b1_s11_Ksn: 91*d0*tsi/(T0*0.63)
+b1_s11_facet_angle: 35
+b1_s11_type: coupled_symbolic_comm
+b1_s11_ibc: symbolic
+b1_s11_ibc0: sx
+b1_s11_ibc1: 0.0
+b1_s11_ibc2: Tm
+b1_s11_ibc3: 0
+b1_s11_rho_s: rho
+b1_s11_cp_s: cp
+slope: tan((90-b1_s11_facet_angle)*_pi/180)
+b1_s11_h: x1 +tseed*(1-exp(-(x0-xwci)*slope/tseed))
+b1_s11_dhdx0: slope*exp(-(x0-xwci)*slope/tseed)
+b1_s11_dhdx1: 1.0
+b1_s11_flux2: 0.0
+b1_s11_report: 1
+b2_v1_hp_type: plain
+b2_s7_hp_type: plain
+b2_s7_flux0: convflux+radiation*epss
+b2_s7_r_type: fixed
+b2_s7_r_dir: 1 1
+b2_s7_report: 1
+b2_s6_hp_type: plain
+b2_s6_r_type: fixed
+b2_s6_r_dir: 0 0
+b2_s8_hp_type: melt
+b2_s8_type: coupled_symbolic_comm
+b2_s8_r_type: fixed
+b2_s8_ibc: symbolic
+b2_s8_ibc0: Tm
+b2_s8_report: 1
+b2_s8_h: b0_s8_h
+b2_s8_dhdx0: b0_s8_dhdx0
+b2_s8_dhdx1: b0_s8_dhdx1
+b2_s8_h: b1_s11_h
+b2_s8_dhdx0: b1_s11_dhdx0
+b2_s8_dhdx1: b1_s11_dhdx1
+b3_v2_hp_type: plain
+b3_s7_hp_type: plain
+b3_s7_flux0: convflux+radiation*epss
+b3_s7_r_type: fixed
+b3_s7_r_dir: 1 1
+b3_s7_report: 1
+b3_s11_hp_type: melt
+b3_s11_type: coupled_symbolic_comm
+b3_s11_r_type: fixed
+b3_s11_ibc: symbolic
+b3_s11_ibc0: Tm
+b3_s11_report: 1
+b3_s11_h: b0_s8_h
+b3_s11_dhdx0: b0_s8_dhdx0
+b3_s11_dhdx1: b0_s8_dhdx1
+b3_s11_h: b1_s11_h
+b3_s11_dhdx0: b1_s11_dhdx0
+b3_s11_dhdx1: b1_s11_dhdx1
+# b0 is liquid: 
+b0_type: buoyancy
+b0_mesh: rstrt508_b0.bin
+b0_rho_vs_T: rho
+# b1 is liquid: 
+b1_type: buoyancy
+b1_mesh: rstrt508_b1.bin
+b1_rho_vs_T: rho
+b2_type: cd
+b2_rho: rho
+b2_cv: cp
+b2_mesh: rstrt508_b2.bin
+b2_ibc: symbolic
+b2_ibc0: Tm
+b2_a: symbolic
+b2_a0: sx
+b2_a1: 0.0
+b2_ax: sx
+b2_ay: 0.0
+b2_nu: 22/k0
+b2_src: zero
+b2_s6_flux0: b2_rho*b2_cv*u*sx*n0
+b3_type: cd
+b3_rho: rho
+b3_cv: cp
+b3_mesh: rstrt508_b3.bin
+b3_ibc: symbolic
+b3_ibc0: Tm
+b3_a: symbolic
+b3_a0: sx
+b3_a1: 0.0
+b3_ax: sx
+b3_ay: 0.0
+b3_nu: 22/k0
+b3_src: zero
+b2_s6_flux0: b3_rho*b3_cv*u*sx*n0
+nblock: 1 1 1 1
+b0_v3_type: comm
+b0_v3_group: 0 1 2
+b0_v3_hp_type: multi_physics_pnt
+b0_v3_b2_v3_matching: 2 0 4 1 5 2
+b0_v3_b3_v3_matching: 2 0 4 1 5 2
+b0_s9_type: partition
+b0_v4_type: comm
+b0_v4_group: 0 1 2
+b1_v3_type: comm
+b1_v3_group: 0 1 2
+b1_v3_hp_type: multi_physics_pnt
+b1_v3_b2_v3_matching: 2 0 4 1 5 2
+b1_v3_b3_v3_matching: 2 0 4 1 5 2
+b1_s9_type: partition
+b1_v4_type: comm
+b1_v4_group: 0 1 2
+b2_v3_type: comm
+b2_v3_group: 0 1 2
+b2_v3_hp_type: multi_physics_pnt
+b2_v3_b0_v3_matching: 0 2 1 4 2 5
+b2_v3_b1_v3_matching: 0 2 1 4 2 5
+b2_s10_type: partition
+b2_v5_type: comm
+b2_v5_group: 0 1 2
+b3_v3_type: comm
+b3_v3_group: 0 1 2
+b3_v3_hp_type: multi_physics_pnt
+b3_v3_b0_v3_matching: 0 2 1 4 2 5
+b3_v3_b1_v3_matching: 0 2 1 4 2 5
+b3_s10_type: partition
+b3_v5_type: comm
+b3_v5_group: 0 1 2

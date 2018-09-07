@@ -1,0 +1,10 @@
+b0_mesh: geometry_b0.d
+b1_mesh: geometry_b1.d
+logfile: generate
+growth factor: 4000.0
+nblock: 2
+adapt: 1
+b0_s3_type: comm
+b1_s3_type: comm
+b0_s2_type: prdc
+b1_s5_type: prdc

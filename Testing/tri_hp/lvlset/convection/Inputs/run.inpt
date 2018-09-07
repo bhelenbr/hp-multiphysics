@@ -1,0 +1,73 @@
+# sets the polynomial order of the basis (use 2): 
+log2p: 2
+# extra levels for p multigrid (usually same as log2p): 
+extra_finest_levels: 2
+# number of geometric multigrid levels: 
+ngrid: 1
+# iterations on coarsening/refinement in multigrid cycle: 
+itercrsn: 2
+iterrfne: 2
+# number of iterative multigrid cycles per time step: 
+ncycle: 100
+# relative cut-off for iteration (set negative for no cut-off): 
+relative_tolerance: 1.0e-4
+# absolute cut-off for iteration (set negative for no cut-off): 
+#absolute_tolerance: -1.0e-12
+# v or w multigrid cycle (1 or 2): 
+vwcycle: 2
+# Number of time steps in simulation (4 * dtinv): 
+ntstep: 1
+# Inverse of time step: 
+dtinv: 20
+# gravity: 
+#gravity: 1.0
+# flag for mesh adaptation: 
+adapt: 0
+# Truncation error target for mesh adaptation: 
+#error: 1.0e-6
+# Start from previous time step: 
+#restart: 15
+#output_interval: 5
+# Restart interval (multiplied by output interval): 
+restart_interval: 1000
+# Turn this on to output files during iteration process: 
+#debug_output: 1
+# Turn this on to output files during adaptation process: 
+#adapt_output: 1
+# Name of file for output: 
+logfile: out
+# Number of mesh blocks for each processor: 
+nblock: 1
+# Mesh movement type: fixed, (un)coupled_rigid, (un)coupled_deformable
+mesh_movement: fixed
+b0_type: lvlset
+b0_helper: output_contour
+b0_norm: (x1 -A*sin(2.*_pi*(x0-t)))^2
+b0_var: 2
+b0_ibc: symbolic
+b0_ibc0: 1.0
+b0_ibc1: 0.0
+b0_ibc2: x1-A*sin(2.*_pi*x0)
+b0_ibc3: 0.0
+b0_filetype: 3
+b0_reinit_iterations: 3
+b0_growth factor: 10.0
+b0_mesh: ../conv
+b0_rho: 1.0
+b0_mu: 0.01
+b0_rho2: 1.0
+b0_mu2: 0.01
+b0_sigma: 0.0
+b0_width: 0.1
+b0_s8_hp_type: inflow
+b0_s11_hp_type: outflow
+b0_s1_type: prdc
+b0_s2_type: prdc
+A: 0.025
+# THESE WON'T TRY TO COMMUNICATE FOR THE INTERFACE: 
+# BECAUSE THEY AREN'T IN THE MANIFOLD GROUP: 
+#UNCOMMENT THESE TO GENERATE MESH: 
+#ntstep: 2
+#adapt: 1
+#b0_filetype: 8
+#b0_growth factor: 1000.0

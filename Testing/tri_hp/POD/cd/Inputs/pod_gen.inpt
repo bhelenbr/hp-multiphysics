@@ -1,0 +1,23 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 2
+snapshots: 20
+ndeflation: 2
+#podmodes: 6
+logfile: output
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+b0_ibc: symbolic
+b0_ibc0: exp(-100*(x0-.3)^2)*exp(-100*(x1-.5)^2)
+nu: 0
+ax: 1.0
+ay: 0.0
+b0_src: zero
+# Physics type: 
+b0_type: pod_cd_gen
+# Mesh name: 
+b0_mesh: ../square16.grd
+b0_s1_hp_type: adiabatic
+b0_s3_hp_type: adiabatic
+b0_s4_hp_type: adiabatic
+b0_s2_hp_type: characteristic

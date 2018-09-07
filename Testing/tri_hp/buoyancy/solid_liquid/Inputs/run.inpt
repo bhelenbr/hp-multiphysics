@@ -1,0 +1,99 @@
+# Name of file for output: 
+logfile: out
+# log 2 of polynomial order (0,1,2): 
+log2p: 2
+# interval for outputting restart files: 
+#restart_interval: 50
+# Iterative stuff: 
+# choose petsc LU inversion solver: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+nblock: 1 1
+ncycle: 15
+itercrsn: 1
+nstage: 1
+alpha: 1.0
+beta: 1.0
+#under_relaxation: 1.0e-8
+# For multigrid solver: value
+#nblock: 2
+#ncycle: 300
+#itercrsn: 2
+#iterrfne: 2
+#ngrid: 2
+#vwcycle: 2
+#ngrid: 1
+#extra_finest_levels: 0
+#iterative convergence tolerances: 
+relative_tolerance: 1.0e-4
+absolute_tolerance: 1.0e-7
+#debug_output: 1
+# mesh adaptation stuff: 
+# flag to turn mesh adaptation on or off: 
+#adapt: 1
+# error_estimator: energy_norm
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-5
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 0.0
+# This sets maximum size of mesh based on input mesh (50 x): 
+growth factor: 1
+#mesh_movement: coupled_deformable
+# Non-dimensionalization Variables: 
+dtinv: 0.0
+# Dimensionaless Variables: 
+cp: 1
+rho: 1
+rho_vs_T: rho
+conductivity: 3
+mu: 0.1
+# I.C. and B.C. Info: 
+b0_ibc: symbolic
+b0_ibc0: 0
+b0_ibc1: 0
+b0_ibc2: x1
+b0_ibc3: 0.0
+b0_type: buoyancy
+b0_mesh: ./rstrt1_b0.grd
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 0 1
+b0_s1_flux3: rho*(u0*n0 +u1*n1)
+b0_s2_hp_type: plain
+b0_s2_hp_typelist: 1 1 1 1
+b0_s2_flux0: rho*u0*(u0*n0 +u1*n1)
+b0_s2_flux1: rho*u1*(u0*n0 +u1*n1)
+b0_s2_flux2: rho*cp*u2*(u0*n0+u1*n1)
+b0_s2_flux3: rho*(u0*n0 +u1*n1)
+b0_s3_hp_type: solid_fluid
+b0_s3_flux2: 0.0
+b0_s3_type: symbolic_comm
+b0_s3_h: x1
+b0_s3_dhdx0: 0
+b0_s3_dhdx1: 1
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 0 0 1 1
+b0_s4_flux2: rho*cp*u2*(u0*n0+u1*n1)
+b0_s4_flux3: rho*(u0*n0 +u1*n1)
+b1_type: cd
+b1_mesh: ./rstrt1_b1.grd
+b1_ax: b0_ibc0
+b1_ay: b0_ibc1
+b1_src: zero
+b1_conductivity: 1
+b1_s5_hp_type: plain
+b1_s5_hp_typelist: 1
+b1_s5_flux0: u*(b1_ax*n0+b1_ay*n1)
+b1_s3_hp_type: plain
+b1_s3_hp_typelist: 1
+b1_s3_flux0: 0.0
+b1_s3_type: symbolic_comm
+b1_s3_h: b0_s3_h
+b1_s3_dhdx0: b0_s3_dhdx0
+b1_s3_dhdx1: b0_s3_dhdx1
+b1_s6_hp_type: dirichlet
+b1_s7_hp_type: plain
+b1_s7_hp_typelist: 1
+b1_s7_flux0: u*(b1_ax*n0 +b1_ay*n1)
+b1_ibc: symbolic
+b1_ibc0: x1

@@ -1,0 +1,36 @@
+log2p: 0
+extra_finest_levels: 0
+ngrid: 3
+ncycle: 200
+vwcycle: 2
+itercrsn: 1
+iterrfne: 1
+ntstep: 5
+dtinv: 1.0
+adapt: 0
+restart_interval: 10
+#debug_output: 1
+logfile: output
+nblock: 1
+ibc: symbolic
+ibc0: t
+src: zero
+nu: 1.0
+ax: 0.0
+ay: 0.0
+b0_type: cd
+b0_filetype: 3
+b0_growth factor: 32.0
+b0_mesh: ./tim.0
+b0_s1_type: plain
+b0_s1_hp_type: adiabatic
+b0_s2_type: plain
+b0_s2_hp_type: adiabatic
+b0_s3_type: plain
+b0_s3_hp_type: dirichlet
+b0_s4_hp_type: dirichlet
+b0_s5_type: circle
+b0_s5_hp_type: dirichlet
+b0_s5_curved: 1
+b0_s5_center: 0.0 0.0
+b0_s5_radius: 0.5
