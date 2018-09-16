@@ -18,7 +18,7 @@ fi
 rm *
 cp ../Inputs/* .
 
-#let backdiff=0
+let backdiff=0
 
 let dtinv=20
 let ntstep=4

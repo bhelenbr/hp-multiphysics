@@ -1,6 +1,6 @@
 log2p: 2
 dtinv: 10.0
-petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 ncycle: 10
 ntstep: 5
 relative_tolerance: 1.0e-5

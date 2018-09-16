@@ -18,7 +18,7 @@ helper: l2error
 b0_type: ins
 b0_filetype: 3
 b0_growth factor: 4.0
-b0_mesh: ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square4
+b0_mesh: ../../../../../grids/SQUARE/INOUT/square4
 b0_mu: 1.0
 b0_s4_hp_type: inflow
 b0_s2_hp_type: outflow

@@ -25,7 +25,7 @@ ibc2: -.5*exp(2.*lda*x0)
 b0_type: ins
 b0_filetype: 3
 b0_growth factor: 10000.0
-b0_mesh: ${HOME}/Codes/grids/SQUARE/INOUT/square8
+b0_mesh: ../../grids/SQUARE/INOUT/square8
 helper: l2error
 b0_rho: 1.0
 b0_mu: 0.025

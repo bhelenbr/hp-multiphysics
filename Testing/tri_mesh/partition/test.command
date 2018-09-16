@@ -35,6 +35,8 @@ if [ "${PE}" = "mpich" ]; then
 	# Running from gridengine
 	let NP=${NSLOTS}
     MF="-machinefile ${TMPDIR}/machines"
+else
+	MF="-machinefile machinefile"
 fi
 
 
@@ -86,6 +88,7 @@ while [ $npc -lt ${#NPROC[@]} ]; do
 	cp ../translate.inpt .
 	mod_map translate.inpt nblock ${np}
 	partition.bash translate.inpt
+	echo "localhost slots=${np}" > machinefile
 	mpiexec -np ${np} ${MF} ${EX} partition.inpt
 	cd ..
 	let npc=$npc+1

@@ -3,7 +3,7 @@ logfile: output
 ncycle: 10
 ntstep: 1
 #debug_output: 1
-petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 relative_tolerance: 1.0e-8
 ibc: freestream
 perturb_amplitude: 0.01
