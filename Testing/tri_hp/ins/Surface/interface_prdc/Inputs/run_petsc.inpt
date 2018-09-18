@@ -1,7 +1,7 @@
 # sets the polynomial order of the basis (use 2): 
 log2p: 2
 # options string for petsc: 
-petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 # number of iterative multigrid cycles per time step: 
 ncycle: 200
 # relative cut-off for iteration (set negative for no cut-off): 

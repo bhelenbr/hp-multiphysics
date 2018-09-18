@@ -13,6 +13,7 @@ adapt: 0
 error_target: 1.0e-3
 logfile: output
 #debug_output: 1
+adapt_output: 1
 nblock: 1
 ibc: freestream
 flowangle: 0.0
