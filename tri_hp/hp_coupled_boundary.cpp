@@ -415,23 +415,23 @@ void hp_coupled_bdry::update(int stage) {
 //		}
 #endif
 		
-		const FLT cflalpha = x.gbl->alpha(stage)*x.gbl->cfl(x.log2p);		
+		const FLT alpha = x.gbl->alpha(stage);
 		i = 0;
 		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
 			for (int n=0;n<NV;++n)
-				x.pnts(v0)(n) = gbl->vug0(i,n) -cflalpha*gbl->vres(i,n);
+				x.pnts(v0)(n) = gbl->vug0(i,n) -alpha*gbl->vres(i,n);
 		} while (++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (int n=0;n<NV;++n)
-			x.pnts(v0)(n) = gbl->vug0(base.nseg,n) -cflalpha*gbl->vres(base.nseg,n);
+			x.pnts(v0)(n) = gbl->vug0(base.nseg,n) -alpha*gbl->vres(base.nseg,n);
 		
 		if (basis::tri(x.log2p)->sm() > 0) {
 			for(int i=0;i<base.nseg;++i)
 				for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 					for(int n=0;n<tri_mesh::ND;++n)
-						crv(i,m)(n) = gbl->sug0(i,m,n) -cflalpha*gbl->sres(i,m,n);
+						crv(i,m)(n) = gbl->sug0(i,m,n) -alpha*gbl->sres(i,m,n);
 		}
 		
 		if (gbl->field_is_coupled) {
@@ -440,12 +440,12 @@ void hp_coupled_bdry::update(int stage) {
 				sind = base.seg(i);
 				v0 = x.seg(sind).pnt(0);
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -cflalpha*x.gbl->res.v(v0,*n);
+					x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -alpha*x.gbl->res.v(v0,*n);
 				}
 			} while (++i < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -cflalpha*x.gbl->res.v(v0,*n);
+				x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -alpha*x.gbl->res.v(v0,*n);
 			}
 			
 			if (basis::tri(x.log2p)->sm() > 0) {
@@ -453,7 +453,7 @@ void hp_coupled_bdry::update(int stage) {
 					sind = base.seg(i);
 					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-							x.ug.s(sind,m,*n) = x.gbl->ug0.s(sind,m,*n) -cflalpha*x.gbl->res.s(sind,m,*n);
+							x.ug.s(sind,m,*n) = x.gbl->ug0.s(sind,m,*n) -alpha*x.gbl->res.s(sind,m,*n);
 						}
 					}
 				}
