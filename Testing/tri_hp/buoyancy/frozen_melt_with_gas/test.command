@@ -31,7 +31,7 @@ EXECNAME="tri_hp_petsc"
 #PETSC_FLAGS+=" -fp_trap"
 #PETSC_FLAGS+=" -on_error_attach_debugger gdb"
 #PETSC_FLAGS+=" -start_in_debugger gdb"
-PETSC_FLAGS+=" -stop_for_debugger"
+#PETSC_FLAGS+=" -stop_for_debugger"
 
 # Uncomment to set valgrind debugging parameters
 VALGRIND_FLAGS+=" --track-origins=yes"
