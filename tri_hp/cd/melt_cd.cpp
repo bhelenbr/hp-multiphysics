@@ -75,9 +75,11 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 		if (!inmap.get(x.gbl->idprefix + "_conductivity",gbl->k_l)) inmap.getwdefault("conductivity",gbl->k_l,0.7*mu);
 	}
 	
-	inmap[base.idprefix+"_is_coupled"] = "1";
+	inmap[base.idprefix+"_field_is_coupled"] = "1";
 	hp_coupled_bdry::init(inmap,gbl_in);
+#ifdef petsc
 	if (!gbl->precondition) gbl->field_is_coupled = false;
+#endif
 	
 	keyword = liquid_block + "_Lf";
 	if (!inmap.get(keyword,gbl->Lf)) {

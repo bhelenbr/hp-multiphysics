@@ -91,7 +91,7 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	}
 	
 	int NVcoupled;
-	inmap.getwdefault(base.idprefix + "_is_coupled",gbl->field_is_coupled,false);
+	inmap.getwdefault(base.idprefix + "_field_is_coupled",gbl->field_is_coupled,false);
 	if (gbl->field_is_coupled) {
 		NVcoupled = NV +c0_indices.size();
 	}
@@ -415,7 +415,10 @@ void hp_coupled_bdry::update(int stage) {
 //		}
 #endif
 		
-		const FLT alpha = x.gbl->alpha(stage);
+		FLT alpha = x.gbl->alpha(stage);
+        if (gbl->field_is_coupled)
+            alpha *= x.gbl->cfl(x.log2p);
+        
 		i = 0;
 		do {
 			sind = base.seg(i);
