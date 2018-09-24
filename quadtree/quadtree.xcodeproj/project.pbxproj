@@ -216,7 +216,7 @@
 					"${inherited}",
 					../include,
 				);
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = ../bin;
 				PRODUCT_NAME = quadtree;
 			};
 			name = Debug;
@@ -232,7 +232,7 @@
 					"${inherited}",
 					../include,
 				);
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = ../bin;
 				PRODUCT_NAME = quadtree;
 			};
 			name = Release;

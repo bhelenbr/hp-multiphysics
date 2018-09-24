@@ -56,7 +56,6 @@
 		6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; };
 		6FADD85F086EF36A00350FA2 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6FADD862086EF36A00350FA2 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
-		6FB91AB70ACCB10300792B04 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91AC00ACCB10300792B04 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6FB91AC30ACCB10300792B04 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
 		6FB91AD60ACCB10300792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
@@ -304,7 +303,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FB91AB70ACCB10300792B04 /* tet_mesh.h in Headers */,
 				B24117810C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
 				6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
@@ -637,7 +635,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DSTROOT = "$(HOME)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -662,7 +659,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DSTROOT = "${HOME}";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -687,7 +683,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DSTROOT = "${HOME}";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
@@ -710,7 +705,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DSTROOT = "${HOME}";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,

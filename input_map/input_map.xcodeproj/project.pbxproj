@@ -189,7 +189,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp mod_map.bash ${HOME}/bin/mod_map";
+			shellScript = "cp mod_map.bash ../bin/mod_map\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

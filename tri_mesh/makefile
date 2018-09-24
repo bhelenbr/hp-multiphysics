@@ -73,7 +73,7 @@ libtri_mesh.a: $(OBJ)
 
 tri_mesh: libtri_mesh.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh $(LIB)
-	cp tri_mesh $(HOME)/bin
+	cp tri_mesh ../bin
 
 libtri_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -82,7 +82,7 @@ libtri_mesh_mpi.a: $(OBJ)
 
 tri_mesh_mpi: libtri_mesh_mpi.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)
-	cp tri_mesh_mpi $(HOME)/bin
+	cp tri_mesh_mpi ../bin
 
 %.o: %.cpp
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<

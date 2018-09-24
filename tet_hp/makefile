@@ -9,14 +9,14 @@ all: tet_hp tet_hp_mpi
 tet_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
 	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp EXTRAFLAGS='-DPTH'
-	cp _$@/tet_hp $(HOME)/bin/$@
+	cp _$@/tet_hp ../bin/$@
 
 .PHONY: tet_hp
 
 tet_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
 	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tet_hp_mpi EXTRAFLAGS='-DMPISRC' CXX=mpic++
-	cp _$@/tet_hp_mpi $(HOME)/bin/$@
+	cp _$@/tet_hp_mpi ../bin/$@
 
 .PHONY: tet_hp_mpi
 

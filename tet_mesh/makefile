@@ -69,7 +69,7 @@ libtet_mesh.a: $(OBJ)
 
 tet_mesh: libtet_mesh.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh $(LIB)
-	cp tet_mesh $(HOME)/bin
+	cp tet_mesh ../bin
 
 libtet_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -78,7 +78,7 @@ libtet_mesh_mpi.a: $(OBJ)
 
 tet_mesh_mpi: libtet_mesh_mpi.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltet_mesh_mpi $(LIB)
-	cp tet_mesh_mpi $(HOME)/bin
+	cp tet_mesh_mpi ../bin
 
 %.o: %.cpp
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
