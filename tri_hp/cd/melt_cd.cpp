@@ -106,8 +106,10 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	inmap.getwdefault(liquid_block + "_Ksn",gbl->Ksn,0.0);
 	inmap.getwdefault(liquid_block + "_K2Dn",gbl->K2Dn,0.0);
 #ifdef OLDKINETICS
+    *x.gbl->log << "#OLDKINETICS is defined\n";
 	inmap.getwdefault(liquid_block + "_K2Dn_max",gbl->K2Dn_max,5e4);
 #else
+    *x.gbl->log << "#OLDKINETICS is not defined\n";
 	if (gbl->K2Dn > 0.0) {
 		const int Tindx = c0_indices[0];
 		TinyVector<FLT,tri_mesh::ND> aPoint = 0.0;
@@ -125,7 +127,19 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 	inmap.getwdefault(liquid_block + "_facet_angle",angle,0.0);
 	gbl->facetdir(0) = cos(M_PI*angle/180.0);
 	gbl->facetdir(1) = sin(M_PI*angle/180.0);
-	
+    
+#ifdef ANALYTIC_JACOBIAN
+    *x.gbl->log << "#ANALYTIC_JACOBIAN is defined\n";
+#else
+    *x.gbl->log << "#ANALYTIC_JACOBIAN is not defined\n";
+#endif
+    
+#ifdef TWOFACETS
+    *x.gbl->log << "#TWOFACETS is defined\n";
+#else
+    *x.gbl->log << "#TWOFACETS is not defined\n";
+#endif
+
 	return;
 }
 
