@@ -1,11 +1,9 @@
 #!/bin/bash
-# Runs a case with a facet
-
-# uncomment full_test to do the whole thing
-# otherwise does one time step only
-# remember that "OLD_WAY" has to be undefined in nstage
-# Also there are a bunch of switches for turning rotation & swapping off/on
-# It hasn't worked with ONE_SIDED not set.  not sure about the others
+# Runs a case with a solidifying surface 
+# And deforms the solid surface so that it moves with the solid pull velocity
+# not sure if this has worked yet.  Not sure why this test is tied in with
+# the melting surface, but oh well.  The triple junction for this case is constrained to 
+# move horizontally
 
 # Set number of processors (overridden if using grid engine)
 # For serial job set NP=0

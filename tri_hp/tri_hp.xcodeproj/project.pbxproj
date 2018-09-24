@@ -1825,6 +1825,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lsuperlu_dist",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
@@ -1848,6 +1849,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lsuperlu_dist",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
@@ -1872,6 +1874,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lsuperllu_dist",
 				);
 				PRODUCT_NAME = tri_hp_axi_petsc;
 			};
@@ -1895,6 +1898,7 @@
 					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
+					"-lsuperllu_dist",
 				);
 				PRODUCT_NAME = tri_hp_axi_petsc;
 			};

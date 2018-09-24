@@ -3,6 +3,7 @@
 # when you have three boundaries coming together at a point
 # and along the melt boundary the temperature is fixed at the melt
 # temperature
+# This case only works with superlu_dist not mumps!!!
 
 
 # This script is a fancy way of finding executables
