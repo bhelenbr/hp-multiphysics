@@ -13,6 +13,7 @@
 
 //#include "gmres.h"
 #include "hp_boundary.h"
+#include <petsctime.h>
 
 #ifndef petsc
 /* compressed row storage */
@@ -244,7 +245,7 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 //	return;
 	
 	
-	MatZeroRows(petsc_J,1,&row,1.0);
+	MatZeroRows(petsc_J,1,&row,1.0,PETSC_NULL,PETSC_NULL);
 
 	
 	return;
@@ -325,9 +326,9 @@ void tet_hp::create_jacobian_residual(){
 	cout << "zeroed enries"<< endl;
 	/* insert values into jacobian matrix J */
 	
-	PetscGetTime(&time1);
+    PetscTime(&time1);
 	create_jacobian(compressed_column);
-	PetscGetTime(&time2);
+	PetscTime(&time2);
 
 	cout << "jacobian made " << time2-time1 << " seconds" << endl;
 
@@ -346,11 +347,11 @@ void tet_hp::create_jacobian_residual(){
 	cout << "jacobian assembled"<< endl;
 
 	
-	PetscGetTime(&time1);
+	PetscTime(&time1);
 	/* apply dirichlet boundary conditions to sparse matrix and vector */
 	for(int j = 0; j < nfbd; ++j)
 		hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
-	PetscGetTime(&time2);
+	PetscTime(&time2);
 
 	cout << "dirichlet BC's applied "<< time2-time1 <<" seconds"<< endl;
 

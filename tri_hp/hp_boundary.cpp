@@ -1590,7 +1590,7 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 	x.J_mpi.zero_rows(counter,indices);
 	x.J.set_diag(counter,indices,1.0);
 #else
-	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+	MatZeroRows(x.petsc_J,counter,indices.data(),1.0,PETSC_NULL,PETSC_NULL);
 #endif
 }
 

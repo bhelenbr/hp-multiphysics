@@ -23,7 +23,7 @@
 #include <float.h>
 #include <blocks.h>
 #ifdef SUPERLU
-#include "slu_ddefs.h"
+#include "superlu_ddefs.h"
 #endif
 
 #ifdef petsc

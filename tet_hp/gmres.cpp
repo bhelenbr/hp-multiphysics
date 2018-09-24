@@ -9,7 +9,7 @@
 #ifndef petsc
 
 #include "tet_hp.h"
-#include "slu_ddefs.h"
+#include "superlu_ddefs.h"
 
 /* brief flexible GMRES written by Yousef Saad */
 

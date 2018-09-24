@@ -1039,7 +1039,7 @@ void hp_coupled_bdry::petsc_jacobian() {
     /* Must zero rows of jacobian created by r_mesh */
     MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
-    MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
+    MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL,PETSC_NULL,PETSC_NULL);
 #endif
 
     if (gbl->symmetric || is_master) {
@@ -2117,7 +2117,7 @@ void hp_deformable_fixed_pnt::petsc_jacobian_dirichlet() {
 	x.J_mpi.zero_rows(nfix,rows);
 	x.J.set_diag(nfix,rows,1.0);
 #else
-	MatZeroRows(x.petsc_J,nfix,rows.data(),1.0);
+	MatZeroRows(x.petsc_J,nfix,rows.data(),1.0,PETSC_NULL,PETSC_NULL);
 #endif
 }
 

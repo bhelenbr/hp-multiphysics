@@ -19,7 +19,7 @@
 #ifndef petsc
 
 #include "tet_hp.h"
-#include "slu_ddefs.h"
+#include "superlu_ddefs.h"
 #include "hp_boundary.h"
 
 void tet_hp::superilu(){

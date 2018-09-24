@@ -11,13 +11,14 @@
 
 #include "tet_hp.h"
 #include "hp_boundary.h"
+#include <petsctime.h>
 
 void tet_hp::petsc_initialize(){
 	
 	size_sparse_matrix = (npnt+nseg*basis::tet(log2p).em+ntri*basis::tet(log2p).fm+ntet*basis::tet(log2p).im)*NV;
 	cout << "number of unknowns "<< size_sparse_matrix << endl;
 
-	PetscTruth mat_nonsymmetric;
+    PetscBool mat_nonsymmetric;
 
 //	PetscInitialize(&argc,&args,(char *)0,help);
 //	PetscInitialize(&argc,&args,(char *)0);
@@ -28,8 +29,7 @@ void tet_hp::petsc_initialize(){
      Set flag if we are doing a nonsymmetric problem; the default is symmetric.
 	 */
 	
-	PetscOptionsHasName(PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);
-
+	PetscOptionsHasName(PETSC_NULL,PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);
 	/* 
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
@@ -139,9 +139,9 @@ void tet_hp::petsc_solve(){
 		if(iter > 0) MatZeroEntries(petsc_J);
 		
 		/* insert values into jacobian matrix J */		
-		PetscGetTime(&time1);
+		PetscTime(&time1);
 		create_jacobian(compressed_column);
-		PetscGetTime(&time2);
+		PetscTime(&time2);
 		
 		cout << "jacobian made " << time2-time1 << " seconds" << endl;
 		
@@ -161,7 +161,7 @@ void tet_hp::petsc_solve(){
 			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
 		
 		//--row_counter;
-		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
+		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0,PETSC_NULL,PETSC_NULL);
 
 		
 		VecAssemblyBegin(petsc_f);
@@ -173,7 +173,9 @@ void tet_hp::petsc_solve(){
 		if(petsc_norm < tol) break;
 		
 		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
-		MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+		// MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+        // FIXME: UNTESTED
+        MatSetOption(petsc_J,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE);
 		
 		double rtol=1.0e-12; // relative tolerance
 		double atol=max(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
@@ -186,7 +188,7 @@ void tet_hp::petsc_solve(){
 		 also serves as the preconditioning matrix.
 		 */
 		
-		KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+		KSPSetOperators(ksp,petsc_J,petsc_J);// SAME_NONZERO_PATTERN
 		
 		/* 
 		 Solve linear system.  Here we explicitly call KSPSetUp() for more
@@ -198,9 +200,9 @@ void tet_hp::petsc_solve(){
 		
 		KSPSetUp(ksp);
 
-		PetscGetTime(&time1);
+		PetscTime(&time1);
 		KSPSolve(ksp,petsc_f,du);
-		PetscGetTime(&time2);
+		PetscTime(&time2);
 	
 		MatMult(petsc_J,du,resid);		
 		VecAXPY(resid,-1.0,petsc_f);
@@ -229,7 +231,7 @@ void tet_hp::petsc_solve(){
 	}
 	
 	
-	VecDestroy(du);
+	VecDestroy(&du);
 
 	return;
 }
@@ -312,10 +314,10 @@ void tet_hp::petsc_finalize(){
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
 	 */
-	KSPDestroy(ksp);
-	VecDestroy(petsc_f);
-	VecDestroy(petsc_u);
-	MatDestroy(petsc_J);
+	KSPDestroy(&ksp);
+	VecDestroy(&petsc_f);
+	VecDestroy(&petsc_u);
+	MatDestroy(&petsc_J);
 	
 	PetscFinalize();
 	
