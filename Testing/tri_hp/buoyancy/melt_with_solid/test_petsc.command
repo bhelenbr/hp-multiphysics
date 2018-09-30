@@ -18,6 +18,10 @@ PRECONDITION=true
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 if [ -e Results_petsc ]; then
 	cd Results_petsc
 else

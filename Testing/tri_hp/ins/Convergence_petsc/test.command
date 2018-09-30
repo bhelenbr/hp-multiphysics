@@ -11,6 +11,10 @@
 # Probably because of changes to numerical evaluation of Jacobian
 
 cd "$(dirname "$0")"
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
 
 HP="mpiexec -np 1 tri_hp_petsc"
 export HP

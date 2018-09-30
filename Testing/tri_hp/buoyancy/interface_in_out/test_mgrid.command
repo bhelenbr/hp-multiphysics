@@ -5,6 +5,10 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 if [ -e Results_mgrid ]; then
 	cd Results_mgrid
 else
@@ -15,10 +19,7 @@ rm *
 
 cp ../Inputs/* .
 
-HP="$HOME/Codes/tri_hp/build/Release/tri_hp"
-HP="$HOME/bin/tri_hp"
-
-${HP} run_mgrid.inpt
+tri_hp run_mgrid.inpt
 
 cd ..
 

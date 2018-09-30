@@ -8,6 +8,10 @@
 # double clicked from gui
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 # Make Results directory
 if [ -e Results ]; then
 	cd Results

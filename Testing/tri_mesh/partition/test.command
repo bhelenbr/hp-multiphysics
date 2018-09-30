@@ -11,49 +11,25 @@
 # if run from sun grid engine, NP will be set equal to NSLOTS which
 # is the number of processors requested from the queue
 
-# Turn valgrind on/off
-let USE_VALGRIND=0
-
-# Set executable to run
-EXECNAME="tri_mesh_mpi"
-
-# Uncomment to set valgrind debugging parameters
-VALGRIND_FLAGS+=" --track-origins=yes"
-VALGRIND_FLAGS+=" --leak-check=full"
-VALGRIND_FLAGS+=" --dsymutil=yes"
-VALGRIND="valgrind  ${VALGRIND_FLAGS}"
-
-#Set executable command
-if [ "${USE_VALGRIND}" -eq 0 ]; then
-	EX="${EXECNAME}"
-else
-	EX=${VALGRIND} ${EXECNAME}
-fi
-
-# Detect if running from Sun Grid Engine
-if [ "${PE}" = "mpich" ]; then
-	# Running from gridengine
-	let NP=${NSLOTS}
-    MF="-machinefile ${TMPDIR}/machines"
-else
-	MF="-machinefile machinefile"
-fi
-
-
-#############################################
-# End of automated part HP is now the correct
-# string needed to run the executable     
-# can just copy and paste above part into shell if you want
-# to run the executable without using this script
-# Paste above into shell to define HP
-# then type ${HP} to run
-#############################################
-
-
 # cd to the directory where the script resides.
 # Necessary for platforms where script can be 
 # double clicked from gui
 cd "$(dirname "$0")"
+
+# Define location of executables
+BINDIR=${PWD%/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
+
+# Name of executable
+EX="tri_mesh_mpi"
+
+# Uncomment to set valgrind debugging parameters
+VALGRIND=""
+VALGRIND_FLAGS+=" --track-origins=yes"
+VALGRIND_FLAGS+=" --leak-check=full"
+VALGRIND_FLAGS+=" --dsymutil=yes"
+#EX="valgrind  ${VALGRIND_FLAGS} tri_mesh_mpi"
 
 # Make Results directory
 if [ -e Results ]; then

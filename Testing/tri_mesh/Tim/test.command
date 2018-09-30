@@ -3,55 +3,23 @@
 #  Works well with Laplacian deformation
 #  Biharmonic deformation diverges?
 
-# This script is a fancy way of finding executables
-# and is flexible enough to run on different platforms
-# there are two main inputs: NP which is the number
-# of processors to use (set to 0 for serial)
-# and USE_VALGRIND which turns on debugging with valgrind (set to 1)
-# if run from sun grid engine, NP will be set equal to NSLOTS which
-# is the number of processors requested from the queue
+# cd to the directory where the script resides.
+# Necessary for platforms where script can be 
+# double clicked from gui
+cd "$(dirname "$0")"
 
-# Turn valgrind on/off
-let USE_VALGRIND=0
-
-# Set executable to run
-EXECNAME="tri_mesh"
+# Define location of executables
+BINDIR=${PWD%/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
 
 # Uncomment to set valgrind debugging parameters
 VALGRIND_FLAGS+=" --track-origins=yes"
 VALGRIND_FLAGS+=" --leak-check=full"
 VALGRIND_FLAGS+=" --dsymutil=yes"
-VALGRIND="valgrind  ${VALGRIND_FLAGS}"
 
-#Set executable command
-if [ "${USE_VALGRIND}" -eq 0 ]; then
-	EX="${EXECNAME}"
-else
-	EX=${VALGRIND} ${EXECNAME}
-fi
-
-# Detect if running from Sun Grid Engine
-if [ "${PE}" = "mpich" ]; then
-	# Running from gridengine
-	let NP=${NSLOTS}
-    MF="-machinefile ${TMPDIR}/machines"
-fi
-
-
-#############################################
-# End of automated part HP is now the correct
-# string needed to run the executable     
-# can just copy and paste above part into shell if you want
-# to run the executable without using this script
-# Paste above into shell to define HP
-# then type ${HP} to run
-#############################################
-
-
-# cd to the directory where the script resides.
-# Necessary for platforms where script can be 
-# double clicked from gui
-cd "$(dirname "$0")"
+EX="tri_mesh"
+#EX="valgrind  ${VALGRIND_FLAGS} tri_mesh"
 
 # Make Results directory
 if [ -e Results ]; then

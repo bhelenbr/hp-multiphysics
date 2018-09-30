@@ -7,6 +7,11 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
+
 if [ -e Results ]; then
 	cd Results
 else

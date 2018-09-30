@@ -22,6 +22,11 @@ else
 fi
 
 cd "$(dirname "$0")"
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
+
 
 #CASE="FD"
 CASE="MG"

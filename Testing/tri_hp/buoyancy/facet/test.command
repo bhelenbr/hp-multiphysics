@@ -14,6 +14,9 @@
 # Sensitive to eps_a in evaluating Jacobian when using dw = dw*eps_r +eps_a
 # With new kinetic expression it stopped one time step before when using the old kinetic expression!
 
+# This cases is highly sensitive to the LU factorization.  I got the best results using
+# mumps, with petsc version 3.7.7.  After that, it got worse
+
 import sys
 import os
 import popen2
@@ -26,6 +29,11 @@ import string
 import math
 
 os.chdir(os.path.dirname(sys.argv[0]))
+
+# Define location of executables
+p0 = subprocess.Popen("echo ${PWD%/*/*/*/*}/bin/:", stdout=subprocess.PIPE,shell=True)
+(BINDIR, err) = p0.communicate()
+os.environ['PATH'] = BINDIR[:-1] + os.environ['PATH']
 
 FULL_TEST=1
 

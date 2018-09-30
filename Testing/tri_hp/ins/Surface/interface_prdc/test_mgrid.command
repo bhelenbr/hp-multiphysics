@@ -8,13 +8,15 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 # To run_mgrid test case comment 
 #CNVG=true
 #MGRID_PHASED_WALLS_FIRST=true
 #MGRID_PHASED_SURFACE_FIRST=true
 #MGRID_ONEPASS=true
-
-cd "$(dirname "$0")"
 
 HP="tri_hp"
 MESH="tri_mesh"

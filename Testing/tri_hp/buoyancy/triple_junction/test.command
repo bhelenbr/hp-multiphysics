@@ -1,11 +1,6 @@
 #!/bin/bash
-# Runs a case with a facet
-
-# uncomment full_test to do the whole thing
-# otherwise does one time step only
-# remember that "OLD_WAY" has to be undefined in nstage
-# Also there are a bunch of switches for turning rotation & swapping off/on
-# It hasn't worked with ONE_SIDED not set.  not sure about the others
+# Runs a case with a facet, a liquid free-surface, a solid translating surface
+# These meet at a triple point that moves according to the growth angle
 
 FULL_TEST=1
 
@@ -50,13 +45,12 @@ if [ ${NP} -gt 0 ]; then
 fi
 
 VALGRIND="valgrind  ${VALGRIND_FLAGS}"
-MYPATH="${HOME}/bin"
 
 #Set executable command
 if [ ${USE_VALGRIND} -eq 0 ]; then
-	HP="${EXECENV} ${MYPATH}/${EXECNAME} run.inpt ${PETSC_FLAGS}"
+	HP="${EXECENV} ${EXECNAME} run.inpt ${PETSC_FLAGS}"
 else
-	HP="${EXECENV} ${VALGRIND} ${MYPATH}/${EXECNAME} run.inpt ${PETSC_FLAGS}"
+	HP="${EXECENV} ${VALGRIND} ${EXECNAME} run.inpt ${PETSC_FLAGS}"
 fi
 
 #############################################
@@ -73,6 +67,10 @@ fi
 # Necessary for platforms where script can be 
 # double clicked from gui
 cd "$(dirname "$0")"
+
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
 
 # Make Results directory
 if [ -e Results ]; then

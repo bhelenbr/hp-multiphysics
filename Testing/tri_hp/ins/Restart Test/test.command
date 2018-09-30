@@ -7,6 +7,10 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 HP="tri_hp"
 export HP
 

@@ -63,13 +63,12 @@ if [ ${NP} -gt 0 ]; then
 fi
 
 VALGRIND="valgrind  ${VALGRIND_FLAGS}"
-MYPATH="${HOME}/bin"
 
 #Set executable command
 if [ ${USE_VALGRIND} -eq 0 ]; then
-	HP="${EXECENV} ${MYPATH}/${EXECNAME} run.inpt ${PETSC_FLAGS}"
+	HP="${EXECENV} ${EXECNAME} run.inpt ${PETSC_FLAGS}"
 else
-	HP=${EXECENV} ${VALGRIND} ${MYPATH}/${EXECNAME} run.inpt ${PETSC_FLAGS}
+	HP=${EXECENV} ${VALGRIND} ${EXECNAME} run.inpt ${PETSC_FLAGS}
 fi
 
 #############################################
@@ -87,6 +86,11 @@ fi
 # double clicked from gui
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+echo ${BINDIR}
+export PATH=${PATH}:${BINDIR}
+
 # Make Results directory
 if [ -e Results ]; then
 	cd Results
@@ -102,6 +106,8 @@ cp ../Inputs/* .
 # generate mesh and remove unnecessary data files
 tri_mesh generate
 rm data*.grd
+
+echo ${HP}
 
 ${HP} ${PETSC}
 

@@ -14,6 +14,10 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 #PETSC_FLAGS="-stop_for_debugger"
 
 # To run_petsc test case comment 
@@ -21,8 +25,6 @@ cd "$(dirname "$0")"
 PETSC_PHASED_WALLS_FIRST=true
 #PETSC_PHASED_SURFACE_FIRST=true
 PETSC_ONEPASS=true
-
-cd "$(dirname "$0")"
 
 HP="mpiexec -np 2 tri_hp_petsc"
 MESH="tri_mesh"
