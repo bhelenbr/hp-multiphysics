@@ -1,0 +1,47 @@
+#!/bin/bash
+
+while getopts ":a" opt; do
+   case $opt in
+      a) Option="Absolute";;
+
+      \?) echo 'usage: delete [-a] <prefix> <start> <end> <interval>'
+      	  echo 'default is start and end are offsets from data that is there'
+      	  echo 'for -a, start and end are absolute numbers'
+          exit 1
+   esac
+done
+shift $((OPTIND-1))
+
+# Check interval
+if [ $# -eq 4 ]; then
+	let INT=$4
+else
+	let INT=1
+fi
+
+case "${Option}" in 
+	Absolute)
+		for (( c=$2; c<=$3; c+=${INT} ))
+		do
+			rm -f $1$c[^0-9]*
+		done
+		;;
+	*)
+		let FIRST=$(ls $1*[^0-9]* | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d' | sort -g | head -1)
+		let FIRST=${FIRST}+${2}
+
+		let LAST=$(ls $1*[^0-9]* | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d'| sort -g | tail -1)
+		let LAST=${LAST}-${3}
+		echo "Deleting ${FIRST} to ${LAST}"
+
+		for (( c=${FIRST}; c<=${LAST}; c+=${INT} ))
+		do
+			rm -f $1$c[^0-9]*
+		done
+		;;
+esac
+
+
+
+
+

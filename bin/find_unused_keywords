@@ -1,0 +1,10 @@
+#!/bin/bash
+
+while read p; do
+	q=$(echo $p | cut -d: -f 1);
+	if [ "${q:0:1}" != '#' ]; then
+		if ! grep -q "$q" $2 ; then
+			echo "$p is not found";
+		fi
+	fi
+done<$1
