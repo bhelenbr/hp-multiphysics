@@ -314,7 +314,8 @@ if [ "$?" -ne "0" ]; then
 fi
 let RESTART=${RESTART}+3
 echo "mesh adaptation ${RESTART}"
-delete_data.bash 2 0
+delete_series data 0 1 
+delete_series rstrt 2 1
 
 
 ################################################

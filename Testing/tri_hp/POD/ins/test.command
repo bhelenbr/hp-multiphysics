@@ -34,7 +34,8 @@ if [ -n "$DNS" ]; then
 
 	mpiexec -np 1 tri_hp_axi_petsc run.inpt
 
-	delete_data.bash 0 30
+	delete_series data 0 30 
+	delete_series rstrt 2 1
 
 	# This is easy to understand but doesn't get the timestep numbers
 	# grep -A1 pressure out_b0.log | grep "\[" | cut -d\  -f2-4 > drag.dat
