@@ -41,9 +41,7 @@ brew install metis
 # as a reminder of nice things to install
 brew install graphviz
 brew install doxygen
-brew install numpy
-brew install scipy
-brew install matplotlib
+python -m pip install numpy scipy matplotlib
 
 To update installed packages
 brew update
@@ -232,6 +230,8 @@ git pull
 git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-superlu_dist=1 --download-scalapack=1
+
 # On High Sierra with most packages installed using homebrew
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --with-valgrind-dir=${HOME}/Packages --with-scalapack-dir=/usr/local
 
