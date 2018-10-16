@@ -27,10 +27,10 @@ case "${Option}" in
 		done
 		;;
 	*)
-		let FIRST=$(ls $1*[^0-9]* | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d' | sort -g | head -1)
+		let FIRST=$(find . -name "$1"'*[^0-9]*' -print | sed s:./:: | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d' | sort -g | head -1)
 		let FIRST=${FIRST}+${2}
 
-		let LAST=$(ls $1*[^0-9]* | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d'| sort -g | tail -1)
+		let LAST=$(find . -name "$1"'*[^0-9]*' -print | sed s:./:: | sed s/$1// | grep -o '^[0-9]*' | sed '/^$/d'| sort -g | tail -1)
 		let LAST=${LAST}-${3}
 		echo "Deleting ${FIRST} to ${LAST}"
 
