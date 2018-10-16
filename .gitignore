@@ -1,7 +1,6 @@
 Cocoa/
 lib/
 Miscellaneous/
-Testing/
 dg/
 planar/
 probe/
@@ -13,9 +12,14 @@ include/
 ucl/
 build/
 html/
+Results*/
+Baseline*/
+Testing/spectral_hp.oldbc/
+Testing/tri_hp_dg/
 *.a
 *.o
 xcuserdata/
 *.xccheckout
 *.bak
 *.xcworkspacedata
+IDEWorkspaceChecks.plist
