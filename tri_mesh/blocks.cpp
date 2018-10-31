@@ -1094,6 +1094,8 @@ void block::init(input_map &input) {
 
 	/* OTHER UNIVERSAL CONSTANTS */
 	input.getwdefault("gravity",gbl->g,0.0);
+    double bodydflt[2] = {0.0,0.0};
+    input.getwdefault("body_force",gbl->body.data(),2,bodydflt);
 
 	/* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
 	input.getwdefault("nstage",gbl->nstage,5);

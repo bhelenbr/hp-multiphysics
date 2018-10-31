@@ -36,10 +36,6 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 	gbl->tpreconditioner.resize(maxpst,NV,NV);
 
 	double prandtl;
-	
-	double bodydflt[2] = {0.0,0.0};
-	if (!inmap.get(gbl->idprefix +"_body_force",gbl->body.data(),2)) inmap.getwdefault("body_force",gbl->body.data(),2,bodydflt); 
-
 	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
 	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
 	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",prandtl,0.713);
