@@ -3,9 +3,14 @@
 # using the approximate mass matrix
 # Set #define DIRK 1 in tri_mesh/blocks.cpp
 
-HP="$HOME/bin/tri_hp"
-
 cd "$(dirname "$0")"
+
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
+HP="tri_hp"
+
 
 if [ -e Results ]; then
 	cd Results
