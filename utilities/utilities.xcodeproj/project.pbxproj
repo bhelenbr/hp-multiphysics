@@ -200,7 +200,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1010;
 			};
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -259,7 +259,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = utilities;
 			};
@@ -269,7 +268,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = utilities;
 			};
