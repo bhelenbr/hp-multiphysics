@@ -1,0 +1,118 @@
+#########
+# Physics
+#########
+b0_type: komega
+gravity: 1.0
+body_force: 0.0 0.015441475176744
+###########
+# Constants
+###########
+rho: 1.0
+mu: 1e-4
+# Set linf = Dh where Dh = 2H and H is the channel width. uinf = ubar
+uinf: 1.0
+linf: 1.0
+beta_wall: 0.075
+# Distance of first gridpoint from wall (from MATLAB)
+d: 0.001609480064883
+###########################
+# Mesh and mesh adaptation 
+###########################
+b0_mesh: rstrt1_b0
+#adapt: 1
+# Norm to be used for mesh adaptation (energy_norm or scale_independent). If commented, just maintains mesh quality for deforming meshes
+#error_estimator: energy_norm
+# target error level when using mesh adaptation:
+#error_target: 1.0e-4
+#growth factor: 100.0
+################
+# Time stepping 
+###############
+#dtinv: 1
+# number of time steps should be greater than 1 to get mesh adaptation working
+#ntstep: 100
+################################
+# Initial & Boundary conditions
+################################
+# Initial/Boundary Condition Function:
+# values for ktld and omgtld found from MATLAB as trapz(y,ktldc)/H and trapz(y,omgtldc)/H
+ibc: symbolic
+ibc0: 0.0
+ibc1: 1.0
+ibc2: 0.008954334693792
+ibc3: 0.4800777148
+ibc4: 0.0
+# wall
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 0 0 1
+b0_s1_ibc: symbolic
+b0_s1_ibc0: 0.0
+b0_s1_ibc1: 0.0
+b0_s1_ibc2: 0.0
+#b0_s1_ibc3: log(60*mu/rho/(beta_wall*d^2))
+b0_s1_ibc3: 10.337959542110054
+b0_s1_ibc4: 0.0
+# periodic boundary
+b0_s2_type: prdc
+b0_s2_dir: 1
+#b0_s3_hp_type: symmetry
+# fixing pressure at two points on the top corners of the domain
+b0_v1_hp_type: plain
+b0_v1_hp_typelist: 1 1 1 1 0
+b0_v2_hp_type: plain
+b0_v2_hp_typelist: 1 1 1 1 0
+###############
+# Continuation
+###############
+restart: 1
+#restart_type: 1
+reload_type: 1
+###############
+# Order of FEM
+###############
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 0
+#########################################
+# PETSC solver, Under Relaxation and SUPG
+#########################################
+ncycle: 1000
+# itertive tolerance for Newton
+relative_tolerance: 1.0e-5
+absolute_tolerance: 1.0e-10
+# choose petsc LU inversion solver: (mumps or superlu_dist) 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_package mumps
+under_relaxation: 8e-2
+# SUPG
+#b0_dissipation: 0.0
+###########
+# Debugging
+###########
+#debug_output: 1
+#jac_debug: 1
+#rsdl_debug: 1
+#####################################
+# Other things I don't usually change
+#####################################
+# Name of file for output: 
+logfile: out
+# Explicit solver stuff
+nstage: 1
+alpha: 1.0
+beta: 1.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

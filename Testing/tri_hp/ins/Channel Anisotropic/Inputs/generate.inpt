@@ -1,0 +1,32 @@
+###############
+# Initial mesh
+###############
+b0_mesh: ./channel.d
+#################################
+# Parameters in the initial mesh
+#################################
+#wall_res: 0.1
+#center_res: 0.1
+#L: 0.5
+#########################
+# Mesh Adaptation 
+#########################
+adapt: 0
+b0_growth factor: 10.0
+######################
+# Boundary Condition ?
+######################
+b0_s2_type: prdc
+b0_s2_dir: 1
+##############
+# Log Filename
+##############
+logfile: generate
+
+
+
+
+
+
+
+

@@ -21,6 +21,7 @@
 //#define CNS
 //#define CNS_EXPLICIT
 //#define NONNEWTONIAN
+#define KOMEGA
 
 #define POD
 
@@ -70,10 +71,14 @@
 #include "nonnewtonian/tri_hp_nonnewtonian.h"
 #endif
 
+#ifdef KOMEGA
+#include "komega/tri_hp_komega.h"
+#endif
+
 class btype {
 	public:
-		const static int ntypes = 18;
-		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,explct,cns,cns_explicit,nonnewtonian,svv};
+		const static int ntypes = 19;
+		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,komega,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,explct,cns,cns_explicit,nonnewtonian,svv};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -82,7 +87,7 @@ class btype {
 			return(-1);
 		}
 };
-const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
+const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy","komega",
     "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","explicit","cns","cns_explicit","nonnewtonian","svv"};
 
 multigrid_interface* block::getnewlevel(input_map& inmap) {
@@ -147,6 +152,13 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 			tri_hp_swe *temp = new tri_hp_swe();
 			return(temp);
 		}
+#endif
+            
+#ifdef KOMEGA
+        case btype::komega: {
+            tri_hp_komega *temp = new tri_hp_komega();
+            return(temp);
+        }
 #endif
 
 #if (defined(POD) && defined(CD))

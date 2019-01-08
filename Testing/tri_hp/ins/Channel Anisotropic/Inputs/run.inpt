@@ -1,0 +1,100 @@
+#########
+# Physics
+#########
+b0_type: ins
+gravity: 1.0
+body_force: 0.0 1.0
+###########
+# Constants
+###########
+rho: 1.0
+mu: 2e-3
+###########################
+# Mesh and mesh adaptation 
+###########################
+b0_mesh: rstrt1_b0
+#adapt: 1
+# Norm to be used for mesh adaptation (energy_norm or scale_independent). If commented, just maintains mesh quality for deforming meshes
+#error_estimator: energy_norm
+# target error level when using mesh adaptation:
+#error_target: 1.0e-4
+#growth factor: 10.0
+################################
+# Initial & Boundary conditions
+################################
+# Initial/Boundary Condition Function:
+ibc: symbolic
+ibc0: 0.0
+ibc1: 0.0
+ibc2: 0.0
+# wall
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 1
+# periodic boundary
+b0_s2_type: prdc
+b0_s2_dir: 1
+#b0_s3_hp_type: symmetry
+# fixing pressure at two points on the top corners of the domain
+b0_v1_hp_type: plain
+b0_v1_hp_typelist: 1 1 0
+b0_v2_hp_type: plain
+b0_v2_hp_typelist: 1 1 0
+###############
+# Continuation
+###############
+#restart: 1
+###############
+# Order of FEM
+###############
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 0
+###################
+# Multigrid solver
+###################
+ncycle: 10
+# itertive tolerance for Newton
+relative_tolerance: 1.0e-5
+absolute_tolerance: 1.0e-10
+################
+# Time stepping 
+###############
+#dtinv: 10
+#ntstep: 10
+###########################
+# Under relaxation & PETSC
+###########################
+# choose petsc LU inversion solver: (mumps or superlu_dist) 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_package mumps
+#under_relaxation: 1.0e-1
+###########
+# Debugging
+###########
+#debug_output: 1
+#jac_debug: 1
+#rsdl_debug: 1
+######################################
+# Other things I don't usually change
+#####################################
+# Name of file for output: 
+logfile: out
+# Explicit solver stuff
+nstage: 1
+alpha: 1.0
+beta: 1.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
