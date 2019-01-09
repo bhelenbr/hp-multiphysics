@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
+#ifdef libbinio
 #include <libbinio/binfile.h>
+#endif
 #include <netcdf.h>
 
 // #define DATATANK
@@ -22,7 +24,9 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 	std::string fnmapp, grd_nm;
 	int i,j,n,tind,count;
 	ofstream out;
+#ifdef libbinio
 	binofstream bout;
+#endif
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
@@ -330,6 +334,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 			break;
 
+#ifdef libbinio
 		case(binary):
 			fnmapp = grd_nm +".bin";
 			bout.open(fnmapp.c_str());
@@ -384,6 +389,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			bout.close();
 
 			break;
+#endif
 			
 		case(netcdf): {
 			fnmapp = grd_nm +".nc";

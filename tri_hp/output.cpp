@@ -13,8 +13,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <myblas.h>
+#ifdef libbinio
 #include <libbinio/binwrap.h>
 #include <libbinio/binfile.h>
+#endif
 #include <netcdf.h>
 
 #define ERR(e) {*gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,gbl->log);}
@@ -52,6 +54,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if (mmovement != fixed || gbl->adapt_interval) {
 				namewdot = fname +"_v";
 				if (output_type(1) == tri_hp::binary) {
+#ifdef libbinio
 					tri_mesh::output(fname,tri_mesh::binary);
 					binofstream bout;
 					for(i=1;i<gbl->nadapt;++i) {
@@ -67,6 +70,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						}
 						bout.close();
 					}
+#endif
 				}
 				else if (output_type(1) == tri_hp::netcdf) {
 					tri_mesh::output(fname,tri_mesh::netcdf);
@@ -180,6 +184,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 		}
 
+#ifdef libbinio
 		case (binary): {
 			fnmapp = fname +".bin";
 			out.open(fnmapp.c_str(),std::ios::binary);
@@ -219,6 +224,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			break;
 		}
+#endif
 			
 		case (netcdf): {
 			fnmapp = fname +".nc";
@@ -877,11 +883,14 @@ void tri_hp::input(const std::string& filename) {
 	std::string fname,fnmapp;
 	std::ostringstream nstr;
 	ifstream fin;
+#ifdef libbinio
 	binifstream bin;
+#endif
 	
 	fname = filename +"_" +gbl->idprefix;
 
 	if (reload_type == tri_hp::binary) {
+#ifdef libbinio
 		fnmapp = fname +".bin";
 		fin.open(fnmapp.c_str(),ios::in);  // Check if there is a grid file for moving mesh / adaptive
 		if(fin.is_open()) {
@@ -921,6 +930,7 @@ void tri_hp::input(const std::string& filename) {
 			fnmapp = filename +"_d" +nstr.str();
 			input(fnmapp,reload_type,i);
 		}
+#endif
 	}
 	else if (reload_type == tri_hp::netcdf) {
 		fnmapp = fname +".nc";
@@ -1117,7 +1127,8 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.close();
 			break;
 		}
-			
+
+#ifdef libbinio
 		case (binary): {
 			fnapp = fname +".bin";
 			in.open(fnapp.c_str());
@@ -1201,6 +1212,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.close();
 			break;
 		}
+#endif
 			
 		case (netcdf): {
 			fnapp = fname +".nc";
@@ -1493,6 +1505,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype typ) {
 	// outputs either array of eigenvalues or coefficient vectors
 	switch(typ) {
+#ifdef libbinio
 		case(tri_hp::binary): {
 			std::string fname = filename +".bin";
 			binofstream bout;
@@ -1510,6 +1523,7 @@ void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype ty
 			bout.close();
 			break;
 		}
+#endif
 		case(tri_hp::netcdf): {
 			std::string fname = filename +".nc";
 			
@@ -1547,6 +1561,7 @@ void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype ty
 void tri_hp::input(int size,Array<FLT,1> list, std::string filename,filetype typ) {
 	// outputs either array of eigenvalues or coefficient vectors
 	switch(typ) {
+#ifdef libbinio
 		case(tri_hp::binary): {
 			std::string fname = filename +".bin";
 			ifstream in;
@@ -1567,6 +1582,8 @@ void tri_hp::input(int size,Array<FLT,1> list, std::string filename,filetype typ
 			in.close();
 			break;
 		}
+#endif
+			
 		case(tri_hp::netcdf): {
 			std::string fname = filename +".nc";
 			

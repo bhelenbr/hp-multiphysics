@@ -3,7 +3,9 @@
 #include <cstring>
 #include <input_map.h>
 #include <iostream>
+#ifdef libbinio
 #include <libbinio/binfile.h>
+#endif
 #include <netcdf.h>
 
 /* Handle errors by printing an error message and exiting with a
@@ -172,7 +174,9 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	std::string grd_nm, bdry_nm, grd_app;
 	TinyVector<int,3> v,s,e;
 	ifstream in;
+#ifdef libbinio
 	binifstream bin;
+#endif
 	FLT fltskip;
 	int intskip;
 	Array<Array<TinyVector<int,2>,1>,1> svrtxbtemp;  // TEMPORARY FOR LOADING GAMBIT
@@ -583,7 +587,8 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			break;
 		}
-			
+
+#ifdef libbinio
 		case(binary): {
 			grd_app = grd_nm + ".bin";
 			bin.open(grd_app.c_str());
@@ -681,6 +686,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			break;
 		}
+#endif
 			
 		case(netcdf): {
 			grd_app = grd_nm +".nc";
