@@ -121,7 +121,6 @@
 			buildPhases = (
 				6FD651EE0922EF8E00D18689 /* Sources */,
 				6FD651EF0922EF8E00D18689 /* Frameworks */,
-				E631981216DBA84600B5C23C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -176,22 +175,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		E631981216DBA84600B5C23C /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 12;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cp mod_map.bash ${HOME}/bin/mod_map\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6FD651EE0922EF8E00D18689 /* Sources */ = {
