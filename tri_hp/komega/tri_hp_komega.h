@@ -17,10 +17,12 @@
 class tri_hp_komega : public tri_hp_ins {
 	public:		
     struct global : public tri_hp_ins::global {
-        
-        /* PHYSICAL CONSTANTS */
+        /* Physical Constants */
         FLT linf,uinf;
-
+			
+				/* Model constants */
+				FLT lambda_k, c_mu, kinf, omginf, epslnk;
+			
     } *gbl;
     
 public:

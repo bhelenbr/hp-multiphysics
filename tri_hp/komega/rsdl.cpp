@@ -40,9 +40,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyVector<FLT,NV> tres;
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
     FLT psiktld, psinktld, ktrb, omg, tmu, mutld, cjcbik, cjcbiomg, dudx, dudy, dvdx, dvdy, vrtctinv, strninv, dfprdomgx, dfprdomgy;
-    FLT uref = gbl->uinf, lref = gbl->linf, kinf = 0.00384, omginf= 1.616244071283537, epslnk = 0.019699536326342;
-    FLT sgmk = 0.5, sgmomg = 0.5, betakomg = 0.075, betastr = 0.09, gamma = 5./9.;
-    FLT  susk = 0., susomg = 0.,  k_mom= 0.;
+	const FLT kinf = gbl->kinf;
+	const FLT omginf = gbl->omginf; //1.616244071283537,
+	const FLT epslnk = gbl->epslnk; // 0.019699536326342;
+  const FLT sgmk = 0.5, sgmomg = 0.5, betakomg = 0.075, betastr = 0.09, gamma = 5./9.;
+  const FLT susk = 0., susomg = 0.,  k_mom= 0.;
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
