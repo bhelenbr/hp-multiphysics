@@ -11,7 +11,7 @@
 #include "../hp_boundary.h"
 
 #define CALC_TAU1
-// #define CALC_TAU2
+//#define CALC_TAU2
 
 #define BODYFORCE
 
@@ -48,7 +48,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	v = tri(tind).pnt;
     
 	/* IF TINFO > -1 IT IS CURVED ELEMENT */
-
     if (tri(tind).info > -1) {
 		/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 		crdtocht(tind);
@@ -112,7 +111,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     FLT jcbmin = jcb;
     FLT h;
 #endif
-  
     if (tri(tind).info > -1) {
 		/* CURVED ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
@@ -532,7 +530,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					for(n=0;n<NV-1;++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
-                        
+                    }
                     /* Kato-Launder Production Terms for k and w */
                     dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
                     dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
@@ -565,7 +563,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
                     qmax2 = MAX(qmax2,q2);
 #endif
-					} 
+					 
 				}
 			}
 			for(n=0;n<NV;++n)
@@ -581,7 +579,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             
 #ifdef CALC_TAU2
             FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
-            FLT jcb = 0.25*area(tind);
 #endif
             
 #ifdef CALC_TAU1
