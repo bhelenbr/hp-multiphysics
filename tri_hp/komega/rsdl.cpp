@@ -10,8 +10,8 @@
 #include "tri_hp_komega.h"
 #include "../hp_boundary.h"
 
-// #define CALC_TAU1
- #define CALC_TAU2
+#define CALC_TAU1
+// #define CALC_TAU2
 
 #define BODYFORCE
 
@@ -48,6 +48,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	v = tri(tind).pnt;
     
 	/* IF TINFO > -1 IT IS CURVED ELEMENT */
+
     if (tri(tind).info > -1) {
 		/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 		crdtocht(tind);
@@ -111,7 +112,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     FLT jcbmin = jcb;
     FLT h;
 #endif
-    
+  
     if (tri(tind).info > -1) {
 		/* CURVED ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
@@ -306,7 +307,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             hmax = 2.*sqrt(hmax);
             h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
             hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
-            //*gbl->log << h << std::endl;
             FLT nuk = (lmu +sgmk*mutld)/gbl->rho;
             FLT nuomg = (lmu +sgmomg*tmu)/gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0))*(0.5*hmax*gbl->bd(0));
@@ -367,17 +367,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 									+dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
 									+dcrd(0,0)(i,j)*tres(NV-1);
                     
-                    df(2,0)(i,j) -= (ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
-                                     -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
+                    df(2,0)(i,j) -= (dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                     -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
                     
-                    df(2,1)(i,j) -= (-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
-                                     +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
+                    df(2,1)(i,j) -= (-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                     +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
                     
-                    df(3,0)(i,j) -= (ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
-                                     -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(3);
+                    df(3,0)(i,j) -= (dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                     -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(3);
                     
-                    df(3,1)(i,j) -= (-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
-                                     +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres(3);
+                    df(3,1)(i,j) -= (-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                     +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(3);
                     
 					du(NV-1,0)(i,j) = -(dcrd(1,1)(i,j)*tres(0) -dcrd(0,1)(i,j)*tres(1));
 					du(NV-1,1)(i,j) = -(-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1));
@@ -428,17 +428,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 
 		/* NEGATIVE REAL TERMS */
 		if (gbl->beta(stage) > 0.0) {
-            psiktld = psifunc(u(2)(i,j),0.0,epslnk);
-            psinktld = psifunc(-u(2)(i,j),0.0,epslnk);
-            ktrb = psiktld*u(2)(i,j);
-            omg = exp(u(3)(i,j));
-            tmu = gbl->rho*ktrb/omg;
-            mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
+
             cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 			cjcbi = lmu/cjcb;
 			lrhorbd0 = rhobd0*cjcb;
-            cjcbik = (lmu +sgmk*mutld)/cjcb;
-            cjcbiomg = (lmu +sgmomg*tmu)/cjcb;
 
 			/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
             /* INDICES ARE 1: EQUATION U, V, k OR w 2: VARIABLE (U, V, k OR w), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -452,9 +445,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 			visc(1,1)(0,1) =  cjcbi*(ldcrd(1,1)*ldcrd(1,0) +2.*ldcrd(0,1)*ldcrd(0,0));
 #define         viscI1II1II1II0I visc(1,1)(0,1)
             
-            visc(2,2)(0,0) = -(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-            visc(2,2)(1,1) = -(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-            visc(2,2)(0,1) =  (dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+            visc(2,2)(0,0) = -(ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
+            visc(2,2)(1,1) = -(ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
+            visc(2,2)(0,1) =  (ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
 #define         viscI2II2II1II0I visc(2,2)(0,1)
             
             visc(3,3)(0,0) = visc(2,2)(0,0);
@@ -478,17 +471,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             /* CALCULATE CURVED SIDE LENGTHS */
             h = 0.0;
             for (int n=0;n<ND;++n)
-                h += dcrd(n,0)(i,j)*dcrd(n,0)(i,j);
+                h += ldcrd(n,0)*ldcrd(n,0);
             hmax = MAX(h,hmax);
             
             h = 0.0;
             for (int n=0;n<ND;++n)
-                h += dcrd(n,1)(i,j)*dcrd(n,1)(i,j);
+                h += ldcrd(n,1)*ldcrd(n,1);
             hmax = MAX(h,hmax);
             
             h = 0.0;
             for (int n=0;n<ND;++n)
-                h += (dcrd(n,1)(i,j) -dcrd(n,0)(i,j))*(dcrd(n,1)(i,j) -dcrd(n,0)(i,j));
+                h += (ldcrd(n,1) -ldcrd(n,0))*(ldcrd(n,1) -ldcrd(n,0));
             hmax = MAX(h,hmax);
          
             
@@ -498,6 +491,14 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					rhorbd0 = RAD(crd(0)(i,j))*lrhorbd0;
+                    psiktld = psifunc(u(2)(i,j),0.0,epslnk);
+                    psinktld = psifunc(-u(2)(i,j),0.0,epslnk);
+                    ktrb = psiktld*u(2)(i,j);
+                    omg = exp(u(3)(i,j));
+                    tmu = gbl->rho*ktrb/omg;
+                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    cjcbik = (lmu +sgmk*mutld)/cjcb;
+                    cjcbiomg = (lmu +sgmomg*tmu)/cjcb;
 
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
@@ -511,17 +512,18 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif        
-					df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-													+visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
-
-					df(0,1)(i,j) = RAD(crd(0)(i,j))*(+viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-													+visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j));
-
-					df(1,0)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-													+viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j));
-
-					df(1,1)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-													+viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j));
+                    df(0,0)(i,j) = +visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
+                    +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j) +k_mom*2./3.*gbl->rho*ldcrd(1,1)*ktrb;
+                    
+                    df(0,1)(i,j) = +viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
+                    +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j) -k_mom*2./3.*gbl->rho*ldcrd(1,0)*ktrb;
+                    
+                    df(1,0)(i,j) = +viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
+                    +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j) -k_mom*2./3.*gbl->rho*ldcrd(0,1)*ktrb;
+                    
+                    df(1,1)(i,j) = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
+                    +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j) +k_mom*2./3.*gbl->rho*ldcrd(0,0)*ktrb;
+                    
                     df(2,0)(i,j) = RAD(crd(0)(i,j))*cjcbik*(visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j));
                     df(2,1)(i,j) = RAD(crd(0)(i,j))*cjcbik*(viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j));
                     df(3,0)(i,j) = RAD(crd(0)(i,j))*cjcbiomg*(visc(3,3)(0,0)*du(3,0)(i,j) +visc(3,3)(0,1)*du(3,1)(i,j));
@@ -532,10 +534,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 						cv(n,1)(i,j) += df(n,1)(i,j);
                         
                     /* Kato-Launder Production Terms for k and w */
-                    dudx = dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j);
-                    dvdx = dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j);
-                    dudy = dcrd(0,1)(i,j)*du(0,0)(i,j) -dcrd(0,0)(i,j)*du(0,1)(i,j);
-                    dvdy = dcrd(0,1)(i,j)*du(1,0)(i,j) -dcrd(0,0)(i,j)*du(1,1)(i,j);
+                    dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
+                    dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
+                    dudy = ldcrd(0,1)*du(0,0)(i,j) -ldcrd(0,0)*du(0,1)(i,j);
+                    dvdy = ldcrd(0,1)*du(1,0)(i,j) -ldcrd(0,0)*du(1,1)(i,j);
                     
                     vrtctinv = sqrt((dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
@@ -544,8 +546,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) += -gamma*gbl->rho/omg/cjcb*dvdx*dvdx;
                     
                     /* Diffusion-like Production Term for w */
-                    dfprdomgx = dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j);
-                    dfprdomgy = dcrd(0,0)(i,j)*du(3,1)(i,j) -dcrd(0,1)(i,j)*du(3,0)(i,j);
+                    dfprdomgx = ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j);
+                    dfprdomgy = ldcrd(0,0)*du(3,1)(i,j) -ldcrd(0,1)*du(3,0)(i,j);
                     res(3)(i,j) += -cjcbiomg*(dfprdomgx*dfprdomgx + dfprdomgy*dfprdomgy);
                     
                     /* Dissipation Terms for k and w */
@@ -586,7 +588,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             hmax = 2.*sqrt(hmax);
             h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
             hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
-            //*gbl->log << h << std::endl;
+
             FLT nuk = (lmu +sgmk*mutld)/gbl->rho;
             FLT nuomg = (lmu +sgmomg*tmu)/gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0))*(0.5*hmax*gbl->bd(0));
