@@ -184,8 +184,9 @@ namespace ibc_cns {
 				double theta = theta0;
 				double dtheta = -1.0e-4;
 				double dq = 1.0e-4;
-				double jac[2][2], deti, delta[2]; 
+				double jac[2][2], deti, error[2];
 				bool conservative = false;
+				const int maxiter = 30;
 				
 				double xyz[3];
 				xyz[0] = scale*x(0) +shift[0];
@@ -194,36 +195,38 @@ namespace ibc_cns {
 				if (fabs(xyz[1]) < 1.0e-8)
 					theta = M_PI/2.0;
 				
-				double error[2] = {1.0, 1.0};
+				double delta[2] = {1.0, 1.0};
 				int niter = 0;
-				while (fabs(error[0])+fabs(error[1]) > 1.0e-15 && niter++ < 30) {
-					calculateError(xyz, error, q, theta);
-					calculateError(xyz, delta, q+dq, theta);
-					jac[0][0] = (delta[0]-error[0])/dq;
-					jac[1][0] = (delta[1]-error[1])/dq;
-					calculateError(xyz, delta, q, theta+dtheta);
-					jac[0][1] = (delta[0]-error[0])/dtheta;
-					jac[1][1] = (delta[1]-error[1])/dtheta;
-					deti = 1./(jac[0][0]*jac[1][1] -jac[0][1]*jac[1][0]);
+				while (fabs(delta[0])+fabs(delta[1]) > 1.0e-10 && niter++ < maxiter) {
+					if (fabs(xyz[1]) > 1.0e-8) {
+						calculateError(xyz, error, q, theta);
+						calculateError(xyz, delta, q+dq, theta);
+						jac[0][0] = (delta[0]-error[0])/dq;
+						jac[1][0] = (delta[1]-error[1])/dq;
+						calculateError(xyz, delta, q, theta+dtheta);
+						jac[0][1] = (delta[0]-error[0])/dtheta;
+						jac[1][1] = (delta[1]-error[1])/dtheta;
+						deti = 1./(jac[0][0]*jac[1][1] -jac[0][1]*jac[1][0]);
 					
-					if (fabs(xyz[1]) > 1.0e-6) {
 						delta[0] = deti*(error[0]*jac[1][1] -error[1]*jac[0][1]);
 						delta[1] = deti*(error[1]*jac[0][0] -error[0]*jac[1][0]);
 						q -= delta[0];
 						theta -= delta[1];
 					}
 					else {
-						q -= error[0]/jac[0][0];
 						theta = M_PI/2.;
+						calculateError(xyz, error, q, theta);
+						calculateError(xyz, delta, q+dq, theta);
+						jac[0][0] = (delta[0]-error[0])/dq;
+						q -= error[0]/jac[0][0];
 					}
 					
 					if (fabs(theta) > M_PI/2.) {
-						theta = M_PI/2. -(theta-M_PI/2.);
+						theta = theta +(theta > 0 ? -M_PI/2. : M_PI/2.);
 					}
 				}
-				if (niter > 9999 || !(q >= 0.0)) {  
-					std::cout << "RINGLEB NOT_CONVERGED: " << xyz[0] << ' ' << xyz[1] << niter << ' ' << q << ' ' << theta << std::endl;
-					return false;
+				if (niter >= maxiter || !(q >= 0.0)) {
+					std::cout << "RINGLEB NOT_CONVERGED: " << xyz[0] << ' ' << xyz[1] << ' ' << niter << ' ' << q << ' ' << theta << ' ' << fabs(delta[0])+fabs(delta[1]) << std::endl;
 				}
 				
 				double c = sqrt(1. - (gam-1.)/2.*q*q);
