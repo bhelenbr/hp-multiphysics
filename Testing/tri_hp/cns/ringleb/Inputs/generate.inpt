@@ -1,0 +1,7 @@
+logfile: generate
+adapt: 1
+b0_filetype: 8
+b0_growth factor: 5000.0
+b0_mesh: ./square
+b0_adapt: 1
+res: 0.25
