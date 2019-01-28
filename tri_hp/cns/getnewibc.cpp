@@ -173,9 +173,9 @@ namespace ibc_cns {
 				
 				shift[0] = xshift;
 				shift[1] = yshift;
-				gam = 1.403;
+                
+                if (!blockdata.get(idnty+ "_gamma",gam)) blockdata.getwdefault("gamma",gam,1.4);
 
-				
 			}
 		
 			bool eval(TinyVector<FLT,tri_mesh::ND> x, double t, Array<double,1> &val) const {
@@ -191,6 +191,7 @@ namespace ibc_cns {
 				double xyz[3];
 				xyz[0] = scale*x(0) +shift[0];
 				xyz[1] = scale*x(1) +shift[1];
+                
 				
 				if (fabs(xyz[1]) < 1.0e-8)
 					theta = M_PI/2.0;
@@ -198,7 +199,7 @@ namespace ibc_cns {
 				double delta[2] = {1.0, 1.0};
 				int niter = 0;
 				while (fabs(delta[0])+fabs(delta[1]) > 1.0e-10 && niter++ < maxiter) {
-					if (fabs(xyz[1]) > 1.0e-8) {
+					if (fabs(xyz[1]) > 1.0e-10) {
 						calculateError(xyz, error, q, theta);
 						calculateError(xyz, delta, q+dq, theta);
 						jac[0][0] = (delta[0]-error[0])/dq;
@@ -207,7 +208,7 @@ namespace ibc_cns {
 						jac[0][1] = (delta[0]-error[0])/dtheta;
 						jac[1][1] = (delta[1]-error[1])/dtheta;
 						deti = 1./(jac[0][0]*jac[1][1] -jac[0][1]*jac[1][0]);
-					
+                    
 						delta[0] = deti*(error[0]*jac[1][1] -error[1]*jac[0][1]);
 						delta[1] = deti*(error[1]*jac[0][0] -error[0]*jac[1][0]);
 						q -= delta[0];
@@ -218,20 +219,23 @@ namespace ibc_cns {
 						calculateError(xyz, error, q, theta);
 						calculateError(xyz, delta, q+dq, theta);
 						jac[0][0] = (delta[0]-error[0])/dq;
-						q -= error[0]/jac[0][0];
+                        delta[0] = error[0]/jac[0][0];
+						q -= delta[0];
 					}
+                    
 					
 					if (fabs(theta) > M_PI/2.) {
 						theta = theta +(theta > 0 ? -M_PI/2. : M_PI/2.);
 					}
 				}
+                
 				if (niter >= maxiter || !(q >= 0.0)) {
 					std::cout << "RINGLEB NOT_CONVERGED: " << xyz[0] << ' ' << xyz[1] << ' ' << niter << ' ' << q << ' ' << theta << ' ' << fabs(delta[0])+fabs(delta[1]) << std::endl;
 				}
 				
 				double c = sqrt(1. - (gam-1.)/2.*q*q);
 				double r = pow(c,(2./(gam-1.)));
-				
+ 
 				if (conservative) {
 					val(0) = r;
 					val(1) = r*q*cos(theta);
@@ -245,6 +249,7 @@ namespace ibc_cns {
 					val(3) = val(0)/r; 
 				}
 				
+                
 				return true;
 				
 			}
@@ -257,7 +262,7 @@ namespace ibc_cns {
 				J = 1./c +1./(3*c*c*c) +1./(5.*c*c*c*c*c) -1./2.*log((1.+c)/(1.-c));
 				r = pow(c,(2./(gam-1.)));
 				xp = 1./(2.*r)*(1./(q*q)-2.*psi*psi) +J/2.;
-				
+                
 				error[0] = xyz[0]-xp;
 				
 				if (fabs(xyz[1]) > 1.0e-6) {
@@ -265,8 +270,10 @@ namespace ibc_cns {
 					error[1] = xyz[1]-yp;
 				}
 				else {
-					error[1] = 0.0;
+					error[1] = xyz[1]-0;
 				}
+                
+                
 				
 				return;
 			}
