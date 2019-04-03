@@ -10,7 +10,9 @@
 
 #include "pod_generate.h"
 #include <myblas.h>
+#ifdef libbinio
 #include <libbinio/binfile.h>
+#endif
 #include <netcdf.h>
 
 #define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
@@ -1495,6 +1497,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::output(vsi& target,std::strin
 			break;
 		}
 			
+#ifdef libbinio
 		case(tri_hp::binary): {
 			/* 1D OUTPUT RENORMALIZED MODE */
 			std::string fname = filename + "_" + base.idprefix +".bin";
@@ -1528,6 +1531,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::output(vsi& target,std::strin
 			bout.close();
 			break;
 		}
+#endif
 			
 		case(tri_hp::netcdf): {
 			std::string fname = filename + "_" + base.idprefix +".nc";

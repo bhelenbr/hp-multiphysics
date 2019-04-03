@@ -9,7 +9,9 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
+#ifdef libbinio
 #include <libbinio/binwrap.h>
+#endif
 #include <netcdf.h>
 #include <myblas.h>
 
@@ -197,6 +199,7 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				}
 			}
 			break;
+#ifdef libbinio
 		case(tri_hp::binary):
 			if (curved) {
 				biniwstream bin(&fin);
@@ -219,27 +222,12 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				}
 			}
 			break;
+#endif
 			
 		case(tri_hp::netcdf):
 			if (curved) {
-				biniwstream bin(&fin);
-				
-				/* HEADER INFORMATION */
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-				pmin = bin.readInt(sizeof(int));
-				
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<pmin-1;++m) {
-						for(n=0;n<tri_mesh::ND;++n) {
-							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-						}
-					}
-					for(m=pmin-1;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							crvbd(tlvl)(j,m)(n) = 0.0;
-					}
-				}
+//FIXME
+				*x.gbl->log << "why doesn't this exist for netcdf\n";
 			}
 			break;
 
@@ -329,6 +317,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 			break;
 		}
 			
+#ifdef libbinio
 		case(tri_hp::binary): {
 			if (curved) {
 				std::string fname;
@@ -352,6 +341,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 			}
 			break;
 		}
+#endif
 			
 		case(tri_hp::netcdf): {
 			if (curved) {

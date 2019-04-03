@@ -8,8 +8,10 @@
  */
 
 #include <myblas.h>
+#ifdef libbinio 
 #include <libbinio/binfile.h>
 #include <libbinio/binwrap.h>
+#endif
 #include <netcdf.h>
 
 #define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
@@ -839,6 +841,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::input(vs& target,std::string 
 			break;
 		}
 			
+#ifdef libbinio
 		case(tri_hp::binary): {
 			/* 1D OUTPUT RENORMALIZED MODE */
 			std::string fname = filename + "_" + base.idprefix +".bin";
@@ -870,6 +873,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::input(vs& target,std::string 
 			in.close();
 			break;
 		}
+#endif
 			
 		case(tri_hp::netcdf): {
 			std::string fname = filename + "_" + base.idprefix +".nc";
