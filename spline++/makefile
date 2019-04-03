@@ -1,6 +1,6 @@
 OBJ = spline.o
 
-CPPFLAGS = -Df2cFortran -I${HOME}/Codes/include/ -I$(PACKAGES)/include/
+CPPFLAGS = -Df2cFortran -I../include/ -I$(PACKAGES)/include/
 
 # CPFLAGS += -debug -DBZ_DEBUG #(for icc)
 
