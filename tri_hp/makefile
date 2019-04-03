@@ -76,6 +76,7 @@ OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/setup_precond
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/setup_preconditioner.o
 OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
 OBJPETSC = petsc.o
+OBJKOMEGA = komega/rsdl.o komega/allocate.o komega/length.o
 
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
@@ -90,11 +91,12 @@ OBJ += $(OBJBUOY)
 #OBJ += $(OBJPS)
 #OBJ += $(OBJSWIRL)
 #OBJ += $(OBJNONNEWTONIAN)
+OBJ += $(OBJKOMEGA)
 
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf
+LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf -lparseargs
 #LIB += -lbinio
 LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lHYPRE -lscalapack -lsuperlu_dist -ldl
 
@@ -136,6 +138,7 @@ dirs:
 	+@[ -d  lvlset ] || mkdir -p lvlset
 	+@[ -d  explicit ] || mkdir -p explicit
 	+@[ -d  nonnewtonian ] || mkdir -p nonnewtonian
+	+@[ -d  komega ] || mkdir -p komega
 	touch dirs
 
 
