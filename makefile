@@ -41,6 +41,7 @@ parseargs: force_look
 	cd $@; $(MAKE) $(MFLAGS)
 	
 dirs: 
+	+@[ -d  bin ] || mkdir -p bin
 	+@[ -d  lib ] || mkdir -p lib
 	+@[ -d  include ] || mkdir -p include
 
