@@ -27,13 +27,7 @@ tri_mesh generate
 
 mpiexec -np 1 ${HP} run.inpt ${PETCSC}
 
-mod_map run.inpt restart 2
-mod_map run.inpt log2p 1
-mpiexec -np 1 ${HP} run.inpt ${PETCSC}
 
-mod_map run.inpt restart 2
-mod_map run.inpt log2p 1
-mpiexec -np 1 ${HP} run.inpt ${PETCSC}
 
 # To extract debugging statements printed in residual with the keyword "komega"
 # grep komega out_b0.log | sed 's/komega//' | sort -g | uniq >  komega.log

@@ -1,7 +1,7 @@
 ###############
 # Initial mesh
 ###############
-b0_mesh: ./channel.d
+b0_mesh: channel1e4.d
 #################################
 # Parameters in the initial mesh
 #################################
@@ -12,7 +12,7 @@ b0_mesh: ./channel.d
 # Actual mesh generation
 #########################
 adapt: 0
-b0_growth factor: 10.0
+#b0_growth factor: 10.0
 #####################
 # Boundary Condition 
 #####################
