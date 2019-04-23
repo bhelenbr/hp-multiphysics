@@ -41,10 +41,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
     FLT psiktld, psinktld, ktrb, omg, tmu, mutld, cjcbik, cjcbiomg, dudx, dudy, dvdx, dvdy, vrtctinv, strninv, dfprdomgx, dfprdomgy;
 	const FLT kinf = gbl->kinf;
-	const FLT omginf = gbl->omginf; //1.616244071283537,
-	const FLT epslnk = gbl->epslnk; // 0.019699536326342;
+	const FLT omginf = gbl->omginf; 
+	const FLT epslnk = gbl->epslnk;
     const FLT sgmk = 0.5, sgmomg = 0.5, betakomg = 0.075, betastr = 0.09, gamma = 5./9.;
-    const FLT susk = 0., susomg = 0.,  k_mom= 0.;
+    const FLT susk = 1., susomg = 1.,  k_mom= 1., KL = 1.;
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -244,8 +244,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     vrtctinv = sqrt((dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
 
-                    res(2)(i,j) += -tmu/cjcb*dvdx*dvdx;
-                    res(3)(i,j) += -gamma*gbl->rho/omg/cjcb*dvdx*dvdx;
+                    res(2)(i,j) += -KL*tmu*vrtctinv*strninv/cjcb;
+                    res(3)(i,j) += -KL*gamma*gbl->rho*vrtctinv*strninv/omg/cjcb;
                         
                     /* Diffusion-like Production Term for w */
                     dfprdomgx = dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j);
@@ -284,7 +284,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
                     qmax2 = MAX(qmax2,q2);
                         
-
 #endif
 				}
 			}
@@ -498,7 +497,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     cjcbi = (lmu +tmu)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)/cjcb;
-
+                  
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
@@ -542,8 +541,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     vrtctinv = sqrt((dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
                     
-                    res(2)(i,j) += -tmu/cjcb*dvdx*dvdx;
-                    res(3)(i,j) += -gamma*gbl->rho/omg/cjcb*dvdx*dvdx;
+                    res(2)(i,j) += -KL*tmu*vrtctinv*strninv/cjcb;
+                    res(3)(i,j) += -KL*gamma*gbl->rho*vrtctinv*strninv/omg/cjcb;
                     
                     /* Diffusion-like Production Term for w */
                     dfprdomgx = ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j);

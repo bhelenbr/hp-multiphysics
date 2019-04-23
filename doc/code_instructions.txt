@@ -360,8 +360,7 @@ To load the new environment variables
 
 make -j 2 tri_hp (For 2 processor machine)
 or to do everything including 3D stuff too
-make -j 2  
-
+ma
 ###################################################################
 
 ###################################################################
