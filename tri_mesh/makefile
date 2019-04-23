@@ -15,6 +15,7 @@ libtri_mesh.a:
 tri_mesh:
 	+@[ -d  _serial ] || mkdir -p _serial
 	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DPTH'
+	cp _serial/tri_mesh ../bin/$@
 
 .PHONY: tri_mesh
 
@@ -27,6 +28,7 @@ libtri_mesh_mpi.a:
 tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
 	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
+	cp _mpi/tri_mesh_mpi ../bin/$@
 
 .PHONY: tri_mesh_mpi
 
@@ -74,7 +76,6 @@ libtri_mesh.a: $(OBJ)
 
 tri_mesh: libtri_mesh.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh $(LIB)
-	cp tri_mesh ../bin
 
 libtri_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -83,7 +84,6 @@ libtri_mesh_mpi.a: $(OBJ)
 
 tri_mesh_mpi: libtri_mesh_mpi.a $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)
-	cp tri_mesh_mpi ../bin
 
 %.o: %.cpp
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
