@@ -47,8 +47,8 @@ int main (int argc, const char * argv[]) {
 	double dy[GP][GP];
 	
 	for (int i = 0; i < 10000; ++i) {
-		// basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
-		// basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
+		basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
+		basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
 		tri.intgrt(uht,dx[0],GP); 
 	}
 #endif

@@ -28,9 +28,9 @@ sed -E "s/report: 1/report: 0/g" $1 > temp.inpt
 mod_map temp.inpt partition $2
 BLKS=$(grep -E "^b[0-9]*_mesh:" $1 | wc -l | tr -d ' ')
 
-#mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt -stop_for_debugger
-#mpiexec -np ${BLKS} valgrind ~/bin/tri_hp_petsc temp.inpt
-mpiexec -np ${BLKS} ~/bin/tri_hp_petsc temp.inpt
+#mpiexec -np ${BLKS} tri_hp_petsc temp.inpt -stop_for_debugger
+#mpiexec -np ${BLKS} valgrind tri_hp_petsc temp.inpt
+mpiexec -np ${BLKS} tri_hp_petsc temp.inpt
 if [ "$?" -ne "0" ]; then
 	echo "partitioning failed"
 	exit 1

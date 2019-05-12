@@ -96,7 +96,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			/* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
 			first = true; // Findmatch sets this
 			mtype = inbdry.mtype;
-			local_match = local_match;
+			local_match = inbdry.local_match;
 			match_names = inbdry.match_names;
 			snd_tags = inbdry.snd_tags;
 			rcv_tags = inbdry.rcv_tags;

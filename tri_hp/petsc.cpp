@@ -896,7 +896,7 @@ void tri_hp::test_jacobian() {
 			ISCreateStride(MPI_COMM_WORLD,jacobian_size,jacobian_start,1,&Irows);
 			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
 			Mat *submat;
-			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
+			MatCreateSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
 			ISDestroy(&Irows);
 			ISDestroy(&Icols);
 			MatDestroyMatrices(1,&submat);
@@ -1059,7 +1059,7 @@ void tri_hp::test_jacobian() {
 			ISCreateStride(MPI_COMM_WORLD,jacobian_size,jacobian_start,1,&Irows);
 			ISCreateStride(MPI_COMM_WORLD,ranges[proc+1]-ranges[proc],ranges[proc],1,&Icols);
 			Mat *submat;
-			MatGetSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
+			MatCreateSubMatrices(petsc_J,1,&Irows,&Icols,MAT_INITIAL_MATRIX,&submat);
 			ISDestroy(&Irows);
 			ISDestroy(&Icols);
 			

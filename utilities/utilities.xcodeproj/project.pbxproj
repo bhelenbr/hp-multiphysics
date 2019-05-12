@@ -204,13 +204,14 @@
 			};
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
+				Base,
+				fr,
+				de,
+				ja,
+				en,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* utilities */;
 			projectDirPath = "";
@@ -312,9 +313,10 @@
 				HEADER_SEARCH_PATHS = (
 					"${PACKAGES}/include",
 					../include,
+					/usr/local/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = /usr/local;
+				PACKAGES = "${HOME}/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
@@ -354,9 +356,10 @@
 				HEADER_SEARCH_PATHS = (
 					"${PACKAGES}/include",
 					../include,
+					/usr/local/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = /usr/local;
+				PACKAGES = "${HOME}/Packages";
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
