@@ -64,26 +64,30 @@ void tri_mesh::adapt() {
 
 	/* TRANSFER MESSAGES */
 	for(i=0;i<nebd;++i)
-		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+        if (ebdry(i)->adaptable)
+            ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
 
 	/* COARSEN MATCHING BOUNDARIES */
 	bdry_yaber1();
 
 	/* COARSEN INTERIOR */
-	yaber(gbl->tolerance);
+	if (gbl->adaptable)
+        yaber(gbl->tolerance);
 
 	/* REFINE FIRST EDGES */
 	bdry_rebay(gbl->tolerance);
 
 	/* TRANSFER MESSAGES */
 	for(i=0;i<nebd;++i)
-		ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+        if (ebdry(i)->adaptable)
+            ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
 
 	/* REFINE MATCHING EDGES */
 	bdry_rebay1();
 
 	/* REFINE INTERIOR */
-	rebay(gbl->tolerance);
+	if (gbl->adaptable)
+        rebay(gbl->tolerance);
 
 	/* REMOVE DELETED ENTITIES */
 	cleanup_after_adapt();

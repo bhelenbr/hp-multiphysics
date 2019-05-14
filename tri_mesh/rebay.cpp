@@ -317,6 +317,10 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 
 	/* REFINE BOUNDARY SIDES */
 	for(int bnum=0;bnum<nebd;++bnum) {
+        
+        if (!ebdry(bnum)->adaptable)
+            continue;
+        
 		count = 0;
 
 		if (!ebdry(bnum)->is_frst()) {
@@ -440,6 +444,9 @@ void tri_mesh::bdry_rebay1() {
 
 	/* REFINE MATCHING BOUNDARIES */
 	for(int bnum=0;bnum<nebd;++bnum) {
+        
+        if (!ebdry(bnum)->adaptable)
+            continue;
 
 		ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
 

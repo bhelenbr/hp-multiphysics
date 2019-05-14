@@ -327,6 +327,10 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 
 	/* COARSEN FIRST BOUNDARIES */
 	for(int bnum=0;bnum<nebd;++bnum) {
+        
+        if (!ebdry(bnum)->adaptable)
+            continue;
+        
 		count = 0;
 
 		if (!ebdry(bnum)->is_frst()) {
@@ -455,6 +459,9 @@ void tri_mesh::bdry_yaber1() {
 
 	for(int bnum=0;bnum<nebd;++bnum) {
 
+        if (!ebdry(bnum)->adaptable)
+            continue;
+        
 		ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
 
 		if (ebdry(bnum)->is_frst() || !ebdry(bnum)->is_comm()) continue;

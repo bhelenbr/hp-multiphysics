@@ -98,6 +98,7 @@ struct block_global {
 	*/
 	//@{
 	int adapt_interval; /**< 0 Completely turns adaptation off otherwise adapts every N timesteps)  */
+    bool adaptable; /**< turns off adaptation individually by block */
 	bool adapt_output; /**< Flag to tell whether to give detailed adaptation data */
 	FLT tolerance; /**< Tolerance for mesh adaptation scheme */
 	FLT error_target; /**< Error target for mesh adaptation scheme */

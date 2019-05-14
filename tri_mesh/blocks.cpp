@@ -1180,6 +1180,7 @@ void block::init(input_map &input) {
 	if (!input.get(idprefix+"_adapt",gbl->adapt_interval)) {
 		input.getwdefault("adapt",gbl->adapt_interval,0);
 	}
+    input.getwdefault(idprefix+"_adaptable",gbl->adaptable,true);
 
 	if (!input.get(idprefix + "_tolerance",gbl->tolerance)) {
 		input.getwdefault("tolerance",gbl->tolerance,sqrt(2.0));

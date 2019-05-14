@@ -352,12 +352,21 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
 		int maxseg;
 		int nseg;
 		Array<int,1> seg, next, prev;
+        bool adaptable;
 
 		/* CONSTRUCTOR */
-		edge_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxseg(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
-		edge_bdry(const edge_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxseg(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
+		edge_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxseg(0), adaptable(true)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
+		edge_bdry(const edge_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxseg(0), adaptable(inbdry.adaptable)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
 
 		/* BASIC B.C. STUFF */
+        virtual void init(input_map& input) {
+            if (!x.gbl->adaptable) {
+                adaptable = false;
+            }
+            else {
+                input.getwdefault(idprefix+"_adaptable",adaptable,true);
+            }
+        }
 		virtual void alloc(int size);
 		virtual edge_bdry* create(tri_mesh &xin) const {
 			return(new edge_bdry(*this,xin));
