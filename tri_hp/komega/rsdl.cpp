@@ -16,7 +16,7 @@
 #define BODYFORCE
 
 double psifunc(double x,double xs,double xe) {
-    if (x > xe) {
+    if (x >= xe) {
         return(1.0);
     }
     else if (x < xs) {
@@ -44,7 +44,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	const FLT omginf = gbl->omginf; 
 	const FLT epslnk = gbl->epslnk;
     const FLT sgmk = 0.5, sgmomg = 0.5, betakomg = 0.075, betastr = 0.09, gamma = 5./9.;
-    const FLT susk = 1., susomg = 1.,  k_mom= 1., KL = 1.;
+    const FLT susk = 1., susomg = 1.,  k_mom= 1., KL = 1., diss_neg = 1.0;
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -253,7 +253,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) += -cjcbiomg*(dfprdomgx*dfprdomgx + dfprdomgy*dfprdomgy);
                         
                     /* Dissipation Terms for k and w */
-                    res(2)(i,j) -= -betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) -= -betastr*gbl->rho*(omg*ktrb + diss_neg*omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) -= -betakomg*gbl->rho*omg*cjcb;
 
                     /* Turbulence Sutaining Terms */

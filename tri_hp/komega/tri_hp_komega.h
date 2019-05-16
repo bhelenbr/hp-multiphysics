@@ -15,14 +15,14 @@
 #include <symbolic_function.h>
 
 class tri_hp_komega : public tri_hp_ins {
-	public:		
+public:
     struct global : public tri_hp_ins::global {
         /* Physical Constants */
         FLT linf,uinf;
-			
-				/* Model constants */
-				FLT lambda_k, c_mu, kinf, omginf, epslnk;
-			
+        
+        /* Model constants */
+        FLT c_mu, kinf, omginf, epslnk;
+        
     } *gbl;
     
 public:
