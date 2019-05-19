@@ -632,6 +632,16 @@ void sparse_row_major::output_row(ostream &stream,int row) {
 	return;
 }
 
+int sparse_row_major::nentries_for_row(int row) {
+    return(_cpt(row+1)-_cpt(row));
+}
+
+void sparse_row_major::get_value_and_col(int row, int entry,FLT &value, int& col) {
+    int const j = _cpt(row) +entry;
+    value = _val(j);
+    col = _col(j);
+}
+
 void sparse_row_major::mmult(const Array<FLT,1>& x,Array<FLT,1> ax) {
 	
 	for (int i=_offset;i<_offset+_nrow;++i) {

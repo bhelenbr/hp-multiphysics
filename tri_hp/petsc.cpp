@@ -21,6 +21,7 @@
 
 #include <limits.h>
 #include <petsctime.h>
+#include <petscviewer.h>
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
@@ -180,7 +181,7 @@ void tri_hp::petsc_initialize(){
 #ifdef MY_SPARSE
 	J.resize(jacobian_size,nnzero); //,jacobian_start);
 	J_mpi.resize(jacobian_size,nnzero_mpi); //,jacobian_start);
-	err = MatCreate(PETSC_COMM_SELF,&petsc_J);
+	err = MatCreate(PETSC_COMM_WORLD,&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #else
 #ifndef MPISRC
@@ -274,7 +275,359 @@ void tri_hp::petsc_setup_preconditioner() {
 		*gbl->log << J << std::endl;
 		*gbl->log << "J_mpi:\n";
 		*gbl->log << J_mpi << std::endl;
-		(*gbl->log).precision(oldprecision);
+        
+        /* A more useful way to output the matrix */
+        const int vdofs = NV +(mmovement == tri_hp::coupled_deformable)*ND;
+        int row = 0;
+        for (int vind = 0; vind < npnt; ++vind) {
+            for (int n = 0; n < vdofs; ++n) {
+                *gbl->log << 'v' << vind << ',' << n << ' ';
+                int entries = J.nentries_for_row(row);
+                for (int k=0; k<entries; ++k) {
+                    int col;
+                    FLT val;
+                    J.get_value_and_col(row, k, val, col);
+                    if (col < npnt*vdofs) {
+                        *gbl->log << "(v" << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                    }
+                    else if ((col -= npnt*vdofs) < nseg*sm0*NV) {
+                        *gbl->log << "(s" << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                    }
+                    else if ((col -= nseg*NV*sm0) < ntri*im0*NV) {
+                        *gbl->log << "(i" << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                    }
+                    else if ((col -= ntri*NV*im0) < jacobian_size){
+                        col -= ntri*im0;
+                        *gbl->log << "(e" << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                    }
+                    else {
+                        *gbl->log << "index out of range" << std::endl;
+                        sim::abort(__LINE__,__FILE__,gbl->log);
+                    }
+                }
+                *gbl->log << std::endl;
+                ++row;
+            }
+        }
+        for (int sind = 0; sind < nseg; ++sind) {
+            for (int m = 0; m < sm0; ++m) {
+                for (int n = 0; n < NV; ++n) {
+                    *gbl->log << 's' << sind << ',' << m << ',' << n << ' ';
+                    int entries = J.nentries_for_row(row);
+                    for (int k=0; k<entries; ++k) {
+                        int col;
+                        FLT val;
+                        J.get_value_and_col(row, k, val, col);
+                        if (col < npnt*vdofs) {
+                            *gbl->log << "(v" << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                        }
+                        else if ((col -= npnt*vdofs) < nseg*sm0*NV) {
+                            *gbl->log << "(s" << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= nseg*NV*sm0) < ntri*im0*NV) {
+                            *gbl->log << "(i" << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= ntri*NV*im0) < jacobian_size){
+                            col -= ntri*im0;
+                            *gbl->log << "(e" << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                        }
+                        else {
+                            *gbl->log << "index out of range" << std::endl;
+                            sim::abort(__LINE__,__FILE__,gbl->log);
+                        }
+                    }
+                    *gbl->log << std::endl;
+                    ++row;
+                }
+            }
+        }
+        for (int tind = 0; tind < ntri; ++tind) {
+            for (int m = 0; m < im0; ++m) {
+                for (int n = 0; n < NV; ++n) {
+                    *gbl->log << 't' << tind << ',' << m << ',' << n << ' ';
+                    int entries = J.nentries_for_row(row);
+                    for (int k=0; k<entries; ++k) {
+                        int col;
+                        FLT val;
+                        J.get_value_and_col(row, k, val, col);
+                        if (col < npnt*vdofs) {
+                            *gbl->log << "(v" << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                        }
+                        else if ((col -= npnt*vdofs) < nseg*sm0*NV) {
+                            *gbl->log << "(s" << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= nseg*NV*sm0) < ntri*im0*NV) {
+                            *gbl->log << "(i" << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= ntri*NV*im0) < jacobian_size){
+                            col -= ntri*im0;
+                            *gbl->log << "(e" << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                        }
+                        else {
+                            *gbl->log << "index out of range" << std::endl;
+                            sim::abort(__LINE__,__FILE__,gbl->log);
+                        }
+                    }
+                    *gbl->log << std::endl;
+                    ++row;
+                }
+            }
+        }
+        /* How to perturb extra unknowns? */
+        for(int i=0;i<nebd;++i) {
+            if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
+            for(int j=0;j<ebdry(i)->nseg;++j) {
+                for(int m=0;m<sm0;++m) {
+                    for(int n=0;n<ND;++n) {
+                        *gbl->log << 'e' << j << ',' << m << ',' << n << ' ';
+                        int entries = J.nentries_for_row(row);
+                        for (int k=0; k<entries; ++k) {
+                            int col;
+                            FLT val;
+                            J.get_value_and_col(row, k, val, col);
+                            if (col < npnt*vdofs) {
+                                *gbl->log << "(v" << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                            }
+                            else if ((col -= npnt*vdofs) < nseg*sm0*NV) {
+                                *gbl->log << "(s" << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                            }
+                            else if ((col -= nseg*NV*sm0) < ntri*im0*NV) {
+                                *gbl->log << "(i" << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                            }
+                            else if ((col -= ntri*NV*im0) < jacobian_size){
+                                col -= ntri*im0;
+                                *gbl->log << "(e" << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                            }
+                            else {
+                                *gbl->log << "index out of range" << std::endl;
+                                sim::abort(__LINE__,__FILE__,gbl->log);
+                            }
+                        }
+                        *gbl->log << std::endl;
+                        ++row;
+                    }
+                }
+            }
+        }
+        assert(row == jacobian_size);
+        
+        /* Output J_mpi */
+        
+        const int nblock = sim::blks.nblock;
+        const int myid = sim::blks.myid;
+        assert(sim::blks.myblock == 1);
+        
+        /* Get counts from other meshes */
+        Array<int,1> sndsizes(4*nblock);
+        sndsizes = 0;
+        sndsizes(myid*4) = npnt;
+        sndsizes(myid*4+1) = nseg;
+        sndsizes(myid*4+2) = ntri;
+        sndsizes(myid*4+3) = jacobian_size;
+        
+        Array<int,1> sizes(4*nblock);
+        sim::blks.allreduce(sndsizes.data(),sizes.data(),4*nblock,blocks::int_msg,blocks::sum);
+        ~sndsizes;
+        
+        row = 0;
+        for (int vind = 0; vind < npnt; ++vind) {
+            for (int n = 0; n < vdofs; ++n) {
+                *gbl->log << 'v' << vind << ',' << n << ' ';
+                int entries = J_mpi.nentries_for_row(row);
+                for (int k=0; k<entries; ++k) {
+                    int col;
+                    FLT val;
+                    J_mpi.get_value_and_col(row, k, val, col);
+                    int block;
+                    for (block = 0; block < nblock; ++block) {
+                        if (col < sizes(4*block+3))
+                            goto foundv;
+                        else
+                            col -= sizes(4*block+3);
+                    }
+                    *gbl->log << "index out of range" << std::endl;
+                    sim::abort(__LINE__,__FILE__,gbl->log);
+                foundv:
+                    int const npnt_mpi = sizes(4*block);
+                    int const nseg_mpi = sizes(4*block+1);
+                    int const ntri_mpi = sizes(4*block+2);
+                    int const jacobian_size_mpi = sizes(4*block+3);
+                    
+                    
+                    if (col < npnt_mpi*vdofs) {
+                        *gbl->log << "(b" << block << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                    }
+                    else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
+                        *gbl->log << "(b" << block << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                    }
+                    else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
+                        *gbl->log << "(b" << block << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                    }
+                    else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                        col -= ntri_mpi*im0;
+                        *gbl->log << "(b" << block << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                    }
+                    else {
+                        *gbl->log << "index out of range" << std::endl;
+                        sim::abort(__LINE__,__FILE__,gbl->log);
+                    }
+                }
+                *gbl->log << std::endl;
+                ++row;
+            }
+        }
+        for (int sind = 0; sind < nseg; ++sind) {
+            for (int m = 0; m < sm0; ++m) {
+                for (int n = 0; n < NV; ++n) {
+                    *gbl->log << 's' << sind << ',' << m << ',' << n << ' ';
+                    int entries = J_mpi.nentries_for_row(row);
+                    for (int k=0; k<entries; ++k) {
+                        int col;
+                        FLT val;
+                        J_mpi.get_value_and_col(row, k, val, col);
+                        int block;
+                        for (block = 0; block < nblock; ++block) {
+                            if (col < sizes(4*block+3))
+                                goto founds;
+                            else
+                                col -= sizes(4*block+3);
+                        }
+                        *gbl->log << "index out of range" << std::endl;
+                        sim::abort(__LINE__,__FILE__,gbl->log);
+                    founds:
+                        int const npnt_mpi = sizes(4*block);
+                        int const nseg_mpi = sizes(4*block+1);
+                        int const ntri_mpi = sizes(4*block+2);
+                        int const jacobian_size_mpi = sizes(4*block+3);
+                        
+                        
+                        if (col < npnt_mpi*vdofs) {
+                            *gbl->log << "(b" << block << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                        }
+                        else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
+                            *gbl->log << "(b" << block << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
+                            *gbl->log << "(b" << block << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                            col -= ntri_mpi*im0;
+                            *gbl->log << "(b" << block << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                        }
+                        else {
+                            *gbl->log << "index out of range" << std::endl;
+                            sim::abort(__LINE__,__FILE__,gbl->log);
+                        }
+                    }
+                    *gbl->log << std::endl;
+                    ++row;
+                }
+            }
+        }
+        for (int tind = 0; tind < ntri; ++tind) {
+            for (int m = 0; m < im0; ++m) {
+                for (int n = 0; n < NV; ++n) {
+                    *gbl->log << 't' << tind << ',' << m << ',' << n << ' ';
+                    int entries = J_mpi.nentries_for_row(row);
+                    for (int k=0; k<entries; ++k) {
+                        int col;
+                        FLT val;
+                        J_mpi.get_value_and_col(row, k, val, col);
+                        int block;
+                        for (block = 0; block < nblock; ++block) {
+                            if (col < sizes(4*block+3))
+                                goto foundi;
+                            else
+                                col -= sizes(4*block+3);
+                        }
+                        *gbl->log << "index out of range" << std::endl;
+                        sim::abort(__LINE__,__FILE__,gbl->log);
+                    foundi:
+                        int const npnt_mpi = sizes(4*block);
+                        int const nseg_mpi = sizes(4*block+1);
+                        int const ntri_mpi = sizes(4*block+2);
+                        int const jacobian_size_mpi = sizes(4*block+3);
+                        
+                        
+                        if (col < npnt_mpi*vdofs) {
+                            *gbl->log << "(b" << block << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                        }
+                        else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
+                            *gbl->log << "(b" << block << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
+                            *gbl->log << "(b" << block << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                        }
+                        else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                            col -= ntri_mpi*im0;
+                            *gbl->log << "(b" << block << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                        }
+                        else {
+                            *gbl->log << "index out of range" << std::endl;
+                            sim::abort(__LINE__,__FILE__,gbl->log);
+                        }
+                    }
+                    *gbl->log << std::endl;
+                    ++row;
+                }
+            }
+        }
+        /* How to perturb extra unknowns? */
+        for(int i=0;i<nebd;++i) {
+            if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
+            for(int j=0;j<ebdry(i)->nseg;++j) {
+                for(int m=0;m<sm0;++m) {
+                    for(int n=0;n<ND;++n) {
+                        *gbl->log << 'e' << j << ',' << m << ',' << n << ' ';
+                        int entries = J_mpi.nentries_for_row(row);
+                        for (int k=0; k<entries; ++k) {
+                            int col;
+                            FLT val;
+                            J_mpi.get_value_and_col(row, k, val, col);
+                            int block;
+                            for (block = 0; block < nblock; ++block) {
+                                if (col < sizes(4*block+3))
+                                    goto founde;
+                                else
+                                    col -= sizes(4*block+3);
+                            }
+                            *gbl->log << "index out of range" << std::endl;
+                            sim::abort(__LINE__,__FILE__,gbl->log);
+                        founde:
+                            int const npnt_mpi = sizes(4*block);
+                            int const nseg_mpi = sizes(4*block+1);
+                            int const ntri_mpi = sizes(4*block+2);
+                            int const jacobian_size_mpi = sizes(4*block+3);
+                            
+                            
+                            if (col < npnt_mpi*vdofs) {
+                                *gbl->log << "(b" << block << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',' << val << ") ";
+                            }
+                            else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
+                                *gbl->log << "(b" << block << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                            }
+                            else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
+                                *gbl->log << "(b" << block << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',' << val << ") ";
+                            }
+                            else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                                col -= ntri_mpi*im0;
+                                *gbl->log << "(b" << block << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',' << val << ") ";
+                            }
+                            else {
+                                *gbl->log << "index out of range" << std::endl;
+                                sim::abort(__LINE__,__FILE__,gbl->log);
+                            }
+                        }
+                        *gbl->log << std::endl;
+                        ++row;
+                    }
+                }
+            }
+        }
+        assert(row == jacobian_size);
+        
+        (*gbl->log).precision(oldprecision);
+
 	}
 	J.check_for_unused_entries(*gbl->log);
 	J_mpi.check_for_unused_entries(*gbl->log);
@@ -285,11 +638,12 @@ void tri_hp::petsc_setup_preconditioner() {
 #else
 	int total_size;
 	sim::blks.allreduce(&jacobian_size, &total_size, 1, blocks::int_msg, blocks::sum);
-	err =  MatCreateMPIAIJWithSplitArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
+	err =  MatCreateMPIAIJWithSplitArrays(PETSC_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
 		J._cpt.data(),J._col.data(),J._val.data(),J_mpi._cpt.data(),J_mpi._col.data(),J_mpi._val.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-//	err =  MatCreateMPIAIJWithArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
+    
+//	err =  MatCreateMPIAIJWithArrays(PETSC_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
 //	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
 
@@ -323,9 +677,10 @@ void tri_hp::petsc_setup_preconditioner() {
 	 */
 #endif
 	PetscTime(&time2);
-	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
+    *gbl->log << "#jacobian made " << time2-time1 << " seconds" << endl;
 
 	if (gbl->jac_debug) {
+        
 		test_jacobian();
 		sim::finalize(__LINE__,__FILE__,gbl->log);
 	}
@@ -337,7 +692,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	PetscTime(&time2);
-	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
+    *gbl->log << "#matrix inverted " << time2-time1 << " seconds" << endl;
 
 	return;
 	
@@ -870,6 +1225,19 @@ void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
 //	For sides, all of the continuous mode entries are moved over for all degrees of freedom so there may be a lot of non-matching modes
 
 void tri_hp::test_jacobian() {
+    
+    /* This outputs a binary file that can be read by matlab */
+    /* add to Matlab path: ${HOME}/Packages/petsc/share/petsc/matlab
+     /* J = PetscBinaryRead('Jacobian') */
+    /* [U,S,V] = svds(A,1,'smallest') */
+    PetscViewer viewer;
+    int ierr1 = PetscViewerBinaryOpen(PETSC_COMM_WORLD, "Jacobian", FILE_MODE_WRITE, &viewer);
+    CHKERRABORT(MPI_COMM_WORLD,ierr1);
+    
+    int ierr2 = MatView(petsc_J,viewer);
+    CHKERRABORT(MPI_COMM_WORLD,ierr2);
+    PetscViewerDestroy(&viewer);
+    
 	/*************** TESTING ROUTINE ***********************/
 	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
 	/*******************************************************/
@@ -1146,8 +1514,6 @@ void tri_hp::test_jacobian() {
 			
 		}
 	}
-	
-	MatView(petsc_J,0);
 }
 
 #endif

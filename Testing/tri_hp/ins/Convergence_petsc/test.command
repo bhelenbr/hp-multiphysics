@@ -24,7 +24,7 @@ GRID="4"
 CFL="1.0"
 AR="SQUARE/INOUT/square"
 MGFLAG=0
-INTV="1 2 4 8"
+INTV="2 3 4 5"
 
 export P
 export GRID

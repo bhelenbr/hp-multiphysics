@@ -53,7 +53,7 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 			 eval $CMD 
 			 cd ..;
 
-			 CNVG1=$(grep -v \# duh_E_${name}.log | head -${INTERVALS[0]} | cut -d \  -f 3)
+			 CNVG1=$(grep -v \# duh_E_${name}.log | head -${INTERVALS[0]} | tail -1 | cut -d \  -f 3)
 			 CNVG2=$(grep -v \# duh_E_${name}.log | head -${INTERVALS[1]} | tail -1 | cut -d \  -f 3)
 			 CNVG3=$(grep -v \# duh_E_${name}.log | head -${INTERVALS[2]} | tail -1 | cut -d \  -f 3)
 			 CNVG4=$(grep -v \# duh_E_${name}.log | head -${INTERVALS[3]} | tail -1 | cut -d \  -f 3)
@@ -77,7 +77,7 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 #				 CMD=qsub ../serial.bash
 			 eval $CMD 
 			 cd ..;
-			 CNVG1=$(grep -v \# duh_V_${name}.log | head -${INTERVALS[0]} | cut -d \  -f 3)
+			 CNVG1=$(grep -v \# duh_V_${name}.log | head -${INTERVALS[0]} | tail -1 | cut -d \  -f 3)
 			 CNVG2=$(grep -v \# duh_V_${name}.log | head -${INTERVALS[1]} | tail -1 | cut -d \  -f 3)
 			 CNVG3=$(grep -v \# duh_V_${name}.log | head -${INTERVALS[2]} | tail -1 | cut -d \  -f 3)
 			 CNVG4=$(grep -v \# duh_V_${name}.log | head -${INTERVALS[3]} | tail -1 | cut -d \  -f 3)
@@ -102,7 +102,7 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 #				 CMD=qsub ../serial.bash
 			 eval $CMD 
 			 cd ..;
-			 CNVG1=$(grep -v \# duh_U_${name}.log | head -${INTERVALS[0]} | cut -d \  -f 3)
+			 CNVG1=$(grep -v \# duh_U_${name}.log | head -${INTERVALS[0]} | tail -1 | cut -d \  -f 3)
 			 CNVG2=$(grep -v \# duh_U_${name}.log | head -${INTERVALS[1]} | tail -1 | cut -d \  -f 3)
 			 CNVG3=$(grep -v \# duh_U_${name}.log | head -${INTERVALS[2]} | tail -1 | cut -d \  -f 3)
 			 CNVG4=$(grep -v \# duh_U_${name}.log | head -${INTERVALS[3]} | tail -1 | cut -d \  -f 3)

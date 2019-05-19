@@ -4,7 +4,7 @@ ntstep: 1
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 dtinv: 0.0
 output_interval: 100
-relative_tolerance: 1.0e-8
+relative_tolerance: 1.0e-10
 nblock: 1
 ibc: freestream
 flowangle: 0.0

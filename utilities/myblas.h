@@ -171,6 +171,9 @@ public:
 	// Array<FLT,1>& operator*(Array<FLT,1>&);
 	
 	FLT& operator()(int row, int col);
+    int nrows() {return(_nrow);}
+    int nentries_for_row(int row);
+    void get_value_and_col(int row, int entry, FLT &value, int& col);
 	void check_for_unused_entries(std::ostream &log);
 	friend ostream &operator<<(ostream &stream, sparse_row_major mat);
 	void output_row(ostream &stream,int row);

@@ -285,7 +285,8 @@ void sim::finalize(int line,const char *file, std::ostream *log) {
 #ifdef MPISRC
 	MPI_Finalize();
 #endif
-	std::abort();
+    
+    std::exit(0);
 }
 
 /* This routine forces everyone to die */

@@ -41,7 +41,7 @@ brew install metis
 # as a reminder of nice things to install
 brew install graphviz
 brew install doxygen
-python -m pip install numpy scipy matplotlib
+pip install numpy scipy matplotlib
 
 To update installed packages
 brew update
