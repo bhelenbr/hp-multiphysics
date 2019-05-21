@@ -1,0 +1,110 @@
+#########
+# Physics
+#########
+b0_type: ins
+gravity: 0
+body_force: 0.0 0.0
+###########
+# Constants
+###########
+# Physical Constants
+rho: 1.0
+mu: 1e-3
+# Set linf = L where L is the distance of the midpoint of the flat plate from  the leading edge where we want to find the velocity profile. uinf  is the freestream velocity
+uinf: 1.0
+linf: 1
+# Derived constants
+nu: mu/rho
+Re: uinf*linf/nu
+###########################
+# Mesh and mesh adaptation 
+###########################
+b0_mesh: rstrt1_b0
+#adapt: 1
+# Norm to be used for mesh adaptation (energy_norm or scale_independent). If commented, just maintains mesh quality for deforming meshes
+#error_estimator: energy_norm
+# target error level when using mesh adaptation: 
+#error_target: 1.0e-4
+#growth factor: 100.0
+################
+# Time stepping 
+###############
+dtinv: 0
+# number of time steps should be greater than 1 to get mesh adaptation working
+ntstep: 1
+################################
+# Initial & Boundary conditions
+################################
+# Initial/Boundary Condition Function: 
+# values for ktld and omgtld found from MATLAB as trapz(y,ktldc)/H and trapz(y,omgtldc)/H
+ibc: symbolic
+ibc0: uinf
+ibc1: 0.0
+ibc2: 0.0
+#inlet
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 1
+b0_s1_flux2: rho*(u0*n0 +u1*n1)
+#symmetry
+b0_s2_hp_type: plain
+b0_s2_hp_typelist: 1 0 1
+# wall
+b0_s3_hp_type: plain
+b0_s3_hp_typelist: 0 0 1
+b0_s3_ibc: symbolic
+b0_s3_ibc0: 0.0
+b0_s3_ibc1: 0.0
+b0_s3_ibc2: 0.0
+# outlet
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 1 1 1
+b0_s4_flux0: rho*u0^2
+b0_s4_flux1: rho*u0*u1
+b0_s4_flux2: rho*u0
+b0_s5_hp_type: plain
+b0_s5_hp_typelist: 1 1 1
+b0_s5_flux0: rho*u1*u0
+b0_s5_flux1: rho*u1*u1
+b0_s5_flux2: rho*u1
+###############
+# Continuation
+###############
+#restart: 1
+#restart_type: 1
+#reload_type: 6
+###############
+# Order of FEM
+###############
+# log 2 of polynomial order (0,1,2) (2 = fourth order polynomials): 
+log2p: 2
+#########################################
+# PETSC solver, Under Relaxation and SUPG
+#########################################
+ncycle: 100
+# itertive tolerance for Newton
+relative_tolerance: 1.0e-5
+absolute_tolerance: 1.0e-10
+# choose petsc LU inversion solver: (mumps or superlu_dist)
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+#under_relaxation: 1e-2
+# preconditioner_interval: 4
+# SUPG
+#b0_dissipation: 0.0
+###########
+# Debugging
+###########
+#debug_output: 1
+#jac_debug: 1
+#rsdl_debug: 1
+#########
+# Output
+#########
+# Name of file for output: 
+logfile: out
+#####################################
+# Other things I usually don't change
+#####################################
+# Explicit solver stuff
+nstage: 1
+alpha: 1.0
+beta: 1.0

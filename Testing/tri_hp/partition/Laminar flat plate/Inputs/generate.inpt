@@ -1,0 +1,31 @@
+###############
+# Initial mesh
+###############
+b0_mesh: ./plate1e4yplus_1.d
+#################################
+# Parameters in the initial mesh
+#################################
+#wall_res: 0.1
+#center_res: 0.1
+#L: 0.5
+#########################
+# Actual mesh generation
+#########################
+adapt: 0
+#b0_growth factor: 10000.0
+#ntstep: 1
+#####################
+# Boundary Condition 
+#####################
+#b0_s2_type: prdc
+#b0_s2_dir: 1
+##############
+# Log Filename
+##############
+logfile: generate
+
+
+
+
+
+
