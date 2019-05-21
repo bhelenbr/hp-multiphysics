@@ -1227,7 +1227,7 @@ void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
 void tri_hp::test_jacobian() {
     
     /* This outputs a binary file that can be read by matlab */
-    /* add to Matlab path: ${HOME}/Packages/petsc/share/petsc/matlab
+    /* add to Matlab path: ${HOME}/Packages/petsc/share/petsc/matlab */
      /* J = PetscBinaryRead('Jacobian') */
     /* [U,S,V] = svds(A,1,'smallest') */
     PetscViewer viewer;

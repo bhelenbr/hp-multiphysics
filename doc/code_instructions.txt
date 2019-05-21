@@ -230,32 +230,11 @@ git pull
 git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-superlu_dist=1 --download-scalapack=1
-
-# On High Sierra with most packages installed using homebrew
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --with-valgrind-dir=${HOME}/Packages --with-scalapack-dir=/usr/local
-
-# with superlu
-# ON LION (For 3.2-p5 remove --download-metis=1)
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-mpi-dir=${HOME}/Packages --with-valgrind-dir=${HOME}/Packages
-
-# ON YOSEMITE
-./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-mpi-dir=${HOME}/Packages --with-fc=0
-
-# on cares cluster
-./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/openmpi --with-parmetis-dir=/export/apps  --with-valgrind-dir=/share/apps
+# on OS X
+./config/configure.py --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1
 
 # on orion
-./config/configure.py --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/share/apps --with-mpi-dir=/share/apps
-
-./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=${HOME}/Packages --with-shared-libraries=0  --with-valgrind-dir=/share/apps
-
-./configure --prefix=/share/apps --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2-1.9 --with-debugging=0 --with-valgrind-dir=/share/apps
-
-./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-hypre=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
-
-# Simplified version for Orion cluster
-./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps --download-sowing=1 --download-zlib=1
 
 # On stampede
 ./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
@@ -265,8 +244,6 @@ git clean -f -d -x         # remove all files that are not in the git repo
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;
 make PETSC_DIR=/Users/bhelenbr/Packages test
-
-
 
 ###################################################################
 ##### MeshAdapt for Tetrahedral Meshing Stuff      ################
@@ -279,7 +256,6 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
-	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/openmpi (on cares)
 	export CMAKE_PREFIX_PATH=/share/apps (on orion)
 	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
        export CMAKE_INSTALL_PREFIX=${HOME}/Packages or /share/apps
@@ -288,12 +264,13 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[cmake ..]
 
 	[ccmake ..] (on linux or OS X)
-	[../../cmake-2.8.4-Linux-i386/bin/ccmake .]  (on cares)
-	 Hit t to toggle expert mode.
-	Change MADLIB_INSTALL_EXTENDED_API TO ON d
+	Hit t to toggle expert mode.
+	Change MADLIB_INSTALL_EXTENDED_API TO ON
+	Change CMAKE_INSTALL_PREFIX to ${HOME}/Packages or /share/apps
 	## Change BUILD DOXYGEN if you want documentation and have doxygen installed
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 	Can ignore this I think
+	Hit "c" configure then Hit "g" generate
 
 	[cmake ..]
 	[make depend]
