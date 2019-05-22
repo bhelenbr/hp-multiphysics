@@ -155,6 +155,17 @@ void tri_hp::length() {
 //				}
 //			}
 //		}
+        
+        for(int i=0;i<nebd;++i) {
+            if (ebdry(i)->adaptable) continue;
+            
+            for(int j=0;j<ebdry(i)->nseg;++j) {
+                int v1 = seg(ebdry(i)->seg(j)).pnt(0);
+                gbl->res.v(v1,0) = 1;
+            }
+            int v1 = seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1);
+            gbl->res.v(v1,0) = 1;
+        }
 		
 		/* NOW RESCALE AT VERTICES */
 		for (int pind=0;pind<npnt;++pind)
@@ -162,7 +173,7 @@ void tri_hp::length() {
 		
 		/* LIMIT BOUNDARY CURVATURE */
 		for(int i=0;i<nebd;++i) {
-			if (!(hp_ebdry(i)->is_curved())) continue;
+			if (!(hp_ebdry(i)->is_curved()) || !ebdry(i)->adaptable) continue;
 			
 			for(int j=0;j<ebdry(i)->nseg;++j) {
 				int sind = ebdry(i)->seg(j);
