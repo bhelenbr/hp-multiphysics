@@ -20,8 +20,8 @@ tri_mesh generate.inpt
 #PETSC="-stop_for_debugger"
 
 mpiexec -np 1 ${HP} run.inpt ${PETCSC}
-echo "1" >> cputimes.dat
-tail -1 out_b0.log >> cputimes.dat
+echo -n "1 " > cputimes.dat
+tail -1 out_b0.log | cut -d \  -f 3 >> cputimes.dat
 
 let NPART=2
 let NPROC=4
@@ -38,11 +38,12 @@ while [ ${NPART} -le ${NPROC} ]; do
 	fi
 	mod_map partition.inpt adapt 0
 	mpiexec -np ${NPART} ${HP} partition.inpt ${PETSC}
-	echo ${NPART} >> ../cputimes.dat
-	tail -1 out_b0.log >> ../cputimes.dat
+	echo -n "${NPART} "  >> ../cputimes.dat
+	tail -1 out_b0.log | cut -d \  -f 3 >> ../cputimes.dat
 	cd ..
 	let NPART=${NPART}+1
 done
+../plot.py
 
 cd ..
 
