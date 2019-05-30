@@ -18,30 +18,29 @@
 #### USING HOMEBREW ####
 ########################
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-brew install --build-from-source --HEAD blitz
 brew install pth
 brew install muparser
 brew install netcdf
 brew install libbinio
-brew install openmpi
-brew install pdftohtml
+brew install mpich
 brew install cmake
-brew install scalapack
-brew install metis
-
-
+brew install python2 (needed for blitz install)
 
 % This doesn't work anymore
+# brew install --build-from-source --HEAD blitz
 % brew tap homebrew/science
 % brew install petsc
 % brew install slepc
 
-
 # These are not necessary but I put it here
 # as a reminder of nice things to install
+brew install pdftohtml
 brew install graphviz
 brew install doxygen
-pip install numpy scipy matplotlib
+
+#need to install numpy scipy matplotlib for python plotting
+#brew install python (install python3)
+#pip3 install numpy scipy matplotlib
 
 To update installed packages
 brew update
@@ -57,18 +56,6 @@ brew cleanup (wait until you are sure everything works)
 ###################################################################
 #### GET BLITZ 
 ###################################################################
-METHOD 1 - Download blitz.10 tar.gz file 
-mv blitzXX.tgz to Packages (OS X) or /share/apps (orion
-unpack & cd into directory
-[./configure -disable-fortran --prefix=$HOME/Packages] (OS X)
-[./configure --prefix=/share/apps] (Orion)
-[make lib]
-[make install]
-(to make pdf instructions in blitz/doc):
-[export PATH=$PATH:/usr/texbin]
-[make pdf] 
-
-METHOD 2 - from repository
 cd ~/Packages
 git clone https://github.com/blitzpp/blitz.git blitz
 cd blitz
