@@ -221,6 +221,7 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 	spline<tri_mesh::ND> my_spline;
 	Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
 	FLT smin, smax; // LIMITS FOR BOUNDARY
+    FLT scale;
 
 	public:
 		spline_bdry(int inid, tri_mesh &xin) : edge_bdry(inid,xin) {mytype="spline";}
@@ -243,35 +244,44 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			std::istringstream data(line);
 			data >> smin >> smax;
 			data.clear();
+            
+            inmap.getwdefault(edge_bdry::idprefix+"_scale",scale,1.0);
 		}
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-			to_geometry_frame(pt);
 			/* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
 			int sind = seg(nseg);
 			int p0 = x.seg(sind).pnt(0);
 			int p1 = x.seg(sind).pnt(1);
-			float sloc;
-
+            TinyVector<FLT,tri_mesh::ND> pt0(x.pnts(p0));
+            TinyVector<FLT,tri_mesh::ND> pt1(x.pnts(p1));
+            
+            to_geometry_frame(pt);
+            to_geometry_frame(pt0);
+            to_geometry_frame(pt1);
+            pt /= scale;
+            pt0 /= scale;
+            pt1 /= scale;
+            
 			/* METHOD 1 */
-			FLT sloc0,sloc1;
-			my_spline.find(sloc0,x.pnts(p0));
+			FLT sloc,sloc0,sloc1;
+			my_spline.find(sloc0,pt0);
 			/* FOR LOOPS */
 			if (sloc0 > smax) sloc0 = smin;
 
-			my_spline.find(sloc1,x.pnts(p1));
+			my_spline.find(sloc1,pt1);
 			/* FOR LOOPS */
 			if (sloc1 < smin) sloc1 = smax;
 
 			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
 			my_spline.interpolate(sloc,pt);
 
-			TinyVector<FLT,tri_mesh::ND> dx = x.pnts(p1) -x.pnts(p0);
+			TinyVector<FLT,tri_mesh::ND> dx = pt1 -pt0;
 			FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
 			FLT ds,psinew;
 			int iter;
 			for (iter = 0; iter < 100; ++iter) {
-				psinew = 2*((pt(0)-x.pnts(p0)(0))*dx(0) +(pt(1)-x.pnts(p0)(1))*dx(1))/l2 -1.0;
+				psinew = 2*((pt(0)-pt0(0))*dx(0) +(pt(1)-pt0(1))*dx(1))/l2 -1.0;
 				ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
 				sloc += 0.5*ds;
 				my_spline.interpolate(sloc,pt);
@@ -280,6 +290,7 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			if (iter > 99) {
 				*x.gbl->log << "too many spline iterations at " << pt << " with final change of " << ds << '\n';
 			}
+            pt *= scale;
 			to_physical_frame(pt);
 			return;
 		}

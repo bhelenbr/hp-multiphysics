@@ -1128,6 +1128,7 @@ class spline_geometry {
 	protected:
 		spline3<ND> my_spline;
 		FLT smin, smax; // LIMITS FOR BOUNDARY
+        FLT scale;
 	public:
 		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
 			std::string line;
@@ -1140,15 +1141,20 @@ class spline_geometry {
 			std::istringstream data(line);
 			data >> smin >> smax;
 			data.clear();
+            
+            inmap.getwdefault(idprefix+"_scale",scale,1.0);
 		}
 			
 		int mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			FLT sloc;
-			
+            
+            pt /= scale;
 			my_spline.find(sloc,pt);
 			if (sloc > smax) sloc = smax;
 			if (sloc < smin) sloc = smin;
 			my_spline.interpolate(sloc,pt);
+            pt *= scale;
+            
 			return(0);
 		}
 		void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {

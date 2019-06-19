@@ -251,12 +251,14 @@ template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>
 
 
 template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
-    int k,sidloc,sidlocprev;
+    int k,sidloc,sidlocprev=0;
     double ol,psi,normdist;
-    double psiloc,psinew,psiprev,normdistprev;
+    double psiloc,psinew,psiprev,normdistprev=1.0e32;
     double mindist = 1.0e32;
 	TinyVector<double,2> dy, dy1;
 
+    psiloc = 1.0;
+    sidloc = npts-2;
 	psiprev = -1.0;
 	
     for(k=0;k<npts-1;++k) {
@@ -294,6 +296,7 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
     }
 	
 	int i = sidloc;
+    assert(0 <= i && i < npts-1);
 	dy = y(i+1)-y(i);
 	ol = 2./dot(dy,dy);
 
