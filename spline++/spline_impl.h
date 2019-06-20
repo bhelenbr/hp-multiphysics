@@ -355,6 +355,7 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
         double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
         double ds = -dmindist/dminddist2;
         s0 += ds;
+        //std::cout << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
         if (fabs(ds) < 1.0e-10) {
             ypt = y1;
             return 0;
@@ -492,67 +493,122 @@ template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND
 	return 0;
 }
 
-template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
-	int k,sidloc,sidlocprev;
-	double ol,psi,normdist;
-	double psiloc,psinew,psiprev,normdistprev;
-	double mindist = 1.0e32;
-	TinyVector<double,2> dy, dy1;
-	
-	psiprev = -1.0;
-	
-	for(k=0;k<npts-1;++k) {
-		dy = y(k+1) -y(k);
-		ol = 2./dot(dy,dy);
-		dy1 = ypt -y(k);
-		psi = ol*(dot(dy1,dy)) -1.;
-		normdist = dy(0)*dy1(1)-dy(1)*dy1(0);
-		normdist *= sqrt(ol/2.);
-		
-		if (psi <= -1.0 && psiprev >= 1.0) {
-			/* PREVIOUS & THIS SIDE ARE POTENTIAL MATCHES */
-			if (fabs(normdist) < mindist) {
-				mindist = fabs(normdist);
-				sidloc = k;
-				psiloc = -1.0;
-			}
-			if (fabs(normdistprev) < mindist) {
-				mindist = fabs(normdistprev);
-				sidloc = sidlocprev;
-				psiloc = 1.0;
-			}
-		}
-		else if (psi >= -1.0 && psi <= 1.0) {
-			/* POTENTIAL SIDE */
-			if (fabs(normdist) < mindist) {
-				mindist = fabs(normdist);
-				sidloc = k;
-				psiloc = psi;
-			}
-		}
-		psiprev = psi;
-		normdistprev = normdist;
-		sidlocprev = k;
-	}
-	
-	int i = sidloc;
-	dy = y(i+1)-y(i);
-	ol = 2./dot(dy,dy);
-	
-	psi = psiloc;
-	s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
-	
-	for (int iter=0;iter<100;++iter) {
-		interpolate(s0,ypt);
-		dy1 = ypt-y(i);
-		psinew = ol*(dot(dy1,dy)) -1.;
-		s0 = s0 - 0.5*(psinew-psi)*(x(i+1)-x(i));
-		if (fabs(psinew-psi) < 1.0e-10) return 0;
-	}
-	
-	return(1);
+template<int ND> int spline3<ND>::tangent(double xptin, TinyVector<double,ND>& tan) {
+    double a,b,bma,t;
+    
+    double xpt = xptin;
+    if (xpt < x(0)) xpt=x(0);
+    if (xpt > x(npts-1)) xpt=x(npts-1);
+    
+    int i;
+    for (i=1;i<npts;++i)
+        if (x(i) >= xpt) break;
+    --i;
+    
+    a=x(i);
+    b=x(i+1);
+    bma=b-a;
+    t=(xpt-a)/bma;
+    tan=  (c(i)(1)-c(i)(0) +(1-2*t)*(c(i)(2)*(1-t) + c(i)(3)*t) +t*(1-t)*(c(i)(3)-c(i)(2)))/bma;
+    
+    return 0;
 }
 
+template<int ND> int spline3<ND>::curvature(double xptin, TinyVector<double,ND>& curv) {
+    double a,b,bma,t;
+    
+    double xpt = xptin;
+    if (xpt < x(0)) xpt=x(0);
+    if (xpt > x(npts-1)) xpt=x(npts-1);
+    
+    int i;
+    for (i=1;i<npts;++i)
+        if (x(i) >= xpt) break;
+    --i;
+    
+    a=x(i);
+    b=x(i+1);
+    bma=b-a;
+    t=(xpt-a)/bma;
+    curv=  (-2*(c(i)(2)*(1-t) + c(i)(3)*t) +2*(1-2*t)*(c(i)(3)-c(i)(2)))/(bma*bma);
+    
+    return 0;
+}
+
+template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
+    int k,sidloc,sidlocprev=0;
+    double ol,psi,normdist;
+    double psiloc,psiprev,normdistprev=1.0e32;
+    double mindist = 1.0e32;
+    TinyVector<double,ND> y1, dy, dy1, tan, curv;
+    
+    psiloc = 1.0;
+    sidloc = npts-2;
+    psiprev = -1.0;
+    
+    for(k=0;k<npts-1;++k) {
+        dy = y(k+1) -y(k);
+        ol = 2./dot(dy,dy);
+        dy1 = ypt -y(k);
+        psi = ol*(dot(dy1,dy)) -1.;
+        normdist = dy(0)*dy1(1)-dy(1)*dy1(0);
+        normdist *= sqrt(ol/2.);
+        
+        if (psi <= -1.0 && psiprev >= 1.0) {
+            /* PREVIOUS & THIS SIDE ARE POTENTIAL MATCHES */
+            if (fabs(normdist) < mindist) {
+                mindist = fabs(normdist);
+                sidloc = k;
+                psiloc = -1.0;
+            }
+            if (fabs(normdistprev) < mindist) {
+                mindist = fabs(normdistprev);
+                sidloc = sidlocprev;
+                psiloc = 1.0;
+            }
+        }
+        else if (psi >= -1.0 && psi <= 1.0) {
+            /* POTENTIAL SIDE */
+            if (fabs(normdist) < mindist) {
+                mindist = fabs(normdist);
+                sidloc = k;
+                psiloc = psi;
+            }
+        }
+        psiprev = psi;
+        normdistprev = normdist;
+        sidlocprev = k;
+    }
+    
+    int i = sidloc;
+    assert(0 <= i && i < npts-1);
+    dy = y(i+1)-y(i);
+    ol = 2./dot(dy,dy);
+    
+    psi = psiloc;
+    s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
+    
+    /* Find s location of minimum distance) */
+    for (int iter=0;iter<100;++iter) {
+        interpolate(s0,y1);
+        dy = y1-ypt;
+        mindist = dot(dy,dy);
+        tangent(s0,tan);
+        curvature(s0,curv);
+        double dmindist = 2*dot(tan,dy);
+        double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
+        double ds = -dmindist/dminddist2;
+        s0 += ds;
+        // std::cout << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
+        if (fabs(ds) < 1.0e-10) {
+            ypt = y1;
+            return 0;
+        }
+    }
+    ypt = y1;
+    
+    return(1);
+}
 
 
 

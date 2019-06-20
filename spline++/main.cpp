@@ -9,6 +9,8 @@
 
 #include "spline.h"
 
+#define TESTING
+
 int main(int argc, char** argv) {
 
 	
@@ -48,18 +50,29 @@ int main(int argc, char** argv) {
 			myspline.read(file);
 			myspline3.read(file);
 			
-			TinyVector<double,2> x;
+			TinyVector<double,2> x,tan,curv;
 			
 			for (double s=myspline.start();s<myspline.stop();s+=(myspline.stop()-myspline.start())/npts) {
 				myspline.interpolate(s,x);
-				std::cout << s << ' ' << x(0) << ' ' << x(1);
+                myspline.tangent(s, tan);
+                myspline.curvature(s, curv);
+                std::cout << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
 				myspline3.interpolate(s,x);
-				std::cout << ' ' << x(0) << ' ' << x(1) << std::endl;
+                myspline3.tangent(s, tan);
+                myspline3.curvature(s, curv);
+                std::cout << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
 			}
-			
-//			double s;
-//			myspline.find(s,x);
-//			std::cout << s << ' ' << x << std::endl;
+
+#ifdef TESTING
+			double s;
+            x(0) = 0.3;
+            x(1) = 0.2;
+			myspline.find(s,x);
+			std::cout << s << ' ' << x << std::endl;
+            myspline3.find(s,x);
+            std::cout << s << ' ' << x << std::endl;
+#endif
+            
 			break;
 		}
 		case 3: {
