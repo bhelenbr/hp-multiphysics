@@ -32,6 +32,8 @@ template<int ND> class spline {
 		}
 		int read(std::string filename);
 		int interpolate(const double spt, TinyVector<double,ND>& loc);
+        int tangent(const double spt, TinyVector<double,ND>& tan);
+        int curvature(const double spt, TinyVector<double,ND>& curv);
 		int find(double &spt, TinyVector<double,ND>& loc);
 		double start() {return(x(0));}
 		double stop() {return(x(npts-1));}

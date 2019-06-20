@@ -249,13 +249,54 @@ template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>
 	return 0;
 }
 
+template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& tan) {
+    double a,b,bma,z;
+    
+    double xpt = xptin;
+    if (xpt < x(0)) xpt=x(0);
+    if (xpt > x(npts-1)) xpt=x(npts-1);
+    
+    int i;
+    for (i=1;i<npts;++i)
+        if (x(i) >= xpt) break;
+    --i;
+    
+    a=x(i);
+    b=x(i+1);
+    bma=b-a;
+    z=(xpt-a)/bma;
+    tan=(c(i)(1)+z*(2*c(i)(2)+z*(3*c(i)(3)+z*(4*c(i)(4)+z*5*c(i)(5)))))/bma;
+    return 0;
+}
+
+template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& curv) {
+    double a,b,bma,z;
+    
+    double xpt = xptin;
+    if (xpt < x(0)) xpt=x(0);
+    if (xpt > x(npts-1)) xpt=x(npts-1);
+    
+    int i;
+    for (i=1;i<npts;++i)
+        if (x(i) >= xpt) break;
+    --i;
+    
+    a=x(i);
+    b=x(i+1);
+    bma=b-a;
+    z=(xpt-a)/bma;
+    curv=(2*c(i)(2)+z*(6*c(i)(3)+z*(12*c(i)(4)+z*20*c(i)(5))))/(bma*bma);
+    return 0;
+}
+
+
 
 template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
     int k,sidloc,sidlocprev=0;
     double ol,psi,normdist;
-    double psiloc,psinew,psiprev,normdistprev=1.0e32;
+    double psiloc,psiprev,normdistprev=1.0e32;
     double mindist = 1.0e32;
-	TinyVector<double,2> dy, dy1;
+	TinyVector<double,ND> y1, dy, dy1, tan, curv;
 
     psiloc = 1.0;
     sidloc = npts-2;
@@ -302,15 +343,25 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
 
 	psi = psiloc;
 	s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
-      
-	for (int iter=0;iter<100;++iter) {
-		interpolate(s0,ypt);
-		dy1 = ypt-y(i);
-		psinew = ol*(dot(dy1,dy)) -1.;
-		s0 = s0 - 0.5*(psinew-psi)*(x(i+1)-x(i));
-		if (fabs(psinew-psi) < 1.0e-10) return 0;
-	}
-	
+    
+    /* Find s location of minimum distance) */
+    for (int iter=0;iter<100;++iter) {
+        interpolate(s0,y1);
+        dy = y1-ypt;
+        mindist = dot(dy,dy);
+        tangent(s0,tan);
+        curvature(s0,curv);
+        double dmindist = 2*dot(tan,dy);
+        double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
+        double ds = -dmindist/dminddist2;
+        s0 += ds;
+        if (fabs(ds) < 1.0e-10) {
+            ypt = y1;
+            return 0;
+        }
+    }
+    ypt = y1;
+    
 	return(1);
 }
 
