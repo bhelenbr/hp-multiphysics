@@ -276,20 +276,20 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
 			my_spline.interpolate(sloc,pt);
 
-			TinyVector<FLT,tri_mesh::ND> dx = pt1 -pt0;
-			FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
-			FLT ds,psinew;
-			int iter;
-			for (iter = 0; iter < 100; ++iter) {
-				psinew = 2*((pt(0)-pt0(0))*dx(0) +(pt(1)-pt0(1))*dx(1))/l2 -1.0;
-				ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
-				sloc += 0.5*ds;
-				my_spline.interpolate(sloc,pt);
-				if (fabs(psinew-psi) < 1.0e-8) break;
-			}
-			if (iter > 99) {
-				*x.gbl->log << "too many spline iterations at " << pt << " with final change of " << ds << '\n';
-			}
+//            TinyVector<FLT,tri_mesh::ND> dx = pt1 -pt0;
+//            FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
+//            FLT ds,psinew;
+//            int iter;
+//            for (iter = 0; iter < 100; ++iter) {
+//                psinew = 2*((pt(0)-pt0(0))*dx(0) +(pt(1)-pt0(1))*dx(1))/l2 -1.0;
+//                ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
+//                sloc += 0.5*ds;
+//                my_spline.interpolate(sloc,pt);
+//                if (fabs(psinew-psi) < 1.0e-8) break;
+//            }
+//            if (iter > 99) {
+//                *x.gbl->log << "too many spline iterations at " << pt << " with final change of " << ds << '\n';
+//            }
             pt *= scale;
 			to_physical_frame(pt);
 			return;

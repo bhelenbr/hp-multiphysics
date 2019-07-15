@@ -10,6 +10,8 @@
 #include "spline.h"
 #include <fstream>
 #include <myblas.h>
+using namespace spline_functions2D;
+
 //#include <blitz/tinyvec-et.h>
 
 template<int ND> int spline<ND>::read(std::string filename) {
@@ -228,17 +230,24 @@ template<int ND> int spline<ND>::read(std::string filename) {
 }
 	
 	
-template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) {
+template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) const {
 	double a,b,bma,z;
 	
 	double xpt = xptin;
-	if (xpt < x(0)) xpt=x(0);
-	if (xpt > x(npts-1)) xpt=x(npts-1);
-
-	int i;
-	for (i=1;i<npts;++i)
-		if (x(i) >= xpt) break;
-	--i;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
 	
 	a=x(i);
 	b=x(i+1);
@@ -249,17 +258,24 @@ template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>
 	return 0;
 }
 
-template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& tan) {
+template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& tan) const {
     double a,b,bma,z;
     
     double xpt = xptin;
-    if (xpt < x(0)) xpt=x(0);
-    if (xpt > x(npts-1)) xpt=x(npts-1);
-    
-    int i;
-    for (i=1;i<npts;++i)
-        if (x(i) >= xpt) break;
-    --i;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
     
     a=x(i);
     b=x(i+1);
@@ -269,17 +285,24 @@ template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& ta
     return 0;
 }
 
-template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& curv) {
+template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& curv) const {
     double a,b,bma,z;
     
     double xpt = xptin;
-    if (xpt < x(0)) xpt=x(0);
-    if (xpt > x(npts-1)) xpt=x(npts-1);
-    
-    int i;
-    for (i=1;i<npts;++i)
-        if (x(i) >= xpt) break;
-    --i;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
     
     a=x(i);
     b=x(i+1);
@@ -291,7 +314,7 @@ template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& 
 
 
 
-template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
+template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) const {
     int k,sidloc,sidlocprev=0;
     double ol,psi,normdist;
     double psiloc,psiprev,normdistprev=1.0e32;

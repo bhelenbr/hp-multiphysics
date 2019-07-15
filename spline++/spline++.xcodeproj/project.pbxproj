@@ -14,17 +14,20 @@
 		6FC91D330DB6EFF700274CF9 /* spline.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FC91D310DB6EFF700274CF9 /* spline.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E67D1EC7182AA7E300376912 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E67D1EC6182AA7E300376912 /* Accelerate.framework */; };
 		E67D1EC8182AA7E300376912 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E67D1EC6182AA7E300376912 /* Accelerate.framework */; };
+		E6F0F3B422DC0EF400BADFEF /* spline_functions2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F0F3B322DC0EF400BADFEF /* spline_functions2D.cpp */; };
+		E6F0F3B522DC0EF400BADFEF /* spline_functions2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F0F3B322DC0EF400BADFEF /* spline_functions2D.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		6F2EF3270DB77B2D001358E1 /* spline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spline.cpp; sourceTree = "<group>"; };
-		6F2EF37F0DB780B3001358E1 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F2EF37F0DB780B3001358E1 /* spline */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spline; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F3920B90DC17A0400B5C521 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FC91D310DB6EFF700274CF9 /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spline.h; sourceTree = "<group>"; };
 		6FC91D320DB6EFF700274CF9 /* spline_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spline_impl.h; sourceTree = "<group>"; };
 		6FC91D8C0DB71A5E00274CF9 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libspline++.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libspline++.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E67D1EC6182AA7E300376912 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = ../../../../System/Library/Frameworks/Accelerate.framework; sourceTree = "<group>"; };
+		E6F0F3B322DC0EF400BADFEF /* spline_functions2D.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = spline_functions2D.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +68,7 @@
 				6FC91D310DB6EFF700274CF9 /* spline.h */,
 				6FC91D320DB6EFF700274CF9 /* spline_impl.h */,
 				6F2EF3270DB77B2D001358E1 /* spline.cpp */,
+				E6F0F3B322DC0EF400BADFEF /* spline_functions2D.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -73,7 +77,7 @@
 			isa = PBXGroup;
 			children = (
 				D2AAC046055464E500DB518D /* libspline++.a */,
-				6F2EF37F0DB780B3001358E1 /* main */,
+				6F2EF37F0DB780B3001358E1 /* spline */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -122,7 +126,7 @@
 			);
 			name = main;
 			productName = main;
-			productReference = 6F2EF37F0DB780B3001358E1 /* main */;
+			productReference = 6F2EF37F0DB780B3001358E1 /* spline */;
 			productType = "com.apple.product-type.tool";
 		};
 		D2AAC045055464E500DB518D /* spline++ */ = {
@@ -177,6 +181,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F2EF3830DB780C6001358E1 /* main.cpp in Sources */,
+				E6F0F3B522DC0EF400BADFEF /* spline_functions2D.cpp in Sources */,
 				6F2EF3840DB780C7001358E1 /* spline.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,6 +190,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6F0F3B422DC0EF400BADFEF /* spline_functions2D.cpp in Sources */,
 				6F2EF3280DB77B2D001358E1 /* spline.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -196,7 +202,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = ..;
 				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
@@ -209,7 +214,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				COMBINE_HIDPI_IMAGES = YES;
 				DSTROOT = ..;
 				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
@@ -245,7 +249,10 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					BZ_DEBUG,
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -259,6 +266,7 @@
 					/usr/local/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = "";
 				PACKAGES = "${HOME}/Packages";
 			};
 			name = Debug;
@@ -311,10 +319,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DEPLOYMENT_LOCATION = NO;
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				PRODUCT_NAME = main;
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"${HOME}/Packages/lib",
+					/usr/local/lib,
+				);
+				OTHER_LDFLAGS = "-lblitz";
+				PRODUCT_NAME = spline;
 			};
 			name = Debug;
 		};
@@ -322,10 +336,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DEPLOYMENT_LOCATION = NO;
+				DSTROOT = ..;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				PRODUCT_NAME = main;
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"${HOME}/Packages/lib",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = spline;
 			};
 			name = Release;
 		};

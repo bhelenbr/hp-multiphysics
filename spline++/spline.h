@@ -11,14 +11,14 @@
 #define _spline_h_
 
 #include <blitz/array.h>
-using namespace blitz;
+
 
 template<int ND> class spline {
 	private:
 		int npts;
-		Array<double,1> x;
-		Array<TinyVector<double,ND>,1> y;
-		Array<TinyVector<TinyVector<double,ND>,6>,1> c;
+        blitz::Array<double,1> x;
+		blitz::Array<blitz::TinyVector<double,ND>,1> y;
+		blitz::Array<blitz::TinyVector<blitz::TinyVector<double,ND>,6>,1> c;
 		
 	public:
 		spline() : npts(0) {}
@@ -31,21 +31,21 @@ template<int ND> class spline {
 			c = inpt.c;
 		}
 		int read(std::string filename);
-		int interpolate(const double spt, TinyVector<double,ND>& loc);
-        int tangent(const double spt, TinyVector<double,ND>& tan);
-        int curvature(const double spt, TinyVector<double,ND>& curv);
-		int find(double &spt, TinyVector<double,ND>& loc);
-		double start() {return(x(0));}
-		double stop() {return(x(npts-1));}
+		int interpolate(const double spt, blitz::TinyVector<double,ND>& loc) const;
+        int tangent(const double spt, blitz::TinyVector<double,ND>& tan) const;
+        int curvature(const double spt, blitz::TinyVector<double,ND>& curv) const;
+		int find(double &spt, blitz::TinyVector<double,ND>& loc) const;
+		double start() const {return(x(0));}
+		double stop() const {return(x(npts-1));}
 	int size() {return(npts);}
 };
 
 template<int ND> class spline3 {
 	private:
 		int npts;
-		Array<double,1> x;
-		Array<TinyVector<double,ND>,1> y;
-		Array<TinyVector<TinyVector<double,ND>,4>,1> c;
+		blitz::Array<double,1> x;
+		blitz::Array<blitz::TinyVector<double,ND>,1> y;
+		blitz::Array<blitz::TinyVector<blitz::TinyVector<double,ND>,4>,1> c;
 		
 	public:
 		spline3() : npts(0) {}
@@ -58,13 +58,21 @@ template<int ND> class spline3 {
 			c = inpt.c;
 		}
 		int read(std::string filename);
-		int interpolate(const double spt, TinyVector<double,ND>& loc);
-        int tangent(const double spt, TinyVector<double,ND>& tan);
-        int curvature(const double spt, TinyVector<double,ND>& curv);
-		int find(double &spt, TinyVector<double,ND>& loc);
+		int interpolate(const double spt, blitz::TinyVector<double,ND>& loc);
+        int tangent(const double spt, blitz::TinyVector<double,ND>& tan);
+        int curvature(const double spt, blitz::TinyVector<double,ND>& curv);
+		int find(double &spt, blitz::TinyVector<double,ND>& loc);
 		double start() {return(x(0));}
 		double stop() {return(x(npts-1));}
 	int size() {return(npts);}
 };
+
+namespace spline_functions2D {
+    void transform2D(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
+    void transform2Di(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
+    void interpolate(const spline<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> dx, double norm_dist = 0.0);
+}
+    
+    
 
 #endif

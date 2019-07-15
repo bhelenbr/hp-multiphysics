@@ -18,7 +18,7 @@
 #define BUOYANCY
 //#define SWE
 //#define EXPLICIT
-//#define CNS
+#define CNS
 //#define CNS_EXPLICIT
 //#define NONNEWTONIAN
 #define KOMEGA
@@ -101,7 +101,7 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 	}
 	else {
 		if (!inmap.get("blocktype",val)) {
-			std::cerr << "couldn't find block type" << std::endl;
+			std::cerr << "couldn't find blocktype" << std::endl;
 			sim::abort(__LINE__,__FILE__,&std::cerr);
 		}
 		type = btype::getid(val.c_str());
