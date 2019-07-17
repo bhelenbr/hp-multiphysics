@@ -1,4 +1,4 @@
-OBJ = spline.o
+OBJ = spline.o spline_functions2D.o
 
 CPPFLAGS = -Df2cFortran -I../include/ -I$(PACKAGES)/include/
 
