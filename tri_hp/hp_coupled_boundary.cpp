@@ -2053,24 +2053,26 @@ void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
 	}
 
 	/* Check if set manually already, otherwise use other boundary to get defaults */
-	Array<int,1> atemp(x.NV);
-	if (!inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
-		for (int n=0;n<x.NV;++n) {
-			
-			// Check for essential B.C.'s on either edge-boundary
-			type[n] = static_cast<bctypes>(x.hp_ebdry(base.ebdry(1-surfbdry))->type[n]);
-			if (type[n] == essential) {
-				essential_indices.push_back(n);
-				continue;
-			}
-			
-			type[n] = static_cast<bctypes>(x.hp_ebdry(base.ebdry(surfbdry))->type[n]);
-			if (type[n] == essential) {
-				essential_indices.push_back(n);
-				continue;
-			}
-		}
-	}
+    if (surfbdry > -1) {
+        Array<int,1> atemp(x.NV);
+        if (!inmap.get(base.idprefix+"_hp_typelist", atemp.data(), x.NV)) {
+            for (int n=0;n<x.NV;++n) {
+                
+                // Check for essential B.C.'s on either edge-boundary
+                type[n] = static_cast<bctypes>(x.hp_ebdry(base.ebdry(1-surfbdry))->type[n]);
+                if (type[n] == essential) {
+                    essential_indices.push_back(n);
+                    continue;
+                }
+                
+                type[n] = static_cast<bctypes>(x.hp_ebdry(base.ebdry(surfbdry))->type[n]);
+                if (type[n] == essential) {
+                    essential_indices.push_back(n);
+                    continue;
+                }
+            }
+        }
+    }
 }
 
 void hp_deformable_fixed_pnt::vdirichlet() {

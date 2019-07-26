@@ -642,6 +642,7 @@ void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) 
 	
 	if (!base.is_comm()) return;
 	
+    /* These have to be done in the same direction so the average works properly */
 	int ebp1 = end-bgn+1;
 	if (base.is_frst()) {
 		count = 0;

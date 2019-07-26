@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/bin/bash
 
 # Runs a case with a facet point
 # Flow is uniform flow
@@ -17,39 +17,34 @@
 # This cases is highly sensitive to the LU factorization.  I got the best results using
 # mumps, with petsc version 3.7.7.  After that, it got worse
 
-import sys
-import os
-import popen2
-import numpy
-import matplotlib.pyplot as plt
-import subprocess
-#import sr
-import glob
-import string
-import math
-
-os.chdir(os.path.dirname(sys.argv[0]))
+# cd to the directory where the script resides.
+# Necessary for platforms where script can be 
+# double clicked from gui
+cd "$(dirname "$0")"
 
 # Define location of executables
-p0 = subprocess.Popen("echo ${PWD%/*/*/*/*}/bin/:", stdout=subprocess.PIPE,shell=True)
-(BINDIR, err) = p0.communicate()
-os.environ['PATH'] = BINDIR[:-1] + os.environ['PATH']
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
+# Make Results directory
+if [ -e Results ]; then
+	cd Results
+else
+	mkdir Results
+	cd Results
+fi
+rm *
+
+# copy input files into results directory
+cp ../Inputs/* .
 
 FULL_TEST=1
 
-HP="mpiexec -np 2 tri_hp_petsc run.inpt"
-
-if not os.path.isdir("Results"):
-	os.mkdir("Results")
-os.chdir("Results")
-os.system("rm *")
-
-# copy input files into results directory
-os.system("cp ../Inputs/* .")
+HP="mpiexec -np 2 ${MF} tri_hp_petsc run.inpt"
 
 # generate mesh and remove unnecessary data files
-os.system("tri_mesh generate")
-os.system("rm data*.grd")
+tri_mesh generate
+rm data*.grd
 
 # Various ways of running
 #mod_map run.inpt b0_s3_one_sided 1
@@ -63,353 +58,321 @@ os.system("rm data*.grd")
 # These are the steps to run
 # Get a reasonable steady temperature field
 # Before starting the melting 
-os.system("cp run.inpt startup.inpt")
-os.system("mod_map run.inpt b0_v1_hp_type plain")
-os.system("mod_map run.inpt b0_v2_hp_type plain")
-os.system("mod_map run.inpt b0_s3_hp_type inflow")
-os.system("mod_map run.inpt b0_s3_type symbolic")
-os.system("mod_map run.inpt b1_s3_hp_type dirichlet")
-os.system("mod_map run.inpt b1_s3_type symbolic")
-os.system("mod_map run.inpt b1_v1_hp_type plain")
-os.system("mod_map run.inpt b1_v2_hp_type plain")
-os.system("mod_map -c run.inpt mesh_movement")
-os.system("mod_map run.inpt ntstep 1")
-os.system('mod_map run.inpt dtinv 0.0')
-os.system("mod_map run.inpt restart_interval 1")
+cp run.inpt startup.inpt
+mod_map run.inpt b0_v1_hp_type plain
+mod_map run.inpt b0_v2_hp_type plain
+mod_map run.inpt b0_s3_hp_type inflow
+mod_map run.inpt b0_s3_type symbolic
+mod_map run.inpt b1_s3_hp_type dirichlet
+mod_map run.inpt b1_s3_type symbolic
+mod_map run.inpt b1_v1_hp_type plain
+mod_map run.inpt b1_v2_hp_type plain
+mod_map -c run.inpt mesh_movement
+mod_map run.inpt ntstep 1
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt restart_interval 1
 # adapt has to be off so s3 doesn"t get messed up.
-os.system("mod_map run.inpt adapt 0")
-err = os.system(HP)
-if err:
-  print "exited from initial T solution"
-  exit
-  
-RESTART=1
+mod_map run.inpt adapt 0
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from initial T solution"
+  exit 1
+fi 
+let RESTART=1
 
-if FULL_TEST == 0:
-	os.system("mv startup.inpt run.inpt")
-	os.system("mod_map run.inpt adapt 0")
-	os.system("mod_map run.inpt restart_interval 1")
-	os.system("mod_map run.inpt ntstep 1")
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	os.system('mod_map run.inpt dtinv_prev 0.0')
-	# os.system("mod_map run.inpt debug_output 1")
-	# os.system("mod_map run.inpt rsdl_debug 2")
-	# os.system("mod_map run.inpt jac_debug 1")
-	err = os.system(HP)
-	if err:
-  		print "exited from quick test with log2p = 0"
- 		sys.exit()
+if [ -z ${FULL_TEST} ]; then
+	mv startup.inpt run.inpt
+	mod_map run.inpt adapt 0
+	mod_map run.inpt restart_interval 1
+	mod_map run.inpt ntstep 1
+	mod_map run.inpt restart $RESTART
+	mod_map run.inpt dtinv_prev 0.0
+	# mod_map run.inpt debug_output 1
+	# mod_map run.inpt rsdl_debug 2
+	# mod_map run.inpt jac_debug 1
+	${HP}
+	if [ "$?" -ne "0" ]; then
+	  echo "exited from initial T solution"
+	  exit 1
+	fi 
+	let RESTART=$RESTART+1
 	
-	RESTART=RESTART+1
+	echo "log2p=1"
+	mod_map run.inpt log2p 1
+	mod_map run.inpt restart $RESTART
+	mod_map run.inpt -d dtinv_prev
+	${HP}
+	if [ "$?" -ne "0" ]; then
+	  echo "exited from initial T solution"
+	  exit 1
+	fi 
+	let RESTART=$RESTART+1
 	
-	print "log2p=1"
-	os.system("mod_map run.inpt log2p 1")
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	os.system("mod_map run.inpt -d dtinv_prev")
-	err = os.system(HP)
-	if err:
-  		print "exited from quick test with log2p = 1"
- 		sys.exit()
-	
-	RESTART=RESTART+1
-	
-	print "log2p=2"
-	os.system("mod_map run.inpt log2p 2")
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	err = os.system(HP)
-	if err:
-  		print "exited from quick test with log2p = 2"
- 		sys.exit()
-	
-	
-	os.chdir("..");
-	os.system("opendiff Baseline/ Results/")
-	sys.exit()
+	echo "log2p=2"
+	mod_map run.inpt log2p 2
+	mod_map run.inpt restart $RESTART
+	${HP}
+	if [ "$?" -ne "0" ]; then
+	  echo "exited from initial T solution"
+	  exit 1
+	fi 
+	cd .. 
+	opendiff Baseline/ Results/
+	exit 0
+fi
 
-os.system("mv startup.inpt run.inpt")
+mv startup.inpt run.inpt
 # 100 steps with small time step
-os.system("mod_map run.inpt ntstep 100")
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt restart_interval 100")
-os.system('mod_map run.inpt dtinv_prev 0.0')
-#os.system("mod_map run.inpt debug_output 1")
-#os.system("mod_map run.inpt under_relaxation 0.66")
-err = os.system(HP)
-if err:
-	print "exited from unsteady evolution 1"
-	sys.exit()
- 
+mod_map run.inpt ntstep 100
+mod_map run.inpt restart $RESTART
+mod_map run.inpt restart_interval 100
+mod_map run.inpt dtinv_prev 0.0
+#mod_map run.inpt debug_output 1
+#mod_map run.inpt under_relaxation 0.66
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from initial T solution"
+  exit 1
+fi 
 RESTART=100
-print "unsteady evolution 1 " +str(RESTART)
-
+echo "unsteady evolution 1 ${RESTART}"
 
 # More steps with larger time step
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system('mod_map run.inpt dtinv_prev "1e5*(dtinv1 +dtinv3)"')
-os.system('mod_map run.inpt dtinv "1e4*(dtinv1+dtinv3)"')
-err = os.system(HP)
-if err:
-	print "exited from unsteady evolution 2"
-	sys.exit()
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt dtinv_prev "1e5*(dtinv1 +dtinv3)"
+mod_map run.inpt dtinv "1e4*(dtinv1+dtinv3)"
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from unsteady evolution 2 ${RESTART}"
+  exit 1
+fi 
 
-RESTART=RESTART+100
-print "unsteady evolution 3 " +str(RESTART)
+let RESTART=${RESTART}+100
+echo "unsteady evolution 3 +${RESTART}"
 # 200
 
 # More steps with larger time step
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system('mod_map run.inpt dtinv_prev "1e4*(dtinv1 +dtinv3)"')
-os.system('mod_map run.inpt dtinv "1e3*(dtinv1+dtinv3)"');
-err = os.system(HP)
-if err:
-	print "exited from unsteady evolution 3"
-	sys.exit()
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt dtinv_prev "1e4*(dtinv1 +dtinv3)"
+mod_map run.inpt dtinv "1e3*(dtinv1+dtinv3)"
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from unsteady evolution 3 ${RESTART}"
+  exit 1
+fi 
 
-RESTART=RESTART+100
-print "unsteady evolution 3 " +str(RESTART)
-# 200
-
-
-# More steps with larger time step
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system('mod_map run.inpt dtinv_prev "1e3*(dtinv1 +dtinv3)"')
-os.system('mod_map run.inpt dtinv "1e2*(dtinv1+dtinv3)"')
-err = os.system(HP)
-if err:
-	print "exited from unsteady evolution 4"
-	sys.exit()
-
-RESTART=RESTART+100
-print "unsteady evolution 4 " +str(RESTART)
+let RESTART=${RESTART}+100
+echo "unsteady evolution 3 ${RESTART}"
 # 300
 
-# More steps with larger time step
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system('mod_map run.inpt dtinv_prev "1e2*(dtinv1 +dtinv3)"')
-os.system('mod_map run.inpt dtinv "1e1*(dtinv1+dtinv3)"')
-err = os.system(HP)
-if err:
-	print "exited from unsteady evolution 5"
-	sys.exit()
 
-RESTART=RESTART+100
-print "unsteady evolution 5 " +str(RESTART)
+# More steps with larger time step
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt dtinv_prev "1e3*(dtinv1 +dtinv3)"
+mod_map run.inpt dtinv "1e2*(dtinv1+dtinv3)"
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from unsteady evolution 4 ${RESTART}"
+  exit 1
+fi 
+
+let RESTART=${RESTART}+100
+echo "unsteady evolution 4 ${RESTART}"
 # 400
 
-# Steady State
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt ntstep 1")
-os.system("mod_map run.inpt restart_interval 1")
-os.system("mod_map -u run.inpt under_relaxation")
-os.system("mod_map -d run.inpt dtinv_prev")
-os.system('mod_map run.inpt dtinv 0.0')
-err = os.system(HP)
-if err:
-	print "exited from initial steady-state"
-	sys.exit()
+# More steps with larger time step
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt dtinv_prev "1e2*(dtinv1 +dtinv3)"
+mod_map run.inpt dtinv "1e1*(dtinv1+dtinv3)"
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from unsteady evolution 5 ${RESTART}"
+  exit 1
+fi 
 
-RESTART=RESTART+1
-print "initial steady-state " +str(RESTART)
-# 401
+let RESTART=${RESTART}+100
+echo "unsteady evolution 5 ${RESTART}"
+# 500
+
+# Steady State
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt ntstep 1
+mod_map run.inpt restart_interval 1
+mod_map -u run.inpt under_relaxation
+mod_map -d run.inpt dtinv_prev
+mod_map run.inpt dtinv 0.0
+${HP}
+if [ "$?" -ne "0" ]; then
+  echo "exited from initial steady-state ${RESTART}"
+  exit 1
+fi 
+
+let RESTART=${RESTART}+1
+echo "initial steady-state ${RESTART}"
+# 501
 
 # MAKE K2DN_MAX infinite
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt b0_s3_K2Dn_max 1e10")
-err = os.system(HP)
-if err:
-	print "exited from changing K2DN_max"
-	sys.exit()
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt b0_s3_K2Dn_max 1e10
+${HP}
+if [ "$?" -ne "0" ]; then
+	echo "exited from changing K2DN_max"
+	exit 1
+fi 
 
-RESTART=RESTART+1
-print "changing K2DN_max " +str(RESTART)
-# 402
-
-# Get high order solution (try to get 1step steady-state first)
-os.system('mod_map run.inpt dtinv 0.0')
-os.system("mod_map run.inpt log2p 1")
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt adapt 0")
-os.system("mod_map run.inpt under_relaxation 0.25")
-err = os.system(HP)
-# if err:
-#   print "exited from log2p = 1 steady state"
-#   exit
-# 
-if err:
-	os.system('mod_map run.inpt dtinv "1e4*(dtinv1 +dtinv3)"')
-	os.system("mod_map run.inpt ntstep 20")
-	os.system("mod_map -c run.inpt under_relaxation")
-	err = os.system(HP)
-	if err:
-		print "exited from log2p = 1"
-		sys.exit()
-	
-	RESTART=RESTART+20
-	os.system('mod_map run.inpt dtinv 0.0')
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	os.system("mod_map run.inpt ntstep 1")
-	os.system("mod_map -u run.inpt under_relaxation")
-	err = os.system(HP)
-	if err:
-		print "exited from log2p = 1"
-		sys.exit()
-	
-
-RESTART=RESTART+1
-print "log2p = 1  " +str(RESTART)
+let RESTART=${RESTART}+1
+echo "changing K2DN_max ${RESTART}"
+# 502
 
 # Get high order solution (try to get 1step steady-state first)
-os.system("mod_map run.inpt log2p 2")
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt adapt 0")
-os.system('mod_map run.inpt dtinv 0.0')
-os.system("mod_map run.inpt ntstep 1")
-os.system("mod_map -u run.inpt under_relaxation")
-err = os.system(HP)
-# if err:
-#   print "exited from log2p = 2 steady state"
-#   exit
-# 
-if err:
-	os.system('mod_map run.inpt dtinv "1e4*(dtinv1 +dtinv3)"')
-	os.system("mod_map run.inpt ntstep 20")
-	os.system("mod_map -c run.inpt under_relaxation")
-	err = os.system(HP)
-	if err:
-		print "exited from log2p = 2"
-		sys.exit()
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt log2p 1
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt adapt 0
+mod_map run.inpt under_relaxation 0.25
+${HP}
+if [ "$?" -ne "0" ]; then
+	mod_map run.inpt dtinv "1e4*(dtinv1 +dtinv3)"
+	mod_map run.inpt ntstep 20
+	mod_map -c run.inpt under_relaxation
+	${HP}
+	if [ "$?" -ne "0" ]; then
+		echo "exited from log2p = 1"
+		exit 1
+	fi 
 	
-	RESTART=RESTART+20
-	os.system('mod_map run.inpt dtinv 0.0')
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	os.system("mod_map run.inpt ntstep 1")
-	os.system("mod_map -u run.inpt under_relaxation")
-	err = os.system(HP)
-	if err:
-		print "exited from log2p = 1"
-		sys.exit()
+	let RESTART=${RESTART}+20
+	mod_map run.inpt dtinv 0.0
+	mod_map run.inpt restart ${RESTART}
+	mod_map run.inpt ntstep 1
+	mod_map -u run.inpt under_relaxation
+	${HP}
+	if [ "$?" -ne "0" ]; then
+		echo "exited from log2p = 1"
+		exit 1
+	fi
+fi 	
+
+let RESTART=${RESTART}+1
+echo "log2p = 1  ${RESTART}"
+
+# Get high order solution (try to get 1step steady-state first)
+mod_map run.inpt log2p 2
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt adapt 0
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt ntstep 1
+mod_map -u run.inpt under_relaxation
+${HP}
+if [ "$?" -ne "0" ]; then
+	mod_map run.inpt dtinv "1e4*(dtinv1 +dtinv3)"
+	mod_map run.inpt ntstep 20
+	mod_map -c run.inpt under_relaxation
+	${HP}
+	if [ "$?" -ne "0" ]; then
+		echo "exited from log2p = 2"
+		exit 1
+	fi
+	
+	let RESTART=${RESTART}+20
+	mod_map run.inpt dtinv 0.0
+	mod_map run.inpt restart ${RESTART}
+	mod_map run.inpt ntstep 1
+	mod_map -u run.inpt under_relaxation
+	${HP}
+	if [ "$?" -ne "0" ]; then
+		echo "exited from log2p = 1"
+		exit 1
+	fi
+fi
 	
 
-RESTART=RESTART+1
-print "log2p = 2 " +str(RESTART)
-os.system("mod_map run.inpt under_relaxation 1.0")
+let RESTART=${RESTART}+1
+echo "log2p = 2 ${RESTART}"
+mod_map run.inpt under_relaxation 1.0
 
 # Get steady-state
-os.system('mod_map run.inpt dtinv 0.0')
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt ntstep 1")
-err = os.system(HP)
-if err:
-	print "exited from log2p = 2 steady state"
-	sys.exit()
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt ntstep 1
+${HP}
+if [ "$?" -ne "0" ]; then
+	echo "exited from log2p = 2 steady state"
+	exit 1
+fi
 
-RESTART=RESTART+1
-print "log2p = 2 steady state " +str(RESTART)
+let RESTART=${RESTART}+1
+echo "log2p = 2 steady state ${RESTART}"
 
 # Turn on Mesh adaptation
-os.system("mod_map -u run.inpt error_estimator")
-os.system("mod_map run.inpt adapt 1")
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt ntstep 3")
-err = os.system(HP)
-if err:
-	print "exited from initial mesh adaptation"
-	sys.exit()
+mod_map -u run.inpt error_estimator
+mod_map run.inpt adapt 1
+mod_map run.inpt restart ${RESTART}
+mod_map run.inpt ntstep 3
+${HP}
+if [ "$?" -ne "0" ]; then
+	echo "exited from initial mesh adaptation"
+	exit 1
+fi
 
-RESTART=RESTART+3
-print "mesh adaptation " +str(RESTART)
+let RESTART=${RESTART}+3
+echo "mesh adaptation ${RESTART}"
 
 ################################################
 # SX IS THE PULL SPEED
 # NOW SLOWLY INCREASE SX
 ################################################
-os.system("mod_map -c run.inpt under_relaxation")
-os.system('mod_map run.inpt dtinv 0.0')
-os.system("mod_map run.inpt ntstep 1")
-os.system("delete_series data 0 1")
-os.system("delete_series rstrt 2 1")
+mod_map -c run.inpt under_relaxation
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt ntstep 1
+delete_series data 0 1
+delete_series rstrt 2 1
 
-sx = numpy.zeros(200)
-xle = numpy.zeros(200)
+SX="$(mod_map -e run.inpt sx | cut -d. -f1)0"
+echo ${SX} > sx.dat
+head -2 "data${RESTART}_b1.dat" | tail -1 | cut -d\  -f1 > xle.dat
 
-p0 = subprocess.Popen(["mod_map","-e","run.inpt","sx"], stdout=subprocess.PIPE)
-p1 = subprocess.Popen(["cut","-d/","-f1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-(out, err) = p1.communicate()
-sx[0] = float(out)
- 
-filename = "data" +str(RESTART) +"_b1.dat"
-p0 = subprocess.Popen(["head","-2",filename], stdout=subprocess.PIPE)
-p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
-(out, err) = p2.communicate()
-xle[0] = float(out)
+SXMAX=1000000
+FACTOR="1.05"
+DSX=$(echo "(${FACTOR}-1)*${SX}"| bc -l | cut -d. -f1)
+let ATTEMPTS=0
+let MAXATTEMPTS=3
 
-SXMAX=0.1
-FACTOR=1.05
-DSX=(FACTOR-1)*sx[0]
-ATTEMPTS=0
-MAXATTEMPTS=3
+while [ ${ATTEMPTS} -lt ${MAXATTEMPTS} ] && [ $(echo "${SX} < ${SXMAX}" | bc -l) -eq 1 ]; do
+	SXOLD=${SX}
+	let SX=${SX}+${DSX}
+	echo "SX ${SX}"
+	
+	mod_map run.inpt sx "${SX}e-7/(d0*tsi)"
+	mod_map run.inpt restart ${RESTART}
 
-count = 1
-
-while ( ATTEMPTS < MAXATTEMPTS and sx[count] < SXMAX):
-	sx[count] = sx[count-1] +DSX
-	print "SX " +str(sx[count])
-	os.system('mod_map run.inpt sx "' +str(sx[count]) +'/(d0*tsi)"');
-	os.system("mod_map run.inpt restart " +str(RESTART))
-	err = os.system(HP)
-	if err:
-		os.system('rm core*')
-		os.system('rm neg*')
-		os.system('rm abort*')
-		DSX /= 4.0;
-		os.system('mod_map run.inpt extrapolate 0.25');
-		ATTEMPTS+=1
-	else:
+	${HP}
+	if [ "$?" -ne "0" ]; then
+		rm core*
+		rm neg*
+		rm abort*
+		SX=${SXOLD}
+		DSX=$(echo "${DSX}/4"| bc -l | cut -d. -f1)
+		let ATTEMPTS=${ATTEMPTS}+1
+	  	mod_map run.inpt extrapolate 0.25
+	else
 		# TEST TO MAKE SURE CONVERGED
-		p0 = subprocess.Popen(["grep","^[1-9]","out_b0.log"], stdout=subprocess.PIPE)
-		p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-		p2 = subprocess.Popen(["cut","-d"," ","-f","3"], stdin=p1.stdout, stdout=subprocess.PIPE)
-		(out, err) = p2.communicate()
-		res = float(out)
-		if res > 1.0e-5:
-	  		DSX /= 4.0;
-	  		os.system('mod_map run.inpt extrapolate 0.25');
-	  		ATTEMPTS+=1
-		else:
-			RESTART+=1
-			os.system('mod_map run.inpt extrapolate 1.0');
-			filename = "data" +str(RESTART) +"_b1.dat"
-			p0 = subprocess.Popen(["head","-2",filename], stdout=subprocess.PIPE)
-			p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-			p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
-			(out, err) = p2.communicate()
-			xle[count] = float(out)
-			if count > 2:
-				alpha = numpy.zeros(3);
-				alpha[2] = sx[count]/((xle[count]-xle[count-1])*(xle[count]-xle[count-2]))
-				alpha[1] = sx[count-1]/((xle[count-1]-xle[count])*(xle[count-1]-xle[count-2]))
-				alpha[0] = sx[count-2]/((xle[count-2]-xle[count])*(xle[count-2]-xle[count-1]))
-				
-				xleturn = alpha[0]*(-xle[count]-xle[count-1])+alpha[1]*(-xle[count-2]-xle[count])+alpha[2]*(-xle[count-1]-xle[count-2])
-				xleturn /= -2*(alpha[0]+alpha[1]+alpha[2])
-				sxturn = alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2]) +alpha[1]*(xleturn-xle[count])*(xleturn-xle[count-2]) +alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2])
-				print str(sxturn)
-				if (sxturn > sx[count] and FACTOR*sx[count] > sxturn):
-					# DSX /= 4.0;
-					# os.system('mod_map run.inpt extrapolate 0.25');
-					print "would have changed factor"
-			count += 1
+		RES=$(grep ^[1-9] out_b0.log | tail -1 | cut -d\  -f 3)
+		RES=${RES/[eE]/*10^\(}\)
+		RES=${RES/\([+]/\(}
+		CNVG=$(echo "${RES} < 1.0*10^(-5)" | bc -l)
+		if [ "$CNVG" != "1" ]; then
+			DSX=$(echo "${DSX}/4"| bc -l | cut -d. -f1)
+			let ATTEMPTS=${ATTEMPTS}+1
+	  		mod_map run.inpt extrapolate 0.25
+		else
+			let RESTART=${RESTART}+1
+			mod_map run.inpt extrapolate 1.0
+			echo ${SX} >> sx.dat
+			head -2 "data${RESTART}_b1.dat" | tail -1 | cut -d\  -f1 >> xle.dat
+		fi
+	fi
+done
+../plot.py
 
-plt.plot(sx[0:count],xle[0:count],'r-x')
-plt.xlabel('pull speed / [m/s]')
-plt.ylabel('leading edge position')
-plt.savefig("turning.pdf")
-
-data = numpy.zeros([200,2])
-data[:,1] = sx
-data[:,2] = xle
-numpy.savetxt("turning.dat",data)
-
-
-os.system('rm core* abort* net* rstrt*.nc')
+rm core* abort* net* rstrt*.nc

@@ -1021,7 +1021,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				pnt(i).info = -1;
 			}
 			in.ignore(80,'\n');
-			while (in.get() == '#')
+			while (in.peek() == '#')
 				in.ignore(80,'\n');
 			
 			for(i=0;i<ntri;++i) {

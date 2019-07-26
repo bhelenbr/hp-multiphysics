@@ -2,67 +2,6 @@
 # Runs a case with a facet, a liquid free-surface, a solid translating surface
 # These meet at a triple point that moves according to the growth angle
 
-FULL_TEST=1
-
-if [ -z "$NP" ]; then
-	let NP=2;
-fi
-
-# Turn valgrind on/off
-let USE_VALGRIND=0
-
-# Set executable to run
-# Choose this for multigrid
-#EXECNAME="tri_hp"
-# Choose this for petsc
-EXECNAME="tri_hp_petsc"
-
-# Uncomment to add petsc debug flags
-#PETSC_FLAGS+=" -info -log_summary -ac-log_summary -memory_info -malloc_log -malloc_info -malloc_debug"
-#PETSC_FLAGS+=" -fp_trap"
-#PETSC_FLAGS+=" -on_error_attach_debugger gdb"
-#PETSC_FLAGS+=" -start_in_debugger gdb"
-#PETSC_FLAGS+=" -stop_for_debugger"
-
-# Uncomment to set valgrind debugging parameters
-VALGRIND_FLAGS+=" --track-origins=yes"
-#VALGRIND_FLAGS+=" --leak-check=yes"
-VALGRIND_FLAGS+=" --dsymutil=yes"
- 
-############################################
-# This part should "just work" (in theory)
-# Skip to end to modify what is actually done
-############################################
-# For platform specific valgrind stuff
-if [ ${NP} -gt 0 ]; then
-	if [ -e "${HOME}/Packages/lib/valgrind/libmpiwrap-amd64-darwin.so" ]; then
-		export LD_PRELOAD="${HOME}/Packages/lib/valgrind/libmpiwrap-amd64-darwin.so"
-		VALGRIND_FLAGS+=" --suppressions=${HOME}/Packages/share/openmpi/openmpi-valgrind.supp"
-	else
-		VALGRIND_FLAGS+=" --suppressions=/usr/local/src/mvapich2-1.9a/src/mpid/ch3/channels/mrail/src/hwloc/contrib/hwloc-valgrind.supp"
-	fi
-	EXECENV="mpiexec -np ${NP} ${MF}"
-fi
-
-VALGRIND="valgrind  ${VALGRIND_FLAGS}"
-
-#Set executable command
-if [ ${USE_VALGRIND} -eq 0 ]; then
-	HP="${EXECENV} ${EXECNAME} run.inpt ${PETSC_FLAGS}"
-else
-	HP="${EXECENV} ${VALGRIND} ${EXECNAME} run.inpt ${PETSC_FLAGS}"
-fi
-
-#############################################
-# End of automated part HP is now the correct
-# string needed to run the executable     
-# can just copy and paste above part into shell if you want
-# to run the executable without using this script
-# Paste above into shell to define HP
-# then type ${HP} to run
-#############################################
-
-
 # cd to the directory where the script resides.
 # Necessary for platforms where script can be 
 # double clicked from gui
@@ -83,6 +22,10 @@ rm *
 
 # copy input files into results directory
 cp ../Inputs/* .
+
+FULL_TEST=1
+
+HP="mpiexec -np 2 ${MF} tri_hp_petsc run.inpt"
 
 cp run.inpt generate.inpt
 mod_map generate.inpt b0_mesh geometry_b0.d
@@ -326,16 +269,18 @@ mod_map -c run.inpt under_relaxation
 mod_map run.inpt dtinv "0.0"
 mod_map run.inpt ntstep "1"
 SX="$(mod_map -e run.inpt sx | cut -d. -f1)0"
+echo ${SX} > sx.dat
+head -2 "data${RESTART}_b1.dat" | tail -1 | cut -d\  -f1 > xle.dat
+
 SXMAX=1000000
 FACTOR="1.05"
+DSX=$(echo "(${FACTOR}-1)*${SX}"| bc -l | cut -d. -f1)
 let ATTEMPTS=0
 let MAXATTEMPTS=3
 
-let CURVE_START=${RESTART}+1
-
 while [ ${ATTEMPTS} -lt ${MAXATTEMPTS} ] && [ $(echo "${SX} < ${SXMAX}" | bc -l) -eq 1 ]; do
 	SXOLD=${SX}
-	SX=$(echo "scale=6;${SX}*${FACTOR}/1" | bc -l)
+	let SX=${SX}+${DSX}
 	echo "SX ${SX}"
 	
 	mod_map run.inpt sx "${SX}e-7/(d0*tsi)"
@@ -343,13 +288,13 @@ while [ ${ATTEMPTS} -lt ${MAXATTEMPTS} ] && [ $(echo "${SX} < ${SXMAX}" | bc -l)
 
 	${HP}
 	if [ "$?" -ne "0" ]; then
-	  rm core*
-	  rm neg*
-	  rm abort*
-	  SX=${SXOLD}
-	  FACTOR=$(echo "scale=5;(${FACTOR}-1)/2 +1" | bc -l)
-	  let ATTEMPTS=${ATTEMPTS}+1
-	  let RESTART=${RESTART}-1
+		rm core*
+		rm neg*
+		rm abort*
+		SX=${SXOLD}
+		DSX=$(echo "${DSX}/4"| bc -l | cut -d. -f1)
+		let ATTEMPTS=${ATTEMPTS}+1
+	  	mod_map run.inpt extrapolate 0.25
 	else
 		# TEST TO MAKE SURE CONVERGED
 		RES=$(grep ^[1-9] out_b0.log | tail -1 | cut -d\  -f 3)
@@ -357,18 +302,20 @@ while [ ${ATTEMPTS} -lt ${MAXATTEMPTS} ] && [ $(echo "${SX} < ${SXMAX}" | bc -l)
 		RES=${RES/\([+]/\(}
 		CNVG=$(echo "${RES} < 1.0*10^(-5)" | bc -l)
 		if [ "$CNVG" != "1" ]; then
-	  		SX=${SXOLD}
-	  		FACTOR=$(echo "scale=5;(${FACTOR}-1)/2 +1" | bc -l)
-	  		let ATTEMPTS=${ATTEMPTS}+1
-	  		let RESTART=${RESTART}-1
+			DSX=$(echo "${DSX}/4"| bc -l | cut -d. -f1)
+			let ATTEMPTS=${ATTEMPTS}+1
+	  		mod_map run.inpt extrapolate 0.25
+		else
+			let RESTART=${RESTART}+1
+			mod_map run.inpt extrapolate 1.0
+			echo ${SX} >> sx.dat
+			head -2 "data${RESTART}_b1.dat" | tail -1 | cut -d\  -f1 >> xle.dat
 		fi
 	fi
-	let RESTART=${RESTART}+1
 done
-rm core*
-rm abort*
-rm neg*
-rm rstrt*.bin
+../plot.py
+
+rm core* abort* net* rstrt*.nc
 
 cd ..
 

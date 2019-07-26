@@ -6,9 +6,9 @@ log2p: 0
 restart_interval: 10
 # Iterative stuff: 
 # choose petsc LU inversion solver: 
-petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_package mumps
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 nblock: 1 1
-ncycle: 100
+ncycle: 30
 itercrsn: 1
 nstage: 1
 alpha: 1.0
