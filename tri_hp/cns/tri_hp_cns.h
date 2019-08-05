@@ -14,6 +14,8 @@
 #include <blocks.h>
 #include <myblas.h>
 
+// #define MMS
+
 class tri_hp_cns : public tri_hp {
 	public:
 		/* THINGS SHARED BY ALL tri_hp_cns in same multigrid block */
@@ -29,7 +31,9 @@ class tri_hp_cns : public tri_hp {
 			TinyVector<FLT,2> eanda, eanda_recv;
 			
 			/* SOURCE FUNCTION FOR MMS */
-			//init_bdry_cndtn *src;
+#ifdef MMS
+			init_bdry_cndtn *src;
+#endif
 			vsi	res_temp;
 			
 			/* preconditioner could make 2d but keep general for now */

@@ -43,17 +43,19 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 
 	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
 
-	/* source term for MMS */
-//	std::string ibcname;
-//	keyword = gbl->idprefix + "_src";
-//	if (!inmap.get(keyword,ibcname)) {
-//		keyword = "src";
-//		if (!inmap.get(keyword,ibcname)) {
-//			*gbl->log << "couldn't find src" << std::endl;
-//		}
-//	}
-//	gbl->ibc = getnewibc(ibcname);
-//	gbl->ibc->init(inmap,keyword);
+#ifdef MMS
+    /* source term for MMS */
+    std::string ibcname;
+    keyword = gbl->idprefix + "_src";
+    if (!inmap.get(keyword,ibcname)) {
+        keyword = "src";
+        if (!inmap.get(keyword,ibcname)) {
+            *gbl->log << "couldn't find src" << std::endl;
+        }
+    }
+    gbl->src = getnewibc(ibcname);
+    gbl->src->init(inmap,keyword);
+#endif
 
 }
 
