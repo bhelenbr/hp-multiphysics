@@ -175,7 +175,7 @@ class tri_hp : public r_tri_mesh  {
 		void init(input_map& inmap, void *gin);
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);
-		void curvinit();
+		//void curvinit();
 
 		/* Input / Output functions */
 		enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary, vtk, netcdf};
