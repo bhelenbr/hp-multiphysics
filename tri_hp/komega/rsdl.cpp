@@ -15,6 +15,11 @@
 
 #define BODYFORCE
 
+//#define WILCOX1988
+//#define WILCOX1988_KL
+#define WILCOX2006
+
+
 double psifunc(double x,double xs,double xe) {
     if (x >= xe) {
         return(1.0);
@@ -39,13 +44,28 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
 	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
-    FLT psiktld, psinktld, ktrb, omg, tmu, mutld, cjcbik, cjcbiomg, dudx, dudy, dvdx, dvdy, vrtctinv, strninv, dfprdomgx, dfprdomgy;
+    FLT psiktld, psinktld, ktrb, omg, tmu, mutld, cjcbik, cjcbiomg, dudx, dudy, dvdx, dvdy, vrtctinv, strninv, dfprdomgx, dfprdomgy, WlcxPrd, dktlddx, dktlddy, domgtlddx, domgtlddy,sgmdx, sgmdy, SS, omgLmtr, omgLmtd;
 	const FLT kinf = gbl->kinf;
 	const FLT omginf = gbl->omginf; 
 	const FLT epslnk = gbl->epslnk;
-    const FLT sgmk = 0.5, sgmomg = 0.5, betakomg = 0.075, betastr = 0.09, gamma = 5./9.;
-    const FLT susk = 1., susomg = 1.,  k_mom= 1., KL = 1., diss_neg = 1.0;
+    const FLT sgmomg = 0.5,  betastr = 0.09, sgmdo = 1./8., Clim = 7./8.;
+    const FLT k_mom= 0.0,  diss_neg = 1.0, ktld_diff_neg = 1.0;
+    const FLT susk = 0.0, susomg = 0.0; // turbulence sustaning terms
+    
+#ifdef WILCOX1988
+    const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9., KL = 0.0, WP = 1.0, CD = 0.0;
+#endif
+    
+#ifdef WILCOX1988_KL
+    const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9., KL = 1.0, WP = 0.0, CD = 0.0;
+#endif
 
+#ifdef WILCOX2006
+    const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25.,  KL = 0.0, WP = 1.0, CD = 1.0;
+#endif
+    
+
+    
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
     
@@ -159,8 +179,21 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     psinktld = psifunc(-u(2)(i,j),0.0,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
+                    
+                    dudx = dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j);
+                    dvdx = dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j);
+                    dudy = dcrd(0,1)(i,j)*du(0,0)(i,j) -dcrd(0,0)(i,j)*du(0,1)(i,j);
+                    dvdy = dcrd(0,1)(i,j)*du(1,0)(i,j) -dcrd(0,0)(i,j)*du(1,1)(i,j);
+#ifdef WILCOX2006
+                    /* Stress-limiter Modification*/
+                    SS = dudx*dudx+ 0.5*(dudy + dvdx)*(dudy + dvdx) + dvdy*dvdy;
+                    omgLmtr = Clim*sqrt(2.0*SS/betastr);
+                    omgLmtd = std::max(omg,omgLmtr);
+                    tmu = gbl->rho*ktrb/omgLmtd;
+#else
                     tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
+#endif
+                    mutld = tmu - ktld_diff_neg*gbl->rho*psinktld*u(2)(i,j)/omginf;
                     cjcbi = (lmu +tmu)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)/cjcb;
@@ -236,17 +269,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     }
                         
                     /* Kato-Launder Production Terms for k and w */
-                    dudx = dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j);
-                    dvdx = dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j);
-                    dudy = dcrd(0,1)(i,j)*du(0,0)(i,j) -dcrd(0,0)(i,j)*du(0,1)(i,j);
-                    dvdy = dcrd(0,1)(i,j)*du(1,0)(i,j) -dcrd(0,0)(i,j)*du(1,1)(i,j);
-
                     vrtctinv = sqrt((dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
 
                     res(2)(i,j) += -KL*tmu*vrtctinv*strninv/cjcb;
                     res(3)(i,j) += -KL*gamma*gbl->rho*vrtctinv*strninv/omg/cjcb;
-                        
+                    
+                    /* Wilcox's Original Production Terms */
+                    WlcxPrd = 2.*dudx*dudx + (dudy +dvdx)*(dudy +dvdx) +2.*dvdy*dvdy;
+                    res(2)(i,j) += -WP*tmu*WlcxPrd/cjcb;
+                    res(3)(i,j) += -WP*gamma*gbl->rho*WlcxPrd/omg/cjcb;
+                    
                     /* Diffusion-like Production Term for w */
                     dfprdomgx = dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j);
                     dfprdomgy = dcrd(0,0)(i,j)*du(3,1)(i,j) -dcrd(0,1)(i,j)*du(3,0)(i,j);
@@ -255,6 +288,18 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /* Dissipation Terms for k and w */
                     res(2)(i,j) -= -betastr*gbl->rho*(omg*ktrb + diss_neg*omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) -= -betakomg*gbl->rho*omg*cjcb;
+                    
+#ifdef WILCOX2006
+                    /* Cross-Diffusion Term for w (Wilcox2006) */
+                    dktlddx = dcrd(1,1)(i,j)*du(2,0)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j);
+                    domgtlddx = dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j);
+                    dktlddy = dcrd(0,1)(i,j)*du(2,0)(i,j) -dcrd(0,0)(i,j)*du(2,1)(i,j);
+                    domgtlddy = dcrd(0,1)(i,j)*du(3,0)(i,j) -dcrd(0,0)(i,j)*du(3,1)(i,j);
+                    sgmdx = 0.; sgmdy = 0.;
+                    if (dktlddx*domgtlddx > 0.0) sgmdx =sgmdo;
+                    if (dktlddy*domgtlddy > 0.0) sgmdy =sgmdo;
+                    res(3) += -CD*gbl->rho/omg*(sgmdx*dktlddx*domgtlddx +sgmdy*dktlddy*domgtlddy)/cjcb;
+#endif
 
                     /* Turbulence Sutaining Terms */
                     res(2)(i,j) += -susk*betastr*gbl->rho*kinf*omginf*cjcb;
@@ -492,8 +537,21 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     psinktld = psifunc(-u(2)(i,j),0.0,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
+                    
+                    dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
+                    dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
+                    dudy = ldcrd(0,1)*du(0,0)(i,j) -ldcrd(0,0)*du(0,1)(i,j);
+                    dvdy = ldcrd(0,1)*du(1,0)(i,j) -ldcrd(0,0)*du(1,1)(i,j);
+#ifdef WILCOX2006
+                    /* Stress-limiter Modification*/
+                    SS = dudx*dudx+ 0.5*(dudy + dvdx)*(dudy + dvdx) + dvdy*dvdy;
+                    omgLmtr = Clim*sqrt(2.0*SS/betastr);
+                    omgLmtd = std::max(omg,omgLmtr);
+                    tmu = gbl->rho*ktrb/omgLmtd;
+#else
                     tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
+#endif
+                    mutld = tmu - ktld_diff_neg*gbl->rho*psinktld*u(2)(i,j)/omginf;
                     cjcbi = (lmu +tmu)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)/cjcb;
@@ -533,16 +591,16 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     }
                     
                     /* Kato-Launder Production Terms for k and w */
-                    dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
-                    dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
-                    dudy = ldcrd(0,1)*du(0,0)(i,j) -ldcrd(0,0)*du(0,1)(i,j);
-                    dvdy = ldcrd(0,1)*du(1,0)(i,j) -ldcrd(0,0)*du(1,1)(i,j);
-                    
                     vrtctinv = sqrt((dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
                     
                     res(2)(i,j) += -KL*tmu*vrtctinv*strninv/cjcb;
                     res(3)(i,j) += -KL*gamma*gbl->rho*vrtctinv*strninv/omg/cjcb;
+                    
+                    /* Wilcox's Original Production Terms */
+                    WlcxPrd = 2.*dudx*dudx + (dudy +dvdx)*(dudy +dvdx) +2.*dvdy*dvdy;
+                    res(2)(i,j) += -WP*tmu*WlcxPrd/cjcb;
+                    res(3)(i,j) += -WP*gamma*gbl->rho*WlcxPrd/omg/cjcb;
                     
                     /* Diffusion-like Production Term for w */
                     dfprdomgx = ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j);
@@ -552,6 +610,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /* Dissipation Terms for k and w */
                     res(2)(i,j) -= -betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) -= -betakomg*gbl->rho*omg*cjcb;
+#ifdef WILCOX2006
+                    /* Cross-Diffusion Term for w (Wilcox2006) */
+                    dktlddx = ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j);
+                    domgtlddx = ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j);
+                    dktlddy = ldcrd(0,1)*du(2,0)(i,j) -ldcrd(0,0)*du(2,1)(i,j);
+                    domgtlddy = ldcrd(0,1)*du(3,0)(i,j) -ldcrd(0,0)*du(3,1)(i,j);
+                    sgmdx = 0.; sgmdy = 0.;
+                    if (dktlddx*domgtlddx > 0.0) sgmdx =sgmdo;
+                    if (dktlddy*domgtlddy > 0.0) sgmdy =sgmdo;
+                    res(3) += -CD*gbl->rho/omg*(sgmdx*dktlddx*domgtlddx +sgmdy*dktlddy*domgtlddy)/cjcb;
+#endif
                     
                     /* Turbulence Sutaining Terms */
                     res(2)(i,j) += -susk*betastr*gbl->rho*kinf*omginf*cjcb;
