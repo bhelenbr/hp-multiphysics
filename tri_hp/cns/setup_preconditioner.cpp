@@ -61,6 +61,7 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			hmax = 0.0;
 			umax = 0.0;
+			qmax = 0.0;
 			ubar = 0.0;
 			FLT jcbmin = jcb;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
@@ -118,6 +119,7 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			hmax = 0.0;
 			umax = 0.0;
+			qmax = 0.0;
 			ubar = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
