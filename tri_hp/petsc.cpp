@@ -373,7 +373,6 @@ void tri_hp::petsc_setup_preconditioner() {
                 }
             }
         }
-        /* How to perturb extra unknowns? */
         for(int i=0;i<nebd;++i) {
             if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
             for(int j=0;j<ebdry(i)->nseg;++j) {
