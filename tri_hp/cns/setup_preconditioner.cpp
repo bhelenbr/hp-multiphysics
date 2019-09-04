@@ -233,35 +233,8 @@ void tri_hp_cns::setup_preconditioner() {
 
 		}
 	}
-	
-	if(gbl->diagonal_preconditioner){
-		for(i=0;i<npnt;++i) {
-			gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
-		}
-	}
-	
-	// remember to do parallel communication
-	
+    
 	tri_hp::setup_preconditioner();
-	
-	int last_phase,mp_phase;
-	
-	if(gbl->diagonal_preconditioner){
-		for(int stage = 0; stage<NV; ++stage) {
-			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				vc0load(mp_phase,gbl->vpreconditioner.data() +stage*NV,NV);
-				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-				last_phase = true;
-				last_phase &= vc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
-			}
-			if (log2p) {
-				sc0load(gbl->spreconditioner.data()+stage*NV,0,0,NV);
-				smsgpass(boundary::all,0,boundary::symmetric);
-				sc0wait_rcv(gbl->spreconditioner.data()+stage*NV,0,0,NV);
-			}
-		}
-	}
-	
 }
 
 void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
