@@ -8,6 +8,7 @@
  */
 #include "tri_hp_cns.h"
 #include "bdry_cns.h"
+#include "shock.h"
 #include <input_map.h>
 #include <tri_boundary.h>
 
@@ -90,9 +91,9 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
  */
 class tri_hp_cns_etype {
 	public:
-		static const int ntypes = 10;
+		static const int ntypes = 9;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,
-			symmetry,applied_stress,surface,surface_slave,force_coupling,adiabatic};
+			symmetry,applied_stress,force_coupling,adiabatic,shock};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -102,7 +103,7 @@ class tri_hp_cns_etype {
 };
 
 const char tri_hp_cns_etype::names[ntypes][40] = {"inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","force_coupling","adiabatic"};
+    "symmetry","applied_stress","force_coupling","adiabatic","shock"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
@@ -110,7 +111,6 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 	std::istringstream data;
 	int type;          
 	hp_edge_bdry *temp;  
-
 
 	type = tri_hp_cns_etype::getid(name.c_str());
 	switch(type) {
@@ -138,22 +138,17 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 			temp = new applied_stress(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_etype::surface: {
-//			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-//				temp = new surface(*this,*ebdry(bnum));
-//				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-//			}
-//			else {
-//				std::cerr << "use coupled physics for surface boundary" << std::endl;
-//				sim::abort(__LINE__,__FILE__,&std::cerr);
-//			}
-//			break;
-//		}
-//		case tri_hp_cns_etype::surface_slave: {
-//			temp = new surface_slave(*this,*ebdry(bnum));
-//			dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-//			break;
-//		}
+		case tri_hp_cns_etype::shock: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new shock(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for shock boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
+			break;
+		}
 //		case tri_hp_cns_etype::force_coupling: {
 //			temp = new force_coupling(*this,*ebdry(bnum));
 //			break;

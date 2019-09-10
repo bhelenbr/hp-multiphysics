@@ -177,8 +177,14 @@ public:
 	virtual void maxres() {}
 	virtual void vdirichlet();
 	virtual void sdirichlet(int mode);
-	virtual void pmatchsolution_snd(FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
-	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
+	virtual void pmatchsolution_snd(FLT *pdata, int vrtstride) {
+        if (c0_indices.size())
+            base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);
+    }
+	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {
+        if (c0_indices.size())
+            base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);
+    }
 	virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride);
 	virtual int smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 	

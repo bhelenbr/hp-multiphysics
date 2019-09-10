@@ -116,7 +116,7 @@ namespace bdry_cns {
 				std::string keyword = base.idprefix +"_dir";
 				inmap.getwdefault(keyword,dir,0);
 				essential_indices.push_back(dir+1);
-				type[dir] = essential;
+				type[dir+1] = essential;
 			}
 			void tadvance();
 	};

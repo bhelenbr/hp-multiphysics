@@ -127,9 +127,12 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				cv(2,1)(i,j) +=  dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(0)(i,j);
 
 				/* ENERGY FLUX */
-				double h = gogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
-				cv(3,0)(i,j) = h*cv(0,0)(i,j);
-				cv(3,1)(i,j) = h*cv(0,1)(i,j);
+                double E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
+                double new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
+                double new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
+                
+                cv(3,0)(i,j) = +dcrd(1,1)(i,j)*new_fluxx -dcrd(0,1)(i,j)*new_fluxy;
+                cv(3,1)(i,j) = -dcrd(1,0)(i,j)*new_fluxx +dcrd(0,0)(i,j)*new_fluxy;
 			}
 		}
 		for(int n = 0; n < NV; ++n)
@@ -318,9 +321,12 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				cv(2,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(0)(i,j);
 				
 				/* ENERGY FLUX */
-				double h = gogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
-				cv(3,0)(i,j) = h*cv(0,0)(i,j);
-				cv(3,1)(i,j) = h*cv(0,1)(i,j);
+                double E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
+                double new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
+                double new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
+                
+                cv(3,0)(i,j) = +ldcrd(1,1)*new_fluxx -ldcrd(0,1)*new_fluxy;
+                cv(3,1)(i,j) = -ldcrd(1,0)*new_fluxx +ldcrd(0,0)*new_fluxy;
 			}
 		}
 		for(int n = 0; n < NV; ++n)

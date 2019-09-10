@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1DDE741D2303562E00BE7310 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		384ADBB021650563009FC4D3 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384ADBA021650563009FC4D3 /* allocate.cpp */; };
 		384ADBB121650563009FC4D3 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384ADBA021650563009FC4D3 /* allocate.cpp */; };
 		384ADBB221650563009FC4D3 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384ADBA021650563009FC4D3 /* allocate.cpp */; };
@@ -613,6 +614,8 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		1DDE741A230346F000BE7310 /* shock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shock.cpp; path = cns/shock.cpp; sourceTree = "<group>"; };
+		1DDE741B230346F000BE7310 /* shock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shock.h; path = cns/shock.h; sourceTree = "<group>"; };
 		384ADB9D21650562009FC4D3 /* tri_hp_komega.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_komega.h; path = komega/tri_hp_komega.h; sourceTree = "<group>"; };
 		384ADBA021650563009FC4D3 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = komega/allocate.cpp; sourceTree = "<group>"; };
 		384ADBA121650563009FC4D3 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = komega/rsdl.cpp; sourceTree = "<group>"; };
@@ -1005,6 +1008,8 @@
 				95816A331283A55B001F9519 /* update.cpp */,
 				6F681E840F533522005F5783 /* bdry_cns.h */,
 				6F681E830F533522005F5783 /* bdry.cpp */,
+				1DDE741B230346F000BE7310 /* shock.h */,
+				1DDE741A230346F000BE7310 /* shock.cpp */,
 				6F681E850F533522005F5783 /* getnewbdry.cpp */,
 				6F681E860F533522005F5783 /* getnewibc.cpp */,
 			);
@@ -1574,6 +1579,7 @@
 				E67EBAC512D603C50011EB69 /* rsdl.cpp in Sources */,
 				E67EBAC612D603C50011EB69 /* length.cpp in Sources */,
 				E60E8153180AE3A90067E2E7 /* getnewibc.cpp in Sources */,
+				1DDE741D2303562E00BE7310 /* shock.cpp in Sources */,
 				E67EBAC712D603C50011EB69 /* bdry.cpp in Sources */,
 				E60E8152180AE3A90067E2E7 /* getnewbdry.cpp in Sources */,
 				E67EBAC812D603C50011EB69 /* getnewbdry.cpp in Sources */,
@@ -1949,8 +1955,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(mpi_threads)",
-					MPISRC,
 					petsc,
+					MPISRC,
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1972,8 +1978,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(mpi_threads)",
-					MPISRC,
 					petsc,
+					MPISRC,
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",

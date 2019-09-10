@@ -213,10 +213,10 @@ void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector
 #endif
 	
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
-	//			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*ibc->f(x.NV-1, xpt, x.gbl->time) +0.5*(u(1)*u(1)+u(2)*u(2));
-	
-	flx(x.NV-1) = h*flx(0);
+    double E = u(x.NV-1)/(x.gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
+    //double E = ibc->f(0, xpt, x.gbl->time)/(u(0)*(x.gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
+    double rho = u(0)/u(x.NV-1);
+    flx(x.NV-1) = rho*E*((u(1)-mv(0))*norm(0)+(u(2)-mv(1))*norm(1))+ibc->f(0, xpt, x.gbl->time)*(u(1)*norm(0)+u(2)*norm(1));
 	
 	return;
 }
