@@ -91,9 +91,9 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
  */
 class tri_hp_cns_etype {
 	public:
-		static const int ntypes = 9;
+		static const int ntypes = 10;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,
-			symmetry,applied_stress,force_coupling,adiabatic,shock};
+			symmetry,applied_stress,force_coupling,adiabatic,shock,outflow_supersonic};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -103,7 +103,7 @@ class tri_hp_cns_etype {
 };
 
 const char tri_hp_cns_etype::names[ntypes][40] = {"inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","force_coupling","adiabatic","shock"};
+    "symmetry","applied_stress","force_coupling","adiabatic","shock","outflow_supersonic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
@@ -157,6 +157,10 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 			temp = new adiabatic(*this,*ebdry(bnum));
 			break;
 		}
+        case tri_hp_cns_etype::outflow_supersonic: {
+            temp = new outflow_supersonic(*this,*ebdry(bnum));
+            break;
+        }
 		default: {
 			return(tri_hp::getnewedgeobject(bnum,name));
 		}

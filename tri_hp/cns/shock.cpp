@@ -48,10 +48,6 @@ void shock::init(input_map& inmap,void* gin) {
 void shock::rsdl(int stage) {
     
 	const int sm = basis::tri(x.log2p)->sm();
-
-	//std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-
-    //pmatchsolution_snd(x.ug.v.data(),1);
     
     base.vloadbuff(boundary::all,x.ug.v.data(),0,x.NV-1,x.NV);
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
@@ -74,7 +70,6 @@ void shock::rsdl(int stage) {
         }
     }
     
-	//smatchsolution_snd(x.ug.s.data(),0,sm-1,sm);
     
     int j,k,count,offset,sind,sign;
     int bgn = 0;
@@ -100,8 +95,8 @@ void shock::rsdl(int stage) {
     else {
         int bgnsign = (bgn % 2 ? -1 : 1);
         count = 0;
-
-        for(j=base.nseg-1;j>=0;--j) {
+        
+        for(j=0;j<base.nseg;++j) {
             sind = base.seg(j);
             offset = (sind*stride +bgn)*x.NV;
             sign = bgnsign;
@@ -144,8 +139,6 @@ void shock::rsdl(int stage) {
         }
     }
     
-    //std::cout << x.ug.s << std::endl;
-    
 	hp_coupled_bdry::rsdl(stage);
 
 }
@@ -155,13 +148,13 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 
 	const int sm = basis::tri(x.log2p)->sm();
 
-	int i,n,sind; //i=gp, n=ND
-	TinyVector<FLT,tri_mesh::ND> norm, rp; //rp=radius axissymetric
-	Array<FLT,1> ubar(x.NV); //mean vel
+	int i,n,sind;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV);
 	FLT jcb; //jacobian 1d on edge
-	Array<TinyVector<FLT,MXGP>,1> u(x.NV),u_opp(x.NV); //proj soln to gp
-	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u; //proj coordintes (x,y) to gp, dcrd is derives
-	TinyMatrix<FLT,7,MXGP> res; //res at gp, unintegrated
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV),u_opp(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u;
+	TinyMatrix<FLT,7,MXGP> res;
 	Array<TinyVector<FLT,MXTM>,1> uht_opp(x.NV);
     Array<FLT,1> mvel_u_new(MXGP), shock_vel(MXGP);
 
@@ -175,24 +168,24 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
     
     
     
-	sind = base.seg(indx);	//sind = index of boundary element edge in bigger mesh
-	x.crdtocht1d(sind); //get all info about this element side
+	sind = base.seg(indx);
+	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
-		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0)); //project (x,y) and dx/dxi and dy/dxi to gp
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
 	
 	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0)); //project soln uhat to gp, uht loaded automatically
+		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));
     
 	for(n=0;n<x.NV;++n)
-		basis::tri(x.log2p)->proj1d(&uht_opp(n)(0),&u_opp(n)(0)); //project soln uhat to gp in opposite region
+		basis::tri(x.log2p)->proj1d(&uht_opp(n)(0),&u_opp(n)(0));
     
-	for(i=0;i<basis::tri(x.log2p)->gpx();++i) { //calculate res at gp
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
         
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
         
-        FLT pu, uu, vu, RTu, rhou, Eu, cu, pd, ud, vd, RTd, rhod, Ed, cd, nsign;
+        FLT pu, uu, vu, RTu, rhou, Eu, cu, pd, ud, vd, RTd, rhod, Ed, cd;
 		if (u(0)(i)<u_opp(0)(i)){
 			pu = u(0)(i);
 			uu = u(1)(i);
@@ -203,8 +196,6 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			ud = u_opp(1)(i);
 			vd = u_opp(2)(i);
 			RTd = u_opp(3)(i);
-            
-            nsign = 1.0;
             
 		}
 		else{
@@ -217,8 +208,6 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			uu = u_opp(1)(i);
 			vu = u_opp(2)(i);
 			RTu = u_opp(3)(i);
-            
-            nsign = -1.0;
             
 		}
         
@@ -280,9 +269,14 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
             mvel_u_new(i) = (shock_vel(i)-normal_uu)*jcb;
         }
         
-		/* TANGENTIAL SPACING */ //how are points distributed along edge, see paper
-		res(0,i) = -ksprg(indx)*jcb;
-		/* NORMAL FLUX */ //rad is for axissymetric weight by r, calculate all fluxes here and figure things out
+		/* TANGENTIAL SPACING */
+        if(is_master){
+            res(0,i) = -ksprg(indx)*jcb;
+        }
+        else{
+            res(0,i) = ksprg(indx)*jcb;
+        }
+		/* NORMAL FLUX */
         res(1,i) = shock_vel(i)*jcb;
         
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
@@ -300,7 +294,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	}
     
 	lf = 0.0;
-	/* INTEGRATE & STORE shock SOURCE TERM */ //integrate wrt basis functions
+	/* INTEGRATE & STORE shock SOURCE TERM */
 	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(3,0));
 	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(4,0));
 	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(5,0));
@@ -527,7 +521,6 @@ int shock::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_
     }
     for(int n=0;n<vdofs;++n) {
         target(p1 +n) += x.NV;
-        //target(p1 +n) += (1+sm)*x.NV;
     }
     
     // Now add to side degrees of freedom

@@ -142,6 +142,16 @@ namespace bdry_cns {
 				x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
 			}
 		};
+    
+    
+    class outflow_supersonic : public generic {
+    protected:
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
+    public:
+        outflow_supersonic(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "outflow_supersonic";}
+        outflow_supersonic(const outflow_supersonic& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
+        outflow_supersonic* create(tri_hp& xin, edge_bdry &bin) const {return new outflow_supersonic(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+    };
 
 
 }
