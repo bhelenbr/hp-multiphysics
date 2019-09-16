@@ -146,6 +146,7 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 			else {
 				std::cerr << "use coupled physics for shock boundary" << std::endl;
 				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
 			}
 			break;
 		}
