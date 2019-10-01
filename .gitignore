@@ -16,6 +16,8 @@ Results*/
 Baseline*/
 Testing/spectral_hp.oldbc/
 Testing/tri_hp_dg/
+bin/
+ShowMesh/
 *.a
 *.o
 xcuserdata/
