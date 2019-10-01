@@ -1,0 +1,43 @@
+log2p: 2
+logfile: output
+dtinv: 100.0
+ncycle: 10
+ntstep: 1
+#debug_output: 1
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+relative_tolerance: 1.0e-8
+ibc: freestream
+perturb_amplitude: 0
+flowangle: 90.0
+flowspeed: 1.0
+rho: 1.0
+mu: 0.1
+nblock: 1 1
+mesh_movement: coupled_deformable
+blocktype: ins
+b0_mesh: rstrt1_b0.grd
+b0_s1_hp_type: inflow
+b0_s2_hp_type: symmetry
+b0_s2_r_type: fixed
+b0_s2_r_dir: 0 0
+b0_s3_type: symbolic_comm
+b0_s3_curved: 1
+b1_mesh: rstrt1_b1.grd
+b1_s3_type: symbolic_comm
+b1_s3_curved: 1
+b1_s4_r_type: fixed
+b1_s4_r_dir: 0 0
+b1_s5_hp_type: outflow
+b1_s5_r_type: fixed
+b1_s4_hp_type: symmetry
+amp: 1.0
+b0_s3_h: x1-amp*t*sin(2*_pi*x0)-1.0
+b0_s3_dhdx0: -amp*t*cos(2*_pi*x0)*2*_pi
+b0_s3_dhdx1: 1
+b1_s3_h: x1-amp*t*sin(2*_pi*x0)-1.0
+b1_s3_dhdx0: -amp*t*cos(2*_pi*x0)*2*_pi
+b1_s3_dhdx1: 1
+#b0_s2_type: prdc
+#b1_s4_type: prdc
+#b0_v1_type: prdc
+#b1_v1_type: prdc
