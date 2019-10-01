@@ -63,6 +63,10 @@
 				</array>
 				<key>Class Name</key>
 				<string>AMGetSelectedFinderItemsAction</string>
+				<key>Disabled</key>
+				<false/>
+				<key>IgnoresInput</key>
+				<true/>
 				<key>InputUUID</key>
 				<string>1976B134-73E7-431F-8D88-083E9B2BC342</string>
 				<key>Keywords</key>
@@ -157,17 +161,20 @@ fi
 
 #DISPLAY=:0.0; export DISPLAY
 location="${HOME}/Codes/ShowMesh"
-for file in $@; do
+for file in "$@"; do
+	echo "$file"
 	case "$file" in
       *.[e,n,s])  
 		"${location}/_showmesh/showmesh" "${file%.*}"
 		;;
       *.grd)
-		"${location}/_showgrid/showgrid" "${file%.*}"
+		echo "${location}/_showgrid/showgrid ${file%.*}"
+		"${location}/_showgrid/showgrid" "${file%.*}" &amp;
 		;;
 
     esac
 done
+wait
 echo finished</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
@@ -281,7 +288,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>554.500000:1122.000000</string>
+				<string>425.500000:1165.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -291,7 +298,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>84A0772A-C3AE-4991-98E5-9609E79A83F9</key>
+		<key>7A3812D7-CC8D-4307-A68B-98CFE79B830C</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
