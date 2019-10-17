@@ -167,66 +167,68 @@ void tri_hp::length() {
             gbl->res.v(v1,0) = 1;
         }
 		
-		/* NOW RESCALE AT VERTICES */
-		for (int pind=0;pind<npnt;++pind)
-			lngth(pind) *= gbl->res.v(pind,0);
-		
-		/* LIMIT BOUNDARY CURVATURE */
-		for(int i=0;i<nebd;++i) {
-			if (!(hp_ebdry(i)->is_curved()) || !ebdry(i)->adaptable) continue;
-			
-			for(int j=0;j<ebdry(i)->nseg;++j) {
-				int sind = ebdry(i)->seg(j);
-				int v1 = seg(sind).pnt(0);
-				int v2 = seg(sind).pnt(1);
-				
-				crdtocht1d(sind);
-				
-				/* FIND ANGLE BETWEEN LINEAR SIDES */
-				int tind = seg(sind).tri(0);
-				int k;
-				for(k=0;k<3;++k)
-					if (tri(tind).seg(k) == sind) break;
-				
-				int v0 = tri(tind).pnt(k);
-				
-				TinyVector<FLT,ND> dx0;
-				dx0(0) = pnts(v2)(0)-pnts(v1)(0);
-				dx0(1) = pnts(v2)(1)-pnts(v1)(1);
-				FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1) +10.*EPSILON;  // To make sure we don't exceed 1.0 in acos
-				
-				TinyVector<FLT,ND> dx1;
-				dx1(0) = pnts(v0)(0)-pnts(v2)(0);
-				dx1(1) = pnts(v0)(1)-pnts(v2)(1);
-				FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
-				
-				TinyVector<FLT,ND> dx2;
-				dx2(0) = pnts(v1)(0)-pnts(v0)(0);
-				dx2(1) = pnts(v1)(1)-pnts(v0)(1);
-				FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
-				
-				TinyVector<FLT,2> ep, dedpsi;
-				
-				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
-				FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-				
-				FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
-				FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
-				
+        if (gbl->adaptable) {
+            /* NOW RESCALE AT VERTICES */
+            for (int pind=0;pind<npnt;++pind)
+                lngth(pind) *= gbl->res.v(pind,0);
+            
+            /* LIMIT BOUNDARY CURVATURE */
+            for(int i=0;i<nebd;++i) {
+                if (!(hp_ebdry(i)->is_curved()) || !ebdry(i)->adaptable) continue;
+                
+                for(int j=0;j<ebdry(i)->nseg;++j) {
+                    int sind = ebdry(i)->seg(j);
+                    int v1 = seg(sind).pnt(0);
+                    int v2 = seg(sind).pnt(1);
+                    
+                    crdtocht1d(sind);
+                    
+                    /* FIND ANGLE BETWEEN LINEAR SIDES */
+                    int tind = seg(sind).tri(0);
+                    int k;
+                    for(k=0;k<3;++k)
+                        if (tri(tind).seg(k) == sind) break;
+                    
+                    int v0 = tri(tind).pnt(k);
+                    
+                    TinyVector<FLT,ND> dx0;
+                    dx0(0) = pnts(v2)(0)-pnts(v1)(0);
+                    dx0(1) = pnts(v2)(1)-pnts(v1)(1);
+                    FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1) +10.*EPSILON;  // To make sure we don't exceed 1.0 in acos
+                    
+                    TinyVector<FLT,ND> dx1;
+                    dx1(0) = pnts(v0)(0)-pnts(v2)(0);
+                    dx1(1) = pnts(v0)(1)-pnts(v2)(1);
+                    FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
+                    
+                    TinyVector<FLT,ND> dx2;
+                    dx2(0) = pnts(v1)(0)-pnts(v0)(0);
+                    dx2(1) = pnts(v1)(1)-pnts(v0)(1);
+                    FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
+                    
+                    TinyVector<FLT,2> ep, dedpsi;
+                    
+                    basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
+                    FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+                    
+                    FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
+                    FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
+                    
 
-				basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
-				lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-				
-				FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
-				FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
-				
-				
-				// FIXME: end points are wrong for periodic boundary or communication boundary
-				FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
-				lngth(v1) /= 1. +sum;
-				lngth(v2) /= 1. +sum;
-			}
-		}
+                    basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
+                    lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+                    
+                    FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
+                    FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
+                    
+                    
+                    // FIXME: end points are wrong for periodic boundary or communication boundary
+                    FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
+                    lngth(v1) /= 1. +sum;
+                    lngth(v2) /= 1. +sum;
+                }
+            }
+        }
 		
 		/* Need to call this first because smooth_lngth uses fltwk */
 		if (gbl->adapt_output) {
