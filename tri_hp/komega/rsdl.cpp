@@ -16,8 +16,8 @@
 #define BODYFORCE
 
 //#define WILCOX1988
-//#define WILCOX1988_KL
-#define WILCOX2006
+#define WILCOX1988_KL
+//#define WILCOX2006
 
 double psifunc(double x,double xs,double xe) {
     if (x >= xe) {
@@ -50,7 +50,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT epslnk = gbl->epslnk;
     const FLT sgmomg = 0.5,  betastr = 0.09;
 #ifdef WILCOX1988
-    FLT WlcxPrd;
+    FLT SS;
     const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9.;
 #endif
 #ifdef WILCOX1988_KL
@@ -58,7 +58,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9.;
 #endif
 #ifdef WILCOX2006
-    FLT WlcxPrd, dktlddx, dktlddy, CD, SS, omgLmtr, omgLmtd, tmuLmtd;
+    FLT dktlddx, dktlddy, CD, SS, omgLmtr, omgLmtd, tmuLmtd;
     const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25., sgmdo = 1./8., Clim = 7./8.;
 #endif
     const FLT k_mom= 1.0; // the term in the momentum equation including k
@@ -264,18 +264,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /* KATO-LAUNDER PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
                     vrtctinv = sqrt(0.5*(dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
-                    res(2)(i,j) -= tmu*vrtctinv*strninv*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*vrtctinv*strninv/omg*cjcb;
+                    res(2)(i,j) -= 2.0*tmu*vrtctinv*strninv*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*vrtctinv*strninv/omg*cjcb;
 #else
                     /* WILCOX ORIGINAL PRODUCTION TERMS */
-                    WlcxPrd = 2.*dudx*dudx + (dudy +dvdx)*(dudy +dvdx) +2.*dvdy*dvdy;
+                    SS = dudx*dudx + 0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
 #ifdef WILCOX1988
-                    res(2)(i,j) -= tmu*WlcxPrd*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*WlcxPrd/omg*cjcb;
+                    res(2)(i,j) -= tmu*2.0*SS*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omg*cjcb;
 #endif
 #ifdef WILCOX2006
                     /* STRESS-LIMITER MODIFICATION */
-                    SS = dudx*dudx+ 0.5*(dudy + dvdx)*(dudy + dvdx) + dvdy*dvdy;
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
@@ -606,18 +605,17 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /* KATO-LAUNDER PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
                     vrtctinv = sqrt(0.5*(dudy -dvdx)*(dudy -dvdx));
                     strninv = sqrt(dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy);
-                    res(2)(i,j) -= tmu*vrtctinv*strninv*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*vrtctinv*strninv/omg*cjcb;
+                    res(2)(i,j) -= 2.0*tmu*vrtctinv*strninv*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*vrtctinv*strninv/omg*cjcb;
 #else
                     /* WILCOX ORIGINAL PRODUCTION TERMS */
-                    WlcxPrd = 2.*dudx*dudx + (dudy +dvdx)*(dudy +dvdx) +2.*dvdy*dvdy;
+                    SS = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
 #ifdef WILCOX1988
-                    res(2)(i,j) -= tmu*WlcxPrd*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*WlcxPrd/omg*cjcb;
+                    res(2)(i,j) -= 2.0*tmu*SS*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2*SS/omg*cjcb;
 #endif
 #ifdef WILCOX2006
                     /* STRESS-LIMITER MODIFICATION */
-                    SS = dudx*dudx+ 0.5*(dudy + dvdx)*(dudy + dvdx) + dvdy*dvdy;
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
