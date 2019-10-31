@@ -1,0 +1,12 @@
+logfile: generate
+nblock: 2
+adapt: 1
+growth factor: 1000
+b0_mesh: prdc_bot.d
+b0_s2_type: prdc
+b0_s3_type: comm
+b0_v1_type: prdc
+b1_mesh: prdc_top.d
+b1_s3_type: comm
+b1_s4_type: prdc
+b1_v1_type: prdc

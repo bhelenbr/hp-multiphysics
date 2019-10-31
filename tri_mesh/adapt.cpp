@@ -44,8 +44,7 @@ void tri_mesh::adapt() {
 	int i;
 
 	/* CALCULATE TARGET LENGTH */
-    if (gbl->adaptable)
-        length();
+    length();
 	
 	for(int last_phase = 0, mp_phase = 0; !last_phase; ++mp_phase) {
 		pmsgload(boundary::all_phased,mp_phase,boundary::symmetric,lngth.data(),0,0,1);
