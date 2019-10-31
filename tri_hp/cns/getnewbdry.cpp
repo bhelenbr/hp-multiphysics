@@ -126,10 +126,10 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_etype::euler: {
-//			temp = new euler(*this,*ebdry(bnum));
-//			break;
-//		}
+		case tri_hp_cns_etype::euler: {
+			temp = new euler(*this,*ebdry(bnum));
+			break;
+		}
 		case tri_hp_cns_etype::symmetry: {
 			temp = new symmetry(*this,*ebdry(bnum));
 			break;

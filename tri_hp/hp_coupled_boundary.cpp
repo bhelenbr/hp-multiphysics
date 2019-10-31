@@ -2232,10 +2232,12 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 			case curved: {
 				int bnumwall = base.ebdry(1-surfbdry);
 				TinyVector<FLT,tri_mesh::ND> tgt = x.pnts(base.pnt);
-				x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, tgt);
-				//FIXME: NEED TO REWRITE BOUNDARY GEOMETRY OBJECTS
+                if(surfbdry == 0)
+                    x.ebdry(bnumwall)->mvpttobdry(0, 1.0, tgt);
+                else
+                    x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, -1.0, tgt);
 				TinyVector<FLT,tri_mesh::ND> diff = x.pnts(base.pnt)-tgt;
-				lf(x.NV) = dot(diff,diff);  // FIXME: This won't work because its not an interesection with 0..
+                lf(x.NV) = dot(diff,wall_normal);
 				break;
 			}
 		}

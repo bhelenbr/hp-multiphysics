@@ -1,0 +1,106 @@
+#polynomial order: 
+log2p: 2
+#petsc command line args: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+#Number of iterative cycles: 
+ncycle: 100
+#restart: 1
+#Iterative tolerances: 
+absolute_tolerance: 1.0e-10
+relative_tolerance: 5.0e-11
+#Number of time steps: 
+ntstep: 5000
+rsdl_debug: 0
+jac_debug: 0
+debug_output: 0
+#Inverse time step: 
+dtinv: cu*100
+# Name of file for output: 
+logfile: output
+# Number of mesh blocks for each processor: 
+nblock: 1 1
+# flag for mesh adaptation: 
+adapt: 1
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 10
+#Physical properties: 
+blocktype: cns
+mesh_movement: coupled_deformable
+mu: 0
+prandtl: 1
+# Initial and boundary condition function: 
+gamma: 1.4
+xs: 7.0
+ys: 1.17275
+area1: 1.75-0.75*cos((0.2*x0-1)*_pi)
+area2: 1.25-0.25*cos((0.2*x0-1)*_pi)
+darea1: (3*_pi*sin(_pi*(x0/5 - 1)))/20
+darea2: (_pi*sin(_pi*(x0/5 - 1)))/20
+# IC Upstream
+Po: 6894.76
+RTo: 55.5556*287.058
+b0_ibc: nozzle
+b0_ibc_Aratio: x0<5 ? area1 : area2
+b0_ibc_dArdx: x0<5 ? darea1 : darea2
+b0_ibc_RTo: RTo
+b0_ibc_Po: Po
+b0_ibc_xthroat: 5.0
+# Name of mesh: 
+b0_mesh: rstrt1_b0.grd
+# Side type specifiers: 
+#b0_s1_hp_type: symmetry
+#b0_s1_dir: 1
+b0_s1_hp_type: euler
+b0_s2_type: coupled_symbolic_comm
+b0_s2_h: x0-xs
+b0_s2_dhdx0: 1
+b0_s2_dhdx1: 0
+b0_s2_hp_type: shock
+b0_s2_c0_indices: 
+#b0_s3_hp_type: symmetry
+#b0_s3_dir: 1
+b0_s3_hp_type: euler
+b0_s4_hp_type: inflow
+# IC downstream
+M: 1.49491
+pu: Po/((1+0.5*(gamma-1)*M^2)^(gamma/(gamma-1)))
+RTu: RTo/(1+0.5*(gamma-1)*M^2)
+rhou: pu/RTu
+cu: sqrt(gamma*RTu)
+pd: pu*(1.0+((2.0*gamma)/(gamma+1.0))*(M^2-1.0))
+rhod: rhou*(((gamma+1.0)*M^2)/((gamma-1.0)*M^2+2.0))
+ud: (rhou/rhod)*M*cu
+RTd: pd/rhod
+cd: sqrt(gamma*RTd)
+Md: ud/cd
+Astar: ys*Md/(((2+(gamma-1)*Md^2)/(gamma+1))^((gamma+1)/(2*(gamma-1))))
+b1_ibc: nozzle
+b1_ibc_Aratio: area2/Astar
+b1_ibc_dArdx: darea2/Astar
+b1_ibc_RTo: RTo
+b1_ibc_Po: pd*(1+0.5*(gamma-1)*Md^2)^(gamma/(gamma-1))
+b1_ibc_xthroat: 12
+# Name of mesh: 
+b1_mesh: rstrt1_b1.grd
+# Side type specifiers: 
+#b1_s5_hp_type: symmetry
+#b1_s5_dir: 1
+b1_s5_hp_type: euler
+b1_s6_hp_type: outflow
+#b1_s7_hp_type: symmetry
+#b1_s7_dir: 1
+b1_s7_hp_type: euler
+b1_s2_type: coupled_symbolic_comm
+b1_s2_h: x0-xs
+b1_s2_dhdx0: 1
+b1_s2_dhdx1: 0
+b1_s2_hp_type: shock
+b1_s2_c0_indices: 
+b0_v1_hp_type: hp_deformable_free_pnt
+b0_v2_hp_type: hp_deformable_free_pnt
+b1_v1_hp_type: hp_deformable_free_pnt
+b1_v2_hp_type: hp_deformable_free_pnt
+b0_v1_wall_type: curved
+b0_v2_wall_type: curved
+b1_v1_wall_type: curved
+b1_v2_wall_type: curved

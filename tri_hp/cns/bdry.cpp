@@ -687,39 +687,7 @@ void symmetry::tadvance() {
 
 void outflow_supersonic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
     
-    //            TinyVector<FLT,4> ub,fluxtemp;
-    //            FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-    //            norm /= mag;
-    //
-    //            /* rotate coordinate system */
-    //            FLT ul =  (u(1)-mv(0))*norm(0) +(u(2)-mv(1))*norm(1);
-    //            FLT vl = -(u(1)-mv(0))*norm(1) +(u(2)-mv(1))*norm(0);
-    //
-    //            /* far field */
-    //            FLT pr = ibc->f(0,xpt,x.gbl->time);
-    //            FLT RT = ibc->f(x.NV-1,xpt,x.gbl->time);
-    //            //RT = u(x.NV-1);
-    //
-    //            FLT rho = pr*RT;
-    //
-    //            /* CONTINUITY */
-    //            fluxtemp(0) = rho*ul;
-    //            fluxtemp(1) = fluxtemp(0)*ul+pr;
-    //            fluxtemp(2) = fluxtemp(0)*vl;
-    //
-    //            FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(ul*ul+vl*vl);
-    //            fluxtemp(3) = fluxtemp(0)*h;
-    //
-    //            /* CHANGE BACK TO X,Y COORDINATES */
-    //            flx(0) = fluxtemp(0);
-    //            flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
-    //            flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
-    //            flx(3) = fluxtemp(3);
-    //
-    //            flx *= mag;
-    
     flx(0) = u(0)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
-    //        flx(0) = ibc->f(0, xpt, x.gbl->time)/ibc->f(x.NV-1, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
     
     /* X&Y MOMENTUM */
 #ifdef INERTIALESS
@@ -731,7 +699,6 @@ void outflow_supersonic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt,
 #endif
     
     /* ENERGY EQUATION */
-    //double E = u(x.NV-1)/(x.gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
     double rho = u(0)/u(x.NV-1);
     double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
     flx(x.NV-1) = rho*E*((u(1)-mv(0))*norm(0)+(u(2)-mv(1))*norm(1))+u(0)*(u(1)*norm(0)+u(2)*norm(1));
@@ -739,4 +706,30 @@ void outflow_supersonic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt,
     return;
 }
 
+
+
+void euler::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
+    
+    Array<FLT,1> ub(x.NV);
+    for(int n=0;n<x.NV;++n)
+        ub(n) = ibc->f(n,xpt,x.gbl->time);
+    
+    flx(0) = u(0)/u(x.NV-1)*((ub(1) -mv(0))*norm(0) +(ub(2) -mv(1))*norm(1));
+    
+    /* X&Y MOMENTUM */
+#ifdef INERTIALESS
+    for (int n=1;n<tri_mesh::ND+1;++n)
+        flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+#else
+    for (int n=1;n<tri_mesh::ND+1;++n)
+        flx(n) = flx(0)*ub(n) +u(0)*norm(n-1);
+#endif
+    
+    /* ENERGY EQUATION */
+    double rho = u(0)/u(x.NV-1);
+    double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(ub(1)*ub(1)+ub(2)*ub(2));
+    flx(x.NV-1) = rho*E*((ub(1)-mv(0))*norm(0)+(ub(2)-mv(1))*norm(1))+u(0)*(ub(1)*norm(0)+ub(2)*norm(1));
+    
+    return;
+}
 

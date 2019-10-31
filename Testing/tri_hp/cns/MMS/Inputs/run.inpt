@@ -1,0 +1,48 @@
+log2p: 0
+b0_helper: l2error
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+itercrsn: 1
+iterrfne: 1
+ncycle: 10
+ngrid: 1
+absolute_tolerance: 1.0e-10
+#relative_tolerance: 5.0e-4
+ntstep: 1
+dtinv: 0
+#dtinv_prev: 10
+#restart: 74
+debug_output: 1
+#adapt_output: 1
+diagonal_preconditioner: 0
+logfile: MMS
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+b0_dissipation: 1
+# MMS stuff: 
+mu: 0.0
+gamma: 1.4
+R: 287.058
+prandtl: .75
+A: 0.04
+b0_ibc: symbolic
+b0_ibc0: 1+A*sin(x0+x1)
+b0_ibc1: 1
+b0_ibc2: 1
+b0_ibc3: 1
+b0_src: symbolic
+b0_src0: A*2*cos(x0+x1)
+b0_src1: A*3*cos(x0+x1)
+b0_src2: A*3*cos(x0+x1)
+b0_src3: A*9*cos(x0+x1)
+b0_type: cns
+# Grid type 3 = .grd, 5 = bin: 
+b0_filetype: 3
+#Memory allocation factor to allow mesh to get refine (times initial number of vertices): 
+b0_growth factor: 5.0
+# Mesh name: 
+b0_mesh: square4_b0.grd
+b0_s4_hp_type: inflow
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow
+b0_s3_hp_type: outflow

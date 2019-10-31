@@ -1,0 +1,37 @@
+logfile: generate
+adapt: 1
+b0_mesh: ./pre_shock.d
+adapt: 1
+res: 0.5
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 8000.0
+nblock: 2
+xs: 7.0
+ys: 1.17275
+area1: 1.75-0.75*cos((0.2*x0-1)*_pi)
+area2: 1.25-0.25*cos((0.2*x0-1)*_pi)
+b0_s1_type: symbolic
+b0_s1_h: x0<5 ? -area1-x1 : -area2-x1
+b0_s1_dhdx0: x0<5 ? -(3*_pi*sin(_pi*(x0/5 - 1)))/20 : -(_pi*sin(_pi*(x0/5 - 1)))/20
+b0_s1_dhdx1: -1
+b0_s2_type: symbolic_comm
+b0_s2_h: x0-xs
+b0_s2_dhdx0: 1
+b0_s2_dhdx1: 0
+b0_s3_type: symbolic
+b0_s3_h: x0<5 ? area1-x1 : area2-x1
+b0_s3_dhdx0: x0<5 ? (3*_pi*sin(_pi*(x0/5 - 1)))/20 : (_pi*sin(_pi*(x0/5 - 1)))/20
+b0_s3_dhdx1: -1
+b1_mesh: ./post_shock.d
+b1_s2_type: symbolic_comm
+b1_s2_h: x0-xs
+b1_s2_dhdx0: 1
+b1_s2_dhdx1: 0
+b1_s5_type: symbolic
+b1_s5_h: -area2-x1
+b1_s5_dhdx0: -(_pi*sin(_pi*(x0/5 - 1)))/20
+b1_s5_dhdx1: -1
+b1_s7_type: symbolic
+b1_s7_h: area2-x1
+b1_s7_dhdx0: (_pi*sin(_pi*(x0/5 - 1)))/20
+b1_s7_dhdx1: -1

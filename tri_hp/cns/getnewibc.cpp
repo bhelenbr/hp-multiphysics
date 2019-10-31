@@ -11,6 +11,7 @@
 #include "bdry_cns.h"
 #include <tri_boundary.h>
 
+#include <fstream>
 namespace ibc_cns {
 
 	class freestream : public init_bdry_cndtn {
@@ -280,6 +281,171 @@ namespace ibc_cns {
 		
 			
 	};
+
+
+    class nozzle : public init_bdry_cndtn {
+//        protected:
+//            tri_hp_cns &x;
+        
+        private:
+            FLT RTo, Po, xthroat;
+            FLT gam; // temp figure out how to load gbl->gamma
+            symbolic_function<2> Aratio;
+            symbolic_function<2> dArdx;
+        
+        public:
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
+                Array<double,1> val(4);
+                bool error;
+            
+                error = eval(x,time,val);
+
+                return(val(n));
+            }
+        
+            void init(input_map &blockdata,std::string idnty) {
+                std::string keyword,val;
+                std::istringstream data;
+                
+                keyword = idnty +"_Aratio";
+                Aratio.init(blockdata,keyword);
+                
+                keyword = idnty +"_dArdx";
+                dArdx.init(blockdata,keyword);
+
+                
+                keyword = idnty +"_RTo";
+                if (!blockdata.get(keyword,RTo))
+                    blockdata.getwdefault("RTo",RTo,287.058);
+                
+                keyword = idnty +"_Po";
+                if (!blockdata.get(keyword,Po))
+                    blockdata.getwdefault("Po",Po,101325.0);
+                
+                keyword = idnty +"_xthroat";
+                if (!blockdata.get(keyword,xthroat))
+                    blockdata.getwdefault("xthroat",xthroat,5.0);
+                
+                if (!blockdata.get(idnty+ "_gamma",gam)) blockdata.getwdefault("gamma",gam,1.4);
+
+            }
+        
+            bool eval(TinyVector<FLT,tri_mesh::ND> x, double t, Array<double,1> &val) const {
+                
+                int it = 0;
+                int maxit = 1000;
+                FLT tol = 1.0e-8;
+                FLT lam = 1.0;
+                FLT fold;
+                int armijo = 0;
+                FLT M_armijo, f_armijo, fp_armijo;
+                FLT alpha = 1.0e-4;
+                
+                FLT Ar = Aratio.Eval(x,t);
+                FLT M;
+                if (x(0)>=xthroat-1.0e-2 && x(0)<=xthroat+1.0e-2){
+                    M = 1.0;
+                    FLT RT = RTo/(1.0+0.5*(gam-1.0)*M*M);
+                    FLT p = Po/(pow((1.0+0.5*(gam-1.0)*M*M),((gam/(gam-1.0)))));
+                    FLT c = sqrt(gam*RT);
+                    FLT u = M*c;
+                    FLT v = 0.0;
+
+                    val(0) = p;
+                    val(1) = u;
+                    val(2) = v;
+                    val(3) = RT;
+                    return true;
+                }
+                else if (x(0)<xthroat-1.0e-2){
+                    M = 0.5;
+                }
+                else{
+                    M = 1.5;
+                }
+
+                FLT f = M*Ar-pow(((2.0+(gam-1.0)*M*M)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0))));
+                FLT fp = Ar - (2.0*M*pow((((gam - 1.0)*M*M + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+                
+
+                fold = f;
+                while(fabs(f)>tol && it<maxit){
+                    
+                    lam = 1.0;
+
+                    M_armijo = M-lam*(f/fp);
+
+                    f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
+                    fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+                    
+                    while(fabs(f_armijo)>(1.0-alpha*lam)*fabs(fold) && armijo<100){
+
+                        lam = 0.5*lam;
+                        M_armijo = M-lam*(f_armijo/fp_armijo);
+                        f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
+                        fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+
+                        armijo++;
+                    }
+                    armijo = 0;
+
+                    M = M_armijo;
+                    
+                    f = f_armijo;
+                    fp = fp_armijo;
+
+                    it++;
+
+                }
+
+                if (it == maxit){
+                    printf("Newton Solver in ibc nozzle exceeded iteration limit \n");
+                    if (fabs(f)>1.0e-8){
+                        std::cerr << "Nozzle not converged" << std::endl;
+                        sim::abort(__LINE__,__FILE__,&std::cerr);
+                    }
+                }
+                
+                
+                FLT RT = RTo/(1.0+0.5*(gam-1.0)*M*M);
+                FLT p = Po/(pow((1.0+0.5*(gam-1.0)*M*M),((gam/(gam-1.0)))));
+                
+                //Use this to allow shock to move from initial position
+//                if (x(0) == 10){
+//                    p = p-1500.0;
+//                }
+                
+                FLT c = sqrt(gam*RT);
+                FLT u = M*c;
+                FLT v;
+                FLT rho = p/RT;
+                
+                FLT dArdM = (2.0*pow((((gam - 1.0)*M*M + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0) - pow((((gam - 1.0)*M*M + 2.0)/(gam + 1.0)),((gam + 1)/(2*gam - 2)))/(M*M);
+                FLT dAdx = dArdx.Eval(x,t);
+                FLT dMdx = pow(dArdM,-1.0)*dAdx;
+                
+                FLT dcdM = -sqrt(gam)*(M*RTo*(gam/2.0 - 1.0/2.0))/(pow(((gam/2.0 - 1.0/2.0)*M*M + 1.0),2)*sqrt(RTo/((gam/2.0 - 1.0/2.0)*M*M + 1.0)));
+                FLT dudx = dMdx*(sqrt(gam*RT)+M*dcdM);
+                
+                FLT dpdM = -(2.0*M*Po*gam*(gam/2.0 - 1.0/2.0))/(pow(((gam/2.0 - 1.0/2.0)*M*M + 1.0),(gam/(gam - 1.0) + 1.0))*(gam - 1.0));
+                FLT dRTdM = -(2.0*M*RTo*(gam/2.0 - 1.0/2.0))/pow(((gam/2.0 - 1.0/2.0)*M*M + 1.0),2);
+                FLT drhodx = (1/(RT*RT))*(RT*dpdM*dMdx-p*dRTdM*dMdx);
+                
+                v = -(x(1)/rho)*(rho*dudx+u*drhodx);
+                
+                    
+                val(0) = p;
+                val(1) = u;
+                val(2) = v;
+                val(3) = RT;
+                
+                
+                return true;
+                
+            }
+        
+            
+    };
 	
 	class helper_type {
 		public:
@@ -297,8 +463,8 @@ namespace ibc_cns {
 
 	class ibc_type {
 		public:
-			const static int ntypes = 7;
-			enum ids {freestream,sphere,accelerating,impinge,stokes_drop_gas,stokes_drop_liquid,ringleb};
+			const static int ntypes = 8;
+			enum ids {freestream,sphere,accelerating,impinge,stokes_drop_gas,stokes_drop_liquid,ringleb,nozzle};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -307,7 +473,7 @@ namespace ibc_cns {
 				return(-1);
 			}
 	};
-	const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","impinge","stokes_drop_gas","stokes_drop_liquid","ringleb"};
+	const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","impinge","stokes_drop_gas","stokes_drop_liquid","ringleb","nozzle"};
 
 }
 
@@ -331,6 +497,10 @@ init_bdry_cndtn *tri_hp_cns::getnewibc(std::string name) {
 			temp = new ibc_cns::ringleb;
 			break;
 		}
+        case ibc_cns::ibc_type::nozzle: {
+            temp = new ibc_cns::nozzle;
+            break;
+        }
 		default: {
 			return(tri_hp::getnewibc(name));
 		}

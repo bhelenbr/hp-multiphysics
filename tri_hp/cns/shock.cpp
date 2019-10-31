@@ -71,44 +71,27 @@ void shock::rsdl(int stage) {
     }
     
     
-    int j,k,count,offset,sind,sign;
+    int j,k,count,offset,sind;
     int bgn = 0;
     int end = sm-1;
     int stride = sm;
     FLT *sdata = x.ug.s.data();
 
-    /* These have to be done in the same direction so the average works properly */
     int ebp1 = end-bgn+1;
-    if (base.is_frst()) {
-        count = 0;
-        for(j=0;j<base.nseg;++j) {
-            sind = base.seg(j);
-            offset = (sind*stride +bgn)*x.NV;
-            for(k=0;k<ebp1;++k) {
-                for(int n = 0; n<x.NV; n++){
-                    base.fsndbuf(count++) = sdata[offset +n];
-                }
-                offset+=x.NV;
+    count = 0;
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        offset = (sind*stride +bgn)*x.NV;
+        int sign = 1;
+        for(k=0;k<ebp1;++k) {
+            for(int n = 0; n<x.NV; n++){
+                base.fsndbuf(count++) = sign*sdata[offset +n];
             }
+            offset+=x.NV;
+            sign*=-1;
         }
     }
-    else {
-        int bgnsign = (bgn % 2 ? -1 : 1);
-        count = 0;
-        
-        for(j=0;j<base.nseg;++j) {
-            sind = base.seg(j);
-            offset = (sind*stride +bgn)*x.NV;
-            sign = bgnsign;
-            for (k=bgn;k<=end;++k) {
-                for(int n = 0; n<x.NV; n++){
-                    base.fsndbuf(count++) = sign*sdata[offset +n];
-                }
-                sign *= -1;
-                offset+=x.NV;
-            }
-        }
-    }
+
     base.sndsize() = count;
     base.sndtype() = boundary::flt_msg;
 
@@ -119,22 +102,10 @@ void shock::rsdl(int stage) {
     base.comm_finish(boundary::all,0,boundary::symmetric,boundary::replace);
 
 
-    if (is_master){
-        for (int j=base.nseg-1,count=0;j>=0; j--){
-            for (int k=0;k<sm;k++){
-                for (int n=0;n<x.NV;n++){
-                    u_opp_e(j,k,n) = base.fsndbuf(count++);
-                }
-            }
-        }
-    }
-    else {
-        for (int j=base.nseg-1,count=0;j>=0; j--){
-            for (int k=0,sign=1;k<sm;k++){
-                for (int n=0;n<x.NV;n++){
-                    u_opp_e(j,k,n) = sign*base.fsndbuf(count++);
-                }
-                sign *= -1;
+    for (int j=base.nseg-1,count=0;j>=0; j--){
+        for (int k=0;k<sm;k++){
+            for (int n=0;n<x.NV;n++){
+                u_opp_e(j,k,n) = base.fsndbuf(count++);
             }
         }
     }
@@ -154,9 +125,9 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	FLT jcb; //jacobian 1d on edge
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV),u_opp(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u;
-	TinyMatrix<FLT,7,MXGP> res;
+	TinyMatrix<FLT,6,MXGP> res;
 	Array<TinyVector<FLT,MXTM>,1> uht_opp(x.NV);
-    Array<FLT,1> mvel_u_new(MXGP), shock_vel(MXGP);
+    Array<FLT,1> mvel_u_new(MXGP), shock_vel(MXGP),  mvel_u_norm(MXGP), mvel_norm(MXGP);
 
 	for (int n=0; n<x.NV; n++){
 		uht_opp(n)(0) = u_opp_v(indx,n);
@@ -185,7 +156,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
         
-        FLT pu, uu, vu, RTu, rhou, Eu, cu, pd, ud, vd, RTd, rhod, Ed, cd;
+        FLT pu, uu, vu, RTu, rhou, Eu, cu, pd, ud, vd, RTd, rhod, cd, shock_sign;
 		if (u(0)(i)<u_opp(0)(i)){
 			pu = u(0)(i);
 			uu = u(1)(i);
@@ -196,6 +167,8 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			ud = u_opp(1)(i);
 			vd = u_opp(2)(i);
 			RTd = u_opp(3)(i);
+            
+            shock_sign = 1.0;
             
 		}
 		else{
@@ -209,6 +182,8 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 			vu = u_opp(2)(i);
 			RTu = u_opp(3)(i);
             
+            shock_sign = -1.0;
+            
 		}
         
         
@@ -216,8 +191,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		rhod = pd/RTd;
 		cu = sqrt(x.gbl->gamma*RTu);
 		cd = sqrt(x.gbl->gamma*RTd);
-		Eu = pu/(rhou*(x.gbl->gamma-1.0))+0.5*(uu*uu+vu*vu);
-		Ed = pd/(rhod*(x.gbl->gamma-1.0))+0.5*(ud*ud+vd*vd);
+        Eu = RTu/(x.gbl->gamma-1.0)+0.5*(uu*uu+vu*vu);
         
         //Is flow in + or - direction?
         int flag;
@@ -255,50 +229,66 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
         }
         
+        norm(0) = shock_sign*norm(0);
+        norm(1) = shock_sign*norm(1);
+        
+        normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
+        normal_ud = (ud*norm(0)+vd*norm(1))/jcb;
 
-        FLT Mu = (mvel_u(0,i)*norm(0)+mvel_u(1,i)*norm(1))/(cu*jcb);
+        mvel_norm(i) = ((x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)))*norm(0)+(x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)))*norm(1))/jcb;
+        mvel_u_norm(i) = (mvel_u(0,i)*norm(0)+mvel_u(1,i)*norm(1))/jcb;
+        
+        
+        FLT Mu = mvel_u_norm(i)/cu;
         NewtZou(Mu, normal_ud, cd, normal_uu, cu, flag);
 
-        
+
         if (flag == 0){
             shock_vel(i) = normal_uu-cu*Mu;
-            mvel_u_new(i) = (normal_uu-shock_vel(i))*jcb;
         }
         else{
             shock_vel(i) = normal_uu+cu*Mu;
-            mvel_u_new(i) = (shock_vel(i)-normal_uu)*jcb;
         }
         
-		/* TANGENTIAL SPACING */
-        if(is_master){
-            res(0,i) = -ksprg(indx)*jcb;
+
+        /* TANGENTIAL SPACING */
+        res(0,i) = -shock_sign*ksprg(indx)*jcb;
+        /* NORMAL FLUX */
+        res(1,i) = (mvel_norm(i)-shock_vel(i))*jcb;
+        
+
+        norm(0) = shock_sign*norm(0);
+        norm(1) = shock_sign*norm(1);
+
+        normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
+        normal_ud = (ud*norm(0)+vd*norm(1))/jcb;
+
+        mvel_norm(i) = ((x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)))*norm(0)+(x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)))*norm(1))/jcb;
+        if (flag == 0){
+            mvel_u_new(i) = (normal_uu-mvel_norm(i))*jcb;
         }
         else{
-            res(0,i) = ksprg(indx)*jcb;
+            mvel_u_new(i) = (mvel_norm(i)-normal_uu)*jcb;
         }
-		/* NORMAL FLUX */
-        res(1,i) = shock_vel(i)*jcb;
-        
-		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
-		//res(2,i) = -res(1,i)*(-norm(1)*mvel_u(0,i) +norm(0)*mvel_u(1,i))/jcb*gbl->meshc(indx);
         
         /* CONTINUITY FLUX */
-        res(3,i) = rhou*mvel_u_new(i);
+        res(2,i) = rhou*mvel_u_new(i);
         /* U-MOMENTUM FLUX */
-        res(4,i) = rhou*uu*mvel_u_new(i)+pu*norm(0);
+        res(3,i) = rhou*uu*mvel_u_new(i)+pu*norm(0);
         /* V-MOMENTUM FLUX */
-        res(5,i) = rhou*vu*mvel_u_new(i)+pu*norm(1);
+        res(4,i) = rhou*vu*mvel_u_new(i)+pu*norm(1);
         /* ENERGY FLUX */
-        res(6,i) = rhou*Eu*mvel_u_new(i)+pu*normal_uu*jcb;
+        res(5,i) = rhou*Eu*mvel_u_new(i)+pu*normal_uu*jcb;
+        
         
 	}
     
 	lf = 0.0;
 	/* INTEGRATE & STORE shock SOURCE TERM */
-	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(3,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(4,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(5,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(3)(0),&res(6,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(2,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(3,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(4,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(3)(0),&res(5,0));
     
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
     basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
@@ -377,14 +367,22 @@ void shock::element_jacobian_opp(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-                for(int n=0;n<x.NV+NV;++n){
+                for(int n=0;n<x.NV+NV;++n)
 					K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
-                }
 			++kcol;
 			u_opp_v(mode+indx,var) -= dw(var);
 		}
 	}
     
+    dw = 0.0;
+    for(int i=0;i<sm;i++){
+        for(int n=0;n<x.NV;n++){
+            dw(n) = dw(n)+fabs(u_opp_e(indx,i,n));
+        }
+    }
+
+    dw *= eps_r;
+    dw += eps_a;
 
 	for(int mode = 0; mode < sm; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
@@ -394,9 +392,8 @@ void shock::element_jacobian_opp(int indx, Array<FLT,2>& K) {
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
-                for(int n=0;n<x.NV+NV;++n){
+                for(int n=0;n<x.NV+NV;++n)
                     K(krow++,kcol) = (lf(n)(k)-Rbar(n)(k))/dw(var);
-                }
 			++kcol;
 			u_opp_e(indx,mode,var) -= dw(var);
 		}
@@ -417,8 +414,8 @@ void shock::petsc_jacobian() {
     Array<FLT,2> K(vdofs*(sm+2),x.NV*(sm+2));
     Array<int,1> loc_to_glo_row(vdofs*(sm+2));
     Array<int,1> loc_to_glo_col(x.NV*(sm+2));
-    
-    
+
+
     /* Send flow indices to opposite boundary */
     int cnt = 0;
     int sind;
@@ -442,13 +439,13 @@ void shock::petsc_jacobian() {
         /* and x,y mesh movement equations */
         for (int j=0;j<base.nseg;++j) {
             int sind = base.seg(j);
-            
+
             /* CREATE COLUMN NUMBERING LIST */
             int ind = 0;
             int gindx = base.isndbuf(2*j);
             for(int var = 0; var < x.NV; ++var)
                 loc_to_glo_col(ind++) = gindx++;
-            
+
             gindx = base.isndbuf(2*(j+1));
             for(int var = 0; var < x.NV; ++var)
                 loc_to_glo_col(ind++) = gindx++;
@@ -466,13 +463,13 @@ void shock::petsc_jacobian() {
                 for(int var = 0; var < vdofs; ++var)
                     loc_to_glo_row(ind++) = gindx++;
             }
-            
+
             int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
             int gindxND = jacobian_start +j*tri_mesh::ND*sm;
             for(int mode = 0; mode < sm; ++mode) {
                 for(int var = 0; var < x.NV; ++var)
                     loc_to_glo_row(ind++) = gindxNV++;
-                
+
                 for(int var = 0; var < tri_mesh::ND; ++var)
                     loc_to_glo_row(ind++) = gindxND++;
             }
@@ -498,31 +495,35 @@ int shock::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_
     
     if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
     
+//    int count = hp_coupled_bdry::non_sparse_rcv(phase, nnzero, nnzero_mpi);
+    
     const int sm=basis::tri(x.log2p)->sm();
     const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
     const int begin_seg = x.npnt*vdofs;
-    
+
     /* if local match then entries will go in to local jacobian */
     Array<int,1> target;
     if (base.is_local(0))  // only 1 matching boundary
         target.reference(nnzero);
     else
         target.reference(nnzero_mpi);
-     
+
     int p0,p1;
     for (int i=0;i<base.nseg;++i) {
         int sind = base.seg(i);
         p0 = x.seg(sind).pnt(0)*vdofs;
         p1 = x.seg(sind).pnt(1)*vdofs;
         for(int n=0;n<vdofs;++n) {
+//        for(int n=0;n<x.NV;++n) {
             target(p0 +n) += (2+sm)*x.NV;
             target(p1 +n) += (1+sm)*x.NV;
         }
     }
     for(int n=0;n<vdofs;++n) {
+//    for(int n=0;n<x.NV;++n) {
         target(p1 +n) += x.NV;
     }
-    
+
     // Now add to side degrees of freedom
     if (sm) {
         for (int i=0;i<base.nseg;++i) {
@@ -534,7 +535,7 @@ int shock::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_
             }
         }
     }
-    
+
     // Last thing to receive is nnzero for edge equations
     if (sm) {
         for (int i=0;i<base.nseg;++i) {

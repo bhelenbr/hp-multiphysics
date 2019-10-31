@@ -1,0 +1,26 @@
+# Name of file for output: 
+logfile: generate
+# Number of mesh blocks for each processor: 
+nblock: 2
+# flag for mesh adaptation: 
+adapt: 1
+#Resolution of far-field: 
+res: _pi/4
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 8000.0
+# Name of mesh: 
+b0_mesh: ./upstream.d
+# Side type specifiers: 
+#b0_s2_type: comm
+b0_s2_type: symbolic_comm
+b0_s2_h: x0
+b0_s2_dhdx0: 1
+b0_s2_dhdx1: 0
+# Name of mesh: 
+b1_mesh: ./downstream.d
+# Side type specifiers: 
+#b1_s2_type: comm
+b1_s2_type: symbolic_comm
+b1_s2_h: x0
+b1_s2_dhdx0: 1
+b1_s2_dhdx1: 0
