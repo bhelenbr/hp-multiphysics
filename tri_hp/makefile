@@ -97,7 +97,7 @@ OBJ += $(OBJBUOY)
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf -lparseargs
+LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf
 #LIB += -lbinio
 LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lscalapack -ldl
 #LIBPETSC += -lHYPRE -lsuperlu_dist

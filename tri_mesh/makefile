@@ -51,8 +51,8 @@ MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
-LIB += -lm -lmuparser -lmetis -lparmetis -lpth -lblitz -lparseargs -lnetcdf
+LIB = -L../../lib -L$(PACKAGES)/lib -lutil -lquad -linput_map -lspline -lmyblas
+LIB += -lm -lmuparser -lmetis -lparmetis -lpth -lblitz -lnetcdf
 #LIB += -lbinio
 
 CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include

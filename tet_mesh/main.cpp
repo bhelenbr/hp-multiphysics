@@ -3,6 +3,7 @@
 #include <parseargs.h>
 #include "tet_mesh.h"
 #include <input_map.h>
+#include <unistd.h>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -10,69 +11,7 @@
 
 using namespace std;
 
-static int informat = 4;
-static int outformat = 4;
-static GBool Generate = gFalse;
-static GBool Shift = gFalse;
-static GBool Scale = gFalse;
-static GBool Smooth = gFalse;
-static GBool Coarsen_hp = gFalse;
-static GBool Refineby2 = gFalse;
-static GBool Partition = gFalse;
-static GBool GMSHPartition = gFalse;
-static GBool GMSHLabel = gFalse;
-static GBool Format = gFalse;
-static GBool Coarsen_Marks = gFalse;
-static GBool Symmetrize = gFalse;
-static GBool Cut = gFalse;
-static GBool Vlngth = gFalse;
-GBool printHelp = gFalse;
-
-
-static ArgDesc argDesc[] = {
-  {"-g",        argFlag,        &Generate,      0,
-		"generate mesh from .d file"},
-  {"-m",        argFlag,        &Shift,        0,
-		"shift mesh position"},
-  {"-s",        argFlag,      &Scale,        0,
-		"scale mesh"},
-  {"-f",        argFlag,      &Smooth,        0,
-		"smooth mesh"},
-  {"-h",        argFlag,      &printHelp,      0,
-		"print usage information"},
-  {"-help",    argFlag,      &printHelp,      0,
-		"print usage information"},
-  {"-c",        argFlag,      &Coarsen_hp,      0,
-		"coarsen substructured mesh"},
-  {"-r",        argFlag,      &Refineby2,             0,
-		"refine mesh by 2"},
-  {"-i",        argInt,      &informat,          0,
-		"input mesh format"},
-  {"-o", argInt,    &outformat,        0,
-		"output format"},
-  {"-p"  ,argFlag,     &Partition,            0,
-		"partition mesh"},
-	{"-gp"  ,argFlag,     &GMSHPartition,            0,
-		"partition gmsh physical volumes"},
-	{"-gl"  ,argFlag,     &GMSHLabel,            0,
-		"create label of gmsh physical volumes"},
-  {"-x"  ,argFlag,     &Format,            0,
-		"change format"},
-  {"-l"  ,argFlag,     &Coarsen_Marks,            0,
-		"Coarsen vertices based on list of marks"},
-  {"-y"  ,argFlag,     &Symmetrize,            0,
-		"Make mesh symmetric about y = 0"},
-  {"-z"  ,argFlag,     &Cut,            0,
-		"Cut mesh using indicator function"},
-  {"-v"  ,argFlag,     &Vlngth,            0,
-		"Create a mesh resolution file"},
-  {NULL}
-};
-
-
 int main(int argc, char *argv[]) {
-	GBool ok;
-	
 	// tet_mesh zx;
 	// zx.test();
 	
@@ -93,12 +32,130 @@ int main(int argc, char *argv[]) {
 #endif
 	
   // parse args
-	ok = parseArgs(argDesc, &argc, argv);
-	if (!ok || printHelp) {
-		fprintf(stderr, "mesh utility ");
-		printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
-		exit(1);
-	}
+    bool Append = false;
+    bool Debugger = false;
+    bool Coarsenby2 = false;
+    bool Echo = false;
+    bool Smooth = false;
+    bool GMSHPartition = false;
+    bool GMSHLabel = false;
+    bool Coarsen_hp = false;
+    bool Shift = false;
+    bool Partition = false;
+    bool Refineby2 = false;
+    bool Scale = false;
+    bool Vlngth = false;
+    bool Format = false;
+    bool Symmetrize = false;
+    bool Cut = false;
+    int informat = 4, outformat = 4;
+    int p;
+    int opt;
+    while ((opt = getopt (argc, argv, "abcdefghi:lmo:p:rsvxyz")) != -1) {
+        switch (opt) {
+            case 'a': {
+                Append = true;
+                break;
+            }
+            case 'c': {
+                Coarsenby2 = true;
+                break;
+            }
+            case 'd': {
+                Debugger = true;
+                break;
+            }
+            case 'e': {
+                Echo = true;
+                break;
+            }
+            case 'f': {
+                Smooth = true;
+                break;
+            }
+            case 'g': {
+                GMSHPartition = true;
+                break;
+            }
+            case 'h': {
+                std::cout << "tet_mesh utility" << std::endl;
+                std::cout << "tet_mesh [-abcdefghlmpsvxyz] [-i input format] [-o output format] inputfile outputfile" << std::endl;
+                std::cout << " -h prints usage information" << std::endl;
+                std::cout << "-a append two meshes" << std::endl;
+                std::cout << "-b create label of gmsh physical volumes" << std::endl;
+                std::cout << "-c Coarsen mesh by factor of 2" << std::endl;
+                std::cout << "-d Stop for Debugger" << std::endl;
+                std::cout << "-e display basic mesh information" << std::endl;
+                std::cout << "-f smooth mesh" << std::endl;
+                std::cout << "-g partition gmsh physical volumes" << std::endl;
+                std::cout << "-l coarsen substructured mesh" << std::endl;
+                std::cout << "-m shift mesh position" << std::endl;
+                std::cout << "-p # partition mesh into # parts" << std::endl;
+                std::cout << "-r refine mesh by 2" << std::endl;
+                std::cout << "-s scale mesh" << std::endl;
+                std::cout << "-v Create a mesh resolution file" << std::endl;
+                std::cout << "-x change format" << std::endl;
+                std::cout << "-y Make mesh symmetric about y = 0" << std::endl;
+                std::cout << "-z Cut mesh using indicator function" << std::endl;
+                return 1;
+            }
+            case 'i': {
+                std::istringstream input(optarg);
+                if (!(input >> informat)) {
+                    std::cerr << "Use tet_mesh -h for usage" << std::endl;
+                    return 1;
+                }
+            }
+            case 'l': {
+                Coarsen_hp = true;
+                break;
+            }
+            case 'm': {
+                Shift = true;
+                break;
+            }
+            case 'p': {
+                Partition = true;
+                std::istringstream input(optarg);
+                if (!(input >> p)) {
+                    std::cerr << "Unable to read number of partitions.  Use tet_mesh -h for usage" << std::endl;
+                    return 1;
+                }
+                break;
+            }
+            case 'r': {
+                Refineby2 = true;
+                break;
+            }
+            case 'v': {
+                Vlngth = true;
+                break;
+            }
+            case 'x': {
+                Format = true;
+                break;
+            }
+            case 'y': {
+                Symmetrize = true;
+                break;
+            }
+            case 'z': {
+                Cut = true;
+                break;
+            }
+                
+            case '?': {
+                std::cerr << "Unknown option character " << optopt << std::endl;
+                std::cerr << "Use tri_mesh -h for usage" << std::endl;
+                return 1;
+            }
+            default: {
+                std::cerr << "Use tri_mesh -h for usage" << std::endl;
+                return 1;
+            }
+        }
+    }
+    int index = optind;
 	
 	tet_mesh::filetype in = static_cast<tet_mesh::filetype>(informat);
 	tet_mesh::filetype out = static_cast<tet_mesh::filetype>(outformat);
@@ -212,8 +269,6 @@ int main(int argc, char *argv[]) {
 		/* This separates different volumes in a GMSH mesh */
 		/* The volumes must be numbered sequentially starting at 1 */
 		class tet_mesh zx;
-		int p;
-		sscanf(argv[2],"%d",&p);
 		std::string fname;
 		ostringstream nstr;
 		
@@ -275,8 +330,6 @@ int main(int argc, char *argv[]) {
 	if (Partition) {
 #ifdef METIS
 		class tet_mesh zx;
-		int p;
-		sscanf(argv[2],"%d",&p);
 		std::string fname,mname;
 		ostringstream nstr;
 		zx.input(argv[1],in,1.0,inmap);

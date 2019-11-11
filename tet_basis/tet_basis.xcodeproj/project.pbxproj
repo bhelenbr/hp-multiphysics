@@ -184,17 +184,18 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1120;
 			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
+				de,
+				Base,
+				fr,
+				ja,
+				en,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* tri_basis */;
 			projectDirPath = "";
@@ -279,6 +280,7 @@
 		6FD8AD450864E338005A8B60 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -310,12 +312,14 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
 					../include,
+					/usr/local/include,
+					"${HOME}/Packages/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					/usr/local/lib,
+					"${HOME}/Packages/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";
@@ -325,6 +329,7 @@
 		6FD8AD460864E338005A8B60 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -355,12 +360,14 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
 					../include,
+					/usr/local/include,
+					"${HOME}/Packages/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					/usr/local/lib,
+					"${HOME}/Packages/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";
@@ -371,6 +378,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
@@ -385,6 +393,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = "$(HOME)/bin";
 				OTHER_LDFLAGS = "-lblitz";

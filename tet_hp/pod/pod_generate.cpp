@@ -10,7 +10,7 @@
 #include "pod_generate.h"
 
 #include <myblas.h>
-#include <libbinio/binfile.h>
+//#include <libbinio/binfile.h>
 // #include <veclib/clapack.h>
 
 extern "C" {
@@ -383,33 +383,34 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
 
-	for (m=0;m<nsnapshots;++m) {
-		/* OUTPUT COEFFICIENT VECTOR */
-		nstr.str("");
-		nstr << restart_interval*m+restartfile << std::flush;
-		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-		binofstream bout;
-		bout.open(filename.c_str());
-		if (bout.error()) {
-			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-		}
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-
-		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".dat";
-		ofstream out;
-		out.open(filename.c_str());
-		out.precision(8);
-		
-		for (l=0;l<nmodes;++l) {
-			bout.writeFloat(psimatrix_recv(m*nmodes +l),binio::Double);
-			out << psimatrix_recv(m*nmodes+l) << std::endl;
-		}
-
-		bout.close();
-		out.close();
-	}
+    //FIXME: BINIO IS DEAD
+//	for (m=0;m<nsnapshots;++m) {
+//		/* OUTPUT COEFFICIENT VECTOR */
+//		nstr.str("");
+//		nstr << restart_interval*m+restartfile << std::flush;
+//		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
+//		binofstream bout;
+//		bout.open(filename.c_str());
+//		if (bout.error()) {
+//			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
+//			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+//		}
+//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+//
+//		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".dat";
+//		ofstream out;
+//		out.open(filename.c_str());
+//		out.precision(8);
+//
+//		for (l=0;l<nmodes;++l) {
+//			bout.writeFloat(psimatrix_recv(m*nmodes +l),binio::Double);
+//			out << psimatrix_recv(m*nmodes+l) << std::endl;
+//		}
+//
+//		bout.close();
+//		out.close();
+//	}
 	
 	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
 

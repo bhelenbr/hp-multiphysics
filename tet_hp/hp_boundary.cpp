@@ -10,7 +10,7 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 //#include <blitz/tinyvec-et.h>
-#include <libbinio/binwrap.h>
+//#include <libbinio/binwrap.h>
 #include <myblas.h>
 
 //#define MPDEBUG
@@ -102,28 +102,28 @@ void hp_edge_bdry::output(const std::string& filename, tet_hp::filetype typ,int 
 			break;
 		}
 			
-		case(tet_hp::binary): {
-			if (curved) {
-				std::string fname;
-				fname = filename +"_" +x.gbl->idprefix +".txt";
-				ofstream fout;
-				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
-				
-				binowstream bout(&fout);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-				bout.writeInt(x.p0,sizeof(int));
-
-			for(j=0;j<base.nseg;++j) {
-				for(m=0;m<x.em0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
-				}
-			}
-			fout.close();
-			}
-			break;
-		}
+//		case(tet_hp::binary): {
+//			if (curved) {
+//				std::string fname;
+//				fname = filename +"_" +x.gbl->idprefix +".txt";
+//				ofstream fout;
+//				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+//
+//				binowstream bout(&fout);
+//				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+//				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+//				bout.writeInt(x.p0,sizeof(int));
+//
+//			for(j=0;j<base.nseg;++j) {
+//				for(m=0;m<x.em0;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
+//				}
+//			}
+//			fout.close();
+//			}
+//			break;
+//		}
 			
 		default:
 			break;
@@ -153,27 +153,27 @@ void hp_edge_bdry::input(ifstream& fin,tet_hp::filetype typ,int tlvl) {
 			}
 			}
 			break;
-		case(tet_hp::binary):
-			if (curved) {
-				biniwstream bin(&fin);
-				
-				/* HEADER INFORMATION */
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-				pmin = bin.readInt(sizeof(int));
-			for(j=0;j<base.nseg;++j) {
-				for(m=0;m<pmin-1;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-				}
-	            for(m=pmin-1;m<x.em0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						crvbd(tlvl)(j,m)(n) = 0.0;
-				}				
-			}
-			}
-			break;
+//		case(tet_hp::binary):
+//			if (curved) {
+//				biniwstream bin(&fin);
+//
+//				/* HEADER INFORMATION */
+//				bin.setFlag(binio::BigEndian,bin.readInt(1));
+//				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+//
+//				pmin = bin.readInt(sizeof(int));
+//			for(j=0;j<base.nseg;++j) {
+//				for(m=0;m<pmin-1;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+//				}
+//	            for(m=pmin-1;m<x.em0;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						crvbd(tlvl)(j,m)(n) = 0.0;
+//				}
+//			}
+//			}
+//			break;
 			
 		default:
 			break;
@@ -550,35 +550,35 @@ void hp_face_bdry::output(const std::string& filename, tet_hp::filetype typ,int 
 			break;
 		}
 			
-		case(tet_hp::binary): {
-			if (curved) {
-				std::string fname;
-				fname = filename +"_" +x.gbl->idprefix +".bin";
-				ofstream fout;
-				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
-
-				binowstream bout(&fout);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-				bout.writeInt(x.p0,sizeof(int));
-
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<x.em0;++m) {
-						for(n=0;n<tet_mesh::ND;++n)
-							bout.writeFloat(ecrvbd(tlvl)(j,m)(n),binio::Double);
-					}
-				}
-				for(j=0;j<base.ntri;++j) {
-					for(m=0;m<x.fm0;++m) {
-						for(n=0;n<tet_mesh::ND;++n)
-							bout.writeFloat(fcrvbd(tlvl)(j,m)(n),binio::Double);
-					}
-				}
-				fout.close();
-			}
-			
-			break;
-		}
+//		case(tet_hp::binary): {
+//			if (curved) {
+//				std::string fname;
+//				fname = filename +"_" +x.gbl->idprefix +".bin";
+//				ofstream fout;
+//				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
+//
+//				binowstream bout(&fout);
+//				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+//				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+//				bout.writeInt(x.p0,sizeof(int));
+//
+//				for(j=0;j<base.nseg;++j) {
+//					for(m=0;m<x.em0;++m) {
+//						for(n=0;n<tet_mesh::ND;++n)
+//							bout.writeFloat(ecrvbd(tlvl)(j,m)(n),binio::Double);
+//					}
+//				}
+//				for(j=0;j<base.ntri;++j) {
+//					for(m=0;m<x.fm0;++m) {
+//						for(n=0;n<tet_mesh::ND;++n)
+//							bout.writeFloat(fcrvbd(tlvl)(j,m)(n),binio::Double);
+//					}
+//				}
+//				fout.close();
+//			}
+//			
+//			break;
+//		}
 	
 		default:
 			break;
@@ -618,35 +618,35 @@ void hp_face_bdry::input(ifstream& fin,tet_hp::filetype typ,int tlvl) {
 
 			}
 			break;
-		case(tet_hp::binary):
-			if (curved) {
-				biniwstream bin(&fin);
-				
-				/* HEADER INFORMATION */
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-				pmin = bin.readInt(sizeof(int));
-			for(j=0;j<base.nseg;++j) {
-				for(m=0;m<pmin-1;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						ecrvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-				}
-	            for(m=pmin-1;m<x.em0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						ecrvbd(tlvl)(j,m)(n) = 0.0;
-				}				
-			}
-
-			// FIXME: DOESN'T WORK FOR CHANGING ORDERS
-			for(j=0;j<base.ntri;++j) {
-				for(m=0;m<x.fm0;++m) {
-					for(n=0;n<tet_mesh::ND;++n)
-						fcrvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-				}
-			}
-			}
-			break;
+//		case(tet_hp::binary):
+//			if (curved) {
+//				biniwstream bin(&fin);
+//				
+//				/* HEADER INFORMATION */
+//				bin.setFlag(binio::BigEndian,bin.readInt(1));
+//				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+//
+//				pmin = bin.readInt(sizeof(int));
+//			for(j=0;j<base.nseg;++j) {
+//				for(m=0;m<pmin-1;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						ecrvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+//				}
+//	            for(m=pmin-1;m<x.em0;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						ecrvbd(tlvl)(j,m)(n) = 0.0;
+//				}				
+//			}
+//
+//			// FIXME: DOESN'T WORK FOR CHANGING ORDERS
+//			for(j=0;j<base.ntri;++j) {
+//				for(m=0;m<x.fm0;++m) {
+//					for(n=0;n<tet_mesh::ND;++n)
+//						fcrvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+//				}
+//			}
+//			}
+//			break;
 			
 		default:
 			break;

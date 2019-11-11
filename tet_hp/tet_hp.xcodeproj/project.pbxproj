@@ -717,17 +717,18 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1120;
 			};
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tet_hp" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
+				ja,
+				Base,
+				en,
+				fr,
+				de,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* spectral_hp */;
 			projectDirPath = "";
@@ -975,12 +976,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
@@ -995,12 +996,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
@@ -1014,6 +1015,7 @@
 		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1078,6 +1080,7 @@
 		6FB40AC7091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1139,13 +1142,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					JACOBI,
 					PTH,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
@@ -1160,13 +1163,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					JACOBI,
 					PTH,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
@@ -1181,6 +1184,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					petsc,
@@ -1188,12 +1192,10 @@
 				);
 				OTHER_LDFLAGS = (
 					"-lparmetis",
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
 					"-lMAdLib",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
@@ -1207,6 +1209,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					petsc,
@@ -1214,12 +1217,10 @@
 				);
 				OTHER_LDFLAGS = (
 					"-lparmetis",
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
 					"-lMAdLib",
-					"-lsuperlu_dist",
 					"-lmumps_common",
 					"-lscalapack",
 					"-lpetsc",
@@ -1233,12 +1234,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",
@@ -1254,12 +1255,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
 				);
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lmetis",
 					"-lmuparser",
 					"-lblitz",

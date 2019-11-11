@@ -22,9 +22,9 @@
 #include <tet_mesh.h>
 #include <float.h>
 #include <blocks.h>
-#ifdef SUPERLU
-#include "superlu_ddefs.h"
-#endif
+//#ifdef SUPERLU
+//#include "superlu_ddefs.h"
+//#endif
 
 #ifdef petsc
 #include <petscksp.h>

@@ -59,11 +59,11 @@ done
 	
 if [ -n "$FTYP" ]; 
 then
-        echo "tri_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
-	tri_mesh -i $FTYP -p $MESH $BLKS | grep -v '#creating' >> partition.inpt
+        echo "tri_mesh -i $FTYP -p $BLKS $MESH  | grep -v '#creating' >> partition.inpt"
+	tri_mesh -i $FTYP -p $BLKS $MESH | grep -v '#creating' >> partition.inpt
 else
-        echo "tri_mesh -p $MESH $BLKS | grep -v '#creating' >> partition.inpt"
-	tri_mesh -p $MESH $BLKS | grep -v '#creating' >> partition.inpt
+        echo "tri_mesh -p $BLKS $MESH  | grep -v '#creating' >> partition.inpt"
+	tri_mesh -p $BLKS $MESH  | grep -v '#creating' >> partition.inpt
 fi
 
 

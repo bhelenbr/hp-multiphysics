@@ -64,7 +64,6 @@
 		6FB91AED0ACCB1E100792B04 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6FB91AF00ACCB1E100792B04 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
 		6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
-		6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
@@ -72,7 +71,6 @@
 		6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
 		6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
-		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		959CF3A010890B7E002293FD /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
 		959CF3A110890B7F002293FD /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
@@ -132,7 +130,6 @@
 		6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FBD0E8B0FB234BE00565502 /* connect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = connect.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FC7DF0305B30C6E001FE736 /* tet_mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2152F670C836C72001BE654 /* vertexcircle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexcircle.cpp; sourceTree = "<group>"; };
 		B21C0D9C0C20774400E7FBFC /* fangle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = fangle.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -170,7 +167,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */,
-				6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */,
 				6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */,
 				6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */,
 				E6F8CDBB1D3F31080010D881 /* libtri_mesh_mpi.a in Frameworks */,
@@ -185,7 +181,6 @@
 			files = (
 				6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */,
 				E6F8CDBA1D3F31010010D881 /* libtri_mesh.a in Frameworks */,
-				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
 				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
 				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
 				6F6564700FAB455200428C3C /* libspline++.a in Frameworks */,
@@ -203,7 +198,6 @@
 				B25713D10CEA55F200BAC009 /* libtri_mesh.a */,
 				E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
-				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
 				6F65646F0FAB455200428C3C /* libspline++.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
 				6F956D720FE65610009B5B29 /* Accelerate.framework */,
@@ -407,17 +401,18 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1120;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
+				de,
+				en,
+				ja,
+				fr,
+				Base,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
@@ -635,6 +630,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -642,7 +638,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lblitz",
 					"-lmetis",
 					"-lparmetis",
@@ -659,6 +654,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -666,7 +662,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lblitz",
 					"-lmetis",
 					"-lparmetis",
@@ -683,6 +678,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
@@ -690,7 +686,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lblitz",
 					"-lmuparser",
 					"-lmetis",
@@ -705,6 +700,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
@@ -712,7 +708,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				OTHER_LDFLAGS = (
-					"-lbinio",
 					"-lblitz",
 					"-lmuparser",
 					"-lmetis",
@@ -726,6 +721,7 @@
 		6FD540670863870800D6A762 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -784,6 +780,7 @@
 		6FD540680863870800D6A762 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

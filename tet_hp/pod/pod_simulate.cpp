@@ -8,7 +8,7 @@
  */
 
 #include <myblas.h>
-#include <libbinio/binfile.h>
+//#include <libbinio/binfile.h>
 
 #define FULL_JACOBIAN
 
@@ -193,34 +193,35 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) 
 	}
 #endif
 
-	int initfile;
-	inmap.getwdefault("initfile",initfile,1);
-	nstr.str("");
-	nstr << initfile << std::flush;
-	filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
-	binifstream bin;
-	bin.open(filename.c_str());
-	if (bin.error()) {
-		*BASE::gbl->log << "couldn't open coefficient input file " << filename;
-		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-	}
-	bin.setFlag(binio::BigEndian,bin.readInt(1));
-	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
-	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
-	BASE::ug.e(Range(0,BASE::nseg-1)) = 0.;
-	BASE::ug.f(Range(0,BASE::ntri-1)) = 0.;
-	BASE::ug.i(Range(0,BASE::ntet-1)) = 0.;
-
-	for (int l=0;l<nmodes;++l) {
-		coeffs(l) = bin.readFloat(binio::Double); 
-		BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
-		BASE::ug.e(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).e(Range(0,BASE::nseg-1));
-		BASE::ug.f(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).f(Range(0,BASE::ntri-1));
-		BASE::ug.i(Range(0,BASE::ntet-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntet-1));
-	}
-	bin.close();
+//FIXME: This needs to be fixed
+//	int initfile;
+//	inmap.getwdefault("initfile",initfile,1);
+//	nstr.str("");
+//	nstr << initfile << std::flush;
+//	filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
+//	binifstream bin;
+//	bin.open(filename.c_str());
+//	if (bin.error()) {
+//		*BASE::gbl->log << "couldn't open coefficient input file " << filename;
+//		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+//	}
+//	bin.setFlag(binio::BigEndian,bin.readInt(1));
+//	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+//
+//	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
+//	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
+//	BASE::ug.e(Range(0,BASE::nseg-1)) = 0.;
+//	BASE::ug.f(Range(0,BASE::ntri-1)) = 0.;
+//	BASE::ug.i(Range(0,BASE::ntet-1)) = 0.;
+//
+//	for (int l=0;l<nmodes;++l) {
+//		coeffs(l) = bin.readFloat(binio::Double);
+//		BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
+//		BASE::ug.e(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).e(Range(0,BASE::nseg-1));
+//		BASE::ug.f(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).f(Range(0,BASE::ntri-1));
+//		BASE::ug.i(Range(0,BASE::ntet-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntet-1));
+//	}
+//	bin.close();
 
 #ifdef POD_BDRY
 	/* Let boundary conditions load to and from coeff/rsdls vectors */

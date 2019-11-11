@@ -47,8 +47,8 @@ tet_prims.o vertexcircle.o test.o MAdLibInterface.o
 MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
-LIB = -L../../lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
-LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs -lMAdLib
+LIB = -L../../lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -linput_map -lspline -lmyblas
+LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lMAdLib
 
 CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
 
