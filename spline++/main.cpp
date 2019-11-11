@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     bool Find = false;
     bool UseFile = false;
     int opt;
-    while ((opt = getopt (argc, argv, "m:s:r:o:i:hf")) != -1)
+    while ((opt = getopt (argc, argv, "m:s:r:o:i:hf")) != -1) {
         switch (opt) {
             case 'm': {
                 istringstream input(optarg);
@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
                 std::cerr << "Use spline -h for usage" << std::endl;
                 return 1;
             }
+        }
     }
     
 #ifdef THIRD

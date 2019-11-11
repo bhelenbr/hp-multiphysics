@@ -12,24 +12,11 @@
 
 #include <blocks.h>
 #include <signal.h>
+#include <unistd.h>
 #ifdef petsc
 #include <petscksp.h>
 static char help[] = "How am I supposed to know???\n\n";
 #endif
-
-#include <parseargs.h>
-static GBool Debugger = gFalse;
-GBool printHelp = gFalse;
-
-static ArgDesc argDesc[] = {
-	{"-h",        argFlag,      &printHelp,      0,
-		"print usage information"},
-	{"-help",    argFlag,      &printHelp,      0,
-		"print usage information"},
-	{"-stop_for_debugger"  ,argFlag,     &Debugger,            0,
-		"Stop for Debugger"},
-	{NULL}
-};
 
 #include <thread>
 #include <unistd.h>
@@ -65,15 +52,37 @@ int main(int argc, char **argv) {
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
 	
-	// parse args
-	GBool ok = parseArgs(argDesc, &argc, argv);
-	if (!ok || printHelp) {
-		fprintf(stderr, "tri_hp ");
-		printUsage("tri_hp", "<inputfile>]", argDesc);
-		sim::abort(__LINE__,__FILE__,&std::cerr);
-	}
-	
-	
+    
+    
+    // parse args
+   bool Debugger = false;
+   int opt;
+   while ((opt = getopt (argc, argv, "dh")) != -1) {
+       switch (opt) {
+           case 'd': {
+               Debugger = true;
+               break;
+           }
+           case 'h': {
+               std::cout << "tri_hp utility" << std::endl;
+               std::cout << "mod_map [-dh] inputfile petsc_flags" << std::endl;
+               std::cout << "-h prints usage information" << std::endl;
+               std::cout << "-d Stop for Debugger" << std::endl;
+               return 1;
+           }
+           case '?': {
+               std::cerr << "Unknown option character " << optopt << std::endl;
+               std::cerr << "Use tri_hp -h for usage" << std::endl;
+               return 1;
+           }
+           default: {
+               std::cerr << "Use tri_hp -h for usage" << std::endl;
+               return 1;
+           }
+       }
+   }
+   int index = optind;
+    
 #if (defined(MPISRC) && !defined(petsc))
 	if (Debugger) {
 		int size;
@@ -116,11 +125,11 @@ int main(int argc, char **argv) {
 		std::cerr << "interrupt handler failed" << std::endl;
 
 	/* NORMAL SIMULATION */
-	if (argc < 2) {
+	if (argc -index < 1) {
 		std::cerr << "# Need to specify input file" << std::endl;
 		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
-	sim::blks.go(argv[1]);
+	sim::blks.go(argv[index]);
 
 #ifdef petsc
 	PetscFinalize();

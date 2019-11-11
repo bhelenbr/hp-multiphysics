@@ -6,75 +6,93 @@
 #include <stdlib.h>
 #include "input_map.h"
 #include <muParser.h>
+#include <unistd.h>
 
-#define TESTING
-
-#ifndef TESTING
-#include <parseargs.h>
-
-static char NewFile[100] = "";
-static char deleteKeyword[100] = "";
-GBool printHelp = gFalse;
-
-static ArgDesc argDesc[] = {
-  {"-h",        argFlag,      &printHelp,      0,
-    "print usage information"},
-	{"-d", argString,    deleteKeyword,     100,
-    "delete keyword"},
-  {"-o", argString,    NewFile,     100,
-    "output file name"},
-  {NULL}
-};
-#endif
+//#define TESTING
 
 int main (int argc, char *argv[]) {
 	input_map mymap;
-	std::string key,value;
-	std::istringstream data;
-	std::string idprefix("prefix");
-	
+
 #ifndef TESTING
-	GBool ok;
+    std::string deleteKeyword;
+    std::string file,newFile;
+    bool useNewFile = false, deleteKey = false;
+    int opt;
+    while ((opt = getopt (argc, argv, "d:o:h")) != -1) {
+        switch (opt) {
+            case 'd': {
+                deleteKey = true;
+                deleteKeyword = optarg;
+                break;
+            }
+            case 'o': {
+                useNewFile = true;
+                newFile = optarg;
+                break;
+            }
+            case 'h': {
+                std::cout << "mod_map utility" << std::endl;
+                std::cout << "mod_map [-odh] inputfile [keyword] [value]" << std::endl;
+                std::cout << " -h prints usage information" << std::endl;
+                std::cout << "\"mod_map -d keyword inputfile\" deletes keyword form inputfile" << std::endl;
+                std::cout << "\"-o filename\" outputs to file instead of replacing current file" << std::endl;
+                return 1;
+            }
+                
+            case '?': {
+                std::cerr << "Unknown option character " << optopt << std::endl;
+                std::cerr << "Use mod_map -h for usage" << std::endl;
+                return 1;
+            }
+            default: {
+                std::cerr << "Use mod_map -h for usage" << std::endl;
+                return 1;
+            }
+        }
+    }
 
-	// parse args
-	ok = parseArgs(argDesc, &argc, argv);
-	if (!ok || printHelp) {
-			fprintf(stderr, "mod_map utility ");
-			printUsage("mod_map", "<inputfile> <keyword> <value>]", argDesc);
-			exit(1);
-	}
-	mymap.input(argv[1]);
-
-	
+    int index = optind;
+    if (argc -index < 1) {
+        std::cerr << "Missing input filename?" << std::endl;
+        return 1;
+    }
+    else {
+        file = argv[index++];
+        mymap.input(file);
+    }
+    
 	std::ofstream fout;
-	if (NewFile[0] != '\0') {
-		fout.open(NewFile);
+	if (useNewFile) {
+		fout.open(newFile);
 	}
 	else {
-		fout.open(argv[1]);
+		fout.open(file);
 	}
 	
-	if (deleteKeyword[0] != '\0') {
+    if (deleteKey) {
 		std::map<std::string,std::string>::iterator mi;
-    mi = mymap.find(deleteKeyword);
+        mi = mymap.find(deleteKeyword);
 		if (mi != mymap.end()) {
 			mymap.erase(mi);
 		}
 	}
 	else {
-		// add or update 
-		mymap[argv[2]] = argv[3];
+		// add or update
+        if (argc -index <2) {
+            std::cerr << "Missing keyword and values" << std::endl;
+            return 1;
+        }
+        else {
+            mymap[argv[index]] = argv[index+1];
+        }
 	}
-	
 
 	fout << mymap;
 	fout.close();
 	return 0;
 
 #else
-	
 	mu::Parser P;
-	
 	try {
 		P.SetExpr("23685*3");
 		std::cout <<  P.Eval() << std::endl;
@@ -99,14 +117,14 @@ int main (int argc, char *argv[]) {
 		std::cout << "I am confused" << std::endl;
 	}
 	return 0;
-	
-	
-	
+
 	/* INPUT MAP FROM FILE */
 	mymap.input(argv[1]);
-	
 
-
+    std::string key,value;
+    std::istringstream data;
+    std::string idprefix("prefix");
+    
 	/* SET MAP VALUE FROM FLOAT */
 	std::ostringstream myout;
 	myout.str("");

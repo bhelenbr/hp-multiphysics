@@ -152,7 +152,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1120;
 			};
 			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -210,6 +210,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
@@ -225,6 +226,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
