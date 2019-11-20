@@ -278,8 +278,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    res(2)(i,j) -= tmuLmtd*WlcxPrd*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*WlcxPrd/omgLmtd*cjcb;
+                    res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omgLmtd*cjcb;
 #endif
 #endif
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -612,15 +612,15 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     SS = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
 #ifdef WILCOX1988
                     res(2)(i,j) -= 2.0*tmu*SS*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*2*SS/omg*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omg*cjcb;
 #endif
 #ifdef WILCOX2006
                     /* STRESS-LIMITER MODIFICATION */
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    res(2)(i,j) -= tmuLmtd*WlcxPrd*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*WlcxPrd/omgLmtd*cjcb;
+                    res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
+                    res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omgLmtd*cjcb;
 #endif
 #endif
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
