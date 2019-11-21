@@ -16,8 +16,8 @@
 #define BODYFORCE
 
 //#define WILCOX1988
-#define WILCOX1988_KL
-//#define WILCOX2006
+//#define WILCOX1988_KL
+#define WILCOX2006
 
 double psifunc(double x,double xs,double xe) {
     if (x >= xe) {
@@ -28,6 +28,14 @@ double psifunc(double x,double xs,double xe) {
     }
     double theta = M_PI/2*(2*x - (xs + xe))/(xe - xs);
     return(0.5*(sin(theta) +1));
+}
+
+double dpsifunc(double x,double xs,double xe) {
+    if (x >= xe || x < xs) {
+        return(0.0);
+    }
+    double theta = M_PI/2*(2*x - (xs + xe))/(xe - xs);
+    return(0.5*M_PI/xe*x*cos(theta));
 }
 
 void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
@@ -58,8 +66,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9.;
 #endif
 #ifdef WILCOX2006
-    FLT dktlddx, dktlddy, CD, SS, omgLmtr, omgLmtd, tmuLmtd;
+    FLT dktlddx, dktlddy, dkdx, dkdy, CD, SS, omgLmtr, omgLmtd, tmuLmtd;
     const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25., sgmdo = 1./8., Clim = 7./8.;
+    bool CDon = false; // turn the cross-diffusion term on or off
 #endif
     const FLT k_mom= 1.0; // the term in the momentum equation including k
     const FLT susk = 0.0, susomg = 0.0; // turbulence sustaning terms
@@ -293,10 +302,14 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     
 #ifdef WILCOX2006
                     /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
+                    if (CDon){
                     dktlddx = (dcrd(1,1)(i,j)*du(2,0)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb;
                     dktlddy = (dcrd(0,0)(i,j)*du(2,1)(i,j) -dcrd(0,1)(i,j)*du(2,0)(i,j))/cjcb;
-                    CD = dktlddx*domgtlddx +dktlddy*domgtlddy;
+                    dkdx = dpsifunc(u(2)(i,j),0,epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddx;
+                    dkdy = dpsifunc(u(2)(i,j),0,epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddy;
+                    CD = dkdx*domgtlddx +dkdy*domgtlddy;
                     if ( CD > 0.0)  res(3) -= gbl->rho/omg*sgmdo*CD*cjcb;
+                    }
 #endif
 
                     /* TURBULENCE SUSTAINING TERMS */
@@ -634,10 +647,14 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     
 #ifdef WILCOX2006
                     /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
+                    if (CDon){
                     dktlddx = (dcrd(1,1)(i,j)*du(2,0)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb;
                     dktlddy = (dcrd(0,0)(i,j)*du(2,1)(i,j) -dcrd(0,1)(i,j)*du(2,0)(i,j))/cjcb;
-                    CD = dktlddx*domgtlddx +dktlddy*domgtlddy;
+                    dkdx = dpsifunc(u(2)(i,j),0,epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddx;
+                    dkdy = dpsifunc(u(2)(i,j),0,epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddy;
+                    CD = dkdx*domgtlddx +dkdy*domgtlddy;
                     if ( CD > 0.0)  res(3) -= gbl->rho/omg*sgmdo*CD*cjcb;
+                    }
 #endif
                     
                     /* TURBULENCE SUSTAINING TERMS */
