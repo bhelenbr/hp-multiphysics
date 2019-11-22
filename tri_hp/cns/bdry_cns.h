@@ -163,6 +163,15 @@ namespace bdry_cns {
         euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
     };
 
+    class wall : public generic {
+    protected:
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx);
+    public:
+        wall(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "wall";}
+        wall(const wall& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
+        wall* create(tri_hp& xin, edge_bdry &bin) const {return new wall(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+    };
+
 
 }
 #endif

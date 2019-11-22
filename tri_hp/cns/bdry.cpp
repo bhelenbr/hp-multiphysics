@@ -733,3 +733,42 @@ void euler::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<F
     return;
 }
 
+
+void wall::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
+    
+    //Zero nomral velocity
+    FLT u_x, u_y, u_tan, norm_x, norm_y, tan_x, tan_y;
+    norm_x = norm(0);
+    norm_y = norm(1);
+
+    //Tangent vector points clockwise
+    tan_x = -norm(1);
+    tan_y = norm(0);
+    u_tan = u(1)*tan_x+u(2)*tan_y;
+
+    //u_norm is zero
+    if(tan_x != 0){
+        u_y = -u_tan*norm_x/(norm_y*tan_x-tan_y*norm_x);
+        u_x = u_tan/tan_x-u_y*(tan_y/tan_x);
+    }
+    else{
+        u_y = u_tan;
+        u_x = 0.0;
+    }
+
+
+    flx(0) = u(0)/u(x.NV-1)*((u_x -mv(0))*norm(0) +(u_y -mv(1))*norm(1));
+
+    /* X&Y MOMENTUM */
+    flx(1) = flx(0)*u_x +u(0)*norm(0);
+    flx(2) = flx(0)*u_y +u(0)*norm(1);
+
+    /* ENERGY EQUATION */
+    double rho = u(0)/u(x.NV-1);
+    double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(u_x*u_x+u_y*u_y);
+    flx(x.NV-1) = rho*E*((u_x-mv(0))*norm(0)+(u_y-mv(1))*norm(1))+u(0)*(u_x*norm(0)+u_y*norm(1));
+    
+    return;
+}
+
+

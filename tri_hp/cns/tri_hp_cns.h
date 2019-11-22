@@ -14,7 +14,7 @@
 #include <blocks.h>
 #include <myblas.h>
 
- //#define MMS
+// #define MMS
 
 class tri_hp_cns : public tri_hp {
 	public:

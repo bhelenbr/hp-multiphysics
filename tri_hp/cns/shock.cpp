@@ -120,12 +120,12 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	const int sm = basis::tri(x.log2p)->sm();
 
 	int i,n,sind;
-	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	TinyVector<FLT,tri_mesh::ND> norm, rp, norm_meshc;
 	Array<FLT,1> ubar(x.NV);
 	FLT jcb; //jacobian 1d on edge
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV),u_opp(x.NV);
-	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u;
-	TinyMatrix<FLT,6,MXGP> res;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u, mvel, mvel_d;
+	TinyMatrix<FLT,7,MXGP> res;
 	Array<TinyVector<FLT,MXTM>,1> uht_opp(x.NV);
     Array<FLT,1> mvel_u_new(MXGP), shock_vel(MXGP),  mvel_u_norm(MXGP), mvel_norm(MXGP);
 
@@ -194,13 +194,13 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         Eu = RTu/(x.gbl->gamma-1.0)+0.5*(uu*uu+vu*vu);
         
         //Is flow in + or - direction?
-        int flag;
-        if(uu > 0){
-            flag = 0;
-        }
-        else{
-            flag = 1;
-        }
+        int flag = 0;
+//        if(uu > 0){
+//            flag = 0;
+//        }
+//        else{
+//            flag = 1;
+//        }
         
 		/* Call NewtZou to find Mu, use in shock velocity evaluation */
         FLT normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
@@ -216,6 +216,17 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #ifdef MESH_REF_VEL
             mvel_u(1,i) -= x.gbl->mesh_ref_vel(1);
 #endif
+            
+            
+            
+            mvel_d(0,i) = ud -(x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)));
+#ifdef MESH_REF_VEL
+            mvel_d(0,i) -= x.gbl->mesh_ref_vel(0);
+#endif
+            mvel_d(1,i) = vd -(x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
+#ifdef MESH_REF_VEL
+            mvel_d(1,i) -= x.gbl->mesh_ref_vel(1);
+#endif
         }
         else{
             /* RELATIVE VELOCITY STORED IN MVEL(N)*/
@@ -226,6 +237,16 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
             mvel_u(1,i) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)))-vu;
 #ifdef MESH_REF_VEL
             mvel_u(1,i) -= x.gbl->mesh_ref_vel(1);
+#endif
+            
+            
+            mvel_d(0,i) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)))-ud;
+#ifdef MESH_REF_VEL
+            mvel_d(0,i) -= x.gbl->mesh_ref_vel(0);
+#endif
+            mvel_d(1,i) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)))-vd;
+#ifdef MESH_REF_VEL
+            mvel_d(1,i) -= x.gbl->mesh_ref_vel(1);
 #endif
         }
         
@@ -255,10 +276,21 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         res(0,i) = -shock_sign*ksprg(indx)*jcb;
         /* NORMAL FLUX */
         res(1,i) = (mvel_norm(i)-shock_vel(i))*jcb;
-        
-
+        /* UPWINDING BASED ON TANGENTIAL VELOCITY */
         norm(0) = shock_sign*norm(0);
         norm(1) = shock_sign*norm(1);
+        
+        /* Calculate stabilization constant based on analysis of linear elements and constant tau */
+        FLT dMda = -(x.gbl->gamma + 1.0)/(2.0*cu*(((2*(x.gbl->gamma - 1.0)*(2.0*x.gbl->gamma*Mu*Mu - x.gbl->gamma + 1.0))/Mu + (4.0*x.gbl->gamma*((x.gbl->gamma - 1.0)*Mu*Mu + 2.0))/Mu - (2.0*((x.gbl->gamma - 1.0)*Mu*Mu + 2.0)*(2.0*x.gbl->gamma*Mu*Mu - x.gbl->gamma + 1.0))/(Mu*Mu*Mu))/(2.0*(x.gbl->gamma - 1.0)*sqrt((((Mu*Mu*(x.gbl->gamma - 1.0) + 2.0)*(2.0*Mu*Mu*x.gbl->gamma - x.gbl->gamma + 1.0))/(Mu*Mu)))) - (Mu*Mu - 1.0)/(Mu*Mu) + 2.0));
+        FLT dMdb = -dMda;
+        FLT tan_rel = -mvel_u(0,i)*norm(1) +mvel_u(1,i)*norm(0);
+        FLT tan_u = -norm(1)*uu +norm(0)*vu;
+        FLT tan_d = -norm(1)*ud +norm(0)*vd;
+        FLT vslp = (tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb;
+        gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
+        
+        res(2,i) = -res(1,i)*(tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb*gbl->meshc(indx);
+
 
         normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
         normal_ud = (ud*norm(0)+vd*norm(1))/jcb;
@@ -272,28 +304,28 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         }
         
         /* CONTINUITY FLUX */
-        res(2,i) = rhou*mvel_u_new(i);
+        res(3,i) = rhou*mvel_u_new(i);
         /* U-MOMENTUM FLUX */
-        res(3,i) = rhou*uu*mvel_u_new(i)+pu*norm(0);
+        res(4,i) = rhou*uu*mvel_u_new(i)+pu*norm(0);
         /* V-MOMENTUM FLUX */
-        res(4,i) = rhou*vu*mvel_u_new(i)+pu*norm(1);
+        res(5,i) = rhou*vu*mvel_u_new(i)+pu*norm(1);
         /* ENERGY FLUX */
-        res(5,i) = rhou*Eu*mvel_u_new(i)+pu*normal_uu*jcb;
+        res(6,i) = rhou*Eu*mvel_u_new(i)+pu*normal_uu*jcb;
         
         
 	}
     
 	lf = 0.0;
 	/* INTEGRATE & STORE shock SOURCE TERM */
-	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(2,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(3,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(4,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(3)(0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(0)(0),&res(3,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1)(0),&res(4,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(2)(0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(3)(0),&res(6,0));
     
 	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */
     basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0));
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
-	//basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
     
 	return;
 }

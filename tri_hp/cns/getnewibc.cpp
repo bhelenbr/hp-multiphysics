@@ -334,7 +334,7 @@ namespace ibc_cns {
                 
                 int it = 0;
                 int maxit = 1000;
-                FLT tol = 1.0e-8;
+                FLT tol = 1.0e-10;
                 FLT lam = 1.0;
                 FLT fold;
                 int armijo = 0;
@@ -343,21 +343,8 @@ namespace ibc_cns {
                 
                 FLT Ar = Aratio.Eval(x,t);
                 FLT M;
-                if (x(0)>=xthroat-1.0e-2 && x(0)<=xthroat+1.0e-2){
-                    M = 1.0;
-                    FLT RT = RTo/(1.0+0.5*(gam-1.0)*M*M);
-                    FLT p = Po/(pow((1.0+0.5*(gam-1.0)*M*M),((gam/(gam-1.0)))));
-                    FLT c = sqrt(gam*RT);
-                    FLT u = M*c;
-                    FLT v = 0.0;
-
-                    val(0) = p;
-                    val(1) = u;
-                    val(2) = v;
-                    val(3) = RT;
-                    return true;
-                }
-                else if (x(0)<xthroat-1.0e-2){
+                
+                if (x(0)<xthroat){
                     M = 0.5;
                 }
                 else{
@@ -410,10 +397,6 @@ namespace ibc_cns {
                 FLT RT = RTo/(1.0+0.5*(gam-1.0)*M*M);
                 FLT p = Po/(pow((1.0+0.5*(gam-1.0)*M*M),((gam/(gam-1.0)))));
                 
-                //Use this to allow shock to move from initial position
-//                if (x(0) == 10){
-//                    p = p-1500.0;
-//                }
                 
                 FLT c = sqrt(gam*RT);
                 FLT u = M*c;
