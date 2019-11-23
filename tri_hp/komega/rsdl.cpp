@@ -68,6 +68,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #ifdef WILCOX2006
     FLT dktlddx, dktlddy, dkdx, dkdy, CD, SS, omgLmtr, omgLmtd, tmuLmtd;
     const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25., sgmdo = 1./8., Clim = 7./8.;
+    const bool klim = false; // adds a klimiter modeled after komega SST equations
 #endif
     const FLT k_mom= 1.0; // the term in the momentum equation including k
     const FLT susk = 0.0, susomg = 0.0; // turbulence sustaning terms
@@ -286,8 +287,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
-                    res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omgLmtd*cjcb;
+                    if (klim){
+                        res(2)(i,j) -= std::min(tmuLmtd*2.0*SS,20.0*betastr*gbl->rho*omg*ktrb)*cjcb;
+                    } else {
+                        res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
+                    }
+                   res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omgLmtd*cjcb;
 #endif
 #endif
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -629,7 +634,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     omgLmtr = Clim*sqrt(2.0*SS/betastr);
                     omgLmtd = std::max(omg,omgLmtr);
                     tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
+                    if (klim){
+                        res(2)(i,j) -= std::min(tmuLmtd*2.0*SS,20.0*betastr*gbl->rho*omg*ktrb)*cjcb;
+                    } else {
+                        res(2)(i,j) -= tmuLmtd*2.0*SS*cjcb;
+                    }
                     res(3)(i,j) -= gamma*gbl->rho*2.0*SS/omgLmtd*cjcb;
 #endif
 #endif
@@ -644,8 +653,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     
 #ifdef WILCOX2006
                     /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
-                    dktlddx = (dcrd(1,1)(i,j)*du(2,0)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb;
-                    dktlddy = (dcrd(0,0)(i,j)*du(2,1)(i,j) -dcrd(0,1)(i,j)*du(2,0)(i,j))/cjcb;
+                    dktlddx = (ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j))/cjcb;
+                    dktlddy = (ldcrd(0,0)*du(2,1)(i,j) -ldcrd(0,1)*du(2,0)(i,j))/cjcb;
                     dkdx = dpsifunc(u(2)(i,j),0,epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddx;
                     dkdy = dpsifunc(u(2)(i,j),0,epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddy;
                     CD = dkdx*domgtlddx +dkdy*domgtlddy;
