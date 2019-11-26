@@ -1064,11 +1064,22 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				*gbl->log << "couldn't open " << grd_app << "for reading\n";
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-			
 			in >> npnt;
+            
+            for (int i = 0; i < npnt; ++i) {
+                in.ignore(numeric_limits<streamsize>::max(), in.widen('\n'));
+            }
+            in >> nseg;
+            ++nseg;
+            
+            in.close();
+            in.open(grd_app.c_str());
+            in >> npnt;
 			
-			maxpst = static_cast<int>(grwfac*npnt*npnt);
-			allocate(maxpst);
+			maxpst = MAX(static_cast<int>(grwfac*nseg*nseg),static_cast<int>(grwfac*npnt));
+            nseg = 0;
+
+            allocate(maxpst);
 			initialized = 1;
 			std::string symbolic_string;
 			istringstream data;
