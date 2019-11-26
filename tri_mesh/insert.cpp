@@ -161,7 +161,7 @@ int tri_mesh::insert(int pnum, int tnum) {
 	nseg += 3;
 
 	if (ntri > maxpst || nseg > maxpst) {
-		*gbl->log << "need to use bigger growth factor: too many sides/tris" << nseg << ntri << std::endl;
+		*gbl->log << "need to use bigger growth factor: too many sides/tris/maxpst" << nseg << ' ' << ntri << ' ' << maxpst << std::endl;
 		output("error");
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
