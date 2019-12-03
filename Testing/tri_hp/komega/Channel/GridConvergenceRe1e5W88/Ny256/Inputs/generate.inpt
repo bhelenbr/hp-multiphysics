@@ -1,0 +1,10 @@
+# Initial mesh (should specify nblock if more than 1. Can also specify b0_filetype):
+b0_mesh: ./channel1e5_256.d
+# Parameters in the initial mesh:
+# Mesh adaptation (can specify b0_growth factor, ntstep):
+adapt: 0
+# Side properties: 
+b0_s2_type: prdc
+b0_s2_dir: 1
+# Log filename:
+logfile: generate
