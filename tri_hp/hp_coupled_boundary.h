@@ -164,7 +164,7 @@ class hp_deformable_free_pnt : public hp_deformable_fixed_pnt {
 protected:
 	FLT position;
 	enum {vertical, horizontal, curved} wall_type;
-	TinyVector<FLT,tri_mesh::ND> wall_normal;
+	//TinyVector<FLT,tri_mesh::ND> wall_normal;
 	
 public:
 	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "hp_deformable_free_pnt";}

@@ -2163,8 +2163,14 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 			wall_type = horizontal;
 			position = x.pnts(base.pnt)(1);
 		}
-		else if (input == "curved")
+        else if (input == "curved") {
 			wall_type = curved;
+            int bnumwall = base.ebdry(1-surfbdry);
+            if (!x.hp_ebdry(bnumwall)->is_curved()) {
+                *x.gbl->log << "Can't use curved hp_deformable_free_pnt on non_curved boundary" << std::endl;
+                sim::abort(__LINE__,__FILE__,&std::cerr);
+            }
+        }
 		else {
 			*x.gbl->log << "Unrecognized wall type" << std::endl;
 		}
@@ -2173,25 +2179,6 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 		wall_type = vertical;
 		position = x.pnts(base.pnt)(0);
 	}
-	
-	/* Find tangent to wall and use to constrain motion */
-	int bnumwall = base.ebdry(1-surfbdry);
-	TinyVector<FLT,tri_mesh::ND> rp;
-	if (surfbdry == 0) {
-		int sindwall = x.ebdry(bnumwall)->seg(0);
-		x.crdtocht1d(sindwall);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
-	}
-	else {
-		int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
-		x.crdtocht1d(sindwall);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
-	}
-	FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
-	wall_normal /= length;
-	FLT temp = wall_normal(0);
-	wall_normal(0) = wall_normal(1);
-	wall_normal(1) = -temp;
 }
 
 void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
@@ -2230,6 +2217,15 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 				break;
 			}
 			case curved: {
+                /* Calculate normal from geometry definition */
+                TinyVector<FLT,tri_mesh::ND> wall_normal;
+                if (surfbdry == 0) {
+                    x.ebdry(base.ebdry(1))->bdry_normal(0,-1.0,wall_normal);
+                }
+                else {
+                    x.ebdry(base.ebdry(0))->bdry_normal(x.ebdry(base.ebdry(0))->nseg-1,1.0,wall_normal);
+                }
+
 				int bnumwall = base.ebdry(1-surfbdry);
 				TinyVector<FLT,tri_mesh::ND> tgt = x.pnts(base.pnt);
                 if(surfbdry == 0)
