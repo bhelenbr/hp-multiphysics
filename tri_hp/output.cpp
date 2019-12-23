@@ -488,6 +488,251 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.close();
 			break;
 		}
+            
+            
+        case (vtu): {
+            fnmapp = fname +".vtu";
+            out.open(fnmapp.c_str());
+            if (!out) {
+                *gbl->log<< "couldn't open vtu output file " << fnmapp;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            int numpnts = npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri;
+            int numtris = ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);
+
+            out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+            out << "    <UnstructuredGrid>" << endl;
+            out << "        <Piece NumberOfPoints=\"" << numpnts << "\" NumberOfCells=\"" << numtris << "\">" << endl;
+            out << "            <PointData Vectors=\"Data\">" << endl;
+            out << "                <DataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"" << NV << "\" format=\"ascii\">" << endl;
+              
+            /* VERTEX MODES */
+            for(i=0;i<npnt;++i) {
+                for(n=0;n<NV;++n)
+                    out << ugbd(tlvl).v(i,n) << ' ';
+                out << std::endl;
+            }
+            
+            if (basis::tri(log2p)->p() > 1) {
+                /* SIDE MODES */
+                for(sind=0;sind<nseg;++sind) {
+                    ugtouht1d(sind,tlvl);
+                    for(n=0;n<NV;++n)
+                        basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
+                    
+                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                        for(n=0;n<NV;++n)
+                            out << u(n)(0,i) << ' ';
+                        out << std::endl;
+                    }
+                }
+                
+                /* INTERIOR MODES */
+                if (basis::tri(log2p)->p() > 2) {
+                    for(tind = 0; tind < ntri; ++tind) {
+                        ugtouht(tind,tlvl);
+                        for(n=0;n<NV;++n)
+                            basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
+                            
+                        for(i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                                for(n=0;n<NV;++n)
+                                    out << u(n)(i,j) << ' ';
+                                out << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+            out << "                </DataArray>" << endl;
+            out << "            </PointData>" << endl;
+            
+            out << "            <CellData>" << endl;
+            out << "            </CellData>" << endl;
+            
+            out << "            <Points>" << endl;
+            out << "                <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            
+            for(i=0;i<npnt;++i) {
+                for(n=0;n<ND;++n)
+                    out << vrtxbd(tlvl)(i)(n) << ' ';
+                out << 0.0 << endl;
+            }
+            
+            if (basis::tri(log2p)->p() > 1) {
+                /* SIDE MODES */
+                for(sind=0;sind<nseg;++sind) {
+                    if (seg(sind).info < 0) {
+                        v0 = seg(sind).pnt(0);
+                        v1 = seg(sind).pnt(1);
+                        for(n=0;n<ND;++n)
+                            basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
+                    }
+                    else {
+                        crdtocht1d(sind,tlvl);
+                        
+                        for(n=0;n<ND;++n)
+                            basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
+                    }
+                    
+                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                        for(n=0;n<ND;++n)
+                            out << crd(n)(0,i) << ' ';
+                        out << 0.0 << endl;
+                    }
+                }
+                
+                /* INTERIOR MODES */
+                if (basis::tri(log2p)->p() > 2) {
+                    for(tind = 0; tind < ntri; ++tind) {
+                        if (tri(tind).info < 0) {
+                            for(n=0;n<ND;++n)
+                                basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+                        }
+                        else {
+                            crdtocht(tind,tlvl);
+                            for(n=0;n<ND;++n)
+                                basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
+                        }
+                        
+                        for(i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                                for(n=0;n<ND;++n)
+                                    out << crd(n)(i,j) << ' ';
+                                out << 0.0 << endl;
+
+                            }
+                        }
+                    }
+                }
+            }
+            
+            out << "                </DataArray>" << endl;
+            out << "            </Points>" << endl;
+            
+            out << "            <Cells>" << endl;
+            out << "                <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" << endl;
+            
+            /* OUTPUT CONNECTIVY INFO */
+            for(tind=0;tind<ntri;++tind) {
+                
+                /* VERTICES */
+                ijind[0][basis::tri(log2p)->sm()+1] = tri(tind).pnt(0);
+                ijind[0][0] = tri(tind).pnt(1);
+                ijind[basis::tri(log2p)->sm()+1][0] = tri(tind).pnt(2);
+                
+                /* SIDES */
+                indx = tri(tind).seg(0);
+                sgn = tri(tind).sgn(0);
+                if (sgn < 0) {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+                }
+                else {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
+                }
+                
+                indx = tri(tind).seg(1);
+                sgn = tri(tind).sgn(1);
+                if (sgn > 0) {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+                }
+                else {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+                }
+                
+                indx = tri(tind).seg(2);
+                sgn = tri(tind).sgn(2);
+                if (sgn > 0) {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+                }
+                else {
+                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                        ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+                }
+                
+                /* INTERIOR VERTICES */
+                k = 0;
+                for(i=1;i<basis::tri(log2p)->sm();++i) {
+                    for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                        ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
+                        ++k;
+                    }
+                }
+                
+                /* OUTPUT CONNECTION LIST */
+                for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
+                    for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+                        out << ijind[i][j] << ' ' << ijind[i+1][j] << ' ' << ijind[i][j+1] << std::endl;
+                        out << ijind[i+1][j] << ' ' << ijind[i+1][j+1] << ' ' << ijind[i][j+1] << std::endl;
+                    }
+                    out << ijind[i][basis::tri(log2p)->sm()-i] << ' ' << ijind[i+1][basis::tri(log2p)->sm()-i] << ' ' << ijind[i][basis::tri(log2p)->sm()+1-i] << std::endl;
+                }
+            }
+            out << "                </DataArray>" << endl;
+            out << "                <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" << endl;
+            out << "                    ";
+            
+            /* offsets */
+            for(int i = 0; i < numtris; ++i)
+                out << (i+1)*3 << ' ';
+            out << endl;
+            
+            out << "                </DataArray>" << endl;
+            out << "                <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" << endl;
+            out << "                    ";
+            /* vtk file type 5 for triangles */
+            for(int i = 0; i < numtris; ++i)
+                out << 5 << ' ';
+            out << endl;
+            
+            out << "                </DataArray>" << endl;
+            out << "            </Cells>" << endl;
+            out << "        </Piece>" << endl;
+            out << "    </UnstructuredGrid>" << endl;
+            out << "</VTKFile>" << endl;
+            
+            out.close();
+            
+            if(gbl->idnum==0){
+                std::ostringstream nstr;
+                nstr.str("");
+                int tstep = gbl->tstep;
+                if (tstep == -1) tstep = 0;
+                
+                nstr << tstep << std::flush;
+                fnmapp = "data" +nstr.str()+".pvtu";
+                out.open(fnmapp.c_str());
+                
+                fnmapp = "data" +nstr.str();
+                
+                out << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+                out << "    <PUnstructuredGrid GhostLevel=\"0\">" << endl;
+                out << "        <PPointData Vectors=\"Data\">" << endl;
+                out << "            <PDataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"" << NV << "\"/>" << endl;
+                out << "        </PPointData>" << endl;
+                out << "        <PCellData>" << endl;
+                out << "        </PCellData>" << endl;
+                out << "        <PPoints>" << endl;
+                out << "            <PDataArray type=\"Float32\" NumberOfComponents=\"3\"/>" << endl;
+                out << "        </PPoints>" << endl;
+                
+                for(int i=0;i<sim::blks.nblock; ++i)
+                    out << "        <Piece Source=\"" << fnmapp << "_b" << i << ".vtu\"/>" << endl;
+
+                out << "    </PUnstructuredGrid>" << endl;
+                out << "</VTKFile>" << endl;
+                
+                out.close();
+            }
+            
+            break;
+        }
 			
 		case(tecplot): {
 			fnmapp = fname +".dat";
@@ -1323,6 +1568,12 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			for(int i=0;i<nebd;++i) {
 				hp_ebdry(i)->input(filename, netcdf, tlvl);
 			}
+            
+            for(int i=0;i<nvbd;++i) {
+                hp_vbdry(i)->input(filename, netcdf, tlvl);
+            }
+            
+            
 
 			break;
 		}
