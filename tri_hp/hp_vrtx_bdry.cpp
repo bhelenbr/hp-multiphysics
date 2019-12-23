@@ -83,6 +83,19 @@ void hp_vrtx_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 	return;
 }
 
+void hp_vrtx_bdry::input(const std::string& filename,tri_hp::filetype typ,int tlvl) {
+    std::string idin,mytypein;
+    
+    switch(typ) {
+        case(tri_hp::netcdf):
+            // This is how netcdf should input data
+            break;
+        default:
+            break;
+    }
+    return;
+}
+
 void hp_vrtx_bdry::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
 	switch(typ) {
 		case(tri_hp::text): {
