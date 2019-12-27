@@ -1083,7 +1083,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			initialized = 1;
 			std::string symbolic_string;
 			istringstream data;
-			for(i=0;i<npnt;++i) {
+			for(int i=0;i<npnt;++i) {
 				in.ignore(80,':');
 				for(n=0;n<ND;++n) {
 					in >> symbolic_string;

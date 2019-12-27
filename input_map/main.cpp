@@ -63,10 +63,10 @@ int main (int argc, char *argv[]) {
     
 	std::ofstream fout;
 	if (useNewFile) {
-		fout.open(newFile);
+		fout.open(newFile.c_str());
 	}
 	else {
-		fout.open(file);
+		fout.open(file.c_str());
 	}
 	
     if (deleteKey) {
