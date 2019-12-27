@@ -13,8 +13,8 @@ rm *
 # Solve for the modes
 cp ../Inputs/* .
 
-${HOME}/Codes/tet_mesh/partition.bash -p -t run.inpt
-#${HOME}/Codes/tet_mesh/partition2.bash run.inpt
+tet_partition -p -t run.inpt
+#tet_partition2 run.inpt
 
 
 # For multigrid

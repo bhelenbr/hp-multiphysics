@@ -9,4 +9,10 @@ xcuserdata/
 *.xccheckout
 *.bak
 *.xcworkspacedata
+bin/tri_hp*
+bin/tet_hp*
+bin/tri_mesh*
+bin/tet_mesh*
+bin/spline
+bin/show*
 IDEWorkspaceChecks.plist

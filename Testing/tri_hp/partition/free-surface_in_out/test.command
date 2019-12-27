@@ -34,7 +34,7 @@ let NPART=4
 mod_map run.inpt partition ${NPART}
 let NTSTEP=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt restart $NTSTEP
-~/Codes/tri_hp/subpartition.bash run.inpt ${NPART}
+~/Codes/tri_hp/tri_subpartition run.inpt ${NPART}
 
 mpiexec -np ${NPART} tri_hp_petsc partition.inpt
 

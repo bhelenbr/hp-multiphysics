@@ -41,7 +41,7 @@ if [ -n "$DNS" ]; then
 	mod_map run.inpt nblock 4
 	mod_map run.inpt partition 1
 	mod_map run.inpt logfile partition
-	partition.bash run.inpt	
+	tri_partition run.inpt	
 	
 	mod_map partition.inpt logfile output
 	mpiexec -np 4 ${HP} partition.inpt

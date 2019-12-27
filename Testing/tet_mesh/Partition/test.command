@@ -13,7 +13,7 @@ rm *
 # Solve for the modes
 cp ../Inputs/* .
 
-PARTSCRIPT="${HOME}/Codes/tet_mesh/partition.bash"
+PARTSCRIPT="tet_partition"
 
 ${PARTSCRIPT} run.inpt
 

@@ -63,7 +63,7 @@ while [ $npc -lt ${#NPROC[@]} ]; do
 	cd partition${np}
 	cp ../translate.inpt .
 	mod_map translate.inpt nblock ${np}
-	partition.bash translate.inpt
+	tri_partition translate.inpt
 	echo "localhost slots=${np}" > machinefile
 	mpiexec -np ${np} ${MF} ${EX} partition.inpt
 	cd ..

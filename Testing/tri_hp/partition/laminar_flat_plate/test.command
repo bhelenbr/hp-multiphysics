@@ -31,7 +31,7 @@ while [ ${NPART} -le ${NPROC} ]; do
 	cd npart${NPART}
 	cp ../* .
 	mod_map run.inpt adapt 1
-	subpartition.bash run.inpt ${NPART}
+	tri_subpartition run.inpt ${NPART}
 	if [ "$?" -ne "0" ]; then
 			echo "partitioning failed"
 			exit 1

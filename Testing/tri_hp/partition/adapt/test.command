@@ -48,7 +48,7 @@ let NTSTEP=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt restart $NTSTEP
 mod_map run.inpt ntstep 1
 mod_map run.inpt adapt 1
-~/Codes/tri_hp/subpartition.bash run.inpt ${NPART}
+~/Codes/tri_hp/tri_subpartition run.inpt ${NPART}
 if [ "$?" -ne "0" ]; then
         echo "partitioning failed"
         exit 1
