@@ -27,7 +27,6 @@ tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
 	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc' CXX=mpic++
 	cp _$@/tri_hp_petsc ../bin/$@
-	cp subpartition.bash ../bin/
 
 .PHONY: tri_hp_petsc
 
