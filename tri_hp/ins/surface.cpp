@@ -17,10 +17,10 @@
 
 //#define BODYFORCE
 
-
 using namespace bdry_ins;
 
 // extern FLT body[ND];
+
 
 
 void surface::init(input_map& inmap,void* gin) {
@@ -82,8 +82,28 @@ void surface::init(input_map& inmap,void* gin) {
 	inmap.getwdefault(master_id +"_sigma",gbl->sigma,0.0);
 	inmap.getwdefault(master_id +"_p_ext",gbl->p_ext,0.0);
 	
+#ifdef VOLUMEFLUX
+    if (!inmap.get(base.idprefix +"_area",gbl->area)) {
+        gbl->area = 0.0;
+        for (int tind = 0; tind < x.ntri; ++tind) {
+            gbl->area += x.area(tind);
+        }
+    }
+#endif
+    
 	return;
 }
+
+#ifdef VOLUMEFLUX
+void surface::rsdl(int stage) {
+    gbl->area_now = 0.0;
+    for (int tind = 0; tind < x.ntri; ++tind) {
+        gbl->area_now += x.area(tind);
+    }
+    
+    hp_coupled_bdry::rsdl(stage);
+}
+#endif
 
 void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
@@ -105,6 +125,31 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));
 	
+//	/* Calculate stabilization constant based on analysis of linear elements and constant tau */
+//	int v0 = x.seg(sind).pnt(0);
+//	int v1 = x.seg(sind).pnt(1);
+//	norm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+//	norm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+//	FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+//	FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+//
+//	mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+//	mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+//#ifdef MESH_REF_VEL
+//	mvel(0) -= x.gbl->mesh_ref_vel(0);
+//	mvel(1) -= x.gbl->mesh_ref_vel(1);
+//#endif
+//	FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+//
+//	mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+//	mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+//#ifdef MESH_REF_VEL
+//	mvel(0) -= x.gbl->mesh_ref_vel(0);
+//	mvel(1) -= x.gbl->mesh_ref_vel(1);
+//#endif
+//	FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+//	gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+	
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
@@ -121,7 +166,12 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
-		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
+#ifdef VOLUMEFLUX
+		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1) +(gbl->area_now-gbl->area)*jcb);
+#else
+        res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
+#endif
+        
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
 		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 		
@@ -160,10 +210,10 @@ void surface::setup_preconditioner() {
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
 	FLT dttang, dtnorm;
-	FLT vslp, strss;
+	FLT strss;
 	FLT drho;
 	FLT nu1, nu2;
-	FLT qmax, gam1, gam2;
+	FLT gam1, gam2;
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
 	TinyMatrix<FLT,4,MXGP> res;
 	TinyMatrix<FLT,4,MXGP> lf;
@@ -263,8 +313,8 @@ void surface::setup_preconditioner() {
 		mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
 		
-		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
-		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
+		FLT qmax0 = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+		FLT vslp0 = (-mvel(0)*nrm(1) +mvel(1)*nrm(0))/h;
 		
 		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
@@ -272,8 +322,8 @@ void surface::setup_preconditioner() {
 		mvel(0) -= x.gbl->mesh_ref_vel(0);
 		mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
-		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
-		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
+		FLT qmax1 = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+		FLT vslp1 = (-mvel(0)*nrm(1) +mvel(1)*nrm(0))/h;
 		
 		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
 		
@@ -283,7 +333,8 @@ void surface::setup_preconditioner() {
 #else
 		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
 #endif
-		
+        FLT qmax = MAX(qmax0,qmax1);
+        FLT vslp = MAX(abs(vslp0),abs(vslp1));
 		gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
 		gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 		
@@ -303,7 +354,8 @@ void surface::setup_preconditioner() {
 		/* |a| dv/dpsi  dpsi */
 		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
 		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
-		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+		 gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+       //gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
 #endif
 		
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
@@ -453,7 +505,7 @@ void surface_outflow::init(input_map& inmap,void* gbl_in) {
 }
 
 void surface_outflow::element_rsdl(Array<FLT,1> lf) {
-	TinyVector<FLT,tri_mesh::ND> tangent;
+	TinyVector<FLT,tri_mesh::ND> tangent, wall_normal;
 	surface *surf2 = dynamic_cast<surface *>(surf);
 
 	
@@ -465,6 +517,7 @@ void surface_outflow::element_rsdl(Array<FLT,1> lf) {
 		/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 		/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
 		if (wall_type == curved) {
+            /* Calculate normal from geometry definition */
 			if (surfbdry == 0) {
 				x.ebdry(base.ebdry(1))->bdry_normal(0,-1.0,wall_normal);
 			}
@@ -472,6 +525,26 @@ void surface_outflow::element_rsdl(Array<FLT,1> lf) {
 				x.ebdry(base.ebdry(0))->bdry_normal(x.ebdry(base.ebdry(0))->nseg-1,1.0,wall_normal);
 			}
 		}
+        else {
+            /* Calculate normal using mesh */
+            int bnumwall = base.ebdry(1-surfbdry);
+            TinyVector<FLT,tri_mesh::ND> rp;
+            if (surfbdry == 0) {
+                int sindwall = x.ebdry(bnumwall)->seg(0);
+                x.crdtocht1d(sindwall);
+                basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
+            }
+            else {
+                int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
+                x.crdtocht1d(sindwall);
+                basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
+            }
+            FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
+            wall_normal /= length;
+            FLT temp = wall_normal(0);
+            wall_normal(0) = wall_normal(1);
+            wall_normal(1) = -temp;
+        }
 		
 		if (surfbdry == 0) {
 			/* Surf-boundary then point then wall (in ccw sense) */

@@ -17,6 +17,7 @@ namespace bdry_ins {
 
 //#define MPDEBUG
 //#define DEBUG
+//#define VOLUMEFLUX
 
 class surface : public hp_coupled_bdry {
 	protected:
@@ -26,6 +27,9 @@ class surface : public hp_coupled_bdry {
 		struct global : public hp_coupled_bdry::global {
 			/* FLUID PROPERTIES */
 			FLT sigma,rho2,mu2,p_ext;
+#ifdef VOLUMEFLUX
+            FLT area, area_now;
+#endif
 		} *gbl;
 		
 		void* create_global_structure() {return new global;}
@@ -37,6 +41,9 @@ class surface : public hp_coupled_bdry {
 		surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 		
 		void init(input_map& inmap,void* gbl_in);
+#ifdef VOLUMEFLUX
+        void rsdl(int stage);
+#endif
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 		void setup_preconditioner();
 #ifndef petsc
