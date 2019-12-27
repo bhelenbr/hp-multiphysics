@@ -504,7 +504,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
             out << "    <UnstructuredGrid>" << endl;
             out << "        <Piece NumberOfPoints=\"" << numpnts << "\" NumberOfCells=\"" << numtris << "\">" << endl;
-            out << "            <PointData Vectors=\"Data\">" << endl;
+            out << "            <PointData>" << endl;
             out << "                <DataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"" << NV << "\" format=\"ascii\">" << endl;
               
             /* VERTEX MODES */
@@ -713,7 +713,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 
                 out << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
                 out << "    <PUnstructuredGrid GhostLevel=\"0\">" << endl;
-                out << "        <PPointData Vectors=\"Data\">" << endl;
+                out << "        <PPointData>" << endl;
                 out << "            <PDataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"" << NV << "\"/>" << endl;
                 out << "        </PPointData>" << endl;
                 out << "        <PCellData>" << endl;
