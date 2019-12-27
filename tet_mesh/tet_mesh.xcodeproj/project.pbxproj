@@ -141,8 +141,6 @@
 		B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = getnewbdry.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		B24119840C623C2300EA7B1A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
-		E61FBFEE186248CC0035181D /* partition2.bash */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = partition2.bash; sourceTree = "<group>"; };
-		E642B18814437A1700F3CDC9 /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libtri_mesh_mpi.a; sourceTree = "<group>"; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -273,8 +271,6 @@
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
-				E642B18814437A1700F3CDC9 /* partition.bash */,
-				E61FBFEE186248CC0035181D /* partition2.bash */,
 				6F9D57311047327300216CB3 /* makefile */,
 			);
 			name = Scripts;
@@ -366,7 +362,6 @@
 				6FB91AE20ACCB1E100792B04 /* Headers */,
 				6FB91AEB0ACCB1E100792B04 /* Sources */,
 				6FB91B040ACCB1E100792B04 /* Frameworks */,
-				6FB91B0E0ACCB1E100792B04 /* Rez */,
 			);
 			buildRules = (
 			);
@@ -384,7 +379,6 @@
 				6FC7DED905B30C6E001FE736 /* Headers */,
 				6FC7DEE205B30C6E001FE736 /* Sources */,
 				6FC7DEF705B30C6E001FE736 /* Frameworks */,
-				6FC7DF0005B30C6E001FE736 /* Rez */,
 			);
 			buildRules = (
 			);
@@ -426,23 +420,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXRezBuildPhase section */
-		6FB91B0E0ACCB1E100792B04 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FC7DF0005B30C6E001FE736 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXRezBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		6F27980508B9FA49007BECA9 /* ShellScript */ = {

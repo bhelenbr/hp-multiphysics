@@ -337,10 +337,7 @@ ma
 ###################################################################
 #### OS X ####
 ###################################################################
-cd ${HOME}/Codes
-cd parseargs
-make
-cd ..
+cd ${HOME}/hp-multiphysics
 cd utilities
 xcodebuild -alltargets -configuration Release
 cd ../quadtree

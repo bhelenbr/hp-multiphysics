@@ -745,7 +745,6 @@
 		E6C03FD01A9216950021A0FE /* melt_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_buoyancy.h; path = buoyancy/melt_buoyancy.h; sourceTree = "<group>"; };
 		E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = partition.cpp; sourceTree = "<group>"; };
 		E6E0961A1CC9C81500B1F871 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
-		E6E0961B1CC9C81500B1F871 /* subpartition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = subpartition.bash; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1119,7 +1118,6 @@
 			children = (
 				E6367B551E3F9B9B00695A3D /* makefile */,
 				E6E0961A1CC9C81500B1F871 /* Doxyfile */,
-				E6E0961B1CC9C81500B1F871 /* subpartition.bash */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
@@ -1206,7 +1204,6 @@
 				E67EBAAF12D603C50011EB69 /* Sources */,
 				E67EBAD412D603C50011EB69 /* Frameworks */,
 				E67EBAE712D603C50011EB69 /* CopyFiles */,
-				E60E0B28228851C70086FC2E /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1268,26 +1265,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		E60E0B28228851C70086FC2E /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncp subpartition.bash ../bin\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6F9853B90BDE612700D342F6 /* Sources */ = {

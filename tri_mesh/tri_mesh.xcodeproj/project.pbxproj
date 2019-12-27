@@ -172,7 +172,6 @@
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = "<group>"; };
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
-		E6D716EA1206CC15005572EE /* partition.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = partition.bash; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
@@ -331,7 +330,6 @@
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
-				E6D716EA1206CC15005572EE /* partition.bash */,
 				6FFD05F50CC3DA4C001CE474 /* Doxyfile */,
 				F556D7CC0226C8DC01990B20 /* makefile */,
 			);
@@ -434,7 +432,6 @@
 				6FB91AE20ACCB1E100792B04 /* Headers */,
 				6FB91AEB0ACCB1E100792B04 /* Sources */,
 				6FB91B040ACCB1E100792B04 /* Frameworks */,
-				6FB91B0E0ACCB1E100792B04 /* Rez */,
 			);
 			buildRules = (
 			);
@@ -452,7 +449,6 @@
 				6FC7DED905B30C6E001FE736 /* Headers */,
 				6FC7DEE205B30C6E001FE736 /* Sources */,
 				6FC7DEF705B30C6E001FE736 /* Frameworks */,
-				E60E0B29228852100086FC2E /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -495,16 +491,6 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXRezBuildPhase section */
-		6FB91B0E0ACCB1E100792B04 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXRezBuildPhase section */
-
 /* Begin PBXShellScriptBuildPhase section */
 		6F27980508B9FA49007BECA9 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -518,23 +504,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0";
-		};
-		E60E0B29228852100086FC2E /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncp partition.bash ../bin\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

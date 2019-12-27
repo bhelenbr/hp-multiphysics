@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6F99D04E0B5DE0FA00628456 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F99D04D0B5DE0FA00628456 /* libparseargs.a */; };
 		6FD651D00922EC6800D18689 /* input_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CC0922EC6800D18689 /* input_map.cpp */; };
 		6FD651D10922EC6800D18689 /* input_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FD651CD0922EC6800D18689 /* input_map.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FD651F30922EFB000D18689 /* input_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD651CC0922EC6800D18689 /* input_map.cpp */; };
@@ -15,7 +14,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6F99D04D0B5DE0FA00628456 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FD651CB0922EC6800D18689 /* input */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = input; sourceTree = "<group>"; };
 		6FD651CC0922EC6800D18689 /* input_map.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = input_map.cpp; sourceTree = "<group>"; };
 		6FD651CD0922EC6800D18689 /* input_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = input_map.h; sourceTree = "<group>"; };
@@ -31,7 +29,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F99D04E0B5DE0FA00628456 /* libparseargs.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,7 +76,6 @@
 		6F99D0500B5DE10E00628456 /* Frameworks & Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6F99D04D0B5DE0FA00628456 /* libparseargs.a */,
 			);
 			name = "Frameworks & Libraries";
 			sourceTree = "<group>";
