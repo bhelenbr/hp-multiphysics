@@ -15,4 +15,5 @@ bin/tri_mesh*
 bin/tet_mesh*
 bin/spline
 bin/show*
+_*
 IDEWorkspaceChecks.plist
