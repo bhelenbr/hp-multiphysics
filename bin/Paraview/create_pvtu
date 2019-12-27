@@ -1,0 +1,123 @@
+#!/bin/zsh 
+
+usage() {                                      # Function: Print a help message.
+  echo 'usage: create_pvtu -s <starting block> -b <nblock> -n <start> <end> <interval>'  1>&2 
+  echo 'or:    create_pvtu  -s <starting block> -b <nblock> <b0 filelist>' 1>&2 
+  echo '-o <name> will cause the output files to be named name#.vtk.series'
+  echo '-p <name> will look for files of type name#_b#.vtk instead of data_#_b#.vtk'
+}
+
+exit_abnormal() {                              # Function: Exit with error.
+  usage
+  exit 1
+}
+
+NV=1
+STARTBLOCK=0
+NBLOCKS=1
+FNAME='data'
+ONAME=${FNAME}
+
+while getopts "hnb:o:p:s:" opt; do
+   case $opt in
+   n)
+   	let SEQUENCE=1
+   	;;
+   b)
+   	NBLOCKS=${OPTARG}                        # Set $NBLOCKS to specified value.
+    re_isanum='^[0-9]+$'                     # Regex: match whole numbers only
+	if ! [[ $NBLOCKS =~ $re_isanum ]] ; then  # if $NBLOCKS not a whole number:
+		echo "Error: NBLOCKS must be a positive, whole number."
+		exit_abnormally
+		exit 1
+	elif [ $NBLOCKS -eq "0" ]; then            # If it's zero:
+		echo "Error: NBLOCKS must be greater than zero."
+		exit_abnormal                          # Exit abnormally.
+	fi
+	;;
+	o)
+	ONAME=${OPTARG}
+	;;
+	p)
+	FNAME=${OPTARG}
+	;;
+	s)
+   	STARTBLOCK=${OPTARG}                        # Set $NBLOCKS to specified value.
+    re_isanum='^[0-9]+$'                     # Regex: match whole numbers only
+	if ! [[ $STARTBLOCK =~ $re_isanum ]] ; then  # if $NBLOCKS not a whole number:
+		echo "Error: STARTBLOCK must be a nonnegative, whole number."
+		exit_abnormally
+		exit 1
+	fi
+	;;
+   \?) 
+          exit_abnormal
+   esac
+done
+shift $((OPTIND-1))
+
+let NBLOCKS=${STARTBLOCK}+${NBLOCKS}
+
+if [ "${SEQUENCE}" -eq 1 ]; then
+	# Check interval
+	if [ $# -eq 3 ]; then
+		let INT=$3
+	else
+		let INT=1
+	fi
+		# Get number of components from first file
+	NV=$(grep NumberOfComponents ${FNAME}_$1_b${STARTBLOCK}.vtu | head -1)
+	NV=${NV%\" format=\"ascii\">}	
+	NV=${NV##*\"}
+	
+	for (( c = $1; c< $2; c+=${INT} )) do
+		echo "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" > ${ONAME}${c}.pvtu
+		echo "    <PUnstructuredGrid GhostLevel=\"0\">" >> ${ONAME}${c}.pvtu
+		echo "        <PPointData>" >> ${ONAME}${c}.pvtu
+		echo "            <PDataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"${NV}\"/>" >> ${ONAME}${c}.pvtu
+		echo "        </PPointData>" >> ${ONAME}${c}.pvtu
+		echo "        <PCellData>" >> ${ONAME}${c}.pvtu
+		echo "        </PCellData>" >> ${ONAME}${c}.pvtu
+		echo "        <PPoints>" >> ${ONAME}${c}.pvtu
+		echo "            <PDataArray type=\"Float32\" NumberOfComponents=\"3\"/>" >> ${ONAME}${c}.pvtu
+		echo "        </PPoints>" >> ${ONAME}${c}.pvtu
+		for (( b = $STARTBLOCK; b<$NBLOCKS; ++b )) do
+			echo "        <Piece Source=\"${FNAME}_${c}_b${b}.vtu\"/>" >> ${ONAME}${c}.pvtu
+		done
+        echo  "    </PUnstructuredGrid>" >> ${ONAME}${c}.pvtu
+        echo  "</VTKFile>" >> ${ONAME}${c}.pvtu
+	done
+else
+	let NFILES=$#
+	let NCHAR=${#FNAME}
+	SORTED_FILES=$(for file in "$@"; do
+		echo $file
+	done | sort -V | tr '\n' ' ')
+	IFS=' ' read -r -A array <<< "$SORTED_FILES"
+	
+	# Get number of components from first file
+	file=${array[1]%_b*.vtu}
+	file=${file}_b${STARTBLOCK}.vtu
+	NV=$(grep NumberOfComponents $file | head -1)
+	NV=${NV%\" format=\"ascii\">}	
+	NV=${NV##*\"}
+	for (( c = 1; c< ${NFILES}; c+=1 )) do
+		file=${array[$c]%_b*.vtu}
+		time=${file:$NCHAR}
+		echo "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" > ${ONAME}${time}.pvtu
+		echo "    <PUnstructuredGrid GhostLevel=\"0\">" >> ${ONAME}${time}.pvtu
+		echo "        <PPointData>" >> ${ONAME}${time}.pvtu
+		echo "            <PDataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"${NV}\"/>" >> ${ONAME}${time}.pvtu
+		echo "        </PPointData>" >> ${ONAME}${time}.pvtu
+		echo "        <PCellData>" >> ${ONAME}${time}.pvtu
+		echo "        </PCellData>" >> ${ONAME}${time}.pvtu
+		echo "        <PPoints>" >> ${ONAME}${time}.pvtu
+		echo "            <PDataArray type=\"Float32\" NumberOfComponents=\"3\"/>" >> ${ONAME}${time}.pvtu
+		echo "        </PPoints>" >> ${ONAME}${time}.pvtu
+		for (( b = $STARTBLOCK; b<$NBLOCKS; ++b )) do
+			echo "        <Piece Source=\"${file}_b${b}.vtu\"/>" >> ${ONAME}${time}.pvtu
+		done
+        echo  "    </PUnstructuredGrid>" >> ${ONAME}${time}.pvtu
+        echo  "</VTKFile>" >> ${ONAME}${time}.pvtu
+	done
+fi
