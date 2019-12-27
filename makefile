@@ -1,4 +1,4 @@
-DIRS = parseargs utilities input_map quadtree spline++ symbolic_function
+DIRS = utilities input_map quadtree spline++ symbolic_function
 TRI_DIRS = tri_basis tri_mesh tri_hp
 TET_DIRS = tet_basis tet_mesh tet_hp
 
