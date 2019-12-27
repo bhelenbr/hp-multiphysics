@@ -51,8 +51,8 @@ OBJ += $(OBJCNS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
-
+ -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map  -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
+#LIB += -lbinio
 ### Begin machine dependent
 
 ## Linux:

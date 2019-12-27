@@ -48,7 +48,8 @@ MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
 LIB = -L../../lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -linput_map -lspline -lmyblas
-LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lMAdLib
+LIB += -lm -lmuparser -lmetis -lpth -lblitz -lMAdLib
+#LIB += -lbinio
 
 CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
 
