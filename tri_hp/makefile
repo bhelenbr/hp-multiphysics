@@ -83,7 +83,7 @@ OBJKOMEGA = komega/rsdl.o komega/allocate.o komega/length.o
 OBJ = $(BASE)
 OBJ += $(OBJCD)
 OBJ += $(OBJINS)
-#OBJ += $(OBJCNS) 
+OBJ += $(OBJCNS) 
 #OBJ += $(OBJCNSEXPLICIT)
 #OBJ += $(OBJLVLSET)
 OBJ += $(OBJBUOY)
@@ -92,7 +92,7 @@ OBJ += $(OBJBUOY)
 #OBJ += $(OBJPS)
 #OBJ += $(OBJSWIRL)
 #OBJ += $(OBJNONNEWTONIAN)
-#OBJ += $(OBJKOMEGA)
+OBJ += $(OBJKOMEGA)
 
 DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
