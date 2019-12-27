@@ -37,9 +37,6 @@ input_map: utilities force_look
 utilities: force_look
 	cd $@; $(MAKE) $(MFLAGS)
 	
-parseargs: force_look
-	cd $@; $(MAKE) $(MFLAGS)
-	
 dirs: 
 	+@[ -d  bin ] || mkdir -p bin
 	+@[ -d  lib ] || mkdir -p lib
