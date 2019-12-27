@@ -1,0 +1,87 @@
+-----------------------------
+Installation on Ubuntu 18.04
+-----------------------------
+1) Install C++ complier (type and run in the terminal)
+    sudo apt install build-essential
+
+2) Python
+    sudo apt install python
+
+3) MPI
+    sudo apt install mpi-default-dev
+
+4) Valgrind
+    sudo apt install valgrind-mpi
+    sudo apt install valgrind-dbg
+
+5) CMake 
+    sudo apt install cmake
+
+6) Blas 
+    sudo apt install libblas-dev
+
+7) liblapack
+    sudo apt install liblapack-dev
+
+8) Fortran
+    sudo apt install gfortran
+
+9) curl
+    sudo apt install curl
+
+10) Git
+	sudo apt install git
+
+13) pth
+    sudo apt install libpth-dev
+
+15) muparser
+    sudo apt install libmuparser-dev
+
+16) netcdf
+    sudo apt install libnetcdf-dev
+
+10) Create a folder called Packages in the Home directory
+
+12) Blitz
+    a) Download the latest release from
+        https://github.com/blitzpp/blitz/releases
+    b) Move the archive to Packages: 
+        mv blitz-1.0.1.tar.gz /home/brian/Packages
+    c) Install Blitz:
+        cd Packages
+        gunzip blitz-1.0.1.tar.gz
+        tar xvf blitz-1.0.1.tar
+        cd blitz-1.0.1/
+        ./configure -disable-fortran --prefix=$HOME/Packages
+        make lib
+        make install
+
+
+14) Get header for C to call FORTRAN routines
+	cd ${HOME}/Packages/include
+        curl -OL http://www-zeus.desy.de/~burow/cfortran/cfortran.h 
+
+17) PETSC
+    cd ${HOME}/Packages
+    git clone -b maint https://bitbucket.org/petsc/petsc petsc
+    cd petsc
+    ./config/configure.py --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1
+    make PETSC_DIR=${HOME}/Packages/petsc PETSC_ARCH=arch-linux2-c-debug all
+    make PETSC_DIR=${HOME}/Packages/petsc PETSC_ARCH=arch-linux2-c-debug install
+    make PETSC_DIR=${HOME}/Packages PETSC_ARCH="" test
+    
+18) hp-multiphysics
+    cd
+    nano .bashrc
+    * Now add these lines to the end of .bashrc and save
+      export PACKAGES=${HOME}/Packages
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PACKAGES/lib
+    * Now close terminal and reopen
+      type "echo $LD_LIBRARY_PATH" to make sure it works
+    git clone https://github.com/bhelenbr/hp-multiphysics.git
+    cd hp-multiphysics
+    * Replace 2 in the following command with the number of parallel threads your CPU can do  
+    make -j 2 tri_hp
+
+

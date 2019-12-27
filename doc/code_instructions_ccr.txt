@@ -1,0 +1,208 @@
+ssh -X bhelenbr@ccr.buffalo.edu
+ssh -X bhelenbr@rush.ccr.buffalo.edu
+pass: naca0012
+
+vpn stuff:
+ubvpn.buffalo.edu
+ub2816
+CCR=vpn87&&
+
+###################################################
+#put this stuff into .bash_profile:
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/Packages/lib
+export PACKAGES=$HOME/Packages
+
+module load intel-mpi
+module load intel
+
+export CC=icc
+export CXX=icpc
+
+###################################################
+#blitz
+###################################################
+
+./configure -disable-fortran --prefix=$HOME/Packages -disable-doxygen -disable-html-docs;
+make;
+make install;
+
+
+###################################################
+#muparser
+###################################################
+
+./configure --enable-shared=no --prefix=${HOME}/Packages --enable-samples=no --includedir=${HOME}/Packages/include/muParser;
+make;
+make install;
+cd ../include;
+mkdir muParser;
+mv muParser* muParser;
+
+
+###################################################
+#libbinio
+###################################################
+
+# add this to binwrap.cpp:
+#include <cstdio>
+
+./configure --prefix=${HOME}/Packages --enable-shared=no --enable-fast-install=no;
+make;
+make install;
+
+
+###################################################
+#metis
+###################################################
+# change Makefile.in:
+CC=icc
+
+make;
+mv libmetis.a ../lib;
+
+
+###################################################
+#pth
+###################################################
+
+./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize;
+make;
+make install;
+
+###################################################
+#parseargs
+###################################################
+rm *.a *.o;
+make;
+
+###################################################
+#cfortran
+###################################################
+http://www-zeus.desy.de/~burow/cfortran/
+save cfortran.h to ${HOME}/Packages/include/
+
+
+###################################################
+#petsc
+###################################################
+# type which mpiicc to find mpi directory for configure script -> --with-mpi-dir=/util/intel/impi/4.0.3.008/intel64/
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/util/intel/impi/4.0.3.008/intel64/ --download-parmetis=1;
+
+# READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
+make PETSC_DIR=/ifs/user/bhelenbr/u2/Packages/petsc-3.1-p5 PETSC_ARCH=linux-gnu-c-debug all
+make PETSC_DIR=/ifs/user/bhelenbr/u2/Packages/petsc-3.1-p5 PETSC_ARCH=linux-gnu-c-debug install
+
+
+###################################################
+#MAdLib
+###################################################
+mkdir build;
+cd build;
+module load cmake
+cmake ..;
+ccmake ..;
+# configure these settings:
+CMAKE_INSTALL_PREFIX          /user/bhelenbr/u2/Packages
+MADLIB_BUILD_SHARED_LIBRARY   OFF
+MADLIB_BUILD_STATIC_LIBRARY   ON
+MADLIB_INSTALL_EXTENDED_API   ON  
+
+make depend;
+make -j 8;
+make install;
+# copy the header files from include_all to include
+cp ../../include_all/MAdLib/* ../../include/MAdLib/;
+
+###################################################
+#tri_mesh, tet_mesh, tri_hp, tet_hp
+###################################################
+# add these lines to make files
+CPPFLAGS += -I/util/intel/impi/4.0.3.008/intel64/include/
+CXXMPI = mpiicc
+
+
+# issues with tri_hp
+std::isnan() in ins/tstep doesnt work with icc
+
+move #include "tri_hp_ins.h" and #include "../hp_boundary.h"   before other stuff
+
+remove &'s from ISDestroy and MATDestroy in petsc.cpp and sparse.cpp
+
+change make file to match -lsuperlu_dist_2.4 or whatever one petsc downloads
+
+
+# issues with tet_mesh
+move "" headers above others in connect.cpp, MAdLibInterface.cpp, output.cpp
+move <block.h> above others in tet_mesh.h
+
+# issues with tet_hp
+move "" headers above others in allocate.cpp, hp_boundary.h
+
+
+###################################################
+# important websites
+###################################################
+
+http://www.ccr.buffalo.edu/display/WEB/Getting+Started
+http://www.ccr.buffalo.edu/display/WEB/Batch+computing
+
+
+###################################################
+# run simulations on scratch: warning not backed 
+# up and contents deleted after a month (use touch *) 
+###################################################
+
+cd /panasas/scratch/bhelenbr/
+
+
+###################################################
+# useful commands
+###################################################
+
+qstat             check status of all jobs and get jobid
+qstat -u          bhelenbr  check status of your jobs
+showbf -S         show all available resources
+qdel jobid        delete job jobid
+qsub pbs_script   submit job with pbs_script script
+showstart jobid   show approximate time to start
+
+
+###################################################
+# qsub pbs_script use this to run codes
+###################################################
+
+#!/bin/bash
+#PBS -l walltime=00:10:00
+#PBS -l nodes=2:GM:ppn=2
+##PBS -l nodes=16:IB2:ppn=8
+##PBS -l nodes=10:IB1:ppn=12
+#PBS -M brazelmj@clarkson.edu
+#PBS -m e
+#PBS -N Room4
+#PBS -o pbs-cpi-bono.out
+#PBS -j oe
+#PBS -q debug
+#
+#
+cd $PBS_O_WORKDIR
+echo "working directory = "$PBS_O_WORKDIR
+. $MODULESHOME/init/sh
+
+module load intel-mpi/4.0.3
+module load intel/11.1
+
+module list
+ulimit -s unlimited
+#
+which mpiexec
+UNIQ_HOSTS=hosts.$$
+cat $PBS_NODEFILE | uniq > $UNIQ_HOSTS
+NNuniq=`cat $UNIQ_HOSTS | wc -l`
+NPROCS=`cat $PBS_NODEFILE | wc -l`
+mpdboot -n $NNuniq -f $UNIQ_HOSTS -r /usr/bin/ssh -v
+mpdtrace
+#mpiexec -np $NPROCS /user/bhelenbr/u2/bin/tet_hp_mpi partition.inpt
+mpirun -np $NPROCS /user/bhelenbr/u2/bin/tet_hp_mpi partition.inpt
+mpdallexit
+echo "All Done!"
