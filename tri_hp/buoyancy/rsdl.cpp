@@ -10,8 +10,8 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
-#define CALC_TAU1
-// #define CALC_TAU2
+// #define CALC_TAU1
+#define CALC_TAU2
 // #define BOUSSINESQ
 
 void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
@@ -280,6 +280,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
 					FLT nu = gbl->mu/rho;
 					FLT alpha = gbl->kcond/(rho*gbl->cp);
+                    cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 
 					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
 					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);

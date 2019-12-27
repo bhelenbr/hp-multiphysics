@@ -17,6 +17,9 @@
 #### FOR OS X       ####
 #### USING HOMEBREW ####
 ########################
+# To install command line tools
+xcode-select --install
+
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install pth
 brew install muparser
@@ -47,6 +50,9 @@ brew update
 brew outdated
 brew upgrade
 brew cleanup (wait until you are sure everything works)
+
+# If you want to start over: uninstall homebrew:
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
 
 ############################################################
 # THE FOLLOWING PACKAGES ARE UNNECESSARY IF USING HOMEBREW #
@@ -265,6 +271,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[make install]
 
 	# Move the include_all/MAdLib folder and replace the one in include
+
 
 ###################################################################
 NOW DOWNLOAD MY CODE
