@@ -19,6 +19,15 @@ void tri_hp_cns::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
+    
+    if (gbl->error_estimator == global::none) {
+        if (gbl->adapt_output) {
+            ostringstream fname;
+            fname << "adapt_diagnostic" << gbl->tstep;
+            output(fname.str(),tri_hp::adapt_diagnostic);
+        }
+        return;
+    }
 	
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
@@ -107,6 +116,9 @@ void tri_hp_cns::error_estimator() {
 	gbl->eanda(0) = totalenergy2;
 	gbl->eanda(1) = e2to_pow;
 	gbl->eanda(2) = totalerror2;
+    
+    tri_hp::error_estimator();
+    
 
 	return;
 }

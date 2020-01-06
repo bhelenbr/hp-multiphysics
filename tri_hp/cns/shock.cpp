@@ -261,7 +261,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         
         
         FLT Mu = mvel_u_norm(i)/cu;
-        NewtZou(Mu, normal_ud, cd, normal_uu, cu, flag);
+        NewtZou(Mu, normal_ud, cd, normal_uu, cu, flag, crd(0,i), crd(1,i));
 
 
         if (flag == 0){
@@ -331,7 +331,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 }
 
 
-void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag){
+void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy){
     
     FLT Jr, f, fp;
     if(flag == 0){
@@ -346,7 +346,7 @@ void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag){
     
     int it = 0;
     int maxit = 100;
-    FLT tol = 1.0e-14;
+    FLT tol = 1.0e-13;
     while(fabs(f)>tol && it<maxit){
         Mu = Mu-(f/fp);
         
@@ -361,7 +361,7 @@ void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag){
         it = it+1;
     }
     if (it == maxit){
-        printf("Newton Solver in Zou exceeded iteration limit \n");
+        std::cout << "Newton Solver in Zou exceeded iteration limit at (" << crdx << "," << crdy << ")" << std::endl;
     }
 }
 

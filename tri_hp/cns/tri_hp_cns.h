@@ -27,7 +27,7 @@ class tri_hp_cns : public tri_hp {
 			FLT kcond, mu, gamma,R;
 
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-			TinyVector<FLT,2> eanda, eanda_recv;
+//			TinyVector<FLT,3> eanda, eanda_recv;
 			
 			/* SOURCE FUNCTION FOR MMS */
 #ifdef MMS
