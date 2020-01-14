@@ -30,26 +30,30 @@ void tri_hp_komega::error_estimator() {
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
 	int lgpn = basis::tri(log2p)->gpn();
-	std::vector<int> highs;
-	highs.push_back(2+sm);
-	highs.push_back(2+2*sm);
-	highs.push_back(2+3*sm);
-	int indx = 3+3*sm;
-	for(int m = 1; m < sm; ++m) {
-		for(int k = 0; k < sm-m-1; ++k) {
-			++indx;
-		}
-		highs.push_back(indx++);
-	}
+    /* USING energy CONSTANT AS ERROR INDICATOR */
+    /* Real convergence rate is p+1/2 (for pressure in L_2) */
+    /* Real convergence rate of the error for this norm will be probably p-1/2 because it has derivatives */
+    /* This norm is measuring error in p-1 solution not pth order solution */
+    /* If solution was optimal converence of derivative in this norm would be p-1 (so this the lower bound) */
+    /* alpha includes weighting due to area of element +2 */
+    const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
+    FLT e2to_pow = 0.0, totalenergy2 = 0.0, totalerror2 = 0.0;
+    
+    std::vector<int> highs;
+    if (sm) {
+        highs.push_back(2+sm);
+        highs.push_back(2+2*sm);
+        highs.push_back(2+3*sm);
+        int indx = 3+3*sm;
+        for(int m = 1; m < sm; ++m) {
+            for(int k = 0; k < sm-m-1; ++k) {
+                ++indx;
+            }
+            highs.push_back(indx++);
+        }
+    }
 
-	/* USING energy CONSTANT AS ERROR INDICATOR */
-	/* Real convergence rate is p+1/2 (for pressure in L_2) */
-	/* Real convergence rate of the error for this norm will be probably p-1/2 because it has derivatives */
-	/* This norm is measuring error in p-1 solution not pth order solution */
-	/* If solution was optimal converence of derivative in this norm would be p-1 (so this the lower bound) */
-	/* alpha includes weighting due to area of element +2 */
-	const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
-	FLT e2to_pow = 0.0, totalenergy2 = 0.0, totalerror2 = 0.0;
+
 	for (int tind=0;tind<ntri;++tind) {
 			
 		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -66,9 +70,19 @@ void tri_hp_komega::error_estimator() {
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
 		basis::tri(log2p)->proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
 		
-		for(int n=0;n<NV;++n) 
-			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
-				uht(n)(*it) = 0.0;
+        if (sm) {
+            for(int n=0;n<NV;++n)
+                for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
+                    uht(n)(*it) = 0.0;
+        }
+        else {
+            for(int n=0;n<NV;++n) {
+                FLT ubar = (uht(n)(0)+uht(n)(1)+uht(n)(2))/3.0;
+                for(int i=0;i<3;++i) {
+                    uht(n)(i) = ubar;
+                }
+            }
+        }
 			
 		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&ul(n)(0,0),&dul(n,0)(0,0),&dul(n,1)(0,0),MXGP);
