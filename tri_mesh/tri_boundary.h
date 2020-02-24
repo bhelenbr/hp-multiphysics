@@ -248,9 +248,8 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
             inmap.getwdefault(edge_bdry::idprefix+"_scale",scale,1.0);
 		}
 
-		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-			/* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
-			int sind = seg(nseg);
+		void mvpttobdry(int seg_ind,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+			int sind = seg(seg_ind);
 			int p0 = x.seg(sind).pnt(0);
 			int p1 = x.seg(sind).pnt(1);
             TinyVector<FLT,tri_mesh::ND> pt0(x.pnts(p0));
@@ -266,12 +265,10 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			/* METHOD 1 */
 			FLT sloc,sloc0,sloc1;
 			my_spline.find(sloc0,pt0);
-			/* FOR LOOPS */
-			if (sloc0 > smax) sloc0 = smin;
-
 			my_spline.find(sloc1,pt1);
 			/* FOR LOOPS */
-			if (sloc1 < smin) sloc1 = smax;
+            if (sloc0 >= smax) sloc0 = smin;
+            if (sloc0 > sloc1) sloc1 = smax;
 
 			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
 			my_spline.interpolate(sloc,pt);
