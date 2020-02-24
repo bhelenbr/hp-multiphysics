@@ -1228,7 +1228,7 @@ void tri_hp::test_jacobian() {
     /* This outputs a binary file that can be read by matlab */
     /* add to Matlab path: ${HOME}/Packages/petsc/share/petsc/matlab */
      /* J = PetscBinaryRead('Jacobian') */
-    /* [U,S,V] = svds(A,1,'smallest') */
+    /* [U,S,V] = svds(J,1,'smallest') */
     PetscViewer viewer;
     int ierr1 = PetscViewerBinaryOpen(PETSC_COMM_WORLD, "Jacobian", FILE_MODE_WRITE, &viewer);
     CHKERRABORT(MPI_COMM_WORLD,ierr1);
