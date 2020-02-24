@@ -82,28 +82,8 @@ void surface::init(input_map& inmap,void* gin) {
 	inmap.getwdefault(master_id +"_sigma",gbl->sigma,0.0);
 	inmap.getwdefault(master_id +"_p_ext",gbl->p_ext,0.0);
 	
-#ifdef VOLUMEFLUX
-    if (!inmap.get(base.idprefix +"_area",gbl->area)) {
-        gbl->area = 0.0;
-        for (int tind = 0; tind < x.ntri; ++tind) {
-            gbl->area += x.area(tind);
-        }
-    }
-#endif
-    
 	return;
 }
-
-#ifdef VOLUMEFLUX
-void surface::rsdl(int stage) {
-    gbl->area_now = 0.0;
-    for (int tind = 0; tind < x.ntri; ++tind) {
-        gbl->area_now += x.area(tind);
-    }
-    
-    hp_coupled_bdry::rsdl(stage);
-}
-#endif
 
 void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	
@@ -166,12 +146,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* TANGENTIAL SPACING */
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
-#ifdef VOLUMEFLUX
-		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1) +(gbl->area_now-gbl->area)*jcb);
-#else
-        res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
-#endif
-        
+        res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));        
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
 		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 		
