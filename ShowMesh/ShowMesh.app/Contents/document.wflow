@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>444.42</string>
+	<string>492</string>
 	<key>AMApplicationVersion</key>
-	<string>2.9</string>
+	<string>2.10</string>
 	<key>AMDocumentVersion</key>
 	<string>2</string>
 	<key>actions</key>
@@ -158,18 +158,17 @@ if [ $X11Running -eq 0 ] ; then
   fi
 fi
 
+source ${HOME}/.zshrc
 
 #DISPLAY=:0.0; export DISPLAY
-location="${HOME}/Codes/ShowMesh"
+location="${HOME}/hp-multiphysics/ShowMesh"
 for file in "$@"; do
-	echo "$file"
 	case "$file" in
       *.[e,n,s])  
-		"${location}/_showmesh/showmesh" "${file%.*}"
+		"showmesh" "${file%.*}"
 		;;
       *.grd)
-		echo "${location}/_showgrid/showgrid ${file%.*}"
-		"${location}/_showgrid/showgrid" "${file%.*}" &amp;
+		"showgrid" "${file%.*}" &amp;
 		;;
 
     esac
@@ -235,9 +234,9 @@ echo finished</string>
 					<key>1</key>
 					<dict>
 						<key>default value</key>
-						<string></string>
+						<false/>
 						<key>name</key>
-						<string>source</string>
+						<string>CheckedForUserDefaultShell</string>
 						<key>required</key>
 						<string>0</string>
 						<key>type</key>
@@ -248,9 +247,9 @@ echo finished</string>
 					<key>2</key>
 					<dict>
 						<key>default value</key>
-						<false/>
+						<string></string>
 						<key>name</key>
-						<string>CheckedForUserDefaultShell</string>
+						<string>source</string>
 						<key>required</key>
 						<string>0</string>
 						<key>type</key>
@@ -288,7 +287,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>425.500000:1165.000000</string>
+				<string>425.500000:497.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -298,7 +297,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>7A3812D7-CC8D-4307-A68B-98CFE79B830C</key>
+		<key>6BAF9EC1-C10A-4279-B291-AF8B28B7BC5F</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
