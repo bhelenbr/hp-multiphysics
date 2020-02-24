@@ -1,0 +1,28 @@
+logfile: deform
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 1
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 5
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-9
+relative_tolerance: 1.0e-5
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 1
+# inverse of timestep 0=steady state: 
+adapt: 0
+nblock: 1
+# Initial and boundary condition function: 
+ibc: symbolic
+ibc0: 0.0
+ibc1: 0.0
+ibc2: 0.0
+# Physics type (incompressible Navier-Stokes): 
+blocktype: ps
+b0_mesh: rstrt1_b0.grd
+b0_s1_hp_type: curve_edges
+b0_s1_type: spline
+b0_s1_filename: naca.spl
+b0_s1_s_limits: 0 2.0453
+b0_s2_hp_type: dirichlet
+b0_s3_hp_type: dirichlet
