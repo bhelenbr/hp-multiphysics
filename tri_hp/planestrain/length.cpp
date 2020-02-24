@@ -15,7 +15,7 @@
 void tri_hp_ps::length() {
 	int i,j,k,v0,v1,v2,indx,sind,tind,count;
 	TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
-	FLT q,p,duv,um,vm,u,v;
+	FLT q,p,duv,um,vm;
 	FLT sum,ruv,ratio;
 	FLT length0,length1,length2,lengthept;
 	FLT ang1,curved1,ang2,curved2;
@@ -32,7 +32,7 @@ void tri_hp_ps::length() {
 		for(j=0;j<3;++j) {
 			v0 = tri(tind).pnt(j);
 			p += fabs(ug.v(v0,2));
-			duv += fabs(u-um)+fabs(v-vm);
+			duv += fabs(ug.v(v0,0)-um)+fabs(ug.v(v0,1)-vm);
 		}
 		gbl->eanda(0) += 1./3.*(p*area(tind) +duv*gbl->mu*sqrt(area(tind)) );
 		gbl->eanda(1) += area(tind);

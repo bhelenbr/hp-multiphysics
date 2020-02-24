@@ -21,8 +21,8 @@ void tri_hp_ps::init(input_map& inmap, void *gin) {
 
 	gbl->tau.resize(maxpst);
 	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
-	inmap.getwdefault(gbl->idprefix + "_nu",nu,0.0);
-	inmap.getwdefault(gbl->idprefix + "_E",E,0.0);
+	inmap.getwdefault(gbl->idprefix + "_nu",nu,0.3);
+	inmap.getwdefault(gbl->idprefix + "_E",E,1.0);
 
 	gbl->mu = E/(2.*(1.+nu));
 	gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);

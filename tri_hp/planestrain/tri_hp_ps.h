@@ -39,10 +39,9 @@ class tri_hp_ps : public tri_hp {
 
 		void init(input_map& inmap, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
-
 		void length();
 		void setup_preconditioner();
-		void rsdl(int stage);
+        void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
 };
 #endif

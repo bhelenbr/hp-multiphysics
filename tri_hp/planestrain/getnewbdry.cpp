@@ -21,8 +21,8 @@ using namespace bdry_ps;
  */
 class tri_hp_ps_etype {
 	public:
-		static const int ntypes = 3;
-		enum ids {unknown=-1,dirichlet,neumann,friction_wall};
+		static const int ntypes = 4;
+		enum ids {unknown=-1,dirichlet,neumann,friction_wall,curve_edges};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -31,7 +31,7 @@ class tri_hp_ps_etype {
 		}
 };
 
-const char tri_hp_ps_etype::names[ntypes][40] = {"dirichlet","neumann","friction_wall"};
+const char tri_hp_ps_etype::names[ntypes][40] = {"dirichlet","neumann","friction_wall","curve_edges"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ps::getnewedgeobject(int bnum, std::string name) {
@@ -54,6 +54,10 @@ hp_edge_bdry* tri_hp_ps::getnewedgeobject(int bnum, std::string name) {
 			temp = new friction_wall(*this,*ebdry(bnum));  // FIXME NOT WORKING YET
 			break;
 		}
+        case tri_hp_ps_etype::curve_edges: {
+            temp = new curve_edges(*this,*ebdry(bnum));
+            break;
+        }
 		default: {
 			return(tri_hp::getnewedgeobject(bnum,name));
 		}

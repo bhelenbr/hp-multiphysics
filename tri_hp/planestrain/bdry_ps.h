@@ -118,4 +118,17 @@ namespace bdry_ps {
 			}
 
 	};
+
+    class curve_edges : public dirichlet {
+        public:
+            curve_edges(tri_hp_ps &xin, edge_bdry &bin) : dirichlet(xin,bin) {mytype = "curve_edges";}
+            curve_edges(const curve_edges& inbdry, tri_hp_ps &xin, edge_bdry &bin) : dirichlet(inbdry,xin,bin) {}
+            curve_edges* create(tri_hp& xin, edge_bdry &bin) const {return new curve_edges(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
+            void init(input_map& inmap, void* gbl_in) {
+                inmap[base.idprefix+"_curved"] = "0";
+                dirichlet::init(inmap,gbl_in);
+                return;
+            }
+            void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
+    };
 }

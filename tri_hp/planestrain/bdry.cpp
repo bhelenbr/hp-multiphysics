@@ -106,3 +106,62 @@ void friction_wall::rsdl(int stage) {
 
 	return;
 }
+
+void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
+    int j,k,m,n,v0,v1,sind,info;
+    TinyVector<FLT,tri_mesh::ND> pt;
+    char uplo[] = "U";
+    
+    /* SET DISPLACEMENT OF VERTICES TO ZERO */
+    j = 0;
+    do {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
+        for(int n=0;n<tri_mesh::ND;++n)
+            x.ug.v(v0,n) = 0.0;
+    } while(++j < base.nseg);
+    v0 = x.seg(sind).pnt(1);
+    for(int n=0;n<tri_mesh::ND;++n)
+        x.ug.v(v0,n) = 0.0;
+    
+    if (basis::tri(x.log2p)->p() == 1) return;
+
+    /*******************/
+    /* SET SIDE DISPLACEMENTS */
+    /*******************/
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
+        v1 = x.seg(sind).pnt(1);
+        
+        for(int n=0;n<tri_mesh::ND;++n) {
+            basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+            
+            for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+                x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+        }
+        
+        for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
+            pt(0) = x.crd(0)(0,k);
+            pt(1) = x.crd(1)(0,k);
+            base.mvpttobdry(j,basis::tri(x.log2p)->xp(k),pt);
+            x.crd(0)(0,k) -= pt(0);
+            x.crd(1)(0,k) -= pt(1);
+        }
+        
+        for(n=0;n<tri_mesh::ND;++n) {
+            basis::tri(x.log2p)->intgrt1d(&x.cf(n,0),&x.crd(n)(0,0));
+#ifdef F2CFortran
+            DPBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.cf(n,2),basis::tri(x.log2p)->sm(),info);
+#else
+            const int sbwth = basis::tri(x.log2p)->sbwth(), one = 1, sm = basis::tri(x.log2p)->sm();
+            const int sbp1 = sbwth +1;
+            dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.cf(n,2),&sm,&info);
+#endif
+            for(m=0;m<basis::tri(x.log2p)->sm();++m)
+                x.ug.s(sind,m,n) = -x.cf(n,m+2);
+        }
+    }
+    
+    return;
+}
