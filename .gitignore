@@ -17,3 +17,5 @@ bin/spline
 bin/show*
 _*
 IDEWorkspaceChecks.plist
+build/
+xcschemes/
