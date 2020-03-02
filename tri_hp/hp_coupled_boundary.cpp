@@ -1394,8 +1394,8 @@ int hp_coupled_bdry::petsc_matchjacobian_rcv(int phase) {
 	// slave only receives indices of continuous variables
 	// master receives only information for flow not mesh variables
 	
-	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
-	
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase || c0_indices_xy.empty()) return(0);
+    
 	const int sm = x.sm0;
 	int count = 0;
 

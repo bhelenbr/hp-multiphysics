@@ -15,6 +15,7 @@
 #include <myblas.h>
 
 // #define MMS
+//#define Sutherland
 
 class tri_hp_cns : public tri_hp {
 	public:
@@ -24,7 +25,10 @@ class tri_hp_cns : public tri_hp {
 			Array<FLT,3> tau;
 
 			/* PHYSICAL CONSTANTS */
-			FLT kcond, mu, gamma,R;
+			FLT kcond, mu, gamma,R, prandtl;
+#ifdef Sutherland
+            FLT s1, s2;
+#endif
 
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 //			TinyVector<FLT,3> eanda, eanda_recv;
@@ -36,7 +40,7 @@ class tri_hp_cns : public tri_hp {
 			vsi	res_temp;
 			
 			/* preconditioner could make 2d but keep general for now */
-			Array<FLT,3> vpreconditioner, spreconditioner, tpreconditioner; 
+			Array<FLT,3> vpreconditioner, spreconditioner, tpreconditioner;
 
 
 		} *gbl;
@@ -66,6 +70,9 @@ class tri_hp_cns : public tri_hp {
 		void project_res_side(int mode);
 		void project_res_interior();
 		void switch_variables(Array<double,1> pvu, Array<double,1> &a);
+#ifdef Sutherland
+        void Sutherland_visc(FLT RT);
+#endif
 
 };
 #endif

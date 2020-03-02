@@ -38,10 +38,22 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 	double prandtl;
 	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
 	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
-	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",prandtl,0.713);
+	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",gbl->prandtl,0.713);
 	if (!inmap.get(gbl->idprefix + "_R",gbl->R)) inmap.getwdefault("R",gbl->R,287.058);
 
-	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
+
+	gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
+    
+#ifdef Sutherland
+    if (!inmap.get("s1",gbl->s1))
+        inmap.getwdefault("s1",gbl->s1,0.1458205e-5);
+    else
+        inmap.get("s1",gbl->s1);
+    if  (!inmap.get("s2",gbl->s2))
+        inmap.getwdefault("s2",gbl->s2,110.333333);
+    else
+        inmap.get("s2",gbl->s2);    
+#endif
 
 #ifdef MMS
     /* source term for MMS */

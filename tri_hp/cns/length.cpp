@@ -19,6 +19,7 @@ void tri_hp_cns::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
+    FLT lmu = gbl->mu;
     
     if (gbl->error_estimator == global::none) {
         if (gbl->adapt_output) {
@@ -32,17 +33,41 @@ void tri_hp_cns::error_estimator() {
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
 	int lgpn = basis::tri(log2p)->gpn();
-	std::vector<int> highs;
-	highs.push_back(2+sm);
-	highs.push_back(2+2*sm);
-	highs.push_back(2+3*sm);
-	int indx = 3+3*sm;
-	for(int m = 1; m < sm; ++m) {
-		for(int k = 0; k < sm-m-1; ++k) {
-			++indx;
-		}
-		highs.push_back(indx++);
-	}
+//	std::vector<int> highs;
+//	highs.push_back(2+sm);
+//	highs.push_back(2+2*sm);
+//	highs.push_back(2+3*sm);
+//	int indx = 3+3*sm;
+//	for(int m = 1; m < sm; ++m) {
+//		for(int k = 0; k < sm-m-1; ++k) {
+//			++indx;
+//		}
+//		highs.push_back(indx++);
+//	}
+    
+    /* USING energy CONSTANT AS ERROR INDICATOR */
+    /* Real convergence rate is p+1/2 (for pressure in L_2) */
+    /* Real convergence rate of the error for this norm will be probably p-1/2 because it has derivatives */
+    /* This norm is measuring error in p-1 solution not pth order solution */
+    /* If solution was optimal converence of derivative in this norm would be p-1 (so this the lower bound) */
+    /* alpha includes weighting due to area of element +2 */
+    const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
+    FLT e2to_pow = 0.0, totalenergy2 = 0.0, totalerror2 = 0.0;
+    
+    std::vector<int> highs;
+    if (sm) {
+        highs.push_back(2+sm);
+        highs.push_back(2+2*sm);
+        highs.push_back(2+3*sm);
+        int indx = 3+3*sm;
+        for(int m = 1; m < sm; ++m) {
+            for(int k = 0; k < sm-m-1; ++k) {
+                ++indx;
+            }
+            highs.push_back(indx++);
+        }
+    }
+
 	
 	/* USING energy CONSTANT AS ERROR INDICATOR */
 	/* Real convergence rate is p+1/2 (for pressure in L_2) */
@@ -50,8 +75,8 @@ void tri_hp_cns::error_estimator() {
 	/* This norm is measuring error in p-1 solution not pth order solution */
 	/* If solution was optimal converence of derivative in this norm would be p-1 (so this the lower bound) */
 	/* alpha includes weighting due to area of element +2 */
-	const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
-	FLT e2to_pow = 0.0, totalenergy2 = 0.0, totalerror2 = 0.0;
+//	const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
+//	FLT e2to_pow = 0.0, totalenergy2 = 0.0, totalerror2 = 0.0;
 	for (int tind=0;tind<ntri;++tind) {
 		
 		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -68,9 +93,23 @@ void tri_hp_cns::error_estimator() {
 		for(int n=1;n<NV;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
 		
-		for(int n=0;n<NV;++n) 
-			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
-				uht(n)(*it) = 0.0;
+//		for(int n=0;n<NV;++n) 
+//			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
+//				uht(n)(*it) = 0.0;
+        
+        if (sm) {
+            for(int n=0;n<NV;++n)
+                for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
+                    uht(n)(*it) = 0.0;
+        }
+        else {
+            for(int n=0;n<NV;++n) {
+                FLT ubar = (uht(n)(0)+uht(n)(1)+uht(n)(2))/3.0;
+                for(int i=0;i<3;++i) {
+                    uht(n)(i) = ubar;
+                }
+            }
+        }
 
 		basis::tri(log2p)->proj(&uht(0)(0),&ul(0)(0,0),MXGP);
 		for(int n=1;n<NV;++n)
@@ -89,17 +128,22 @@ void tri_hp_cns::error_estimator() {
 				FLT dudxl = ldcrd(1,1)*dul(1,0)(i,j) -ldcrd(1,0)*dul(1,1)(i,j);
 				FLT dudyl = -ldcrd(0,1)*dul(1,0)(i,j) +ldcrd(0,0)*dul(1,1)(i,j);
 				FLT dvdxl = ldcrd(1,1)*dul(2,0)(i,j) -ldcrd(1,0)*dul(2,1)(i,j);
-				FLT dvdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);		
+				FLT dvdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
+                
+#ifdef Sutherland
+                Sutherland_visc(u(NV-1)(i,j));
+                lmu = gbl->mu;
+#endif
 				
 				FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 				/* INVISCID PARTS TO ERROR MEASURE */
 				energy = rho*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j)) +u(0)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
+                energy += lmu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
 				
 				rho = ul(0)(i,j)/ul(NV-1)(i,j);
 				denergy = rho*(ul(1)(i,j)*ul(1)(i,j) +ul(2)(i,j)*ul(2)(i,j)) +ul(0)(i,j);
-				denergy += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				denergy += lmu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
 				
 				denergy -= energy;
 				

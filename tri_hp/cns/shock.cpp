@@ -82,13 +82,13 @@ void shock::rsdl(int stage) {
     for(j=0;j<base.nseg;++j) {
         sind = base.seg(j);
         offset = (sind*stride +bgn)*x.NV;
-        int sign = 1;
+        FLT sign = 1.0;
         for(k=0;k<ebp1;++k) {
             for(int n = 0; n<x.NV; n++){
                 base.fsndbuf(count++) = sign*sdata[offset +n];
             }
             offset+=x.NV;
-            sign*=-1;
+//            sign*=-1.0;
         }
     }
 
@@ -132,8 +132,10 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	for (int n=0; n<x.NV; n++){
 		uht_opp(n)(0) = u_opp_v(indx,n);
 		uht_opp(n)(1) = u_opp_v(indx+1,n);
+        FLT sign = 1.0;
 		for (int j=0; j<sm; j++){
-			uht_opp(n)(j+2) = u_opp_e(indx,j,n);
+			uht_opp(n)(j+2) = sign*u_opp_e(indx,j,n);
+            sign *= -1.0;
 		}
 	}
     
@@ -202,7 +204,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 //            flag = 1;
 //        }
         
-		/* Call NewtZou to find Mu, use in shock velocity evaluation */
+		/* Call Shock_vel to find Mu, use in shock velocity evaluation */
         FLT normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
         FLT normal_ud = (ud*norm(0)+vd*norm(1))/jcb;
         
@@ -261,7 +263,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         
         
         FLT Mu = mvel_u_norm(i)/cu;
-        NewtZou(Mu, normal_ud, cd, normal_uu, cu, flag, crd(0,i), crd(1,i));
+        Shock_vel(Mu, normal_ud, cd, normal_uu, cu, flag, crd(0,i), crd(1,i));
 
 
         if (flag == 0){
@@ -287,7 +289,20 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         FLT tan_u = -norm(1)*uu +norm(0)*vu;
         FLT tan_d = -norm(1)*ud +norm(0)*vd;
         FLT vslp = (tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb;
-        gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
+        //Original
+//        gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
+        
+        //Final
+        gbl->meshc(indx) = gbl->adis/fabs(vslp);
+        
+        
+        //Try
+//        gbl->meshc(indx) = 9.0*gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
+        
+//        if (x.log2p != 0)
+//            gbl->meshc(indx) = gbl->adis/(x.log2p*x.log2p*fabs(vslp));
+//        else
+//            gbl->meshc(indx) = gbl->adis/fabs(vslp);
         
         res(2,i) = -res(1,i)*(tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb*gbl->meshc(indx);
 
@@ -331,7 +346,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 }
 
 
-void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy){
+void shock::Shock_vel(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy){
     
     FLT Jr, f, fp;
     if(flag == 0){
@@ -361,7 +376,7 @@ void shock::NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx,
         it = it+1;
     }
     if (it == maxit){
-        std::cout << "Newton Solver in Zou exceeded iteration limit at (" << crdx << "," << crdy << ")" << std::endl;
+        std::cout << "Newton Solver in Zou exceeded iteration limit at (" << crdx << "," << crdy << ")" << "f=" << f << std::endl;
     }
 }
 
@@ -573,8 +588,8 @@ int shock::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_
         for (int i=0;i<base.nseg;++i) {
             for (int m=0;m<sm;++m) {
                 for(int n=0;n<NV;++n) {
-                    //target(jacobian_start+i*sm*NV +m*NV +n) = (2+sm)*x.NV;
-                    target(jacobian_start+i*sm*NV +m*NV +n) = (2+sm)*vdofs;
+                    target(jacobian_start+i*sm*NV +m*NV +n) = (2+sm)*x.NV;
+//                    target(jacobian_start+i*sm*NV +m*NV +n) = (2+sm)*vdofs;
                 }
             }
         }

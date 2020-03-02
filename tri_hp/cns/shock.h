@@ -42,7 +42,7 @@ class shock : public hp_coupled_bdry{
 		void init(input_map& inmap,void* gbl_in);
 		void rsdl(int stage);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
-		void NewtZou(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy);
+		void Shock_vel(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy);
 		void element_jacobian_opp(int indx, Array<FLT,2>& K);
 #ifdef petsc
 		void petsc_jacobian();

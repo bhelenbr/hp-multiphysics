@@ -21,6 +21,8 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/gm1;
 	FLT gogm1 = gam*ogm1;
+    
+    FLT Pout, uout, RTout;
 	
 	std::string fname;
 	fname = filename +"_" +base.idprefix;
@@ -41,6 +43,10 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			diff_flux = 0.0;
 			moment = 0.0;
 			circumference = 0.0;
+            
+            Pout = 0.0;
+            uout = 0.0;
+            RTout = 0.0;
 #ifdef L2_ERROR
 			FLT l2error = 0.0;
 			TinyVector<FLT,2> xpt;
@@ -72,30 +78,30 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 
 					double mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-										
+
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
 					visc(0,0)(0,0) = -mujcbi*(4./3.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
 					visc(0,0)(1,1) = -mujcbi*(4./3.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 					visc(0,0)(0,1) =  mujcbi*(4./3.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 #define                 viscI0II0II1II0I visc(0,0)(0,1)
-					
+
 					visc(1,1)(0,0) = -mujcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +4./3.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
 					visc(1,1)(1,1) = -mujcbi*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +4./3.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 					visc(1,1)(0,1) =  mujcbi*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +4./3.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 #define                 viscI1II1II1II0I visc(1,1)(0,1)
-					
+
 					visc(0,1)(0,0) =  mujcbi*1./3.*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
 					visc(0,1)(1,1) =  mujcbi*1./3.*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
 					visc(0,1)(0,1) = -mujcbi*(x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i)-2./3.*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i));
 					visc(0,1)(1,0) = -mujcbi*(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i)-2./3.*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i));
-					
+
 					/* OTHER SYMMETRIES     */
 #define				viscI1II0II0II0I visc(0,1)(0,0)
 #define				viscI1II0II1II1I visc(0,1)(1,1)
 #define				viscI1II0II0II1I visc(0,1)(1,0)
 #define				viscI1II0II1II0I visc(0,1)(0,1)
-					
+
 					/* HEAT DIFFUSION TENSOR */
 					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
 					kcond(1,1) = -kcjcbi*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
@@ -109,12 +115,12 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					ldiff_flux(2) =    basis::tri(x.log2p)->wtx(i)*( x.u(0)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
 									-viscI1II0II1II0I*x.du(1,0)(0,i) -viscI1II1II1II0I*x.du(2,0)(0,i)
 									-viscI1II0II1II1I*x.du(1,1)(0,i) -visc(1,1)(1,1)*x.du(2,1)(0,i));
-					ldiff_flux(3) = basis::tri(x.log2p)->wtx(i)*(-kcond(1,0)*x.du(3,0)(0,i) -kcond(1,1)*x.du(3,1)(0,i));
+					ldiff_flux(3) = basis::tri(x.log2p)->wtx(i)*(-kcond(0,1)*x.du(3,0)(0,i) -kcond(1,1)*x.du(3,1)(0,i));
 					diff_flux -= ldiff_flux;
 					ldiff_flux /= jcb;
 
 					norm(0) = x.dcrd(1,0)(0,i);
-					norm(1) = -x.dcrd(0,0)(0,i);                
+					norm(1) = -x.dcrd(0,0)(0,i);
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
@@ -136,16 +142,28 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					xpt(1) = x.crd(1)(0,i);
 					l2error += jcb*l2norm->Eval(xpt,x.gbl->time);
 #endif
-					
+
 					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
 					for(int n=0;n<x.NV;++n)
 						file_out << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
 					file_out << std::endl;
-				}				
+                    
+                    
+//                    Pout += basis::tri(x.log2p)->wtx(i)*x.u(0)(0,i)*sqrt(norm(0)*norm(0)+norm(1)*norm(1));
+//                    uout += basis::tri(x.log2p)->wtx(i)*x.u(1)(0,i)*sqrt(norm(0)*norm(0)+norm(1)*norm(1));
+//                    RTout += basis::tri(x.log2p)->wtx(i)*x.u(3)(0,i)*sqrt(norm(0)*norm(0)+norm(1)*norm(1));
+                    
+                    Pout += basis::tri(x.log2p)->wtx(i)*(x.u(0)(0,i)*norm(0)+x.u(0)(0,i)*norm(1));
+                    uout += basis::tri(x.log2p)->wtx(i)*(x.u(1)(0,i)*norm(0)+x.u(2)(0,i)*norm(1));
+                    RTout += basis::tri(x.log2p)->wtx(i)*(x.u(3)(0,i)*norm(0)+x.u(3)(0,i)*norm(1));
+                    
+				}
+
 			}
 			file_out.close();
 
-			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
+
+			*x.gbl->log << setprecision(14) << base.idprefix << " circumference: " << circumference << std::endl;
 			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
 			*x.gbl->log << base.idprefix << " convective flux: " << conv_flux << std::endl;
 			*x.gbl->log << base.idprefix << " circulation: " << circulation << std::endl;
@@ -155,6 +173,11 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 #ifdef L2_ERROR
 			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
 #endif
+            
+            *x.gbl->log << base.idprefix << " Integrated Pressure: " << Pout << std::endl;
+            *x.gbl->log << base.idprefix << " Integrated vel: " << uout << std::endl;
+            *x.gbl->log << base.idprefix << " Integrated RT: " << RTout << std::endl;
+            
 			break;
 		}
 			
@@ -473,24 +496,6 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT pr = rho*rt;
 	FLT c2 = gam*rt;
 	FLT c = sqrt(c2);
-	
-	/* df/dw */
-//	A = u/rt,               rho,                       0.0,     -rho*u/rt,
-//		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
-//		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
-//		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
-	
-//	fluxtemp = 0.0;
-//	
-//	for(int i = 0; i < x.NV; ++i)
-//		for(int j = 0; j < x.NV; ++j)
-//			fluxtemp(i) += 0.5*A(0,i)*(ub(j)+pvu(j));
-	
-//	/* or this way */
-//	fluxtemp(0) = rho*u;
-//	fluxtemp(1) = rho*u*u+pr;
-//	fluxtemp(2) = rho*u*v;
-//	fluxtemp(3) = rho*u*(gogm1*rt+ke);
 
 	fluxleft(0) = (pvu(0)/pvu(x.NV-1))*(pvu(1)-mv_n);
 	fluxleft(1) = fluxleft(0)*pvu(1)+pvu(0);
@@ -513,20 +518,32 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT alpha = x.gbl->kcond/(rho*cp);
 	FLT h = side_length; 
 	
-	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
+//	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
+    //To steaady state
+    FLT hdt = 0.0;
+    
 	FLT umag = sqrt(u*u+v*v);
 	FLT M = MAX(umag/c,1.0e-5);
 	FLT nuh = 4.0*nu/(h*c);
-	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
-	
-	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+//    FLT nuh = 3.0*MAX(4.0*nu/(3.0*h*c),alpha/(h*c));
+//	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
+//
+//	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+    
+    FLT b2;
+    if (M<0.8){
+        b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh,1.0);
+//        b2 = MIN(3.0*M*M + (hdt+nuh)*(hdt+nuh), 1.0);
+    }
+    else{
+        b2 = 1.0;
+    }
+    
 	FLT alph = 0.0;
-	
-//	/* Preconditioner */
-//	P = b2,                   0.0, 0.0, 0.0,
-//	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
-//	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
-//	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;	
+//    FLT alph = 1.0+b2;
+    
+    //Turn preconditioner off
+    b2 = 1.0;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
@@ -534,35 +551,19 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
 	       -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
 	
-//	/* jacobian of primitive wrt conservative */
-//	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
-//	       -u/rho,          1.0/rho,    0.0,         0.0,
-//		   -v/rho,          0.0,        1.0/rho,     0.0,
-//	       (gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
-	
 	/* jacobian of conservative wrt primitive */
 	dcdp = 1.0/rt,               0.0,   0.0,   -rho/rt,
 		   u/rt,                 rho,   0.0,   -rho*u/rt,
 		   v/rt,                 0.0,   rho,   -rho*v/rt,
 		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;
-
-	
-//	temp = 0.0;
-//	for(int i=0; i<x.NV; ++i)
-//		for(int j=0; j<x.NV; ++j)
-//			for(int k=0; k<x.NV; ++k)
-//				temp(0,i)+=dpdc(i,k)*A(k,j);
-//	A = temp;
-//	
-//	temp = 0.0;
-//	for(int i=0; i<x.NV; ++i)
-//		for(int j=0; j<x.NV; ++j)
-//			for(int k=0; k<x.NV; ++k)
-//				temp(0,i)+=P(i,k)*A(k,j);
-//	
-//	A = temp;
-//	matrix_absolute_value(A);
-	
+    
+    temp = 0.0;
+    for(int i=0; i<x.NV; ++i)
+        for(int j=0; j<x.NV; ++j)
+            for(int k=0; k<x.NV; ++k)
+                temp(i,j)+=dcdp(i,k)*Pinv(k,j);
+    
+    Pinv = temp;
 	
 	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
     
@@ -595,23 +596,6 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
         for(int j=0; j<x.NV; ++j)
             for(int k=0; k<x.NV; ++k)
                 A(i,j)+=V(i,k)*temp(k,j);
-    
-//    Aeigs = 0.5*(u+u*b2+temp1)-mv_n, 0.5*(u+u*b2-temp1)-mv_n,u-mv_n,u-mv_n;
-//
-//    for(int i=0; i<x.NV; ++i)
-//        Aeigs(i) = fabs(Aeigs(i));
-//
-//
-//    for(int i=0; i<x.NV; ++i)
-//        for(int j=0; j<x.NV; ++j)
-//            VINV(i,j) = Aeigs(i)*VINV(i,j);
-//
-//
-//    A = 0.0;
-//    for(int i=0; i<x.NV; ++i)
-//        for(int j=0; j<x.NV; ++j)
-//            for(int k=0; k<x.NV; ++k)
-//                A(i,j)+=V(i,k)*VINV(k,j);
 
 
     temp = 0.0;
@@ -622,12 +606,12 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 
     A = temp;
 
-    temp = 0.0;
-    for(int i=0; i<x.NV; ++i)
-        for(int j=0; j<x.NV; ++j)
-            for(int k=0; k<x.NV; ++k)
-                temp(i,j)+=dcdp(i,k)*A(k,j);
-    A = temp;
+//    temp = 0.0;
+//    for(int i=0; i<x.NV; ++i)
+//        for(int j=0; j<x.NV; ++j)
+//            for(int k=0; k<x.NV; ++k)
+//                temp(i,j)+=dcdp(i,k)*A(k,j);
+//    A = temp;
     
     
 	for(int i = 0; i < x.NV; ++i)
@@ -769,36 +753,47 @@ void euler::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<F
 void wall::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
     
     //Zero nomral velocity
-    FLT u_x, u_y, u_tan, norm_x, norm_y, tan_x, tan_y;
-    norm_x = norm(0);
-    norm_y = norm(1);
-
-    //Tangent vector points clockwise
-    tan_x = -norm(1);
-    tan_y = norm(0);
-    u_tan = u(1)*tan_x+u(2)*tan_y;
-
-    //u_norm is zero
-    if(tan_x != 0){
-        u_y = -u_tan*norm_x/(norm_y*tan_x-tan_y*norm_x);
-        u_x = u_tan/tan_x-u_y*(tan_y/tan_x);
-    }
-    else{
-        u_y = u_tan;
-        u_x = 0.0;
-    }
-
-
-    flx(0) = u(0)/u(x.NV-1)*((u_x -mv(0))*norm(0) +(u_y -mv(1))*norm(1));
+//    FLT u_x, u_y, u_tan, norm_x, norm_y, tan_x, tan_y;
+//    norm_x = norm(0);
+//    norm_y = norm(1);
+//
+//    //Tangent vector points clockwise
+//    tan_x = -norm(1);
+//    tan_y = norm(0);
+//    u_tan = u(1)*tan_x+u(2)*tan_y;
+//
+//    //u_norm is zero
+//    if(tan_x != 0){
+//        u_y = -u_tan*norm_x/(norm_y*tan_x-tan_y*norm_x);
+//        u_x = u_tan/tan_x-u_y*(tan_y/tan_x);
+//    }
+//    else{
+//        u_y = u_tan;
+//        u_x = 0.0;
+//    }
+//
+//
+//    flx(0) = u(0)/u(x.NV-1)*((u_x -mv(0))*norm(0) +(u_y -mv(1))*norm(1));
+//
+//    /* X&Y MOMENTUM */
+//    flx(1) = flx(0)*u_x +u(0)*norm(0);
+//    flx(2) = flx(0)*u_y +u(0)*norm(1);
+//
+//    /* ENERGY EQUATION */
+//    double rho = u(0)/u(x.NV-1);
+//    double E = u(x.NV-1)/(x.gbl->gamma-1.0)+0.5*(u_x*u_x+u_y*u_y);
+//    flx(x.NV-1) = rho*E*((u_x-mv(0))*norm(0)+(u_y-mv(1))*norm(1))+u(0)*(u_x*norm(0)+u_y*norm(1));
+    
+    
+    flx(0) = 0.0;
 
     /* X&Y MOMENTUM */
-    flx(1) = flx(0)*u_x +u(0)*norm(0);
-    flx(2) = flx(0)*u_y +u(0)*norm(1);
+    flx(1) = u(0)*norm(0);
+    flx(2) = u(0)*norm(1);
 
     /* ENERGY EQUATION */
-    double rho = u(0)/u(x.NV-1);
-    double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(u_x*u_x+u_y*u_y);
-    flx(x.NV-1) = rho*E*((u_x-mv(0))*norm(0)+(u_y-mv(1))*norm(1))+u(0)*(u_x*norm(0)+u_y*norm(1));
+    flx(x.NV-1) = 0.0;
+    
     
     return;
 }

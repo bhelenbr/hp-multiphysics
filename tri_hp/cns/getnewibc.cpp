@@ -335,11 +335,11 @@ namespace ibc_cns {
                 int it = 0;
                 int maxit = 1000;
                 FLT tol = 1.0e-10;
-                FLT lam = 1.0;
-                FLT fold;
-                int armijo = 0;
-                FLT M_armijo, f_armijo, fp_armijo;
-                FLT alpha = 1.0e-4;
+//                FLT lam = 1.0;
+//                FLT fold;
+//                int armijo = 0;
+//                FLT M_armijo, f_armijo, fp_armijo;
+//                FLT alpha = 1.0e-4;
                 
                 FLT Ar = Aratio.Eval(x,t);
                 FLT M;
@@ -355,39 +355,46 @@ namespace ibc_cns {
                 FLT fp = Ar - (2.0*M*pow((((gam - 1.0)*M*M + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
                 
 
-                fold = f;
+//                fold = f;
                 while(fabs(f)>tol && it<maxit){
                     
-                    lam = 1.0;
-
-                    M_armijo = M-lam*(f/fp);
-
-                    f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
-                    fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+                  /*  Armijo Line Search (no longer necessary) */
+//                    lam = 1.0;
+//
+//                    M_armijo = M-lam*(f/fp);
+//
+//                    f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
+//                    fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+//
+//                    while(fabs(f_armijo)>(1.0-alpha*lam)*fabs(fold) && armijo<100){
+//
+//                        lam = 0.5*lam;
+//                        M_armijo = M-lam*(f_armijo/fp_armijo);
+//                        f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
+//                        fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
+//
+//                        armijo++;
+//                    }
+//                    armijo = 0;
+//
+//                    M = M_armijo;
+//
+//                    f = f_armijo;
+//                    fp = fp_armijo;
                     
-                    while(fabs(f_armijo)>(1.0-alpha*lam)*fabs(fold) && armijo<100){
-
-                        lam = 0.5*lam;
-                        M_armijo = M-lam*(f_armijo/fp_armijo);
-                        f_armijo = M_armijo*Ar-(pow(((2.0+(gam-1.0)*M_armijo*M_armijo)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0)))));
-                        fp_armijo = Ar - (2.0*M_armijo*pow((((gam - 1.0)*M_armijo*M_armijo + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
-
-                        armijo++;
-                    }
-                    armijo = 0;
-
-                    M = M_armijo;
-                    
-                    f = f_armijo;
-                    fp = fp_armijo;
+                    M = M-(f/fp);
+                    f = M*Ar-pow(((2.0+(gam-1.0)*M*M)/(gam+1.0)),((gam+1.0)/(2.0*(gam-1.0))));
+                    fp = Ar - (2.0*M*pow((((gam - 1.0)*M*M + 2.0)/(gam + 1.0)),((gam + 1.0)/(2.0*gam - 2.0) - 1.0))*(gam - 1.0))/(2.0*gam - 2.0);
 
                     it++;
 
                 }
+                
+//                std::cout << setprecision(14) << x << " " << M << " " << f << std::endl;
 
                 if (it == maxit){
                     printf("Newton Solver in ibc nozzle exceeded iteration limit \n");
-                    if (fabs(f)>1.0e-8){
+                    if (fabs(f)>1.0e-10){
                         std::cerr << "Nozzle not converged" << std::endl;
                         sim::abort(__LINE__,__FILE__,&std::cerr);
                     }

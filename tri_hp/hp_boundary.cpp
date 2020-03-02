@@ -242,44 +242,46 @@ void hp_edge_bdry::input(const std::string& filename,tri_hp::filetype typ,int tl
 	std::string idin, mytypein;
 	switch(typ) {
 		case(tri_hp::netcdf): {
-			if (curved) {
-				std::string fname;
-				fname = filename +"_" +base.idprefix +".nc";
-				
-				int retval, ncid, dim_id;
-				size_t dimreturn;
-				if ((retval = nc_open(fname.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
-				
-				if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
-				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
-				if (dimreturn  != base.nseg) {
-					*x.gbl->log << "mismatched seg counts?" << std::endl;
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
-				}
-				
-				if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
-				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
-				int pmin = dimreturn+1;
-				
-				int var_id;
-				if ((retval = nc_inq_varid (ncid, "crvbd", &var_id))) ERR(retval);
-				size_t index[3];
-				for(j=0;j<base.nseg;++j) {
-					index[0] = j;
-					for(m=0;m<pmin-1;++m) {
-						index[1] = m;
-						for(n=0;n<tri_mesh::ND;++n) {
-							index[2] = n;
-							nc_get_var1_double(ncid,var_id,index,&crvbd(tlvl)(j,m)(n));
-						}
-					}
-					for(m=pmin-1;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							crvbd(tlvl)(j,m)(n) = 0.0;
-					}
-				}
-				if ((retval = nc_close(ncid))) ERR(retval);
-			}
+            if (basis::tri(x.log2p)->p() != 1){
+                if (curved) {
+                    std::string fname;
+                    fname = filename +"_" +base.idprefix +".nc";
+                    
+                    int retval, ncid, dim_id;
+                    size_t dimreturn;
+                    if ((retval = nc_open(fname.c_str(), NC_NOWRITE, &ncid))) ERR(retval);
+                    
+                    if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
+                    if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+                    if (dimreturn  != base.nseg) {
+                        *x.gbl->log << "mismatched seg counts?" << std::endl;
+                        sim::abort(__LINE__,__FILE__,x.gbl->log);
+                    }
+                    
+                    if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
+                    if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+                    int pmin = dimreturn+1;
+                    
+                    int var_id;
+                    if ((retval = nc_inq_varid (ncid, "crvbd", &var_id))) ERR(retval);
+                    size_t index[3];
+                    for(j=0;j<base.nseg;++j) {
+                        index[0] = j;
+                        for(m=0;m<pmin-1;++m) {
+                            index[1] = m;
+                            for(n=0;n<tri_mesh::ND;++n) {
+                                index[2] = n;
+                                nc_get_var1_double(ncid,var_id,index,&crvbd(tlvl)(j,m)(n));
+                            }
+                        }
+                        for(m=pmin-1;m<x.sm0;++m) {
+                            for(n=0;n<tri_mesh::ND;++n)
+                                crvbd(tlvl)(j,m)(n) = 0.0;
+                        }
+                    }
+                    if ((retval = nc_close(ncid))) ERR(retval);
+                }
+            }
 			break;
 		}
 			

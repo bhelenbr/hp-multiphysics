@@ -300,16 +300,30 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 	
 	
-	FLT hdt = 0.5*h*gbl->bd(0)/c;
+//	FLT hdt = 0.5*h*gbl->bd(0)/c;
+    //To steady state
+    FLT hdt = 0.0;
+    
 	FLT umag = sqrt(u*u+v*v);
 	FLT M = MAX(umag/c,1.0e-5);
 	FLT nuh = 4.0*nu/(h*c);
+//    FLT nuh = 3.0*MAX(4.0*nu/(3.0*h*c),alpha/(h*c));
 	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
-	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+    FLT b2;
+    
+    if (M<0.8){
+        b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+//        b2 = MIN(3.0*M*M + (hdt+nuh)*(hdt+nuh), 1.0);
+    }
+    else{
+        b2 = 1.0;
+    }
+    
 	FLT alph = 1.0+b2;
-	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
+//	cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
+    
 #ifdef petsc
 	b2 = 1.0;
 	alph = 0.0;
@@ -322,13 +336,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
 	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
 	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;
-	
+
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
 		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0,
 		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
 		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
-
+    
 	/* jacobian of primitive wrt conservative */
 	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
 		    -u/rho,          1.0/rho,    0.0,        0.0,
@@ -435,18 +449,18 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		0.0, nu/(h*h), 0.0,      0.0,
 		0.0, 0.0,      nu/(h*h), 0.0,
 		0.0, 0.0,      0.0,      alpha/(h*h);
-	
+
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*S(k,j);
 	S = temp;
+
+//	for(int i=0; i<NV; ++i)
+//		S(i,i) += gbl->bd(0);
 	
-	for(int i=0; i<NV; ++i)
-		S(i,i) += gbl->bd(0);
-	
-	Tinv = 2.0/h*(A+B+h*S);
+	Tinv = 2.0*(A+B+h*S)/h;
 		
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);

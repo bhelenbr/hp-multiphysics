@@ -143,6 +143,14 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			/* TIME DERIVATIVE TERMS */ 
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
+                    
+#ifdef Sutherland
+                    Sutherland_visc(u(NV-1)(i,j));
+                    lkcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
+                    lmu = gbl->mu;
+//                    lkcond = gbl->kcond;
+#endif
+                    
 					double rho = u(0)(i,j)/u(NV-1)(i,j);
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
@@ -337,6 +345,14 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			/* TIME DERIVATIVE TERMS */ 
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
+                    
+#ifdef Sutherland
+                    Sutherland_visc(u(NV-1)(i,j));
+                    lkcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
+                    lmu = gbl->mu;
+//                    lkcond = gbl->kcond;
+#endif
+                    
 					double rho = u(0)(i,j)/u(NV-1)(i,j);
 					cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
@@ -487,3 +503,14 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 	return;
 }
+
+
+#ifdef Sutherland
+void tri_hp_cns::Sutherland_visc(FLT RT){
+    
+    gbl->mu = gbl->s1*pow(RT,1.5)/(RT+gbl->s2);
+    
+    return;
+    
+}
+#endif
