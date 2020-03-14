@@ -142,6 +142,8 @@ class tri_mesh : public multigrid_interface {
 		void initlngth();  /**< Set target mesh resolution based on current mesh */
 		virtual void length() {} /**< Virtual so inheritors can set target resolution before adaptation */
 		void adapt(); /**< Adapt mesh */
+        void refineby2(); /**< Uniform refinement */
+
 		//@}
 
 		/* Destructor (deletes boundary objects) */
@@ -243,6 +245,7 @@ class tri_mesh : public multigrid_interface {
 		void collapse(int sind, int endpt); /**< Removes by collapsing segment sind to endpt */
 
 		void bdry_rebay(FLT tolsize); /**< Refine edges */
+        void bdry_refineby2();
 		void bdry_rebay1(); /**< Refine slave edges */
 		void rebay(FLT tolsize); /**< Refine mesh using Rebay point placement */
 		int insert(const TinyVector<FLT,ND> &x);  /**< Inserts a point */

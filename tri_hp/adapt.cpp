@@ -639,5 +639,51 @@ void tri_hp::movetdata(int from, int to) {
 }
 
 
+void tri_hp::refineby2() {
 
+    treeinit();  // FIXME??
+    
+    /* Create storage for adaptation */
+    gbl->pstr = create();
+    gbl->pstr->init(*this,adapt_storage);
+    for(int i=0;i<nebd;++i)
+        hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
+    
+    /* Communicate halo information */
+    transfer_halo_solutions();
+    
+    /* Copy to storage for updating solution after adaptation */
+    gbl->pstr->copy(*this);
+
+    /* Append halo solution for partition meshes to make searching near partition boundaries work */
+    gbl->pstr->append_halos();
+    
+    gbl->pstr->checkintwk();
+    checkintwk();
+    
+    tri_mesh::refineby2();
+    setinfo();
+    
+    /* Delete adaptation storage */
+    delete gbl->pstr;
+    
+#ifdef petsc
+    petsc_finalize();
+    petsc_initialize();
+#endif
+
+    if (gbl->adapt_output) {
+        std::ostringstream fname;
+        fname << "adapted_solution" << gbl->tstep;
+        tri_mesh::output(fname.str(),tri_mesh::grid);
+        tri_hp::output(fname.str(),tri_hp::tecplot);
+    }
+    
+    *gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
+    
+    // FOR TESTING ADAPTATION TO A SPECIFIED FUNCTION
+    // tobasis(gbl->ibc);
+    
+    return;
+}
 

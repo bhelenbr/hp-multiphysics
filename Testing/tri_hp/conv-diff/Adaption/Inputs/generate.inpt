@@ -3,7 +3,7 @@ ntstep: 2
 log2p: 2
 adapt: 1
 logfile: generate
-b0_growth factor: 10.0
+b0_growth factor: 100.0
 b0_mesh: parabola.d
 b0_s1_type: symbolic
 b0_s1_h: x1-x0^(2^log2p)

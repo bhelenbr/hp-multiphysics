@@ -1343,6 +1343,8 @@ void block::go(input_map input) {
 		return;
 	}
 #endif
+    
+    
 
 	begin_time = clock();
 
@@ -1352,6 +1354,20 @@ void block::go(input_map input) {
 		gbl->tstep = 0;
 		output("data0",block::display);
 	}
+    
+    int rb2;
+    if (input.get("refineby2",rb2)) {
+        grd(0)->refineby2();
+        nstr.str("");
+        nstr << nstart+1 << std::flush;
+        outname = "data" +nstr.str();
+        output(outname,block::display);
+        
+        outname = "rstrt" +nstr.str();
+        output(outname,block::restart);
+        return;
+    }
+    
 
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
 		for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {

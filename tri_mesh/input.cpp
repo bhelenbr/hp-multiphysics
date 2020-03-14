@@ -1065,18 +1065,16 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			in >> npnt;
-            
-            for (int i = 0; i < npnt; ++i) {
+            for (int i = 0; i < npnt+1; ++i) {
                 in.ignore(numeric_limits<streamsize>::max(), in.widen('\n'));
             }
             in >> nseg;
-            ++nseg;
-            
+            maxpst = MAX(static_cast<int>(grwfac*nseg*nseg),static_cast<int>(grwfac*npnt));
+
             in.close();
             in.open(grd_app.c_str());
             in >> npnt;
 			
-			maxpst = MAX(static_cast<int>(grwfac*nseg*nseg),static_cast<int>(grwfac*npnt));
             nseg = 0;
 
             allocate(maxpst);

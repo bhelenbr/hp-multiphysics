@@ -66,9 +66,19 @@ void tri_hp_ins::error_estimator() {
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
 		basis::tri(log2p)->proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
 		
-		for(int n=0;n<NV;++n) 
-			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
-				uht(n)(*it) = 0.0;
+        if (sm) {
+            for(int n=0;n<NV;++n)
+                for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
+                    uht(n)(*it) = 0.0;
+        }
+        else {
+            for(int n=0;n<NV;++n) {
+                FLT ubar = (uht(n)(0)+uht(n)(1)+uht(n)(2))/3.0;
+                for(int i=0;i<3;++i) {
+                    uht(n)(i) = ubar;
+                }
+            }
+        }
 			
 		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&ul(n)(0,0),&dul(n,0)(0,0),&dul(n,1)(0,0),MXGP);

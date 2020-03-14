@@ -11,9 +11,8 @@ restart_type: 0
 ibc: symbolic
 ibc0: x0^(2^log2p)
 b0_type: cd
-b0_filetype: 3
 b0_growth factor: 40.0
-b0_mesh: ./parabola
+b0_mesh: parabola.grd
 b0_s1_type: symbolic
 b0_s1_h: x1-x0^(2^log2p)
 b0_s1_dhdx0: -(2^log2p)*x0^(2^log2p-1)

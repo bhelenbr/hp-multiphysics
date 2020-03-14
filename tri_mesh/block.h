@@ -233,6 +233,7 @@ class multigrid_interface {
 
 		/** Mesh adaptation routines */
 		virtual void adapt() {}
+        virtual void refineby2() {}
 	
 		/** Mesh partition routines */
 		virtual void setpartition(int nparts, blitz::Array<int,1> part_list) {}

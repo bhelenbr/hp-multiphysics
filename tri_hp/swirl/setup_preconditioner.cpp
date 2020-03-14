@@ -55,6 +55,13 @@ void tri_hp_swirl::setup_preconditioner() {
 			qmax = MAX(qmax,q);
 			qsmax = MAX(qsmax,qs);
 		}
+        if  (std::isnan(qmax)) {
+            *gbl->log << gbl->idprefix << ' ' << tind << std::endl;
+            *gbl->log << "flow solution has nan's " << qmax << std::endl;
+            output("nan",tecplot);
+            sim::abort(__LINE__,__FILE__,gbl->log);
+        }
+        
 		gam = 3.0*qsmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
 		if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.01);
 		qs = sqrt(qsmax);

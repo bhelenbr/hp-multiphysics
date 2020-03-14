@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
 			
 			/* If there is a marks file then try to subdivide appended multiphysics mesh */
 			ifstream marks_file;
-			std::string marksfilename = std::string(argv[1]) +".marks";
+			std::string marksfilename = input_file +".marks";
 			marks_file.open(marksfilename.c_str());
 			if (marks_file) {
 				for(int i=0;i<zx.ntri;++i)
@@ -424,7 +424,7 @@ int main(int argc, char *argv[]) {
         /* Output a marks file so you know which element came from where */
         ofstream file;
         std::string filename;
-        filename = std::string(argv[index+2]) +".marks";
+        filename = std::string(argv[index]) +".marks";
         file.open(filename.c_str());
         for(int i=0;i<zx.ntri-zy.ntri;++i) {
             file << 0 << std::endl;

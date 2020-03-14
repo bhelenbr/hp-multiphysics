@@ -230,6 +230,7 @@ class tri_hp : public r_tri_mesh  {
 		void length();
 		virtual void error_estimator() {};
 		void adapt();
+    void refineby2();
 		void copy(const tri_hp &tgt);
 		void append_halos();
 		void transfer_halo_solutions();

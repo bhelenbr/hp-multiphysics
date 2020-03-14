@@ -23,18 +23,19 @@ os.system("rm *")
 
 # copy input files into results directory
 os.system("cp ../Inputs/* .")
+os.system("cp ../test.command .")
 
 nlayers = 10
 # generate mesh and remove unnecessary data files
 offset = 0.0
 #os.system("spline -m 0.25,0.0 -r -10.0 -s 3.0 -o" +str(offset)+ " -i spoints.dat naca.spl > interp.dat");
-os.system("spline -m 0.0,0.0 -r -0.0 -s 1.0 -o " +str(offset)+ " naca.spl 40 >> interp.dat");
+os.system("spline -m 0.0,0.0 -r -0.0 -s 1.0 -o " +str(offset)+ " naca.spl 40 3.0 >> interp.dat");
 
 dy = -1e-3
 offset = dy
 for x in range(nlayers):
 	#os.system("spline -m 0.25,0.0 -r -10.0 -s 3.0 -o" +str(offset)+ " -i spoints.dat naca.spl > interp.dat");
-	os.system("spline -m 0.0,0.0 -r -0.0 -s 1.0 -o " +str(offset)+ " naca.spl 40 >> interp.dat");
+	os.system("spline -m 0.0,0.0 -r -0.0 -s 1.0 -o " +str(offset)+ " naca.spl 40 3.0 >> interp.dat");
 	dy *= 1.3
 	offset += dy
 
@@ -204,4 +205,7 @@ count += 1
 f.close()
 
 os.system("tri_mesh generate.inpt")
+
+os.chdir("..")
+os.system("opendiff Baseline/ Results/")
 #os.system("open naca.pdf");

@@ -191,8 +191,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 #endif
 
 					for (n=3;n<NV-1;++n) {
-						e(n,0)(i,j) = +gbl->D(n)/lmu*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
-						e(n,1)(i,j) = +gbl->D(n)/lmu*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));                              
+						e(n,0)(i,j) = +gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
+						e(n,1)(i,j) = +gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
 					}
 
 					for (n=0;n<NV-1;++n) {
@@ -379,8 +379,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 #endif                
 
 					for (n=3;n<NV-1;++n) {
-						e(n,0)(i,j) = +gbl->D(n)/lmu*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
-						e(n,1)(i,j) = +gbl->D(n)/lmu*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));                               
+						e(n,0)(i,j) = +gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
+						e(n,1)(i,j) = +gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
 					}
 
 					for (n=0;n<NV-1;++n) {
