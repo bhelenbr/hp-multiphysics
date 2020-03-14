@@ -1,0 +1,59 @@
+logfile: output
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 0
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 1000
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-9
+relative_tolerance: 1.0e-5
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 1
+# inverse of timestep 0=steady state: 
+adapt: 0
+length_smoothing_steps: 1
+minimum_length: 8e-4*d
+error_estimator: energy_norm
+# Uncomment above to use error estimation when adapting: 
+# Otherwise just maintains mesh quality for deforming meshes: 
+# target error level when using mesh adaptation (for energy_norm): 
+error_target: 1.0e-4
+# Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
+curvature_sensitivity: 2.0
+nblock: 1 1
+# Initial and boundary condition function: 
+ibc: sphere
+# Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
+# and 0 inside inner radius with smooth transition in between: 
+inner_radius: 5.0
+outer_radius: 10.0
+# Viscosity (1/Reynolds Number): 
+mu: 1.0e-1
+rho: 1.0
+# Physics type (incompressible Navier-Stokes): 
+blocktype: ins
+b0_mesh: rstrt1_b0.grd
+b0_adaptable: 0
+b0_growth factor: 2
+b0_s1_hp_type: inflow
+b0_s1_type: spline
+b0_s1_filename: naca.spl
+b0_s1_s_limits: 0 2.0452
+b0_s2_type: comm
+b0_s3_type: comm
+b0_s2_adaptable: 0
+b0_s3_adaptable: 0
+b1_mesh: rstrt1_b1.grd
+b1_growth factor: 20
+b1_s2_type: comm
+b1_s3_type: comm
+b1_s2_adaptable: 0
+b1_s3_adaptable: 0
+b1_s5_hp_type: outflow
+b1_s6_hp_type: outflow
+b1_s7_hp_type: outflow
+b1_s8_hp_type: inflow
+b0_v1_type: comm
+b1_v1_type: comm
+b0_v2_type: comm
+b1_v2_type: comm

@@ -1,0 +1,21 @@
+log2p: 2
+ncycle: 0
+ntstep: 2
+logfile: run
+adapt: 1
+error: 1.0e-6
+error_estimator: energy_norm
+minimum_length: 0.0001
+maximum_length: 1.0e10
+refineby2: 1
+ibc: symbolic
+ibc0: x0^(2^log2p)
+b0_type: cd
+b0_growth factor: 40.0
+b0_mesh: parabola.grd
+b0_s1_type: symbolic
+b0_s1_h: x1-x0^(2^log2p)
+b0_s1_dhdx0: -(2^log2p)*x0^(2^log2p-1)
+b0_s1_dhdx1: 1.0
+b0_s1_curved: 1
+helper: l2error
