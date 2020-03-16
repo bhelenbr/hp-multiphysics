@@ -43,6 +43,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	FLT fluxx,fluxy;
 	const int NV = 5;
 	TinyVector<int,3> v;
+    TinyVector<FLT,ND> pt;
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
@@ -70,8 +71,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25., sgmdo = 1./8., Clim = 7./8.; // The default value from Wilcox(2006) for Clim is 7./8.
     const bool klim = false; // adds a klimiter modeled after komega SST equations
 #endif
-    const FLT k_mom= 1.0; // the term in the momentum equation including k
-    const FLT susk = 1.0, susomg = 1.0; // turbulence sustaning terms
+    const FLT k_mom= 0.0, k_negdiss = 0.0; // the term in the momentum equation including k
+    const FLT susk = 0.0, susomg = 0.0; // turbulence sustaning terms
     
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -203,7 +204,16 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #ifdef BODYFORCE
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
-#endif                  
+#endif
+                    
+#ifdef MMS
+                    /* source terms for MMS */
+                    pt(0) = crd(0)(i,j);
+                    pt(1) = crd(1)(i,j);
+                    for(int n = 0; n < NV; ++n)
+                        res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+#endif
+                            
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U, V, K-TILDE OR ln(OMEGA) 2: VARIABLE (U, V, K-TILDE OR ln(OMEGA)), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -306,7 +316,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
                         
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + k_negdiss*omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
 #ifdef WILCOX2006
                     /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
@@ -598,7 +608,15 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #ifdef BODYFORCE
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
-#endif        
+#endif
+                    
+#ifdef MMS
+                    /* source terms for MMS */
+                    pt(0) = crd(0)(i,j);
+                    pt(1) = crd(1)(i,j);
+                    for(int n = 0; n < NV; ++n)
+                        res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+#endif
                     df(0,0)(i,j) = cjcbi*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                     +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*ldcrd(1,1)*ktrb;
                     
@@ -665,7 +683,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
                     
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + k_negdiss*omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
                     
 #ifdef WILCOX2006

@@ -21,9 +21,22 @@ void tri_hp_komega::init(input_map& inmap, void *gin) {
 	if (!inmap.get(gbl->idprefix + "_epslnk",gbl->epslnk)) inmap.getwdefault("epslnk",gbl->epslnk,1.0);
     if (!inmap.get(gbl->idprefix + "_kinf",gbl->kinf)) inmap.getwdefault("kinf",gbl->kinf,1.0);
     if (!inmap.get(gbl->idprefix + "_omginf",gbl->omginf)) inmap.getwdefault("omginf",gbl->omginf,1.0);
+    
+#ifdef MMS
+    /* source term for MMS */
+    std::string ibcname, keyword;
+    keyword = gbl->idprefix + "_src";
+    if (!inmap.get(keyword,ibcname)) {
+        keyword = "src";
+        if (!inmap.get(keyword,ibcname)) {
+            *gbl->log << "couldn't find src" << std::endl;
+        }
+    }
+    gbl->src = getnewibc(ibcname);
+    gbl->src->init(inmap,keyword);
+#endif
    
-
-	return;
+    return;
 }
 
 void tri_hp_komega::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {

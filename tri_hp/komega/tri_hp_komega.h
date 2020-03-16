@@ -14,6 +14,8 @@
 #include <blocks.h>
 #include <symbolic_function.h>
 
+#define MMS
+
 class tri_hp_komega : public tri_hp_ins {
 public:
     struct global : public tri_hp_ins::global {
@@ -23,7 +25,14 @@ public:
         /* Model constants */
         FLT c_mu, kinf, omginf, epslnk;
         
+        /* SOURCE FUNCTION FOR MMS */
+        #ifdef MMS
+            init_bdry_cndtn *src;
+        #endif
+        
     } *gbl;
+
+
     
 public:
     void* create_global_structure() {return new global;}
