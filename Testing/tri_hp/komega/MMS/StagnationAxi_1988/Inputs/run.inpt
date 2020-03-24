@@ -1,0 +1,66 @@
+# Physics (should define nblock for more than 1 block):
+b0_type: komega
+gravity: 0
+body_force: 0.0 0.0
+# k-omega Parameters:
+epslnk: 0.0
+betastar: 0.09
+beta_omg: 0.075
+gamma: 5.0/9.0
+sigma_k: 0.5
+sigma_omg: 0.5
+kinf: 1.0
+omginf: 1.0
+# Physical Parameters ( assuming the stagnation flow strength parameter "a = 1" so at y = inf, u = x and v = -y):
+rho: 1.0
+mu: 1e-4
+# Mesh and mesh adaptation (can set adapt on and set growth factor, error_target, error_estimator (energy_norm or scale_independent), minimum_length, maximum_length, curvature sensitivity. Can also set adapat_output on): 
+b0_mesh: rstrt1_b0
+# Time stepping:
+nconv: 10
+dtinv: 0
+ntstep: 1
+# PETSC solver, under-relaxation and SUPG (b0_dissipation, preconditioner_interval and relative_tolerance):
+ncycle: 3
+absolute_tolerance: 1.0e-13
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+# Continuation (restart, reload_type, restart_type):
+# Order of FEM and b0_helper (l2error):
+log2p: 2
+b0_helper: l2error
+# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval))
+logfile: out
+# Explicit solver stuff:
+nstage: 1
+alpha: 1.0
+beta: 1.0
+# Debugging ( can set debug_output, jac_debug, rsdl_debug on):
+rsdl_debug: 1
+# Problem Calculations:
+# Initial & Boundary conditions (I. s1 is inlet, s2 is symmetry except for ln(omg),s3 is symmetry, s4 is outlet II. To get the fluxes set b0_s2_hp_type to outflow and set b0_s2_report to 1 III. Two vertices are used to fixi pressure at two points on the presiodic boundary (upper and lower left ones)):
+ibc: symbolic
+ibc0: x0
+ibc1: -2.0*x1
+ibc2: x0*x0
+ibc3: x0
+ibc4: -0.5*rho*(x0*x0 +4.0*x1*x1)
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 0 0 0
+b0_s2_hp_type: plain
+b0_s2_hp_typelist: 0 1 1 1 1 
+b0_s2_flux3: x0*mu
+b0_s3_hp_type: plain
+b0_s3_hp_typelist: 1 0 1 1 1 
+b0_s4_hp_type: plain
+b0_s4_hp_typelist: 1 1 1 1 1
+b0_s4_flux0: x0*(rho*u0*u0 -0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*(mu +rho*x0*x0/exp(x0)) +2.0/3.0*rho*x0^2)
+b0_s4_flux1: x0*rho*u1*u0 
+b0_s4_flux2: x0*rho*u2*u0 -2.0*x0*x0*(mu +sigma_k*rho*x0*x0/exp(x0))
+b0_s4_flux3: x0*rho*u3*u0 -mu*x0 - sigma_omg*rho*x0^3/exp(x0)
+b0_s4_flux4: x0*rho*u0
+b0_src: symbolic
+b0_src0: -2.0*rho*x0*x0*exp(-x0)*(2.0 -x0) +4.0/3.0*x0*x0
+b0_src1: 0.0
+b0_src2: 2.0*rho*x0^3 +betastar*rho*exp(x0)*x0^3 -4.0*mu*x0 - 2.0*sigma_k*rho*x0^3*exp(-x0)*(4.0-x0) -x0*betastar*rho*kinf*omginf -12.0*rho*x0^3*exp(-x0)
+b0_src3: rho*x0*x0 +beta_omg*rho*exp(x0)*x0 - mu -3.0*x0*sigma_omg*rho*x0*exp(-x0) -mu*x0 -x0*betastar*rho*omginf*omginf/exp(x0) -12.0*rho*gamma*x0*exp(-x0)
+b0_src4: 0.0
