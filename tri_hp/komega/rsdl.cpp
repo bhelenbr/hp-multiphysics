@@ -10,15 +10,15 @@
 #include "tri_hp_komega.h"
 #include "../hp_boundary.h"
 
-#define CALC_TAU1
-//#define CALC_TAU2
+//#define CALC_TAU1
+#define CALC_TAU2
 
 
 #define BODYFORCE
 
 //#define WILCOX1988
-#define WILCOX1988_KL
-//#define WILCOX2006
+//#define WILCOX1988_KL
+#define WILCOX2006
 
 double psifunc(double x,double xs,double xe) {
     if (x >= xe) {
@@ -67,12 +67,13 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9.;
 #endif
 #ifdef WILCOX2006
-    FLT dktlddx, dktlddy, dkdx, dkdy, CD, omgLmtr, omgLmtd, tmuLmtd;
-    const FLT sgmk = 0.6, betakomg = 0.0708, gamma = 13./25., sgmdo = 1./8., Clim = 7./8.; // The default value from Wilcox(2006) for Clim is 7./8.
+    FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr, omgLmtd, tmuLmtd;
+    FLT betakomg = 0.0708;
+    const FLT sgmk = 0.6, gamma = 13./25., sgmdo = 1./8., Clim = 7.0/8.0; // The default value from Wilcox(2006) for Clim is 7./8.
     const bool klim = false; // adds a klimiter modeled after komega SST equations
 #endif
-    const FLT k_mom= 0.0, k_negdiss = 0.0; // the term in the momentum equation including k
-    const FLT susk = 0.0, susomg = 0.0; // turbulence sustaning terms
+    const FLT k_mom= 1.0; // the term in the momentum equation including k
+    const FLT susk = 1.0, susomg = 1.0; // turbulence sustaning terms
     
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -306,7 +307,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgLmtd*cjcb;
 #ifdef AXISYMMETRIC
                     FLT chi = fabs(0.25*(dudy -dvdx)*(dudy -dvdx)*u(0)(i,j)/crd(0)(i,j)/pow(betastr*omg,3.0));
-                    FLT f_beta = (1.0 +85.0*chi)/(1.0 + 100.0*chi);
+                    FLT f_beta = (1.0 +85.0*chi)/(1.0 +100.0*chi);
                     betakomg *= f_beta;
 #endif
 #endif
@@ -316,7 +317,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
                         
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + k_negdiss*omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
 #ifdef WILCOX2006
                     /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
@@ -324,9 +325,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     dktlddy = (dcrd(0,0)(i,j)*du(2,1)(i,j) -dcrd(0,1)(i,j)*du(2,0)(i,j))/cjcb;
                     dkdx = dpsifunc(u(2)(i,j),0,epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddx;
                     dkdy = dpsifunc(u(2)(i,j),0,epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddy;
-                    CD = dkdx*domgtlddx +dkdy*domgtlddy;
-                    if ( CD > 0.0 )
-                        res(3) -= RAD(crd(0)(i,j))*gbl->rho/omg*sgmdo*CD*cjcb;
+                    CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
+                    if ( CrssD > 0.0)
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gbl->rho*CrssD/omg*sgmdo*cjcb;
 
 #endif
 
@@ -671,9 +672,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
                     }
                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgLmtd*cjcb;
+                    
 #ifdef AXISYMMETRIC
                     FLT chi = fabs(0.25*(dudy -dvdx)*(dudy -dvdx)*u(0)(i,j)/crd(0)(i,j)/pow(betastr*omg,3.0));
-                    FLT f_beta = (1.0 +85.0*chi)/(1.0 + 100.0*chi);
+                    FLT f_beta = (1.0 +85.0*chi)/(1.0 +100.0*chi);
                     betakomg *= f_beta;
 #endif
 #endif
@@ -683,7 +685,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
                     
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + k_negdiss*omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
                     
 #ifdef WILCOX2006
@@ -692,9 +694,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     dktlddy = (ldcrd(0,0)*du(2,1)(i,j) -ldcrd(0,1)*du(2,0)(i,j))/cjcb;
                     dkdx = dpsifunc(u(2)(i,j),0,epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddx;
                     dkdy = dpsifunc(u(2)(i,j),0,epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),0,epslnk)*dktlddy;
-                    CD = dkdx*domgtlddx +dkdy*domgtlddy;
-                    if ( CD > 0.0)
-                        res(3) -= RAD(crd(0)(i,j))*gbl->rho/omg*sgmdo*CD*cjcb;
+                    CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
+                    if ( CrssD > 0.0)
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gbl->rho*CrssD/omg*sgmdo*cjcb;
 #endif
                     
                     /* TURBULENCE SUSTAINING TERMS */
