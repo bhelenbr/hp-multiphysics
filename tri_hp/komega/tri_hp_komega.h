@@ -14,7 +14,7 @@
 #include <blocks.h>
 #include <symbolic_function.h>
 
-#define MMS
+//#define MMS
 
 class tri_hp_komega : public tri_hp_ins {
 public:

@@ -10,8 +10,8 @@
 #include "tri_hp_komega.h"
 #include "../hp_boundary.h"
 
-//#define CALC_TAU1
-#define CALC_TAU2
+#define CALC_TAU1
+//#define CALC_TAU2
 
 
 #define BODYFORCE
@@ -48,7 +48,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
     FLT lmu = gbl->mu, rhorbd0, lrhobd0, cjcb, cjcbi;
-    FLT psiktld, psinktld, ktrb, omg, tmu, mutld, cjcbik, cjcbiomg, strninv;
+    FLT psiktld, psinktld, ktrb, omg, omgMx, tmu, tmuLmtd, mutld, cjcbik, cjcbiomg, strninv;
     TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
     TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
     TinyVector<FLT,NV> tres;
@@ -67,10 +67,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT sgmk = 0.5, betakomg = 0.075, gamma = 5./9.;
 #endif
 #ifdef WILCOX2006
-    FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr, omgLmtd, tmuLmtd;
+    FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr;
     FLT betakomg = 0.0708;
-    const FLT sgmk = 0.6, gamma = 13./25., sgmdo = 1./8., Clim = 7.0/8.0; // The default value from Wilcox(2006) for Clim is 7./8.
-    const bool klim = false; // adds a klimiter modeled after komega SST equations
+    const FLT sgmk = 0.6, gamma = 13./25., sgmdo = 1./8., Clim = 0.0; // The default value from Wilcox(2006) for Clim is 7./8.
 #endif
     const FLT k_mom= 1.0; // the term in the momentum equation including k
     const FLT susk = 1.0, susomg = 1.0; // turbulence sustaning terms
@@ -183,14 +182,30 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 				for(int j=0;j<lgpn;++j) {
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                     rhorbd0 = gbl->rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
-					
                     psiktld = psifunc(u(2)(i,j),0.0,epslnk);
                     psinktld = psifunc(-u(2)(i,j),0.0,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
-                    cjcbi = (lmu +tmu)*RAD(crd(0)(i,j))/cjcb;
+                    FLT dudx = (dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j))/cjcb;
+                    FLT dvdx = (dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j))/cjcb;
+                    FLT dudy = (dcrd(0,0)(i,j)*du(0,1)(i,j) -dcrd(0,1)(i,j)*du(0,0)(i,j))/cjcb;
+                    FLT dvdy = (dcrd(0,0)(i,j)*du(1,1)(i,j) -dcrd(0,1)(i,j)*du(1,0)(i,j))/cjcb;
+                    strninv = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
+#ifdef AXISYMMETRIC
+                    strninv += u(0)(i,j)*u(0)(i,j)/crd(0)(i,j)/crd(0)(i,j);
+#endif
+#ifndef WILCOX2006
+                    omgMx = omg;
+                    tmuLmtd = tmu;
+#else
+                    /* STRESS-LIMITER MODIFICATION */
+                    omgLmtr = Clim*sqrt(2.0*strninv/betastr);
+                    omgMx = std::max(omg,omgLmtr);
+                    tmuLmtd = gbl->rho*ktrb/omgMx;
+#endif
+                    mutld = tmu -gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
 
@@ -200,7 +215,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 
 #ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmu)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
 #endif
 #ifdef BODYFORCE
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
@@ -215,7 +230,6 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
 #endif
                             
-
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U, V, K-TILDE OR ln(OMEGA) 2: VARIABLE (U, V, K-TILDE OR ln(OMEGA)), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
 					visc(0,0)(0,0) = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
@@ -273,49 +287,28 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 						cv(n,1)(i,j) += df(n,1)(i,j);
                     }
 
-                    FLT dudx = (dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j))/cjcb;
-                    FLT dvdx = (dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j))/cjcb;
-                    FLT dudy = (dcrd(0,0)(i,j)*du(0,1)(i,j) -dcrd(0,1)(i,j)*du(0,0)(i,j))/cjcb;
-                    FLT dvdy = (dcrd(0,0)(i,j)*du(1,1)(i,j) -dcrd(0,1)(i,j)*du(1,0)(i,j))/cjcb;
-                    
                     /*PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
-                    strninv = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
-#ifdef AXISYMMETRIC
-                    strninv += u(0)(i,j)*u(0)(i,j)/crd(0)(i,j)/crd(0)(i,j);
-#endif
-#ifdef WILCOX1988_KL
-                    /* KATO-LAUNDER */
+#ifndef WILCOX1988_KL
+                    res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgMx*cjcb;
+#else
                     vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
                     res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
                     res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
 #endif
-#ifdef WILCOX1988
-                    /* WILCOX ORIGINAL PRODUCTION TERMS */
-                    res(2)(i,j) -= RAD(crd(0)(i,j))*tmu*2.0*strninv*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omg*cjcb;
-#endif
+                    /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
+                    FLT domgtlddx = (dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j))/cjcb;
+                    FLT domgtlddy = (dcrd(0,0)(i,j)*du(3,1)(i,j) -dcrd(0,1)(i,j)*du(3,0)(i,j))/cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
+                    
+                    /* ROUND JET CORRECTION FOR WILCOX2006 */
 #ifdef WILCOX2006
-                    /* STRESS-LIMITER MODIFICATION */
-                    omgLmtr = Clim*sqrt(2.0*strninv/betastr);
-                    omgLmtd = std::max(omg,omgLmtr);
-                    tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    if (klim){
-                        res(2)(i,j) -= RAD(crd(0)(i,j))*std::min(tmuLmtd*2.0*strninv,20.0*betastr*gbl->rho*omg*ktrb)*cjcb;
-                    } else {
-                        res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
-                    }
-                   res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgLmtd*cjcb;
 #ifdef AXISYMMETRIC
                     FLT chi = fabs(0.25*(dudy -dvdx)*(dudy -dvdx)*u(0)(i,j)/crd(0)(i,j)/pow(betastr*omg,3.0));
                     FLT f_beta = (1.0 +85.0*chi)/(1.0 +100.0*chi);
                     betakomg *= f_beta;
 #endif
 #endif
-                    /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
-                    FLT domgtlddx = (dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j))/cjcb;
-                    FLT domgtlddy = (dcrd(0,0)(i,j)*du(3,1)(i,j) -dcrd(0,1)(i,j)*du(3,0)(i,j))/cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
-                        
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
                     res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
@@ -328,9 +321,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
                     if ( CrssD > 0.0)
                         res(3)(i,j) -= RAD(crd(0)(i,j))*gbl->rho*CrssD/omg*sgmdo*cjcb;
-
 #endif
-
                     /* TURBULENCE SUSTAINING TERMS */
                     res(2)(i,j) -= RAD(crd(0)(i,j))*susk*betastr*gbl->rho*kinf*omginf*cjcb;
                     res(3)(i,j) -= RAD(crd(0)(i,j))*susomg*betastr*gbl->rho*omginf*omginf/omg*cjcb;
@@ -593,8 +584,25 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
-                    cjcbi = (lmu +tmu)*RAD(crd(0)(i,j))/cjcb;
+                    FLT dudx = (ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j))/cjcb;
+                    FLT dvdx = (ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j))/cjcb;
+                    FLT dudy = (ldcrd(0,0)*du(0,1)(i,j) -ldcrd(0,1)*du(0,0)(i,j))/cjcb;
+                    FLT dvdy = (ldcrd(0,0)*du(1,1)(i,j) -ldcrd(0,1)*du(1,0)(i,j))/cjcb;
+                    strninv = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
+#ifdef AXISYMMETRIC
+                    strninv += u(0)(i,j)*u(0)(i,j)/crd(0)(i,j)/crd(0)(i,j);
+#endif
+#ifndef WILCOX2006
+                    omgMx = omg;
+                    tmuLmtd = tmu;
+#else
+                    /* STRESS-LIMITER MODIFICATION */
+                    omgLmtr = Clim*sqrt(2.0*strninv/betastr);
+                    omgMx = std::max(omg,omgLmtr);
+                    tmuLmtd = gbl->rho*ktrb/omgMx;
+#endif
+                    mutld = tmu -gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
                   
@@ -604,7 +612,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 
 #ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmu)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
 #endif
 #ifdef BODYFORCE
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
@@ -639,51 +647,29 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);
                     }
-
-                    FLT dudx = (ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j))/cjcb;
-                    FLT dvdx = (ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j))/cjcb;
-                    FLT dudy = (ldcrd(0,0)*du(0,1)(i,j) -ldcrd(0,1)*du(0,0)(i,j))/cjcb;
-                    FLT dvdy = (ldcrd(0,0)*du(1,1)(i,j) -ldcrd(0,1)*du(1,0)(i,j))/cjcb;
                     
                     /*PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
-                    strninv = dudx*dudx +0.5*(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy;
-#ifdef AXISYMMETRIC
-                    strninv += u(0)(i,j)*u(0)(i,j)/crd(0)(i,j)/crd(0)(i,j);
-#endif
-#ifdef WILCOX1988_KL
+#ifndef WILCOX1988_KL
+                    res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgMx*cjcb;
+#else
                     /* KATO-LAUNDER */
                     vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
                     res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
                     res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
 #endif
-#ifdef WILCOX1988
-                    /* WILCOX ORIGINAL PRODUCTION TERMS */
-                    res(2)(i,j) -= RAD(crd(0)(i,j))*tmu*2.0*strninv*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omg*cjcb;
-#endif
+                    /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
+                    FLT domgtlddx = (ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j))/cjcb;
+                    FLT domgtlddy = (ldcrd(0,0)*du(3,1)(i,j) -ldcrd(0,1)*du(3,0)(i,j))/cjcb;
+                    res(3)(i,j) -= cjcbiomg*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb*cjcb;
+                    /* ROUND JET CORRECTION FOR WILCOX2006 */
 #ifdef WILCOX2006
-                    /* STRESS-LIMITER MODIFICATION */
-                    omgLmtr = Clim*sqrt(2.0*strninv/betastr);
-                    omgLmtd = std::max(omg,omgLmtr);
-                    tmuLmtd = gbl->rho*ktrb/omgLmtd;
-                    if (klim){
-                        res(2)(i,j) -= RAD(crd(0)(i,j))*std::min(tmuLmtd*2.0*strninv,20.0*betastr*gbl->rho*omg*ktrb)*cjcb;
-                    } else {
-                        res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
-                    }
-                   res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgLmtd*cjcb;
-                    
 #ifdef AXISYMMETRIC
                     FLT chi = fabs(0.25*(dudy -dvdx)*(dudy -dvdx)*u(0)(i,j)/crd(0)(i,j)/pow(betastr*omg,3.0));
                     FLT f_beta = (1.0 +85.0*chi)/(1.0 +100.0*chi);
                     betakomg *= f_beta;
 #endif
 #endif
-                    /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
-                    FLT domgtlddx = (ldcrd(1,1)*du(3,0)(i,j) -ldcrd(1,0)*du(3,1)(i,j))/cjcb;
-                    FLT domgtlddy = (ldcrd(0,0)*du(3,1)(i,j) -ldcrd(0,1)*du(3,0)(i,j))/cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
-                    
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
                     res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
