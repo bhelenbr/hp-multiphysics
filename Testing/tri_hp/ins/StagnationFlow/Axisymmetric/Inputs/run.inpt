@@ -40,9 +40,9 @@ b0_s3_hp_type: plain
 b0_s3_hp_typelist: 1 0 1 
 b0_s4_hp_type: plain
 b0_s4_hp_typelist: 1 1 1
-b0_s4_flux0: rho*u0*u0 - 0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*mu
-b0_s4_flux1: rho*u1*u0 
-b0_s4_flux2: rho*u0
+b0_s4_flux0: x0*(rho*u0*u0 - 0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*mu)
+b0_s4_flux1: x0*rho*u1*u0 
+b0_s4_flux2: x0*rho*u0
 #Alternatively using applied_stress and symmetry BCs
 # b0_s2_hp_type: symmetry
 # b0_s3_hp_type: symmetry

@@ -55,13 +55,13 @@ b0_s3_hp_type: plain
 b0_s3_hp_typelist: 1 0 1 1 1 
 b0_s4_hp_type: plain
 b0_s4_hp_typelist: 1 1 1 1 1
-b0_s4_flux0: x0*(rho*u0*u0 -0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*(mu +rho*x0*x0/exp(x0)) +2.0/3.0*rho*x0^2)
+b0_s4_flux0: x0*(rho*u0*u0 -0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*(mu +rho/Clim*sqrt(betastar/12.0)*x0*x0) +2.0/3.0*rho*x0^2)
 b0_s4_flux1: x0*rho*u1*u0 
 b0_s4_flux2: x0*rho*u2*u0 -2.0*x0*x0*(mu +sigma_k*rho*x0*x0/exp(x0))
 b0_s4_flux3: x0*rho*u3*u0 -mu*x0 - sigma_omg*rho*x0^3/exp(x0)
 b0_s4_flux4: x0*rho*u0
 b0_src: symbolic
-b0_src0: -2.0*rho*x0*x0*exp(-x0)*(2.0 -x0) +4.0/3.0*x0*x0
+b0_src0: -2.0*sqrt(betastar/3.0)*rho*x0*x0/Clim +4.0/3.0*x0*x0
 b0_src1: 0.0
 b0_src2: 2.0*rho*x0^3 +betastar*rho*exp(x0)*x0^3 -4.0*mu*x0 - 2.0*sigma_k*rho*x0^3*exp(-x0)*(4.0-x0) -x0*betastar*rho*kinf*omginf -sqrt(12.0*betastar)/Clim*rho*x0^3
 b0_src3: rho*x0*x0 +beta_omg*rho*exp(x0)*x0 - mu -3.0*x0*sigma_omg*rho*x0*exp(-x0) -mu*x0 -x0*betastar*rho*omginf*omginf/exp(x0) -sqrt(12.0*betastar)/Clim*rho*gamma*x0 -2.0*sigma_d*x0*x0*exp(-x0)

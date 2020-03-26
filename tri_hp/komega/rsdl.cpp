@@ -69,7 +69,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #ifdef WILCOX2006
     FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr;
     FLT betakomg = 0.0708;
-    const FLT sgmk = 0.6, gamma = 13./25., sgmdo = 1./8., Clim = 0.0; // The default value from Wilcox(2006) for Clim is 7./8.
+    const FLT sgmk = 0.6, gamma = 13./25., sgmdo = 1./8., Clim = 7.0/8.0; // The default value from Wilcox(2006) for Clim is 7./8.
 #endif
     const FLT k_mom= 1.0; // the term in the momentum equation including k
     const FLT susk = 1.0, susomg = 1.0; // turbulence sustaning terms
@@ -299,7 +299,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
                     FLT domgtlddx = (dcrd(1,1)(i,j)*du(3,0)(i,j) -dcrd(1,0)(i,j)*du(3,1)(i,j))/cjcb;
                     FLT domgtlddy = (dcrd(0,0)(i,j)*du(3,1)(i,j) -dcrd(0,1)(i,j)*du(3,0)(i,j))/cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*(lmu +sgmomg*tmu)*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb;
+                    res(3)(i,j) -= cjcbiomg*(domgtlddx*domgtlddx + domgtlddy*domgtlddy)*cjcb*cjcb;
                     
                     /* ROUND JET CORRECTION FOR WILCOX2006 */
 #ifdef WILCOX2006

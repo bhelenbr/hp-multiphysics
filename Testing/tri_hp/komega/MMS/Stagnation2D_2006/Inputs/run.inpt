@@ -10,6 +10,7 @@ beta_omg: 0.0708
 sigma_k: 0.6
 sigma_omg: 0.5
 sigma_d: 1.0/8.0
+Clim: 7.0/8.0
 kinf: 1.0
 omginf: 1.0
 # Physical Parameters ( assuming the stagnation flow strength parameter "a = 1" so at y = inf, u = x and v = -y):
@@ -54,16 +55,14 @@ b0_s3_hp_type: plain
 b0_s3_hp_typelist: 1 0 1 1 1 
 b0_s4_hp_type: plain
 b0_s4_hp_typelist: 1 1 1 1 1
-b0_s4_flux0: rho*u0*u0 - 0.5*rho*(x0*x0+x1*x1) -2.0*(mu +rho*x0*x0/exp(x0)) +2.0/3.0*x0^2
+b0_s4_flux0: rho*u0*u0 - 0.5*rho*(x0*x0+x1*x1) -2.0*(mu +rho*x0*x0/2.0/Clim*sqrt(betastar)) +2.0/3.0*x0^2
 b0_s4_flux1: rho*u1*u0 
 b0_s4_flux2: rho*u2*u0 - 2*x0*(mu +sigma_k*rho*x0*x0/exp(x0))
 b0_s4_flux3: rho*u3*u0 - mu - sigma_omg*rho*x0*x0/exp(x0)
 b0_s4_flux4: rho*u0
 b0_src: symbolic
-b0_src0: -2.0*rho*x0*exp(-x0)*(2.0 -x0) +4.0/3.0*x0
+b0_src0: -2.0*rho/Clim*sqrt(betastar)*x0 +4.0/3.0*x0
 b0_src1: 0.0
 b0_src2: 2.0*x0*x0 +betastar*exp(x0)*x0*x0 -2.0*(mu +rho*sigma_k*x0*x0*exp(-x0)*(3-x0)) -betastar*rho*kinf*omginf -16.0/7.0*rho*x0*x0*sqrt(betastar)
 b0_src3: x0 +beta_omg*exp(x0) - rho*x0*exp(-x0) - mu  -betastar*rho*omginf*omginf/exp(x0) -16.0/7.0*gamma*rho*sqrt(betastar) -2.0*sigma_d*rho*x0/exp(x0)
 b0_src4: 0.0
-#  # -2.0*rho*sigma_d*x0/exp(x0)
-
