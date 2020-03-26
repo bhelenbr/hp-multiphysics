@@ -137,7 +137,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     FLT qmax = 0.0;
     FLT qmax2 = 0.0;
     FLT hmax = 0.0;
-    FLT tmuav = 0.0, mutldav = 0.0;
+    FLT tmuLmtdav = 0.0, tmuav = 0.0, mutldav = 0.0;
     FLT jcb = 0.25*area(tind);
     FLT jcbmin = jcb;
     FLT h;
@@ -350,6 +350,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
                     qmax2 = MAX(qmax2,q2);
                     
+                    tmuLmtdav = tmuLmtdav +tmuLmtd;
                     tmuav = tmuav+tmu;
                     mutldav = mutldav+mutld;
 #endif
@@ -377,13 +378,14 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
             hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
             
+            tmuLmtdav = tmuLmtdav/lgpx/lgpn;
             tmuav = tmuav/lgpx/lgpn;
             mutldav = mutldav/lgpx/lgpn;
-            FLT nu = (lmu + tmuav)/gbl->rho;
+            FLT nu = (lmu + tmuLmtdav)/gbl->rho;
             FLT nuk = (lmu + sgmk*mutldav)/gbl->rho;
             FLT nuomg = (lmu + sgmomg*tmuav)/gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-            if (tmuav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+            if (tmuLmtdav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
             
             FLT q2 = sqrt(qmax2);
             FLT lam2k  = (q2 +1.5*nuk/h +hmax*gbl->bd(0));
@@ -572,7 +574,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                 h += (ldcrd(n,1) -ldcrd(n,0))*(ldcrd(n,1) -ldcrd(n,0));
             hmax = MAX(h,hmax);
             
-            FLT tmuav = 0.0, mutldav = 0.0;
+            FLT tmuLmtdav = 0.0, tmuav = 0.0, mutldav = 0.0;
 #endif
 
 			/* TIME DERIVATIVE TERMS */ 
@@ -696,6 +698,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
                     qmax2 = MAX(qmax2,q2);
                     
+                    tmuLmtdav = tmuLmtdav +tmuLmtd;
                     tmuav = tmuav+tmu;
                     mutldav = mutldav+mutld;
 #endif
@@ -723,14 +726,15 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             hmax = 2.*sqrt(hmax);
             h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
             hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
-
+            
+            tmuLmtdav = tmuLmtdav/lgpx/lgpn;
             tmuav = tmuav/lgpx/lgpn;
             mutldav = mutldav/lgpx/lgpn;
-            FLT nu = (lmu + tmuav)/gbl->rho;
+            FLT nu = (lmu + tmuLmtdav)/gbl->rho;
             FLT nuk = (lmu + sgmk*mutldav)/gbl->rho;
             FLT nuomg = (lmu + sgmomg*tmuav)/gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-            if (tmuav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+            if (tmuLmtdav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
             
             FLT q2 = sqrt(qmax2);
             FLT lam2k  = (q2 +1.5*nuk/h +hmax*gbl->bd(0));
