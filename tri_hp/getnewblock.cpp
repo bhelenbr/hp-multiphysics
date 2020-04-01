@@ -13,7 +13,7 @@
 
 #define CD
 #define INS
-//#define PS
+#define PS
 //#define SWIRL
 #define BUOYANCY
 //#define SWE

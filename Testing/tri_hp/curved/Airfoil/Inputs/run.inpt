@@ -1,0 +1,123 @@
+# Physics (should define nblock for more than 1 block, use blocktype instead of b0_type, ... if all the same): 
+nblock: 1 1
+blocktype: komega
+gravity: 0
+body_force: 0.0 0.0
+# k-omega Parameters (I. lambda_k is ratio of epsilon_k to kmax (can be added if not using Stefanski's method of defining epslnk in terms of ktldinf, II. omgBC is 1. Menter's BC 2. Constant Wilcox's BC 3. Variable Wilcox's BC, III. y1 is the distance of first grid point from wall used in the Menter's wall boundary condition for omega, IV. ksplus is dimensionless surface roughness height used in the Wilcox's wall boundary condition for omega): 
+omgBC: 3
+y1: 4.0e-5
+ksplus: 5.0
+# Physical Parameters (I. uinf = ubar_ref (expected mean velocity) II. Set linf = L where L is the flat plate length ): 
+rho: 1.0
+mu: 2e-6
+uinf: 1.0
+linf: 1.0
+# Mesh and mesh adaptation (can set adapt on and set growth factor, error_target, error_estimator (energy_norm or scale_independent), minimum_length, maximum_length, length_smoothing_steps and curvature sensitivity. Can also set adapat_output on): 
+b0_mesh: rstrt1_b0.grd
+b0_allcurved: 1
+b0_adaptable: 0
+b0_growth factor: 2
+#b0_s1_type: spline
+#b0_s1_filename: naca.spl
+#b0_s1_s_limits: 0 2.0452
+b0_s2_adaptable: 0
+b0_s3_adaptable: 0
+b0_s2_type: comm
+b0_s3_type: comm
+b0_v1_type: comm
+b0_v2_type: comm
+b1_mesh: rstrt1_b1.grd
+b1_growth factor: 2
+b1_s2_adaptable: 0
+b1_s3_adaptable: 0
+b1_s2_type: comm
+b1_s3_type: comm
+b1_v1_type: comm
+b1_v2_type: comm
+# Time stepping: 
+nconv: 17
+dtinv: 8192*8192*ustar_avg/ystar_avg/2^nconv
+# dtinv: 1000
+ntstep: 10
+# PETSC solver, under-relaxation and SUPG (can change b0_dissipation from 1, can also use preconditioner_interval and relative_tolerance): 
+ncycle: 3
+absolute_tolerance: 1.0e-13
+# b0_dissipation: 1.1
+# b1_dissipation: 1.1
+# under_relaxation: 1e-2
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+# Continuation (can set restart, restart_type, reload_type): 
+# Order of FEM: 
+log2p: 1
+# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval)): 
+logfile: out
+# Explicit solver stuff: 
+nstage: 1
+alpha: 1.0
+beta: 1.0
+# Debugging ( can set debug_output, jac_debug, rsdl_debug on): 
+# Problem Calculations (I. beta1 is constant used in Menter's BC, II. x0 is the x coordinate, III. Skinf friction Coeff. from White's Fluid Mech. IV. kinf and omginf are the same as Stefanski et al. 2018 V. ks used with Wilcox's rough wall BC VI. epslnk can be specified as lambda_k*kmax where kmax is kmax2ustarRatio*ustar^2 with kmax2ustarRatio of 3.5 but in here is defined to match Stefanski et al. 2018. See the ktldinfSolver MATALB code too. kinf can also be identified like mu*omginf/rho/0.01 in terms of omginf in order to obtain a given value of nut_inf like 0.01 or 0.001): 
+beta1: 0.075
+nu: mu/rho
+ReL: uinf*linf/nu
+kinf: 1.0e-6*uinf^2
+omginf: 5.0*uinf/linf
+CD: 0.031/(ReL^(1.0/7.0))
+D: CD*0.5*rho*uinf^2*linf
+tau_avg: D/linf
+ustar_avg: sqrt(tau_avg/rho)
+ystar_avg: nu/ustar_avg
+ktldinf: 40.9*kinf
+epslnk: 10*ktldinf
+ks_avg: ksplus*nu/ustar_avg
+Rex: (x0 > 0 ? uinf*x0/nu : 1.0)
+Cf: 0.027/(Rex^(1.0/7.0))
+tau: Cf*0.5*rho*uinf^2
+ustar: sqrt(tau/rho)
+ks: ksplus*nu/ustar
+# Initial & Boundary conditions (I. s8 is inlet; s1 is wall; s5, s6, s7 are bottom, right and top outlets): 
+ibc: symbolic
+ibc0: uinf
+ibc1: 0.0
+ibc2: ktldinf
+ibc3: log(omginf)
+ibc4: 0.0
+# b0_s8_type: inflow
+b0_s1_hp_type: plain
+b0_s1_hp_typelist: 0 0 0 0 1
+b0_s1_ibc: symbolic
+b0_s1_ibc0: 0.0
+b0_s1_ibc1: 0.0
+b0_s1_ibc2: 0.0
+b0_s1_ibc3: omgBC > 2 ? log(40000*nu/ks^2) : omgBC > 1 ? log(40000*nu/ks_avg^2) : log(60*nu/(beta1*y1^2))
+b0_s1_ibc4: 0.0
+b1_s8_hp_type: plain
+b1_s8_hp_typelist: 0 0 0 0 1
+b1_s8_flux4: rho*(u0*n0 +u1*n1)
+b1_s5_hp_type: plain
+b1_s5_hp_typelist: 1 1 1 1 1
+b1_s5_flux0: rho*(u0*n0 +u1*n1)*u0
+b1_s5_flux1: rho*(u0*n0 +u1*n1)*u1
+b1_s5_flux2: rho*(u0*n0 +u1*n1)*u2
+b1_s5_flux3: rho*(u0*n0 +u1*n1)*u3
+b1_s5_flux4: rho*(u0*n0 +u1*n1)
+b1_s6_hp_type: plain
+b1_s6_hp_typelist: 1 1 1 1 1
+b1_s6_flux0: rho*(u0*n0 +u1*n1)*u0
+b1_s6_flux1: rho*(u0*n0 +u1*n1)*u1
+b1_s6_flux2: rho*(u0*n0 +u1*n1)*u2
+b1_s6_flux3: rho*(u0*n0 +u1*n1)*u3
+b1_s6_flux4: rho*(u0*n0 +u1*n1)
+b1_s7_hp_type: plain
+b1_s7_hp_typelist: 1 1 1 1 1
+b1_s7_flux0: rho*(u0*n0 +u1*n1)*u0
+b1_s7_flux1: rho*(u0*n0 +u1*n1)*u1
+b1_s7_flux2: rho*(u0*n0 +u1*n1)*u2
+b1_s7_flux3: rho*(u0*n0 +u1*n1)*u3
+b1_s7_flux4: rho*(u0*n0 +u1*n1)
+# ibc: sphere
+# inner_radius: 5.0
+# outer_radius: 10.0
+# b1_s5_hp_type: inflow
+# b1_s6_hp_type: outflow
+# b1_s7_hp_type: inflow

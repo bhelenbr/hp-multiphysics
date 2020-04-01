@@ -119,6 +119,41 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		ugbd(i).i.resize(maxpst,im0,NV);
 		vrtxbd(i).resize(maxpst);
 	}
+    
+#ifdef ALLCURVED
+    inmap.getwdefault(gbl->idprefix+"_allcurved",allcurved,false);
+    if (allcurved) {
+        /* Allocate solution vector storage */
+        crv.s.resize(maxpst,sm0,ND);
+        crv.i.resize(maxpst,im0,ND);
+
+        /* For ease of access have level 0 in time history reference ug */
+        crvbd.resize(gbl->nhist+1);
+        crvbd(0).s.reference(crv.s);
+        crvbd(0).i.reference(crv.i);
+
+        for(i=1;i<gbl->nhist+1;++i) {
+            crvbd(i).s.resize(maxpst,sm0,ND);
+            crvbd(i).i.resize(maxpst,im0,ND);
+        }
+        pcrdtocht = crdtocht_allcurved;
+        pcrdtocht_nhist = crdtocht_nhist_allcurved;
+        pcrdtocht1d = crdtocht1d_allcurved;
+        pcrdtocht1d_nhist = crdtocht1d_nhist_allcurved;
+        
+        /* Load curvature coefficients */
+        load_curvatures("curvatures",reload_type,crv);
+        for(i=1;i<gbl->nhist+1;++i) {
+            crvbd(i).s = crv.s;
+            crvbd(i).i = crv.i;
+        }
+    } else {
+        pcrdtocht = crdtocht_standard;
+        pcrdtocht_nhist = crdtocht_nhist_standard;
+        pcrdtocht1d = crdtocht1d_standard;
+        pcrdtocht1d_nhist = crdtocht1d_nhist_standard;
+    }
+#endif
 
 	/* GET INITIAL CONDITION FUNCTION */
 	std::string ibcname;
@@ -388,6 +423,13 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 			dxdt.resize(1);
 			dugdt(0).resize(maxpst,NV,basis::tri(0)->gpx(),basis::tri(0)->gpn());
 			dxdt(0).resize(maxpst,ND,basis::tri(0)->gpx(),basis::tri(0)->gpn());
+            
+#ifdef ALLCURVED
+            pcrdtocht = crdtocht_standard;
+            pcrdtocht_nhist = crdtocht_nhist_standard;
+            pcrdtocht1d = crdtocht1d_standard;
+            pcrdtocht1d_nhist = crdtocht1d_nhist_standard;
+#endif
 			break;
 		}
 		case adapt_storage: {
@@ -437,24 +479,40 @@ void tri_hp::setinfo() {
 	for(i=0;i<nvbd;++i)
 		pnt(vbdry(i)->pnt).info = 0;
 
-	/* SET UP EDGE BC INFORMATION FOR CURVED SIDES OUTPUT */
-	for(i=0;i<nseg;++i)
-		seg(i).info = -1;
+#ifdef ALLCURVED
+    if (!allcurved) {
+#endif
+        /* SET UP EDGE BC INFORMATION FOR CURVED SIDES OUTPUT */
+        for(i=0;i<nseg;++i)
+            seg(i).info = -1;
 
-	for(i=0;i<ntri;++i)
-		tri(i).info = -1;
+        for(i=0;i<ntri;++i)
+            tri(i).info = -1;
 
-	if (log2p > 0) {
-		for(i=0;i<nebd;++i) {
-			if (hp_ebdry(i)->is_curved()) {
-				for(j=0;j<ebdry(i)->nseg;++j) {
-					sind = ebdry(i)->seg(j);
-					seg(sind).info = 0;
-					tri(seg(sind).tri(0)).info = 0;
-				}
-			} 
-		}
-	}
+        if (log2p > 0) {
+            for(i=0;i<nebd;++i) {
+                if (hp_ebdry(i)->is_curved()) {
+                    for(j=0;j<ebdry(i)->nseg;++j) {
+                        sind = ebdry(i)->seg(j);
+                        seg(sind).info = 0;
+                        tri(seg(sind).tri(0)).info = 0;
+                    }
+                }
+            }
+        }
+#ifdef ALLCURVED
+    }
+    else {
+        /* SET UP EDGE BC INFORMATION FOR CURVED SIDES OUTPUT */
+        for(i=0;i<nseg;++i)
+            seg(i).info = 0;
+
+        for(i=0;i<ntri;++i)
+            tri(i).info = 0;
+    }
+#endif
+
+    
 
 	return;
 }
@@ -501,4 +559,3 @@ FLT tri_hp::maxres() {
 	return(max_residual);
 }
 #endif
-

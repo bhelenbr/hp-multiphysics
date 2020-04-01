@@ -1875,3 +1875,215 @@ void tri_hp::input(int size,Array<FLT,1> list, std::string filename,filetype typ
 	}
 }
 
+#ifdef ALLCURVED
+void tri_hp::load_curvatures(const std::string& filename, filetype typ, vsi crv) {
+    int i,k,m,n,pin,pmin,indx;
+    std::string fnapp;
+    char buffer[80];
+    ifstream in;
+    
+    std::string fname;
+    fname = filename +"_" +gbl->idprefix;
+
+    switch(typ) {
+        case (text): {
+            fnapp = fname +".txt";
+            in.open(fnapp.c_str());
+            if (!in) {
+                *gbl->log << "couldn't open text input file " << fnapp << std::endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+
+            /* HEADER INFORMATION */
+            /* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
+            in.ignore(80,'=');
+            in >> pin;
+            pmin = MIN(p0,pin);
+
+            do {
+                in.ignore(80,'\n');
+                buffer[0] = in.get();
+            } while (buffer[0] != 'E');  // END OF HEADER
+            in.ignore(80,'\n');
+
+            for(i=0;i<npnt;++i) {
+                for(n=0;n<ND;++n) {
+                    FLT temp;
+                    in >> temp;
+                    pnts(i)(n) += temp;
+                }
+                in.ignore(80,'\n');
+            }
+            
+            for(i=0;i<nseg;++i) {
+                for(m=0;m<(pmin-1);++m) {
+                    for(n=0;n<ND;++n)
+                        in >> crv.s(i,m,n);
+                    in.ignore(80,'\n');
+                }
+                
+                for(m=pmin-1;m<p0-1;++m) {
+                    for(n=0;n<ND;++n)
+                        crv.s(i,m,n) = 0.0;
+                    in.ignore(80,'\n');
+                }
+
+                for(m=0;m<(pin-p0);++m) {
+                    in.ignore(80,'\n');
+                }
+            }
+
+            for(i=0;i<ntri;++i) {
+                indx = 0;
+                for(m=1;m<pmin-1;++m) {
+                    for(k=0;k<pmin-1-m;++k) {
+                        for(n=0;n<ND;++n)
+                            in >> crv.i(i,indx,n);
+                        ++indx;
+                    }
+                    
+                    for(k=pmin-1-m;k<p0-1-m;++k) {
+                        for(n=0;n<ND;++n)
+                            crv.i(i,indx,n) = 0.0;
+                        ++indx;
+                    }
+
+                    for(k=0;k<pin-p0;++k) {
+                        in.ignore(80,'\n');
+                    }
+                }
+                
+                for(m=pmin-1;m<p0-1;++m) {
+                    for(k=0;k<p0-1-m;++k) {
+                        for(n=0;n<ND;++n)
+                            crv.i(i,indx,n) = 0.0;
+                        ++indx;
+                    }
+                }
+
+                for(m=pmin-1;m<pin-1;++m) {
+                    for(k=0;k<pin-1-m;++k) {
+                        in.ignore(80,'\n');
+                    }
+                }
+            }
+            in.ignore(80,'\n');
+            in.close();
+            break;
+        }
+            
+        case (netcdf): {
+            fnapp = fname +".nc";
+            /* Create the file. The NC_CLOBBER parameter tells netCDF to
+             * overwrite this file, if it already exists.*/
+            int retval, ncid, dim_id;
+            size_t dimreturn;
+            
+            if ((retval = nc_open(fnapp.c_str(), NC_NOWRITE, &ncid))) {
+                *gbl->log << "couldn't open netcdf input file " << fnapp << std::endl;
+                ERR(retval);
+            }
+            
+            if ((retval = nc_inq_dimid(ncid, "npnt", &dim_id))) ERR(retval);
+            if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+            if (dimreturn  != npnt) {
+                *gbl->log << "mismatched pnt counts?" << std::endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            if ((retval = nc_inq_dimid(ncid, "nseg", &dim_id))) ERR(retval);
+            if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+            if (dimreturn  != nseg) {
+                *gbl->log << "mismatched seg counts" << std::endl;;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            if ((retval = nc_inq_dimid(ncid, "ntri", &dim_id))) ERR(retval);
+            if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+            if (dimreturn  != ntri) {
+                *gbl->log << "mismatched tri counts?" << std::endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            if ((retval = nc_inq_dimid(ncid, "NV", &dim_id))) ERR(retval);
+            if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+            if (dimreturn  != 3) {
+                *gbl->log << "mismatched variable counts?" << std::endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
+            if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
+            pin = dimreturn+1;
+            pmin = MIN(p0,pin);
+            
+            int var_id;
+            if ((retval = nc_inq_varid (ncid, "ugv", &var_id))) ERR(retval);
+            size_t index[3];
+            /* POINT INFO */
+            for(i=0;i<npnt;++i) {
+                index[0]= i;
+                for(n=0;n<ND;++n) {
+                    index[1] = n;
+                    FLT temp;
+                    nc_get_var1_double(ncid,var_id,index,&temp);
+                    pnts(i)(n) += temp;
+                }
+            }
+            
+            if ((retval = nc_inq_varid (ncid, "ugs", &var_id))) ERR(retval);
+            for(i=0;i<nseg;++i) {
+                index[0] = i;
+                for(m=0;m<(pmin-1);++m) {
+                    index[1] = m;
+                    for(n=0;n<ND;++n) {
+                        index[2] = n;
+                        nc_get_var1_double(ncid,var_id,index,&crv.s(i,m,n));
+                    }
+                }
+                
+                for(m=pmin-1;m<p0-1;++m)
+                    for(n=0;n<ND;++n)
+                        crv.s(i,m,n) = 0.0;
+            }
+            
+            if ((retval = nc_inq_varid (ncid, "ugi", &var_id))) ERR(retval);
+            for(i=0;i<ntri;++i) {
+                indx = 0;
+                index[0] = i;
+                index[1] = 0;
+                for(m=1;m<p0-1;++m) {
+                    for(k=0;k<pmin-1-m;++k) {
+                        for(n=0;n<ND;++n) {
+                            index[2] = n;
+                            nc_get_var1_double(ncid,var_id,index,&crv.i(i,indx,n));
+                        }
+                        ++indx;
+                        ++index[1];
+                    }
+                    
+                    for(k=max(pmin-1-m,0);k<p0-1-m;++k) {
+                        for(n=0;n<ND;++n)
+                            crv.i(i,indx,n) = 0.0;
+                        ++indx;
+                    }
+                    
+                    for(k=0;k<pin-p0;++k) {
+                        ++index[1];
+                    }
+                }
+            }
+            if ((retval = nc_close(ncid))) ERR(retval);
+
+            break;
+        }
+            
+        default:
+            *gbl->log << "can't input a tri_hp from that filetype" << std::endl;
+            sim::abort(__LINE__,__FILE__,gbl->log);
+            break;
+    }
+
+    return;
+}
+#endif

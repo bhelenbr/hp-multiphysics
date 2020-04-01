@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
 //            }
             
             /* Spacing based on curvature and tangent */
-            int maxsize = 2*npts;
+            int maxsize = 10*npts;
             Array<double,1> svalues(maxsize);
             double ds = (myspline.stop()-myspline.start())/(npts-1);
             /* First guess is uniform spacing in parametric coordinate */
@@ -216,8 +216,10 @@ int main(int argc, char** argv) {
                 ++iter;
             }
             
-            /* 2 level refinement of curved elements */
-            for(iter = 0;iter<2;++iter) {
+            /* multi level refinement of curved elements */
+            bool change;
+            do {
+                change = false;
                 myspline.tangent(svalues(0), tan1);
                 for (int i=1;i<npts;++i) {
                     myspline.tangent(svalues(i), tan);
@@ -229,15 +231,17 @@ int main(int argc, char** argv) {
                             }
                             svalues(i) = 0.5*(svalues(i-1)+svalues(i));
                             ++npts;
+                            change = true;
                         }
                         else {
-                            std::cerr << "allocated size wasn't large enough\n";
+                            std::cerr << "allocated size wasn't large enough, try using larger number of points or lower curvature senstivity\n";
+                            change = 0;
                             break;
                         }
                     }
                     tan1 = tan;
                 }
-            }
+            } while (change);
             
             for (int i=0;i<npts;++i) {
                 interpolate(myspline, svalues(i), size, angle, dx, norm_dist);
