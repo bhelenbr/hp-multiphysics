@@ -152,6 +152,12 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->proj1d(&uht_opp(n)(0),&u_opp(n)(0));
     
+    // Output shock shape
+//    if(indx==0){
+//        *x.gbl->log << x.cht(0,0) << " " << x.cht(1,0) << std::endl;
+//    }
+//    *x.gbl->log << x.cht(0,1) << " " << x.cht(1,1) << std::endl;
+    
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
@@ -283,30 +289,17 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         norm(1) = shock_sign*norm(1);
         
         /* Calculate stabilization constant based on analysis of linear elements and constant tau */
-        FLT dMda = -(x.gbl->gamma + 1.0)/(2.0*cu*(((2*(x.gbl->gamma - 1.0)*(2.0*x.gbl->gamma*Mu*Mu - x.gbl->gamma + 1.0))/Mu + (4.0*x.gbl->gamma*((x.gbl->gamma - 1.0)*Mu*Mu + 2.0))/Mu - (2.0*((x.gbl->gamma - 1.0)*Mu*Mu + 2.0)*(2.0*x.gbl->gamma*Mu*Mu - x.gbl->gamma + 1.0))/(Mu*Mu*Mu))/(2.0*(x.gbl->gamma - 1.0)*sqrt((((Mu*Mu*(x.gbl->gamma - 1.0) + 2.0)*(2.0*Mu*Mu*x.gbl->gamma - x.gbl->gamma + 1.0))/(Mu*Mu)))) - (Mu*Mu - 1.0)/(Mu*Mu) + 2.0));
-        FLT dMdb = -dMda;
-        FLT tan_rel = -mvel_u(0,i)*norm(1) +mvel_u(1,i)*norm(0);
-        FLT tan_u = -norm(1)*uu +norm(0)*vu;
-        FLT tan_d = -norm(1)*ud +norm(0)*vd;
-        FLT vslp = (tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb;
+        FLT tan_rel = (-mvel_u(0,i)*norm(1) +mvel_u(1,i)*norm(0))/jcb;
+        FLT vslp = tan_rel;
+        
         //Original
 //        gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
         
         //Final
         gbl->meshc(indx) = gbl->adis/fabs(vslp);
         
+        res(2,i) = -res(1,i)*vslp*gbl->meshc(indx);
         
-        //Try
-//        gbl->meshc(indx) = 9.0*gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
-        
-//        if (x.log2p != 0)
-//            gbl->meshc(indx) = gbl->adis/(x.log2p*x.log2p*fabs(vslp));
-//        else
-//            gbl->meshc(indx) = gbl->adis/fabs(vslp);
-        
-        res(2,i) = -res(1,i)*(tan_rel-cu*tan_u*dMda+cu*tan_d*dMdb)/jcb*gbl->meshc(indx);
-
-
         normal_uu = (uu*norm(0)+vu*norm(1))/jcb;
         normal_ud = (ud*norm(0)+vd*norm(1))/jcb;
 

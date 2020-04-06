@@ -167,6 +167,7 @@ public:
 	virtual void input(const std::string& fname,tri_hp::filetype typ,int tlvl = 0);
 	/* input output functions */
 	virtual void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
+    virtual void output_msh(const std::string& fname, int count_pass = 0);
 	virtual void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
 	
 	/* CURVATURE FUNCTIONS */

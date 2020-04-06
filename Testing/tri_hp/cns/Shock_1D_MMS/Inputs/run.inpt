@@ -1,5 +1,5 @@
 #polynomial order: 
-log2p: 0
+log2p: 2
 b0_helper: l2error
 b1_helper: l2error
 #petsc command line args: 
@@ -15,16 +15,17 @@ debug_output: 0
 extrapolate: 0
 under_relaxation: 1
 #Inverse time step:
-dtinv: cu_avg/_pi*10
+dtinv: 5000
 #Number of time steps: 
 T: _pi/omegas
-ntstep: T*dtinv
+#ntstep: T*dtinv
+ntstep: 3480
 # Name of file for output: 
 logfile: output
 # Number of mesh blocks for each processor: 
 nblock: 1 1
 # flag for mesh adaptation: 
-adapt: 1
+adapt: 0
 # Factor to increase memory allocation for mesh adaptation: 
 growth factor: 10
 #Physical properties: 
@@ -33,7 +34,7 @@ mesh_movement: coupled_deformable
 mu: 0
 prandtl: 1
 # Initial and boundary condition function: 
-L: _pi
+L: _pi/2
 Mu_avg: 3
 gamma: 1.4
 pu_avg: 1
@@ -108,7 +109,7 @@ b1_mesh: rstrt1_b1.grd
 b1_s5_hp_type: symmetry
 b1_s5_dir: 1
 b1_s5_r_dir: 1 1
-b1_s6_hp_type: outflow
+b1_s6_hp_type: characteristic
 b1_s7_hp_type: symmetry
 b1_s7_dir: 1
 b1_s7_r_dir: 1 1

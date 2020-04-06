@@ -33,7 +33,7 @@ cp ../Inputs/* .
 
 tri_mesh generate
 
-#mpiexec -np 2 ${HP} run.inpt ${PETSC}
+mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 cd ..
 

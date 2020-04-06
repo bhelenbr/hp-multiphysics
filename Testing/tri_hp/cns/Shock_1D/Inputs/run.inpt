@@ -1,23 +1,22 @@
 #polynomial order: 
-log2p: 0
-b0_helper: l2error
-b1_helper: l2error
+log2p: 2
+#b0_helper: l2error
+#b1_helper: l2error
 #petsc command line args: 
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 #Number of iterative cycles: 
-ncycle: 50
+ncycle: 30
 #Iterative tolerances: 
-absolute_tolerance: 1.0e-12
-relative_tolerance: 5.0e-12
+absolute_tolerance: 1.0e-10
+relative_tolerance: 5.0e-10
 #Number of time steps: 
-ntstep: 40
+ntstep: 200
 rsdl_debug: 0
 jac_debug: 0
 debug_output: 0
 extrapolate: 0
-under_relaxation: 1
 #Inverse time step: 
-dtinv: cu/_pi*80
+dtinv: 10
 # Name of file for output: 
 logfile: output
 # Number of mesh blocks for each processor: 
@@ -48,23 +47,23 @@ b0_ibc3: RTu
 # Name of mesh: 
 b0_mesh: rstrt1_b0.grd
 # Side type specifiers: 
-b0_s1_hp_type: symmetry
-b0_s1_dir: 1
+#b0_s1_hp_type: symmetry
+#b0_s1_dir: 1
 b0_s1_r_dir: 1 1
-#b0_s1_hp_type: euler
+b0_s1_hp_type: wall
 b0_s2_type: coupled_symbolic_comm
 b0_s2_h: x0
 b0_s2_dhdx0: 1
 b0_s2_dhdx1: 0
 b0_s2_hp_type: shock
 b0_s2_c0_indices: 
-b0_s3_hp_type: symmetry
-b0_s3_dir: 1
+#b0_s3_hp_type: symmetry
+#b0_s3_dir: 1
 b0_s3_r_dir: 1 1
-#b0_s3_hp_type: euler
+b0_s3_hp_type: wall
 b0_s4_hp_type: inflow
 # IC downstream CHANGE: 
-vs: _pi/10
+vs: 0.1
 Md: (vu-vs)/cu
 pd: pu*(1.0+((2.0*gamma)/(gamma+1.0))*(Md^2-1.0))
 rhod: rhou*(((gamma+1.0)*Md^2)/((gamma-1.0)*Md^2+2.0))
@@ -78,15 +77,15 @@ b1_ibc3: RTd
 # Name of mesh: 
 b1_mesh: rstrt1_b1.grd
 # Side type specifiers: 
-b1_s5_hp_type: symmetry
-b1_s5_dir: 1
+#b1_s5_hp_type: symmetry
+#b1_s5_dir: 1
 b1_s5_r_dir: 1 1
-#b1_s5_hp_type: euler
+b1_s5_hp_type: wall
 b1_s6_hp_type: outflow
-b1_s7_hp_type: symmetry
-b1_s7_dir: 1
+#b1_s7_hp_type: symmetry
+#b1_s7_dir: 1
 b1_s7_r_dir: 1 1
-#b1_s7_hp_type: euler
+b1_s7_hp_type: wall
 b1_s2_type: coupled_symbolic_comm
 b1_s2_h: x0
 b1_s2_dhdx0: 1

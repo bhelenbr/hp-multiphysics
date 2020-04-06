@@ -11,7 +11,7 @@ growth factor: 8000.0
 # Name of mesh: 
 b0_mesh: ./upstream.d
 #Useful parameters
-L: _pi
+L: _pi/2
 Mu_avg: 3
 gamma: 1.4
 cu_avg: gamma^(1/2)

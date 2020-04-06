@@ -190,7 +190,7 @@ public:
     //void curvinit();
     
     /* Input / Output functions */
-    enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary, vtk, vtu, netcdf};
+    enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary, vtk, vtu, netcdf, gmsh};
     TinyVector<filetype,3> output_type;
     filetype reload_type;
     void input(const std::string &name);

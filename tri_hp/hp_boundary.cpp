@@ -481,6 +481,65 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 	return;
 }
 
+
+
+
+void hp_edge_bdry::output_msh(const std::string& filename, int count_pass) {
+    
+    ofstream out;
+    std::string fname, fnmapp;
+    
+    out.setf(std::ios::scientific, std::ios::floatfield);
+    out.precision(8);
+     
+    fname = filename +"_" +x.gbl->idprefix;
+    
+    // Output .msh mesh file (version 2)
+    fnmapp = fname +".msh";
+    out.open(fnmapp.c_str(),std::ios::app);
+    if (!out) {
+        *x.gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
+        sim::abort(__LINE__,__FILE__,x.gbl->log);
+    }
+    
+    
+    int line_type = 1;
+    if(basis::tri(x.log2p)->p() == 1){
+        line_type = 1;
+    }
+    else if(basis::tri(x.log2p)->p() == 2){
+        line_type = 8;
+    }
+    else if(basis::tri(x.log2p)->p() == 4){
+        line_type = 27;
+    }
+    
+    int sind;
+    
+    for (int j=0;j<base.nseg;j++){
+        
+        sind = base.seg(j);
+        
+        count_pass++;
+        out << count_pass << " " << line_type << " " << 2 << " " << 0 << " " << base.idnum << " " << x.seg(sind).pnt(0)+1 << " " << x.seg(sind).pnt(1)+1 << " ";
+        
+        if (basis::tri(x.log2p)->p() > 1){
+            for (int k=0;k<basis::tri(x.log2p)->sm();k++){
+                out << x.npnt+sind*basis::tri(x.log2p)->sm()+k+1 << " ";
+            }
+        }
+        out << endl;
+    }
+
+    out.close();
+
+    return;
+}
+
+
+
+
+
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
 	int j,k,m,n,v0,v1,sind,info;
 	TinyVector<FLT,tri_mesh::ND> pt;

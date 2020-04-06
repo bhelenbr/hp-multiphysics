@@ -1104,7 +1104,184 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 
 		}
-
+            
+        case(gmsh): {
+            // Output .msh mesh file (version 2)
+            fnmapp = fname +".msh";
+            out.open(fnmapp.c_str());
+            if (!out) {
+                *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            
+            // Mesh format
+            out << "$MeshFormat" << endl;
+            out << "2.2 0 8" << endl;
+            out << "$EndMeshFormat" << endl;
+            
+            // Nodes
+            int num_nodes = npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri;
+            out << "$Nodes" << endl;
+            out << num_nodes << endl;
+            int count=1;
+            for(int i=0;i<npnt;i++){
+                out << count << " ";
+                for (int n=0;n<ND;n++){
+                    out << pnts(i)(n) << " ";
+                }
+                out << 0.0 << endl;
+                count++;
+            }
+            
+            
+            
+            //High Order stuff
+            if (basis::tri(log2p)->p() > 1) {
+                /* SIDE MODES */
+                for(sind=0;sind<nseg;++sind) {;
+                    if (seg(sind).info < 0) {
+                        v0 = seg(sind).pnt(0);
+                        v1 = seg(sind).pnt(1);
+                        for(n=0;n<ND;++n)
+                            basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
+                    }
+                    else {
+                        crdtocht1d(sind,tlvl);
+                        
+                        for(n=0;n<ND;++n)
+                            basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
+                    }
+                    
+                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                        out << count << " ";
+                        for(n=0;n<ND;++n)
+                            out << crd(n)(0,i) << ' ';
+                        out << 0.0 << std::endl;
+                        count++;
+                    }
+                }
+                
+                /* INTERIOR MODES */
+                if (basis::tri(log2p)->p() > 2) {
+                    for(tind = 0; tind < ntri; ++tind) {
+                        if (tri(tind).info < 0) {
+                            for(n=0;n<ND;++n)
+                                basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+                        }
+                        else {
+                            crdtocht(tind,tlvl);
+                            for(n=0;n<ND;++n)
+                                basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
+                        }
+                        
+                        for(i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                                out << count << " ";
+                                for(n=0;n<ND;++n)
+                                    out << crd(n)(i,j) << ' ';
+                                out << 0.0 << std::endl;
+                                count++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            
+            
+            out << "$EndNodes" << endl;
+            
+            // Elements
+            int element_type = 2;
+            int line_type = 1;
+            if(basis::tri(log2p)->p() == 1){
+                element_type = 2;
+                line_type = 1;
+            }
+            else if(basis::tri(log2p)->p() == 2){
+                element_type = 9;
+                line_type = 8;
+            }
+            else if(basis::tri(log2p)->p() == 4){
+                element_type = 23;
+                line_type = 27;
+            }
+            
+            
+            out << "$Elements" << endl;
+            
+            count = 0;
+            for(i=0;i<nebd;i++) {
+                int num_seg = ebdry(i)->nseg;
+                for (j=0;j<num_seg;j++){
+                    count++;
+                }
+            }
+            out << count+ntri << endl;
+            
+            out.close();
+            
+            
+            
+            int count_pass = 0;
+            for(i=0;i<nebd;i++) {
+                hp_ebdry(i)->output_msh(filename,count_pass);
+                int num_seg = ebdry(i)->nseg;
+                for (j=0;j<num_seg;j++){
+                    count_pass++;
+                }
+            }
+            
+            
+            out.open(fnmapp.c_str(),std::ios::app);
+            
+            for(i=count_pass;i<count_pass+ntri;++i){
+                int el = i-count_pass;
+                out << i+1 << " " << element_type << " " << 2 << " " << 0 << " " << 0 << " " << tri(el).pnt(0)+1 << ' ' << tri(el).pnt(1)+1 << ' ' << tri(el).pnt(2)+1 << " ";
+                
+                if (basis::tri(log2p)->p() > 1){
+                    int j = 2;
+                    int sind = tri(el).seg(j);
+                    for (int k=0;k<basis::tri(log2p)->sm();k++){
+                        out << npnt+sind*basis::tri(log2p)->sm()+k+1 << " ";
+                    }
+                    for(j=0; j<2; j++){
+                        sind = tri(el).seg(j);
+                        for (int k=0;k<basis::tri(log2p)->sm();k++){
+                            out << npnt+sind*basis::tri(log2p)->sm()+k+1 << " ";
+                        }
+                    }
+                    
+                    // Interior modes
+                    if (basis::tri(log2p)->p() > 2) {
+                        for (int j=0;j<basis::tri(log2p)->im();j++){
+                            if(j == 0)
+                                out << npnt+basis::tri(log2p)->sm()*nseg+el*basis::tri(log2p)->im()+2 << " ";
+                            else if(j==1)
+                                out << npnt+basis::tri(log2p)->sm()*nseg+el*basis::tri(log2p)->im()+1 << " ";
+                            else
+                                out << npnt+basis::tri(log2p)->sm()*nseg+el*basis::tri(log2p)->im()+j+1 << " ";
+                        }
+                    }
+                    
+                    
+                }
+                
+                
+                
+                out << endl;
+            }
+            
+            
+            out << "$EndElements" << endl;
+            
+            
+            out.close();
+            
+            
+            break;
+    }
+            
 		default:
 			*gbl->log << "can't output a tri_hp to that filetype" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
