@@ -16,8 +16,7 @@ ibc1: -exp(-8*_pi^2*t)*cos(2*_pi*x1)*sin(2*_pi*x0)
 ibc2: exp(-16*_pi^2*t)*(sin(2*_pi*x0)^2+sin(2*_pi*x1)^2)/2 -0.5
 helper: l2error
 b0_type: ins
-b0_filetype: 3
-b0_mesh: ../../../../../grids/SQUARE/PRDC/square32
+b0_mesh: square32.grd
 b0_mu: 1.0
 b0_s2_type: prdc
 b0_s2_dir: 0
