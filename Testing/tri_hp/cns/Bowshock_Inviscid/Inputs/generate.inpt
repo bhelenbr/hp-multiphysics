@@ -1,0 +1,51 @@
+# Name of file for output: 
+logfile: generate
+# Number of mesh blocks for each processor: 
+nblock: 2
+# flag for mesh adaptation: 
+adapt: 1
+#Blunt body radius: 
+R: 0.5
+#Downstream height: 
+Dh: 1.5
+#Upstream height: 
+Uh: 1
+#Downstream width: 
+Dw: 1
+#Upstream width: 
+Uw: 1
+#Upstream height:
+Hu: R+Dh+Uh
+#Downstream height:
+Hd: R+Dh
+#Body height:
+Hb: R
+#Total width:
+Wt: Uw+Dw
+#Width of flow:
+Wf: Uw+Dw-R
+#Resolution of far-field: 
+res: 0.2
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 8000.0
+# Name of mesh: 
+b0_mesh: ./upstream.d
+# Side type specifiers: 
+b0_s3_type: symbolic_comm
+b0_s3_h: x0-1-0.25*x1^2
+b0_s3_dhdx0: 1
+b0_s3_dhdx1: -0.5*x1
+b0_s3_curved: 1
+# Name of mesh: 
+b1_mesh: ./downstream.d
+# Side type specifiers: 
+b1_s8_type: symbolic
+b1_s8_h: (x0-Dw-Uw)^2+(x1)^2-0.25
+b1_s8_dhdx0: 2*(x0-Dw-Uw)
+b1_s8_dhdx1: 2*x1
+b1_s8_curved: 1
+b1_s3_type: symbolic_comm
+b1_s3_h: x0-1-0.25*x1^2
+b1_s3_dhdx0: 1
+b1_s3_dhdx1: -0.5*x1
+b1_s3_curved: 1

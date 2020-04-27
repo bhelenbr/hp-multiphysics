@@ -30,12 +30,6 @@ tri_mesh generate
 
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
-# mod_map run.inpt adapt 1
-# mod_map run.inpt error_estimator energy_norm
-# mod_map run.inpt error_target 1e-4
-# mod_map run.inpt adapt_output 1
-# 
-# mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 #cd ..
 

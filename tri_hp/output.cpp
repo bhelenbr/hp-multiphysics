@@ -1212,6 +1212,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             
             count = 0;
             for(i=0;i<nebd;i++) {
+                //Hack for nozzle case
+//                if(ebdry(i)->idnum==2)
+//                    continue;
+                
+                
                 int num_seg = ebdry(i)->nseg;
                 for (j=0;j<num_seg;j++){
                     count++;
@@ -1225,6 +1230,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             
             int count_pass = 0;
             for(i=0;i<nebd;i++) {
+                //Hack for nozzle mesh
+//                if(ebdry(i)->idnum==2)
+//                    continue;
+                
                 hp_ebdry(i)->output_msh(filename,count_pass);
                 int num_seg = ebdry(i)->nseg;
                 for (j=0;j<num_seg;j++){

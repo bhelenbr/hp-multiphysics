@@ -520,8 +520,14 @@ void hp_edge_bdry::output_msh(const std::string& filename, int count_pass) {
         
         sind = base.seg(j);
         
+        int id = base.idnum;
+        //Hack for nozzle case
+//        if(base.idnum>2){
+//            id -= 1;
+//        }
+        
         count_pass++;
-        out << count_pass << " " << line_type << " " << 2 << " " << 0 << " " << base.idnum << " " << x.seg(sind).pnt(0)+1 << " " << x.seg(sind).pnt(1)+1 << " ";
+        out << count_pass << " " << line_type << " " << 2 << " " << 0 << " " << id << " " << x.seg(sind).pnt(0)+1 << " " << x.seg(sind).pnt(1)+1 << " ";
         
         if (basis::tri(x.log2p)->p() > 1){
             for (int k=0;k<basis::tri(x.log2p)->sm();k++){
@@ -888,10 +894,10 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 				sind = base.seg(j);
 				x.crdtocht1d(sind,level);
 				for(n=0;n<tri_mesh::ND;++n) {
-					basis::tri(p).proj1d(&x.cht(n,0),&crd(n,0));
-					for (int i=0;i<basis::tri(p).gpx;++i)
+					basis::tri(p)->proj1d(&x.cht(n,0),&crd(n,0));
+					for (int i=0;i<basis::tri(p)->gpx();++i)
 						dxdt(p,j)(n,i) += x.gbl->bd(level)/x.gbl->bd(0)*crd(n,i);
-#FIXME: This will not work divide by 0.0
+//#FIXME: This will not work divide by 0.0
 				}
 			}
 		}

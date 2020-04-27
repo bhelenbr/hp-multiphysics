@@ -10,13 +10,13 @@ ncycle: 30
 absolute_tolerance: 1.0e-10
 relative_tolerance: 5.0e-10
 #Number of time steps: 
-ntstep: 200
+ntstep: 100
 rsdl_debug: 0
 jac_debug: 0
 debug_output: 0
 extrapolate: 0
 #Inverse time step: 
-dtinv: 10
+dtinv: 20
 # Name of file for output: 
 logfile: output
 # Number of mesh blocks for each processor: 
@@ -62,7 +62,7 @@ b0_s2_c0_indices:
 b0_s3_r_dir: 1 1
 b0_s3_hp_type: wall
 b0_s4_hp_type: inflow
-# IC downstream CHANGE: 
+# IC downstream: 
 vs: 0.1
 Md: (vu-vs)/cu
 pd: pu*(1.0+((2.0*gamma)/(gamma+1.0))*(Md^2-1.0))

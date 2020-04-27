@@ -1,0 +1,146 @@
+#polynomial order: 
+log2p: 2
+#petsc command line args: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+#Number of iterative cycles: 
+ncycle: 20
+debug_output: 0
+rsdl_debug: 0
+#Iterative tolerances: 
+absolute_tolerance: 1.0e-10
+relative_tolerance: 5.0e-8
+#Number of time steps: 
+ntstep: 2000
+#Inverse time step: 
+dtinv: cu*100
+# Name of file for output: 
+logfile: output
+# Number of mesh blocks for each processor: 
+nblock: 1 1
+# flag for mesh adaptation: 
+adapt: 1
+#Blunt body radius: 
+R: 0.5
+#Downstream height: 
+Dh: 1.5
+#Upstream height: 
+Uh: 1
+#Downstream width: 
+Dw: 1
+#Upstream width: 
+Uw: 1
+#Upstream height:
+Hu: R+Dh+Uh
+#Downstream height:
+Hd: R+Dh
+#Body height:
+Hb: R
+#Total width:
+Wt: Uw+Dw
+#Width of flow:
+Wf: Uw+Dw-R
+# Factor to increase memory allocation for mesh adaptation: 
+growth factor: 10
+#Physical properties: 
+blocktype: cns
+mesh_movement: coupled_deformable
+mu: 0
+prandtl: 1
+# Initial and boundary condition function: 
+M: 3
+gamma: 1.4
+rhou: 1.4
+uu: 3
+vu: 0
+cu: uu/M
+RTu: cu^2/gamma
+pu: rhou*RTu
+b0_ibc: symbolic
+#Upstream props: 
+b0_ibc0: pu
+b0_ibc1: uu
+b0_ibc2: vu
+b0_ibc3: RTu
+# Name of mesh: 
+b0_mesh: rstrt1_b0.grd
+# Side type specifiers: 
+#b0_s1_hp_type: outflow_supersonic
+b0_s1_hp_type: inflow
+b0_s2_hp_type: outflow_supersonic
+b0_s2_r_dir: 0 0
+b0_s3_type: coupled_symbolic_comm
+b0_s3_h: x0-1-0.25*x1^2
+b0_s3_dhdx0: 1
+b0_s3_dhdx1: -0.5*x1
+b0_s3_hp_type: shock
+b0_s3_c0_indices: 
+b0_s4_hp_type: outflow_supersonic
+b0_s4_r_dir: 0 0
+#b0_s5_hp_type: outflow_supersonic
+b0_s5_hp_type: inflow
+b0_s6_hp_type: inflow
+#Downstream Props
+norm_mag: 1/((1+0.25*x1^2)^(1/2))
+norm_x: norm_mag*1
+norm_y: x1<0 ? norm_mag*0.5*x1 : -norm_mag*0.5*x1
+vs: 0
+uu_norm: uu*norm_x+vu*norm_y
+Md: (uu_norm-vs)/cu
+pd: pu*(1.0+((2.0*gamma)/(gamma+1.0))*(Md^2-1.0))
+rhod: rhou*(((gamma+1.0)*Md^2)/((gamma-1.0)*Md^2+2.0))
+ud_norm: vs+(rhou/rhod)*(uu_norm-vs)
+RTd: pd/rhod
+tan_x: norm_mag*0.5*x1
+tan_y: x1<0 ? -norm_mag : norm_mag
+uu_tan: uu*tan_x+vu*tan_y
+ud_tan: uu_tan
+vd: (ud_norm*tan_x-ud_tan*norm_x)/(norm_y*tan_x-tan_y*norm_x)
+ud: x1==0 ? ud_norm : ud_tan/tan_x-vd*(tan_y/tan_x)
+#Try potential flow past cylinder
+U_pot: vs+(rhou/rhod)*(uu-vs)
+r: ((Wt-x0)^2+x1^2)^(1/2)
+theta: x0==Wt ? _pi/2 : atan(x1/(Wt-x0))
+vr: U_pot*(1-(R^2/r^2))*cos(theta)
+vtheta: -U_pot*(1-(R^2/r^2))*sin(theta)
+ud_pot: vr*cos(theta)-r*vtheta*sin(theta)
+vd_pot: vr*sin(theta)+r*vtheta*cos(theta)
+pd_pot: 0.5*rhod*(U_pot^2-(vr^2+vtheta^2))+pd
+#Final properties to use
+#pd_final: x0-1-0.25*x1^2<0.2 ? pd : pd_pot
+#ud_final: x0-1-0.25*x1^2<0.2 ? ud : ud_pot
+#vd_final: x0-1-0.25*x1^2<0.2 ? vd : vd_pot
+pd_final: x1<=0.5 ? x1>=-0.5 ? pd_pot : pd : pd
+ud_final: x1<=0.5 ? x1>=-0.5 ? ud_pot : ud : ud
+vd_final: x1<=0.5 ? x1>=-0.5 ? vd_pot : vd : vd
+b1_ibc: symbolic
+b1_ibc0: pd_pot
+b1_ibc1: x0==2 ? ud_pot+1 : ud_pot
+b1_ibc2: vd_pot
+b1_ibc3: pd_pot/rhod
+# Name of mesh: 
+b1_mesh: rstrt1_b1.grd
+# Side type specifiers: 
+b1_s7_hp_type: outflow_supersonic
+b1_s7_r_dir: 0 0
+b1_s8_hp_type: wall
+b1_s8_type: symbolic
+b1_s8_h: (x0-Dw-Uw)^2+(x1)^2-0.25
+b1_s8_dhdx0: 2*(x0-Dw-Uw)
+b1_s8_dhdx1: 2*x1
+b1_s8_curved: 1
+b1_s9_hp_type: outflow_supersonic
+b1_s9_r_dir: 0 0
+b1_s3_type: coupled_symbolic_comm
+b1_s3_h: x0-1-0.25*x1^2
+b1_s3_dhdx0: 1
+b1_s3_dhdx1: -0.5*x1
+b1_s3_hp_type: shock
+b1_s3_c0_indices: 
+b0_v1_hp_type: hp_deformable_free_pnt
+b0_v2_hp_type: hp_deformable_free_pnt
+b1_v1_hp_type: hp_deformable_free_pnt
+b1_v2_hp_type: hp_deformable_free_pnt
+b0_v1_wall_type: vertical
+b0_v2_wall_type: vertical
+b1_v1_wall_type: vertical
+b1_v2_wall_type: vertical

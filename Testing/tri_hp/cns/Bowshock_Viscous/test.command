@@ -35,6 +35,6 @@ tri_mesh generate
 
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
-cd ..
+#cd ..
 
 #opendiff Results Baseline

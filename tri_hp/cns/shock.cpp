@@ -298,6 +298,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         //Final
         gbl->meshc(indx) = gbl->adis/fabs(vslp);
         
+        // This causes solution failure for a perfect normal shock, take out res(2,i) to eliminate upwinding for normal shock problems
         res(2,i) = -res(1,i)*vslp*gbl->meshc(indx);
         
         normal_uu = (uu*norm(0)+vu*norm(1))/jcb;

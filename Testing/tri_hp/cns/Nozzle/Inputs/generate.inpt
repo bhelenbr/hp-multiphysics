@@ -2,7 +2,7 @@ logfile: generate
 adapt: 1
 b0_mesh: ./pre_shock.d
 adapt: 1
-res: 0.5
+res: 0.375
 # Factor to increase memory allocation for mesh adaptation: 
 growth factor: 8000.0
 nblock: 2
@@ -10,8 +10,8 @@ nblock: 2
 xs: 7.0
 ys: 1.189014223226559
 # Shock starts away from steady location
-#xs: 8.0
-#ys: 1.3319
+#xs: 7.5
+#ys: 1.2623
 A: 1.384534025668615
 B: 0.200869841251668
 C: 1.115465974331382
