@@ -44,5 +44,5 @@ void spline_functions2D::interpolate(const spline<2>& myspline, double s, const 
     norm /= sqrt(dot(norm,norm));
     myspline.curvature(s, curv);
     transform2Di(curv,size,angle,zero);
-    std::cout << s << ' ' << x(0) +norm(0)*norm_dist << ' ' << x(1) +norm(1)*norm_dist << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+    std::cout << std::setprecision(10) << s << ' ' << x(0) +norm(0)*norm_dist << ' ' << x(1) +norm(1)*norm_dist << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
 }
