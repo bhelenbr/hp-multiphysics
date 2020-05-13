@@ -297,13 +297,15 @@ void sim::abort(int line,const char *file, std::ostream *log) {
 		sim::blks.blk(b)->output("aborted_solution", block::restart);
 	}
 #ifdef petsc
-	PetscEnd();
+	PetscFinalize();
 #endif
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD,1);
 #endif
+    *log << "Did I make it here? " << line << " of file " << file << std::endl;
+
 	/* Terminates all threads */
-	std::abort();
+	std::exit(1);
 }
 
 /* each block has a list of group #'s that it belongs to: integer array of size "n_comm_purposes" */
