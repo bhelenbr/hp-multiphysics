@@ -7,7 +7,7 @@ while getopts ":dcuea" opt; do
       u) Command="Uncomment";;
       e) Command="Echo";;
       a) Command="Append";;
-      \?) echo 'usage\: mod_map.script -[d,c,u]'
+      \?) echo 'usage\: mod_map.script -[d,c,u,e,a]'
            exit 1
    esac
 done

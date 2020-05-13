@@ -57,7 +57,8 @@ void tri_mesh::adapt() {
 	setup_for_adapt();
 
 	/* SWAP EGES TO MAKE DELAUNAY */
-	swap(1.0e-10);
+    if (gbl->adaptable)
+        swap(1.0e-10);
 
 	/* COARSEN FIRST EDGES & SEND MESSAGES */
 	bdry_yaber(gbl->tolerance);

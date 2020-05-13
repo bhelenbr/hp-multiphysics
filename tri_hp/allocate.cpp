@@ -363,6 +363,13 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 		coarse_flag = false;
 		isfrst = true;
 	}
+    
+#ifdef ALLCURVED
+    pcrdtocht = inmesh.pcrdtocht;
+    pcrdtocht_nhist = inmesh.pcrdtocht_nhist;
+    pcrdtocht1d = inmesh.pcrdtocht1d;
+    pcrdtocht1d_nhist = inmesh.pcrdtocht1d_nhist;
+#endif
 
 	output_type = inmesh.output_type;
 
