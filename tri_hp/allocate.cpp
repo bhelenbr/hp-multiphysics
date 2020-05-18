@@ -365,10 +365,27 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 	}
     
 #ifdef ALLCURVED
+    allcurved = inmesh.allcurved;
     pcrdtocht = inmesh.pcrdtocht;
     pcrdtocht_nhist = inmesh.pcrdtocht_nhist;
     pcrdtocht1d = inmesh.pcrdtocht1d;
     pcrdtocht1d_nhist = inmesh.pcrdtocht1d_nhist;
+    
+    if (allcurved) {
+        /* Allocate solution vector storage */
+        crv.s.resize(maxpst,sm0,ND);
+        crv.i.resize(maxpst,im0,ND);
+        
+        /* For ease of access have level 0 in time history reference ug */
+        crvbd.resize(gbl->nhist+1);
+        crvbd(0).s.reference(crv.s);
+        crvbd(0).i.reference(crv.i);
+        
+        for(int i=1;i<gbl->nhist+1;++i) {
+            crvbd(i).s.resize(maxpst,sm0,ND);
+            crvbd(i).i.resize(maxpst,im0,ND);
+        }
+    }
 #endif
 
 	output_type = inmesh.output_type;

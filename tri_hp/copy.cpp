@@ -24,8 +24,15 @@
 		for(i=0;i<npnt;++i)
 			for(n=0;n<ND;++n)
 				vrtxbd(t)(i)(n) = tgt.vrtxbd(t)(i)(n);
+        
+#ifdef ALLCURVED
+        if (allcurved) {
+            if (sm0) crvbd(t).s(Range(0,nseg-1),Range::all(),Range::all()) = tgt.crvbd(t).s(Range(0,nseg-1),Range::all(),Range::all());
+            if (im0) crvbd(t).i(Range(0,ntri-1),Range::all(),Range::all()) = tgt.crvbd(t).i(Range(0,ntri-1),Range::all(),Range::all());
+        }
+#endif
 	}
-
+     
 	for(i=0;i<nebd;++i)
 		hp_ebdry(i)->copy(*tgt.hp_ebdry(i));
 
