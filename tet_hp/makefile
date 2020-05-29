@@ -49,23 +49,15 @@ OBJ += $(OBJCNS)
 #OBJ += $(OBJCNS_EXPLICIT)
 #OBJ += $(OBJMASS)
 
-DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -O3 -g -I../../include/ -I$(PACKAGES)/include
- LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
-#LIB += -lbinio
-### Begin machine dependent
 
-## Linux:
-LIB += -llapack -lblas 
-
-## Darwin:
-#LIB += -framework veclib
-
-#LIB += -mkl
-
-### End machine dependent
-
+DEFINES += $(EXTRAFLAGS)
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
 CPPFLAGS += $(DEFINES)
+
+LIBS += ${LIBDIRS}
+LIBS += -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm -lpth -lblitz -lMAdLib
+LIBS += ${LIBBLAS}
 
 tet_hp: $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh -ltet_mesh $(LIB)

@@ -1,33 +1,12 @@
 OBJ = spline.o spline_functions2D.o
 
-CPPFLAGS = -Df2cFortran -I../include/ -I$(PACKAGES)/include/
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
+CPPFLAGS += $(DEFINES)
 
-# CPFLAGS += -debug -DBZ_DEBUG #(for icc)
-
-### Begin machine dependent
-
-## Darwin:
-## Machine specific for Darwin
-#AR = libtool
-#ARFLAGS = -o
-#CPPFLAGS += -O3
-
-## Linux:
-##  Machine specific for Linux
-#CXX=icpc #(cares)
-#CXX=g++3 #(shelob)
-CPPFLAGS += -O3
-
-## IRIX64:
-#CPPFLAGS += -Ofast=IP30  #(sauter)
-#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS += -Ofast=IPrk5 #(origin)
-
-## Aix:
-## Machine specific for Jupiter
-#CPPFLAGS += -O3
-
-### End machine dependent
+LIBS += ${LIBDIRS}
+LIBS += -lspline -lm
+LIBS += ${LIBBLAS}
 
 all: libspline.a splinetest
 
@@ -40,6 +19,6 @@ libspline.a: $(OBJ)
 	cp -f spline.h ../include/
 
 splinetest: $(OBJ) main.o libspline.a
-	${CXX} -o $@ main.o -L../lib -lspline -llapack -lblas -lm
+	${CXX} -o $@ main.o ${LIBS}
 
 $(OBJ): spline.h spline_impl.h

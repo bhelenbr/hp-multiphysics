@@ -1,34 +1,12 @@
 OBJ = input_map.o
 
-CPPFLAGS = -O3
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
+CPPFLAGS += $(DEFINES)
 
-#CPPFLAGS = -debug -DBZ_DEBUG #(for intel procs)
+LIBS += ${LIBDIRS}
+LIBS += -lmuparser
 
-CPPFLAGS += -I$(PACKAGES)/include
-LIBS = -L$(PACKAGES)/lib -L../lib -lmuparser
-
-### Begin machine dependent
-
-## Darwin:
-## Machine specific for Darwin
-#AR = libtool
-#ARFLAGS = -o
- 
-## Linux:
-##  Machine specific for Linux
-#CXX=g++3 #(shelob)
-#CXX=icpc #(cares)
-#CPPFLAGS += -cxxlib-icc
-#AR=libtool #(cares)
-#ARFLAGS = --mode=link ${CC} -o #(cares)
-
-## IRIX64:
-#CPPFLAGS = -Ofast=IP30  #(sauter)
-#CPPFLAGS = -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS = -Ofast=IPrk5 #(origin)
-
-### End machine dependent
-  
 all: mod_map libinput_map.a
 
 clean:

@@ -88,44 +88,31 @@ OBJ += $(OBJCNS)
 OBJ += $(OBJBUOY)
 #OBJ += $(OBJSW)   
 #OBJ += $(OBJEXPLICIT)
-#OBJ += $(OBJPS)
+OBJ += $(OBJPS)
 #OBJ += $(OBJSWIRL)
 #OBJ += $(OBJNONNEWTONIAN)
 OBJ += $(OBJKOMEGA)
 
-DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
-CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
+DEFINES += -DMY_SPARSE $(EXTRAFLAGS)
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
+CPPFLAGS += $(DEFINES)
 
-LIB = -L../../lib -L$(PACKAGES)/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -libverbs -lnetcdf
-#LIB += -lbinio
+LIBS += ${LIBDIRS}
+LIBS += -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -lnetcdf
+LIBS += ${LIBBLAS}
+
 LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lscalapack -ldl
 #LIBPETSC += -lHYPRE -lsuperlu_dist
 
-### Begin machine dependent
-
-## Darwin:
-## Machine specific for OS X
-#CPPFLAGS += -O3 -Wno-long-double 
-#LIB += -framework veclib
-
-## Linux:
-LIB += -llapack -lblas #(cares)
-
-## Intel Compilers & MKL
-#LIB += -lmkl -lmkl_lapack #(hawk)
-
-### End machine dependent
-
-CPPFLAGS += $(DEFINES)
-
 tri_hp: $(OBJ) 
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIBS)
 
 tri_hp_mpi: $(OBJ) 
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIBS)
 
 tri_hp_petsc: $(OBJ) $(OBJPETSC) 
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi $(LIB) $(LIBPETSC) 
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi $(LIBS) $(LIBPETSC) 
 
 dirs: 
 	+@[ -d  ins ] || mkdir -p ins

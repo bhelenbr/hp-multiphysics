@@ -1,15 +1,14 @@
 OBJ=main.o
 
-LIB = -L$(PACKAGES)/lib -lmuparser -L../lib -linput_map
-CPPFLAGS += -I$(PACKAGES)/include -I../include
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
+CPPFLAGS += $(DEFINES)
 
-# FOR CLUSTER
-#CXX=icpc
-#CPPFLAGS += -cxxlib-icc
-#CPPFLAGS += -debug (for icc)
+LIBS += ${LIBDIRS}
+LIBS += -lmuparser -linput_map
 
 main: $(OBJ)
-	$(CXX) $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
+	$(CXX) $(CPPFLAGS) -o $@ $(OBJ) $(LIBS)
 	cp symbolic_function.h ../include
 
 clean:

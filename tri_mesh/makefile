@@ -49,25 +49,15 @@ refineby2.o swap.o yaber.o adapt.o blocks.o
 
 MAINOBJ = main.o
 
-DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
-
-LIB = -L../../lib -L$(PACKAGES)/lib -lutil -lquad -linput_map -lspline -lmyblas
-LIB += -lm -lmuparser -lmetis -lparmetis -lpth -lblitz -lnetcdf
-#LIB += -lbinio
-
-CPPFLAGS = -std=c++0x -O3 -g -I../../include/ -I$(PACKAGES)/include
-
-### Begin machine dependent
-
-## Linux:
-LIB += -lblas -llapack #(cares)
-
-## Intel Cluster
-#LIB += -lmkl -lmkl_lapack #(hawk)
-
-### End machine dependent
-
+DEFINES += -DMETIS -DMY_SPARSE $(EXTRAFLAGS)
+CPPFLAGS += ${OPT}
+CPPFLAGS += ${INCLUDEDIRS}
 CPPFLAGS += $(DEFINES)
+
+LIBS += ${LIBDIRS}
+LIBS += -lutil -lquad -linput_map -lspline -lmyblas
+LIBS += -lm -lmuparser -lmetis -lparmetis -lpth -lblitz -lnetcdf
+LIBS += ${LIBBLAS}
 
 libtri_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -75,7 +65,7 @@ libtri_mesh.a: $(OBJ)
 	cp -f ../*.h ../../include/
 
 tri_mesh: libtri_mesh.a $(MAINOBJ)
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh $(LIB)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh $(LIBS)
 
 libtri_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -83,7 +73,7 @@ libtri_mesh_mpi.a: $(OBJ)
 	cp -f ../*.h ../../include/
 
 tri_mesh_mpi: libtri_mesh_mpi.a $(MAINOBJ)
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIB)
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) -ltri_mesh_mpi $(LIBS)
 
 %.o: %.cpp
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
