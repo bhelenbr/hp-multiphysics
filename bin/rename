@@ -13,9 +13,9 @@ shift $(($OPTIND - 1))
 p1="$1"
 p2="$2"
 shift 2
-for file in $*; do
-  file2=$(echo $file | sed -e "s:$p1:$p2:g") 
+for file in "$@"; do
+  file2=$(echo "$file" | sed -e "s:$p1:$p2:g") 
   if [ "$file2" != "$file1" ]; then
-     $cmd $file $file2
+     $cmd "$file" "$file2"
   fi
 done
