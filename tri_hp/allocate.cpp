@@ -143,13 +143,6 @@ void tri_hp::init(input_map& inmap, void *gin) {
         
         /* Load curvature coefficients */
         load_curvatures("curvatures",reload_type,crv);
-        for(int i=0;i<npnt;++i) {
-            for(int n=0;n<tri_mesh::ND;++n) {
-                pnts(i)(n) += crv.v(i,n);
-                crv.v(i,n) = 0.0;
-            }
-        }
-        
         for(i=1;i<gbl->nhist+1;++i) {
             crvbd(i).s = crv.s;
             crvbd(i).i = crv.i;
