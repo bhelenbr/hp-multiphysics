@@ -134,7 +134,16 @@ void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indice
         v0 = x.seg(sind).pnt(0);
         v1 = x.seg(sind).pnt(1);
         
+        base.mvpttobdry(j,-1.0,pt);
+        for (n=0;n<tri_mesh::ND;++n)
+            x.ug.v(v0,n) = pt(n) -x.pnts(v0)(n);
+            
+        base.mvpttobdry(j,1.0,pt);
+        for (n=0;n<tri_mesh::ND;++n)
+            x.ug.v(v1,n) = pt(n) -x.pnts(v1)(n);
+            
         for(int n=0;n<tri_mesh::ND;++n) {
+            basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
             basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
             
             for(k=0;k<basis::tri(x.log2p)->gpx();++k)
@@ -142,8 +151,8 @@ void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indice
         }
         
         for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
-            pt(0) = x.crd(0)(0,k);
-            pt(1) = x.crd(1)(0,k);
+            pt(0) = x.crd(0)(0,k)+x.res(0)(0,k);
+            pt(1) = x.crd(1)(0,k)+x.res(1)(0,k);
             base.mvpttobdry(j,basis::tri(x.log2p)->xp(k),pt);
             x.crd(0)(0,k) -= pt(0);
             x.crd(1)(0,k) -= pt(1);

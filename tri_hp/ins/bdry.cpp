@@ -104,10 +104,10 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
 						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
-					ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
+                    ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(x.NV-1)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i)
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
 									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-					ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+                    ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*( x.u(x.NV-1)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
 									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
 									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
 
@@ -176,8 +176,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 				v0 = x.seg(sind).pnt(0);
 				total_flux += x.gbl->res.v(v0,Range::all());
 			} while (++ind < base.nseg);
-			v0 = x.seg(sind).pnt(1);
-			total_flux += x.gbl->res.v(v0,Range::all());
+            /* Skip last point because it will be done as first point (must be loop) */
 			
 			break;
 		}
