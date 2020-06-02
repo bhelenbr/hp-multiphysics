@@ -38,8 +38,7 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 	let ngrid=1
 	let nedge=1
 	while [ $ngrid -lt ${NGRIDMAX} ]; do
-		mod_map run.inpt b0_mesh ../../../../grids/SQUARE/GENERIC/square${nedge}
-#		mod_map run.inpt b0_mesh ../GENERIC/square${nedge}
+		mod_map run.inpt b0_mesh square${ngrid}_b0.grd
 		mod_map run.inpt log2p ${log2p}
 		mod_map run.inpt logfile approx${ngrid}.p${log2p}
 		mod_map run.inpt ncycle 1
@@ -51,7 +50,10 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 		${HP} run
 		tail -2 full${ngrid}.p${log2p}_b0.log | head -1 | cut -d\  -f2,4 >> cnvg${log2p}.dat
 		
-		let ngrid=${ngrid}+1
+		let ngp=${ngrid}+1
+		cp run.inpt square${ngrid}_b0.grd_bdry.inpt
+		tri_mesh -r square${ngrid}_b0.grd square${ngp}_b0.grd
+		let ngrid=${ngp}
 		let nedge=2*${nedge}
 	done
 	let log2p=${log2p}+1

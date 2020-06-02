@@ -29,6 +29,7 @@ b0_type: explicit
 nu: 0.0
 ax: 0.0
 ay: 0.0
+sigma: 1.0
 # The name of the mesh: 
 b0_mesh: ./square1
 # For each boundary set type: 

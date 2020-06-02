@@ -1,8 +1,8 @@
-#! /usr/bin/env python
+#!/usr/local/bin/python3
 
 import sys
 import os
-import popen2
+#import popen2
 import string
 import math
 import numpy
@@ -33,3 +33,10 @@ plt.loglog(resolutions,errors2[1::2,0],'g-o')
 plt.xlabel('Resolution')
 plt.ylabel('Error')
 plt.savefig("Error.pdf")	
+
+#print(math.log2(errors0[11,0]/errors0[13,0]))
+print(math.log2(errors0[10,0]/errors0[12,0]))
+#print(math.log2(errors1[11,0]/errors1[13,0]))
+print(math.log2(errors1[10,0]/errors1[12,0]))
+#print(math.log2(errors2[11,0]/errors2[13,0]))
+print(math.log2(errors2[10,0]/errors2[12,0]))

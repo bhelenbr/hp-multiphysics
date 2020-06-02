@@ -5,6 +5,13 @@ HP="$HOME/bin/tri_hp"
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
+HP="tri_hp"
+
+
 if [ -e Results ]; then
 	cd Results
 else
@@ -45,7 +52,7 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 		
 		let ngp=${ngrid}+1
 		cp run.inpt square${ngrid}_b0.grd_bdry.inpt
-		tri_mesh -r square${ngrid}_b0.grd square${ngp}
+		tri_mesh -r square${ngrid}_b0.grd square${ngp}_b0.grd
 		let ngrid=${ngp}
 		let nedge=2*${nedge}
 	done
@@ -53,3 +60,5 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 done
 
 cd ..
+
+opendiff Results/ Baseline/

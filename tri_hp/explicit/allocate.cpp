@@ -17,6 +17,10 @@ void tri_hp_explicit::init(input_map& inmap, void *gin) {
 	gbl = static_cast<global *>(gin);
 
 	tri_hp_cd::init(inmap,gin);
+    if (!inmap.get(gbl->idprefix + "_sigma",gbl->sigma)) {
+        inmap.getwdefault("sigma",gbl->sigma,1.0);
+    }
+    
 	gbl->sprcn2.resize(maxpst,sm0,NV);
 
 

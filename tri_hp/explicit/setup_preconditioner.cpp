@@ -6,7 +6,7 @@
 
 void tri_hp_explicit::setup_preconditioner() {
 	int side;
-	FLT jcb,dtstari;
+    FLT jcb,dtstari = 0.0;
 	TinyVector<int,3> v;
 	TinyVector<FLT,2> mvel;
 	const int ltm = basis::tri(log2p)->tm();
@@ -65,7 +65,7 @@ void tri_hp_explicit::setup_preconditioner() {
 		}
 		FLT q = sqrt(qmax);
 		
-		FLT lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
+		FLT lam1  = (q +1.5*alpha/h +h*gbl->sigma);
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind)  = adis*h/(jcb*lam1);
@@ -171,10 +171,10 @@ void tri_hp_explicit::setup_preconditioner() {
 					}
 				}
 			}
-			gbl->tprcn(tind,Range::all()) = dtstari*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+			gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 		}
 		else {
-			gbl->tprcn(tind,Range::all()) = dtstari*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+			gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 			for(int i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all())*basis::tri(log2p)->vdiag();
