@@ -299,6 +299,20 @@ void tri_mesh::scale(TinyVector<FLT,ND>& s) {
 	return;
 }
 
+void tri_mesh::map(symbolic_function<2> x0, symbolic_function<2> x1) {
+    TinyVector<FLT,ND> pnt;
+    
+    for(int i=0;i<npnt;++i) {
+        pnt = pnts(i);
+        pnts(i)(0) = x0.Eval(pnt);
+        pnts(i)(1) = x1.Eval(pnt);
+    }
+
+    return;
+}
+
+
+
 int tri_mesh::smooth_cofa(int niter) {
 	int iter,sind,i,j,n,p0,p1;
 

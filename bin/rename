@@ -1,10 +1,11 @@
 #!/bin/bash -f
 
 cmd='mv'
-while getopts ":c" opt; do
+while getopts ":cE" opt; do
    case $opt in
       c) cmd='cp';; 
-      \? ) echo 'usage: rename [-c] pattern1 pattern2 files'
+      e) flag='-E';; 
+      \? ) echo 'usage: rename [-c,e] pattern1 pattern2 files'
            exit 1
    esac
 done
@@ -14,7 +15,7 @@ p1="$1"
 p2="$2"
 shift 2
 for file in "$@"; do
-  file2=$(echo "$file" | sed -e "s:$p1:$p2:g") 
+  file2=$(echo "$file" | sed ${flag} -e "s:$p1:$p2:g") 
   if [ "$file2" != "$file1" ]; then
      $cmd "$file" "$file2"
   fi

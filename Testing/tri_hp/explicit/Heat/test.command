@@ -24,9 +24,12 @@ cp ../Inputs/* .
 
 let LOG2PMAX=3
 let NGRIDMAX=6
-let log2p=0
+let log2p=2
 
 let ngrid=1
+
+
+# Create sequence of rhombus meshes
 while [ $ngrid -lt ${NGRIDMAX} ]; do
 	mod_map run.inpt b0_mesh square${ngrid}_b0.grd
 	mod_map run.inpt ntstep 1
@@ -36,10 +39,22 @@ while [ $ngrid -lt ${NGRIDMAX} ]; do
 	let ngrid=${ngp}
 done
 
+# Change rombus back to square shape
+# This is to make sure diagonal edges are all
+# oriented the same way
+let ngrid=1
+while [ $ngrid -le ${NGRIDMAX} ]; do
+	tri_mesh -m "(x0-x1)/1.1/2+(x0+x1)/2,(x0+x1)/2-(x0-x1)/1.1/2" square${ngrid}_b0.grd
+	mv output.grd  square${ngrid}_b0.grd
+	let ngrid=${ngrid}+1
+done
+
+
 mod_map run.inpt restart_interval 10000
 while [ $log2p -lt ${LOG2PMAX} ]; do
 	let ngrid=4-${log2p}
-	let nmax=${NGRIDMAX}-${log2p}
+#	let nmax=${NGRIDMAX}-${log2p}
+	let nmax=${NGRIDMAX}
 	while [ ${ngrid} -le ${nmax} ]; do
 		mkdir L2P_${log2p}_G${ngrid}
 		cd L2P_${log2p}_G${ngrid}

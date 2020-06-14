@@ -157,6 +157,7 @@ class tri_mesh : public multigrid_interface {
 		void append(const tri_mesh &z); /**< Appends mesh */
 		void shift(TinyVector<FLT,ND>& s); /**< Tranlates mesh */
 		void scale(TinyVector<FLT,ND>& s); /**< Scales mesh */
+        void map(symbolic_function<2> x0, symbolic_function<2> x1); /**< Maps mesh */
 		int smooth_cofa(int niter); /**< Does a center of area smoothing */
 		int smooth_lngth(int niter); /** diffuses vlength to smooth mesh */
 		void refineby2(const class tri_mesh& xmesh); /**< Refines by 2 */

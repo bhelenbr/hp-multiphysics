@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
     bool Partition = false;
     bool Refineby2 = false;
     bool Scale = false;
+    bool Map = false;
     bool Vlngth = false;
     bool Format = false;
     bool Symmetrize = false;
@@ -53,7 +54,8 @@ int main(int argc, char *argv[]) {
     int informat = 3, outformat = 3;
     int p;
     int opt;
-    while ((opt = getopt (argc, argv, "acdefghi:lmo:p:rsvxyz")) != -1) {
+    std::string x0,x1;
+    while ((opt = getopt (argc, argv, "acdefghi:lm:o:p:rsvxyz")) != -1) {
         switch (opt) {
             case 'a': {
                 Append = true;
@@ -90,7 +92,7 @@ int main(int argc, char *argv[]) {
                 std::cout << "-f smooth mesh" << std::endl;
                 std::cout << "-g generate mesh from .d file" << std::endl;
                 std::cout << "-l coarsen substructured mesh" << std::endl;
-                std::cout << "-m shift mesh position" << std::endl;
+                std::cout << "-m map mesh positions with arguments \"f(x0,x1),g(x0,x1)\"" << std::endl;
                 std::cout << "-p # partition mesh into # parts" << std::endl;
                 std::cout << "-r refine mesh by 2" << std::endl;
                 std::cout << "-s scale mesh" << std::endl;
@@ -112,7 +114,16 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'm': {
-                Shift = true;
+                Map = true;
+                std::string input(optarg);
+                size_t pos = input.find(",");
+                if (pos == string::npos) {
+                std::cerr << "Missing comma in mapping.  Use tri_mesh -h for usage" << std::endl;
+                    return 1;
+                }
+                x0 = input.substr(0,pos);
+                x1 = input.substr(pos+1);
+
                 break;
             }
             case 'p': {
@@ -129,7 +140,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 's': {
-                Generate = true;
+                Scale = true;
                 break;
             }
             case 'v': {
@@ -303,14 +314,30 @@ int main(int argc, char *argv[]) {
 		zy.output(output_file,out);
 		return 0;
 	}
+    
+    if (Scale) {
+        class tri_mesh zx;
+        TinyVector<FLT,2> s;
+        printf("Enter x and y scaling\n");
+        scanf("%le%le",&s(0),&s(1));
+        zx.input(input_file,in,1.0,inmap);
+        zx.scale(s);
+        zx.output(output_file,out);
+        return 0;
+    }
 
-	if (Scale) {
+	if (Map) {
 		class tri_mesh zx;
-		TinyVector<FLT,2> s;
-		printf("Enter x and y scaling\n");
-		scanf("%le%le",&s(0),&s(1));
+        input_map inmap;
+        std::string function;
+        symbolic_function<2> x0f ,x1f;
+        inmap["x0"] = x0;
+        x0f.init(inmap,"x0");
+        inmap["x1"] = x1;
+        x1f.init(inmap,"x1");
+        
 		zx.input(input_file,in,1.0,inmap);
-		zx.scale(s);
+		zx.map(x0f,x1f);
 		zx.output(output_file,out);
 		return 0;
 	}

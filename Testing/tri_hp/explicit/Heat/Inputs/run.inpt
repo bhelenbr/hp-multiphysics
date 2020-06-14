@@ -16,7 +16,7 @@ absolute_tolerance: -1.0
 # Name of the logfile: 
 logfile: output
 # Implicit time step (can be used to add a dtinv*T term to the equations: 
-dtinv: ntstep*(2*_pi)^2
+dtinv: ntstep*(_pi/2)^2
 ntstep: 2^(2*ng)*log2p^8
 ng: 4
 extrapolate: 0
@@ -24,7 +24,7 @@ extrapolate: 0
 helper: l2error
 #Initial and boundary condition function: 
 ibc: symbolic
-ibc0: sin(2.*_pi*x0)*exp(-4*_pi^2*t)
+ibc0: cos(_pi*x0/2)*exp(-_pi^2*t/4)
 b0_type: explicit
 # Set diffusivity and convective velocities if you want them: 
 nu: 1.0

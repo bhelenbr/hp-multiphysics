@@ -28,7 +28,7 @@ plt.loglog(resolutions,errors3[0::,0],'k-x')
 # plt.xticks(rlist,rlist)
 plt.xlabel('Resolution')
 plt.ylabel('Error')
-plt.savefig("Error.pdf")	
+plt.savefig("Results/Error.pdf")	
 
 print(math.log2(errors0[1,0]/errors0[2,0]))
 print(math.log2(errors1[1,0]/errors1[2,0]))

@@ -32,7 +32,7 @@ plt.loglog(resolutions,errors2[1::2,0],'g-o')
 # plt.xticks(rlist,rlist)
 plt.xlabel('Resolution')
 plt.ylabel('Error')
-plt.savefig("Error.pdf")	
+plt.savefig("Results/Error.pdf")	
 
 #print(math.log2(errors0[11,0]/errors0[13,0]))
 print(math.log2(errors0[10,0]/errors0[12,0]))
