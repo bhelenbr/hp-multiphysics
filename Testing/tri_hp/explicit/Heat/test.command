@@ -24,7 +24,7 @@ cp ../Inputs/* .
 
 let LOG2PMAX=3
 let NGRIDMAX=6
-let log2p=2
+let log2p=0
 
 let ngrid=1
 
@@ -50,16 +50,17 @@ while [ $ngrid -le ${NGRIDMAX} ]; do
 done
 
 
-mod_map run.inpt restart_interval 10000
+mod_map run.inpt output_interval 10000
 while [ $log2p -lt ${LOG2PMAX} ]; do
 	let ngrid=4-${log2p}
-#	let nmax=${NGRIDMAX}-${log2p}
-	let nmax=${NGRIDMAX}
+	let nmax=${NGRIDMAX}-${log2p}
+#	let nmax=${NGRIDMAX}
 	while [ ${ngrid} -le ${nmax} ]; do
 		mkdir L2P_${log2p}_G${ngrid}
 		cd L2P_${log2p}_G${ngrid}
 		cp ../run.inpt .
 		mod_map run.inpt ntstep $(echo "${ngrid}^4*2^(${log2p}*4)/8" | bc)
+		mod_map run.inpt output_interval $(echo "${ngrid}^4*2^(${log2p}*4)/8" | bc)
 		mod_map run.inpt b0_mesh ../square${ngrid}_b0.grd
 		mod_map run.inpt log2p ${log2p}
 		${HP} run

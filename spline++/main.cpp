@@ -248,8 +248,7 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            while (!point_data.eof()) {
-                point_data >> s;
+            while (point_data >> s) {
                 interpolate(myspline, s, size, angle, dx, norm_dist);
             }
         }

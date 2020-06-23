@@ -500,7 +500,8 @@ template<int EP> class tri_basis_array {
 		tri_basis_array() {
 			tri(0) = new tri_basis<1,EP>;
 			tri(1) = new tri_basis<2,EP>;
-			tri(2) = new tri_basis<4,EP>;	
+            tri(2) = new tri_basis<4,EP>;
+            //tri(2) = new tri_basis<3,EP>;
 			//tri(3) = new tri_basis<8,EP>;
 		
 			tri(0)->initialize();
