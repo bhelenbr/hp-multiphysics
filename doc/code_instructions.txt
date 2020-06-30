@@ -65,9 +65,11 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 cd ~/Packages
 git clone https://github.com/blitzpp/blitz.git blitz
 cd blitz
-autoreconf -fiv
-./configure --prefix=${HOME}/Packages
-make lib
+cmake .
+ccmake .
+# Change cmake_install_prefix to ${HOME}/Packages
+# (c)configure then (g)enerate
+make
 make install
 
 ###################################################################
@@ -104,30 +106,7 @@ extract, configure
 svn checkout http://muparser.googlecode.com/svn/trunk/ muparser-read-only
 
 ###################################################################
-#### PLATFORM INDEPENDENT BINARY I/O LIBRARY
-#### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?)
-###################################################################
-
-Download libbinio v1.4 (most recent) at http://sourceforge.net/projects/libbinio
-move libbinio-1.4.tar.bz2 to Packages
-unzip, configure
-	[tar --use-compress-program bzip2 -xvf libbinio-1.4.tar.bz2]
-	[cd libbinio-1.4]
-	[./configure --prefix=${HOME}/Packages]
-	For intel compilers had to disable shared library (skip this line)
-	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-fast-install=no] 
-	[make]
-	[make install]
-	[cd ..]
-
-# or from repository
-cvs -d:pserver:anonymous@libbinio.cvs.sourceforge.net:/cvsroot/libbinio login 
-cvs -z3 -d:pserver:anonymous@libbinio.cvs.sourceforge.net:/cvsroot/libbinio co -P libbinio
-autoreconf -fiv
-(fails on documentation?)
-
-###################################################################
-######## USER SPACE THREADS LIBRARY #############
+######## PTH USER SPACE THREADS LIBRARY #############
 ###################################################################
 
 Download Pth (2.0.7 is most recent) at http://www.gnu.org/software/pth/
@@ -143,63 +122,10 @@ move pth-2.0.7.tar.gz to Packages
 # curl -OL ftp://ftp.gnu.org/gnu/pth/pth-2.0.7.tar.gz
 
 ###################################################################
-####### SYSTEM SPACE THREADS LIBRARY #############
-###################################################################
-# SKIP THIS
-Download Boost at
-	the
-unpack in packages folder (see index.html file for instructions)
-	[tar zxvf boost_1_48_0.tar.gz]
-	[cd boost_1_48_0]
-	[./bootstrap.sh --with-libraries=thread --prefix=${HOME}/Packages]
-	[./b2 install]
-	[cd ..]
-
-###################################################################
-### HEADER FOR C to CALL FORTRAN ROUTINES ###########
-###################################################################
-cd ${HOME}/Packages/include/
-curl -OL http://www-zeus.desy.de/~burow/cfortran/cfortran.h 
-
-###################################################################
 #### (VALGRIND ONLY FOR DEBUGGING  SKIP THIS) ####
 ###################################################################
-##############################################################
-# auto tools for OS X ########################################
-# needed to build from svn repository ########################
-##############################################################
-curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-latest.tar.gz
-tar xzf autoconf-latest.tar.gz
-cd autoconf-
-./configure --prefix=${HOME}/Packages
-make
-make install
-
-cd $build
-curl -OL http://ftpmirror.gnu.org/automake/automake-1.15.tar.gz
-tar xzf automake-1.15.tar.gz
-cd automake-1.15
-./configure --prefix=${HOME}/Packages
-make install
-
-cd $build
-curl -OL http://ftpmirror.gnu.org/libtool/libtool-2.4.tar.gz
-tar xzf libtool-2.4.tar.gz
-cd libtool-2.4
-./configure --prefix=${HOME}/Packages
-make
-make install
-###############################################
 # To install command line tools
 xcode-select --install
-
-# download valgrind from web
-xcode-select --install  (To install Xcode command line tools)
-tar --use-compress-program bzip2 valgrindXXX.tar.bz2
-./configure --prefix=/share/apps (for cluster)
-./configure --prefix=${HOME}/Packages (for ubuntu & for OS X with homebrew installed openmpi)
-make
-make install
 
 or from git (for newest which is sometimes necessary)
 git clone git://sourceware.org/git/valgrind.git
@@ -224,14 +150,13 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
 # on OS X
-./config/configure.py --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1
 
 # on orion
 ./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps --download-sowing=1 --download-zlib=1
 
 # On stampede
-./config/configure.py --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
-
+./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
