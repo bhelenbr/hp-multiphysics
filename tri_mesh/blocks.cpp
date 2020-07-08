@@ -302,8 +302,7 @@ void sim::abort(int line,const char *file, std::ostream *log) {
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD,1);
 #endif
-    *log << "Did I make it here? " << line << " of file " << file << std::endl;
-
+    
 	/* Terminates all threads */
 	std::exit(1);
 }
@@ -1359,6 +1358,7 @@ void block::go(input_map input) {
     
     int rb2;
     if (input.get("refineby2",rb2)) {
+        gbl->tstep=nstart+1;
         grd(0)->refineby2();
         nstr.str("");
         nstr << nstart+1 << std::flush;
