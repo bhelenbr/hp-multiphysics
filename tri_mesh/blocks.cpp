@@ -1357,7 +1357,8 @@ void block::go(input_map input) {
 	}
     
     int rb2;
-    if (input.get("refineby2",rb2)) {
+    input.getwdefault("refineby2",rb2,0);
+    if (rb2) {
         gbl->tstep=nstart+1;
         grd(0)->refineby2();
         nstr.str("");
