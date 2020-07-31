@@ -263,23 +263,31 @@ void edge_bdry::reorder() {
 		sind = seg(i);
 		if (x.gbl->intwk(x.seg(sind).pnt(0)) == -1) {
 			first = i;
-			break;
+            goto foundfirst;
 		}
 	}
 
 	/* SPECIAL CONSTRAINT IF LOOP */
 	/* THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
-	if (first < 0) {
-		minp = x.npnt;
-		for(i=0;i<nseg;++i) {
-			sind = seg(i);
-			if (x.seg(sind).pnt(0) < minp) {
-				first = i;
-				minp = x.seg(sind).pnt(0);
-			}
-		}
-	}
+    /* Check if there is an intersecting vertex point */
+    for(i=0;i<nseg;++i) {
+        sind = seg(i);
+        if (x.gbl->i2wk(x.seg(sind).pnt(0)) == -1) {
+            first = i;
+            goto foundfirst;
+        }
+    }
+        
+    minp = x.npnt;
+    for(i=0;i<nseg;++i) {
+        sind = seg(i);
+        if (x.seg(sind).pnt(0) < minp) {
+            first = i;
+            minp = x.seg(sind).pnt(0);
+        }
+    }
 
+    foundfirst:
 	/* SWAP FIRST SIDE */
 	count = 0;
 	swap(count,first);
