@@ -22,6 +22,8 @@ tri_mesh generate.inpt
 mpiexec -np 1 ${HP} run.inpt ${PETCSC}
 echo -n "1 " > cputimes.dat
 tail -1 out_b0.log | cut -d \  -f 3 >> cputimes.dat
+grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
+grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
 
 let NPART=2
 let NPROC=4
@@ -40,6 +42,8 @@ while [ ${NPART} -le ${NPROC} ]; do
 	mpiexec -np ${NPART} ${HP} partition.inpt ${PETSC}
 	echo -n "${NPART} "  >> ../cputimes.dat
 	tail -1 out_b0.log | cut -d \  -f 3 >> ../cputimes.dat
+	grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
+	grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
 	cd ..
 	let NPART=${NPART}+1
 done
