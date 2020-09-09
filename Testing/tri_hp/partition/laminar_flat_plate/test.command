@@ -20,10 +20,13 @@ tri_mesh generate.inpt
 #PETSC="-stop_for_debugger"
 
 mpiexec -np 1 ${HP} run.inpt ${PETCSC}
-echo -n "1 " > cputimes.dat
+echo -n "1 " >> cputimes.dat
 tail -1 out_b0.log | cut -d \  -f 3 >> cputimes.dat
-grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
-grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
+tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> cputimes.dat
+echo -n " " >> cputimes.dat
+grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat 
+echo -n " " >> cputimes.dat
+grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> cputimes.dat
 
 let NPART=2
 let NPROC=4
@@ -41,9 +44,11 @@ while [ ${NPART} -le ${NPROC} ]; do
 	mod_map partition.inpt adapt 0
 	mpiexec -np ${NPART} ${HP} partition.inpt ${PETSC}
 	echo -n "${NPART} "  >> ../cputimes.dat
-	tail -1 out_b0.log | cut -d \  -f 3 >> ../cputimes.dat
-	grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
-	grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat
+	tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> cputimes.dat
+	echo -n " " >> cputimes.dat
+	grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat 
+	echo -n " " >> cputimes.dat
+	grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> cputimes.dat
 	cd ..
 	let NPART=${NPART}+1
 done
