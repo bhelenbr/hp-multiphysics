@@ -18,10 +18,12 @@ tri_mesh generate.inpt
 # HP="mpiexec -np 1 tri_hp_petsc -stop_for_debugger"
 
 #PETSC="-stop_for_debugger"
+OMPIFLAGS="--bysocket --bind-to-socket --report-bindings"
+MPICHFLAGS="-bind-to socket"
+MPIFLAGS=${MPICHFLAGS}
 
-mpiexec -np 1 ${HP} run.inpt ${PETCSC}
+mpiexec -np 1 ${MPIFLAGS} ${HP} run.inpt ${PETCSC}
 echo -n "1 " >> cputimes.dat
-tail -1 out_b0.log | cut -d \  -f 3 >> cputimes.dat
 tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> cputimes.dat
 echo -n " " >> cputimes.dat
 grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat 
@@ -42,7 +44,7 @@ while [ ${NPART} -le ${NPROC} ]; do
 			exit 1
 	fi
 	mod_map partition.inpt adapt 0
-	mpiexec -np ${NPART} ${HP} partition.inpt ${PETSC}
+	mpiexec -np ${NPART} ${MPIFLAGS} ${HP} partition.inpt ${PETSC}
 	echo -n "${NPART} "  >> ../cputimes.dat
 	tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> ../cputimes.dat
 	echo -n " " >> ../cputimes.dat
