@@ -23,7 +23,10 @@ public:
         FLT linf,uinf;
         
         /* Model constants */
-        FLT c_mu, kinf, omginf, epslnk;
+        FLT kinf, omginf, epslnk;
+        FLT Clim;  // only used for Wilcox2006
+        int version;
+        int kmom_on, sust_on;
         
         /* SOURCE FUNCTION FOR MMS */
         #ifdef MMS

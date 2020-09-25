@@ -17,10 +17,13 @@ void tri_hp_komega::init(input_map& inmap, void *gin) {
 	
 	if (!inmap.get(gbl->idprefix + "_linf",gbl->linf)) inmap.getwdefault("linf",gbl->linf,1.0);
 	if (!inmap.get(gbl->idprefix + "_uinf",gbl->uinf)) inmap.getwdefault("uinf",gbl->uinf,1.0);
-	if (!inmap.get(gbl->idprefix + "_c_mu",gbl->c_mu)) inmap.getwdefault("c_mu",gbl->c_mu,0.09);
 	if (!inmap.get(gbl->idprefix + "_epslnk",gbl->epslnk)) inmap.getwdefault("epslnk",gbl->epslnk,1.0);
     if (!inmap.get(gbl->idprefix + "_kinf",gbl->kinf)) inmap.getwdefault("kinf",gbl->kinf,1.0);
     if (!inmap.get(gbl->idprefix + "_omginf",gbl->omginf)) inmap.getwdefault("omginf",gbl->omginf,1.0);
+    if (!inmap.get(gbl->idprefix + "_Clim",gbl->Clim)) inmap.getwdefault("omginf",gbl->Clim,7.0/8.0);
+    if (!inmap.get(gbl->idprefix + "_version",gbl->version)) inmap.getwdefault("version",gbl->version,3);
+    if (!inmap.get(gbl->idprefix + "_kmom_on",gbl->kmom_on)) inmap.getwdefault("kmom_on",gbl->kmom_on,1);
+    if (!inmap.get(gbl->idprefix + "_sust_on",gbl->sust_on)) inmap.getwdefault("sust_on",gbl->sust_on,1);
     
 #ifdef MMS
     /* source term for MMS */
