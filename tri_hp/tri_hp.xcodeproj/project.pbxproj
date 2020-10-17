@@ -317,6 +317,31 @@
 		E6513DAF240352D1007924BC /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
 		E6513DB0240352D5007924BC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
 		E6513DB1240352D9007924BC /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
+		E675F1F024537B13005EFD22 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964ED097F43D6009F4225 /* setup_preconditioner.cpp */; };
+		E675F1F124537B14005EFD22 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964ED097F43D6009F4225 /* setup_preconditioner.cpp */; };
+		E675F1F224537B15005EFD22 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964ED097F43D6009F4225 /* setup_preconditioner.cpp */; };
+		E675F1F324537B15005EFD22 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964ED097F43D6009F4225 /* setup_preconditioner.cpp */; };
+		E675F1F424537B16005EFD22 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964ED097F43D6009F4225 /* setup_preconditioner.cpp */; };
+		E675F1F524537B1A005EFD22 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EB097F43D6009F4225 /* rsdl.cpp */; };
+		E675F1F624537B1B005EFD22 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EB097F43D6009F4225 /* rsdl.cpp */; };
+		E675F1F724537B1B005EFD22 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EB097F43D6009F4225 /* rsdl.cpp */; };
+		E675F1F824537B1C005EFD22 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EB097F43D6009F4225 /* rsdl.cpp */; };
+		E675F1F924537B1C005EFD22 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EB097F43D6009F4225 /* rsdl.cpp */; };
+		E675F1FA24537B20005EFD22 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
+		E675F1FB24537B21005EFD22 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
+		E675F1FC24537B22005EFD22 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
+		E675F1FD24537B22005EFD22 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
+		E675F1FE24537B23005EFD22 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964EA097F43D6009F4225 /* length.cpp */; };
+		E675F1FF24537B28005EFD22 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
+		E675F20024537B29005EFD22 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
+		E675F20124537B29005EFD22 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
+		E675F20224537B2A005EFD22 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
+		E675F20324537B2B005EFD22 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E8097F43D6009F4225 /* bdry.cpp */; };
+		E675F20424537B2D005EFD22 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
+		E675F20524537B2E005EFD22 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
+		E675F20624537B2F005EFD22 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
+		E675F20724537B2F005EFD22 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
+		E675F20824537B30005EFD22 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E9097F43D6009F4225 /* getnewbdry.cpp */; };
 		E67EBAB012D603C50011EB69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
@@ -464,14 +489,16 @@
 		E6BCC9931575C4FB00C10502 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		E6BCC9941575C4FB00C10502 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		E6BCC9951575C4FB00C10502 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E6CEFA25244A3F1C00CD8BCE /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E6097F43D6009F4225 /* allocate.cpp */; };
+		E6CEFA26244A3F1D00CD8BCE /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E6097F43D6009F4225 /* allocate.cpp */; };
+		E6CEFA27244A3F1E00CD8BCE /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E6097F43D6009F4225 /* allocate.cpp */; };
+		E6CEFA28244A3F1F00CD8BCE /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E6097F43D6009F4225 /* allocate.cpp */; };
+		E6CEFA29244A3F2000CD8BCE /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5964E6097F43D6009F4225 /* allocate.cpp */; };
 		E6CEFD5A232A987000929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5B232A987100929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5C232A987100929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5E232A987300929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
-		E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F10F6459E9006AB2DA /* allocate.cpp */; };
-		E6DE8D181AEBD8CF00BA9256 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FCA81550F6842FD000F34F8 /* minvrt.cpp */; };
-		E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F40F6459E9006AB2DA /* setup_preconditioner.cpp */; };
 		E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
@@ -754,6 +781,7 @@
 		E6367B551E3F9B9B00695A3D /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_vrtx_bdry.cpp; sourceTree = "<group>"; };
 		E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hp_getnewbdry.cpp; sourceTree = "<group>"; };
+		E65130D32482955D00087815 /* rsdl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = explicit/rsdl.cpp; sourceTree = "<group>"; };
 		E658002813E2CFC400A01E99 /* tri_hp_nonnewtonian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_nonnewtonian.h; path = nonnewtonian/tri_hp_nonnewtonian.h; sourceTree = "<group>"; };
 		E658002913E2CFC400A01E99 /* tri_hp_nonnewtonian.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tri_hp_nonnewtonian.cpp; path = nonnewtonian/tri_hp_nonnewtonian.cpp; sourceTree = "<group>"; };
 		E67EBAFA12D603C50011EB69 /* tri_hp_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1087,6 +1115,7 @@
 				6FB526F10F6459E9006AB2DA /* allocate.cpp */,
 				6FCA81550F6842FD000F34F8 /* minvrt.cpp */,
 				6FB526F40F6459E9006AB2DA /* setup_preconditioner.cpp */,
+				E65130D32482955D00087815 /* rsdl.cpp */,
 			);
 			name = Explicit;
 			sourceTree = "<group>";
@@ -1259,7 +1288,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1120;
+				LastUpgradeCheck = 1200;
 			};
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tri_hp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1293,9 +1322,11 @@
 			files = (
 				6F9853BA0BDE612700D342F6 /* main.cpp in Sources */,
 				6F9853BB0BDE612700D342F6 /* adapt.cpp in Sources */,
+				E6CEFA28244A3F1F00CD8BCE /* allocate.cpp in Sources */,
 				E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */,
 				E60E0B062287BFFA0086FC2E /* allocate.cpp in Sources */,
 				E6B7A91B23C573DD002974EE /* getnewbdry.cpp in Sources */,
+				E675F20024537B29005EFD22 /* bdry.cpp in Sources */,
 				E63566D11949D85700AB8511 /* rsdl.cpp in Sources */,
 				E60B06171A4EE7E3007AE41D /* hp_coupled_boundary.cpp in Sources */,
 				6F9853BC0BDE612700D342F6 /* copy.cpp in Sources */,
@@ -1304,9 +1335,12 @@
 				6F9853BF0BDE612700D342F6 /* l2error.cpp in Sources */,
 				6F9853C00BDE612700D342F6 /* setup_preconditioner.cpp in Sources */,
 				6F9853C10BDE612700D342F6 /* movco.cpp in Sources */,
+				E675F1F624537B1B005EFD22 /* rsdl.cpp in Sources */,
+				E675F20524537B2E005EFD22 /* getnewbdry.cpp in Sources */,
 				6F9853C20BDE612700D342F6 /* movfin.cpp in Sources */,
 				E60E0B122287C0370086FC2E /* length.cpp in Sources */,
 				6F9853C30BDE612700D342F6 /* nstage.cpp in Sources */,
+				E675F1F124537B14005EFD22 /* setup_preconditioner.cpp in Sources */,
 				6F9853C40BDE612700D342F6 /* output.cpp in Sources */,
 				E60E0B1A2287C0550086FC2E /* getnewbdry.cpp in Sources */,
 				E60E0B1E2287C05B0086FC2E /* getnewibc.cpp in Sources */,
@@ -1334,6 +1368,7 @@
 				E6BBC0E01ABFA4A4008C50F2 /* melt_cd.cpp in Sources */,
 				6F9853CC0BDE612700D342F6 /* getnewblock.cpp in Sources */,
 				E60E0B0A2287C00F0086FC2E /* setup_preconditioner.cpp in Sources */,
+				E675F1FB24537B21005EFD22 /* length.cpp in Sources */,
 				384ADBC321650563009FC4D3 /* length.cpp in Sources */,
 				6F9853CD0BDE612700D342F6 /* getnewbdry.cpp in Sources */,
 				6F9853CE0BDE612700D342F6 /* setup_preconditioner.cpp in Sources */,
@@ -1365,6 +1400,7 @@
 				6F9854720BDE649A00D342F6 /* adapt.cpp in Sources */,
 				E6CEFD5B232A987100929BA5 /* shock.cpp in Sources */,
 				E60E0B082287BFFC0086FC2E /* allocate.cpp in Sources */,
+				E675F20724537B2F005EFD22 /* getnewbdry.cpp in Sources */,
 				E63566D71949D85800AB8511 /* rsdl.cpp in Sources */,
 				E60B06181A4EE7E3007AE41D /* hp_coupled_boundary.cpp in Sources */,
 				6F9854730BDE649A00D342F6 /* copy.cpp in Sources */,
@@ -1379,11 +1415,14 @@
 				6F98547B0BDE649A00D342F6 /* output.cpp in Sources */,
 				E60E0B1C2287C0570086FC2E /* getnewbdry.cpp in Sources */,
 				E60E0B202287C05C0086FC2E /* getnewibc.cpp in Sources */,
+				E675F20224537B2A005EFD22 /* bdry.cpp in Sources */,
 				384ADBB921650563009FC4D3 /* rsdl.cpp in Sources */,
 				6F98547C0BDE649A00D342F6 /* ptprobe.cpp in Sources */,
 				6F98547D0BDE649A00D342F6 /* tobasis.cpp in Sources */,
+				E675F1FD24537B22005EFD22 /* length.cpp in Sources */,
 				E60E0B182287C0420086FC2E /* update.cpp in Sources */,
 				6F98547E0BDE649A00D342F6 /* tadvance.cpp in Sources */,
+				E6CEFA26244A3F1D00CD8BCE /* allocate.cpp in Sources */,
 				E60E0B102287C0310086FC2E /* rsdl.cpp in Sources */,
 				6F98547F0BDE649A00D342F6 /* allocate.cpp in Sources */,
 				384ADBB321650563009FC4D3 /* allocate.cpp in Sources */,
@@ -1395,6 +1434,7 @@
 				6F9854810BDE649A00D342F6 /* rsdl.cpp in Sources */,
 				6F9854820BDE649A00D342F6 /* length.cpp in Sources */,
 				E63D72F01CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
+				E675F1F824537B1C005EFD22 /* rsdl.cpp in Sources */,
 				E6BBC0E11ABFA4A4008C50F2 /* melt_cd.cpp in Sources */,
 				6F9854830BDE649A00D342F6 /* getnewblock.cpp in Sources */,
 				E60E0B0C2287C0100086FC2E /* setup_preconditioner.cpp in Sources */,
@@ -1414,6 +1454,7 @@
 				E63566C61949D84400AB8511 /* allocate.cpp in Sources */,
 				6F98549A0BDE649A00D342F6 /* getnewibc.cpp in Sources */,
 				E6E0961F1CC9C93100B1F871 /* partition.cpp in Sources */,
+				E675F1F324537B15005EFD22 /* setup_preconditioner.cpp in Sources */,
 				E6BBC0DB1ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				E60E0B242287C06F0086FC2E /* bdry.cpp in Sources */,
 				6F98549D0BDE649A00D342F6 /* allocate.cpp in Sources */,
@@ -1428,6 +1469,7 @@
 				6FB91A5B0ACCB04500792B04 /* adapt.cpp in Sources */,
 				E6CEFD5C232A987100929BA5 /* shock.cpp in Sources */,
 				E60E0B072287BFFB0086FC2E /* allocate.cpp in Sources */,
+				E675F20624537B2F005EFD22 /* getnewbdry.cpp in Sources */,
 				E63566CB1949D85600AB8511 /* rsdl.cpp in Sources */,
 				E60B06151A4EE7E3007AE41D /* hp_coupled_boundary.cpp in Sources */,
 				6FB91A5C0ACCB04500792B04 /* copy.cpp in Sources */,
@@ -1442,11 +1484,14 @@
 				6FB91A650ACCB04500792B04 /* ptprobe.cpp in Sources */,
 				E60E0B1B2287C0560086FC2E /* getnewbdry.cpp in Sources */,
 				E60E0B1F2287C05C0086FC2E /* getnewibc.cpp in Sources */,
+				E675F20124537B29005EFD22 /* bdry.cpp in Sources */,
 				384ADBB821650563009FC4D3 /* rsdl.cpp in Sources */,
 				6FB91A660ACCB04500792B04 /* tobasis.cpp in Sources */,
 				6FB91A670ACCB04500792B04 /* tadvance.cpp in Sources */,
+				E675F1FC24537B22005EFD22 /* length.cpp in Sources */,
 				E60E0B172287C0410086FC2E /* update.cpp in Sources */,
 				6FB91A6C0ACCB04500792B04 /* getnewblock.cpp in Sources */,
+				E6CEFA27244A3F1E00CD8BCE /* allocate.cpp in Sources */,
 				E60E0B0F2287C0310086FC2E /* rsdl.cpp in Sources */,
 				6FB91A6E0ACCB04500792B04 /* setup_preconditioner.cpp in Sources */,
 				384ADBB221650563009FC4D3 /* allocate.cpp in Sources */,
@@ -1458,6 +1503,7 @@
 				6FB91A700ACCB04500792B04 /* length.cpp in Sources */,
 				6FB91A710ACCB04500792B04 /* allocate.cpp in Sources */,
 				E63D72ED1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
+				E675F1F724537B1B005EFD22 /* rsdl.cpp in Sources */,
 				E6BBC0DE1ABFA4A3008C50F2 /* melt_cd.cpp in Sources */,
 				6FB91A730ACCB04500792B04 /* bdry.cpp in Sources */,
 				E60E0B0B2287C00F0086FC2E /* setup_preconditioner.cpp in Sources */,
@@ -1477,6 +1523,7 @@
 				E6B93EA7138A0914005FF1A9 /* bdry.cpp in Sources */,
 				E6B93EA8138A0915005FF1A9 /* getnewbdry.cpp in Sources */,
 				E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */,
+				E675F1F224537B15005EFD22 /* setup_preconditioner.cpp in Sources */,
 				E6BBC0D81ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				E60E0B232287C06E0086FC2E /* bdry.cpp in Sources */,
 				E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */,
@@ -1495,6 +1542,8 @@
 				6FB40B03091AF517002BAA09 /* hp_boundary.cpp in Sources */,
 				6FB40B06091AF517002BAA09 /* l2error.cpp in Sources */,
 				6FB40B0A091AF517002BAA09 /* setup_preconditioner.cpp in Sources */,
+				E675F1F524537B1A005EFD22 /* rsdl.cpp in Sources */,
+				E675F1FA24537B20005EFD22 /* length.cpp in Sources */,
 				6FB40B0B091AF517002BAA09 /* movco.cpp in Sources */,
 				6FB40B0C091AF517002BAA09 /* movfin.cpp in Sources */,
 				6FB40B0E091AF517002BAA09 /* output.cpp in Sources */,
@@ -1508,6 +1557,8 @@
 				6F00469F092047C500A6F21E /* getnewblock.cpp in Sources */,
 				E60E8156180AEFA70067E2E7 /* rsdl.cpp in Sources */,
 				6F68254F099850E600F57688 /* hp_getnewibc.cpp in Sources */,
+				E675F20424537B2D005EFD22 /* getnewbdry.cpp in Sources */,
+				E675F1F024537B13005EFD22 /* setup_preconditioner.cpp in Sources */,
 				6FB901D90A6C782300A4729C /* allocate.cpp in Sources */,
 				384ADBB021650563009FC4D3 /* allocate.cpp in Sources */,
 				6FBDA4880F304D4200E5FB76 /* allocate.cpp in Sources */,
@@ -1520,12 +1571,12 @@
 				E60E8159180AEFA70067E2E7 /* bdry.cpp in Sources */,
 				6FBDA48D0F304D4600E5FB76 /* getnewbdry.cpp in Sources */,
 				E60E8158180AEFA70067E2E7 /* update.cpp in Sources */,
-				E6DE8D181AEBD8CF00BA9256 /* minvrt.cpp in Sources */,
 				384ADBB621650563009FC4D3 /* rsdl.cpp in Sources */,
 				6FBDA48E0F304D4600E5FB76 /* getnewibc.cpp in Sources */,
 				6FD0E23F100D226F00EC2128 /* copy.cpp in Sources */,
 				6F1DBF27101C645200406AF3 /* nstage.cpp in Sources */,
 				9504779212D4FC73000CF354 /* allocate.cpp in Sources */,
+				E675F1FF24537B28005EFD22 /* bdry.cpp in Sources */,
 				9504779312D4FC74000CF354 /* setup_preconditioner.cpp in Sources */,
 				9504779412D4FC75000CF354 /* rsdl.cpp in Sources */,
 				9504779512D4FC76000CF354 /* length.cpp in Sources */,
@@ -1537,10 +1588,9 @@
 				E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */,
 				E6B748191616914B008409F5 /* bdry.cpp in Sources */,
 				E6B7481A16169151008409F5 /* rsdl.cpp in Sources */,
+				E6CEFA29244A3F2000CD8BCE /* allocate.cpp in Sources */,
 				E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6B7481B16169158008409F5 /* length.cpp in Sources */,
-				E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */,
-				E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */,
 				E6B7481C1616915D008409F5 /* setup_preconditioner.cpp in Sources */,
 				E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */,
 				E6B7481D16169160008409F5 /* allocate.cpp in Sources */,
@@ -1635,10 +1685,13 @@
 				E67EBB0312D603E10011EB69 /* setup_preconditioner.cpp in Sources */,
 				E67EBB0412D603E10011EB69 /* movco.cpp in Sources */,
 				E67EBB0512D603E10011EB69 /* movfin.cpp in Sources */,
+				E675F1F924537B1C005EFD22 /* rsdl.cpp in Sources */,
+				E675F1F424537B16005EFD22 /* setup_preconditioner.cpp in Sources */,
 				384ADBBB21650563009FC4D3 /* rsdl.cpp in Sources */,
 				E67EBB0612D603E10011EB69 /* output.cpp in Sources */,
 				384ADBC721650563009FC4D3 /* length.cpp in Sources */,
 				E67EBB0712D603E10011EB69 /* ptprobe.cpp in Sources */,
+				E675F20824537B30005EFD22 /* getnewbdry.cpp in Sources */,
 				E67EBB0812D603E10011EB69 /* tobasis.cpp in Sources */,
 				E60E0B192287C0430086FC2E /* update.cpp in Sources */,
 				E67EBB0912D603E10011EB69 /* getnewblock.cpp in Sources */,
@@ -1650,11 +1703,13 @@
 				E67EBB0E12D603E10011EB69 /* rsdl.cpp in Sources */,
 				E6B7A91C23C573DE002974EE /* getnewbdry.cpp in Sources */,
 				E67EBB0F12D603E10011EB69 /* length.cpp in Sources */,
+				E675F1FE24537B23005EFD22 /* length.cpp in Sources */,
 				E6CEFD5A232A987000929BA5 /* shock.cpp in Sources */,
 				E67EBB1012D603E10011EB69 /* bdry.cpp in Sources */,
 				E6B7A91A23C573DA002974EE /* bdry.cpp in Sources */,
 				E60E0B252287C06F0086FC2E /* bdry.cpp in Sources */,
 				E67EBB1112D603E10011EB69 /* getnewbdry.cpp in Sources */,
+				E675F20324537B2B005EFD22 /* bdry.cpp in Sources */,
 				E60B06191A4EE7E3007AE41D /* hp_coupled_boundary.cpp in Sources */,
 				E67EBB1212D603E10011EB69 /* getnewibc.cpp in Sources */,
 				E67EBB1412D603E10011EB69 /* copy.cpp in Sources */,
@@ -1683,6 +1738,7 @@
 				E6BCC9921575C4FB00C10502 /* setup_preconditioner.cpp in Sources */,
 				E60E0B112287C0320086FC2E /* rsdl.cpp in Sources */,
 				E6B7A91323C573B8002974EE /* setup_preconditioner.cpp in Sources */,
+				E6CEFA25244A3F1C00CD8BCE /* allocate.cpp in Sources */,
 				E6BCC9931575C4FB00C10502 /* length.cpp in Sources */,
 				E6BCC9941575C4FB00C10502 /* rsdl.cpp in Sources */,
 				E60E0B1D2287C0570086FC2E /* getnewbdry.cpp in Sources */,
@@ -1808,6 +1864,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -1820,6 +1877,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1838,6 +1896,7 @@
 					BZ_DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -1873,6 +1932,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -1885,6 +1945,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1899,6 +1960,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = MY_SPARSE;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
