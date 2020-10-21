@@ -141,7 +141,7 @@ make install
 ######## FOR PETSC ############
 ###################################################################
 cd ~/Packages
-git clone -b maint https://gitlab.com/petsc/petsc.git petsc
+git clone -b release https://gitlab.com/petsc/petsc.git petsc
 
 # OR to update
 rm -rf arch-darwin-c-debug #remove build files
