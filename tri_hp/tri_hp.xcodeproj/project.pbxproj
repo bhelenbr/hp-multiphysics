@@ -469,9 +469,6 @@
 		E6CEFD5C232A987100929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5E232A987300929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
-		E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F10F6459E9006AB2DA /* allocate.cpp */; };
-		E6DE8D181AEBD8CF00BA9256 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FCA81550F6842FD000F34F8 /* minvrt.cpp */; };
-		E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F40F6459E9006AB2DA /* setup_preconditioner.cpp */; };
 		E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
@@ -639,6 +636,7 @@
 		384ADBA021650563009FC4D3 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = komega/allocate.cpp; sourceTree = "<group>"; };
 		384ADBA121650563009FC4D3 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = komega/rsdl.cpp; sourceTree = "<group>"; };
 		384ADBA321650563009FC4D3 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = komega/length.cpp; sourceTree = "<group>"; };
+		4160E5CB253A4C5D00768383 /* libdyld.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libdyld.tbd; path = usr/lib/system/libdyld.tbd; sourceTree = SDKROOT; };
 		6F00447D091FD15D00A6F21E /* tri_hp_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tri_hp_cd.h; path = cd/tri_hp_cd.h; sourceTree = "<group>"; };
 		6F004489091FD33A00A6F21E /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cd/allocate.cpp; sourceTree = "<group>"; };
 		6F00450F091FE27600A6F21E /* bdry_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_cd.h; path = cd/bdry_cd.h; sourceTree = "<group>"; };
@@ -883,6 +881,7 @@
 				C6859E8C029090F304C91782 /* Documentation */,
 				6F661FF3091AFADC00FB5D82 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
+				4160E5CA253A4C5D00768383 /* Frameworks */,
 			);
 			name = spectral_hp;
 			sourceTree = "<group>";
@@ -941,6 +940,14 @@
 				384ADBA321650563009FC4D3 /* length.cpp */,
 			);
 			name = komega;
+			sourceTree = "<group>";
+		};
+		4160E5CA253A4C5D00768383 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4160E5CB253A4C5D00768383 /* libdyld.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		6F016C3A09818C4300AD7FA3 /* Swirl */ = {
@@ -1259,7 +1266,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1120;
+				LastUpgradeCheck = 1200;
 			};
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tri_hp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1520,7 +1527,6 @@
 				E60E8159180AEFA70067E2E7 /* bdry.cpp in Sources */,
 				6FBDA48D0F304D4600E5FB76 /* getnewbdry.cpp in Sources */,
 				E60E8158180AEFA70067E2E7 /* update.cpp in Sources */,
-				E6DE8D181AEBD8CF00BA9256 /* minvrt.cpp in Sources */,
 				384ADBB621650563009FC4D3 /* rsdl.cpp in Sources */,
 				6FBDA48E0F304D4600E5FB76 /* getnewibc.cpp in Sources */,
 				6FD0E23F100D226F00EC2128 /* copy.cpp in Sources */,
@@ -1539,8 +1545,6 @@
 				E6B7481A16169151008409F5 /* rsdl.cpp in Sources */,
 				E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
 				E6B7481B16169158008409F5 /* length.cpp in Sources */,
-				E6DE8D171AEBD8CA00BA9256 /* allocate.cpp in Sources */,
-				E6DE8D191AEBD8D300BA9256 /* setup_preconditioner.cpp in Sources */,
 				E6B7481C1616915D008409F5 /* setup_preconditioner.cpp in Sources */,
 				E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */,
 				E6B7481D16169160008409F5 /* allocate.cpp in Sources */,
@@ -1772,11 +1776,16 @@
 		6FB40AC2091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(threads)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1789,11 +1798,16 @@
 		6FB40AC3091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"$(threads)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1808,6 +1822,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -1820,6 +1836,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1838,6 +1855,7 @@
 					BZ_DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -1873,6 +1891,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -1885,6 +1905,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1899,6 +1920,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = MY_SPARSE;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
