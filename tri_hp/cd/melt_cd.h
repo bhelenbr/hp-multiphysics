@@ -16,7 +16,7 @@
 #include <symbolic_function.h>
 
 //#define OLDKINETICS
-//#define TWOFACETS
+#define TWOFACETS
 
 //#define ANALYTIC_JACOBIAN
 

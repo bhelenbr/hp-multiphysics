@@ -175,9 +175,9 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 	melt_buoyancy *surf1 = dynamic_cast<melt_buoyancy *>(surf);
 	
 	/* This is to allow the general expression at the triple point */
-	//     anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
-	//     FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
-	//     FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
+	   //  anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
+	   //  FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
+	   //  FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
 	
 	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
 	FLT res1 = jcb*RAD(xp(0))*surf1->gbl->rho_s*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
