@@ -27,7 +27,7 @@ brew install netcdf
 brew install libbinio
 brew install mpich
 brew install cmake
-brew install python2 (needed for blitz install)
+#brew install python2 (not needed for blitz install anymore I think)
 
 % This doesn't work anymore
 # brew install --build-from-source --HEAD blitz
