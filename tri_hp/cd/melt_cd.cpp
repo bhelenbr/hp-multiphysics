@@ -21,7 +21,6 @@
 #include "melt_cd.h"
 
 //#define TEST_ANALYTIC_JACOBIAN
-#define TWOFACETS
 
 using namespace bdry_cd;
 
@@ -899,12 +898,15 @@ void melt_facet_pt::element_rsdl(Array<FLT,1> lf) {
 	FLT DT = surf->ibc->f(Tindx, xp, x.gbl->time) -u(Tindx);
 	bdry_cd::melt_cd *surf1 = dynamic_cast<bdry_cd::melt_cd *>(surf);
 	
+#ifdef TWOFACETS
 	/* This is to allow the general expression at the triple point */
-	     anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
-	     FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
-	     FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
-	
-	//FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
+    anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
+    FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
+    FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
+#else
+	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
+#endif
+    
 	FLT res1 = RAD(xp(0))*surf1->gbl->rho_s*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1))*jcb;
 	/* Kinetic equation for surface temperature */
 	lf(x.NV+1) = RAD(xp(0))*surf1->gbl->rho_s*(-DT)*jcb +res1*K;  // -gbl->K_gt*kappa?;
