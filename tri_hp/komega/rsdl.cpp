@@ -47,10 +47,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
     FLT lmu = gbl->mu, rhorbd0, lrhobd0, cjcb, cjcbi;
-    FLT psiktld, psinktld, ktrb, omg, omgMx, tmu, tmuLmtd, mutld, cjcbik, cjcbiomg, strninv;
+    FLT psiktld, psinktld, psinktldshftd, ktrb, omg, omgMx, tmu, tmuLmtd, mutld, cjcbik, cjcbiomg, strninv;
     FLT vrtctinv; // only used for WILCOX1988KL
     FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr; // only used for WILCOX2006
     FLT sgmk, betakomg, gamma; // turbulence model constants that have different values for different versions
+
     
     TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
     TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
@@ -71,6 +72,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT k_mom = kmom_on ? 1.0 : 0.0; // the term in the momentum equation including k
     const FLT susk = sust_on ? 1.0 : 0.0; // turbulence sustaning terms
     const FLT susomg = sust_on ? 1.0 : 0.0;
+    const FLT alphDk = 100, alphMutld = 100; // booster factors
     if (version != WILCOX2006){
         sgmk = 0.5; betakomg = 0.075; gamma = 5./9.;
     }
@@ -188,6 +190,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     rhorbd0 = gbl->rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
                     psiktld = psifunc(u(2)(i,j),epslnk);
                     psinktld = psifunc(-u(2)(i,j),epslnk);
+                    psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = gbl->rho*ktrb/omg;
@@ -209,7 +212,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         omgMx = std::max(omg,omgLmtr);
                         tmuLmtd = gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    mutld = tmu -alphMutld*gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -318,7 +321,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
@@ -593,6 +596,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					rhorbd0 = RAD(crd(0)(i,j))*lrhobd0;
                     psiktld = psifunc(u(2)(i,j),epslnk);
                     psinktld = psifunc(-u(2)(i,j),epslnk);
+                    psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = gbl->rho*ktrb/omg;
@@ -614,7 +618,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         omgMx = std::max(omg,omgLmtr);
                         tmuLmtd = gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    mutld = tmu -alphMutld*gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -688,7 +692,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + alphDk*omginf*psinktld*u(2)(i,j))*cjcb;
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
