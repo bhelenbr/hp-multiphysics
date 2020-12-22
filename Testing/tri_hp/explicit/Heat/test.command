@@ -5,6 +5,8 @@
 # Time step was set small enough to get p=1 to converge
 # p=2 and p=4 worked better
 # Run make_plot.command to show converge plot
+# Something is weird with this test where sometimes it needs to be run twice
+# Something goofy with mesh generation part
 cd "$(dirname "$0")"
 
 # Define location of executables
@@ -52,7 +54,6 @@ while [ $ngrid -le ${NGRIDMAX} ]; do
 done
 
 
-mod_map run.inpt output_interval 10000
 while [ $log2p -lt ${LOG2PMAX} ]; do
 	let ngrid=4-${log2p}
 	let nmax=${NGRIDMAX}-${log2p}
