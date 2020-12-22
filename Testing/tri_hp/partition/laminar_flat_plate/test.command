@@ -1,4 +1,4 @@
-$!/bin/zsh
+#!/bin/zsh
 #  Calculates a flat plate boundary and tests partitioning and parallel speedup
 
 cd "$(dirname "$0")"

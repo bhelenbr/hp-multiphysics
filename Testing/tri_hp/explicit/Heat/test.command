@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 # Runs a case that inverts the mass matrix
 # using the approximate mass matrix
 # Set #define DIRK 1 in tri_mesh/blocks.cpp
@@ -59,7 +59,7 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 		mkdir L2P_${log2p}_G${ngrid}
 		cd L2P_${log2p}_G${ngrid}
 		cp ../run.inpt .
-		mod_map run.inpt ntstep $(echo "${ngrid}^4*2^(${log2p}*4)/8" | bc)
+		mod_map run.inpt ntstep $(echo "4*${ngrid}^4*2^(${log2p}*4)/8" | bc)
 		mod_map run.inpt output_interval $(echo "${ngrid}^4*2^(${log2p}*4)/8" | bc)
 		mod_map run.inpt b0_mesh ../square${ngrid}_b0.grd
 		mod_map run.inpt log2p ${log2p}

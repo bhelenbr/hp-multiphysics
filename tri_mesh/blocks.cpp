@@ -22,13 +22,6 @@
 #endif
 #include <blitz/array.h>
 
-// #define petsc
-
-//#define DIRK 1
-#define DIRK 4
-// #define BACKDIFF 2
-// #define AM1
-
 using namespace std;
 using namespace blitz;
 
@@ -1011,47 +1004,87 @@ void block::init(input_map &input) {
 		if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 #endif
-
-	/* SET TIME STEPPING INFO */
-#ifdef BACKDIFF
-	gbl->nhist = BACKDIFF+1;
-	gbl->nadapt = BACKDIFF+1;
-	gbl->bd.resize(BACKDIFF+1);
-	gbl->stepsolves = 1;
-#endif
-
-#if (DIRK==4)
-	gbl->nadapt = 2;
-	gbl->nhist = 4;
-	gbl->stepsolves = 3;
-	gbl->bd.resize(1);
-	gbl->bd = 0.0;
-	gbl->adirk.resize(DIRK,DIRK);
-	gbl->cdirk.resize(DIRK);
-#endif
+    
+    int time_scheme;
+    input.getwdefault("time_scheme",time_scheme,static_cast<int>(block_global::time_schemes::DIRK4));
+    gbl->time_scheme = static_cast<block_global::time_schemes>(time_scheme);
 	
-#if (DIRK==1)
-	/* This is the BD1 scheme */
-	gbl->nadapt = 1;
-	gbl->nhist = 1;
-	gbl->stepsolves = 1;
-	gbl->bd.resize(1);
-	gbl->bd = 0.0;
-	gbl->adirk.resize(DIRK,DIRK);
-	gbl->cdirk.resize(DIRK);
-#endif
-	
-#if (DIRK==2)
-	/* This is the AM1 or BD1 with extrapolation scheme */
-	gbl->nadapt = 2;
-	gbl->nhist = 2;
-	gbl->stepsolves = 1;
-	gbl->bd.resize(1);
-	gbl->bd = 0.0;
-	gbl->adirk.resize(DIRK,DIRK);
-	gbl->cdirk.resize(DIRK);
-#endif
-
+    /* SET TIME STEPPING INFO */
+    switch (gbl->time_scheme) {
+        case(block_global::time_schemes::DIRK4):
+            /* ESDIRK SCHEME */
+            gbl->nadapt = 2;
+            gbl->nhist = 4;
+            gbl->stepsolves = 3;
+            gbl->bd.resize(1);
+            gbl->bd = 0.0;
+            gbl->adirk.resize(4,4);
+            gbl->cdirk.resize(4);
+            break;
+        case(block_global::time_schemes::DIRK3):
+            /* DIRK SCHEME */
+            gbl->nadapt = 2;
+            gbl->nhist = 4;
+            gbl->stepsolves = 3;
+            gbl->bd.resize(1);
+            gbl->bd = 0.0;
+            gbl->adirk.resize(3,3);
+            gbl->cdirk.resize(3);
+            break;
+        case(block_global::time_schemes::DIRK2):
+            /* BD1 WITH EXTRAPOLATION */
+            gbl->nadapt = 2;
+            gbl->nhist = 2;
+            gbl->stepsolves = 1;
+            gbl->bd.resize(1);
+            gbl->bd = 0.0;
+            gbl->adirk.resize(2,2);
+            gbl->cdirk.resize(2);
+            break;
+        case(block_global::time_schemes::DIRK1):
+            /* BD1 WITH NO EXTRAPOLATION */
+            gbl->nadapt = 1;
+            gbl->nhist = 1;
+            gbl->stepsolves = 1;
+            gbl->bd.resize(1);
+            gbl->bd = 0.0;
+            gbl->adirk.resize(1,1);
+            gbl->cdirk.resize(1);
+            break;
+        case(block_global::time_schemes::AM1):
+            /* This is the AM1 with extrapolation scheme */
+            gbl->nadapt = 2;
+            gbl->nhist = 2;
+            gbl->stepsolves = 1;
+            gbl->bd.resize(1);
+            gbl->bd = 0.0;
+            gbl->adirk.resize(2,2);
+            gbl->cdirk.resize(2);
+            break;
+        case(block_global::time_schemes::BD1):
+            /* This is the BD1 scheme */
+            /* This is the 2-step backwards difference scheme */
+            gbl->nhist = 1;
+            gbl->nadapt = 1;
+            gbl->bd.resize(1);
+            gbl->stepsolves = 1;
+            break;
+        case(block_global::time_schemes::BD2):
+            /* This is the 2-step backwards difference scheme */
+            gbl->nhist = 2;
+            gbl->nadapt = 2;
+            gbl->bd.resize(2);
+            gbl->stepsolves = 1;
+            break;
+        case(block_global::time_schemes::BD3):
+            /* This is the 2-step backwards difference scheme */
+            gbl->nhist = 3;
+            gbl->nadapt = 3;
+            gbl->bd.resize(3);
+            gbl->stepsolves = 1;
+            break;
+    }
+    
 	gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
 	gbl->substep = -1;
 	input.getwdefault("dtinv",gbl->dti,0.0);
@@ -1440,136 +1473,245 @@ void block::tadvance() {
 		error=maxres();
 		*gbl->log << " and tstep " << gbl->tstep << ": " << (gbl->dti = gbl->dti_function.Eval(error,static_cast<FLT>(gbl->tstep))) << std::endl;
 	}
-		
-#ifdef BACKDIFF
-	if (gbl->dti > 0.0) 
-		gbl->time += 1./gbl->dti;
-	else 
-		gbl->time = gbl->tstep;
-
-	for(int i=0;i<BACKDIFF+1;++i)
-		gbl->bd(i) = 0.0;
-
-	switch(gbl->tstep) {
-		case(1):
-			gbl->bd(0) =  gbl->dti;
-			gbl->bd(1) = -gbl->dti;
-			break;
-#if (BACKDIFF > 1)
-		case(2):
-			gbl->bd(0) =  1.5*gbl->dti;
-			gbl->bd(1) = -2.0*gbl->dti;
-			gbl->bd(2) =  0.5*gbl->dti;
-			break;
-#endif
-#if (BACKDIFF > 2)
-		case(3):
-			gbl->bd(0) = 11./6*gbl->dti;
-			gbl->bd(1) = -3.*gbl->dti;
-			gbl->bd(2) = 1.5*gbl->dti;
-			gbl->bd(3) = -1./3.*gbl->dti;
-			break;
-#endif
+    
+    switch(gbl->time_scheme) {
+        case(block_global::time_schemes::DIRK4): {
+            switch(gbl->tstep) {     /* STARTUP SEQUENCE */
+                case(1): {
+                    /* THIS IS THE STANDARD FORM */
+                    // FLT gbl->adirk(DIRK,DIRK) = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}}
+                    // FLT gbl->bdirk[DIRK] = {1-B2RK3-GRK3,B2RK3,GRK3};
+                    // FLT gbl->cdirk(DIRK) = {GRK3,C2RK3,1.0};
+                    /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+                    gbl->adirk(0,0) = 1./sim::GRK3;                 gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;
+                    gbl->adirk(1,0) = sim::C2RK3-sim::GRK3;      gbl->adirk(1,1) = 1./sim::GRK3; gbl->adirk(1,2) = 0.0;
+                    gbl->adirk(2,0) = 1.-sim::B2RK3-sim::C2RK3; gbl->adirk(2,1) = sim::B2RK3;    gbl->adirk(2,2) = 1./sim::GRK3;
+                    gbl->cdirk(0) = sim::GRK3; gbl->cdirk(1) = sim::C2RK3-sim::GRK3; gbl->cdirk(2) = 1.0-sim::C2RK3;
+                    gbl->esdirk = false;
+                    break;
+                }
+                case(2): {
+                    gbl->adirk(0,0) = 1./sim::GRK3;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
+                    gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
+                    gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
+                    gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4;
+                    gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
+                    gbl->esdirk = true;
+                    break;
+                }
+                default : {
+                    /* THIS IS THE STANDARD FORM */
+                    // FLT gbl->adirk(DIRK,DIRK) = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}}
+                    // FLT gbl->bdirk[DIRK] = {B1RK4,B2RK4,B3RK4,GRK4};
+                    // FLT gbl->cdirk(DIRK) = {0.0,2.*GRK4,C3RK4,1.0};
+                    /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+                    gbl->adirk(0,0) = 1./sim::GRK4;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
+                    gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
+                    gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
+                    gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4;
+                    gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
+                    gbl->esdirk = true;
+                }
+            }
+            gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
+            if (gbl->dti > 0.0) {
+                gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+                if (gbl->esdirk) {
+                    /* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
+                    gbl->adirk(0,0) *= gbl->dti_prev/gbl->dti;
+                }
+                gbl->dti_prev = gbl->dti;
+            }
+            else {
+                gbl->time = gbl->tstep;
+            }
+            break;
+        }
+            
+        case(block_global::time_schemes::DIRK3): {
+            /* THIS IS THE STANDARD FORM */
+            // FLT gbl->adirk(DIRK,DIRK) = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}}
+            // FLT gbl->bdirk[DIRK] = {1-B2RK3-GRK3,B2RK3,GRK3};
+            // FLT gbl->cdirk(DIRK) = {GRK3,C2RK3,1.0};
+            /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+            gbl->adirk(0,0) = 1./sim::GRK3;                 gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;
+            gbl->adirk(1,0) = sim::C2RK3-sim::GRK3;      gbl->adirk(1,1) = 1./sim::GRK3; gbl->adirk(1,2) = 0.0;
+            gbl->adirk(2,0) = 1.-sim::B2RK3-sim::C2RK3; gbl->adirk(2,1) = sim::B2RK3;    gbl->adirk(2,2) = 1./sim::GRK3;
+            gbl->cdirk(0) = sim::GRK3; gbl->cdirk(1) = sim::C2RK3-sim::GRK3; gbl->cdirk(2) = 1.0-sim::C2RK3;
+            gbl->esdirk = false;
+            
+            gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep,gbl->substep);
+            if (gbl->dti > 0.0) {
+                gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+                gbl->dti_prev = gbl->dti;
+            }
+            else {
+                gbl->time = gbl->tstep;
+            }
+            break;
+        }
+            
+        case(block_global::time_schemes::DIRK2): {
+            /* STARTUP SEQUENCE */
+            switch(gbl->tstep) {
+                case(1): {
+                    /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+                    gbl->adirk(0,0) = 1.;                 gbl->adirk(0,1) = 0.0;
+                    gbl->adirk(1,0) = 0.;                 gbl->adirk(1,1) = 0.;
+                    gbl->cdirk(0) = 1;
+                    gbl->esdirk = false;
+                    break;
+                }
+                default: {
+                    gbl->adirk(0,0) = 1.0;                        gbl->adirk(0,1) = 0.0;
+                    gbl->adirk(1,0) = 0.0;                        gbl->adirk(1,1) = 1.0;
+                    gbl->cdirk(0) = 1;
+                    gbl->esdirk = true;
+                    break;
+                }
+            }
+            gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
+            if (gbl->dti > 0.0) {
+                gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+                if (gbl->esdirk) {
+                    /* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
+                    gbl->adirk(0,0) *= gbl->dti_prev/gbl->dti;
+                }
+                gbl->dti_prev = gbl->dti;
+            }
+            else {
+                gbl->time = gbl->tstep;
+            }
+            break;
+        }
+        
+        case(block_global::time_schemes::DIRK1): {
+            gbl->adirk(0,0) = 1.0;
+            gbl->cdirk(0) = 1.0;
+            gbl->esdirk = false;
+            gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep,gbl->substep);
+            if (gbl->dti > 0.0) {
+                gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+                gbl->dti_prev = gbl->dti;
+            }
+            else {
+                gbl->time = gbl->tstep;
+            }
+            break;
+        }
+            
+        case(block_global::time_schemes::AM1): {
+            /* STARTUP SEQUENCE */
+            switch(gbl->tstep) {
+                case(1): {
+                    /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+                    gbl->adirk(0,0) = 1.;                 gbl->adirk(0,1) = 0.0;
+                    gbl->adirk(1,0) = 0.;                 gbl->adirk(1,1) = 0.;
+                    gbl->cdirk(0) = 1;
+                    gbl->esdirk = false;
+                    break;
+                }
+                case(2): {
+                    gbl->adirk(0,0) = 1.0;                        gbl->adirk(0,1) = 0.0;
+                    gbl->adirk(1,0) = 0.5;                        gbl->adirk(1,1) = 2.0;
+                    gbl->cdirk(0) = 1;
+                    gbl->esdirk = true;
+                    break;
+                }
+                default : {
+                    /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+                    gbl->adirk(0,0) = 2.0;                        gbl->adirk(0,1) = 0.0;
+                    gbl->adirk(1,0) = 0.5;                        gbl->adirk(1,1) = 2.0;
+                    gbl->cdirk(0) = 1;
+                    gbl->esdirk = true;
+                    break;
+                }
+            }
+            gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
+            if (gbl->dti > 0.0) {
+                gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
+                if (gbl->esdirk) {
+                    /* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
+                    gbl->adirk(0,0) *= gbl->dti_prev/gbl->dti;
+                }
+                gbl->dti_prev = gbl->dti;
+            }
+            else {
+                gbl->time = gbl->tstep;
+            }
+            break;
+        }
+            
+        case(block_global::time_schemes::BD3): {
+            switch(gbl->tstep) {
+                case(1): {
+                    gbl->bd(0) =  gbl->dti;
+                    gbl->bd(1) = -gbl->dti;
+                    break;
+                }
+                case(2): {
+                    gbl->bd(0) =  1.5*gbl->dti;
+                    gbl->bd(1) = -2.0*gbl->dti;
+                    gbl->bd(2) =  0.5*gbl->dti;
+                    break;
+                }
+                default: {
+                    gbl->bd(0) = 11./6*gbl->dti;
+                    gbl->bd(1) = -3.*gbl->dti;
+                    gbl->bd(2) = 1.5*gbl->dti;
+                    gbl->bd(3) = -1./3.*gbl->dti;
+                    break;
+                }
+            }
+            if (gbl->dti > 0.0)
+                gbl->time += 1./gbl->dti;
+            else
+                gbl->time = gbl->tstep;
+            break;
+        }
+            
+        case(block_global::time_schemes::BD2): {
+            switch(gbl->tstep) {
+                case(1): {
+                    gbl->bd(0) =  gbl->dti;
+                    gbl->bd(1) = -gbl->dti;
+                    break;
+                }
+                default: {
+                    gbl->bd(0) =  1.5*gbl->dti;
+                    gbl->bd(1) = -2.0*gbl->dti;
+                    gbl->bd(2) =  0.5*gbl->dti;
+                    break;
+                }
+            }
+            if (gbl->dti > 0.0)
+                gbl->time += 1./gbl->dti;
+            else
+                gbl->time = gbl->tstep;
+            break;
+        }
+            
+        case(block_global::time_schemes::BD1): {
+            switch(gbl->tstep) {
+                case(1): {
+                    gbl->bd(0) =  gbl->dti;
+                    gbl->bd(1) = -gbl->dti;
+                    break;
+                }
+                default: {
+                    gbl->bd(0) =  1.5*gbl->dti;
+                    gbl->bd(1) = -2.0*gbl->dti;
+                    gbl->bd(2) =  0.5*gbl->dti;
+                    break;
+                }
+            }
+            if (gbl->dti > 0.0)
+                gbl->time += 1./gbl->dti;
+            else
+                gbl->time = gbl->tstep;
+            break;
+        }
 	}
-#endif
-
-#ifdef DIRK
-#if (DIRK == 4)
-	/* STARTUP SEQUENCE */
-	switch(gbl->tstep) {
-		case(1): {
-			/* THIS IS THE STANDARD FORM */
-			// FLT gbl->adirk(DIRK,DIRK) = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}}
-			// FLT gbl->bdirk[DIRK] = {1-B2RK3-GRK3,B2RK3,GRK3};
-			// FLT gbl->cdirk(DIRK) = {GRK3,C2RK3,1.0};
-			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-			gbl->adirk(0,0) = 1./sim::GRK3;                 gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;
-			gbl->adirk(1,0) = sim::C2RK3-sim::GRK3;      gbl->adirk(1,1) = 1./sim::GRK3; gbl->adirk(1,2) = 0.0;
-			gbl->adirk(2,0) = 1.-sim::B2RK3-sim::C2RK3; gbl->adirk(2,1) = sim::B2RK3;    gbl->adirk(2,2) = 1./sim::GRK3;
-			gbl->cdirk(0) = sim::GRK3; gbl->cdirk(1) = sim::C2RK3-sim::GRK3; gbl->cdirk(2) = 1.0-sim::C2RK3;
-			gbl->esdirk = false;
-			break;
-		}
-		case(2): {
-			gbl->adirk(0,0) = 1./sim::GRK3;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
-			gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
-			gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
-			gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4;
-			gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
-			gbl->esdirk = true;
-			break;
-		}
-		default : {
-			/* THIS IS THE STANDARD FORM */
-			// FLT gbl->adirk(DIRK,DIRK) = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}}
-			// FLT gbl->bdirk[DIRK] = {B1RK4,B2RK4,B3RK4,GRK4};
-			// FLT gbl->cdirk(DIRK) = {0.0,2.*GRK4,C3RK4,1.0};
-			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-			gbl->adirk(0,0) = 1./sim::GRK4;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
-			gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
-			gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
-			gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4;
-			gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
-			gbl->esdirk = true;
-		}
-	}
-#elif (DIRK==2)
-	/* STARTUP SEQUENCE */
-	switch(gbl->tstep) {
-		case(1): {
-			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-			gbl->adirk(0,0) = 1.;                 gbl->adirk(0,1) = 0.0;
-			gbl->adirk(1,0) = 0.;									gbl->adirk(1,1) = 0.;
-			gbl->cdirk(0) = 1;
-			gbl->esdirk = false;
-			break;
-		}
-		case(2): {
-#ifdef AM1
-			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
-			gbl->adirk(1,0) = 0.5;						gbl->adirk(1,1) = 2.0;
-#else
-			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
-			gbl->adirk(1,0) = 0.0;						gbl->adirk(1,1) = 1.0;
-#endif
-			gbl->cdirk(0) = 1;
-			gbl->esdirk = true;
-			break;
-		}
-		default : {
-			/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-#ifdef AM1
-			gbl->adirk(0,0) = 2.0;						gbl->adirk(0,1) = 0.0;
-			gbl->adirk(1,0) = 0.5;						gbl->adirk(1,1) = 2.0;
-#else
-			gbl->adirk(0,0) = 1.0;						gbl->adirk(0,1) = 0.0;
-			gbl->adirk(1,0) = 0.0;						gbl->adirk(1,1) = 1.0;
-#endif
-			gbl->cdirk(0) = 1;
-			gbl->esdirk = true;
-			break;
-		}
-	}
-#else
-	gbl->adirk(0,0) = 1.0;
-	gbl->cdirk(0) = 1.0;
-	gbl->esdirk = false;
-#endif
-	
-	gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
-	if (gbl->dti > 0.0) {
-		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
-		if (gbl->esdirk) {
-			/* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
-			gbl->adirk(0,0) *= gbl->dti_prev/gbl->dti;
-		}
-		gbl->dti_prev = gbl->dti;
-	}
-	else {
-		gbl->time = gbl->tstep;
-	}
-#endif
-
 
 	for (lvl=0;lvl<ngrid;++lvl) {
 		grd(lvl)->tadvance();

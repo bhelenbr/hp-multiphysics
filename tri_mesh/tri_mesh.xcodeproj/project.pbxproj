@@ -849,7 +849,6 @@
 				OTHER_LDFLAGS = (
 					"-lmuparser",
 					"-lmetis",
-					"-lblitz",
 					"-lpth",
 					"-lnetcdf",
 				);

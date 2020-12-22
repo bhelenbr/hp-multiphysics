@@ -56,6 +56,7 @@ namespace sim {
 struct block_global {
 	int idnum; /**< global block number */
 	std::string idprefix; /**< "b" + block # */
+
 	FLT dti; /**< Inverse time step */
 	FLT dti_prev; /**< Inverse time step for prior step (allows changes in time step) */
 	FLT time; /**< Simulation time */
@@ -69,6 +70,7 @@ struct block_global {
 	std::ostream *log; /**< log file stream */
 
 	/** Time stepping data for simulation */
+    enum time_schemes {DIRK1=1, DIRK2, DIRK3, DIRK4, AM1, BD1, BD2, BD3} time_scheme;
 	int nhist; /**< number of backwards difference steps */
 	int nadapt; /**< number of solutions that require adaptation */
 	int stepsolves; /**< Number of implicit solutions required per timestep */
