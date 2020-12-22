@@ -21,7 +21,6 @@
 		6FD651CF0922EC6800D18689 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FD651F10922EF8E00D18689 /* mod_map */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mod_map; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC046055464E500DB518D /* libinput_map.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinput_map.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		E631981016DBA7ED00B5C23C /* mod_map.bash */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = mod_map.bash; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,7 +91,6 @@
 			isa = PBXGroup;
 			children = (
 				6FD651CF0922EC6800D18689 /* makefile */,
-				E631981016DBA7ED00B5C23C /* mod_map.bash */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
