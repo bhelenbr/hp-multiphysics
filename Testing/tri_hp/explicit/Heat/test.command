@@ -1,8 +1,10 @@
 #!/bin/zsh
 # Runs a case that inverts the mass matrix
 # using the approximate mass matrix
-# Set #define DIRK 1 in tri_mesh/blocks.cpp
-
+# Error is mainly determined by the spatial resolution
+# Time step was set small enough to get p=1 to converge
+# p=2 and p=4 worked better
+# Run make_plot.command to show converge plot
 cd "$(dirname "$0")"
 
 # Define location of executables
@@ -73,5 +75,7 @@ while [ $log2p -lt ${LOG2PMAX} ]; do
 done
 
 cd ..
+
+./make_plot.command >> Results/rates.dat
 
 opendiff Results/ Baseline/
