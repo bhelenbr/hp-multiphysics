@@ -188,7 +188,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 #else
 FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
-	const int p = 2;
+	const int p = 4;
 	
 	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
 
@@ -265,15 +265,19 @@ void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			const int v0 = x.seg(sind).pnt(1);
 			TinyVector<FLT,4> up,upd,xp,xpd;
 			basis::tri(x.log2p)->ptprobe1d(x.NV,up.data(),1.0,&x.uht(0)(0),MXTM);
-			FLT DT = ibc->f(c0_indices[0], x.pnts(v0), x.gbl->time) -up(c0_indices[0]);
-			FLT K = calculate_kinetic_coefficients(DT,0.0);
-			fout << s << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' << K << ' ' << DT << ' ' << 0.0 << std::endl;
-			fout.close();
+#ifdef TWOFACETS
+            FLT sint = (+gbl->facetdir(0)*xpd(0) +gbl->facetdir(1)*xpd(1))/jcb;
+#else
+            FLT sint = 0;
+#endif
+            FLT DT = ibc->f(c0_indices[0], x.pnts(v0), x.gbl->time) -up(c0_indices[0]);
+            FLT K = calculate_kinetic_coefficients(DT,sint);
+            fout << s << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' << K << ' ' << DT << ' ' << sint << std::endl;
+            fout.close();
             basis::tri(x.log2p)->ptprobe1d(x.NV,up.data(),upd.data(),1.0,&x.uht(0)(0),MXTM);
             basis::tri(x.log2p)->ptprobe1d(x.ND,xp.data(),xpd.data(),1.0,&x.cht(0,0),MXTM);
 			jcb = sqrt(xpd(0)*xpd(0) +xpd(1)*xpd(1));
             *x.gbl->log << "#DTDs " << upd(2)/jcb << std::endl;
-            
             
 			break;
 		}
