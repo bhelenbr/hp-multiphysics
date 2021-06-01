@@ -20,13 +20,13 @@
 # To install command line tools
 xcode-select --install
 
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-brew install pth
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install muparser
 brew install netcdf
 brew install libbinio
 brew install mpich
 brew install cmake
+brew install pth
 #brew install python2 (not needed for blitz install anymore I think)
 
 % This doesn't work anymore
@@ -52,7 +52,7 @@ brew upgrade
 brew cleanup (wait until you are sure everything works)
 
 # If you want to start over: uninstall homebrew:
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
 
 ############################################################
 # THE FOLLOWING PACKAGES ARE UNNECESSARY IF USING HOMEBREW #
@@ -67,7 +67,7 @@ git clone https://github.com/blitzpp/blitz.git blitz
 cd blitz
 cmake .
 ccmake .
-# Change cmake_install_prefix to ${HOME}/Packages
+# Change cmake_install_prefix to /Users/bhelenbr/Packages
 # (c)configure then (g)enerate
 make
 make install
@@ -165,6 +165,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 
 ###################################################################
 ##### MeshAdapt for Tetrahedral Meshing Stuff      ################
+##### https://sites.uclouvain.be/madlib/
 ###################################################################
 #### FOR TETRAHEDRAL CODE, DO THIS HERE ####
 #### NOT NECESSARY FOR 2D CODE ###
@@ -254,21 +255,29 @@ ma
 ###################################################################
 cd ${HOME}/hp-multiphysics
 cd utilities
-xcodebuild -alltargets -configuration Release
+xcodebuild -scheme myblas -configuration Release
+xcodebuild -scheme util -configuration Release
 cd ../quadtree
-xcodebuild -alltargets -configuration Release
+xcodebuild -scheme quad -configuration Release
 cd ../spline++
-xcodebuild -alltargets  -configuration Release
+xcodebuild -scheme spline++ -configuration Release
 cd ../input_map
-xcodebuild -alltargets  -configuration Release
+xcodebuild -scheme input_map -configuration Release
 cd ../symbolic_function
-xcodebuild -alltargets  -configuration Release
+xcodebuild -scheme install -configuration Release
 cd ../tri_mesh
-xcodebuild -alltargets -configuration Release
+xcodebuild -scheme tri_mesh -configuration Release
+xcodebuild -scheme libtri_mesh -configuration Release
+xcodebuild -scheme libtri_mesh_mpi -configuration Release
 cd ../tri_basis
-xcodebuild -alltargets -configuration Release
+xcodebuild -scheme tri_basis -configuration Release
 cd ../tri_hp
-xcodebuild -alltargets -configuration Release
+xcodebuild -scheme tri_hp_petsc -configuration Release
+xcodebuild -scheme tri_hp_mpi -configuration Release
+xcodebuild -scheme tri_hp -configuration Release
+xcodebuild -scheme tri_hp_axi_petsc -configuration Release
+xcodebuild -scheme tri_hp_axi_mpi -configuration Release
+xcodebuild -scheme tri_hp_axi -configuration Release
 cd ../tet_mesh
 xcodebuild -alltargets -configuration Release
 cd ../tet_basis
