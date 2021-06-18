@@ -1317,7 +1317,7 @@ void tri_hp::test_jacobian() {
 						}
 						if (cols[cnt] == j) {
 							if (fabs(testJ(i,j) -vals[cnt])/(fabs(testJ(i,j)) +fabs(vals[cnt])) > DEBUG_REL_TOL)
-								*gbl->log << " (FS " << desc << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+								*gbl->log << " (FS " << desc << ' ' << testJ(i,j) << ' ' << vals[cnt] << ") ";
 							++cnt;
 						}
 						else if (cols[cnt] < j) {
