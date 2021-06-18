@@ -289,21 +289,29 @@ xcodebuild -alltargets -configuration Release
 # TO CLEAN
 cd ${HOME}/hp-multiphysics
 cd utilities
-xcodebuild -alltargets -configuration Release clean
+xcodebuild -scheme myblas -configuration Release clean
+xcodebuild -scheme util -configuration Release clean
 cd ../quadtree
-xcodebuild -alltargets -configuration Release clean
+xcodebuild -scheme quad -configuration Release clean
 cd ../spline++
-xcodebuild -alltargets  -configuration Release clean
+xcodebuild -scheme spline++ -configuration Release clean
 cd ../input_map
-xcodebuild -alltargets  -configuration Release clean
+xcodebuild -scheme input_map -configuration Release clean
 cd ../symbolic_function
-xcodebuild -alltargets  -configuration Release clean
+xcodebuild -scheme install -configuration Release clean
 cd ../tri_mesh
-xcodebuild -alltargets -configuration Release clean
+xcodebuild -scheme tri_mesh -configuration Release clean
+xcodebuild -scheme libtri_mesh -configuration Release clean
+xcodebuild -scheme libtri_mesh_mpi -configuration Release clean
 cd ../tri_basis
-xcodebuild -alltargets -configuration Release clean
+xcodebuild -scheme tri_basis -configuration Release clean
 cd ../tri_hp
-xcodebuild -alltargets -configuration Release clean
+xcodebuild -scheme tri_hp_petsc -configuration Release clean
+xcodebuild -scheme tri_hp_mpi -configuration Release clean
+xcodebuild -scheme tri_hp -configuration Release clean
+xcodebuild -scheme tri_hp_axi_petsc -configuration Release clean
+xcodebuild -scheme tri_hp_axi_mpi -configuration Release clean
+xcodebuild -scheme tri_hp_axi -configuration Release clean
 cd ../tet_mesh
 xcodebuild -alltargets -configuration Release clean
 cd ../tet_basis
