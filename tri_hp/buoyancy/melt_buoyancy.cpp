@@ -1,6 +1,8 @@
 #include "melt_buoyancy.h"
 #include <myblas.h>
 
+#define NEW_STABILIZATION
+
 using namespace bdry_buoyancy;
 
 void surface_marangoni::init(input_map& inmap,void* gbl_in) {
@@ -38,6 +40,34 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 	
 	sind = base.seg(indx);
 	x.crdtocht1d(sind);
+    
+#ifdef NEW_STABILIZATION
+    /* Calculate stabilization constant based on analysis of linear elements and constant tau */
+    int v0 = x.seg(sind).pnt(0);
+    int v1 = x.seg(sind).pnt(1);
+    norm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+    norm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+    FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+    FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+
+    mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+    mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+    mvel(0) -= x.gbl->mesh_ref_vel(0);
+    mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+    FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+    
+    mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+    mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+#ifdef MESH_REF_VEL
+    mvel(0) -= x.gbl->mesh_ref_vel(0);
+    mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+    FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+    gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+#endif
+    
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
 	

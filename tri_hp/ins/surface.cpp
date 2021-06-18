@@ -21,6 +21,7 @@ using namespace bdry_ins;
 
 // extern FLT body[ND];
 
+//#define NEW_STABILIZATION
 
 
 void surface::init(input_map& inmap,void* gin) {
@@ -105,31 +106,33 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));
 	
-//	/* Calculate stabilization constant based on analysis of linear elements and constant tau */
-//	int v0 = x.seg(sind).pnt(0);
-//	int v1 = x.seg(sind).pnt(1);
-//	norm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-//	norm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
-//	FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-//	FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
-//
-//	mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
-//	mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
-//#ifdef MESH_REF_VEL
-//	mvel(0) -= x.gbl->mesh_ref_vel(0);
-//	mvel(1) -= x.gbl->mesh_ref_vel(1);
-//#endif
-//	FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
-//
-//	mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
-//	mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
-//#ifdef MESH_REF_VEL
-//	mvel(0) -= x.gbl->mesh_ref_vel(0);
-//	mvel(1) -= x.gbl->mesh_ref_vel(1);
-//#endif
-//	FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
-//	gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
-	
+#ifdef NEW_STABILIZATION
+	/* Calculate stabilization constant based on analysis of linear elements and constant tau */
+	int v0 = x.seg(sind).pnt(0);
+	int v1 = x.seg(sind).pnt(1);
+	norm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+	norm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+	FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+	FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+
+	mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+	mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef MESH_REF_VEL
+	mvel(0) -= x.gbl->mesh_ref_vel(0);
+	mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+	FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+
+	mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+	mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+#ifdef MESH_REF_VEL
+	mvel(0) -= x.gbl->mesh_ref_vel(0);
+	mvel(1) -= x.gbl->mesh_ref_vel(1);
+#endif
+	FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
+	gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+#endif
+    
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);

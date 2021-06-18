@@ -278,6 +278,7 @@ public:
     void findmax(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
     void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
     void integrated_averages(Array<FLT,1> a);
+    void local_index_to_mesh_descriptor(int col, std::string& desc);
     
 #ifdef petsc
     /* Sparse stuff */
@@ -296,6 +297,7 @@ public:
     void petsc_to_ug();
     void ug_to_petsc();
     void petsc_make_1D_rsdl_vector(Array<FLT,1>);
+    void petsc_output_vector(Vec petsc_vec);
     
     int jacobian_start;
     int jacobian_size;

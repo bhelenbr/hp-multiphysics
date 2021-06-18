@@ -1009,7 +1009,7 @@ void hp_edge_bdry::rsdl(int stage) {
 }
 
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
-	int sm = basis::tri(x.log2p)->sm();
+	const int sm = basis::tri(x.log2p)->sm();
 	Array<FLT,2> Rbar(x.NV,sm+2);
 	Array<int,1> loc_to_glo(x.NV*(sm+2));
 	
@@ -1309,7 +1309,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #endif
 			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
-				*x.gbl->log << x.J._col(col) << ' ';
+				*x.gbl->log << x.J._col(col) << ' ' << x.J._val(col) << ' ';
 #endif
 				base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
@@ -1332,7 +1332,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #endif
 				for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
-					*x.gbl->log << x.J._col(col) << ' ';
+					*x.gbl->log << x.J._col(col) << ' ' << x.J._val(col) << ' ';
 #endif
 					base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
@@ -1358,7 +1358,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #endif
 		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
 #ifdef MPDEBUG
-			*x.gbl->log << x.J._col(col) << ' ';
+			*x.gbl->log << x.J._col(col) << ' ' << x.J._val(col) << ' ';
 #endif
 			base.fsndbuf(base.sndsize()++) = x.J._col(col) +0.1;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
@@ -1460,7 +1460,7 @@ int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 				if (col < INT_MAX-10 && col > -1) {
 					col += Jstart_mpi;
 #ifdef MPDEBUG
-					*x.gbl->log  << col << ' ';
+					*x.gbl->log  << col << ' ' << val << ' ';
 #endif
 					(*pJ_mpi).add_values(row,col,val);
 				}
@@ -1511,7 +1511,7 @@ int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 					if (col < INT_MAX-10 && col > -1) {
 						col += Jstart_mpi;
 #ifdef MPDEBUG
-						*x.gbl->log  << col << ' ';
+						*x.gbl->log  << col << ' '  << val << ' ';
 #endif
 						(*pJ_mpi).add_values(row,col,val);
 					}
@@ -1571,7 +1571,7 @@ int hp_edge_bdry::petsc_matchjacobian_rcv(int phase) {
 			if (col < INT_MAX-10 && col > -1) {
 				col += Jstart_mpi;
 #ifdef MPDEBUG
-				*x.gbl->log  << col << ' ';
+				*x.gbl->log  << col << ' ' << val << ' ';
 #endif
 				(*pJ_mpi).add_values(row,col,val);
 			}

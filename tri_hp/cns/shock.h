@@ -42,11 +42,16 @@ class shock : public hp_coupled_bdry{
 		void init(input_map& inmap,void* gbl_in);
 		void rsdl(int stage);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
-		void Shock_vel(FLT &Mu, FLT vd, FLT cd, FLT vu, FLT cu, int flag, FLT crdx, FLT crdy);
+		int shock_mach(FLT &Mu, FLT cu, FLT cd, FLT vdiff);
+    
 		void element_jacobian_opp(int indx, Array<FLT,2>& K);
 #ifdef petsc
 		void petsc_jacobian();
+#ifdef WAY1
         void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+#else
+        void element_jacobian(int indx, Array<FLT,2>& K);
+#endif
         int non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 #endif
 };
