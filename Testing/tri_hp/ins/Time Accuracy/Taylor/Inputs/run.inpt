@@ -1,12 +1,14 @@
 log2p: 2
 extra_finest_levels: 2
 ngrid: 5
+#extrapolate: 1
 ncycle: 400
 vwcycle: 2
 itercrsn: 2
 iterrfne: 2
 ntstep: 10
 dtinv: 10.0
+time_scheme: 5
 absolute_tolerance: 1.0e-10
 logfile: output
 A: 1.0

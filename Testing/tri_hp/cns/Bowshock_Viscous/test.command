@@ -34,6 +34,11 @@ cp ../Inputs/* .
 tri_mesh generate
 
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
+mpiexec -np 2 ${HP} run_shock.inpt ${PETSC}
+mod_map run_shock.inpt log2p 1
+mpiexec -np 2 ${HP} run_shock.inpt ${PETSC}
+mod_map run_shock.inpt log2p 2
+mpiexec -np 2 ${HP} run_shock.inpt ${PETSC}
 
 #cd ..
 

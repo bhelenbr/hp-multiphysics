@@ -50,7 +50,7 @@ while [ $dtc -lt 5 ]; do
     liumax=$(cut -f 3 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
     l2vmax=$(cut -f 4 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
     livmax=$(cut -f 5 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
-    echo "$l2umax $liumax $l2vmax $livmax $l2pmax $lipmax" >> cnvg.dat 
+    echo "$l2umax $liumax $l2vmax $livmax" >> cnvg.dat 
     
     
 	let dtc=${dtc}+1
@@ -59,5 +59,7 @@ while [ $dtc -lt 5 ]; do
 done
 
 cd ..
+
+./make_plot.command > Results/rates.dat
 
 opendiff Results/ Baseline/

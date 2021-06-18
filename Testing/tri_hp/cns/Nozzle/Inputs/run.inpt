@@ -1,20 +1,23 @@
 #polynomial order: 
-log2p: 2
+log2p: 0
 #petsc command line args: 
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 #Number of iterative cycles: 
-ncycle: 30
+ncycle: 20
 #restart: 0
 #Iterative tolerances: 
 absolute_tolerance: 1.0e-10
 relative_tolerance: 5.0e-8
 #Number of time steps: 
 ntstep: 1
-rsdl_debug: 0
-jac_debug: 0
-debug_output: 0
+time_scheme: 1
+#rsdl_debug: 3
+#jac_debug: 1
+#debug_output: 1
+restart_interval: ntstep
 #Inverse time step: 
-dtinv: cu*20
+#dtinv: cu*20
+dtinv: 0.0
 # Name of file for output: 
 logfile: output
 # Number of mesh blocks for each processor: 
@@ -38,7 +41,7 @@ C: 1.115465974331382
 D: 0.559366372602671
 area: A-C*exp(-B*x0)*cos(D*x0-_pi)
 darea: - B*C*exp(-B*x0)*cos(D*x0) - C*D*exp(-B*x0)*sin(D*x0)
-# IC Upstream
+# IC Upstream: 
 Po: 1
 RTo: 1/gamma
 R: 1/gamma
@@ -73,7 +76,7 @@ b0_s3_dhdx1: -1
 b0_s3_curved: 1
 b0_s3_r_dir: curved
 b0_s4_hp_type: inflow
-# IC downstream
+# IC downstream: 
 M: 1.51867
 pu: Po/((1+0.5*(gamma-1)*M^2)^(gamma/(gamma-1)))
 RTu: RTo/(1+0.5*(gamma-1)*M^2)

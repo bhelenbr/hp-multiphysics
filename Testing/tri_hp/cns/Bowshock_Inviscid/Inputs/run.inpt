@@ -10,7 +10,8 @@ rsdl_debug: 0
 absolute_tolerance: 1.0e-10
 relative_tolerance: 5.0e-8
 #Number of time steps: 
-ntstep: 2000
+ntstep: 1000
+#time_scheme: 1
 #Inverse time step: 
 dtinv: cu*100
 # Name of file for output: 
@@ -29,15 +30,15 @@ Uh: 1
 Dw: 1
 #Upstream width: 
 Uw: 1
-#Upstream height:
+#Upstream height: 
 Hu: R+Dh+Uh
-#Downstream height:
+#Downstream height: 
 Hd: R+Dh
-#Body height:
+#Body height: 
 Hb: R
-#Total width:
+#Total width: 
 Wt: Uw+Dw
-#Width of flow:
+#Width of flow: 
 Wf: Uw+Dw-R
 # Factor to increase memory allocation for mesh adaptation: 
 growth factor: 10
@@ -79,7 +80,7 @@ b0_s4_r_dir: 0 0
 #b0_s5_hp_type: outflow_supersonic
 b0_s5_hp_type: inflow
 b0_s6_hp_type: inflow
-#Downstream Props
+#Downstream Props: 
 norm_mag: 1/((1+0.25*x1^2)^(1/2))
 norm_x: norm_mag*1
 norm_y: x1<0 ? norm_mag*0.5*x1 : -norm_mag*0.5*x1
@@ -96,7 +97,7 @@ uu_tan: uu*tan_x+vu*tan_y
 ud_tan: uu_tan
 vd: (ud_norm*tan_x-ud_tan*norm_x)/(norm_y*tan_x-tan_y*norm_x)
 ud: x1==0 ? ud_norm : ud_tan/tan_x-vd*(tan_y/tan_x)
-#Try potential flow past cylinder
+#Try potential flow past cylinder: 
 U_pot: vs+(rhou/rhod)*(uu-vs)
 r: ((Wt-x0)^2+x1^2)^(1/2)
 theta: x0==Wt ? _pi/2 : atan(x1/(Wt-x0))
@@ -105,7 +106,7 @@ vtheta: -U_pot*(1-(R^2/r^2))*sin(theta)
 ud_pot: vr*cos(theta)-r*vtheta*sin(theta)
 vd_pot: vr*sin(theta)+r*vtheta*cos(theta)
 pd_pot: 0.5*rhod*(U_pot^2-(vr^2+vtheta^2))+pd
-#Final properties to use
+#Final properties to use: 
 #pd_final: x0-1-0.25*x1^2<0.2 ? pd : pd_pot
 #ud_final: x0-1-0.25*x1^2<0.2 ? ud : ud_pot
 #vd_final: x0-1-0.25*x1^2<0.2 ? vd : vd_pot

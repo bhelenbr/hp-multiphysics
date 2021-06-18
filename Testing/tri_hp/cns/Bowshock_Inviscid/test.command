@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# This runs Mach 3 inviscid flow over the front half of a cylinder.
+# 
+# Downstream flow is initialized using incompressible potential flow over a cylinder at
+# a velocity equal to that on the downstream side of the shock.
+# 
+# Make sure shock stabilization is turned on to get convergence.
+
 # Generates a mesh for a curved bow shock
 # where there are two domains before and after shock
 #
-# This actually just calculates a M= 0.3 flow
-# with a communication boundary for now
 # Uses cns which is based on primitive variables
 # p, u, v, RT
 # variables are non dimensional
@@ -33,6 +38,12 @@ cp ../Inputs/* .
 cd Results
 tri_mesh generate
 
+mpiexec -np 2 ${HP} run.inpt ${PETSC}
+
+mod_map run.inpt ntstep 1
+mod_map run.inpt time_scheme 1
+mod_map run.inpt dtinv 0.0
+mod_map run.inpt restart 1000
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 #cd ..
