@@ -10,7 +10,7 @@ ncycle: 30
 absolute_tolerance: 1.0e-10
 relative_tolerance: 5.0e-10
 #Number of time steps: 
-ntstep: 100
+ntstep: 10
 rsdl_debug: 0
 jac_debug: 0
 debug_output: 0

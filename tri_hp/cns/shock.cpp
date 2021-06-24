@@ -41,17 +41,15 @@ void shock::init(input_map& inmap,void* gin) {
 	return;
 }
 
-
-void shock::rsdl(int stage) {
-    
-	const int sm = basis::tri(x.log2p)->sm();
+void shock::send_opposite() {
+    const int sm = basis::tri(x.log2p)->sm();
     
     base.vloadbuff(boundary::all,x.ug.v.data(),0,x.NV-1,x.NV);
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-	base.comm_finish(boundary::all,0,boundary::symmetric,boundary::replace);
-	
+    base.comm_prepare(boundary::all,0,boundary::symmetric);
+    base.comm_exchange(boundary::all,0,boundary::symmetric);
+    base.comm_wait(boundary::all,0,boundary::symmetric);
+    base.comm_finish(boundary::all,0,boundary::symmetric,boundary::replace);
+    
     if (base.is_frst()) {
         for (int i=0,count=0; i<base.nseg+1; i++){
             for(int n=0; n<x.NV; n++){
@@ -85,7 +83,7 @@ void shock::rsdl(int stage) {
                 base.fsndbuf(count++) = sign*sdata[offset +n];
             }
             offset+=x.NV;
-//            sign*=-1.0;
+            sign*=-1.0;
         }
     }
 
@@ -106,34 +104,43 @@ void shock::rsdl(int stage) {
             }
         }
     }
-    
-	hp_coupled_bdry::rsdl(stage);
+}
 
+void shock::rsdl(int stage) {
+    send_opposite();
+	hp_coupled_bdry::rsdl(stage);
 }
 
 void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 
 	const int sm = basis::tri(x.log2p)->sm();
 
-	int i,n,sind;
+    int i,n,sind;
 	TinyVector<FLT,tri_mesh::ND> norm, rp, norm_meshc;
 	Array<FLT,1> ubar(x.NV);
 	FLT jcb; //jacobian 1d on edge
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV),u_opp(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel_u, mvel_d;
 	TinyMatrix<FLT,7,MXGP> res;
-	Array<TinyVector<FLT,MXTM>,1> uht_opp(x.NV);
-
-	for (int n=0; n<x.NV; n++){
-		uht_opp(n)(0) = u_opp_v(indx,n);
-		uht_opp(n)(1) = u_opp_v(indx+1,n);
-        FLT sign = 1.0;
-		for (int j=0; j<sm; j++){
-			uht_opp(n)(j+2) = sign*u_opp_e(indx,j,n);
-            sign *= -1.0;
-		}
-	}
-
+	Array<TinyVector<FLT,MXTM>,1> uht_opp(x.NV), temp(x.NV);
+    
+    const int sign = 2*is_master-1;
+    for (int n=0; n<x.NV; n++){
+        uht_opp(n)(0) = u_opp_v(indx,n);
+        uht_opp(n)(1) = u_opp_v(indx+1,n);
+        for (int j=0; j<sm; j++){
+            uht_opp(n)(j+2) = u_opp_e(indx,j,n);
+        }
+    }
+    
+    if (!is_master) {
+        /* This assume that the master is the upstream side */
+        /* This will fail if that is not the case */
+        temp.reference(x.uht);
+        x.uht.reference(uht_opp);
+        uht_opp.reference(temp);
+    }
+    
 	sind = base.seg(indx);
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
@@ -146,6 +153,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		basis::tri(x.log2p)->proj1d(&uht_opp(n)(0),&u_opp(n)(0));
     
 #ifdef NEW_STABILIZATION
+    /* For consistency use the upstream side to determine stabilization */
     /* Calculate stabilization constant based on analysis of linear elements and constant tau */
     int v0 = x.seg(sind).pnt(0);
     int v1 = x.seg(sind).pnt(1);
@@ -154,8 +162,8 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
     FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
     FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
     TinyVector<FLT,tri_mesh::ND> mvel;
-    mvel(0) = x.uht(0)(0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
-    mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+    mvel(0) = x.uht(0)(0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+    mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
     mvel(0) -= x.gbl->mesh_ref_vel(0);
     mvel(1) -= x.gbl->mesh_ref_vel(1);
@@ -170,15 +178,14 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 #endif
     FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
     
-    FLT meshc = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
-    FLT meshc1 = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) -vslp0+vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
+    FLT meshc = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +sign*(vslp0-vslp1))/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
 #endif
     
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 		norm(0) =  dcrd(1,i);
 		norm(1) = -dcrd(0,i);
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-        
+
         TinyVector<FLT,2> urel, urel_opp, mvel;
         for (int n=0;n<x.ND;++n) {
             mvel(n) = x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i));
@@ -189,43 +196,24 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
             urel_opp(n) = u_opp(n+1)(i)-mvel(n);
         }
         
-        FLT mvel_norm = (mvel(0)*norm(0) +mvel(1)*norm(1))/jcb;
-        FLT unorm = (u(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
+        FLT mvel_norm = sign*(mvel(0)*norm(0) +mvel(1)*norm(1))/jcb;
+        FLT unorm = sign*(u(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
         FLT unorm_rel = unorm-mvel_norm;
 
-        FLT unorm_opp, pu, uu, vu, RTu, cd, vslpu, sign;
-        if (unorm_rel > 0.0) {
-            /* This is upstream side */
-            sign = 1.0;
-            unorm_opp = -(u_opp(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
-            pu = u(0)(i);
-            uu = u(1)(i);
-            vu = u(2)(i);
-            RTu = u(3)(i);
-            cd = sqrt(x.gbl->gamma*u_opp(3)(i));
-            vslpu = (-urel(0)*norm(1) +urel(1)*norm(0))/jcb;
-        } else {
-            /* This is downstream side */
-            sign = -1;
-            unorm_opp = unorm;
-            unorm = -(u_opp(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
-            mvel_norm *= -1.0;
-            unorm_rel = unorm-mvel_norm;
-            pu = u_opp(0)(i);
-            uu = u_opp(1)(i);
-            vu = u_opp(2)(i);
-            RTu = u_opp(3)(i);
-            cd = sqrt(x.gbl->gamma*u(3)(i));
-            vslpu = -(-urel_opp(0)*norm(1) +urel_opp(1)*norm(0))/jcb;
-#ifdef NEW_STABILIZATION
-            meshc = meshc1;
-#endif
-        }
+        FLT unorm_opp, pu, uu, vu, RTu, cd, vslpu;
+        unorm_opp = -sign*(u_opp(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
+        pu = u(0)(i);
+        uu = u(1)(i);
+        vu = u(2)(i);
+        RTu = u(3)(i);
+        cd = sqrt(x.gbl->gamma*u_opp(3)(i));
+        vslpu = sign*(-urel(0)*norm(1) +urel(1)*norm(0))/jcb;
+
         FLT rhou = pu/RTu;
         FLT Eu = RTu/(x.gbl->gamma-1.0)+0.5*(uu*uu +vu*vu);
         FLT cu = sqrt(x.gbl->gamma*RTu);
         FLT Mu = unorm_rel/cu;
-        if (int err = shock_mach(Mu, cu, cd, unorm+unorm_opp)) {
+        if (shock_mach(Mu, cu, cd, unorm+unorm_opp)) {
             *x.gbl->log << "#Trouble finding Mach number\n";
         }
         
@@ -272,6 +260,10 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(1,0));
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
     
+    if (!is_master) {
+        x.uht.reference(uht_opp);
+    }
+    
 	return;
 }
 
@@ -295,6 +287,7 @@ int shock::shock_mach(FLT &M, FLT cu, FLT cd, FLT vdiff) {
 
     }
     if (it >= maxit) {
+        *x.gbl->log << "trouble converging on Mach number\n";
         return(1);
     }
     return(0);
@@ -409,6 +402,7 @@ void shock::element_jacobian(int indx, Array<FLT,2>& K) {
 
 #ifdef petsc
 void shock::petsc_jacobian() {
+    send_opposite();
     
     hp_coupled_bdry::petsc_jacobian();
     

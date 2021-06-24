@@ -352,7 +352,6 @@ void tri_hp::petsc_setup_preconditioner() {
                 }
             }
             *gbl->log << std::endl;
-            ++row;
         }
         (*gbl->log).precision(oldprecision);
 	}
@@ -1385,16 +1384,7 @@ void tri_hp::local_index_to_mesh_descriptor(int col, std::string& desc) {
     }
     else {
         col -= ntri*NV*im0;
-        for (int i=0;i<nebd;++i) {
-            if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
-            if (col < ebdry(i)->nseg*sm0*tri_mesh::ND) {  // Warning this should really be NV for the edge
-                nstr << 'e' << i << ',' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND;
-                break;
-            }
-            else {
-                col -= ebdry(i)->nseg*sm0*tri_mesh::ND;
-            }
-        }
+        nstr << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND;
     }
     desc = nstr.str();
 }

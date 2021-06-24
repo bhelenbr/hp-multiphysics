@@ -42,36 +42,7 @@ cp ../Inputs/* .
 tri_mesh generate
 
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
-NTSTEP=$(mod_map -e run.inpt ntstep)
-RESTART=${NTSTEP}
-
-mod_map run.inpt log2p 1
-mod_map run.inpt restart ${RESTART}
-mpiexec -np 2 ${HP} run.inpt ${PETSC}
-RESTART=${RESTART}+${NTSTEP}
-
-mod_map run.inpt log2p 2
-mod_map run.inpt restart ${RESTART}
-mpiexec -np 2 ${HP} run.inpt ${PETSC}
-exit 1
-
-# Halve time step and run some more
-DTP=$(mod_map -e run.inpt dtinv)
-DT=${DTP}/2
-mod_map run.inpt restart ${RESTART}
-mod_map run.inpt dtinv "${DT}"
-mod_map run.inpt dtinv_prev "${DTP}"
-mpiexec -np 2 ${HP} run.inpt ${PETSC}
-RESTART=${RESTART}+${NTSTEP}
-	
-# Try to get steady-state
-mod_map run.inpt ntstep 1
-mod_map run.inpt restart ${RESTART}
-mod_map run.inpt dtinv 0.0
-mod_map run.inpt dtinv_prev 0.0
-mpiexec -np 2 ${HP} run.inpt ${PETSC}
-
 
 cd ..
 
-#opendiff Results Baseline
+opendiff Results Baseline

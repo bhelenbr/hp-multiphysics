@@ -1,6 +1,0 @@
-This runs Mach 3 inviscid flow over the front half of a cylinder.
-
-Downstream flow is initialized using incompressible potential flow over a cylinder at
-a velocity equal to that on the downstream side of the shock.
-
-Make sure shock stabilization is turned on to get convergence.

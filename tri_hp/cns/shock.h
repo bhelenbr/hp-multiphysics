@@ -40,11 +40,11 @@ class shock : public hp_coupled_bdry{
 		shock* create(tri_hp& xin, edge_bdry &bin) const {return new shock(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
 		
 		void init(input_map& inmap,void* gbl_in);
+        void send_opposite();
 		void rsdl(int stage);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
+        void element_jacobian_opp(int indx, Array<FLT,2>& K);
 		int shock_mach(FLT &Mu, FLT cu, FLT cd, FLT vdiff);
-    
-		void element_jacobian_opp(int indx, Array<FLT,2>& K);
 #ifdef petsc
 		void petsc_jacobian();
 #ifdef WAY1
