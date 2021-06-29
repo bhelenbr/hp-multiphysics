@@ -19,6 +19,10 @@
 # This makes rho = 1
 # and c = 1
 
+# Can't get this started with p=1 for some reason
+# Have to start with p=4 and with the time_scheme: 4
+# Doesn't start with time_scheme: 1
+
 cd "$(dirname "$0")"
 BINDIR=${PWD%/*/*/*/*}/bin
 export PATH=${PATH}:${BINDIR}
@@ -40,10 +44,11 @@ tri_mesh generate
 
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
+RESTART=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt ntstep 1
 mod_map run.inpt time_scheme 1
 mod_map run.inpt dtinv 0.0
-mod_map run.inpt restart 1000
+mod_map run.inpt restart ${RESTART}
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 #cd ..

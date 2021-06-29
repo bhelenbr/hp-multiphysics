@@ -18,6 +18,7 @@ namespace bdry_cns {
 
 //#define MPDEBUG
 //#define DEBUG
+//#define WAY1
 
 class shock : public hp_coupled_bdry{
 	protected:

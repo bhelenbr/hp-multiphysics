@@ -12,7 +12,6 @@
 #include <iostream>
 
 #define NEW_STABILIZATION
-//#define WAY1
 
 using namespace bdry_cns;
 
@@ -29,6 +28,7 @@ void shock::init(input_map& inmap,void* gin) {
 
     /* Both sides have to do work for this Boundary Condition */
     inmap[base.idprefix+"_symmetric"] = "1";
+    inmap[base.idprefix+"_c0_indices"] = " ";
     
 	hp_coupled_bdry::init(inmap,gin);
 #ifdef WAY1
@@ -65,24 +65,14 @@ void shock::send_opposite() {
         }
     }
     
-    
-    int j,k,count,offset,sind;
-    int bgn = 0;
-    int end = sm-1;
-    int stride = sm;
-    FLT *sdata = x.ug.s.data();
-
-    int ebp1 = end-bgn+1;
-    count = 0;
-    for(j=0;j<base.nseg;++j) {
-        sind = base.seg(j);
-        offset = (sind*stride +bgn)*x.NV;
+    int count =0;
+    for (int j=base.nseg-1;j>=0; j--){
+        int sind = base.seg(j);
         FLT sign = 1.0;
-        for(k=0;k<ebp1;++k) {
+        for(int k=0;k<sm;++k) {
             for(int n = 0; n<x.NV; n++){
-                base.fsndbuf(count++) = sign*sdata[offset +n];
+                base.fsndbuf(count++) = sign*x.ug.s(sind,k,n);
             }
-            offset+=x.NV;
             sign*=-1.0;
         }
     }
@@ -97,7 +87,7 @@ void shock::send_opposite() {
     base.comm_finish(boundary::all,0,boundary::symmetric,boundary::replace);
 
 
-    for (int j=base.nseg-1,count=0;j>=0; j--){
+    for(int j=0,count=0;j<base.nseg;++j) {
         for (int k=0;k<sm;k++){
             for (int n=0;n<x.NV;n++){
                 u_opp_e(j,k,n) = base.fsndbuf(count++);
@@ -162,23 +152,23 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
     FLT h = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
     FLT hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
     TinyVector<FLT,tri_mesh::ND> mvel;
-    mvel(0) = x.uht(0)(0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
-    mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+    mvel(0) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+    mvel(1) = x.uht(2)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
     mvel(0) -= x.gbl->mesh_ref_vel(0);
     mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif  
     FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
 
-    mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
-    mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+    mvel(0) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+    mvel(1) = x.uht(2)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
     mvel(0) -= x.gbl->mesh_ref_vel(0);
     mvel(1) -= x.gbl->mesh_ref_vel(1);
 #endif
     FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
     
-    FLT meshc = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +sign*(vslp0-vslp1))/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
+    FLT meshc = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +(vslp0-vslp1))/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
 #endif
     
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
@@ -201,13 +191,13 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         FLT unorm_rel = unorm-mvel_norm;
 
         FLT unorm_opp, pu, uu, vu, RTu, cd, vslpu;
-        unorm_opp = -sign*(u_opp(1)(i)*norm(0) +u(2)(i)*norm(1))/jcb;
+        unorm_opp = -sign*(u_opp(1)(i)*norm(0) +u_opp(2)(i)*norm(1))/jcb;
         pu = u(0)(i);
         uu = u(1)(i);
         vu = u(2)(i);
         RTu = u(3)(i);
         cd = sqrt(x.gbl->gamma*u_opp(3)(i));
-        vslpu = sign*(-urel(0)*norm(1) +urel(1)*norm(0))/jcb;
+        vslpu = (-urel(0)*norm(1) +urel(1)*norm(0))/jcb;  // This flips sign but gets flipped again because of integral with dv/dxi
 
         FLT rhou = pu/RTu;
         FLT Eu = RTu/(x.gbl->gamma-1.0)+0.5*(uu*uu +vu*vu);
@@ -232,7 +222,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         // gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
         FLT meshc = gbl->adis/(fabs(vslpu) +100.0*FLT_EPSILON);
 #endif
-        res(2,i) = -sign*res(1,i)*vslpu*meshc;
+        res(2,i) = -res(1,i)*vslpu*meshc;
         
         /* CONTINUITY FLUX */
         FLT mdot = sign*rhou*unorm_rel*jcb;
@@ -261,7 +251,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(2,0));
     
     if (!is_master) {
-        x.uht.reference(uht_opp);
+        x.uht.reference(temp);
     }
     
 	return;
@@ -365,15 +355,16 @@ void shock::element_jacobian_opp(int indx, Array<FLT,2>& K) {
 	return;
 }
 
+#ifndef WAY1
 void shock::element_jacobian(int indx, Array<FLT,2>& K) {
     hp_coupled_bdry::element_jacobian(indx, K);
     
     const int sm = basis::tri(x.log2p)->sm();
-
-    /* Multiply flow Jacobian terms for shock velocity equation by 2 because they are missing the remote parts */
+    
+    /* Multiply flow Jacobian terms for shock velocity equation by 2 because the parts in J_mpi don't get passed */
     /* Don't do mesh jacobian terms because these do not have cross terms */
     int kcol = 0;
-    for(int mode = 0; mode < 2; ++mode) {
+    for(int mode = 0; mode < sm+2; ++mode) {
         for(int var = 0; var < x.NV; ++var) {
             int krow = x.NV+NV-1;
             for(int k=0;k<sm+2;++k) {
@@ -384,21 +375,8 @@ void shock::element_jacobian(int indx, Array<FLT,2>& K) {
         }
         kcol += tri_mesh::ND;
     }
-    
-    
-    for(int mode = 2; mode < sm+2; ++mode) {
-        for(int var = 0; var < x.NV; ++var) {
-            int krow = x.NV+NV-1;;
-            for(int k=0;k<sm+2;++k) {
-                K(krow,kcol) *= 2.0;
-                krow += x.NV+NV;
-            }
-            ++kcol;
-        }
-        kcol += tri_mesh::ND;
-    }
 }
-
+#endif
 
 #ifdef petsc
 void shock::petsc_jacobian() {
@@ -503,7 +481,7 @@ int shock::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1> &nnzero_
     
     if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return(0);
     
-    int count = hp_coupled_bdry::non_sparse_rcv(phase, nnzero, nnzero_mpi);
+    hp_coupled_bdry::non_sparse_rcv(phase, nnzero, nnzero_mpi);
     
     const int sm=basis::tri(x.log2p)->sm();
     const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;

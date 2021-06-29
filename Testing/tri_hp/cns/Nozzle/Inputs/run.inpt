@@ -67,7 +67,6 @@ b0_s2_h: x0-xs_mesh
 b0_s2_dhdx0: 1
 b0_s2_dhdx1: 0
 b0_s2_hp_type: shock
-b0_s2_c0_indices: 
 b0_s3_hp_type: euler
 b0_s3_type: symbolic
 b0_s3_h: area-x1
@@ -118,7 +117,6 @@ b1_s2_h: x0-xs_mesh
 b1_s2_dhdx0: 1
 b1_s2_dhdx1: 0
 b1_s2_hp_type: shock
-b1_s2_c0_indices: 
 b0_v1_hp_type: hp_deformable_free_pnt
 b0_v2_hp_type: hp_deformable_free_pnt
 b1_v1_hp_type: hp_deformable_free_pnt
