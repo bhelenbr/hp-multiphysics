@@ -304,6 +304,10 @@
 		E63D72EF1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72F01CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72F11CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
+		E649A6E7259262F600218829 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F10F6459E9006AB2DA /* allocate.cpp */; };
+		E649A6EE259262FB00218829 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FCA81550F6842FD000F34F8 /* minvrt.cpp */; };
+		E649A6F5259262FE00218829 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB526F40F6459E9006AB2DA /* setup_preconditioner.cpp */; };
+		E649A6FC2592630100218829 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65130D32482955D00087815 /* rsdl.cpp */; };
 		E64A35DF1AACD76B008BAE74 /* melt_buoyancy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */; };
 		E64A35E11AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
 		E64A35E21AAD50A3008BAE74 /* hp_getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E64A35E01AAD50A3008BAE74 /* hp_getnewbdry.cpp */; };
@@ -1548,9 +1552,11 @@
 				6FB40B0C091AF517002BAA09 /* movfin.cpp in Sources */,
 				6FB40B0E091AF517002BAA09 /* output.cpp in Sources */,
 				6FB40B0F091AF517002BAA09 /* ptprobe.cpp in Sources */,
+				E649A6FC2592630100218829 /* rsdl.cpp in Sources */,
 				E6CEFD5E232A987300929BA5 /* shock.cpp in Sources */,
 				E60E815A180AEFA70067E2E7 /* getnewbdry.cpp in Sources */,
 				E60E815B180AEFA70067E2E7 /* getnewibc.cpp in Sources */,
+				E649A6F5259262FE00218829 /* setup_preconditioner.cpp in Sources */,
 				E60E8155180AEFA70067E2E7 /* setup_preconditioner.cpp in Sources */,
 				6FB40B18091AF517002BAA09 /* tobasis.cpp in Sources */,
 				6F004387091F9BDA00A6F21E /* tadvance.cpp in Sources */,
@@ -1561,6 +1567,7 @@
 				E675F1F024537B13005EFD22 /* setup_preconditioner.cpp in Sources */,
 				6FB901D90A6C782300A4729C /* allocate.cpp in Sources */,
 				384ADBB021650563009FC4D3 /* allocate.cpp in Sources */,
+				E649A6EE259262FB00218829 /* minvrt.cpp in Sources */,
 				6FBDA4880F304D4200E5FB76 /* allocate.cpp in Sources */,
 				E6224ABA1A52C407002E3CD6 /* surface.cpp in Sources */,
 				6FBDA4890F304D4300E5FB76 /* setup_preconditioner.cpp in Sources */,
@@ -1590,6 +1597,7 @@
 				E6B7481A16169151008409F5 /* rsdl.cpp in Sources */,
 				E6CEFA29244A3F2000CD8BCE /* allocate.cpp in Sources */,
 				E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */,
+				E649A6E7259262F600218829 /* allocate.cpp in Sources */,
 				E6B7481B16169158008409F5 /* length.cpp in Sources */,
 				E6B7481C1616915D008409F5 /* setup_preconditioner.cpp in Sources */,
 				E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */,
