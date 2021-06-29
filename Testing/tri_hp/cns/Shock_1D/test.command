@@ -27,4 +27,4 @@ mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 cd ..
 
-#opendiff Results Baseline
+opendiff Results Baseline
