@@ -355,6 +355,8 @@ void shock::element_jacobian_opp(int indx, Array<FLT,2>& K) {
 	return;
 }
 
+#ifdef petsc
+
 #ifndef WAY1
 void shock::element_jacobian(int indx, Array<FLT,2>& K) {
     hp_coupled_bdry::element_jacobian(indx, K);
@@ -378,7 +380,6 @@ void shock::element_jacobian(int indx, Array<FLT,2>& K) {
 }
 #endif
 
-#ifdef petsc
 void shock::petsc_jacobian() {
     send_opposite();
     

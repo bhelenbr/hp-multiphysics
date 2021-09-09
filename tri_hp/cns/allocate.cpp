@@ -45,17 +45,16 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 	gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
     
 #ifdef Sutherland
-    if (!inmap.get("s1",gbl->s1))
+    *gbl->log << "#Sutherland is defined\n";
+    if (!inmap.get(gbl->idprefix +"_s1",gbl->s1))
         inmap.getwdefault("s1",gbl->s1,0.1458205e-5);
-    else
-        inmap.get("s1",gbl->s1);
-    if  (!inmap.get("s2",gbl->s2))
+    
+    if  (!inmap.get(gbl->idprefix +"_s2",gbl->s2))
         inmap.getwdefault("s2",gbl->s2,110.333333);
-    else
-        inmap.get("s2",gbl->s2);    
 #endif
 
 #ifdef MMS
+    *gbl->log << "MMS is defined\n";
     /* source term for MMS */
     std::string ibcname;
     keyword = gbl->idprefix + "_src";
