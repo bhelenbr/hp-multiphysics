@@ -23,10 +23,12 @@ xcode-select --install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install muparser
 brew install netcdf
-brew install libbinio
+#brew install libbinio
 brew install mpich
+#brew install open-mpi (open-mpi / mumps / petsc doesn't work)
 brew install cmake
 brew install pth
+brew install blitz
 #brew install python2 (not needed for blitz install anymore I think)
 
 % This doesn't work anymore
@@ -46,6 +48,7 @@ brew install doxygen
 #pip3 install numpy scipy matplotlib
 
 To update installed packages
+brew doctor 
 brew update
 brew outdated
 brew upgrade

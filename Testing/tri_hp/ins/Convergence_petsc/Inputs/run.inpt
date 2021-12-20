@@ -14,7 +14,7 @@ b0_type: ins
 #mesh_movement: coupled_deformable
 b0_filetype: 3
 b0_growth factor: 2.0
-b0_mesh: ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square16
+b0_mesh: ${HOME}/Codes/grids/SQUARE/INOUT/square16
 b0_rho: 1.0
 b0_mu: 0.0
 b0_s4_hp_type: inflow

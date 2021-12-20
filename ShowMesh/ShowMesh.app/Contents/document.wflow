@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>492</string>
+	<string>509</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -81,7 +81,13 @@
 				</array>
 				<key>arguments</key>
 				<dict/>
+				<key>isViewVisible</key>
+				<integer>1</integer>
+				<key>location</key>
+				<string>207.000000:68.000000</string>
 			</dict>
+			<key>isViewVisible</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>action</key>
@@ -161,14 +167,14 @@ fi
 source ${HOME}/.zshrc
 
 #DISPLAY=:0.0; export DISPLAY
-location="${HOME}/hp-multiphysics/ShowMesh"
+location="${HOME}/hp-multiphysics/bin"
 for file in "$@"; do
 	case "$file" in
       *.[e,n,s])  
-		"showmesh" "${file%.*}"
+		"${location}/showmesh" "${file%.*}"
 		;;
       *.grd)
-		"showgrid" "${file%.*}" &amp;
+		"${location}/showgrid" "${file%.*}" &amp;
 		;;
 
     esac
@@ -287,7 +293,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>425.500000:497.000000</string>
+				<string>425.500000:317.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -297,7 +303,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>6BAF9EC1-C10A-4279-B291-AF8B28B7BC5F</key>
+		<key>9C023F45-D8BB-4876-A6DC-4BEEEA384B71</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>

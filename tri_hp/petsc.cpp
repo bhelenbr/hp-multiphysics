@@ -440,8 +440,7 @@ void tri_hp::petsc_jacobian() {
 	const int im = basis::tri(log2p)->im();
 	const int tm = basis::tri(log2p)->tm();
 	
-	int vdofs = NV;
-	if (mmovement == coupled_deformable) vdofs += ND;
+	const int vdofs = NV +(mmovement == coupled_deformable)*ND;
 	int kn = 3*vdofs +(tm-3)*NV;
 	Array<int,1> loc_to_glo(kn);
 	Array<FLT,2> K(kn,kn);
@@ -1029,12 +1028,13 @@ void tri_hp::test_jacobian() {
     assert(sim::blks.myblock == 1);
     
     /* Get counts from other meshes */
-    Array<int,1> sndsizes(4*nblock);
+    Array<int,1> sndsizes(5*nblock);
     sndsizes = 0;
-    sndsizes(myid*4) = npnt;
-    sndsizes(myid*4+1) = nseg;
-    sndsizes(myid*4+2) = ntri;
-    sndsizes(myid*4+3) = jacobian_size;
+    sndsizes(myid*5) = npnt;
+    sndsizes(myid*5+1) = nseg;
+    sndsizes(myid*5+2) = ntri;
+    sndsizes(myid*5+3) = jacobian_size;
+    sndsizes(myid*5+4) = NV;
 
     
     Array<int,1> sizes(4*nblock);
@@ -1240,10 +1240,12 @@ void tri_hp::test_jacobian() {
 			}
 		}
 		else {
-            int const npnt_mpi = sizes(4*proc);
-            int const nseg_mpi = sizes(4*proc+1);
-            int const ntri_mpi = sizes(4*proc+2);
-            int const jacobian_size_mpi = sizes(4*proc+3);
+            const int npnt_mpi = sizes(5*proc);
+            const int nseg_mpi = sizes(5*proc+1);
+            const int ntri_mpi = sizes(5*proc+2);
+            const int jacobian_size_mpi = sizes(5*proc+3);
+            const int NV_mpi = sizes(5*proc+4);
+            const int vdofs_mpi = NV_mpi +(mmovement == tri_hp::coupled_deformable)*ND;
             
 			IS Irows;
 			IS Icols;
@@ -1300,16 +1302,16 @@ void tri_hp::test_jacobian() {
 				for(int j=0;j<ranges[proc+1]-ranges[proc];++j){
                     ostringstream nstr;
                     int col = j;
-                    if (col < npnt_mpi*vdofs) {
+                    if (col < npnt_mpi*vdofs_mpi) {
                         nstr << "b" << proc << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',';
                     }
-                    else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
-                        nstr << "b" << proc << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',';
+                    else if ((col -= npnt_mpi*vdofs_mpi) < nseg_mpi*sm0*NV_mpi) {
+                        nstr << "b" << proc << ',' << 's' << col/(NV_mpi*sm0) << ',' << (col % (sm0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                     }
-                    else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
-                        nstr << "b" << proc << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',';
+                    else if ((col -= nseg_mpi*NV_mpi*sm0) < ntri_mpi*im0*NV_mpi) {
+                        nstr << "b" << proc << ',' << 'i' << col/(NV_mpi*im0) << ',' << (col % (im0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                     }
-                    else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                    else if ((col -= ntri_mpi*NV_mpi*im0) < jacobian_size_mpi){
                         nstr << "b" << proc << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',';
                     }
                     desc = nstr.str();
@@ -1329,16 +1331,16 @@ void tri_hp::test_jacobian() {
                                 if (fabs(vals[cnt]) > DEBUG_ABS_TOL && cols[cnt] >= ranges[proc]) {
                                     int col = cols[cnt];
                                     if (!(fabs(testJ(i,col) -vals[cnt])/(fabs(testJ(i,col)) +fabs(vals[cnt])) < DEBUG_REL_TOL)) {
-                                        if (col < npnt_mpi*vdofs) {
-                                            nstr << "b" << proc << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',';
+                                        if (col < npnt_mpi*vdofs_mpi) {
+                                            nstr << "b" << proc << ',' << 'v' << col/vdofs_mpi << ',' << col % vdofs_mpi << ',';
                                         }
-                                        else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
-                                            nstr << "b" << proc << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',';
+                                        else if ((col -= npnt_mpi*vdofs_mpi) < nseg_mpi*sm0*NV_mpi) {
+                                            nstr << "b" << proc << ',' << 's' << col/(NV_mpi*sm0) << ',' << (col % (sm0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                                         }
-                                        else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
-                                            nstr << "b" << proc << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',';
+                                        else if ((col -= nseg_mpi*NV_mpi*sm0) < ntri_mpi*im0*NV_mpi) {
+                                            nstr << "b" << proc << ',' << 'i' << col/(NV_mpi*im0) << ',' << (col % (im0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                                         }
-                                        else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                                        else if ((col -= ntri_mpi*NV_mpi*im0) < jacobian_size_mpi){
                                             nstr << "b" << proc << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',';
                                         }
                                         *gbl->log << " (FS " << nstr.str() << ", "<< testJ(i,col) << ' ' << vals[cnt] << ") ";
@@ -1359,16 +1361,16 @@ void tri_hp::test_jacobian() {
                             int col = cols[cnt]-jacobian_start;
                             if (!(fabs(testJ(i,col) -vals[cnt])/(fabs(testJ(i,col)) +fabs(vals[cnt])) < DEBUG_REL_TOL)) {
                                 ostringstream nstr;
-                                if (col < npnt_mpi*vdofs) {
-                                    nstr << "b" << proc << ',' << 'v' << col/vdofs << ',' << col % vdofs << ',';
+                                if (col < npnt_mpi*vdofs_mpi) {
+                                    nstr << "b" << proc << ',' << 'v' << col/vdofs_mpi << ',' << col % vdofs_mpi << ',';
                                 }
-                                else if ((col -= npnt_mpi*vdofs) < nseg_mpi*sm0*NV) {
-                                    nstr << "b" << proc << ',' << 's' << col/(NV*sm0) << ',' << (col % (sm0*NV))/NV << ',' << col % NV << ',';
+                                else if ((col -= npnt_mpi*vdofs_mpi) < nseg_mpi*sm0*NV_mpi) {
+                                    nstr << "b" << proc << ',' << 's' << col/(NV_mpi*sm0) << ',' << (col % (sm0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                                 }
-                                else if ((col -= nseg_mpi*NV*sm0) < ntri_mpi*im0*NV) {
-                                    nstr << "b" << proc << ',' << 'i' << col/(NV*im0) << ',' << (col % (im0*NV))/NV << ',' << col % NV << ',';
+                                else if ((col -= nseg_mpi*NV_mpi*sm0) < ntri_mpi*im0*NV_mpi) {
+                                    nstr << "b" << proc << ',' << 'i' << col/(NV_mpi*im0) << ',' << (col % (im0*NV_mpi))/NV_mpi << ',' << col % NV_mpi << ',';
                                 }
-                                else if ((col -= ntri_mpi*NV*im0) < jacobian_size_mpi){
+                                else if ((col -= ntri_mpi*NV_mpi*im0) < jacobian_size_mpi){
                                     nstr << "b" << proc << ',' << 'e' << col/(ND*sm0) << ',' << (col % (sm0*ND))/ND << ',' << col % ND << ',';
                                 }
                                 desc = nstr.str();

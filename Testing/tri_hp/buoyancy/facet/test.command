@@ -41,6 +41,7 @@ cp ../Inputs/* .
 FULL_TEST=1
 
 HP="mpiexec -np 2 ${MF} tri_hp_petsc run.inpt"
+# -stop_for_debugger"
 
 # generate mesh and remove unnecessary data files
 tri_mesh generate

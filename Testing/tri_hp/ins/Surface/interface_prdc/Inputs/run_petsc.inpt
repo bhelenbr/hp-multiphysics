@@ -35,16 +35,17 @@ logfile: out
 nblock: 1 1
 # Mesh movement type: fixed, (un)coupled_rigid, (un)coupled_deformable
 mesh_movement: coupled_deformable
-# Default initial condition for all blocks (can be overridden block by block)
-# ibcN is initial condition for the nth variable
+# Default initial condition for all blocks (can be overridden block by block): 
+# ibcN is initial condition for the nth variable: 
 # Variable for incompressible flow with heat transfer are u,v,T,p: 
+RES: 0.25
 b0_ibc: symbolic
 b0_ibc0: 1.0
 b0_ibc1: 0.0
 b0_ibc2: 0.0
 # Physics type of block: 
 b0_type: ins
-# Input mesh filetype
+# Input mesh filetype: 
 # easymesh=0, gambit=1, tecplot=2, grid=3, text=4, binary=5, boundary=8: 
 b0_filetype: 3
 # Factor to increase memory allocation for mesh adaptation: 
@@ -54,7 +55,7 @@ b0_mesh: ./bot1
 # Some physical parameters: 
 b0_rho: 1.0
 b0_mu: 1.0e-1
-# Boundary side specifications
+# Boundary side specifications: 
 # This is the underlying mesh type used for a free-surface: 
 b0_s2_type: prdc
 b0_s2_r_type: fixed
@@ -94,8 +95,7 @@ b1_s5_phase1: 1
 # This way doesn't work: 
 #b1_s1_phase1: 1
 #b0_s2_phase1: 1
-# This way works: 
+# This way works (vertex passing 3 lines): 
 #b0_v1_type: prdc
 #b1_v1_type: prdc
-b0_v1_b1_v1_matching: 0 0 1 1 3 3 4 4
-RES: 0.25
+#b0_v1_b1_v1_matching: 0 0 1 1 3 3 4 4

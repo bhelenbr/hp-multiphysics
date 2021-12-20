@@ -83,8 +83,6 @@ void tri_mesh::init(input_map &input, void *gin) {
 }
 
 void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-	int i;
-
 	const tri_mesh& inmesh = dynamic_cast<const tri_mesh &>(in);
 
 	if (!initialized) {
