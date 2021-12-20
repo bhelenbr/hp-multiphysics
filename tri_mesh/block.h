@@ -64,7 +64,9 @@ struct block_global {
 	int substep; /**< For schemes requiring multiple solves per step */
 	int iteration; /**< Iterative counter within substep */
 	bool time_relaxation; /**< For relaxation schemes with adjustable time implicit term */
-	symbolic_function<2> dti_function;
+    symbolic_function<2> dti_function;
+    bool auto_timestep; /**< Adjust timestep based on convergence */
+    FLT auto_timestep_ratio; /**< factor to increase or decrease time step */
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
 	std::ostream *log; /**< log file stream */
@@ -171,17 +173,18 @@ class block {
 		}
 
 		/** Function to start thread */
-		virtual void go(input_map input);
+		void go(input_map input);
 
 		/** Initialization function */
-		virtual void init(input_map& input);
+		void init(input_map& input);
 
 		/** Outputs solution in various filetypes */
 		enum output_purpose {display, restart, debug};
 		void output(const std::string &filename, output_purpose why, int level = 0);
 
 		/** Shift to next implicit time step */
-		virtual void tadvance();
+		void tadvance();
+        void reset_timestep();
 
 		/** Iterate on all blocks */
 		void iterate(int mglvl, int niter);
@@ -210,6 +213,7 @@ class multigrid_interface {
 
 		/** Shift to next implicit time step */
 		virtual void tadvance() {}
+        virtual void reset_timestep() {}
 
 		void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
 		class comm_info;  /**< Utility class for figuring out communication */
@@ -217,7 +221,7 @@ class multigrid_interface {
 		virtual void matchboundaries() {} /**< Makes sure data on boundaries coinside */
 
 		/** Setup preconditioner */
-		virtual void setup_preconditioner() {}
+        virtual int setup_preconditioner() {return(0);}
 
 		/** Calculate residuals */
 		virtual void rsdl() {}

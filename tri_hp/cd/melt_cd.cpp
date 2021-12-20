@@ -277,7 +277,7 @@ void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
             basis::tri(x.log2p)->ptprobe1d(x.NV,up.data(),upd.data(),1.0,&x.uht(0)(0),MXTM);
             basis::tri(x.log2p)->ptprobe1d(x.ND,xp.data(),xpd.data(),1.0,&x.cht(0,0),MXTM);
 			jcb = sqrt(xpd(0)*xpd(0) +xpd(1)*xpd(1));
-            *x.gbl->log << "#DTDs " << upd(2)/jcb << std::endl;
+            *x.gbl->log << "#dT/ds " << upd(2)/jcb << std::endl;
             
 			break;
 		}
@@ -286,14 +286,14 @@ void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	}
 }
 
-void melt_cd::setup_preconditioner() {
+int melt_cd::setup_preconditioner() {
 	int indx,last_phase, mp_phase;
 	TinyVector<FLT,tri_mesh::ND> nrm,mvel,us,aPoint,dXdXi,dXdEta,dX;
 	FLT h,hsm,vslp,vnrm,dttang,dtnorm,sign_dir;
 	const int Tvar = c0_indices[0];
-	
-	hp_coupled_bdry::setup_preconditioner();
-	if (!gbl->symmetric && !is_master) return;
+
+	int err = hp_coupled_bdry::setup_preconditioner();
+	if (!gbl->symmetric && !is_master) return(err);
 
 	aPoint = 0.0;
 	if (x.NV > 1) {
@@ -449,7 +449,7 @@ void melt_cd::setup_preconditioner() {
 	}
 	
 #ifdef petsc
-	if (!gbl->precondition) return;
+	if (!gbl->precondition) return(err);
 #endif
 	
 	for(indx=0;indx<base.nseg+1;++indx) {
@@ -467,7 +467,7 @@ void melt_cd::setup_preconditioner() {
 		if (info != 0) {
 			*x.gbl->log << indx << ' ' << gbl->vdt(indx,Range::all(),Range::all()) << std::endl;
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
-			sim::abort(__LINE__,__FILE__,x.gbl->log);
+            err = 1;
 		}
 	}
 	
@@ -485,12 +485,12 @@ void melt_cd::setup_preconditioner() {
 #endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+                err = 1;
 			}
 		}
 	}
 	
-	return;
+	return(err);
 }
 
 void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {

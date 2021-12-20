@@ -667,7 +667,7 @@ void r_tri_mesh::element_jacobian(int tind, Array<FLT,2> K) {
 
 
 
-void r_tri_mesh::setup_preconditioner() {
+int r_tri_mesh::setup_preconditioner() {
 	int last_phase, mp_phase;
 	int i,p0,p1,sind;
 	Array<FLT,1> diag;
@@ -736,5 +736,5 @@ void r_tri_mesh::setup_preconditioner() {
 	for(i=0;i<npnt;++i)
 		diag(i) = r_cfl/diag(i);
 
-	return;
+	return(0);
 }

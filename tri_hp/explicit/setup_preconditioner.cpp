@@ -4,7 +4,7 @@
 
 // #define TESTING
 
-void tri_hp_explicit::setup_preconditioner() {
+int tri_hp_explicit::setup_preconditioner() {
 	int side;
     FLT jcb,dtstari = 0.0;
 	TinyVector<int,3> v;
@@ -17,7 +17,8 @@ void tri_hp_explicit::setup_preconditioner() {
 	Array<FLT,1> uht(ltm), lf(ltm);
 	Range all(0,ltm-1);
 	const FLT alpha = gbl->kcond/gbl->rhocv;
-
+    int err = 0;
+    
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 
@@ -37,8 +38,8 @@ void tri_hp_explicit::setup_preconditioner() {
 		if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		FLT h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
@@ -157,7 +158,7 @@ void tri_hp_explicit::setup_preconditioner() {
 					*gbl->log << "bfmi " << basis::tri(log2p)->bfmi(mb,mi) << std::endl;
 			for(int mi=0;mi<lim;++mi)
 				*gbl->log << "idiag " << basis::tri(log2p)->idiag(mi,0) << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
 #endif
 
 			indx = 3;
@@ -188,7 +189,7 @@ void tri_hp_explicit::setup_preconditioner() {
 		}
 	}
 	
-	tri_hp::setup_preconditioner();
+	err += tri_hp::setup_preconditioner();
 	
 	gbl->vprcn(Range(0,npnt-1),Range::all()) *= basis::tri(log2p)->vdiag();  // undoes vdiag term done by tri_hp::setup_preconditioner
 
@@ -200,5 +201,5 @@ void tri_hp_explicit::setup_preconditioner() {
 		gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 1.0/gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all());
 	}
 
-	return; 
+	return(err); 
 }

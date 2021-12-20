@@ -371,9 +371,10 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 
 #ifndef petsc
-template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
-
-	BASE::setup_preconditioner();
+template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
+    int err;
+    
+	err = BASE::setup_preconditioner();
 		
 	rsdl(BASE::gbl->nstage);
 
@@ -461,24 +462,25 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 #endif
 	if (info != 0) {
 		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
-		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+        err = 1;
 	}
 #endif
 
-	return;
+	return(err);
 }
 
 #else
 
-template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
+template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 	const int sm=basis::tri(BASE::log2p)->sm();
 	const int im=basis::tri(BASE::log2p)->im();
 	const int ndofs = (BASE::npnt +BASE::nseg*sm +BASE::ntri*im)*BASE::NV;
 	Array<FLT,2> jacobian_send(tmodes,tmodes);
 	Array<FLT,1> phi1D(ndofs), JPhi(ndofs);
-
+    int err;
+    
 	/* Calculate Full Jacobian */
-	BASE::setup_preconditioner();
+	err = BASE::setup_preconditioner();
 		
 	/* Now compress it using phi^T J phi */
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
@@ -602,11 +604,11 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	if (info != 0) {
 		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
-		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+        err = 1;
 	}
 #endif
 	
-	return;
+    return(err);
 }
 #endif
 

@@ -30,6 +30,6 @@ class tri_hp_explicit : public tri_hp_cd {
 		void init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d);
         void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void minvrt();
-		void setup_preconditioner();
+		int setup_preconditioner();
 };
 #endif

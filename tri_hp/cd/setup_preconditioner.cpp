@@ -3,12 +3,12 @@
 #include "../hp_boundary.h"
 
 
-void tri_hp_cd::setup_preconditioner() {
+int tri_hp_cd::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1;
 	TinyVector<int,3> v;
 	TinyVector<FLT,ND> mvel;
-
+    int err = 0;
 	FLT alpha = gbl->kcond/gbl->rhocv;
 
 	/***************************************/
@@ -37,8 +37,8 @@ void tri_hp_cd::setup_preconditioner() {
 		if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 
@@ -93,7 +93,5 @@ void tri_hp_cd::setup_preconditioner() {
 		}
 	}
 
-	tri_hp::setup_preconditioner();
-
-	return; 
+	return(err +tri_hp::setup_preconditioner());
 }

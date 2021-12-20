@@ -6,12 +6,13 @@
 // #define TIMEACCURATE
 #define REFINED_WAY
 
-void tri_hp_buoyancy::setup_preconditioner() {
+int tri_hp_buoyancy::setup_preconditioner() {
 	/* SET-UP DIAGONAL PRECONDITIONER */
 	int tind,i,j,side;
 	FLT jcb,jcb1,h,hmax,q,qmax,q2,qmax2,lam1,lam2,gam,rho,rhoav,nu,alpha;
 	TinyVector<int,3> v;
-	
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
@@ -179,14 +180,14 @@ void tri_hp_buoyancy::setup_preconditioner() {
 		if (!(h > 0.0)) { 
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		
 		if  (std::isnan(qmax)) { 
 			*gbl->log << "flow solution has nan's" << std::endl;
-			output("nan",tecplot);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 				
 #ifndef TIMEACCURATE
@@ -234,5 +235,5 @@ void tri_hp_buoyancy::setup_preconditioner() {
 		}
 	}
 		
-	tri_hp::setup_preconditioner();
+	return(tri_hp::setup_preconditioner()+err);
 }

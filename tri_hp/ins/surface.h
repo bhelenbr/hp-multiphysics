@@ -41,7 +41,7 @@ class surface : public hp_coupled_bdry {
 		
 		void init(input_map& inmap,void* gbl_in);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
-		void setup_preconditioner();
+		int setup_preconditioner();
 #ifndef petsc
 		// void rsdl(int stage); //!< applies mass flux preconditioner for multgrid case
 #endif

@@ -152,7 +152,7 @@ public:
 	void vdirichlet();
 #ifdef petsc
 	void petsc_jacobian_dirichlet();
-	void setup_preconditioner();
+	int setup_preconditioner();
 #endif
 };
 
@@ -179,7 +179,7 @@ public:
 #ifdef petsc
 	void petsc_jacobian();
 	void petsc_jacobian_dirichlet() {hp_vrtx_bdry::petsc_jacobian_dirichlet();}
-	void setup_preconditioner() {hp_vrtx_bdry::setup_preconditioner();}
+    int setup_preconditioner() {return(hp_vrtx_bdry::setup_preconditioner());}
 #endif
 };
 
@@ -195,7 +195,7 @@ public:
 	
 	void init(input_map& inmap,void* gbl_in);
 	void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
-	void setup_preconditioner();
+	int setup_preconditioner();
 };
 
 class hp_deformable_follower_pnt : public hp_deformable_free_pnt {
@@ -209,7 +209,7 @@ public:
 	void rsdl(int stage);
 #ifdef petsc
 	void petsc_jacobian();
-	void setup_preconditioner() {hp_deformable_fixed_pnt::setup_preconditioner();}
+	int setup_preconditioner() {return(hp_deformable_fixed_pnt::setup_preconditioner());}
 #endif
 };
 

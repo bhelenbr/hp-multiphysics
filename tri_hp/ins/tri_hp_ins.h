@@ -42,7 +42,7 @@ class tri_hp_ins : public tri_hp {
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		void error_estimator();
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
 

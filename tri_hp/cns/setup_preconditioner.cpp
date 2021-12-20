@@ -4,14 +4,15 @@
 
 //#define TIMEACCURATE
 
-void tri_hp_cns::setup_preconditioner() {
+int tri_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side;
 	FLT jcb,h,hmax,q,qmax,tstep,dtstari;
 	TinyVector<int,3> v;
 	Array<double,1> umax(NV),ubar(NV);
 	Array<double,2> tprcn(NV,NV),tau(NV,NV),dpdc(NV,NV);
-
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
@@ -158,14 +159,14 @@ void tri_hp_cns::setup_preconditioner() {
 		if (!(h > 0.0)) { 
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 
 		if  (std::isnan(qmax)) { 
 			*gbl->log << "flow solution has nan's" << std::endl;
-			output("nan",tecplot);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 
 		
@@ -234,7 +235,7 @@ void tri_hp_cns::setup_preconditioner() {
 		}
 	}
     
-	tri_hp::setup_preconditioner();
+	return(tri_hp::setup_preconditioner()+err);
 }
 
 void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {

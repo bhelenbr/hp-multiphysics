@@ -3,13 +3,14 @@
 #include "tri_hp_swe.h"
 #include "../hp_boundary.h"
 
-void tri_hp_swe::setup_preconditioner() {
+int tri_hp_swe::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,hmax,q,qmax,umax,vmax,c,c2,pre,rtpre,fmax,cflnow,alpha,alpha2,sigma;
 	FLT dx, dxmax, lambdamax;
 	TinyVector<int,3> v;
 	TinyVector<FLT,ND> mvel;
-
+    int err = 0;
+    
 	cflnow = 0.0;
 
 	/***************************************/
@@ -58,8 +59,8 @@ void tri_hp_swe::setup_preconditioner() {
 		if (!(jcb > 0.0) || !(hmax > 0.0)) {  // THIS CATCHES NAN'S TOO
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 
 		q = sqrt(qmax);
@@ -97,7 +98,6 @@ void tri_hp_swe::setup_preconditioner() {
 	}
 	// if (!coarse && log2p == log2pmax) *gbl->log << "#cfl is " << cflnow << std::endl;
 
-	tri_hp::setup_preconditioner();  
+	return(tri_hp::setup_preconditioner()+err);
 
-	return;
 }

@@ -83,7 +83,7 @@ class r_tri_mesh : public tri_mesh {
 			void rsdl();
 			void element_jacobian(int tind,Array<FLT,2> K); 
 			void update();
-			void setup_preconditioner();
+			int setup_preconditioner();
 			FLT maxres();
 		private:
 			bool isfrst;

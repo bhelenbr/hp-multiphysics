@@ -3,11 +3,12 @@
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 
-void tri_hp_ps::setup_preconditioner() {
+int tri_hp_ps::setup_preconditioner() {
 	int tind,i,j,side;
 	FLT jcb,h,hmax,lam1,gam,gami;
 	TinyVector<int,3> v;
-
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE PSEUDO-TIME STEP ****/
 	/***************************************/
@@ -30,8 +31,8 @@ void tri_hp_ps::setup_preconditioner() {
 		if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
@@ -55,7 +56,5 @@ void tri_hp_ps::setup_preconditioner() {
 			}
 		}
 	}
-	tri_hp::setup_preconditioner();
-
-	return;
+	return(tri_hp::setup_preconditioner()+err);
 }

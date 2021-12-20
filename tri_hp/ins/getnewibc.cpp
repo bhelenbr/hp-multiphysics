@@ -859,7 +859,7 @@ class force_coupling : public tri_hp_helper {
 					
 			}
 			
-			void setup_preconditioner() {
+			int setup_preconditioner() {
 				FLT delta = 1.0e-6;
 				
 				rsdl(0);
@@ -990,9 +990,9 @@ class force_coupling : public tri_hp_helper {
 #endif
 				if (info) {
 					*x.gbl->log << "Error inverting Jacobian for solid body coupling " << info << std::endl;
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
+                    return(1);
 				}
-				
+                return(0);
 			}
 
 			void update(int stage) {

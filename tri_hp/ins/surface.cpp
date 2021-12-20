@@ -183,7 +183,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	return;
 }
 
-void surface::setup_preconditioner() {
+int surface::setup_preconditioner() {
 	int indx,m,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
@@ -198,10 +198,10 @@ void surface::setup_preconditioner() {
 	TinyVector<FLT,2> mvel;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
-	
-	hp_coupled_bdry::setup_preconditioner();
+    
+	int err = hp_coupled_bdry::setup_preconditioner();
 
-	if (!gbl->symmetric && !is_master) return;
+	if (!gbl->symmetric && !is_master) return(err);
 	
 	drho = x.gbl->rho -gbl->rho2;
 	nu1 = x.gbl->mu/x.gbl->rho;
@@ -404,7 +404,7 @@ void surface::setup_preconditioner() {
 			GETRF(2*lsm,2*lsm,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+                err = 1;
 			}
 			/*
 			 \phi_n dx,dy*t = \phi_n Vt
@@ -470,7 +470,7 @@ void surface::setup_preconditioner() {
 		}
 	}
 
-	return;
+	return(err);
 }
 
 void surface_outflow::init(input_map& inmap,void* gbl_in) {

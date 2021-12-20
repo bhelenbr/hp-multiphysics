@@ -45,7 +45,7 @@ template<class BASE> class pod_simulate : public BASE {
 		void calc_coeffs();
 		void tadvance();
 		void rsdl(int stage);
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void update();
 		FLT maxres();
 

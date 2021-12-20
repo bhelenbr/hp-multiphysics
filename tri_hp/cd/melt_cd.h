@@ -52,7 +52,7 @@ namespace bdry_cd {
 		void delete_global_structure() { if(shared_owner) delete gbl;}
 		void init(input_map& inmap, void* gbl_in);
 		void output(const std::string& filename, tri_hp::filetype typ,int tlvl);
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 #if defined(petsc) && defined(ANALYTIC_JACOBIAN)
 		void element_jacobian(int indx, Array<FLT,2>& K);

@@ -1104,7 +1104,20 @@ void block::init(input_map &input) {
 		*gbl->log << "Guess extrapolation constant should between 0 and 1" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
-
+    
+    input.getwdefault("auto_timestep",gbl->auto_timestep,false);
+    if (gbl->auto_timestep) {
+        if (gbl->dti <= 0.0) {
+            *gbl->log << "Auto timestepping requires an initial time step"  << std::endl;
+            sim::abort(__LINE__,__FILE__,gbl->log);
+        }
+        if (gbl->time_scheme > 4) {
+            *gbl->log << "Auto timestepping can only be used with DIRK schemes"  << std::endl;
+            sim::abort(__LINE__,__FILE__,gbl->log);
+        }
+        input.getwdefault("auto_timestep_ratio",gbl->auto_timestep_ratio,2.0);
+    }
+    
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
 	if (gbl->time_relaxation) {
 		gbl->dti_function.init(input,"dtinv_function");
@@ -1271,7 +1284,7 @@ FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 	int vcount,extra_count = 0;
 	int gridlevel,gridlevelp;
 	FLT error,maxerror = 0.0;
-
+    
 	/* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
 	/* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */
 	gridlevel = MIN(MAX(lvl-extra_finest_levels,0),ngrid-1);
@@ -1279,8 +1292,14 @@ FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 
 	for (vcount=0;vcount<vw;++vcount) {
 
-		if (evaluate_preconditioner) grd(gridlevel)->setup_preconditioner();
-
+        if (evaluate_preconditioner) {
+            int err = grd(gridlevel)->setup_preconditioner();
+            int errorsum = 0;
+            sim::blks.allreduce(&err,&errorsum, 1, blocks::int_msg, blocks::sum);
+            if (errorsum)
+                throw 1;
+        }
+        
 		for(int iter=0;iter<itercrsn;++iter)
 			grd(gridlevel)->update();
 		
@@ -1288,13 +1307,20 @@ FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 			*gbl->log << gbl->iteration << ' ';
 			error = maxres(0);
 			*gbl->log << std::endl;
+            /* Check for nan's */
+            if (!(error > 0.0))
+                throw 1;
 		}
+    
 
 		/* THIS IS TO RUN A TWO-LEVEL ITERATION */
 		/* OR TO CONVERGE THE SOLUTION ON THE COARSEST MESH */
 		if (error_control_level == lvl) {
 			*gbl->log << "#error_control " << extra_count << ' ';
 			error = maxres(gridlevel);
+            /* Check for nan's */
+            if (!(error > 0.0))
+                throw 1;
 			maxerror = MAX(error,maxerror);
 			*gbl->log << ' ' << error/maxerror << std::endl;
 			if (error/maxerror > error_control_tolerance && error > absolute_tolerance && extra_count < ncycle) vcount = vw-2;
@@ -1322,7 +1348,13 @@ FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 
 		grd(gridlevelp)->mg_prolongate();
 
-		if (evaluate_preconditioner && iterrfne) grd(gridlevel)->setup_preconditioner();
+        if (evaluate_preconditioner && iterrfne) {
+            int err = grd(gridlevel)->setup_preconditioner();
+            int errorsum = 0;
+            sim::blks.allreduce(&err,&errorsum, 1, blocks::int_msg, blocks::sum);
+            if (errorsum)
+                throw 1;
+        }
 
 		for(int iter=0;iter<iterrfne;++iter)
 			grd(gridlevel)->update();
@@ -1405,27 +1437,60 @@ void block::go(input_map input) {
     }
     
 
+    bool time_success = false;
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
-		for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
-			*gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
-			tadvance();
+        try {
+            for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
+                *gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
+                tadvance();
 
-			maxerror = 0.0;
-			for(gbl->iteration=0;gbl->iteration<ncycle;++gbl->iteration) {
-				error = cycle(vw,0,!(gbl->iteration%prcndtn_intrvl));
-				maxerror = MAX(error,maxerror);
+                maxerror = 0.0;
+                for(gbl->iteration=0;gbl->iteration<ncycle;++gbl->iteration) {
+                    error = cycle(vw,0,!(gbl->iteration%prcndtn_intrvl));
+                    maxerror = MAX(error,maxerror);
 
-				if (debug_output) {
-					if (gbl->iteration % debug_output == 0) {
-						nstr.str("");
-						nstr << gbl->tstep << '_' << gbl->substep << '_' << gbl->iteration << std::flush;
-						outname = "debug" +nstr.str();
-						output(outname,block::debug);
-					}
-				}
-				if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
-			}
-		}
+                    if (debug_output) {
+                        if (gbl->iteration % debug_output == 0) {
+                            nstr.str("");
+                            nstr << gbl->tstep << '_' << gbl->substep << '_' << gbl->iteration << std::flush;
+                            outname = "debug" +nstr.str();
+                            output(outname,block::debug);
+                        }
+                    }
+                    if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
+                }
+                if (gbl->auto_timestep && gbl->iteration == ncycle) {
+                    throw 1;
+                }
+            }
+            time_success = true;
+        }
+        catch(int e) {
+            nstr.str("");
+            nstr << gbl->tstep << std::flush;
+            outname = "error" +nstr.str();
+            output(outname,block::display);
+            if (e == 1) {
+                *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
+                if (gbl->auto_timestep && time_success) {
+                    gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
+                    *gbl->log << "#Setting time step to " << gbl->dti << '\n';
+                    reset_timestep();
+                    time_success = false;
+                    --gbl->tstep;
+                    continue;
+                }
+                else {
+                    *gbl->log << "#convergence error.  Aborting\n";
+                    sim::abort(__LINE__,__FILE__,gbl->log);
+                }
+            }
+            else {
+                *gbl->log << "#unknown error caught\n";
+                sim::abort(__LINE__,__FILE__,gbl->log);
+                return;
+            }
+        }
 
 		/* OUTPUT DISPLAY FILES */
 		if (!((gbl->tstep)%out_intrvl)) {
@@ -1441,9 +1506,13 @@ void block::go(input_map input) {
 		}
 
 		/* OUTPUT RESTART FILES */
-		if (!((gbl->tstep)%(rstrt_intrvl*out_intrvl))) {
+		if (!((gbl->tstep)%(rstrt_intrvl))) {
 			outname = "rstrt" +nstr.str();
 			output(outname,block::restart);
+            if (gbl->auto_timestep) {
+                gbl->dti = gbl->dti/gbl->auto_timestep_ratio;
+                *gbl->log << "Setting time step to " << gbl->dti << '\n';
+            }
 		}
 	}
 	end_time = clock();
@@ -1720,6 +1789,19 @@ void block::tadvance() {
 	grd(0)->matchboundaries();
 
 	return;
+}
+
+void block::reset_timestep() {
+
+    for(int substep = gbl->substep; substep >= 0; --substep)
+        gbl->time -= gbl->cdirk(substep)/gbl->dti;
+    
+    if (gbl->esdirk) {
+        gbl->dti_prev = gbl->adirk(0,0)*sim::GRK4*gbl->dti;
+    }
+    grd(0)->reset_timestep();
+    
+    return;
 }
 
 void block::output(const std::string &filename, output_purpose why, int level) {

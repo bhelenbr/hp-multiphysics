@@ -23,7 +23,7 @@ class tri_hp_swirl : public tri_hp_ins {
 		void init(input_map& inmap, void *gin);  
 		tri_hp_swirl* create() { return new tri_hp_swirl(); }
 		void length();
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 };
 #endif

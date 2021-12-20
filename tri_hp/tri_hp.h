@@ -208,12 +208,13 @@ public:
     /** Shift to next implicit time step */
     void tadvance();
     virtual void calculate_unsteady_sources();
+    void reset_timestep();
     
     /** Makes sure vertex positions on boundaries coinside */
     void matchboundaries();
     
     /** Setup preconditioner */
-    void setup_preconditioner();
+    int setup_preconditioner();
     
     /** Calculate residuals */
     void rsdl() {rsdl(gbl->nstage);}
@@ -351,7 +352,7 @@ public:
             if (!x.coarse_flag) x.input(fname);
         }
     }
-    virtual void setup_preconditioner() {}
+    virtual int setup_preconditioner() {return(0);}
     virtual void rsdl(int stage) {}
     virtual void update(int stage) {}
     virtual void mg_restrict() {}

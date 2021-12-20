@@ -10,6 +10,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
+
 /* DIRK SCHEMES */
 #ifdef DIRK
 void tri_hp::tadvance() {
@@ -170,6 +171,57 @@ void tri_hp::calculate_unsteady_sources() {
 	return;
 }
 
+void tri_hp::reset_timestep() {
+    /* Rewind ugbd(1) to value from previous time step */
+    for (int substep = gbl->substep; substep >= 0; --substep) {
+        const int stage = substep +gbl->esdirk;
+        for (int s=0;s<stage;++s) {
+            ugbd(1).v(Range(0,npnt-1),Range::all()) -= gbl->adirk(stage,s)*ugbd(s+2).v(Range(0,npnt-1),Range::all());
+            if (basis::tri(log2p)->sm()) {
+                ugbd(1).s(Range(0,nseg-1),Range::all(),Range::all()) -= gbl->adirk(stage,s)*ugbd(s+2).s(Range(0,nseg-1),Range::all(),Range::all());
+                if (basis::tri(log2p)->im()) {
+                    ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) -= gbl->adirk(stage,s)*ugbd(s+2).i(Range(0,ntri-1),Range::all(),Range::all());
+                }
+            }
+            for(int i=0;i<npnt;++i)
+                for(int n=0;n<ND;++n)
+                    vrtxbd(1)(i)(n) -= gbl->adirk(stage,s)*vrtxbd(s+2)(i)(n);
+        }
+    }
+    
+    /* update ugbd(0) to be solution from previous time step */
+    ug.v(Range(0,npnt-1),Range::all()) = ugbd(1).v(Range(0,npnt-1),Range::all());
+    if (basis::tri(log2p)->sm()) {
+        ug.s(Range(0,nseg-1),Range::all(),Range::all()) = ugbd(1).s(Range(0,nseg-1),Range::all(),Range::all());
+        if (basis::tri(log2p)->im()) {
+            ug.i(Range(0,ntri-1),Range::all(),Range::all()) = ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all());
+        }
+    }
+
+    /* SAME FOR MESH INFORMATION */
+    for(int i=0;i<npnt;++i)
+        for(int n=0;n<ND;++n)
+            pnts(i)(n) = vrtxbd(1)(i)(n);
+    
+    
+    const int stage = gbl->esdirk;
+    if (stage) {
+        /* Rewind ugbd(1) */
+        ugbd(1).v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all()) -ugbd(stage+1).v(Range(0,npnt-1),Range::all())/gbl->adirk(stage-1,stage-1);
+        if (basis::tri(log2p)->sm()) {
+            ugbd(1).s(Range(0,nseg-1),Range::all(),Range::all()) = ug.s(Range(0,nseg-1),Range::all(),Range::all()) -ugbd(stage+1).s(Range(0,nseg-1),Range::all(),Range::all())/gbl->adirk(stage-1,stage-1);
+            if (basis::tri(log2p)->im()) {
+                ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all()) -ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all())/gbl->adirk(stage-1,stage-1);
+            }
+        }
+        for(int i=0;i<npnt;++i)
+            for(int n=0;n<ND;++n)
+                vrtxbd(1)(i)(n) = pnts(i)(n)-vrtxbd(stage+1)(i)(n)/gbl->adirk(stage-1,stage-1);
+    }
+    
+    for(int i=0;i<nebd;++i)
+        hp_ebdry(i)->reset_timestep();
+}
 #else
 
 void tri_hp::tadvance() {

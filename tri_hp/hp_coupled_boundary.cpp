@@ -2123,7 +2123,7 @@ void hp_deformable_fixed_pnt::petsc_jacobian_dirichlet() {
 #endif
 }
 
-void hp_deformable_fixed_pnt::setup_preconditioner() {
+int hp_deformable_fixed_pnt::setup_preconditioner() {
 	const int nfix = tri_mesh::ND;
 
 	/* Turn off preconditioner for r_tri_mesh */
@@ -2146,6 +2146,7 @@ void hp_deformable_fixed_pnt::setup_preconditioner() {
 			}
 		}
 	}
+    return(0);
 }
 
 #endif
@@ -2347,7 +2348,7 @@ void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> l
 	return;
 }
 
-void translating_surface::setup_preconditioner() {
+int translating_surface::setup_preconditioner() {
 	int indx,m,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> nrm;
 	FLT h, hsm;
@@ -2358,8 +2359,8 @@ void translating_surface::setup_preconditioner() {
 	TinyMatrix<FLT,4,MXGP> lf;
 	TinyVector<FLT,2> mvel;
 	int last_phase, mp_phase;
-	
-	hp_coupled_bdry::setup_preconditioner();
+    
+	int err = hp_coupled_bdry::setup_preconditioner();
 	
 	/**************************************************/
 	/* DETERMINE MOVEMENT TIME STEP              */
@@ -2513,7 +2514,7 @@ void translating_surface::setup_preconditioner() {
 			GETRF(2*lsm,2*lsm,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+                err = 1;
 			}
 			/*
 			 \phi_n dx,dy*t = \phi_n Vt
@@ -2586,7 +2587,7 @@ void translating_surface::setup_preconditioner() {
 			gbl->sdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
 		}
 	}
-	return;
+    return(err);
 }
 
 /* Routine to make sure r_gbl residual doesn't get screwed up at triple junction */

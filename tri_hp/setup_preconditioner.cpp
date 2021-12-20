@@ -6,17 +6,18 @@
 /* This is for a diagonal or block diagonal preconditioner where the block could be of size NVxNV */
 /* Physics classes should call this routine after they have finished setting up their diagonal preconditioner */
 
-void tri_hp::setup_preconditioner() {
+int tri_hp::setup_preconditioner() {
 	int i,last_phase,mp_phase;
+    int err = 0;
 	
 #ifndef petsc
 	/* SET UP TSTEP FOR MESH MOVEMENT */
 	if (mmovement == coupled_deformable && log2p == 0) {
-		r_tri_mesh::setup_preconditioner();
+		err = r_tri_mesh::setup_preconditioner();
 	}
 #else
 	if (mmovement == coupled_deformable) {
-		r_tri_mesh::setup_preconditioner();
+		err = r_tri_mesh::setup_preconditioner();
 	}
 #endif
 	
@@ -54,14 +55,14 @@ void tri_hp::setup_preconditioner() {
 	
 	/* Modify according to boundary conditions */
 	for(i=0;i<nebd;++i)
-		hp_ebdry(i)->setup_preconditioner();
+		err += hp_ebdry(i)->setup_preconditioner();
 	
 	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
 	for(i=0;i<nvbd;++i)
-		hp_vbdry(i)->setup_preconditioner();
+		err += hp_vbdry(i)->setup_preconditioner();
 	
 	/* SET UP TSTEP FOR HELPER */
-	helper->setup_preconditioner();
+	err += helper->setup_preconditioner();
 	
 	/* Invert Preconditioner */
 	if (gbl->diagonal_preconditioner) {
@@ -91,7 +92,7 @@ void tri_hp::setup_preconditioner() {
 	petsc_setup_preconditioner();
 #endif
 	
-	return;
+	return(err);
 }
 
 

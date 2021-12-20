@@ -36,7 +36,7 @@ class tri_hp_swe : public tri_hp_ins {
 		void init(input_map& inmap, void *gin);  
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void rsdl(int stage);
 		void calculate_unsteady_sources() {tri_hp::calculate_unsteady_sources();}
 };

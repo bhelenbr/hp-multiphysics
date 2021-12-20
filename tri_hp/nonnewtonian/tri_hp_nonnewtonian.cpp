@@ -466,12 +466,13 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	return;
 }
 
-void tri_hp_nonnewtonian::setup_preconditioner() {
+int tri_hp_nonnewtonian::setup_preconditioner() {
 	/* SET-UP DIAGONAL PRECONDITIONER */
 	int tind,i,j,side;
 	FLT jcb,h,hmax,q,qmax,lam1,gam;
 	TinyVector<int,3> v;
-		
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
@@ -558,15 +559,15 @@ void tri_hp_nonnewtonian::setup_preconditioner() {
 		if (!(h > 0.0)) { 
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
-			tri_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		
 		if  (std::isnan(qmax)) { 
 			*gbl->log << gbl->idprefix << ' ' << tind << std::endl;
 			*gbl->log << "flow solution has nan's " << qmax << std::endl;
-			output("nan",tecplot);
-			sim::abort(__LINE__,__FILE__,gbl->log);
+            err = 1;
+            break;
 		}
 		
 		gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
@@ -595,5 +596,5 @@ void tri_hp_nonnewtonian::setup_preconditioner() {
 		}
 	}
 	
-	tri_hp::setup_preconditioner();
+	return(tri_hp::setup_preconditioner()+err);
 }
