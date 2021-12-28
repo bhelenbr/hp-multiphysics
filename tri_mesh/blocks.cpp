@@ -1116,6 +1116,7 @@ void block::init(input_map &input) {
             sim::abort(__LINE__,__FILE__,gbl->log);
         }
         input.getwdefault("auto_timestep_ratio",gbl->auto_timestep_ratio,2.0);
+        input.getwdefault("auto_dti_min",gbl->auto_dti_min,1.0);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1472,7 +1473,7 @@ void block::go(input_map input) {
             output(outname,block::display);
             if (e == 1) {
                 *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
-                if (gbl->auto_timestep && time_success) {
+                if (gbl->auto_timestep && time_success && gbl->dti>gbl->auto_dti_min) {
                     gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
                     *gbl->log << "#Setting time step to " << gbl->dti << '\n';
                     reset_timestep();
@@ -1510,7 +1511,7 @@ void block::go(input_map input) {
 			outname = "rstrt" +nstr.str();
 			output(outname,block::restart);
             if (gbl->auto_timestep) {
-                gbl->dti = gbl->dti/gbl->auto_timestep_ratio;
+                if (gbl->dti>gbl->auto_dti_min) gbl->dti = gbl->dti/gbl->auto_timestep_ratio;
                 *gbl->log << "Setting time step to " << gbl->dti << '\n';
             }
 		}

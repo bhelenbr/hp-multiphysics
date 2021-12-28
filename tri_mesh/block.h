@@ -67,6 +67,7 @@ struct block_global {
     symbolic_function<2> dti_function;
     bool auto_timestep; /**< Adjust timestep based on convergence */
     FLT auto_timestep_ratio; /**< factor to increase or decrease time step */
+    FLT auto_dti_min; /**< minimum inverse time step for auto_timestep>*/
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
 	std::ostream *log; /**< log file stream */
