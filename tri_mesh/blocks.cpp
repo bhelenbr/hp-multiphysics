@@ -1471,25 +1471,18 @@ void block::go(input_map input) {
             nstr << gbl->tstep << std::flush;
             outname = "error" +nstr.str();
             output(outname,block::display);
-            if (e == 1) {
-                *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
-                if (gbl->auto_timestep && time_success) {
-                    gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
-                    *gbl->log << "#Setting time step to " << gbl->dti << '\n';
-                    reset_timestep();
-                    time_success = false;
-                    --gbl->tstep;
-                    continue;
-                }
-                else {
-                    *gbl->log << "#convergence error.  Aborting\n";
-                    sim::abort(__LINE__,__FILE__,gbl->log);
-                }
+            *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
+            if (gbl->auto_timestep && time_success) {
+                gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
+                *gbl->log << "#Setting time step to " << gbl->dti << '\n';
+                reset_timestep();
+                time_success = false;
+                --gbl->tstep;
+                continue;
             }
             else {
-                *gbl->log << "#unknown error caught\n";
+                *gbl->log << "#convergence error.  Aborting\n";
                 sim::abort(__LINE__,__FILE__,gbl->log);
-                return;
             }
         }
 

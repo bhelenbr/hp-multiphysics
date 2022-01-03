@@ -854,37 +854,38 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 }
 
 void hp_edge_bdry::reset_timestep() {
-    
-    /* Rewind ugbd(1) to value from previous time step */
-    for (int substep = x.gbl->substep; substep >= 0; --substep) {
-        const int stage = substep +x.gbl->esdirk;
-        for (int s=0;s<stage;++s) {
-            for(int j=0;j<base.nseg;++j) {
-                for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-                    for(int n=0;n<tri_mesh::ND;++n) {
-                        crvbd(1)(j,m)(n) -= x.gbl->adirk(stage,s)*crvbd(s+2)(j,m)(n);
+    if (x.p0 > 1 && curved) {
+        /* Rewind ugbd(1) to value from previous time step */
+        for (int substep = x.gbl->substep; substep >= 0; --substep) {
+            const int stage = substep +x.gbl->esdirk;
+            for (int s=0;s<stage;++s) {
+                for(int j=0;j<base.nseg;++j) {
+                    for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+                        for(int n=0;n<tri_mesh::ND;++n) {
+                            crvbd(1)(j,m)(n) -= x.gbl->adirk(stage,s)*crvbd(s+2)(j,m)(n);
+                        }
                     }
                 }
             }
         }
-    }
-    
-    /* update crvbd(0) to be solution from previous time step */
-    for(int j=0;j<base.nseg;++j) {
-        for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-            for(int n=0;n<tri_mesh::ND;++n) {
-                crvbd(0)(j,m)(n) = crvbd(1)(j,m)(n);
-            }
-        }
-    }
-    
-    const int stage = x.gbl->esdirk;
-    if (stage) {
-        /* Rewind ugbd(1) */
+        
+        /* update crvbd(0) to be solution from previous time step */
         for(int j=0;j<base.nseg;++j) {
             for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
                 for(int n=0;n<tri_mesh::ND;++n) {
-                    crvbd(1)(j,m)(n) = crvbd(0)(j,m)(n) -crvbd(stage+1)(j,m)(n)/x.gbl->adirk(stage-1,stage-1);
+                    crvbd(0)(j,m)(n) = crvbd(1)(j,m)(n);
+                }
+            }
+        }
+        
+        const int stage = x.gbl->esdirk;
+        if (stage) {
+            /* Rewind ugbd(1) */
+            for(int j=0;j<base.nseg;++j) {
+                for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+                    for(int n=0;n<tri_mesh::ND;++n) {
+                        crvbd(1)(j,m)(n) = crvbd(0)(j,m)(n) -crvbd(stage+1)(j,m)(n)/x.gbl->adirk(stage-1,stage-1);
+                    }
                 }
             }
         }
