@@ -1105,8 +1105,8 @@ void block::init(input_map &input) {
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
     
-    input.getwdefault("auto_timestep",gbl->auto_timestep,false);
-    if (gbl->auto_timestep) {
+    input.getwdefault("auto_timestep_tries",gbl->auto_timestep_tries,0);
+    if (gbl->auto_timestep_tries) {
         if (gbl->dti <= 0.0) {
             *gbl->log << "Auto timestepping requires an initial time step"  << std::endl;
             sim::abort(__LINE__,__FILE__,gbl->log);
@@ -1117,6 +1117,7 @@ void block::init(input_map &input) {
         }
         input.getwdefault("auto_timestep_ratio",gbl->auto_timestep_ratio,2.0);
         input.getwdefault("auto_dti_min",gbl->auto_dti_min,0.0);
+        input.getwdefault("auto_dti_max",gbl->auto_dti_max,gbl->dti*128.0);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1438,7 +1439,7 @@ void block::go(input_map input) {
     }
     
 
-    bool time_success = false;
+    int auto_time_step_failures = 0;
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
         try {
             for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
@@ -1460,11 +1461,11 @@ void block::go(input_map input) {
                     }
                     if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
                 }
-                if (gbl->auto_timestep && gbl->iteration == ncycle) {
+                if (gbl->auto_timestep_tries && gbl->iteration == ncycle) {
                     throw 1;
                 }
             }
-            time_success = true;
+            auto_time_step_failures = 0;
         }
         catch(int e) {
             nstr.str("");
@@ -1472,17 +1473,21 @@ void block::go(input_map input) {
             outname = "error" +nstr.str();
             output(outname,block::display);
             *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
-            if (gbl->auto_timestep && time_success) {
+            if (auto_time_step_failures < gbl->auto_timestep_tries) {
+                reset_timestep();
                 gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
                 *gbl->log << "#Setting time step to " << gbl->dti << '\n';
-                reset_timestep();
-                time_success = false;
+                if (gbl->dti > gbl->auto_dti_max) {
+                    *gbl->log << "dti is too large. Aborting" << std::endl;
+                    break;
+                }
+                ++auto_time_step_failures;
                 --gbl->tstep;
                 continue;
             }
             else {
                 *gbl->log << "#convergence error.  Aborting\n";
-                sim::abort(__LINE__,__FILE__,gbl->log);
+                break;
             }
         }
 
@@ -1503,7 +1508,7 @@ void block::go(input_map input) {
 		if (!((gbl->tstep)%(rstrt_intrvl))) {
 			outname = "rstrt" +nstr.str();
 			output(outname,block::restart);
-            if (gbl->auto_timestep) {
+            if (gbl->auto_timestep_tries) {
                 gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
                 *gbl->log << "Setting time step to " << gbl->dti << '\n';
             }
@@ -1536,6 +1541,12 @@ void block::tadvance() {
 		error=maxres();
 		*gbl->log << " and tstep " << gbl->tstep << ": " << (gbl->dti = gbl->dti_function.Eval(error,static_cast<FLT>(gbl->tstep))) << std::endl;
 	}
+    
+    if (gbl->substep == 0) {
+        /* create backup of dti_prev in case we need to reset the time step */
+        *gbl->log << "#time " << gbl->time << ", dti " << gbl->dti << ", dti_prev " << gbl->dti_prev << std::endl;
+        gbl->dti_prev_store = gbl->dti_prev;
+    }
     
     switch(gbl->time_scheme) {
         case(block_global::time_schemes::DIRK4): {
@@ -1790,9 +1801,8 @@ void block::reset_timestep() {
     for(int substep = gbl->substep; substep >= 0; --substep)
         gbl->time -= gbl->cdirk(substep)/gbl->dti;
     
-    if (gbl->esdirk) {
-        gbl->dti_prev = gbl->adirk(0,0)*sim::GRK4*gbl->dti;
-    }
+    gbl->dti_prev = gbl->dti_prev_store;
+
     grd(0)->reset_timestep();
     
     return;
