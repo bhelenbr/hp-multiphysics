@@ -44,8 +44,8 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 
 	gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
     
-#ifdef Sutherland
-    *gbl->log << "#Sutherland is defined\n";
+#ifdef SUTHERLAND
+    *gbl->log << "#SUTHERLAND is defined\n";
     if (!inmap.get(gbl->idprefix +"_s1",gbl->s1))
         inmap.getwdefault("s1",gbl->s1,0.1458205e-5);
     

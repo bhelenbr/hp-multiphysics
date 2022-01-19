@@ -21,18 +21,20 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	TinyMatrix<FLT,NV,NV> A,B;
-	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lmu = gbl->mu, rhorbd0, cjcb;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,NV> cv, df;
 	TinyMatrix<FLT,ND,ND> kcond;
 	TinyVector<FLT,NV> tres;
-	FLT lkcond = gbl->kcond;
-	FLT gam = gbl->gamma;
-	FLT gm1 = gam-1.0;
-	FLT ogm1 = 1.0/gm1;
-	FLT gogm1 = gam*ogm1;
-	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
+    TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
+    const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+	const FLT gam = gbl->gamma;
+	const FLT gm1 = gam-1.0;
+	const FLT ogm1 = 1.0/gm1;
+	const FLT gogm1 = gam*ogm1;
+#ifndef SUTHERLAND
+    const FLT lmu = gbl->mu;
+    const FLT lkcond = gbl->kcond;
+#endif
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -97,7 +99,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i = 0; i < lgpx; ++i) {
 			for(int j = 0; j < lgpn; ++j) {
-				double rho = u(0)(i,j)/u(NV-1)(i,j);
+				const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 				fluxx = rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(0)(i,j));
 				fluxy = rho*RAD(crd(0)(i,j))*(u(2)(i,j) -mvel(1)(i,j));
 
@@ -127,9 +129,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				cv(2,1)(i,j) +=  dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(0)(i,j);
 
 				/* ENERGY FLUX */
-                double E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
-                double new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
-                double new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
+                const FLT E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
+                const FLT new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
+                const FLT new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
                 
                 cv(3,0)(i,j) = +dcrd(1,1)(i,j)*new_fluxx -dcrd(0,1)(i,j)*new_fluxy;
                 cv(3,1)(i,j) = -dcrd(1,0)(i,j)*new_fluxx +dcrd(0,0)(i,j)*new_fluxy;
@@ -144,24 +146,23 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
                     
-#ifdef Sutherland
-                    Sutherland_visc(u(NV-1)(i,j));
-                    lkcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
-                    lmu = gbl->mu;
-//                    lkcond = gbl->kcond;
+#ifdef SUTHERLAND
+                    Sutherland(u(NV-1)(i,j));
+                    const FLT lmu = gbl->mu;
+                    const FLT lkcond = gbl->kcond;
 #endif
                     
-					double rho = u(0)(i,j)/u(NV-1)(i,j);
-					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
-					double mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
+					const FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
+                    const FLT mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
+					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
 
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
 					for(int n = 1; n < NV-1; ++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
-					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
+					const FLT e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef BODYFORCE
@@ -299,7 +300,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i = 0; i < lgpx; ++i) {
 			for(int j = 0; j < lgpn; ++j) {
-				double rho = u(0)(i,j)/u(NV-1)(i,j);
+				const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 				fluxx = rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(0)(i,j));
 				fluxy = rho*RAD(crd(0)(i,j))*(u(2)(i,j) -mvel(1)(i,j));
 				
@@ -329,9 +330,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				cv(2,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(0)(i,j);
 				
 				/* ENERGY FLUX */
-                double E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
-                double new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
-                double new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
+                const FLT E = u(3)(i,j)/gm1+0.5*(u(1)(i,j)*u(1)(i,j)+u(2)(i,j)*u(2)(i,j));
+                const FLT new_fluxx = E*fluxx+u(0)(i,j)*RAD(crd(0)(i,j))*u(1)(i,j);
+                const FLT new_fluxy = E*fluxy+u(0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
                 
                 cv(3,0)(i,j) = +ldcrd(1,1)*new_fluxx -ldcrd(0,1)*new_fluxy;
                 cv(3,1)(i,j) = -ldcrd(1,0)*new_fluxx +ldcrd(0,0)*new_fluxy;
@@ -346,24 +347,23 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
                     
-#ifdef Sutherland
-                    Sutherland_visc(u(NV-1)(i,j));
-                    lkcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
-                    lmu = gbl->mu;
-//                    lkcond = gbl->kcond;
+#ifdef SUTHERLAND
+                    Sutherland(u(NV-1)(i,j));
+                    const FLT lmu = gbl->mu;
+                    const FLT lkcond = gbl->kcond;
 #endif
                     
-					double rho = u(0)(i,j)/u(NV-1)(i,j);
-					cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
-					double mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
+					const FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
+					const FLT mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
+					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
 					
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
 					for(int n = 1; n < NV-1; ++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p)(tind,n,i,j);
-					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
+					const FLT e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p)(tind,NV-1,i,j);
 					
 #ifdef BODYFORCE
@@ -505,12 +505,10 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 }
 
 
-#ifdef Sutherland
-void tri_hp_cns::Sutherland_visc(FLT RT){
-    
+#ifdef SUTHERLAND
+void tri_hp_cns::Sutherland(FLT RT) {
     gbl->mu = gbl->s1*pow(RT,1.5)/(RT+gbl->s2);
-    
+    gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
     return;
-    
 }
 #endif

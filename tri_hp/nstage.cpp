@@ -18,22 +18,36 @@ void tri_hp::rsdl(int stage) {
 	if (mmovement == coupled_deformable) r_tri_mesh::rsdl(); 
 #endif
 
-
-	FLT oneminusbeta = 1.0-gbl->beta(stage);
-	gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-	gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
-
-	if (basis::tri(log2p)->sm()) {
-		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
-		gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) *= oneminusbeta;
-
-		if (basis::tri(log2p)->im()) {
-			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
-			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
-		}
-	}
-
-	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
+    if (stage<gbl->nstage) {
+        FLT oneminusbeta = 1.0-gbl->beta(stage);
+        gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+        gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
+        
+        if (basis::tri(log2p)->sm()) {
+            gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
+            gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) *= oneminusbeta;
+            
+            if (basis::tri(log2p)->im()) {
+                gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+                gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
+            }
+        }
+    }
+    else {
+        gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+        gbl->res_r.v(Range(0,npnt-1),Range::all()) = 0.0;
+        
+        if (basis::tri(log2p)->sm()) {
+            gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
+            gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all())=  0.0;
+            
+            if (basis::tri(log2p)->im()) {
+                gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+                gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+            }
+        }
+    }
+    Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV);
 	
 	for(int tind = 0; tind<ntri;++tind) {
 		

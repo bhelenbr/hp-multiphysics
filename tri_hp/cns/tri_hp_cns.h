@@ -14,8 +14,8 @@
 #include <blocks.h>
 #include <myblas.h>
 
-// #define MMS
-#define Sutherland
+//#define MMS
+//#define SUTHERLAND
 
 class tri_hp_cns : public tri_hp {
 	public:
@@ -26,7 +26,7 @@ class tri_hp_cns : public tri_hp {
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond, mu, gamma,R, prandtl;
-#ifdef Sutherland
+#ifdef SUTHERLAND
             FLT s1, s2;
 #endif
 
@@ -70,8 +70,8 @@ class tri_hp_cns : public tri_hp {
 		void project_res_side(int mode);
 		void project_res_interior();
 		void switch_variables(Array<double,1> pvu, Array<double,1> &a);
-#ifdef Sutherland
-        void Sutherland_visc(FLT RT);
+#ifdef SUTHERLAND
+        void Sutherland(FLT RT);
 #endif
 
 };

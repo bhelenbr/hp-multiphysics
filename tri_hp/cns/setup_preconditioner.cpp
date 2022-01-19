@@ -243,21 +243,24 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
 	
-	FLT gam = gbl->gamma;
-	FLT gm1 = gam-1.0;
-	FLT gogm1 = gam/gm1;
-	FLT pr = pvu(0);
-	FLT u = pvu(1);
-	FLT v = pvu(2);
-	FLT rt = pvu(3);
-	FLT rho = pr/rt;
-	FLT ke = 0.5*(u*u+v*v);
-	FLT c2 = gam*rt;
-	FLT c = sqrt(c2);
+	const FLT gam = gbl->gamma;
+	const FLT gm1 = gam-1.0;
+	const FLT gogm1 = gam/gm1;
+    const FLT pr = pvu(0);
+    const FLT u = pvu(1);
+    const FLT v = pvu(2);
+    const FLT rt = pvu(3);
+    const FLT rho = pr/rt;
+    const FLT ke = 0.5*(u*u+v*v);
+    const FLT c2 = gam*rt;
+    const FLT c = sqrt(c2);
 
-	FLT nu = gbl->mu/rho;
-	FLT cp = gogm1*gbl->R;
-	FLT alpha = gbl->kcond/(rho*cp);
+#ifdef SUTHERLAND
+    Sutherland(rt);
+#endif
+	const FLT nu = gbl->mu/rho;
+	const FLT cp = gogm1*gbl->R;
+	const FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
 //	FLT hdt = 0.25*pow(h*gbl->bd(0),2.0);
@@ -303,13 +306,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 //	FLT hdt = 0.5*h*gbl->bd(0)/c;
     //To steady state
-    FLT hdt = 0.0;
+    const FLT hdt = 0.0;
     
-	FLT umag = sqrt(u*u+v*v);
-	FLT M = MAX(umag/c,1.0e-5);
-	FLT nuh = 4.0*nu/(h*c);
+    const FLT umag = sqrt(u*u+v*v);
+    const FLT M = MAX(umag/c,1.0e-5);
+    const FLT nuh = 4.0*nu/(h*c);
 //    FLT nuh = 3.0*MAX(4.0*nu/(3.0*h*c),alpha/(h*c));
-	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
+    const FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
     FLT b2;
     
@@ -377,7 +380,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 //	A = temp;	
 //	matrix_absolute_value(A);
 	
-	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	const FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
 	V = 0.5*(u*(b2-1.0)+temp1)*rho, 0.5*(u*(b2-1.0)-temp1)*rho, 0.0, 0.0,
 	    1.0,1.0,0.0,0.0,
@@ -419,7 +422,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 //	matrix_absolute_value(B);
 	
 	
-	FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	const FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
 	V = 0.0, 0.0, 0.5*(v*(b2-1.0)+temp2)*rho, 0.5*(v*(b2-1.0)-temp2)*rho,
 		0.0, 1.0, 0.0, 0.0,

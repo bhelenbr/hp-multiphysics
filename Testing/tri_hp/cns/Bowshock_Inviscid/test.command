@@ -46,7 +46,7 @@ mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 RESTART=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt ntstep 1
-mod_map run.inpt time_scheme 1
+mod_map -c run.inpt auto_timestep_tries
 mod_map run.inpt dtinv 0.0
 mod_map run.inpt restart ${RESTART}
 mpiexec -np 2 ${HP} run.inpt ${PETSC}

@@ -1147,23 +1147,32 @@ void block::init(input_map &input) {
     double bodydflt[2] = {0.0,0.0};
     input.getwdefault("body_force",gbl->body.data(),2,bodydflt);
 
+#ifndef petsc
 	/* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
 	input.getwdefault("nstage",gbl->nstage,5);
 	if (gbl->nstage < 0) {
 		*gbl->log << "Number of stages must be positive" << std::endl;
 	}
-	gbl->alpha.resize(gbl->nstage+1);
-	gbl->beta.resize(gbl->nstage+1);
-	istringstream datastream;
+    gbl->alpha.resize(gbl->nstage+1);
+    gbl->beta.resize(gbl->nstage+1);
+    istringstream datastream;
 
-	/* LOAD COEFFICIENTS FOR IMAGINARY TERMS */
-	const FLT alpha_dflt[5] = {0.25, 1./6., .375, .5, 1.0};
-	input.getwdefault("alpha",gbl->alpha.data(),gbl->nstage,alpha_dflt);
-	gbl->alpha(gbl->nstage) = 1.0;
+    /* LOAD COEFFICIENTS FOR IMAGINARY TERMS */
+    const FLT alpha_dflt[5] = {0.25, 1./6., .375, .5, 1.0};
+    input.getwdefault("alpha",gbl->alpha.data(),gbl->nstage,alpha_dflt);
+    gbl->alpha(gbl->nstage) = 1.0;
 
-	const FLT beta_dflt[5] = {1.0, 0.0, 5./9., 0.0, 4./9.};
-	input.getwdefault("beta",gbl->beta.data(),gbl->nstage,beta_dflt);
-	gbl->beta(gbl->nstage) = 1.0;
+    const FLT beta_dflt[5] = {1.0, 0.0, 5./9., 0.0, 4./9.};
+    input.getwdefault("beta",gbl->beta.data(),gbl->nstage,beta_dflt);
+    gbl->beta(gbl->nstage) = 1.0;
+#else
+    gbl->nstage = 1;
+    gbl->alpha.resize(gbl->nstage+1);
+    gbl->beta.resize(gbl->nstage+1);
+    gbl->alpha = 1.0;
+    gbl->beta = 1.0;
+#endif
+
 
 	/* LOAD BASIC CONSTANTS FOR MULTIGRID */
 	input.getwdefault("itercrsn",itercrsn,1);

@@ -676,13 +676,17 @@ void tri_hp::petsc_rsdl() {
 		for(int i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(int n=0;n<NV;++n) {
-				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
-				else *gbl->log << "0.0 ";
+                if (fabs(gbl->res.v(i,n)) < DEBUG_TOL)
+                    *gbl->log << "0.0 ";
+                else
+                    *gbl->log << gbl->res.v(i,n) << ' ';
 			}
 			
 			for(int n=0;n<vdofs-NV;++n) {
-				if (fabs(r_tri_mesh::gbl->res(i)(n)) > DEBUG_TOL) *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
-				else *gbl->log << "0.0 ";
+				if (fabs(r_tri_mesh::gbl->res(i)(n)) < DEBUG_TOL)
+                    *gbl->log << "0.0 ";
+                else
+                    *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
 			}
 			*gbl->log << '\n';
 		}
@@ -691,8 +695,10 @@ void tri_hp::petsc_rsdl() {
 			for(int m=0;m<basis::tri(log2p)->sm();++m) {
 				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
-					else *gbl->log << "0.0 ";
+					if (fabs(gbl->res.s(i,m,n)) < DEBUG_TOL)
+                        *gbl->log << "0.0 ";
+                    else
+                        *gbl->log << gbl->res.s(i,m,n) << ' ';
 				}
 				*gbl->log << '\n';
 			}
@@ -703,8 +709,10 @@ void tri_hp::petsc_rsdl() {
 			for(int m=0;m<basis::tri(log2p)->im();++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
-					else *gbl->log << "0.0 ";
+					if (fabs(gbl->res.i(i,m,n)) < DEBUG_TOL)
+                        *gbl->log << "0.0 ";
+                    else
+                        *gbl->log << gbl->res.i(i,m,n) << ' ';
 				}
 				*gbl->log << '\n';
 			}
@@ -766,8 +774,10 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 		for(int i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(int n=0;n<vdofs;++n) {
-				if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
-				else *gbl->log << "0.0 ";
+				if (fabs(rv(ind)) < DEBUG_TOL)
+                    *gbl->log << "0.0 ";
+				else
+                    *gbl->log << rv(ind) << ' ';
 				++ind;
 			}
 			*gbl->log << '\n';
@@ -777,8 +787,10 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 			for(int m=0;m<basis::tri(log2p)->sm();++m) {
 				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
-					else *gbl->log << "0.0 ";
+                    if (fabs(rv(ind)) < DEBUG_TOL)
+                        *gbl->log << "0.0 ";
+                    else
+                        *gbl->log << rv(ind) << ' ';
 					++ind;
 				}
 				*gbl->log << '\n';
@@ -790,8 +802,10 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 			for(int m=0;m<basis::tri(log2p)->im();++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(rv(ind)) > DEBUG_TOL) *gbl->log << rv(ind) << ' ';
-					else *gbl->log << "0.0 ";
+                    if (fabs(rv(ind)) < DEBUG_TOL)
+                        *gbl->log << "0.0 ";
+                    else
+                        *gbl->log << rv(ind) << ' ';
 					++ind;
 				}
 				*gbl->log << '\n';
@@ -799,8 +813,10 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 		}
 		
 		for (int i = ind; i< rv.extent(firstDim); ++i) {
-			if (fabs(rv(i)) > DEBUG_TOL) *gbl->log << rv(i) << ' ';
-			else *gbl->log << "0.0 ";
+			if (fabs(rv(i)) < DEBUG_TOL)
+                *gbl->log << "0.0 ";
+            else
+                *gbl->log << rv(ind) << ' ';
 		}
 		
 		sim::finalize(__LINE__,__FILE__,gbl->log);

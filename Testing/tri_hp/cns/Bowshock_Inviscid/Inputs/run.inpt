@@ -12,9 +12,10 @@ absolute_tolerance: 1.0e-10
 #under_relaxation: 0.5
 relative_tolerance: 5.0e-8
 #Number of time steps: 
-ntstep: 300
+ntstep: 20
 #extrapolate: 1
-#time_scheme: 1
+time_scheme: 1
+auto_timestep_tries: 3
 #Inverse time step: 
 dtinv: cu*100
 # Name of file for output: 

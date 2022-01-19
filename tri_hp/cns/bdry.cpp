@@ -14,13 +14,14 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	TinyMatrix<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,NV-1,NV-1> visc;
 	TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> kcond;
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
-	FLT lkcond = x.gbl->kcond;
-	FLT lmu = x.gbl->mu;
-	FLT convect,jcb;
-	FLT gam = x.gbl->gamma;
-	FLT gm1 = gam-1.0;
-	FLT ogm1 = 1.0/gm1;
-	FLT gogm1 = gam*ogm1;
+#ifndef SUTHERLAND
+    const FLT lkcond = x.gbl->kcond;
+    const FLT lmu = x.gbl->mu;
+#endif
+	const FLT gam = x.gbl->gamma;
+	const FLT gm1 = gam-1.0;
+	const FLT ogm1 = 1.0/gm1;
+	const FLT gogm1 = gam*ogm1;
     
     FLT Pout, uout, RTout;
 	
@@ -73,11 +74,15 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
 				for (i=0;i<basis::tri(x.log2p)->gpx();++i) {
-					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					const FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
-
-					double mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-					double kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+#ifdef SUTHERLAND
+                    x.Sutherland(x.u(x.NV-1)(0,i));
+                    const FLT lmu = x.gbl->mu;
+                    const FLT lkcond = x.gbl->kcond;
+#endif
+					const FLT mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					const FLT kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -513,7 +518,10 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	fluxtemp = 0.5*(fluxleft+fluxright);
 	
-	FLT nu = x.gbl->mu/rho;
+#ifdef SUTHERLAND
+    x.Sutherland(rt);
+#endif
+	const FLT nu = x.gbl->mu/rho;
 //	FLT cp = gogm1*x.gbl->R;
 //	FLT alpha = x.gbl->kcond/(rho*cp);
 	FLT h = side_length; 
