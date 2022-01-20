@@ -1118,6 +1118,7 @@ void block::init(input_map &input) {
         input.getwdefault("auto_timestep_ratio",gbl->auto_timestep_ratio,2.0);
         input.getwdefault("auto_dti_min",gbl->auto_dti_min,0.0);
         input.getwdefault("auto_dti_max",gbl->auto_dti_max,gbl->dti*128.0);
+        input.getwdefault("auto_timestep_maxtime",gbl->auto_timestep_maxtime,0.0);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1140,7 +1141,7 @@ void block::init(input_map &input) {
 	
 	ntstep += nstart +1;
 	gbl->time = 0.0;
-	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
+//	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
 
 	/* OTHER UNIVERSAL CONSTANTS */
 	input.getwdefault("gravity",gbl->g,0.0);
@@ -1499,7 +1500,7 @@ void block::go(input_map input) {
                 break;
             }
         }
-
+        
 		/* OUTPUT DISPLAY FILES */
 		if (!((gbl->tstep)%out_intrvl)) {
 			nstr.str("");
@@ -1522,6 +1523,11 @@ void block::go(input_map input) {
                 *gbl->log << "Setting time step to " << gbl->dti << '\n';
             }
 		}
+        
+        if ((gbl->auto_timestep_maxtime>0.) && (gbl->time > gbl->auto_timestep_maxtime)) {
+            *gbl->log << "Auto timestepping reached the maximum time specified\n";
+            break;
+        }
 	}
 	end_time = clock();
 	*gbl->log << "that took " << static_cast<double>((end_time - begin_time))/ CLOCKS_PER_SEC << " cpu time" << std::endl;

@@ -67,8 +67,9 @@ struct block_global {
     symbolic_function<2> dti_function;
     int auto_timestep_tries; /**< number of times to time step to be reduced before failure */
     FLT auto_timestep_ratio; /**< factor to increase or decrease time step */
-    FLT auto_dti_min, auto_dti_max; /**< minimum & maximum inverse time step for auto_timestep>*/
+    FLT auto_dti_min, auto_dti_max; /**< minimum & maximum inverse time step for auto_timestep */
     FLT dti_prev_store; /**< storage for dti_prev in case time step needs to be reset */
+    FLT auto_timestep_maxtime; /**< maximum time step before time stepping stops */
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
 	std::ostream *log; /**< log file stream */
