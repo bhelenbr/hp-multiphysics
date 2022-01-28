@@ -722,8 +722,8 @@
 					"$(mpi_threads)",
 					MY_SPARSE,
 					MPISRC,
-					petsc,
 					METIS,
+					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -740,6 +740,7 @@
 					MY_SPARSE,
 					MPISRC,
 					METIS,
+					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;

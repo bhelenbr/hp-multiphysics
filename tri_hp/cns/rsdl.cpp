@@ -11,6 +11,7 @@
 #include "../hp_boundary.h"
 
 //#define BODYFORCE
+#define CALC_TAU2
 
 void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 
@@ -244,24 +245,46 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
-
+            
+#ifdef CALC_TAU2
+            FLT hmax = 0.25*area(tind)/(inscribedradius(tind)*(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)));
+#endif
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(int i=0;i<lgpx;++i) {
 				for(int j=0;j<lgpn;++j) {
 					
 					df(0,0)(i,j) = 0.0;
 					df(0,1)(i,j) = 0.0;
-					
-					tres = 0.0;
-					for(int m = 0; m < NV; ++m)
-						for(int n = 0; n < NV; ++n)							
-							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+
+
 
 					FLT pr = u(0)(i,j);
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
-					FLT rt = u(3)(i,j);	
-		
+					FLT rt = u(3)(i,j);
+#ifdef CALC_TAU2
+                    Array<FLT,1> pvu(NV);
+                    Array<FLT,2> tau(NV,NV), P(NV,NV);
+                    FLT tstep;
+                    pvu(0) = pr;
+                    pvu(1) = uv;
+                    pvu(2) = vv;
+                    pvu(3) = rt;
+                    FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+                    calculate_tau(pvu,hmax,P,tau,tstep);
+                    tau *= adis/cjcb;
+                    
+                    tres = 0.0;
+                    for(int m = 0; m < NV; ++m)
+                        for(int n = 0; n < NV; ++n)
+                            tres(m) += tau(m,n)*res(n)(i,j);
+#else
+                    tres = 0.0;
+                    for(int m = 0; m < NV; ++m)
+                        for(int n = 0; n < NV; ++n)
+                            tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+#endif
+                    
 					FLT rho = pr/rt;
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
@@ -446,6 +469,10 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
+         
+#ifdef CALC_TAU2
+            FLT hmax = 0.25*area(tind)/(inscribedradius(tind)*(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)));
+#endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(int i=0;i<lgpx;++i) {
@@ -454,15 +481,32 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					df(0,0)(i,j) = 0.0;
 					df(0,1)(i,j) = 0.0;
 					
-					tres = 0.0;
-					for(int m = 0; m < NV; ++m)
-						for(int n = 0; n < NV; ++n)							
-							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
-					
 					FLT pr = u(0)(i,j);
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
-					FLT rt = u(3)(i,j);	
+					FLT rt = u(3)(i,j);
+#ifdef CALC_TAU2
+                    Array<FLT,1> pvu(NV);
+                    Array<FLT,2> tau(NV,NV), P(NV,NV);
+                    FLT tstep;
+                    pvu(0) = pr;
+                    pvu(1) = uv;
+                    pvu(2) = vv;
+                    pvu(3) = rt;
+                    FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+                    calculate_tau(pvu,hmax,P,tau,tstep);
+                    tau *= adis/cjcb;
+                    
+                    tres = 0.0;
+                    for(int m = 0; m < NV; ++m)
+                        for(int n = 0; n < NV; ++n)
+                            tres(m) += tau(m,n)*res(n)(i,j);
+#else
+                    tres = 0.0;
+                    for(int m = 0; m < NV; ++m)
+                        for(int n = 0; n < NV; ++n)
+                            tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+#endif
 
 					FLT rho = pr/rt;
 					FLT ke = 0.5*(uv*uv+vv*vv);

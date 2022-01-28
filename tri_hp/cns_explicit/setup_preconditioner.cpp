@@ -143,7 +143,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		FLT tstep;
 		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
-		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
+		calculate_tau(umax,hmax,tprcn,tau,tstep);
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
@@ -188,7 +188,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	return(tri_hp::setup_preconditioner()+err);
 }
 
-void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns_explicit::calculate_tau(Array<double,1> cvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<FLT,2> P(NV,NV), A(NV,NV), V(NV,NV), VINV(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);

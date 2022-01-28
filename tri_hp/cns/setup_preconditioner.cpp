@@ -170,7 +170,7 @@ int tri_hp_cns::setup_preconditioner() {
 		}
 
 		
-		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
+		calculate_tau(umax,hmax,tprcn,tau,tstep);
 
 		dtstari = 1.0/tstep;
 		
@@ -238,7 +238,7 @@ int tri_hp_cns::setup_preconditioner() {
 	return(tri_hp::setup_preconditioner()+err);
 }
 
-void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns::calculate_tau(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);

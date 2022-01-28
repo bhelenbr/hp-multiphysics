@@ -742,7 +742,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
-			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << ", E = " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << std::endl;
+            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << ", E = " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << ", SOLUTIONTIME = " << gbl->time  << std::endl;
 
 			/* VERTEX MODES */
 			for(i=0;i<npnt;++i) {

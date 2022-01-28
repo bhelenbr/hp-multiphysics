@@ -37,20 +37,39 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 
 	double prandtl;
 	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
-	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
+	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.716e-5);
 	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",gbl->prandtl,0.713);
-	if (!inmap.get(gbl->idprefix + "_R",gbl->R)) inmap.getwdefault("R",gbl->R,287.058);
+	if (!inmap.get(gbl->idprefix + "_Rgas",gbl->R)) inmap.getwdefault("Rgas",gbl->R,287.058);
 
-
-	gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
+    /* Pr = mu/(k/cp) with cp = gamma/(gamma-1)*R */
+	gbl->kcond = gbl->mu/gbl->prandtl*gbl->R*gbl->gamma/(gbl->gamma-1.0);
     
 #ifdef SUTHERLAND
-    *gbl->log << "#SUTHERLAND is defined\n";
-    if (!inmap.get(gbl->idprefix +"_s1",gbl->s1))
-        inmap.getwdefault("s1",gbl->s1,0.1458205e-5);
+    /*
+    Formula is
+    mu0*(T/T0)^(3/2)*(T0+C)/(T+C)
+
+    For air from CFD on-line
+    https://www.cfd-online.com/Wiki/Sutherland%27s_law
+    Also agrees with COMSOL
+    https://doc.comsol.com/5.5/doc/com.comsol.help.cfd/cfd_ug_fluidflow_high_mach.08.27.html
+    mu0 = 1.716e-5; % [kg/(m s)]
+    T0 = 273.15 % [K]
+    C = 110.4; % [K]
+    R = 8314/28.97;
+    */
     
-    if  (!inmap.get(gbl->idprefix +"_s2",gbl->s2))
-        inmap.getwdefault("s2",gbl->s2,110.333333);
+    *gbl->log << "#SUTHERLAND is defined\n";
+    FLT T0,C;
+    if (!inmap.get(gbl->idprefix +"_Sutherland_T0",T0))
+        inmap.getwdefault("Sutherland_T0",T0,273.15);
+    
+    if  (!inmap.get(gbl->idprefix +"_Sutherland_C",C))
+        inmap.getwdefault("Sutherland_C",C,110.4);
+    
+    /* Now convert so they can be used with RT instead of T */
+    gbl->s1 = gbl->mu/pow(gbl->R*T0,1.5)*(T0+C)*gbl->R;
+    gbl->s2 = gbl->R*C;
 #endif
 
 #ifdef MMS

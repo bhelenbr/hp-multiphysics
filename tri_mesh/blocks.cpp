@@ -1118,7 +1118,7 @@ void block::init(input_map &input) {
         input.getwdefault("auto_timestep_ratio",gbl->auto_timestep_ratio,2.0);
         input.getwdefault("auto_dti_min",gbl->auto_dti_min,0.0);
         input.getwdefault("auto_dti_max",gbl->auto_dti_max,gbl->dti*128.0);
-        input.getwdefault("auto_timestep_maxtime",gbl->auto_timestep_maxtime,0.0);
+        input.getwdefault("auto_timestep_maxtime",gbl->auto_timestep_maxtime,-1.0);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1141,7 +1141,7 @@ void block::init(input_map &input) {
 	
 	ntstep += nstart +1;
 	gbl->time = 0.0;
-//	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
+	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
 
 	/* OTHER UNIVERSAL CONSTANTS */
 	input.getwdefault("gravity",gbl->g,0.0);
@@ -1524,9 +1524,11 @@ void block::go(input_map input) {
             }
 		}
         
-        if ((gbl->auto_timestep_maxtime>0.) && (gbl->time > gbl->auto_timestep_maxtime)) {
-            *gbl->log << "Auto timestepping reached the maximum time specified\n";
-            break;
+        if (gbl->auto_timestep_tries) {
+            if (gbl->auto_timestep_maxtime > 0.0 && gbl->time > gbl->auto_timestep_maxtime) {
+                *gbl->log << "Auto timestepping reached the maximum time specified\n";
+                break;
+            }
         }
 	}
 	end_time = clock();
