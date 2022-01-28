@@ -247,6 +247,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if ((retval = nc_def_dim(ncid, "NV", NV, &NV_id))) ERR(retval);
 			if ((retval = nc_def_dim(ncid, "sm0", sm0, &sm0_id))) ERR(retval);
 			if ((retval = nc_def_dim(ncid, "im0", im0, &im0_id))) ERR(retval);
+            
+            int time_id;
+            if ((retval = nc_def_var(ncid,"time",NC_DOUBLE,0,dims,&time_id))) ERR(retval);
 			
 			int ugv_id,ugs_id,ugi_id;
 			dims[0] = npnt_id;
@@ -265,7 +268,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			
 			if ((retval = nc_enddef(ncid))) ERR(retval);
 			
+            
 			size_t index[3];
+            nc_put_var1_double(ncid,time_id,index,&gbl->time);
+
 			for(i=0;i<npnt;++i) {
 				index[0] = i;
 				for(n=0;n<NV;++n) {
@@ -1689,10 +1695,13 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
 			pin = dimreturn+1;
 			pmin = MIN(p0,pin);
-			
-			int var_id;
+            
+            int var_id;
+            size_t index[3];
+            if ((retval = nc_inq_varid (ncid, "time", &var_id))) ERR(retval);
+            nc_get_var1_double(ncid,var_id,index,&gbl->time);
+            
 			if ((retval = nc_inq_varid (ncid, "ugv", &var_id))) ERR(retval);
-			size_t index[3];
 			/* POINT INFO */
 			for(i=0;i<npnt;++i) {
 				index[0]= i;

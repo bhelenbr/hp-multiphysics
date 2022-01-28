@@ -140,6 +140,13 @@
 		6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		E632EA7E27A371220013B0CC /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA7F27A3713F0013B0CC /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA8027A371470013B0CC /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA8127A3714F0013B0CC /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA8227A371560013B0CC /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA8327A3715E0013B0CC /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E632EA8427A371640013B0CC /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
@@ -357,6 +364,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E632EA8427A371640013B0CC /* boundary.h in Headers */,
+				E632EA8227A371560013B0CC /* block.h in Headers */,
+				E632EA7F27A3713F0013B0CC /* tri_boundary.h in Headers */,
+				E632EA8127A3714F0013B0CC /* r_tri_boundary.h in Headers */,
+				E632EA8027A371470013B0CC /* r_tri_mesh.h in Headers */,
+				E632EA8327A3715E0013B0CC /* blocks.h in Headers */,
+				E632EA7E27A371220013B0CC /* tri_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
