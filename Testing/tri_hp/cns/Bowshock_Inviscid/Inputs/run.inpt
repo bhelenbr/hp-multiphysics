@@ -51,6 +51,7 @@ blocktype: cns
 mesh_movement: coupled_deformable
 mu: 0
 prandtl: 1
+Rgas: 1/gamma
 # Initial and boundary condition function: 
 M: 3
 gamma: 1.4

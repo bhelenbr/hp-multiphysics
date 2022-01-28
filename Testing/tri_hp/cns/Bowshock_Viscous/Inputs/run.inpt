@@ -11,10 +11,11 @@ absolute_tolerance: 1.0e-7
 relative_tolerance: 5.0e-7
 #under_relaxation: 0.5
 #Number of time steps: 
-ntstep: 1000
+ntstep: 20
 #Inverse time step: 
 dtinv: (cu+uu)*20
 time_scheme: 1
+auto_timestep_tries: 3
 # Name of file for output: 
 logfile: output
 # Number of mesh blocks for each processor: 
@@ -26,25 +27,21 @@ growth factor: 10
 #Physical properties: 
 blocktype: cns
 mesh_movement: coupled_deformable
-#mu: 0.0013364
-#mu: 6.682e-4
-mu: 2e-3
-#mu: 0
-prandtl: 0.7
-#prandtl: 1
-# Initial and boundary condition function: 
-#M: 17.636
-#M: 3
-M: 10
+Reynolds: 5000
+mu: 1/Reynolds*rhou*uu*2*R
+Sutherland_T0: 273.15/300
+Sutherland_C: 110.4/300
+Rgas: 1/gamma
 gamma: 1.4
-rhou: 1.4
-#uu: 17.636
-#uu: 3
-uu: 10
+# Initial and boundary condition function: 
+M: 10
+Tu: 1
+rhou: 1
+cu: sqrt(gamma*Rgas*Tu)
+pu: rhou*Rgas*Tu
+uu: M*cu
 vu: 0
-cu: uu/M
-RTu: cu^2/gamma
-pu: rhou*RTu
+RTu: Rgas*Tu
 b0_ibc: symbolic
 #Upstream props: 
 b0_ibc0: pu
