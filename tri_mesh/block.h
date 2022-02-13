@@ -70,6 +70,7 @@ struct block_global {
     FLT auto_dti_min, auto_dti_max; /**< minimum & maximum inverse time step for auto_timestep */
     FLT dti_prev_store; /**< storage for dti_prev in case time step needs to be reset */
     FLT auto_timestep_maxtime; /**< maximum time step before time stepping stops */
+    bool out_dti_min; /**< to use auto time-stepping but ensure output at dti_min intervals; only makes sense for an integer auto_timestep_ratio. Setting restart_interval other than 1 can mess it up too.  */
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
 	std::ostream *log; /**< log file stream */

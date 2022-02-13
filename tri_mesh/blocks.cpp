@@ -1119,6 +1119,7 @@ void block::init(input_map &input) {
         input.getwdefault("auto_dti_min",gbl->auto_dti_min,0.0);
         input.getwdefault("auto_dti_max",gbl->auto_dti_max,gbl->dti*128.0);
         input.getwdefault("auto_timestep_maxtime",gbl->auto_timestep_maxtime,-1.0);
+        input.getwdefault("out_dti_min",gbl->out_dti_min,false);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1450,6 +1451,8 @@ void block::go(input_map input) {
     
 
     int auto_time_step_failures = 0;
+    int c_dti_min = 1;
+    int k = 0;
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
         try {
             for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
@@ -1476,6 +1479,7 @@ void block::go(input_map input) {
                 }
             }
             auto_time_step_failures = 0;
+            if (gbl->out_dti_min) ++k;
         }
         catch(int e) {
             nstr.str("");
@@ -1493,6 +1497,11 @@ void block::go(input_map input) {
                 }
                 ++auto_time_step_failures;
                 --gbl->tstep;
+                if (gbl->out_dti_min) {
+                    c_dti_min *= static_cast<int>((gbl->auto_timestep_ratio +__FLT_EPSILON__));
+                    k *= static_cast<int>((gbl->auto_timestep_ratio +__FLT_EPSILON__));
+                }
+               
                 continue;
             }
             else {
@@ -1502,12 +1511,19 @@ void block::go(input_map input) {
         }
         
 		/* OUTPUT DISPLAY FILES */
-		if (!((gbl->tstep)%out_intrvl)) {
+		if (!((gbl->tstep)%out_intrvl) && !(gbl->out_dti_min)) {
 			nstr.str("");
 			nstr << gbl->tstep << std::flush;
 			outname = "data" +nstr.str();
 			output(outname,block::display);
 		}
+        else if (gbl->out_dti_min && (c_dti_min==k)) {
+            nstr.str("");
+            nstr << gbl->tstep << std::flush;
+            outname = "data" +nstr.str();
+            output(outname,block::display);
+        }
+        
 
 		/* ADAPT MESH */
 		if (gbl->adapt_interval && !(gbl->tstep%gbl->adapt_interval)) {
@@ -1515,14 +1531,24 @@ void block::go(input_map input) {
 		}
 
 		/* OUTPUT RESTART FILES */
-		if (!((gbl->tstep)%(rstrt_intrvl))) {
+		if (!((gbl->tstep)%(rstrt_intrvl)) && !(gbl->out_dti_min)) {
 			outname = "rstrt" +nstr.str();
 			output(outname,block::restart);
             if (gbl->auto_timestep_tries) {
                 gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
                 *gbl->log << "Setting time step to " << gbl->dti << '\n';
             }
-		}
+        }
+        else if (gbl->auto_timestep_tries && (gbl->out_dti_min) && (c_dti_min==k)) {
+            outname = "rstrt" +nstr.str();
+            output(outname,block::restart);
+            gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
+            *gbl->log << "Setting time step to " << gbl->dti << '\n';
+            if (c_dti_min != 1) c_dti_min/= static_cast<int>(gbl->auto_timestep_ratio +__FLT_EPSILON__);
+            k = 0;
+        }
+   
+		
         
         if (gbl->auto_timestep_tries) {
             if (gbl->auto_timestep_maxtime > 0.0 && gbl->time > gbl->auto_timestep_maxtime) {
