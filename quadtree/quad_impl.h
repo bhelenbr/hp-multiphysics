@@ -112,8 +112,24 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
 	}
 	
 	current = tgt.current;
+    
+    base[0].num = tgt.base[0].num;
+    base[0].prnt = NULL;
+    base[0].pind = tgt.base[i].pind;
+    for(n=0;n<ND;++n) {
+        base[0].xmin[n] = tgt.base[0].xmin[n];
+        base[0].xmax[n] = tgt.base[0].xmax[n];
+    }
+    if (base[0].num > 0) {
+        for(j=0;j<(1<<ND);++j)
+            base[0].node[j] = tgt.base[0].node[j];
+    }
+    else {
+        for(j=0;j<(1<<ND);++j)
+            base[0].dghtr[j] = base +(tgt.base[0].dghtr[j] -tgt.base);
+    }
 	
-	for(i=0;i<current;++i) {
+	for(i=1;i<current;++i) {
 		base[i].num = tgt.base[i].num;
 		base[i].prnt = base +(tgt.base[i].prnt -tgt.base);
 		base[i].pind = tgt.base[i].pind;
@@ -130,8 +146,6 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
 				base[i].dghtr[j] = base +(tgt.base[i].dghtr[j] -tgt.base);
 		}
 	}
-	
-	base[0].prnt = NULL;
 	
 	return;
 }
