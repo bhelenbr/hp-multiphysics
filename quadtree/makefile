@@ -17,7 +17,7 @@ libquad.a: $(OBJ)
 	cp -f libquad.a ../lib/
 	cp -f quadtree.h ../include/
 
-quadtest: $(OBJ) main.o
+quadtest: $(OBJ) main.o libquad.a
 	${CXX} -o $@ main.o ${LIBS}
 
 $(OBJ): quadtree.h quad_impl.h
