@@ -8,9 +8,12 @@ TET_DIRS = tet_basis tet_mesh tet_hp
 export DEFINES
 
 OPT = -O3 -fpic -Wno-deprecated-declarations
+OPT += -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment
+#OPT += -fsanitize=memory
+#OPT += -fsanitize=thread
 #OPT += -funroll-loops -falign-loops=16
 #OPT += -Wno-long-double  #(OS X)
-#OPT += -g  #(Gnu Debug)
+OPT += -g  #(Gnu Debug)
 #OPT = -debug #(for intel debug)
 #OPT = -Ofast=IP30  #(sauter)
 #OPT = -Ofast=IP27  #(ctr-sgi1)
@@ -26,6 +29,9 @@ export LIBDIRS
 
 INCLUDEDIRS=-I${PACKAGES}/include -I${ROOT_DIR}/include
 export INCLUDEDIRS
+
+LIBS += -lasan -lubsan
+export LIBS
 
 LIBBLAS  = -lopenblas #(acres)
 #LIBBLAS = -framework veclib #(OS X)
