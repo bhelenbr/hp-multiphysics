@@ -8,7 +8,7 @@ debug_output: 0
 rsdl_debug: 0
 #Iterative tolerances: 
 absolute_tolerance: 1.0e-7
-relative_tolerance: 5.0e-7
+relative_tolerance: 5.0e-5
 #under_relaxation: 0.5
 #Number of time steps: 
 ntstep: 20
@@ -24,6 +24,9 @@ nblock: 1 1
 adapt: 1
 # Factor to increase memory allocation for mesh adaptation: 
 growth factor: 10
+#error_estimator: energy_norm
+error_target: 1.0e-4
+maximum_length: 2.0
 #Physical properties: 
 blocktype: cns
 mesh_movement: coupled_deformable

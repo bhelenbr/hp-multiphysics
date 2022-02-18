@@ -67,6 +67,14 @@ let RESTART=${RESTART}+$(mod_map -e run.inpt ntstep)
 mod_map run.inpt restart ${RESTART}
 mod_map run.inpt log2p 2
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
+let RESTART=${RESTART}+$(mod_map -e run.inpt ntstep)
+
+mod_map run.inpt restart ${RESTART}
+mod_map -u run.inpt error_estimator
+mod_map run.inpt ntstep 3
+mod_map dtinv 0.0
+mpiexec -np 2 ${HP} run.inpt ${PETSC}
+
 
 #cd ..
 

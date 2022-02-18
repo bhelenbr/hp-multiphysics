@@ -1106,6 +1106,7 @@ void block::init(input_map &input) {
 	}
     
     input.getwdefault("auto_timestep_tries",gbl->auto_timestep_tries,0);
+    gbl->recursive_timestep_levels = 0;
     if (gbl->auto_timestep_tries) {
         if (gbl->dti <= 0.0) {
             *gbl->log << "Auto timestepping requires an initial time step"  << std::endl;
@@ -1119,7 +1120,9 @@ void block::init(input_map &input) {
         input.getwdefault("auto_dti_min",gbl->auto_dti_min,0.0);
         input.getwdefault("auto_dti_max",gbl->auto_dti_max,gbl->dti*128.0);
         input.getwdefault("auto_timestep_maxtime",gbl->auto_timestep_maxtime,-1.0);
-        input.getwdefault("out_dti_min",gbl->out_dti_min,false);
+    }
+    else {
+        input.getwdefault("recursive_timestep_levels",gbl->recursive_timestep_levels,0);
     }
     
 	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
@@ -1380,7 +1383,6 @@ void block::go(input_map input) {
 	std::string outname;
 	std::ostringstream nstr;
 	clock_t begin_time, end_time;
-	FLT maxerror,error;
 
 
 	init(input);
@@ -1450,10 +1452,103 @@ void block::go(input_map input) {
     }
     
 
-    int auto_time_step_failures = 0;
-    int c_dti_min = 1;
-    int k = 0;
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
+        if (gbl->recursive_timestep_levels)
+            recursive_time_step();
+        else
+            time_step();
+        
+		/* OUTPUT DISPLAY FILES */
+		if (!((gbl->tstep)%out_intrvl)) {
+			nstr.str("");
+			nstr << gbl->tstep << std::flush;
+			outname = "data" +nstr.str();
+			output(outname,block::display);
+		}
+
+		/* ADAPT MESH */
+		if (gbl->adapt_interval && !(gbl->tstep%gbl->adapt_interval)) {
+			adapt();
+		}
+
+		/* OUTPUT RESTART FILES */
+		if (!((gbl->tstep)%(rstrt_intrvl))) {
+			outname = "rstrt" +nstr.str();
+			output(outname,block::restart);
+            if (gbl->auto_timestep_tries) {
+                gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
+                *gbl->log << "Setting time step to " << gbl->dti << '\n';
+            }
+        }
+        
+        if (gbl->auto_timestep_tries) {
+            if (gbl->auto_timestep_maxtime > 0.0 && gbl->time > gbl->auto_timestep_maxtime) {
+                *gbl->log << "Auto timestepping reached the maximum time specified\n";
+                break;
+            }
+        }
+	}
+	end_time = clock();
+	*gbl->log << "that took " << static_cast<double>((end_time - begin_time))/ CLOCKS_PER_SEC << " cpu time" << std::endl;
+
+	return;
+}
+
+void block::recursive_time_step(int level) {
+    std::string outname;
+    std::ostringstream nstr;
+    FLT maxerror,error;
+
+    try {
+        for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
+            *gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
+            tadvance();
+
+            maxerror = 0.0;
+            for(gbl->iteration=0;gbl->iteration<ncycle;++gbl->iteration) {
+                error = cycle(vw,0,!(gbl->iteration%prcndtn_intrvl));
+                maxerror = MAX(error,maxerror);
+
+                if (debug_output) {
+                    if (gbl->iteration % debug_output == 0) {
+                        nstr.str("");
+                        nstr << gbl->tstep << '_' << gbl->substep << '_' << gbl->iteration << std::flush;
+                        outname = "debug" +nstr.str();
+                        output(outname,block::debug);
+                    }
+                }
+                if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
+            }
+            if (gbl->iteration == ncycle) {
+                throw 1;
+            }
+        }
+    }
+    catch(int e) {
+        *gbl->log << "#Convergence error for time step " << gbl->tstep << "at level " << level << '\n';
+
+        if (level < gbl->recursive_timestep_levels) {
+            reset_timestep();
+            gbl->dti *= 2.0;
+            *gbl->log << "#Setting recursive time step to " << gbl->dti << '\n';
+
+            for(int halfstep_count=0;halfstep_count<2;++halfstep_count) {
+                recursive_time_step(level+1);
+            }
+        }
+        else {
+            *gbl->log << "#convergence error at finest time step\n";
+            sim::abort(__LINE__,__FILE__,&std::cerr);
+        }
+    }
+}
+
+void block::time_step() {
+    std::string outname;
+    std::ostringstream nstr;
+    FLT maxerror,error;
+
+    for (int auto_timestep_failures = 0; auto_timestep_failures < gbl->auto_timestep_tries+1; ++auto_timestep_failures) {
         try {
             for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
                 *gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
@@ -1478,90 +1573,28 @@ void block::go(input_map input) {
                     throw 1;
                 }
             }
-            auto_time_step_failures = 0;
-            if (gbl->out_dti_min) ++k;
         }
         catch(int e) {
-            nstr.str("");
-            nstr << gbl->tstep << std::flush;
-            outname = "error" +nstr.str();
-            output(outname,block::display);
             *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
-            if (auto_time_step_failures < gbl->auto_timestep_tries) {
+            if (gbl->auto_timestep_tries) {
                 reset_timestep();
                 gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
                 *gbl->log << "#Setting time step to " << gbl->dti << '\n';
                 if (gbl->dti > gbl->auto_dti_max) {
                     *gbl->log << "dti is too large. Aborting" << std::endl;
-                    break;
+                    sim::abort(__LINE__,__FILE__,&std::cerr);
                 }
-                ++auto_time_step_failures;
-                --gbl->tstep;
-                if (gbl->out_dti_min) {
-                    c_dti_min *= static_cast<int>((gbl->auto_timestep_ratio +__FLT_EPSILON__));
-                    k *= static_cast<int>((gbl->auto_timestep_ratio +__FLT_EPSILON__));
-                }
-               
                 continue;
             }
             else {
-                *gbl->log << "#convergence error.  Aborting\n";
-                break;
+                sim::abort(__LINE__,__FILE__,&std::cerr);
             }
         }
-        
-		/* OUTPUT DISPLAY FILES */
-		if (!((gbl->tstep)%out_intrvl) && !(gbl->out_dti_min)) {
-			nstr.str("");
-			nstr << gbl->tstep << std::flush;
-			outname = "data" +nstr.str();
-			output(outname,block::display);
-		}
-        else if (gbl->out_dti_min && (c_dti_min==k)) {
-            nstr.str("");
-            nstr << gbl->tstep << std::flush;
-            outname = "data" +nstr.str();
-            output(outname,block::display);
-        }
-        
-
-		/* ADAPT MESH */
-		if (gbl->adapt_interval && !(gbl->tstep%gbl->adapt_interval)) {
-			adapt();
-		}
-
-		/* OUTPUT RESTART FILES */
-		if (!((gbl->tstep)%(rstrt_intrvl)) && !(gbl->out_dti_min)) {
-			outname = "rstrt" +nstr.str();
-			output(outname,block::restart);
-            if (gbl->auto_timestep_tries) {
-                gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
-                *gbl->log << "Setting time step to " << gbl->dti << '\n';
-            }
-        }
-        else if (gbl->auto_timestep_tries && (gbl->out_dti_min) && (c_dti_min==k)) {
-            outname = "rstrt" +nstr.str();
-            output(outname,block::restart);
-            gbl->dti = (gbl->dti/gbl->auto_timestep_ratio>gbl->auto_dti_min) ? gbl->dti/gbl->auto_timestep_ratio : gbl->auto_dti_min;
-            *gbl->log << "Setting time step to " << gbl->dti << '\n';
-            if (c_dti_min != 1) c_dti_min/= static_cast<int>(gbl->auto_timestep_ratio +__FLT_EPSILON__);
-            k = 0;
-        }
-   
-		
-        
-        if (gbl->auto_timestep_tries) {
-            if (gbl->auto_timestep_maxtime > 0.0 && gbl->time > gbl->auto_timestep_maxtime) {
-                *gbl->log << "Auto timestepping reached the maximum time specified\n";
-                break;
-            }
-        }
-	}
-	end_time = clock();
-	*gbl->log << "that took " << static_cast<double>((end_time - begin_time))/ CLOCKS_PER_SEC << " cpu time" << std::endl;
-
-	return;
+        return;
+    }
+    sim::abort(__LINE__,__FILE__,&std::cerr);
 }
+
 
 FLT block::maxres(int lvl) {
 	FLT error = 0.0,globalmax;
