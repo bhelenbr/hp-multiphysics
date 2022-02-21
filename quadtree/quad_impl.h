@@ -137,13 +137,14 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
 			base[i].xmin[n] = tgt.base[i].xmin[n];
 			base[i].xmax[n] = tgt.base[i].xmax[n];
 		}
-		if (base[i].num > 0) {
-			for(j=0;j<(1<<ND);++j)
+		if (base[i].num >= 0) {
+			for(j=0;j<base[i].num;++j)
 				base[i].node[j] = tgt.base[i].node[j];
 		}
 		else {
-			for(j=0;j<(1<<ND);++j)
-				base[i].dghtr[j] = base +(tgt.base[i].dghtr[j] -tgt.base);
+            for(j=0;j<(1<<ND);++j) {
+                base[i].dghtr[j] = base +(tgt.base[i].dghtr[j] -tgt.base);
+            }
 		}
 	}
 	

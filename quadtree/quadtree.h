@@ -87,9 +87,11 @@ public:
 	enum FILETYPE {text,tecplot};
 	void output(const char *filename, FILETYPE type=tecplot);
 	~quadtree() {
-		delete []srchlst;
-		delete []indx;
-		delete []base;
+        if (size) {
+            delete []srchlst;
+            delete []indx;
+            delete []base;
+        }
 	}
 };
 #endif
