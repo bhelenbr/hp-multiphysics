@@ -8,7 +8,7 @@
 #include <muParser.h>
 #include <unistd.h>
 
-//#define TESTING
+#define TESTING
 
 int main (int argc, char *argv[]) {
 	input_map mymap;
@@ -94,7 +94,7 @@ int main (int argc, char *argv[]) {
 #else
 	mu::Parser P;
 	try {
-		P.SetExpr("23685*3");
+		P.SetExpr("5*3");
 		std::cout <<  P.Eval() << std::endl;
 //		mu::varmap_type variables = P.GetUsedVar();
 //		mu::varmap_type::const_iterator item = variables.begin();
@@ -116,7 +116,6 @@ int main (int argc, char *argv[]) {
 	catch(...) {
 		std::cout << "I am confused" << std::endl;
 	}
-	return 0;
 
 	/* INPUT MAP FROM FILE */
 	mymap.input(argv[1]);
@@ -131,7 +130,8 @@ int main (int argc, char *argv[]) {
 	myout << 3.72569 << std::flush;
 	mymap["a"]  = myout.str();
 	mymap["formula"] = "a + 3.0";
-
+    mymap["formula2"] = "a + 3.0)";
+    
 	std::cout << std::endl << std::endl << "OUTPUTING MAP AT BEGINNING" << std::endl;
 	std::cout << mymap;
 	mymap.echo = true;
@@ -146,6 +146,7 @@ int main (int argc, char *argv[]) {
 	/* LOAD INT USING FORMULA */
 	int c;
 	std::cout << mymap.get("formula",c) << ' ' << c << std::endl;
+    std::cout << mymap.get("formula2",c) << ' ' << c << std::endl;
 
 	/* ERASE ENTRY */
 	std::map<std::string,std::string>::iterator mi;
