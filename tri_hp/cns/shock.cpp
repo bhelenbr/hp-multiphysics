@@ -35,8 +35,8 @@ void shock::init(input_map& inmap,void* gin) {
     c0_indices_xy.clear();
 #endif
     
-	u_opp_v.resize(base.nseg+1,x.NV);
-	u_opp_e.resize(base.nseg,sm,x.NV);
+	u_opp_v.resize(base.maxseg+1,x.NV);
+	u_opp_e.resize(base.maxseg,sm,x.NV);
 	
 	return;
 }
