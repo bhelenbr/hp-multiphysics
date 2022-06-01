@@ -30,7 +30,7 @@ namespace bdry_cd {
 			FLT Lf, rho_s, cp_s, k_s, rho_l, cp_l, k_l;
 			
 			/* Kinetic Coefficients */
-			FLT Krough, Ksn, A2Dn, K2Dn;
+            FLT Krough, Ksn, A2Dn, K2Dn, DTexponent2Dn;
 #ifdef OLDKINETICS
 			FLT K2Dn_max; // Coefficients for Weinstein Kinetic model
 #else
