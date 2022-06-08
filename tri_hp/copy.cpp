@@ -10,7 +10,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
- void tri_hp::copy(const tri_hp& tgt) {
+void tri_hp::copy(const tri_hp& tgt) {
 	int i,n,t;
 
 	/* COPY MESH INFORMATION */

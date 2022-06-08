@@ -1299,7 +1299,7 @@ void block::init(input_map &input) {
 FLT block::cycle(int vw, int lvl, bool evaluate_preconditioner) {
 	int vcount,extra_count = 0;
 	int gridlevel,gridlevelp;
-	FLT error,maxerror = 0.0;
+	FLT error = 0.0,maxerror = 0.0;
     
 	/* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
 	/* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */

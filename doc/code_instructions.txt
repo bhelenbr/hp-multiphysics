@@ -161,6 +161,9 @@ git clean -f -d -x         # remove all files that are not in the git repo
 # On stampede
 ./configure --prefix=${HOME}/Packages --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --download-metis=1 --with-valgrind-dir=/opt/apps
 
+# Add this for optimization (factor of 2 faster)
+--with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native -mtune=native"
+
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;

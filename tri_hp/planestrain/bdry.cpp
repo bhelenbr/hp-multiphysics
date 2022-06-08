@@ -108,7 +108,7 @@ void friction_wall::rsdl(int stage) {
 }
 
 void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
-    int j,k,m,n,v0,v1,sind,info;
+    int j,v0,v1,sind,info;
     TinyVector<FLT,tri_mesh::ND> pt;
     char uplo[] = "U";
     
@@ -135,22 +135,22 @@ void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indice
         v1 = x.seg(sind).pnt(1);
         
         base.mvpttobdry(j,-1.0,pt);
-        for (n=0;n<tri_mesh::ND;++n)
+        for (int n=0;n<tri_mesh::ND;++n)
             x.ug.v(v0,n) = pt(n) -x.pnts(v0)(n);
             
         base.mvpttobdry(j,1.0,pt);
-        for (n=0;n<tri_mesh::ND;++n)
+        for (int n=0;n<tri_mesh::ND;++n)
             x.ug.v(v1,n) = pt(n) -x.pnts(v1)(n);
             
         for(int n=0;n<tri_mesh::ND;++n) {
             basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
             basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
             
-            for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+            for(int k=0;k<basis::tri(x.log2p)->gpx();++k)
                 x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
         }
         
-        for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
+        for(int k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
             pt(0) = x.crd(0)(0,k)+x.res(0)(0,k);
             pt(1) = x.crd(1)(0,k)+x.res(1)(0,k);
             base.mvpttobdry(j,basis::tri(x.log2p)->xp(k),pt);
@@ -158,7 +158,7 @@ void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indice
             x.crd(1)(0,k) -= pt(1);
         }
         
-        for(n=0;n<tri_mesh::ND;++n) {
+        for(int n=0;n<tri_mesh::ND;++n) {
             basis::tri(x.log2p)->intgrt1d(&x.cf(n,0),&x.crd(n)(0,0));
 #ifdef F2CFortran
             DPBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.cf(n,2),basis::tri(x.log2p)->sm(),info);
@@ -167,7 +167,7 @@ void curve_edges::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indice
             const int sbp1 = sbwth +1;
             dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.cf(n,2),&sm,&info);
 #endif
-            for(m=0;m<basis::tri(x.log2p)->sm();++m)
+            for(int m=0;m<basis::tri(x.log2p)->sm();++m)
                 x.ug.s(sind,m,n) = -x.cf(n,m+2);
         }
     }

@@ -98,7 +98,4 @@ int tri_hp_swirl::setup_preconditioner() {
 		}
 	}
 	return(tri_hp::setup_preconditioner()+err);
-
-
-	return;
 }

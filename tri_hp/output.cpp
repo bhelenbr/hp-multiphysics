@@ -136,7 +136,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
  void tri_hp::output(const std::string& filename, filetype typ, int tlvl) {
 	ofstream out;
 	std::string fname, fnmapp;
-	int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
+	int v0,v1,sind,tind,indx,sgn;
 	int ijind[MXTM][MXTM];
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
@@ -158,23 +158,23 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out << "npnt = " << npnt << ", nseg = " << nseg << ", ntri = " << ntri << std::endl;
 			out << "END OF HEADER" << std::endl;
 
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<NV;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<NV;++n)
 					out << ugbd(tlvl).v(i,n) << '\t';
 				out << std::endl;
 			}
 
-			for(i=0;i<nseg;++i) {
-				for(m=0;m<sm0;++m) {
-					for(n=0;n<NV;++n)
+			for(int i=0;i<nseg;++i) {
+				for(int m=0;m<sm0;++m) {
+					for(int n=0;n<NV;++n)
 						out << ugbd(tlvl).s(i,m,n) << '\t';
 					out << std::endl;
 				}
 			}
 
-			for(i=0;i<ntri;++i) {
-				for(m=0;m<im0;++m) {
-					for(n=0;n<NV;++n)
+			for(int i=0;i<ntri;++i) {
+				for(int m=0;m<im0;++m) {
+					for(int n=0;n<NV;++n)
 						out << ugbd(tlvl).i(i,m,n) << '\t';
 					out << std::endl;
 				}
@@ -272,31 +272,31 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			size_t index[3];
             nc_put_var1_double(ncid,time_id,index,&gbl->time);
 
-			for(i=0;i<npnt;++i) {
+			for(int i=0;i<npnt;++i) {
 				index[0] = i;
-				for(n=0;n<NV;++n) {
+				for(int n=0;n<NV;++n) {
 					index[1] = n;
 					nc_put_var1_double(ncid,ugv_id,index,&ugbd(tlvl).v(i,n));
 				}
 			}
 			
 			
-			for(i=0;i<nseg;++i) {
+			for(int i=0;i<nseg;++i) {
 				index[0] = i;
-				for(m=0;m<sm0;++m) {
+				for(int m=0;m<sm0;++m) {
 					index[1] = m;
-					for(n=0;n<NV;++n) {
+					for(int n=0;n<NV;++n) {
 						index[2] = n;
 						nc_put_var1_double(ncid,ugs_id,index,&ugbd(tlvl).s(i,m,n));
 					}
 				}
 			}
 			
-			for(i=0;i<ntri;++i) {
+			for(int i=0;i<ntri;++i) {
 				index[0] = i;
-				for(m=0;m<im0;++m) {
+				for(int m=0;m<im0;++m) {
 					index[1] = m;
-					for(n=0;n<NV;++n) {
+					for(int n=0;n<NV;++n) {
 						index[2] = n;
 						nc_put_var1_double(ncid,ugi_id,index,&ugbd(tlvl).i(i,m,n));
 					}
@@ -325,8 +325,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out << "DATASET UNSTRUCTURED_GRID" << endl;
 			out << "POINTS " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << " float" << endl;
 			
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<ND;++n)
 					out << vrtxbd(tlvl)(i)(n) << ' ';
 				out << 0.0 << endl;
 			}
@@ -337,18 +337,18 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					if (seg(sind).info < 0) {
 						v0 = seg(sind).pnt(0);
 						v1 = seg(sind).pnt(1);
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
 					}
 					else {
 						crdtocht1d(sind,tlvl);
 						
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
 					}
 					
-					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-						for(n=0;n<ND;++n)
+					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(int n=0;n<ND;++n)
 							out << crd(n)(0,i) << ' ';                    
 						out << 0.0 << endl;
 					}
@@ -358,18 +358,18 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
 						if (tri(tind).info < 0) {
-							for(n=0;n<ND;++n)
+							for(int n=0;n<ND;++n)
 								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 						}
 						else {
 							crdtocht(tind,tlvl);
-							for(n=0;n<ND;++n)
+							for(int n=0;n<ND;++n)
 								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
 						}
 						
-						for(i=1;i<basis::tri(log2p)->sm();++i) {
-							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-								for(n=0;n<ND;++n)
+						for(int i=1;i<basis::tri(log2p)->sm();++i) {
+							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(int n=0;n<ND;++n)
 									out << crd(n)(i,j) << ' ';
 								out << 0.0 << endl;
 
@@ -392,48 +392,48 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				indx = tri(tind).seg(0);
 				sgn = tri(tind).sgn(0);
 				if (sgn < 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				
 				indx = tri(tind).seg(1);
 				sgn = tri(tind).sgn(1);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				
 				indx = tri(tind).seg(2);
 				sgn = tri(tind).sgn(2);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				
 				/* INTERIOR VERTICES */
-				k = 0;
-				for(i=1;i<basis::tri(log2p)->sm();++i) {
-					for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+				int k = 0;
+				for(int i=1;i<basis::tri(log2p)->sm();++i) {
+					for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
 						ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
 						++k;
 					}
 				}
 				
 				/* OUTPUT CONNECTION LIST */        
-				for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
-					for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+				for(int i=0;i<basis::tri(log2p)->sm()+1;++i) {
+					for(int j=0;j<basis::tri(log2p)->sm()-i;++j) {
 						out << 3 << ' ' << ijind[i][j] << ' ' << ijind[i+1][j] << ' ' << ijind[i][j+1] << std::endl;
 						out << 3 << ' ' << ijind[i+1][j] << ' ' << ijind[i+1][j+1] << ' ' << ijind[i][j+1] << std::endl;
 					}
@@ -444,7 +444,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			
 			out << "CELL_TYPES " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << endl;
 			
-			for(i=0;i<ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);++i)
+			for(int i=0;i<ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);++i)
 				out << 5 << endl;
 			
 			out << "POINT_DATA " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << endl;
@@ -452,8 +452,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out << "LOOKUP_TABLE default" << endl;
 			
 			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<NV;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<NV;++n)
 					out << ugbd(tlvl).v(i,n) << ' ';                    
 				out << std::endl;
 			}
@@ -462,11 +462,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
 					ugtouht1d(sind,tlvl);
-					for(n=0;n<NV;++n)
+					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
 					
-					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-						for(n=0;n<NV;++n)
+					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(int n=0;n<NV;++n)
 							out << u(n)(0,i) << ' ';                    
 						out << std::endl;
 					}
@@ -476,12 +476,12 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
 						ugtouht(tind,tlvl);
-						for(n=0;n<NV;++n)
+						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 							
-						for(i=1;i<basis::tri(log2p)->sm();++i) {
-							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-								for(n=0;n<NV;++n)
+						for(int i=1;i<basis::tri(log2p)->sm();++i) {
+							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(int n=0;n<NV;++n)
 									out << u(n)(i,j) << ' ';                    
 								out << std::endl;
 							}
@@ -514,8 +514,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "                <DataArray type=\"Float32\" Name=\"Data\" NumberOfComponents=\"" << NV << "\" format=\"ascii\">" << endl;
               
             /* VERTEX MODES */
-            for(i=0;i<npnt;++i) {
-                for(n=0;n<NV;++n)
+            for(int i=0;i<npnt;++i) {
+                for(int n=0;n<NV;++n)
                     out << ugbd(tlvl).v(i,n) << ' ';
                 out << std::endl;
             }
@@ -524,11 +524,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* SIDE MODES */
                 for(sind=0;sind<nseg;++sind) {
                     ugtouht1d(sind,tlvl);
-                    for(n=0;n<NV;++n)
+                    for(int n=0;n<NV;++n)
                         basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
                     
-                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-                        for(n=0;n<NV;++n)
+                    for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                        for(int n=0;n<NV;++n)
                             out << u(n)(0,i) << ' ';
                         out << std::endl;
                     }
@@ -538,12 +538,12 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
                         ugtouht(tind,tlvl);
-                        for(n=0;n<NV;++n)
+                        for(int n=0;n<NV;++n)
                             basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
                             
-                        for(i=1;i<basis::tri(log2p)->sm();++i) {
-                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-                                for(n=0;n<NV;++n)
+                        for(int i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                                for(int n=0;n<NV;++n)
                                     out << u(n)(i,j) << ' ';
                                 out << std::endl;
                             }
@@ -560,8 +560,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "            <Points>" << endl;
             out << "                <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             
-            for(i=0;i<npnt;++i) {
-                for(n=0;n<ND;++n)
+            for(int i=0;i<npnt;++i) {
+                for(int n=0;n<ND;++n)
                     out << vrtxbd(tlvl)(i)(n) << ' ';
                 out << 0.0 << endl;
             }
@@ -572,18 +572,18 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                     if (seg(sind).info < 0) {
                         v0 = seg(sind).pnt(0);
                         v1 = seg(sind).pnt(1);
-                        for(n=0;n<ND;++n)
+                        for(int n=0;n<ND;++n)
                             basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
                     }
                     else {
                         crdtocht1d(sind,tlvl);
                         
-                        for(n=0;n<ND;++n)
+                        for(int n=0;n<ND;++n)
                             basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
                     }
                     
-                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-                        for(n=0;n<ND;++n)
+                    for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                        for(int n=0;n<ND;++n)
                             out << crd(n)(0,i) << ' ';
                         out << 0.0 << endl;
                     }
@@ -593,18 +593,18 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
                         if (tri(tind).info < 0) {
-                            for(n=0;n<ND;++n)
+                            for(int n=0;n<ND;++n)
                                 basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
                         }
                         else {
                             crdtocht(tind,tlvl);
-                            for(n=0;n<ND;++n)
+                            for(int n=0;n<ND;++n)
                                 basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
                         }
                         
-                        for(i=1;i<basis::tri(log2p)->sm();++i) {
-                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-                                for(n=0;n<ND;++n)
+                        for(int i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                                for(int n=0;n<ND;++n)
                                     out << crd(n)(i,j) << ' ';
                                 out << 0.0 << endl;
 
@@ -632,48 +632,48 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 indx = tri(tind).seg(0);
                 sgn = tri(tind).sgn(0);
                 if (sgn < 0) {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
                 }
                 else {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
                 }
                 
                 indx = tri(tind).seg(1);
                 sgn = tri(tind).sgn(1);
                 if (sgn > 0) {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
                 }
                 else {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
                 }
                 
                 indx = tri(tind).seg(2);
                 sgn = tri(tind).sgn(2);
                 if (sgn > 0) {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
                 }
                 else {
-                    for(i=0;i<basis::tri(log2p)->sm();++i)
+                    for(int i=0;i<basis::tri(log2p)->sm();++i)
                         ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
                 }
                 
                 /* INTERIOR VERTICES */
-                k = 0;
-                for(i=1;i<basis::tri(log2p)->sm();++i) {
-                    for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                int k = 0;
+                for(int i=1;i<basis::tri(log2p)->sm();++i) {
+                    for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
                         ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
                         ++k;
                     }
                 }
                 
                 /* OUTPUT CONNECTION LIST */
-                for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
-                    for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+                for(int i=0;i<basis::tri(log2p)->sm()+1;++i) {
+                    for(int j=0;j<basis::tri(log2p)->sm()-i;++j) {
                         out << ijind[i][j] << ' ' << ijind[i+1][j] << ' ' << ijind[i][j+1] << std::endl;
                         out << ijind[i+1][j] << ' ' << ijind[i+1][j+1] << ' ' << ijind[i][j+1] << std::endl;
                     }
@@ -751,10 +751,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << ", E = " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << ", SOLUTIONTIME = " << gbl->time  << std::endl;
 
 			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<ND;++n)
 					out << vrtxbd(tlvl)(i)(n) << ' ';
-				for(n=0;n<NV;++n)
+				for(int n=0;n<NV;++n)
 					out << ugbd(tlvl).v(i,n) << ' ';                    
 				out << std::endl;
 			}
@@ -765,23 +765,23 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					if (seg(sind).info < 0) {
 						v0 = seg(sind).pnt(0);
 						v1 = seg(sind).pnt(1);
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
 					}
 					else {
 						crdtocht1d(sind,tlvl);
 
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
 					}
 					ugtouht1d(sind,tlvl);
-					for(n=0;n<NV;++n)
+					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
 
-					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-						for(n=0;n<ND;++n)
+					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(int n=0;n<ND;++n)
 							out << crd(n)(0,i) << ' ';
-						for(n=0;n<NV;++n)
+						for(int n=0;n<NV;++n)
 							out << u(n)(0,i) << ' ';                    
 						out << std::endl;
 					}
@@ -791,24 +791,24 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
 						ugtouht(tind,tlvl);
-						for(n=0;n<NV;++n)
+						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 
 						if (tri(tind).info < 0) {
-							for(n=0;n<ND;++n)
+							for(int n=0;n<ND;++n)
 								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 						}
 						else {
 							crdtocht(tind,tlvl);
-							for(n=0;n<ND;++n)
+							for(int n=0;n<ND;++n)
 								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
 						}
 
-						for(i=1;i<basis::tri(log2p)->sm();++i) {
-							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-								for(n=0;n<ND;++n)
+						for(int i=1;i<basis::tri(log2p)->sm();++i) {
+							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(int n=0;n<ND;++n)
 									out << crd(n)(i,j) << ' ';
-								for(n=0;n<NV;++n)
+								for(int n=0;n<NV;++n)
 									out << u(n)(i,j) << ' ';                    
 								out << std::endl;
 							}
@@ -831,48 +831,48 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				indx = tri(tind).seg(0);
 				sgn = tri(tind).sgn(0);
 				if (sgn < 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 
 				indx = tri(tind).seg(1);
 				sgn = tri(tind).sgn(1);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 
 				indx = tri(tind).seg(2);
 				sgn = tri(tind).sgn(2);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 
 				/* INTERIOR VERTICES */
-				k = 0;
-				for(i=1;i<basis::tri(log2p)->sm();++i) {
-					for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+				int k = 0;
+				for(int i=1;i<basis::tri(log2p)->sm();++i) {
+					for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
 						ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
 						++k;
 					}
 				}
 
 				/* OUTPUT CONNECTION LIST */        
-				for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
-					for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+				for(int i=0;i<basis::tri(log2p)->sm()+1;++i) {
+					for(int j=0;j<basis::tri(log2p)->sm()-i;++j) {
 						out << ijind[i][j]+1 << ' ' << ijind[i+1][j]+1 << ' ' << ijind[i][j+1]+1 << std::endl;
 						out << ijind[i+1][j]+1 << ' ' << ijind[i+1][j+1]+1 << ' ' << ijind[i][j+1]+1 << std::endl;
 					}
@@ -896,10 +896,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 
 			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<ND;++n)
 					dt_vrtx(n,i) =  vrtxbd(tlvl)(i)(n);
-				for(n=0;n<NV;++n)
+				for(int n=0;n<NV;++n)
 					dt_vals(i) = ugbd(tlvl).v(i,n);                    
 			}
 			
@@ -910,23 +910,23 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					if (seg(sind).info < 0) {
 						v0 = seg(sind).pnt(0);
 						v1 = seg(sind).pnt(1);
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
 					}
 					else {
 						crdtocht1d(sind,tlvl);
 						
-						for(n=0;n<ND;++n)
+						for(int n=0;n<ND;++n)
 							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
 					}
 					ugtouht1d(sind,tlvl);
-					for(n=0;n<NV;++n)
+					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
 					
-					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
-						for(n=0;n<ND;++n)
+					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(int n=0;n<ND;++n)
 							dt_vrtx(n,dt_pnts) = crd(n)(0,i);
-						for(n=0;n<NV;++n)
+						for(int n=0;n<NV;++n)
 							dt_vals(dt_pnts) = u(n)(0,i);                    
 						++dt_pnts;
 					}
@@ -936,7 +936,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
 						ugtouht(tind,tlvl);
-						for(n=0;n<NV;++n)
+						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 						
 						if (tri(tind).info < 0) {
@@ -945,15 +945,15 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						}
 						else {
 							crdtocht(tind,tlvl);
-							for(n=0;n<ND;++n)
+							for(int n=0;n<ND;++n)
 								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
 						}
 						
-						for(i=1;i<basis::tri(log2p)->sm();++i) {
-							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
-								for(n=0;n<ND;++n)
+						for(int i=1;i<basis::tri(log2p)->sm();++i) {
+							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(int n=0;n<ND;++n)
 									dt_vrtx(n,dt_pnts) = crd(n)(i,j);
-								for(n=0;n<NV;++n)
+								for(int n=0;n<NV;++n)
 									dt_vals(dt_pnts) = u(n)(i,j);                    
 								++dt_pnts;
 							}
@@ -974,48 +974,48 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				indx = tri(tind).seg(0);
 				sgn = tri(tind).sgn(0);
 				if (sgn < 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				
 				indx = tri(tind).seg(1);
 				sgn = tri(tind).sgn(1);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				
 				indx = tri(tind).seg(2);
 				sgn = tri(tind).sgn(2);
 				if (sgn > 0) {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
 				}
 				else {
-					for(i=0;i<basis::tri(log2p)->sm();++i)
+					for(int i=0;i<basis::tri(log2p)->sm();++i)
 						ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
 				}
 				
 				/* INTERIOR VERTICES */
-				k = 0;
-				for(i=1;i<basis::tri(log2p)->sm();++i) {
-					for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+				int k = 0;
+				for(int i=1;i<basis::tri(log2p)->sm();++i) {
+					for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
 						ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
 						++k;
 					}
 				}
 				
 				/* OUTPUT CONNECTION LIST */        
-				for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
-					for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+				for(int i=0;i<basis::tri(log2p)->sm()+1;++i) {
+					for(int j=0;j<basis::tri(log2p)->sm()-i;++j) {
 						dt_tvrtx(0,dt_tris) = ijind[i][j];
 						dt_tvrtx(1,dt_tris) = ijind[i+1][j];
 						dt_tvrtx(2,dt_tris) = ijind[i][j+1];
@@ -1069,8 +1069,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			}
 
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << std::endl;
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
+			for(int i=0;i<npnt;++i) {
+				for(int n=0;n<ND;++n)
 					out << pnts(i)(n) << ' ';
 				out << lngth(i) << ' ' << gbl->res.v(i,0) << '\n';
 			}
@@ -1093,8 +1093,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			/* OUTPUTS DISCONNECTED TRIS & ERROR FOR TRI */
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << 3*ntri << ", E = " << ntri << std::endl;
 			for(tind=0;tind<ntri;++tind) {
-				for(j=0;j<3;++j) {
-					for(n=0;n<ND;++n)
+				for(int j=0;j<3;++j) {
+					for(int n=0;n<ND;++n)
 						out << pnts(tri(tind).pnt(j))(n) << ' ';
 					out << gbl->fltwk(tind) << '\n';
 				}
@@ -1148,19 +1148,19 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                     if (seg(sind).info < 0) {
                         v0 = seg(sind).pnt(0);
                         v1 = seg(sind).pnt(1);
-                        for(n=0;n<ND;++n)
+                        for(int n=0;n<ND;++n)
                             basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
                     }
                     else {
                         crdtocht1d(sind,tlvl);
                         
-                        for(n=0;n<ND;++n)
+                        for(int n=0;n<ND;++n)
                             basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
                     }
                     
-                    for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+                    for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
                         out << count << " ";
-                        for(n=0;n<ND;++n)
+                        for(int n=0;n<ND;++n)
                             out << crd(n)(0,i) << ' ';
                         out << 0.0 << std::endl;
                         count++;
@@ -1171,19 +1171,19 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
                         if (tri(tind).info < 0) {
-                            for(n=0;n<ND;++n)
+                            for(int n=0;n<ND;++n)
                                 basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
                         }
                         else {
                             crdtocht(tind,tlvl);
-                            for(n=0;n<ND;++n)
+                            for(int n=0;n<ND;++n)
                                 basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
                         }
                         
-                        for(i=1;i<basis::tri(log2p)->sm();++i) {
-                            for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                        for(int i=1;i<basis::tri(log2p)->sm();++i) {
+                            for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
                                 out << count << " ";
-                                for(n=0;n<ND;++n)
+                                for(int n=0;n<ND;++n)
                                     out << crd(n)(i,j) << ' ';
                                 out << 0.0 << std::endl;
                                 count++;
@@ -1217,14 +1217,14 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "$Elements" << endl;
             
             count = 0;
-            for(i=0;i<nebd;i++) {
+            for(int i=0;i<nebd;i++) {
                 //Hack for nozzle case
 //                if(ebdry(i)->idnum==2)
 //                    continue;
                 
                 
                 int num_seg = ebdry(i)->nseg;
-                for (j=0;j<num_seg;j++){
+                for (int j=0;j<num_seg;j++){
                     count++;
                 }
             }
@@ -1235,14 +1235,14 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             
             
             int count_pass = 0;
-            for(i=0;i<nebd;i++) {
+            for(int i=0;i<nebd;i++) {
                 //Hack for nozzle mesh
 //                if(ebdry(i)->idnum==2)
 //                    continue;
                 
                 hp_ebdry(i)->output_msh(filename,count_pass);
                 int num_seg = ebdry(i)->nseg;
-                for (j=0;j<num_seg;j++){
+                for (int j=0;j<num_seg;j++){
                     count_pass++;
                 }
             }
@@ -1250,7 +1250,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             
             out.open(fnmapp.c_str(),std::ios::app);
             
-            for(i=count_pass;i<count_pass+ntri;++i){
+            for(int i=count_pass;i<count_pass+ntri;++i){
                 int el = i-count_pass;
                 out << i+1 << " " << element_type << " " << 2 << " " << 0 << " " << 0 << " " << tri(el).pnt(0)+1 << ' ' << tri(el).pnt(1)+1 << ' ' << tri(el).pnt(2)+1 << " ";
                 
@@ -1260,7 +1260,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                     for (int k=0;k<basis::tri(log2p)->sm();k++){
                         out << npnt+sind*basis::tri(log2p)->sm()+k+1 << " ";
                     }
-                    for(j=0; j<2; j++){
+                    for(int j=0; j<2; j++){
                         sind = tri(el).seg(j);
                         for (int k=0;k<basis::tri(log2p)->sm();k++){
                             out << npnt+sind*basis::tri(log2p)->sm()+k+1 << " ";
@@ -1304,11 +1304,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 	}
 	 
 	 /* BOUNDARY INFO */
-	 for(i=0;i<nebd;++i) {
+	 for(int i=0;i<nebd;++i) {
 		 hp_ebdry(i)->output(filename,typ,tlvl);
 	 }
 	 
-	 for(i=0;i<nvbd;++i) {
+	 for(int i=0;i<nvbd;++i) {
 		 hp_vbdry(i)->output(filename,typ,tlvl);
 	 }
 
@@ -1666,7 +1666,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			if ((retval = nc_inq_dimid(ncid, "npnt", &dim_id))) ERR(retval);
 			if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
 			if (dimreturn  != npnt) {
-				*gbl->log << "mismatched pnt counts?" << std::endl;
+				*gbl->log << "mismatched pnt counts? " << dimreturn << ' ' << npnt << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			

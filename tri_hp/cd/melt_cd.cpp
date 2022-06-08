@@ -277,8 +277,9 @@ void melt_cd::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
             basis::tri(x.log2p)->ptprobe1d(x.NV,up.data(),upd.data(),1.0,&x.uht(0)(0),MXTM);
             basis::tri(x.log2p)->ptprobe1d(x.ND,xp.data(),xpd.data(),1.0,&x.cht(0,0),MXTM);
 			jcb = sqrt(xpd(0)*xpd(0) +xpd(1)*xpd(1));
+            streamsize oldprecision = (*x.gbl->log).precision(6);
             *x.gbl->log << "#dT/ds " << upd(2)/jcb << std::endl;
-            
+            (*x.gbl->log).precision(oldprecision);
 			break;
 		}
 		default:

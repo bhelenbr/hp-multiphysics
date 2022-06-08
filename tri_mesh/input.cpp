@@ -168,7 +168,7 @@ void tri_mesh::allocate(int mxsize) {
 
 
 void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
-	int i,j,n,sind,count,temp,interior_pts=0;
+	int sind,count,temp,interior_pts=0;
 	std::string grd_nm, bdry_nm, grd_app;
 	TinyVector<int,3> v,s,e;
 	ifstream in;
@@ -253,7 +253,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			nebd = 0;
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
-					for (j = 0; j <nebd;++j) {
+					for (int j = 0; j <nebd;++j) {
 						if (seg(i).info == gbl->intwk(j)) {
 							++gbl->i2wk(j);
 							goto next1;
@@ -278,7 +278,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
-					for (j = 0; j <nebd;++j) {
+					for (int j = 0; j <nebd;++j) {
 						if (seg(i).info == ebdry(j)->idnum) {
 							ebdry(j)->seg(ebdry(j)->nseg++) = i;
 							goto next1a;
@@ -303,7 +303,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			for(int i=0;i<npnt;++i) {
 				in.ignore(80,':');
-				for(n=0;n<ND;++n) {
+				for(int n=0;n<ND;++n) {
 					in >> pnts(i)(n);
 				}
 				in >> pnt(i).info;
@@ -344,7 +344,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				in.ignore(80,':');
 				in >> v(0) >> v(1) >> v(2) >> e(0) >> e(1) >> e(2) >> s(0) >> s(1) >> s(2) >> fltskip >> fltskip >> tri(i).info;
 				
-				for (j=0;j<3;++j) {
+				for (int j=0;j<3;++j) {
 					tri(i).pnt(j) = v(j);
 					if(seg(s(j)).pnt(0) == v((j+1)%3)) {
 						/* SIDE DEFINED IN SAME DIRECTION */
@@ -374,6 +374,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			for(int i=0;i<5;++i)
 				in.ignore(160,'\n');
 			
+            int i;
 			in >> npnt >> i >> nebd;
 			nebd -= 1;
 			ebdry.resize(nebd);
@@ -394,7 +395,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			/* READ VERTEX DATA */
 			for(int i=0;i<npnt;++i) {
 				in >> intskip;
-				for(n=0;n<ND;++n)
+				for(int n=0;n<ND;++n)
 					in >> pnts(i)(n);
 				pnt(i).info = -1;
 			}
@@ -430,7 +431,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				
 				svrtxbtemp(i).resize(ebdry(i)->nseg);
 				
-				for(j=0;j<ebdry(i)->nseg;++j) {
+				for(int j=0;j<ebdry(i)->nseg;++j) {
 					in >> intskip >> svrtxbtemp(i)(j)(0) >> svrtxbtemp(i)(j)(1);
 					--svrtxbtemp(i)(j)(0);
 					--svrtxbtemp(i)(j)(1);
@@ -453,7 +454,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			/* MATCH BOUNDARY SIDES TO GROUPS */
 			for(int i=0;i<nebd;++i) {
-				for(j=0;j<ebdry(i)->nseg;++j) {
+				for(int j=0;j<ebdry(i)->nseg;++j) {
 					sind = pnt(svrtxbtemp(i)(j)(0)).info;
 					if (sind < 0) {
 						*gbl->log << "error in boundary information " << i << j << std::endl;
@@ -508,7 +509,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			/* VRTX INFO */
 			for(int i=0;i<npnt;++i) {
 				in.ignore(80,':');
-				for(n=0;n<ND;++n)
+				for(int n=0;n<ND;++n)
 					in >> pnts(i)(n);
 			}
 			
@@ -723,7 +724,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			/* POINT INFO */
 			for(int i=0;i<npnt;++i) {
 				index[0]= i;
-				for(n=0;n<ND;++n) {
+				for(int n=0;n<ND;++n) {
 					index[1] = n;
 					nc_get_var1_double(ncid,var_id,index,&pnts(i)(n));
 				}
@@ -736,7 +737,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			if ((retval = nc_inq_varid (ncid, "segs", &var_id))) ERR(retval);
 			for(int i=0;i<nseg;++i) {
 				index[0]= i;
-				for(n=0;n<2;++n) {
+				for(int n=0;n<2;++n) {
 					index[1] = n;
 					nc_get_var1_int(ncid,var_id,index,&seg(i).pnt(n));
 				}
@@ -747,7 +748,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			for(int i=0;i<ntri;++i) {
 				index[0]= i;
-				for(n=0;n<3;++n) {
+				for(int n=0;n<3;++n) {
 					index[1] = n;
 					nc_get_var1_int(ncid,var_id,index,&tri(i).pnt(n));
 				}
@@ -850,7 +851,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			/* ERROR %lf SHOULD BE FLT */
 			for(int i=0;i<npnt;++i) {
 				in.ignore(80,':');
-				for(n=0;n<ND;++n)
+				for(int n=0;n<ND;++n)
 					in >> pnts(i)(n);
 				if (in.fail()) { *gbl->log << "2c: error in grid" << std::endl; sim::abort(__LINE__,__FILE__,gbl->log); }
 			}
@@ -1013,7 +1014,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			/* READ VERTEX DATA */
 			for(int i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
+				for(int n=0;n<ND;++n)
 					in >> pnts(i)(n);
 				in.ignore(80,'\n');
 				pnt(i).info = -1;
@@ -1081,7 +1082,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			istringstream data;
 			for(int i=0;i<npnt;++i) {
 				in.ignore(80,':');
-				for(n=0;n<ND;++n) {
+				for(int n=0;n<ND;++n) {
 					in >> symbolic_string;
 					data.str(symbolic_string);
 					if (!(data >> pnts(i)(n)) || !data.eof()) {
@@ -1136,7 +1137,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			nebd = 0;
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
-					for (j = 0; j <nebd;++j) {
+					for (int j = 0; j <nebd;++j) {
 						if (seg(i).info == gbl->intwk(j)) {
 							++gbl->i2wk(j);
 							goto bdnext1;
@@ -1165,7 +1166,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
-					for (j = 0; j <nebd;++j) {
+					for (int j = 0; j <nebd;++j) {
 						if (seg(i).info == ebdry(j)->idnum) {
 							ebdry(j)->seg(ebdry(j)->nseg++) = i;
 							goto bdnext1a;
@@ -1184,7 +1185,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			triangulate(nseg);
 			
 			int bpnt = 0;
-			for (i=0;i<nebd;++i)
+			for (int i=0;i<nebd;++i)
 				bpnt += ebdry(i)->nseg;
 			
 			interior_pts = npnt - bpnt;
@@ -1223,7 +1224,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	/* FIND ENDPOINT MATCHES */
 	for(int i=0;i<nvbd;++i) {
 		/* Find two connecting boundary sides */
-		for(j=0;j<nebd;++j) {
+		for(int j=0;j<nebd;++j) {
 			if (seg(ebdry(j)->seg(0)).pnt(0) == vbdry(i)->pnt) {
 				vbdry(i)->ebdry(1) = j;
 				ebdry(j)->vbdry(0) = i;
