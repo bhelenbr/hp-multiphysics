@@ -1037,6 +1037,9 @@ void tri_hp::test_jacobian() {
     CHKERRABORT(MPI_COMM_WORLD,ierr2);
     PetscViewerDestroy(&viewer);
     
+    if (gbl->jac_debug == 1)
+        return;
+    
     /* Get neighboring block information */
     const int nblock = sim::blks.nblock;
     const int myid = sim::blks.myid;
