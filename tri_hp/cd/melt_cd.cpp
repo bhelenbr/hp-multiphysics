@@ -121,6 +121,7 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 #endif
 	inmap.getwdefault(liquid_block + "_A2Dn",gbl->A2Dn,1.0);
 	inmap.getwdefault(liquid_block + "_surge_time",gbl->surge_time,1.0);
+    inmap.getwdefault(liquid_block + "_DTexponent2Dn",gbl->DTexponent2Dn,0.0);
 	
 	FLT angle;
 	inmap.getwdefault(liquid_block + "_facet_angle",angle,0.0);
@@ -145,7 +146,8 @@ void melt_cd::init(input_map& inmap,void* gbl_in) {
 #ifdef OLDKINETICS
 FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
-	FLT K2Dn_exp = gbl->K2Dn_max*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
+    FLT K2Dn_exp = gbl->K2Dn_max*pow(abs(DT),gbl->DTexponent2Dn)*gbl->K2Dn/(exp(-gbl->A2Dn/(abs(DT) +100.*EPSILON))*gbl->K2Dn_max +gbl->K2Dn);
+
 
 #ifdef TWOFACETS
 	// Hack to get other facet angle
@@ -190,7 +192,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
 	const int p = 4;
 	
-	FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)));
+    FLT K2Dn_exp = gbl->K2Dn*exp(gbl->A2Dn/(max(abs(DT),gbl->K2Dn_DT_min)))*pow(abs(DT),gbl->DTexponent2Dn);
 
 #ifdef TWOFACETS
 	// Hack to get other facet angle
