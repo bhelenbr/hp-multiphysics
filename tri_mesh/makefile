@@ -21,13 +21,13 @@ tri_mesh:
 
 libtri_mesh_mpi.a:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=${CXXMPI}
 
 .PHONY: libtri_mesh_mpi.a
 
 tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=mpic++
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC' CXX=${CXXMPI}
 	cp _mpi/tri_mesh_mpi ../bin/$@
 
 .PHONY: tri_mesh_mpi

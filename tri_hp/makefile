@@ -18,14 +18,14 @@ tri_hp:
 
 tri_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC' CXX=mpic++
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC' CXX=${CXXMPI}
 	cp _$@/tri_hp_mpi ../bin/$@
 
 .PHONY: tri_hp_mpi
 
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc' CXX=mpic++
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc' CXX=${CXXMPI}
 	cp _$@/tri_hp_petsc ../bin/$@
 
 .PHONY: tri_hp_petsc
@@ -39,14 +39,14 @@ tri_hp_axi:
 
 tri_hp_axi_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC' CXX=mpic++
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC' CXX=${CXXMPI}
 	cp _$@/tri_hp_mpi ../bin/$@
 
 .PHONY: tri_hp_axi_mpi
 
 tri_hp_axi_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMPISRC' CXX=mpic++
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMPISRC' CXX=${CXXMPI}
 	cp _$@/tri_hp_petsc ../bin/$@
 
 .PHONY: tri_hp_axi_petsc

@@ -7,7 +7,7 @@ TET_DIRS = tet_basis tet_mesh tet_hp
 #DEFINES += -DIBMR2Fortran
 export DEFINES
 
-OPT = -O3 -fpic -Wno-deprecated-declarations
+OPT = -O3 -fpic -Wno-deprecated-declarations -Wuninitialized
 #OPT += -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment
 #OPT += -fsanitize=memory
 #OPT += -fsanitize=thread
@@ -33,7 +33,8 @@ export INCLUDEDIRS
 #LIBS += -lasan -lubsan
 export LIBS
 
-LIBBLAS  = -lopenblas #(acres)
+LIBBLAS = -lmkl -lmkl_lapack -lmkl_intel_thread -qopenmp #(for intel acres)
+#LIBBLAS  = -lopenblas #(acres gnu)
 #LIBBLAS = -framework veclib #(OS X)
 #LIBBLAS = -llapack -lblas #(cares)
 #LIBBLAS = -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
