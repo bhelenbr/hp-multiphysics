@@ -37,7 +37,7 @@ if iseq(${CXXMPI},"mpiicpc")
 then
 	LIBBLAS = -lmkl -lmkl_lapack -lmkl_intel_thread -qopenmp #(for intel acres)
 else
-	LIBBLAS  = -lopenblas #(acres gnu)
+	LIBBLAS  = -lopenblas -lscalapack #(acres gnu)
 endif
 #LIBBLAS = -framework veclib #(OS X)
 #LIBBLAS = -llapack -lblas #(cares)

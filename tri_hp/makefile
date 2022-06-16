@@ -102,13 +102,7 @@ LIBS += ${LIBDIRS}
 LIBS += -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lparmetis -lm -lpth -lblitz -lnetcdf
 LIBS += ${LIBBLAS}
 
-ifeq (${CXXMPI}, "mpic++")
-# gnu openblas needs scalapack
-LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -lscalapack -ldl
-else
-# intel mkl does not
 LIBPETSC = -lpetsc -ldmumps -lmumps_common -lpord -ldl
-endif
 #LIBPETSC += -lHYPRE -lsuperlu_dist
 
 tri_hp: $(OBJ) 
