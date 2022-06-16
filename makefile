@@ -33,11 +33,10 @@ export INCLUDEDIRS
 #LIBS += -lasan -lubsan
 export LIBS
 
-if iseq(${CXXMPI},"mpiicpc")
-then
-	LIBBLAS = -lmkl -lmkl_lapack -lmkl_intel_thread -qopenmp #(for intel acres)
+ifeq (${CXXMPI},"mpiicpc")
+LIBBLAS = -lmkl -lmkl_lapack -lmkl_intel_thread -qopenmp #(for intel acres)
 else
-	LIBBLAS  = -lopenblas -lscalapack #(acres gnu)
+LIBBLAS  = -lopenblas -lscalapack #(acres gnu)
 endif
 #LIBBLAS = -framework veclib #(OS X)
 #LIBBLAS = -llapack -lblas #(cares)
