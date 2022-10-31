@@ -20,6 +20,7 @@ VALGRIND_FLAGS+=" --dsymutil=yes"
 
 cp run.inpt generate.inpt
 mod_map generate.inpt ntstep 1
+mod_map generate.inpt ncycle 0
 mod_map generate.inpt adapt 1
 mod_map generate.inpt b0_mesh square.d
 mod_map generate.inpt "growth factor" 4000
@@ -48,7 +49,7 @@ let NTSTEP=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt restart $NTSTEP
 mod_map run.inpt ntstep 1
 mod_map run.inpt adapt 1
-~/Codes/tri_hp/tri_subpartition run.inpt ${NPART}
+tri_subpartition run.inpt ${NPART}
 if [ "$?" -ne "0" ]; then
         echo "partitioning failed"
         exit 1
@@ -60,4 +61,4 @@ mpiexec -np ${NPART} tri_hp_petsc partition.inpt ${PETSC}
 
 cd ..
 
-opendiff Baseline_petsc/ Results/
+opendiff Baseline/ Results/

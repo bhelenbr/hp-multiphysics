@@ -2361,6 +2361,7 @@ int translating_surface::setup_preconditioner() {
 	int last_phase, mp_phase;
     
 	int err = hp_coupled_bdry::setup_preconditioner();
+    if (!gbl->symmetric && !is_master) return(err);
 	
 	/**************************************************/
 	/* DETERMINE MOVEMENT TIME STEP              */
