@@ -1123,12 +1123,11 @@ void block::init(input_map &input) {
     }
     else {
         input.getwdefault("recursive_timestep_levels",gbl->recursive_timestep_levels,0);
+        input.getwdefault("recursive_start_level",gbl->recursive_level,0);
+        input.getwdefault("recursive_nsuccesses",gbl->recursive_nsuccesses,1);
+        gbl->recursive_successes = 0;
+        gbl->recursive_fraction = 0;
     }
-    
-	input.getwdefault("implicit_relaxation",gbl->time_relaxation,false);
-	if (gbl->time_relaxation) {
-		gbl->dti_function.init(input,"dtinv_function");
-	}
 	
 	input.getwdefault("ntstep",ntstep,1);
 	if (ntstep < 0) {
@@ -1384,7 +1383,6 @@ void block::go(input_map input) {
 	std::ostringstream nstr;
 	clock_t begin_time, end_time;
 
-
 	init(input);
 	
 #ifdef METIS
@@ -1451,12 +1449,14 @@ void block::go(input_map input) {
         return;
     }
     
-
 	for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
-        if (gbl->recursive_timestep_levels)
+        if (gbl->recursive_timestep_levels) {
+            gbl->recursive_fraction = 0;
             recursive_time_step();
-        else
+        }
+        else {
             time_step();
+        }
         
 		/* OUTPUT DISPLAY FILES */
 		if (!((gbl->tstep)%out_intrvl)) {
@@ -1494,21 +1494,30 @@ void block::go(input_map input) {
 	return;
 }
 
-void block::recursive_time_step(int level) {
+void block::recursive_time_step(int this_level) {
     std::string outname;
     std::ostringstream nstr;
     FLT maxerror,error;
-
+    
+    if (gbl->recursive_level != this_level) {
+        /* Jump directly to lower level */
+        for(int halfstep_count=0;halfstep_count<2;++halfstep_count) {
+            recursive_time_step(this_level+1);
+        }
+        return;
+    }
+    
     try {
+        int denom = 1<<this_level;
         for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
-            *gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
+            *gbl->log << "#TIMESTEP: " << gbl->tstep << " " << (gbl->recursive_fraction>>(gbl->recursive_timestep_levels-this_level))+1 << '/' << denom << " SUBSTEP: " << gbl->substep << std::endl;
             tadvance();
-
+            
             maxerror = 0.0;
             for(gbl->iteration=0;gbl->iteration<ncycle;++gbl->iteration) {
                 error = cycle(vw,0,!(gbl->iteration%prcndtn_intrvl));
                 maxerror = MAX(error,maxerror);
-
+                
                 if (debug_output) {
                     if (gbl->iteration % debug_output == 0) {
                         nstr.str("");
@@ -1523,17 +1532,27 @@ void block::recursive_time_step(int level) {
                 throw 1;
             }
         }
+        ++gbl->recursive_successes;
+        gbl->recursive_fraction += 1<<(gbl->recursive_timestep_levels -this_level);
     }
     catch(int e) {
-        *gbl->log << "#Convergence error for time step " << gbl->tstep << "at level " << level << '\n';
-
-        if (level < gbl->recursive_timestep_levels) {
+        *gbl->log << "#Convergence error for time step " << gbl->tstep << " at level " << this_level << '\n';
+        
+        if (this_level < gbl->recursive_timestep_levels) {
+            gbl->recursive_successes = 0;
+            ++gbl->recursive_level;
             reset_timestep();
             gbl->dti *= 2.0;
             *gbl->log << "#Setting recursive time step to " << gbl->dti << '\n';
-
+            
+            /* Keep track if the sublevel actually successfully converged */
             for(int halfstep_count=0;halfstep_count<2;++halfstep_count) {
-                recursive_time_step(level+1);
+                recursive_time_step(this_level+1);
+            }
+            if (gbl->recursive_level == this_level+1 && gbl->recursive_successes == 2*gbl->recursive_nsuccesses) {
+                gbl->recursive_successes = 0;
+                --gbl->recursive_level;
+                gbl->dti /= 2.0;
             }
         }
         else {
@@ -1541,6 +1560,7 @@ void block::recursive_time_step(int level) {
             sim::abort(__LINE__,__FILE__,&std::cerr);
         }
     }
+
 }
 
 void block::time_step() {
@@ -1608,15 +1628,6 @@ FLT block::maxres(int lvl) {
 
 void block::tadvance() {
 	int lvl;
-
-	if (gbl->time_relaxation) {
-		FLT error;
-		gbl->dti_prev = gbl->dti;
-		
-		*gbl->log << "# dtinv under relaxation at error ";
-		error=maxres();
-		*gbl->log << " and tstep " << gbl->tstep << ": " << (gbl->dti = gbl->dti_function.Eval(error,static_cast<FLT>(gbl->tstep))) << std::endl;
-	}
     
     if (gbl->substep == 0) {
         /* create backup of dti_prev in case we need to reset the time step */

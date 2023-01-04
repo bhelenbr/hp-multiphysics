@@ -153,9 +153,9 @@ void tri_mesh::cut() {
 		zpart[m].allocate(maxpst*4);
 		zpart[m].partition(*this,m);
 
-		char buff[100];
-		sprintf(buff,"begin%d",m);
-		zpart[m].output(buff,tecplot);
+        ostringstream nstr;
+        nstr << "begin" << m << std::flush;
+		zpart[m].output(nstr.str(),tecplot);
 
 		/* FIND NEW BOUNDARY */
 		bnum = -1;
@@ -213,8 +213,9 @@ void tri_mesh::cut() {
 				zpart[m].pnts(pind) += dx;
 			}
 		}
-		sprintf(buff,"cut%d",m);
-		zpart[m].output(buff,grid);
+        nstr.clear();
+        nstr << "cut" << m << std::flush;
+		zpart[m].output(nstr.str(),grid);
 	}
 
 

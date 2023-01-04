@@ -63,14 +63,17 @@ struct block_global {
 	int tstep; /**< Simulation time step */
 	int substep; /**< For schemes requiring multiple solves per step */
 	int iteration; /**< Iterative counter within substep */
-	bool time_relaxation; /**< For relaxation schemes with adjustable time implicit term */
-    symbolic_function<2> dti_function;
     int auto_timestep_tries; /**< number of times to time step to be reduced before failure */
     FLT auto_timestep_ratio; /**< factor to increase or decrease time step */
     FLT auto_dti_min, auto_dti_max; /**< minimum & maximum inverse time step for auto_timestep */
     FLT dti_prev_store; /**< storage for dti_prev in case time step needs to be reset */
     FLT auto_timestep_maxtime; /**< maximum time step before time stepping stops */
-    int recursive_timestep_levels; /**< number of refinement levels for recursive timestepping */
+    int recursive_timestep_levels; /**< maximum number of refinement levels for recursive timestepping */
+    int recursive_level; /**< current refinement  level being used for a timestep */
+    int recursive_nsuccesses; /**< number of successes required to go up a level*/
+    int recursive_successes; /**< number of consecutive successes at  current_level */
+    int recursive_fraction; /**< fractional progress at current level */
+    
     
 	FLT g;  /**< gravity */
 	blitz::TinyVector<FLT,2> body; /**< General way for body forces */
@@ -171,16 +174,16 @@ class block {
 		std::string idprefix;
 		int idnum;
 		block(int idin) : idnum(idin) {
-			char buffer[100];
 			std::string keyname;
-			sprintf(buffer,"b%d",idnum);
-			idprefix = std::string(buffer);
+            ostringstream nstr;
+            nstr << "b" << idnum << std::flush;
+			idprefix = nstr.str();
 		}
 
 		/** Function to start thread */
 		void go(input_map input);
         void time_step();
-        void recursive_time_step(int level=0);
+        void recursive_time_step(int level = 0);
 
 		/** Initialization function */
 		void init(input_map& input);
@@ -275,10 +278,10 @@ class boundary {
 		std::string mytype;
 
 		boundary(int idin) : idnum(idin) {
-			char buffer[100];
 			std::string keyname;
-			sprintf(buffer,"%d",idnum);
-			idprefix = std::string(buffer);
+            ostringstream nstr;
+            nstr << idnum << std::flush;
+            idprefix = nstr.str();
 			mytype = "boundary";
 		}
 		virtual void init(input_map& bdrydata) {}
