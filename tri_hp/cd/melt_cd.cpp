@@ -824,15 +824,10 @@ void melt_facet_pt::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
 	
 	if (x.NV == 1) {
-		/* Let temperature be continuous */
-		inmap[base.idprefix +"_c0_indices"] = "0";
 		keyword = base.idprefix + "_hp_typelist";
 		inmap[keyword] = "1";
 	}
 	else {
-		/* Let temperature be continuous */
-		inmap[base.idprefix +"_c0_indices"] = "2";
-		
 		/* Make u & v dirichlet B.C.'s */
 		keyword = base.idprefix + "_hp_typelist";
 		inmap[keyword] = "0 0 1 1";

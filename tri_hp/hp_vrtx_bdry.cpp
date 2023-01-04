@@ -425,7 +425,13 @@ void hp_vrtx_bdry::petsc_jacobian_dirichlet() {
 
 
 void multi_physics_pnt::init(input_map& inmap,void* gbl_in) {
-	hp_vrtx_bdry::init(inmap,gbl_in);
+    /* Make sure c0vars is not used so send will not */
+    /* skip any variables */
+    if (inmap.find(base.idprefix+"_c0_indices") != inmap.end()) {
+        sim::abort(__LINE__,__FILE__,&std::cerr);
+    }
+    hp_vrtx_bdry::init(inmap,gbl_in);
+    
 	match_pairs.resize(base.nmatches());
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	denom.resize(vdofs);
