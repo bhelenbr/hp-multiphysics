@@ -445,7 +445,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 	int m,n,sind,v0,v1,step,stgt,info;
 	TinyVector<FLT,2> pt;
 	FLT psi;
-	FLT upt[NV];
+	FLT upt[NV+ND];
 	char uplo[] = "U";
 
 	if (!sm0) return;

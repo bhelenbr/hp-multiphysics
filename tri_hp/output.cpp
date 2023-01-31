@@ -40,7 +40,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 	switch(why) {
 		case(block::display): {
 			output(fname,output_type(0));
-			helper->output();
+			if (helper) helper->output();
 			return;
 		}
 		case(block::restart): {

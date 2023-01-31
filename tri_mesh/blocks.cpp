@@ -485,6 +485,10 @@ void blocks::allocate_shared_memory(int nentry, size_t size) {
 		shared_mem_size = size*nentry;
 #ifndef MPISRC
 		shared_mem = malloc(shared_mem_size);
+        if (!shared_mem) {
+            std::cerr << "Could not allocate memory!" << std::endl;
+            sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+        }
 #else
 		int ierr = MPI_Alloc_mem(shared_mem_size, MPI_INFO_NULL, &shared_mem);
 		if (ierr != MPI_SUCCESS) {

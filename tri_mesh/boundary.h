@@ -133,13 +133,21 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			for (int m=0;m<nmatch;++m) {
 				if (sndbuf(m) != NULL) free(sndbuf(m));
 				sndbuf(m) = malloc(buffsize);
+                if(!sndbuf(m)) {
+                    std::cerr << "Could not allocate memory! " << BASE::idprefix << ' ' << nfloats << std::endl;
+                    sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+                }
 				Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
 				fsndbufarray(m).reference(temp1);
 				Array<int,1> temp2(static_cast<int *>(sndbuf(m)), buffsize/sizeof(int), neverDeleteData);
 				isndbufarray(m).reference(temp2);
 				
 				if (rcvbuf(m) != NULL) free(rcvbuf(m));
-				rcvbuf(m) = malloc(buffsize); 
+				rcvbuf(m) = malloc(buffsize);
+                if(!rcvbuf(m)) {
+                    std::cerr << "Could not allocate memory!" << BASE::idprefix << ' ' << nfloats << std::endl;
+                    sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+                }
 				Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
 				frcvbufarray(m).reference(temp3);
 				Array<int,1> temp4(static_cast<int *>(rcvbuf(m)), buffsize/sizeof(int), neverDeleteData);
@@ -216,12 +224,20 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				snd_tags(nmatch) = snd_tag;
 				rcv_tags(nmatch) = rcv_tag;
 				sndbuf(nmatch) = malloc(buffsize);
+                if(!sndbuf(nmatch)) {
+                    std::cerr << "Could not allocate memory! " << BASE::idprefix << ' ' << buffsize << std::endl;
+                    sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+                }
 				Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 				fsndbufarray(nmatch).reference(temp1);
 				Array<int,1> temp2(static_cast<int *>(sndbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
 				isndbufarray(nmatch).reference(temp2);
 				
 				rcvbuf(nmatch) = malloc(buffsize);
+                if(!rcvbuf(nmatch)) {
+                    std::cerr << "Could not allocate memory! " << BASE::idprefix << ' ' << buffsize << std::endl;
+                    sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+                }
 				Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 				frcvbufarray(nmatch).reference(temp3);
 				Array<int,1> temp4(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
@@ -241,12 +257,20 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			snd_tags(nmatch) = snd_tag;
 			rcv_tags(nmatch) = rcv_tag;
 			sndbuf(nmatch) = malloc(buffsize);
+            if(!sndbuf(nmatch)) {
+                std::cerr << "Could not allocate memory! "  << BASE::idprefix << ' ' << buffsize << std::endl;
+                sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+            }
 			Array<FLT,1> temp1(static_cast<FLT *>(sndbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 			fsndbufarray(nmatch).reference(temp1);
 			Array<int,1> temp2(static_cast<int *>(sndbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
 			isndbufarray(nmatch).reference(temp2);
 			
 			rcvbuf(nmatch) = malloc(buffsize);
+            if(!rcvbuf(nmatch)) {
+                std::cerr << "Could not allocate memory!"  << BASE::idprefix << ' ' << buffsize << std::endl;
+                sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+            }
 			Array<FLT,1> temp3(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
 			frcvbufarray(nmatch).reference(temp3);
 			Array<int,1> temp4(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);

@@ -45,7 +45,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		if (!input.get(keyword,grwfac)) {
 			input.getwdefault("growth factor",grwfac,1.0);
 		}
-		if (grwfac < 1.0) {
+		if (grwfac > 0.0 && grwfac < 1.0) {
 			*gbl->log << "growth factor must be greater than one\n";
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
@@ -75,7 +75,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		}
 		
 		if (!input.get(gbl->idprefix+"_minimum_length",gbl->min_length)) {
-			input.getwdefault("minimum_length",gbl->min_length,1e-4*gbl->max_length/maxpst);
+			input.getwdefault("minimum_length",gbl->min_length,-1.0);
 		}
 	}
 
@@ -162,6 +162,7 @@ void tri_mesh::allocate(int mxsize) {
 	}
 
 	initialized = 1;
+    *gbl->log << "#Allocated mesh with maxpst = " << mxsize << std::endl;
 
 	return;
 }
@@ -184,6 +185,8 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	}
 	else
 		grd_nm = filename;
+    
+    FLT grwfac1d = sqrt(grwfac);
 		
 	/* Override filetype based on ending? */
 	size_t dotloc;
@@ -226,8 +229,15 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
-			if (!initialized) {
-				allocate(nseg + (int) (grwfac*nseg));
+            if (!initialized) {
+                if (grwfac > 0.0) {
+                    /* Scaling factor */
+                    allocate(nseg + (int) (grwfac*nseg));
+                }
+                else {
+                    /* absolute size */
+                    allocate(-(int)(grwfac));
+                }
 			}
 			else if (nseg > maxpst) {
 				*gbl->log << "error: mesh is too large" << std::endl;
@@ -269,7 +279,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
@@ -424,7 +434,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				
 				temp = 2;
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
-				ebdry(i)->alloc(static_cast<int>(count*4*grwfac));
+				ebdry(i)->alloc(static_cast<int>(count*4*grwfac1d));
 				ebdry(i)->nseg = count;
 				
 				in.ignore(160,'\n');
@@ -549,7 +559,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
 				in.ignore(80,':');
 				in >> ebdry(i)->nseg;
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac1d*ebdry(i)->nseg));
 				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
 				for(int j=0;j<ebdry(i)->nseg;++j) {
 					in.ignore(80,':');
@@ -654,7 +664,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				temp = bin.readInt(sizeof(int));
 				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
 				ebdry(i)->nseg = bin.readInt(sizeof(int));
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac1d*ebdry(i)->nseg));
 				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
 				for(int j=0;j<ebdry(i)->nseg;++j)
 					ebdry(i)->seg(j) = bin.readInt(sizeof(int));
@@ -787,7 +797,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				if ((retval = nc_inq_dimid(ncid, nstr.str().c_str(), &dim_id))) ERR(retval);
 				if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
 				ebdry(i)->nseg = dimreturn;
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac1d*ebdry(i)->nseg));
 				
 				/* Get the varid of the data variable, based on its name. */
 				if ((retval = nc_get_var_int(ncid, var_id, &ebdry(i)->seg(0)))) ERR(retval);
@@ -961,7 +971,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
@@ -1044,7 +1054,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			nebd = 1;
 			ebdry.resize(1);
 			ebdry(0) = getnewedgeobject(1,bdrymap);
-			ebdry(0)->alloc(static_cast<int>(4*grwfac*count));
+			ebdry(0)->alloc(static_cast<int>(4*grwfac1d*count));
 			ebdry(0)->nseg = count;
 			count = 0;
 			for(int i=0;i<nseg;++i)
@@ -1158,7 +1168,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;

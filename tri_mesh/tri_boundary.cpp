@@ -35,6 +35,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 /* GENERIC FUNCTIONS FOR SIDES          */
 /**************************************/
 void edge_bdry::alloc(int n) {
+    *x.gbl->log << "#" << idprefix << " allocating " << n << std::endl;
 	maxseg = n;
 	seg.resize(Range(-1,n));
 	prev.resize(Range(-1,n));
