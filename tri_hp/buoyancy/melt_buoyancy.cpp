@@ -90,7 +90,7 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 		/* Evaluate Fluxes */
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
 		amv(0) = -(mvel(0,i)-u(0)(i)); amv(1) = -(mvel(1,i)-u(1)(i));
-		anorm(0)= norm(0); anorm(1) = norm(1);
+		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 		for(int n=0;n<x.NV;++n)
 			au(n) = u(n)(i);
 		for(int n=0;n<x.NV;++n) {
