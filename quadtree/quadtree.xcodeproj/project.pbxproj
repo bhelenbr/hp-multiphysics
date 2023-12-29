@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -152,7 +152,8 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1230;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 			};
 			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -215,6 +216,7 @@
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -234,6 +236,7 @@
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -268,9 +271,11 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -283,8 +288,9 @@
 					"$(inherited)",
 					../include,
 					"$(PACKAGES)/include",
-					/usr/local/include,
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
 			};
@@ -314,8 +320,10 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -328,8 +336,9 @@
 					"$(inherited)",
 					../include,
 					"$(PACKAGES)/include",
-					/usr/local/include,
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
 			};
@@ -341,6 +350,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_VERSION = "";
@@ -356,6 +366,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_VERSION = "";

@@ -42,6 +42,9 @@ brew install blitz
 brew install pdftohtml
 brew install graphviz
 brew install doxygen
+brew install latex2rtf
+brew install latexdiff
+brew install svn
 
 #need to install numpy scipy matplotlib for python plotting
 #brew install python (install python3)
@@ -164,6 +167,10 @@ git clean -f -d -x         # remove all files that are not in the git repo
 # Add this for optimization (factor of 2 faster)
 --with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native -mtune=native"
 
+# Add this for optimization (factor of 2 faster) on apple silicon
+--with-debugging=0 --COPTFLAGS="-O3" --CXXOPTFLAGS="-O3" --FOPTFLAGS="-O3"
+
+
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;
@@ -185,7 +192,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
        export CMAKE_INSTALL_PREFIX=${HOME}/Packages or /share/apps
 
-
+E
 	[cmake ..]
 
 	[ccmake ..] (on linux or OS X)
@@ -195,11 +202,12 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	## Change BUILD DOXYGEN if you want documentation and have doxygen installed
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 	Can ignore this I think
+	# Put -framework accelerate everywhere to eliminate linking error with dgesv
 	Hit "c" configure then Hit "g" generate
 
 	[cmake ..]
 	[make depend]
-	[make -j 2]
+	[make -j 2]  
 	[make install]
 
 	# Move the include_all/MAdLib folder and replace the one in include

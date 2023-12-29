@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -200,7 +200,8 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1230;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 			};
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -261,6 +262,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = utilities;
 			};
@@ -271,6 +273,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = "$(HOME)/bin";
 				PRODUCT_NAME = utilities;
 			};
@@ -301,8 +304,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -318,11 +323,11 @@
 				HEADER_SEARCH_PATHS = (
 					"${PACKAGES}/include",
 					../include,
-					/usr/local/include,
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
-				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -351,7 +356,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
@@ -364,11 +371,11 @@
 				HEADER_SEARCH_PATHS = (
 					"${PACKAGES}/include",
 					../include,
-					/usr/local/include,
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
-				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
@@ -377,6 +384,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -394,6 +402,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
@@ -408,6 +417,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				INSTALL_PATH = /lib;
@@ -421,6 +431,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				INSTALL_PATH = /lib;

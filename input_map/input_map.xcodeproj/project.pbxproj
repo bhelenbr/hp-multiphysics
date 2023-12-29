@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -148,7 +148,8 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 			};
 			buildConfigurationList = 6FD651C50922EC5F00D18689 /* Build configuration list for PBXProject "input_map" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -197,6 +198,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -207,6 +209,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = input_map;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 			};
@@ -237,10 +240,12 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -255,17 +260,17 @@
 					"$(inherited)",
 					"$(SRCROOT)/../include",
 					"$(PACKAGES)/include",
-					/usr/local/include,
+					"${HOMEBREW_PREFIX}/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib",
 					"$(SRCROOT)/../lib",
-					/usr/local/lib,
+					"$(HOMEBREW_PREFIX)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
-				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -294,9 +299,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -311,17 +318,17 @@
 					"$(inherited)",
 					"$(SRCROOT)/../include",
 					"$(PACKAGES)/include",
-					/usr/local/include,
+					"${HOMEBREW_PREFIX}/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib",
 					"$(SRCROOT)/../lib",
-					/usr/local/lib,
+					"$(HOMEBREW_PREFIX)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
-				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
@@ -330,6 +337,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = NO;
 				OTHER_LDFLAGS = "-lmuparser";
 				PRODUCT_NAME = mod_map;
@@ -341,6 +349,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = NO;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-lmuparser";

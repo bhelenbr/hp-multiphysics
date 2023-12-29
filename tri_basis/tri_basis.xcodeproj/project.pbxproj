@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -173,7 +173,8 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1230;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 			};
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tri_basis" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -221,12 +222,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
 				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = tri_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -237,9 +240,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = tri_basis;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -251,6 +256,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
@@ -266,6 +272,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				INSTALL_PATH = "$(HOME)/bin";
 				OTHER_LDFLAGS = "-lblitz";
@@ -297,8 +304,10 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -310,17 +319,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					../include,
 					"$(PACKAGES)/include",
-					"${HOME}/Packages/include",
+					"$(HOMEBREW_PREFIX)/include",
+					../include,
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib/",
+					"$(HOMEBREW_PREFIX)/lib",
 					../lib,
-					"${HOME}/Packages/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Debug;
 		};
@@ -348,7 +358,9 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -360,17 +372,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					../include,
 					"$(PACKAGES)/include",
-					"${HOME}/Packages/include",
+					"$(HOMEBREW_PREFIX)/include",
+					../include,
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib/",
+					"$(HOMEBREW_PREFIX)/lib",
 					../lib,
-					"${HOME}/Packages/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PACKAGES = /usr/local;
+				PACKAGES = "$(HOME)/Packages";
 			};
 			name = Release;
 		};
