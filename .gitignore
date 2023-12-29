@@ -15,6 +15,7 @@ bin/tri_mesh*
 bin/tet_mesh*
 bin/spline
 bin/show*
+.DS_Store
 _*
 IDEWorkspaceChecks.plist
 build/
