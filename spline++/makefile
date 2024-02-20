@@ -8,7 +8,7 @@ LIBS += ${LIBDIRS}
 LIBS += -lspline -lm
 LIBS += ${LIBBLAS}
 
-all: libspline.a splinetest
+all: libspline.a spline
 
 clean:
 	rm *.o splinetest
