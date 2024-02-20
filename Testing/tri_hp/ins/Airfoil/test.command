@@ -216,9 +216,14 @@ for i in range(2):
 	os.system("mpiexec -np 2 tri_hp_petsc run.inpt")
 
 os.system('mod_map run.inpt restart 3')
-#os.system('mod_map run.inpt log2p 2')
 os.system('mod_map run.inpt ntstep 4')
 os.system('mod_map run.inpt adapt 1')
+os.system("mpiexec -np 2 tri_hp_petsc run.inpt")
+
+os.system('mod_map run.inpt restart 7')
+os.system('mod_map run.inpt log2p 2')
+os.system('mod_map run.inpt adapt 0')
+os.system('mod_map run.inpt ntstep 1')
 os.system("mpiexec -np 2 tri_hp_petsc run.inpt")
 
 os.system("opendiff ../Results ../Baseline");
