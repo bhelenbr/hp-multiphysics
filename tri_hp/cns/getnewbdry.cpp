@@ -23,9 +23,8 @@ using namespace bdry_cns;
  */
 class tri_hp_cns_vtype {
 	public:
-		static const int ntypes = 7;
-		enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
-		inflow,hybrid_slave_point,hybrid_point};
+		static const int ntypes = 1;
+		enum ids {unknown=-1,inflow};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -34,8 +33,7 @@ class tri_hp_cns_vtype {
 		}
 };
 
-const char tri_hp_cns_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar",
-	"inflow","hybrid_slave_point","hybrid_point"};
+const char tri_hp_cns_vtype::names[ntypes][40] = {"inflow"};
 
 hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
 	std::string keyword,val;
@@ -45,36 +43,12 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
 
 	type = tri_hp_cns_vtype::getid(name.c_str());
 	switch(type) {
-//		case tri_hp_cns_vtype::surface_inflow: {
-//			temp = new surface_fixed_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_vtype::surface_periodic: {
-//			temp = new surface_periodic_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_vtype::surface_outflow: {
-//			temp = new surface_outflow_endpt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_vtype::surface_outflow_planar: {
-//			temp = new surface_outflow_planar(*this,*vbdry(bnum));
-//			break;
-//		}
 		case tri_hp_cns_vtype::inflow: {
 			temp = new inflow_pt(*this,*vbdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_vtype::hybrid_slave_point: {
-//			temp = new hybrid_slave_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_vtype::hybrid_point: {
-//			temp = new hybrid_pt(*this,*vbdry(bnum));
-//			break;
-//		}
 		case tri_hp_cns_vtype::unknown: {
-			return(tri_hp::getnewvrtxobject(bnum,name));
+            return(tri_hp::getnewvrtxobject(bnum,name));
 		}
 	} 
 	gbl->vbdry_gbls(bnum) = temp->create_global_structure();

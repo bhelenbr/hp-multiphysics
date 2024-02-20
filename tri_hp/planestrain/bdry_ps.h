@@ -97,7 +97,7 @@ namespace bdry_ps {
 			void rsdl(int stage);
 
 			void vdirichlet() {
-				int sind,v0;
+				int v0,sind=-1;
 
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j);
