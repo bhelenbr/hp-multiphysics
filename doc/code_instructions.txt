@@ -60,6 +60,13 @@ brew cleanup (wait until you are sure everything works)
 # If you want to start over: uninstall homebrew:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
 
+#################
+ON NVIDIA CLUSTER
+#################
+module load cmake
+module load openblas/dynamic
+module load openmpi/gcc/64/4.1.5
+
 ############################################################
 # THE FOLLOWING PACKAGES ARE UNNECESSARY IF USING HOMEBREW #
 # SKIP TO THE PART ABOUT BUILDING MY CODE                  #
@@ -89,33 +96,31 @@ tar zxvf openmpi-1.4.4.tar.gz
 ./configure --prefix=${HOME}/Packages
 make all install
 
+
 ###################################################################
 #### MATH PARSING LIBRARY 
 #### AVAILABLE THROUGH PACKAGE MANGER IN UBUNTU (SYNAPTIC?) OR YUM
 ###################################################################
 Download muParser v2_2_2 (most recent) at http://muparser.sourceforge.net/
-
-Replace XX with version number in following.
-move it to the Packages folder
-while in the Downloads folder,
-	[mv muparser_vXX.tar ../Packages]
-go to the Packages folder
-	[cd ../Packages]
-extract, configure 
-	[tar zxvf muparser_vXX.tar]
-	[cd muparser]
-	[./configure --prefix=${HOME}/Packages]
-	[make]
-	[make install]
-
 # or FROM repository
-svn checkout http://muparser.googlecode.com/svn/trunk/ muparser-read-only
+git clone https://github.com/beltoforion/muparser.git
+[cd muparser]
+cmake .
+ccmake .
+# Change cmake_install_prefix to /Users/bhelenbr/Packages
+# (c)configure then (g)enerate
+make 
+make install
+
 
 ###################################################################
 ######## PTH USER SPACE THREADS LIBRARY #############
 ###################################################################
 
 Download Pth (2.0.7 is most recent) at http://www.gnu.org/software/pth/
+Or
+# curl -OL ftp://ftp.gnu.org/gnu/pth/pth-2.0.7.tar.gz
+# curl -OL http://ftp.gnu.org/gnu/pth/pth-2.0.7.tar.gz
 move pth-2.0.7.tar.gz to Packages
 	[tar zxvf pth-2.0.7.tar.gz]
 	[cd pth-2.0.7]
@@ -125,7 +130,7 @@ move pth-2.0.7.tar.gz to Packages
 	[make install]
 	[cd ..]
 
-# curl -OL ftp://ftp.gnu.org/gnu/pth/pth-2.0.7.tar.gz
+
 
 ###################################################################
 #### (VALGRIND ONLY FOR DEBUGGING  SKIP THIS) ####
@@ -169,6 +174,9 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 # Add this for optimization (factor of 2 faster) on apple silicon
 --with-debugging=0 --COPTFLAGS="-O3" --CXXOPTFLAGS="-O3" --FOPTFLAGS="-O3"
+
+# ON Nvidia Cluster
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native -mtune=native" --download-zlib
 
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
@@ -218,14 +226,9 @@ NOW DOWNLOAD MY CODE
 ###################################################################
 [cd]
 git clone https://github.com/bhelenbr/hp-multiphysics.git
-[mkdir bin] # (if not already there)
-[cd Codes]
-[mkdir include lib] # (if not already there)
-now get all of my stuff:
-git clone ssh://git@balin.camp.clarkson.edu/~/GitRepo Codes
-[mkdir bin] # (if not already there)
-[cd Codes]
-[mkdir include lib] # (if not already there)
+[cd hp-multiphysics]
+[mkdir include]
+[mkdir lib] # (if not already there)
 #################################################################
 
 ###################################################################	
@@ -261,7 +264,7 @@ To load the new environment variables
 
 make -j 2 tri_hp (For 2 processor machine)
 or to do everything including 3D stuff too
-ma
+make -j 2
 ###################################################################
 
 ###################################################################

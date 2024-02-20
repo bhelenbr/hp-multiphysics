@@ -6,7 +6,7 @@ b0_adaptable: 0
 b0_growth factor: 2
 b0_s1_type: spline
 b0_s1_filename: naca.spl
-b0_s1_s_limits: 0 2.0452
+#b0_s1_s_limits: 0 2.0452
 b0_s2_type: comm
 b0_s3_type: comm
 b0_s4_type: comm

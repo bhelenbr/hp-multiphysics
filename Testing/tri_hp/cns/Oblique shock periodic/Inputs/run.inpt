@@ -1,0 +1,88 @@
+#polynomial order: 
+log2p: 0
+#petsc command line args: 
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+#Number of iterative cycles: 
+ncycle: 30
+#Iterative tolerances: 
+absolute_tolerance: 1.0e-10
+relative_tolerance: 5.0e-10
+#Number of time steps: 
+ntstep: 20
+#rsdl_debug: 1
+#jac_debug: 1
+#debug_output: 1
+extrapolate: 0
+#Inverse time step: 
+dtinv: ntstep/(vu*tantheta)
+# Name of file for output: 
+logfile: output
+# Number of mesh blocks for each processor: 
+nblock: 1 1
+#Physical properties: 
+blocktype: cns
+mesh_movement: coupled_deformable
+mu: 0
+prandtl: 1
+# Initial and boundary condition function: 
+M: 3
+gamma: 1.4
+pu: 1
+RTu: 1
+cu: gamma^(1/2)
+vu: M*cu
+rhou: gamma*pu/(cu^2)
+tantheta: 0.1
+A: 0.01
+nwave: 1
+b0_ibc: symbolic
+#Nondimesnional based on upstream props: 
+b0_ibc0: pu
+b0_ibc1: vu*tantheta
+b0_ibc2: -vu
+b0_ibc3: RTu
+# Name of mesh: 
+b0_mesh: square4top.grd
+# Side type specifiers: 
+b0_s1_type: coupled_symbolic_comm
+b0_s1_h: x1 -A*sin(2*_pi*x0)
+b0_s1_dhdx0: -A*2*_pi*cos(2*_pi*x0)
+b0_s1_dhdx1: 1
+b0_s1_hp_type: shock
+b0_s2_type: prdc
+b0_s2_r_dir: 0 0
+b0_s3_hp_type: inflow
+b0_s3_r_dir: 1 1
+# IC downstream: 
+vs: 0.0
+Md: (vu-vs)/cu
+pd: pu*(1.0+((2.0*gamma)/(gamma+1.0))*(Md^2-1.0))
+rhod: rhou*(((gamma+1.0)*Md^2)/((gamma-1.0)*Md^2+2.0))
+vd: vs+(rhou/rhod)*(vu-vs)
+RTd: pd/rhod
+b1_ibc: symbolic
+b1_ibc0: pd
+b1_ibc1: vu*tantheta
+b1_ibc2: -vd
+b1_ibc3: RTd
+# Name of mesh: 
+b1_mesh: square4bot.grd
+# Side type specifiers: 
+b1_s1_type: coupled_symbolic_comm
+b1_s1_hp_type: shock
+b1_s1_h: b0_s1_h
+b1_s1_dhdx0: b0_s1_dhdx0
+b1_s1_dhdx1: b0_s1_dhdx1
+b1_s5_hp_type: outflow
+b1_s5_r_dir: 1 1
+b1_s4_type: prdc
+b1_s4_r_dir: 0 0
+b0_v1_hp_type: hp_deformable_free_pnt
+b1_v1_hp_type: hp_deformable_free_pnt
+# This way works: 
+b0_s1_phase1: 1
+b1_s1_phase1: 1
+# This way will work as well: 
+#b0_v1_type: prdc
+#b1_v1_type: prdc
+#b0_v1_b1_v1_matching: 0 0 1 1 3 3 4 4

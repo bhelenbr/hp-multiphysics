@@ -258,6 +258,16 @@ template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>
 	return 0;
 }
 
+template<int ND> int spline<ND>::offset(const double xptin, const double distance, TinyVector<double,ND>& loc) const {
+    interpolate(xptin,loc);
+    TinyVector<double,ND> t;
+    tangent(xptin,t);
+    t = t/sqrt(dot(t,t));
+    loc[0] += t[1]*distance;
+    loc[1] -= t[0]*distance;
+    return 0;
+}
+
 template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& tan) const {
     double a,b,bma,z;
     
@@ -495,7 +505,7 @@ template<int ND> int spline3<ND>::read(std::string filename) {
 	return 0;
 }
 
-template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) {
+template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) const {
 	double a,b,bma,t;
 	
 	double xpt = xptin;
@@ -516,7 +526,17 @@ template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND
 	return 0;
 }
 
-template<int ND> int spline3<ND>::tangent(double xptin, TinyVector<double,ND>& tan) {
+template<int ND> int spline3<ND>::offset(const double xptin, const double distance, TinyVector<double,ND>& loc) const {
+    interpolate(xptin,loc);
+    TinyVector<double,ND> t;
+    tangent(xptin,t);
+    t = t/sqrt(dot(t,t));
+    loc[0] += t[1]*distance;
+    loc[1] -= t[0]*distance;
+    return 0;
+}
+
+template<int ND> int spline3<ND>::tangent(double xptin, TinyVector<double,ND>& tan) const {
     double a,b,bma,t;
     
     double xpt = xptin;
@@ -537,7 +557,7 @@ template<int ND> int spline3<ND>::tangent(double xptin, TinyVector<double,ND>& t
     return 0;
 }
 
-template<int ND> int spline3<ND>::curvature(double xptin, TinyVector<double,ND>& curv) {
+template<int ND> int spline3<ND>::curvature(double xptin, TinyVector<double,ND>& curv) const {
     double a,b,bma,t;
     
     double xpt = xptin;
@@ -558,7 +578,7 @@ template<int ND> int spline3<ND>::curvature(double xptin, TinyVector<double,ND>&
     return 0;
 }
 
-template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) {
+template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) const {
     int k,sidloc,sidlocprev=0;
     double ol,psi,normdist;
     double psiloc,psiprev,normdistprev=1.0e32;

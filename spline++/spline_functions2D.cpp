@@ -34,15 +34,11 @@ void spline_functions2D::transform2Di(TinyVector<double,2>& xpt, const double si
 void spline_functions2D::interpolate(const spline<2>& myspline, double s, const double size, const double angle, const TinyVector<double,2> dx, double norm_dist) {
     const int ND = 2;
     TinyVector<double,ND> x, tan, curv, zero = 0.0;
-    myspline.interpolate(s,x);
+    myspline.offset(s,norm_dist/size,x);
     transform2Di(x,size,angle,dx);
     myspline.tangent(s, tan);
     transform2Di(tan,size,angle,zero);
-    TinyVector<double,ND> norm;
-    norm(0) = tan(1);
-    norm(1) = -tan(0);
-    norm /= sqrt(dot(norm,norm));
     myspline.curvature(s, curv);
     transform2Di(curv,size,angle,zero);
-    std::cout << std::setprecision(10) << s << ' ' << x(0) +norm(0)*norm_dist << ' ' << x(1) +norm(1)*norm_dist << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+    std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
 }

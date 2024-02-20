@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>509</string>
+	<string>523</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -164,7 +164,7 @@ if [ $X11Running -eq 0 ] ; then
   fi
 fi
 
-source ${HOME}/.zshrc
+source ${HOME}/.zprofile
 
 #DISPLAY=:0.0; export DISPLAY
 location="${HOME}/hp-multiphysics/bin"
@@ -293,7 +293,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>425.500000:317.000000</string>
+				<string>674.500000:317.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -303,7 +303,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>9C023F45-D8BB-4876-A6DC-4BEEEA384B71</key>
+		<key>F2C79CE0-7777-4559-A952-0FAB1E5994E1</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
