@@ -221,4 +221,4 @@ os.system('mod_map run.inpt ntstep 4')
 os.system('mod_map run.inpt adapt 1')
 os.system("mpiexec -np 2 tri_hp_petsc run.inpt")
 
-#os.system("open naca.pdf");
+os.system("opendiff ../Results ../Baseline");

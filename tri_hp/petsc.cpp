@@ -657,7 +657,7 @@ void tri_hp::petsc_rsdl() {
 	
 	rsdl();
 	
-	enforce_continuity(gbl->res, r_tri_mesh::gbl->res);
+    enforce_continuity(gbl->res, gbl->r_tri_mesh::global::res);
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
@@ -683,10 +683,10 @@ void tri_hp::petsc_rsdl() {
 			}
 			
 			for(int n=0;n<vdofs-NV;++n) {
-				if (fabs(r_tri_mesh::gbl->res(i)(n)) < DEBUG_TOL)
+				if (fabs(gbl->r_tri_mesh::global::res(i)(n)) < DEBUG_TOL)
                     *gbl->log << "0.0 ";
                 else
-                    *gbl->log << r_tri_mesh::gbl->res(i)(n) << ' ';
+                    *gbl->log << gbl->r_tri_mesh::global::res(i)(n) << ' ';
 			}
 			*gbl->log << '\n';
 		}
@@ -744,7 +744,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 			for(int n=0;n<NV;++n)
 				rv(ind++) = gbl->res.v(i,n);
 			for(int n=0;n<ND;++n)
-				rv(ind++) = r_tri_mesh::gbl->res(i)(n);
+				rv(ind++) = gbl->r_tri_mesh::global::res(i)(n);
 		}
 	}
 	

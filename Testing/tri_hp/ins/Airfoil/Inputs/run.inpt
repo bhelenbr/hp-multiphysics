@@ -12,12 +12,12 @@ ntstep: 1
 # inverse of timestep 0=steady state: 
 adapt: 0
 length_smoothing_steps: 1
-minimum_length: 8e-4*d
+#minimum_length: 8e-4*d
 error_estimator: energy_norm
 # Uncomment above to use error estimation when adapting: 
 # Otherwise just maintains mesh quality for deforming meshes: 
 # target error level when using mesh adaptation (for energy_norm): 
-error_target: 1.0e-4
+error_target: 1.0e-3
 # Make curvature_sensitivity greater than 0 to adapt based on geometry curvature: 
 curvature_sensitivity: 2.0
 nblock: 1 1
@@ -44,7 +44,7 @@ b0_s3_type: comm
 b0_s2_adaptable: 0
 b0_s3_adaptable: 0
 b1_mesh: rstrt1_b1.grd
-b1_growth factor: 20
+b1_growth factor: 120
 b1_s2_type: comm
 b1_s3_type: comm
 b1_s2_adaptable: 0

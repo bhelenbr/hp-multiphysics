@@ -2127,7 +2127,7 @@ int hp_deformable_fixed_pnt::setup_preconditioner() {
 	const int nfix = tri_mesh::ND;
 
 	/* Turn off preconditioner for r_tri_mesh */
-	x.r_tri_mesh::gbl->diag(base.pnt) = 1.0;
+	x.gbl->r_tri_mesh::global::diag(base.pnt) = 1.0;
 	
 	/* Turn off side preconditioner as well */
 	if (surf) {
