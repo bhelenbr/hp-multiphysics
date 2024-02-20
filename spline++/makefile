@@ -18,7 +18,8 @@ libspline.a: $(OBJ)
 	cp -f libspline.a ../lib/
 	cp -f spline.h ../include/
 
-splinetest: $(OBJ) main.o libspline.a
+spline: $(OBJ) main.o libspline.a
 	${CXX} -o $@ main.o ${LIBS}
+	cp $@ ../bin/$@
 
 $(OBJ): spline.h spline_impl.h
