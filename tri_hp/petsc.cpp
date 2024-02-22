@@ -973,6 +973,9 @@ void tri_hp::ug_to_petsc(){
 	for(int i = 0; i < nvbd; ++i)
 		hp_vbdry(i)->ug_to_petsc(ind);
 	
+    VecAssemblyBegin(petsc_u);
+    VecAssemblyEnd(petsc_u);
+    
 	return;
 }
 

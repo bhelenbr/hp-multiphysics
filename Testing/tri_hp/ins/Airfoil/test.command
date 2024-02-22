@@ -205,8 +205,15 @@ count += 1
 
 f.close()
 
+PETSC_FLAGS=""
+#PETSC_FLAGS=" -info -log_summary -ac-log_summary -memory_info -malloc_log -malloc_info -malloc_debug"
+#PETSC_FLAGS+=" -fp_trap"
+#PETSC_FLAGS+=" -on_error_attach_debugger gdb"
+#PETSC_FLAGS+=" -start_in_debugger gdb"
+#PETSC_FLAGS+=" -stop_for_debugger"
+
 os.system("tri_mesh generate.inpt")
-os.system("mpiexec -np 2 tri_hp_petsc run.inpt")
+os.system("mpiexec -np 2 tri_hp_petsc run.inpt" +PETSC_FLAGS)
 
 mu = 1.0e-1
 for i in range(2):
