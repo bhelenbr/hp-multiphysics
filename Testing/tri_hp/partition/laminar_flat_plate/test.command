@@ -13,49 +13,70 @@ mkdir Results
 cd Results
 cp ../Inputs/* .
 
+# Make basic mesh
 tri_mesh generate.inpt
 
 # HP="mpiexec -np 1 tri_hp_petsc -stop_for_debugger"
 
 #PETSC="-stop_for_debugger"
-OMPIFLAGS="--bysocket --bind-to-socket --report-bindings"
-MPICHFLAGS="-bind-to socket"
+#OMPIFLAGS="--bysocket --bind-to-socket --report-bindings"
+MPICHFLAGS="-bind-to rr"
 MPIFLAGS=${MPICHFLAGS}
+export OMP_NUM_THREADS=1
+export OMP_DISPLAY_AFFINITY=true
 
-mpiexec -np 1 ${MPIFLAGS} ${HP} run.inpt ${PETCSC}
-echo -n "1 " >> cputimes.dat
-tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> cputimes.dat
-echo -n " " >> cputimes.dat
-grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat 
-echo -n " " >> cputimes.dat
-grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> cputimes.dat
 
-let NPART=2
-let NPROC=4
-
-while [ ${NPART} -le ${NPROC} ]; do
-	mkdir npart${NPART}
-	cd npart${NPART}
+let NREFINE=1
+let NREFINEMAX=2
+while [ ${NREFINE} -le ${NREFINEMAX} ]; do
+	mkdir nrefine${NREFINE}
+	cd nrefine${NREFINE}
 	cp ../* .
-	mod_map run.inpt adapt 1
-	tri_subpartition run.inpt ${NPART}
-	if [ "$?" -ne "0" ]; then
-			echo "partitioning failed"
-			exit 1
-	fi
-	mod_map partition.inpt adapt 0
-	mpiexec -np ${NPART} ${MPIFLAGS} ${HP} partition.inpt ${PETSC}
-	echo -n "${NPART} "  >> ../cputimes.dat
-	tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> ../cputimes.dat
-	echo -n " " >> ../cputimes.dat
-	grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> ../cputimes.dat 
-	echo -n " " >> ../cputimes.dat
-	grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> ../cputimes.dat
+	
+	# RUN SINGLE PROCESS CASE
+	CMD="mpiexec -np 1 ${MPIFLAGS} ${HP} run.inpt"
+	echo ${CMD}
+	eval "${CMD}"
+	echo -n "1 " >> cputimes.dat
+	tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> cputimes.dat
+	echo -n " " >> cputimes.dat
+	grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> cputimes.dat 
+	echo -n " " >> cputimes.dat
+	grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> cputimes.dat
+	
+	let NPART=2
+	let NPARTMAX=8
+	while [ ${NPART} -le ${NPARTMAX} ]; do
+		mkdir npart${NPART}
+		cd npart${NPART}
+		cp ../* .
+		mod_map run.inpt adapt 1
+		tri_subpartition run.inpt ${NPART}
+		if [ "$?" -ne "0" ]; then
+				echo "partitioning failed"
+				exit 1
+		fi
+		mod_map partition.inpt adapt 0
+		CMD="mpiexec -np ${NTASKS} ${MPIFLAGS} ${HP} run.inpt"
+		echo ${CMD}
+		eval "${CMD}"
+		echo -n "${NPART} "  >> ../cputimes.dat
+		tail -1 out_b0.log | cut -d \  -f 3 | tr -d '\n' >> ../cputimes.dat
+		echo -n " " >> ../cputimes.dat
+		grep 'jacobian made' out_b0.log | tail -1 | cut -d\  -f 3 | tr -d '\n' >> ../cputimes.dat 
+		echo -n " " >> ../cputimes.dat
+		grep 'matrix inverted' out_b0.log | tail -1 | cut -d\  -f 3 >> ../cputimes.dat
+		cd ..
+		let NPART=${NPART}+1
+	done
+	../plot.py
 	cd ..
-	let NPART=${NPART}+1
+	tri_mesh -r rstrt1_b0.grd refine.grd
+	mv refine.grd rstrt1_b0.grd
+	
+	let NREFINE=${NREFINE}+1
 done
-../plot.py
-
+	
 cd ..
 
 opendiff Baseline/ Results/
