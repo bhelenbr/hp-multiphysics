@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 #  Calculates a flat plate boundary and tests partitioning and parallel speedup
 
 cd "$(dirname "$0")"
@@ -16,11 +16,11 @@ cp ../Inputs/* .
 # Make basic mesh
 tri_mesh generate.inpt
 
-# HP="mpiexec -np 1 tri_hp_petsc -stop_for_debugger"
-
 #PETSC="-stop_for_debugger"
-#OMPIFLAGS="--bysocket --bind-to-socket --report-bindings"
+
+OMPIFLAGS="--bind-to socket"
 MPICHFLAGS="-bind-to rr"
+#MPIFLAGS=${OMPIFLAGS}
 MPIFLAGS=${MPICHFLAGS}
 export OMP_NUM_THREADS=1
 export OMP_DISPLAY_AFFINITY=true
@@ -57,7 +57,7 @@ while [ ${NREFINE} -le ${NREFINEMAX} ]; do
 				exit 1
 		fi
 		mod_map partition.inpt adapt 0
-		CMD="mpiexec -np ${NTASKS} ${MPIFLAGS} ${HP} run.inpt"
+		CMD="mpiexec -np ${NPART} ${MPIFLAGS} ${HP} partition.inpt"
 		echo ${CMD}
 		eval "${CMD}"
 		echo -n "${NPART} "  >> ../cputimes.dat
