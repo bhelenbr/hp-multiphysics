@@ -11,7 +11,7 @@ LIBS += ${LIBBLAS}
 all: libspline.a spline
 
 clean:
-	rm *.o splinetest
+	rm *.o spline
 
 libspline.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
