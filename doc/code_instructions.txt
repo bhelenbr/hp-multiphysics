@@ -47,8 +47,12 @@ brew install latexdiff
 brew install svn
 
 #need to install numpy scipy matplotlib for python plotting
-#brew install python (install python3)
-#pip3 install numpy scipy matplotlib
+brew install python (install python3)
+mkdir ~/.venv
+python3 -m venv ~/.venv
+source ~/.venv/bin/activate (add this to .zsh_profile)?
+cat "source ~/.venv/bin/activate" >> ~/.zprofile
+pip install numpy scipy matplotlib
 
 To update installed packages
 brew doctor 
@@ -105,11 +109,8 @@ make all install
 Download muParser v2_2_2 (most recent) at http://muparser.sourceforge.net/
 # or FROM repository
 git clone https://github.com/beltoforion/muparser.git
-[cd muparser]
-cmake .
-ccmake .
-# Change cmake_install_prefix to /Users/bhelenbr/Packages
-# (c)configure then (g)enerate
+cd muparser
+cmake . -DCMAKE_INSTALL_PREFIX=${HOME}/Packages
 make 
 make install
 
@@ -162,7 +163,9 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
 # on OS X
-./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --with-mpi-dir=/opt/homebrew
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hypre=1 --with-mpi-dir=/opt/homebrew
+
+--with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native -mtune=native"
 
 # on orion
 ./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --with-mpi-dir=/usr/mpi/gcc/mvapich2/ --with-valgrind-dir=/share/apps --download-sowing=1 --download-zlib=1
@@ -177,7 +180,7 @@ git clean -f -d -x         # remove all files that are not in the git repo
 --with-debugging=0 --COPTFLAGS="-O3" --CXXOPTFLAGS="-O3" --FOPTFLAGS="-O3"
 
 # ON Nvidia Cluster
-./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --download-zlib
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hdf5=1 --download-netcdf=1 --download-hypre=1 --download-zlib=1 --with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native
 
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
