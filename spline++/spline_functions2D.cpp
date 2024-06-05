@@ -11,34 +11,40 @@
 using namespace spline_functions2D;
 using namespace blitz;
 
-void spline_functions2D::transform2D(TinyVector<double,2>& xpt, const double size, const double angle, const TinyVector<double,2> offset) {
+const int ND = 2;
+
+void spline_functions2D::transform2D(TinyVector<double,ND>& loc, const double size, const double angle, const TinyVector<double,ND> offset) {
     // xpt is assumed in physical space and being moved to spline space;
-    const int ND = 2;
-    xpt -= offset;
+    loc -= offset;
     TinyVector<double,ND> temp;
-    temp(0) = cos(-angle)*xpt(0) -sin(-angle)*xpt(1);
-    temp(1) = sin(-angle)*xpt(0) +cos(-angle)*xpt(1);
-    xpt = temp/size;
+    temp(0) = cos(-angle)*loc(0) -sin(-angle)*loc(1);
+    temp(1) = sin(-angle)*loc(0) +cos(-angle)*loc(1);
+    loc = temp/size;
 }
 
-void spline_functions2D::transform2Di(TinyVector<double,2>& xpt, const double size, const double angle, const TinyVector<double,2> offset) {
+void spline_functions2D::transform2Di(TinyVector<double,ND>& loc, const double size, const double angle, const TinyVector<double,ND> offset) {
     // xpt is assumed in spline space and being moved to physical space;
-    const int ND = 2;
-    xpt = xpt*size;
+    loc = loc*size;
     TinyVector<double,ND> temp;
-    temp(0) = cos(angle)*xpt(0) -sin(angle)*xpt(1);
-    temp(1) = sin(angle)*xpt(0) +cos(angle)*xpt(1);
-    xpt = temp +offset;
+    temp(0) = cos(angle)*loc(0) -sin(angle)*loc(1);
+    temp(1) = sin(angle)*loc(0) +cos(angle)*loc(1);
+    loc = temp +offset;
 }
 
-void spline_functions2D::interpolate(const spline<2>& myspline, double s, const double size, const double angle, const TinyVector<double,2> dx, double norm_dist) {
-    const int ND = 2;
-    TinyVector<double,ND> x, tan, curv, zero = 0.0;
-    myspline.offset(s,norm_dist/size,x);
-    transform2Di(x,size,angle,dx);
+void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<double,ND>& tan, TinyVector<double,ND>& curv, const spline<ND>& myspline, double s, const double size, const double angle, const TinyVector<double,ND> offset, double norm_dist) {
+    TinyVector<double,ND> zero = 0.0;
+    myspline.offset(s,norm_dist/size,loc);
+    transform2Di(loc,size,angle,offset);
     myspline.tangent(s, tan);
     transform2Di(tan,size,angle,zero);
     myspline.curvature(s, curv);
     transform2Di(curv,size,angle,zero);
-    std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+}
+
+void spline_functions2D::find(TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, const double norm_dist) {
+    
+    TinyVector<double,ND> tan, curv;
+    transform2D(loc, size, angle, offset);
+    myspline.find(s, loc);
+    interpolate(loc, tan, curv, myspline, s, size, angle, offset, norm_dist);
 }

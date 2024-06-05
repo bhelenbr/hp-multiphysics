@@ -72,7 +72,8 @@ public:
 namespace spline_functions2D {
 void transform2D(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
 void transform2Di(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
-void interpolate(const spline<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> dx, double norm_dist = 0.0);
+void interpolate(blitz::TinyVector<double,2>& loc, blitz::TinyVector<double,2>& tan, blitz::TinyVector<double,2>& curv, const spline<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> offset, double norm_dist);
+void find(blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, const double norm_dist = 0.0);
 }
 
 

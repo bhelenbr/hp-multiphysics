@@ -163,17 +163,18 @@ int main(int argc, char** argv) {
     double s;
     if (Find) {
         if (!UseFile) {
-            transform2D(xfind,size,angle,dx);
-            myspline.find(s,xfind);
-            interpolate(myspline, s, size, angle, dx);
+            find(xfind,myspline,s,size,angle,dx,norm_dist);
+            interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
+            std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
         }
         else {
             while (!point_data.eof()) {
                 for (int n=0;n<ND;++n) {
                     point_data >> xfind(n);
                 }
-                myspline.find(s,xfind);
-                interpolate(myspline, s, size, angle, dx);
+                find(xfind,myspline,s,size,angle,dx,norm_dist);
+                interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
+                std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
     }
@@ -244,12 +245,14 @@ int main(int argc, char** argv) {
             } while (change);
             
             for (int i=0;i<npts;++i) {
-                interpolate(myspline, svalues(i), size, angle, dx, norm_dist);
+                interpolate(x, tan, curv, myspline, svalues(i), size, angle, dx, norm_dist);
+                std::cout << std::setprecision(10) << svalues(i) << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
         else {
             while (point_data >> s) {
-                interpolate(myspline, s, size, angle, dx, norm_dist);
+                interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
+                std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
         
