@@ -149,7 +149,7 @@ void tri_mesh::allocate(int mxsize) {
 		gbl->i2wk.resize(maxpst+1);
 		gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
 		// some smaller lists using i2 storage
-		int mvst3 = MAX(maxpst/3,100);
+		int mvst3 = maxpst/3;
 		Array<int,1> temp1(gbl->i2wk.data(),mvst3,neverDeleteData);
 		gbl->i2wk_lst1.reference(temp1);
 		gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
