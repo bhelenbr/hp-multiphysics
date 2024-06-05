@@ -1,0 +1,13 @@
+logfile: generate
+adapt: 1
+nblock: 1
+ntstep: 0
+growth factor: 50000
+b0_mesh: blayer.d
+b0_offset: 0.05
+b0_s1_type: spline
+b0_s1_filename: naca.spl
+b0_s1_s_limits: 0 0.203893E+01
+b0_s1_offset: 1
+b0_v1_offset_type: polar
+offset: 1
