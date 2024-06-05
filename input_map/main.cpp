@@ -146,12 +146,26 @@ int main (int argc, char *argv[]) {
 	/* LOAD INT USING FORMULA */
 	int c;
 	std::cout << mymap.get("formula",c) << ' ' << c << std::endl;
-    std::cout << mymap.get("formula2",c) << ' ' << c << std::endl;
+    
+    try {
+        std::cout << mymap.get("formula2",c) << ' ' << c << std::endl;
+    }
+    catch (mu::Parser::exception_type &e) {
+        std::cout << "Message:  " << e.GetMsg() << std::endl;
+        std::cout << "Formula:  " << e.GetExpr() << std::endl;
+        std::cout << "Token:     " << e.GetToken() << std::endl;
+        std::cout << "Position: " << e.GetPos() << std::endl;
+        std::cout << "Errc:      " << e.GetCode() << std::endl;
+    }
+    catch(std::exception &e) {
+        std::cout << e.what() << std::endl;
+    }
+    catch(...) {
+        std::cout << "I am confused" << std::endl;
+    }
 
 	/* ERASE ENTRY */
-	std::map<std::string,std::string>::iterator mi;
-	mi = mymap.find("formula");
-	mymap.erase(mi);
+    mymap.delete_entry("formula");
 			
 	/* LOAD INTEGER */
 	int itercrsn;
@@ -177,6 +191,7 @@ int main (int argc, char *argv[]) {
 					exit(1);
 			}
 	}
+    mymap.rename_entries("m","M");
 		
 	/* OUTPUT MAP */
 	std::cout << std::endl << std::endl << "OUTPUTING MAP AT END" << std::endl;

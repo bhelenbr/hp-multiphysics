@@ -11,6 +11,7 @@
 #include <fstream>
 #include <muParser.h>
 #include <tgmath.h>
+#include <regex>
 
 using namespace std;
 
@@ -223,3 +224,90 @@ bool input_map::get(const std::string &keyword, double *array, int nentry) {
     }
     return(false);
 }
+
+/* Function to get entire line as a string */
+bool input_map::getline(const std::string &keyword, std::string& vout) {
+    std::map<std::string,std::string>::const_iterator mi;
+    
+    mi = find(keyword);
+    if (mi != end()) {
+        vout = (*this)[keyword];
+        if (echo) *log << echoprefix << keyword << ": " << vout << std::endl;
+        return(true);
+    }
+    return(false);
+}
+
+/* Get w/default for getting an entire line */
+void input_map::getlinewdefault(const std::string &keyword, std::string& vout, const std::string& dflt) {
+    if (!getline(keyword,vout)) {
+        vout = dflt;
+        if (echo) *log << echoprefix << keyword << ": " << dflt << std::endl;
+    }
+    return;
+}
+
+int input_map::keys_with_ending(std::string const &ending,std::vector<std::string>& keywords) {
+    int found = 0;
+    for (auto mi = this->begin();mi != this->end();++mi) {
+        if (mi->first.length() >= ending.length()) {
+            if (!(mi->first.compare(mi->first.length() - ending.length(), ending.length(), ending))) {
+                ++found;
+                keywords.push_back(mi->first);
+            }
+        }
+    }
+    return(found);
+}
+
+int input_map::delete_entry(std::string exp) {
+    auto mi = this->find(exp);
+    if (mi != this->end()) {
+        this->erase(mi);
+        return(1);
+    }
+    return(0);
+}
+
+int input_map::delete_entries(std::string exp) {
+    int found = 0;
+    std::vector<string> to_delete;
+    for (auto mi = this->begin();mi != this->end();++mi) {
+        if (mi->first.find(exp) != std::string::npos) {
+            to_delete.push_back(mi->first);
+            ++found;
+        }
+    }
+    
+    for (auto key : to_delete) {
+         this->erase(key);
+     }
+    return(found);
+}
+
+
+int input_map::rename_entries(std::string sfind, std::string sreplace) {
+    int found = 0;
+    std::vector<std::pair<std::string,std::string> > rename_list;
+    for (auto mi = this->begin();mi != this->end();++mi) {
+        auto pos = mi->first.find(sfind);
+        if (pos != std::string::npos) {
+            std::string newkey = mi->first;
+            newkey.replace(pos, sfind.length(), sreplace);
+            rename_list.push_back(std::pair<std::string,std::string>(mi->first,newkey));
+            ++found;
+        }
+    }
+    
+    for (auto mypair : rename_list) {
+        (*this)[mypair.second] = (*this)[mypair.first];
+        this->erase(mypair.first);
+     }
+    
+    return(found);
+}
+
+
+
+
+
