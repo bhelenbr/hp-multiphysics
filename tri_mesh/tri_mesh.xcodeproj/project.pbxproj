@@ -147,6 +147,10 @@
 		E632EA8227A371560013B0CC /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E632EA8327A3715E0013B0CC /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E632EA8427A371640013B0CC /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E6A9D1C92B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
+		E6A9D1CA2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
+		E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
+		E6A9D1CC2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
@@ -179,6 +183,7 @@
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = "<group>"; };
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
+		E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = offset_geometry.cpp; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
@@ -285,6 +290,7 @@
 				F5CED4AF015630AA01000001 /* swap.cpp */,
 				6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */,
 				07F2E94300974D3D80990B20 /* connect.cpp */,
+				E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */,
 				6FCD4658071240D80003FAD1 /* tri_boundary.h */,
 				F528820502B1545D012A8EDA /* tri_boundary.cpp */,
 				F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */,
@@ -533,6 +539,7 @@
 				6F2262C908673035001017D0 /* output.cpp in Sources */,
 				6F2262CA08673038001017D0 /* findmatch.cpp in Sources */,
 				6F2262CB08673039001017D0 /* refineby2.cpp in Sources */,
+				E6A9D1C92B40427E00AF0CF3 /* offset_geometry.cpp in Sources */,
 				6F2262CC0867303A001017D0 /* tprims.cpp in Sources */,
 				6F2262CD0867303B001017D0 /* coarsen.cpp in Sources */,
 				6F2262CE08673044001017D0 /* triangulate.cpp in Sources */,
@@ -563,6 +570,7 @@
 				6FB91AC30ACCB10300792B04 /* output.cpp in Sources */,
 				6FB91AC40ACCB10300792B04 /* findmatch.cpp in Sources */,
 				6FB91AC50ACCB10300792B04 /* refineby2.cpp in Sources */,
+				E6A9D1CA2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */,
 				6FB91AC60ACCB10300792B04 /* tprims.cpp in Sources */,
 				6FB91AC70ACCB10300792B04 /* coarsen.cpp in Sources */,
 				6FB91AC80ACCB10300792B04 /* triangulate.cpp in Sources */,
@@ -591,6 +599,7 @@
 				6FB91AED0ACCB1E100792B04 /* input.cpp in Sources */,
 				6FB91AEE0ACCB1E100792B04 /* copy.cpp in Sources */,
 				6FB91AEF0ACCB1E100792B04 /* setup.cpp in Sources */,
+				E6A9D1CC2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */,
 				6FB91AF00ACCB1E100792B04 /* output.cpp in Sources */,
 				6FB91AF10ACCB1E100792B04 /* findmatch.cpp in Sources */,
 				6FB91AF20ACCB1E100792B04 /* refineby2.cpp in Sources */,
@@ -622,6 +631,7 @@
 				6FADD85F086EF36A00350FA2 /* input.cpp in Sources */,
 				6FADD860086EF36A00350FA2 /* copy.cpp in Sources */,
 				6FADD861086EF36A00350FA2 /* setup.cpp in Sources */,
+				E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */,
 				6FADD862086EF36A00350FA2 /* output.cpp in Sources */,
 				6FADD863086EF36A00350FA2 /* findmatch.cpp in Sources */,
 				6FADD864086EF36A00350FA2 /* refineby2.cpp in Sources */,

@@ -163,6 +163,7 @@ class tri_mesh : public multigrid_interface {
 		void refineby2(const class tri_mesh& xmesh); /**< Refines by 2 */
 		void coarsen_substructured(const class tri_mesh &tgt,int p); /**< Coarsens mesh that was output by hp FEM method */
 		//@}
+        void offset_geometry(input_map& input); /**< Creates new domains by offsetting boundaries using a distance function */
 
 		/** @name Routines for parallel computations */
 		//@{

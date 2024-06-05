@@ -217,15 +217,15 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 
 #include <spline.h>
 
-class spline_bdry : public edge_bdry, rigid_movement_interface2D {
-	spline<tri_mesh::ND> my_spline;
-	Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
-	FLT smin, smax; // LIMITS FOR BOUNDARY
-    FLT scale;
+class spline_bdry : public edge_bdry, public rigid_movement_interface2D {
+    public:
+        spline<tri_mesh::ND> my_spline;
+        Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
+        FLT smin, smax; // LIMITS FOR BOUNDARY
+        FLT scale, norm_dist;
 
-	public:
 		spline_bdry(int inid, tri_mesh &xin) : edge_bdry(inid,xin) {mytype="spline";}
-		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), rigid_movement_interface2D(inbdry), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax) {}
+		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), rigid_movement_interface2D(inbdry), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax), scale(inbdry.scale), norm_dist(inbdry.norm_dist) {}
 		spline_bdry* create(tri_mesh& xin) const {return(new spline_bdry(*this,xin));}
 
 		/* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
@@ -246,6 +246,7 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			data.clear();
             
             inmap.getwdefault(edge_bdry::idprefix+"_scale",scale,1.0);
+            inmap.getwdefault(edge_bdry::idprefix+"_norm_dist",norm_dist,0.0);
 		}
 
 		void mvpttobdry(int seg_ind,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
@@ -269,9 +270,13 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 			/* FOR LOOPS */
             if (sloc0 >= smax) sloc0 = smin;
             if (sloc0 > sloc1) sloc1 = smax;
+            
+
 
 			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
-			my_spline.interpolate(sloc,pt);
+			my_spline.offset(sloc, norm_dist, pt);
+            
+//            *x.gbl->log << sloc0 << ' ' << pt0 << ' ' << sloc1 << ' ' << pt1 << ' ' << sloc << ' ' << pt << std::endl;
 
 //            TinyVector<FLT,tri_mesh::ND> dx = pt1 -pt0;
 //            FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);

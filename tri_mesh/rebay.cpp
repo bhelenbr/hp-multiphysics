@@ -485,7 +485,7 @@ void tri_mesh::bdry_rebay1() {
 			nstr << adapt_count++ << std::flush;
 			adapt_file = "adapt" +nstr.str();
 			nstr.str("");
-			output(adapt_file,grid);
+			output(adapt_file,debug_adapt);
 #endif
 		}
 		*gbl->log << "#Slave boundary refinement finished, " << ebdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;

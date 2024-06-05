@@ -250,8 +250,9 @@ class multigrid_interface {
 		/** Mesh adaptation routines */
 		virtual void adapt() {}
         virtual void refineby2() {}
-	
-		/** Mesh partition routines */
+        virtual void offset_geometry(input_map& input) {}
+
+        /** Mesh partition routines */
 		virtual void setpartition(int nparts, blitz::Array<int,1> part_list) {}
 		virtual void partition(multigrid_interface& src, int part, int maxenum, int maxvnum) {}
 

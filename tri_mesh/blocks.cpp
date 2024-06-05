@@ -1388,7 +1388,9 @@ void block::go(input_map input) {
 	clock_t begin_time, end_time;
 
 	init(input);
-	
+
+    begin_time = clock();
+
 #ifdef METIS
 	/* partition utility */
 	int nparts;
@@ -1427,10 +1429,6 @@ void block::go(input_map input) {
 	}
 #endif
     
-    
-
-	begin_time = clock();
-
 	/* OUTPUT INITIAL CONDITION */
 	if (nstart == 0) {
 		// TEMPORARY FIX FOR INCONSITENCY BETWEEN BOUNDARY OUTPUT (BY NUMBER) & BLOCK OUTPUT (BY STRING)
@@ -1439,8 +1437,7 @@ void block::go(input_map input) {
 	}
     
     int rb2;
-    input.getwdefault("refineby2",rb2,0);
-    if (rb2) {
+    if (input.get("refineby2",rb2)) {
         gbl->tstep=nstart+1;
         grd(0)->refineby2();
         nstr.str("");
@@ -1450,6 +1447,13 @@ void block::go(input_map input) {
         
         outname = "rstrt" +nstr.str();
         output(outname,block::restart);
+        return;
+    }
+    
+    int offset;
+    if (input.get("offset",offset)) {
+        gbl->tstep=nstart+1;
+        grd(0)->offset_geometry(input);
         return;
     }
     
