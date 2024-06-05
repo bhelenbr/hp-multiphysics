@@ -35,10 +35,10 @@ let ngrid=1
 
 # Create sequence of rhombus meshes
 while [ $ngrid -lt ${NGRIDMAX} ]; do
-	mod_map run.inpt b0_mesh square${ngrid}_b0.grd
-	mod_map run.inpt ntstep 1
+	#mod_map run.inpt b0_mesh square${ngrid}_b0.grd
+	#mod_map run.inpt ntstep 1
 	let ngp=${ngrid}+1
-	cp run.inpt square${ngrid}_b0.grd_bdry.inpt
+	#cp run.inpt square${ngrid}_b0.grd_bdry.inpt
 	tri_mesh -r square${ngrid}_b0.grd square${ngp}_b0.grd
 	let ngrid=${ngp}
 done

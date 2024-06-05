@@ -17,7 +17,7 @@
 //#define SWIRL
 #define BUOYANCY
 //#define SWE
-//#define EXPLICIT
+#define EXPLICIT
 #define CNS
 //#define CNS_EXPLICIT
 //#define NONNEWTONIAN
