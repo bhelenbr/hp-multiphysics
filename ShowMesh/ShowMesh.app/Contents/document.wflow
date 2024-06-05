@@ -168,17 +168,18 @@ source ${HOME}/.zprofile
 
 #DISPLAY=:0.0; export DISPLAY
 location="${HOME}/hp-multiphysics/bin"
-for file in "$@"; do
-	case "$file" in
-      *.[e,n,s])  
-		"${location}/showmesh" "${file%.*}"
-		;;
-      *.grd)
-		"${location}/showgrid" "${file%.*}" &amp;
-		;;
-
-    esac
-done
+#for file in "$@"; do
+#	case "$file" in
+#      *.[e,n,s])  
+#		"${location}/showmesh" "${file%.*}"
+#		;;
+#      *.grd)
+#		"${location}/showgrid" "${file%.*}" &amp;
+#		;;
+#
+#    esac
+#done
+"${location}/showgrid" "$@"
 wait
 echo finished</string>
 					<key>CheckedForUserDefaultShell</key>
@@ -293,7 +294,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>674.500000:317.000000</string>
+				<string>411.000000:689.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -303,7 +304,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>F2C79CE0-7777-4559-A952-0FAB1E5994E1</key>
+		<key>FF605165-58CB-46C1-8038-470DD505BF50</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>

@@ -36,7 +36,8 @@ else
 
 VPATH = ../
 
-OBJ = showmesh2.o
+OBJ2 = showmesh2.o
+OBJ3 = showmesh3.o
 
 DEFINES = $(EXTRAFLAGS)
 
@@ -45,11 +46,11 @@ LIB = -L/opt/X11/lib -lX11
 CPPFLAGS = -O3 -g -I/opt/X11/include 
 CPPFLAGS += $(DEFINES)
 
-showmesh: $(OBJ)
-	${CC} $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
+showmesh: $(OBJ2)
+	${CC} $(CPPFLAGS) -o $@ $(OBJ2) $(LIB)
 
-showgrid: $(OBJ)
-	${CC} $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
+showgrid: $(OBJ3)
+	${CC} $(CPPFLAGS) -o $@ $(OBJ3) $(LIB)
 
 %.o: %.cpp
 	$(CC) ${CPPFLAGS} -MD -c -o $@ $<
