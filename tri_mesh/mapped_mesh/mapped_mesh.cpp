@@ -1,0 +1,83 @@
+//
+//  mapped.cpp
+//  tri_mesh
+//
+//  Created by Brian Helenbrook on 6/6/24.
+//
+
+#include "mapped_mesh.h"
+
+void spline_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
+    trsfm.init(input,idprefix);
+    std::string line;
+    if (!input.get(idprefix+"_spline",line)) {
+        *log << "Couldn't fine spline file name in input file\n";
+        sim::abort(__LINE__,__FILE__,log);
+    }
+    my_spline.read(line);
+    input.getwdefault(idprefix+"_scale",scale,1.0);
+}
+
+void spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    TinyVector<FLT,2> tan, curv;
+    spline_functions2D::interpolate(to, tan, curv, my_spline, from(0), scale, trsfm.theta,trsfm.pos, -from(1));
+}
+
+void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
+    if (!input.get(idprefix+"_pnt",pnt.data(),2)) {
+        *log << "Couldn't read location of polar pnt " << idprefix+"_pnt" << std::endl;;
+        sim::abort(__LINE__,__FILE__,log);
+    }
+    if (!input.get(idprefix+"_theta_length",theta_length)) {
+        *log << "Couldn't read length to scale theta " << idprefix+"_theta_length" << std::endl;;
+        sim::abort(__LINE__,__FILE__,log);
+    }
+}
+
+void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    const FLT r = from(1);
+    const FLT theta = -from(0)/theta_length;
+    to(0) = pnt(0) +r*cos(theta);
+    to(1) = pnt(1) +r*sin(theta);
+}
+
+void mapped_mesh::init(input_map& input, void *gbl_in) {
+    r_tri_mesh::init(input,gbl_in);
+    map->init(input,gbl->idprefix,gbl->log);
+    mapped_pnts.resize(maxpst);
+    map_pnts();
+}
+
+void mapped_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizereduce1d) {
+    r_tri_mesh::init(mgin,why,sizereduce1d);
+    const mapped_mesh& smm = dynamic_cast<const mapped_mesh&>(mgin);
+    map = smm.map;
+    mapped_pnts.resize(maxpst);
+    map_pnts();
+}
+
+void mapped_mesh::copy(const mapped_mesh& tgt) {
+    r_tri_mesh::copy(tgt);
+    map = tgt.map;
+}
+/** Outputs solution in various filetypes */
+void mapped_mesh::output(const std::string &outname,block::output_purpose why) {
+    if (why == block::display) {
+        map_pnts();
+        Array<TinyVector<FLT,ND>,1> temp; /**< Physical location of the points in the mesh */
+        temp.reference(pnts);
+        pnts.reference(mapped_pnts);
+        tri_mesh::output(outname,output_type);
+        pnts.reference(temp);
+    }
+    else {
+        tri_mesh::output(outname,output_type);
+    }
+}
+
+void mapped_mesh::map_pnts() {
+    for (int i = 0; i < npnt; ++i) {
+        map->to_physical_frame(pnts(i), mapped_pnts(i));
+    }
+}
+

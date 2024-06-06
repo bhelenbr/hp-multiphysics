@@ -151,6 +151,14 @@
 		E6A9D1CA2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CC2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
+		E6D3EFC92C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
+		E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFCB2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
+		E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFCD2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
+		E6D3EFCE2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFCF2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFD02C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
 		E6F1CDE01533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE11533E715009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDDF1533E715009F6A6B /* libspline++.a */; };
 		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
@@ -184,6 +192,8 @@
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = offset_geometry.cpp; sourceTree = "<group>"; };
+		E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mapped_mesh.cpp; sourceTree = "<group>"; };
+		E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mapped_mesh.h; sourceTree = "<group>"; };
 		E6F1CDDF1533E715009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
 		E6F1CDE21533E774009F6A6B /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
@@ -260,6 +270,7 @@
 				6F92F9F008B94B22006F9C2C /* Documentation */,
 				08FB7795FE84155DC02AAC07 /* tri_mesh */,
 				6FFD05E30CC3D9C6001CE474 /* r_tri_mesh */,
+				E6D3EFC62C11B00F007BC477 /* mapped_mesh */,
 				6FFD05E20CC3D97F001CE474 /* block */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
 				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
@@ -340,6 +351,15 @@
 			name = r_tri_mesh;
 			sourceTree = "<group>";
 		};
+		E6D3EFC62C11B00F007BC477 /* mapped_mesh */ = {
+			isa = PBXGroup;
+			children = (
+				E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */,
+				E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */,
+			);
+			path = mapped_mesh;
+			sourceTree = "<group>";
+		};
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
@@ -363,6 +383,7 @@
 				6F2262DF086730A7001017D0 /* r_tri_boundary.h in Headers */,
 				6F2262E2086730AD001017D0 /* block.h in Headers */,
 				6F2262E3086730AE001017D0 /* blocks.h in Headers */,
+				E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,6 +398,7 @@
 				E632EA8027A371470013B0CC /* r_tri_mesh.h in Headers */,
 				E632EA8327A3715E0013B0CC /* blocks.h in Headers */,
 				E632EA7E27A371220013B0CC /* tri_mesh.h in Headers */,
+				E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +413,7 @@
 				6FB91AE70ACCB1E100792B04 /* r_tri_boundary.h in Headers */,
 				6FB91AE90ACCB1E100792B04 /* block.h in Headers */,
 				6FB91AEA0ACCB1E100792B04 /* blocks.h in Headers */,
+				E6D3EFCF2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,6 +428,7 @@
 				6FADD85B086EF32D00350FA2 /* r_tri_boundary.h in Headers */,
 				6FADD85D086EF32D00350FA2 /* block.h in Headers */,
 				6FADD85E086EF33C00350FA2 /* blocks.h in Headers */,
+				E6D3EFCE2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -549,6 +573,7 @@
 				6F2262D208673047001017D0 /* swap.cpp in Sources */,
 				6F2262D308673048001017D0 /* yaber.cpp in Sources */,
 				6F2262D408673049001017D0 /* meshutilities.cpp in Sources */,
+				E6D3EFC92C11B08B007BC477 /* mapped_mesh.cpp in Sources */,
 				6F2262D50867304A001017D0 /* connect.cpp in Sources */,
 				6F2262DA08673095001017D0 /* tri_boundary.cpp in Sources */,
 				6F2262DC086730A5001017D0 /* getnewbdry.cpp in Sources */,
@@ -580,6 +605,7 @@
 				6FB91ACC0ACCB10300792B04 /* swap.cpp in Sources */,
 				6FB91ACD0ACCB10300792B04 /* yaber.cpp in Sources */,
 				6FB91ACE0ACCB10300792B04 /* meshutilities.cpp in Sources */,
+				E6D3EFCB2C11B08B007BC477 /* mapped_mesh.cpp in Sources */,
 				6FB91ACF0ACCB10300792B04 /* connect.cpp in Sources */,
 				6FB91AD00ACCB10300792B04 /* tri_boundary.cpp in Sources */,
 				6FB91AD10ACCB10300792B04 /* getnewbdry.cpp in Sources */,
@@ -603,6 +629,7 @@
 				6FB91AF00ACCB1E100792B04 /* output.cpp in Sources */,
 				6FB91AF10ACCB1E100792B04 /* findmatch.cpp in Sources */,
 				6FB91AF20ACCB1E100792B04 /* refineby2.cpp in Sources */,
+				E6D3EFD02C11B08B007BC477 /* mapped_mesh.cpp in Sources */,
 				6FB91AF30ACCB1E100792B04 /* tprims.cpp in Sources */,
 				6FB91AF40ACCB1E100792B04 /* coarsen.cpp in Sources */,
 				6FB91AF50ACCB1E100792B04 /* triangulate.cpp in Sources */,
@@ -635,6 +662,7 @@
 				6FADD862086EF36A00350FA2 /* output.cpp in Sources */,
 				6FADD863086EF36A00350FA2 /* findmatch.cpp in Sources */,
 				6FADD864086EF36A00350FA2 /* refineby2.cpp in Sources */,
+				E6D3EFCD2C11B08B007BC477 /* mapped_mesh.cpp in Sources */,
 				6FADD865086EF36A00350FA2 /* tprims.cpp in Sources */,
 				6FADD866086EF36A00350FA2 /* coarsen.cpp in Sources */,
 				6FADD867086EF36A00350FA2 /* triangulate.cpp in Sources */,

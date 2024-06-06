@@ -31,6 +31,9 @@ void spline_functions2D::transform2Di(TinyVector<double,ND>& loc, const double s
     loc = temp +offset;
 }
 
+/* p = x(s) +n x k *norm_dist */
+/* dp/ds = dx/ds +curv tan * norm_dist */
+/* dp/dn = norm */
 void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<double,ND>& tan, TinyVector<double,ND>& curv, const spline<ND>& myspline, double s, const double size, const double angle, const TinyVector<double,ND> offset, double norm_dist) {
     TinyVector<double,ND> zero = 0.0;
     myspline.offset(s,norm_dist/size,loc);

@@ -103,25 +103,33 @@ void tri_mesh::offset_geometry(input_map& input) {
                             /* This is airfoil boundary layer domain */
                             ostringstream nstr;
                             nstr << "b" << newblock;
-                            input[nstr.str()+"_type"] = "analytic_spline";
+                            input[nstr.str()+"_type"] = "spline_mapped_mesh";
                             input[nstr.str()+"_mesh"] = nstr.str() +".d";
                             input[nstr.str()+"_spline"] = input[ebdry(i)->idprefix +"_filename"];
+                            if (input.find(ebdry(i)->idprefix +"_theta") != input.end()) {
+                                input[nstr.str()+"_theta"] = input[ebdry(i)->idprefix +"_theta"];
+                            }
+                            if (input.find(ebdry(i)->idprefix +"_center") != input.end()) {
+                                input[nstr.str()+"_center"] = input[ebdry(i)->idprefix +"_center"];
+                            }
+                            if (input.find(ebdry(i)->idprefix +"_scale") != input.end()) {
+                                input[nstr.str()+"_scale"] = input[ebdry(i)->idprefix +"_scale"];
+                            }
 
                             /* Output polar domain stuff */
                             ostringstream nstr1, pntstring;
                             nstr1 << "b" << newblock+1; /* nstr1 is the polar domain */
-                            input[nstr1.str()+"_type"] = "analytic_polar";
+                            input[nstr1.str()+"_type"] = "polar_mapped_mesh";
                             input[nstr1.str()+"_mesh"] = nstr1.str() +".d";
                             pntstring.setf(std::ios::scientific, std::ios::floatfield);
                             pntstring.precision(10);
                             pntstring << pnts(vbdry(vnum)->pnt)(0) << " " << pnts(vbdry(vnum)->pnt)(1);
                             input[nstr1.str()+"_pnt"] = pntstring.str();
+                            input[nstr1.str()+"_theta_length"] = input[gbl->idprefix +"_offset"];
                             
                             /* Output outer domain stuff */
                             input[gbl->idprefix+"_mesh"] = gbl->idprefix +".d";
-                            
-
-
+ 
                             /* Output side definitions */
                             /* end boundary of b.l. domain */
                             /* start boundary of polar domain*/
@@ -287,7 +295,7 @@ void tri_mesh::offset_geometry(input_map& input) {
     }
     input.delete_entry("offset");
     input.delete_entry(gbl->idprefix +"_offset");
-    input["ntstep"] = "1";
+    input["ntstep"] = "2";
     
     ofstream out;
     out.open("offset.inpt");
