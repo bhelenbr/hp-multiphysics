@@ -503,6 +503,7 @@
 		E6CEFD5C232A987100929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5E232A987300929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
+		E6D3EFD52C160469007BC477 /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
 		E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
@@ -795,6 +796,8 @@
 		E6C03FCD1A91080D0021A0FE /* melt_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_cd.h; path = cd/melt_cd.h; sourceTree = "<group>"; };
 		E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = melt_buoyancy.cpp; path = buoyancy/melt_buoyancy.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6C03FD01A9216950021A0FE /* melt_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_buoyancy.h; path = buoyancy/melt_buoyancy.h; sourceTree = "<group>"; };
+		E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = cd_mapped.cpp; path = cd_mapped/cd_mapped.cpp; sourceTree = "<group>"; };
+		E6D3EFD32C147F44007BC477 /* cd_mapped.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = cd_mapped.h; path = cd_mapped/cd_mapped.h; sourceTree = "<group>"; };
 		E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = partition.cpp; sourceTree = "<group>"; };
 		E6E0961A1CC9C81500B1F871 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
@@ -900,6 +903,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				6FB40B1F091AF64E002BAA09 /* Conv-Diff */,
+				E6D3EFD12C147EB0007BC477 /* Conv-Diff Mapped */,
 				6FB40B1E091AF5F2002BAA09 /* Incompressible */,
 				384ADB9B21650510009FC4D3 /* komega */,
 				6F681E390F533020005F5783 /* Compressible */,
@@ -1164,6 +1168,15 @@
 				E658002913E2CFC400A01E99 /* tri_hp_nonnewtonian.cpp */,
 			);
 			name = NonNewtonian;
+			sourceTree = "<group>";
+		};
+		E6D3EFD12C147EB0007BC477 /* Conv-Diff Mapped */ = {
+			isa = PBXGroup;
+			children = (
+				E6D3EFD32C147F44007BC477 /* cd_mapped.h */,
+				E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */,
+			);
+			name = "Conv-Diff Mapped";
 			sourceTree = "<group>";
 		};
 		E6E096191CC9C7EE00B1F871 /* Scripts */ = {
@@ -1639,6 +1652,7 @@
 				E67EBAC612D603C50011EB69 /* length.cpp in Sources */,
 				E6513DB1240352D9007924BC /* getnewbdry.cpp in Sources */,
 				E60E8153180AE3A90067E2E7 /* getnewibc.cpp in Sources */,
+				E6D3EFD52C160469007BC477 /* cd_mapped.cpp in Sources */,
 				1DDE741D2303562E00BE7310 /* shock.cpp in Sources */,
 				E67EBAC712D603C50011EB69 /* bdry.cpp in Sources */,
 				E6513DB0240352D5007924BC /* bdry.cpp in Sources */,
@@ -2072,7 +2086,6 @@
 					"-lmumps_common",
 					"-lpetsc",
 					"-lmpi",
-					"-lhypre",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
@@ -2097,7 +2110,6 @@
 					"-lmumps_common",
 					"-lpetsc",
 					"-lmpi",
-					"-lhypre",
 				);
 				PRODUCT_NAME = tri_hp_petsc;
 				threads = "";
@@ -2121,11 +2133,11 @@
 					"$(inherited)",
 					"-lparmetis",
 					"-lmumps_common",
-					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
 				);
 				PRODUCT_NAME = tri_hp_axi_petsc;
+				threads = "";
 			};
 			name = Debug;
 		};
@@ -2146,11 +2158,11 @@
 					"$(inherited)",
 					"-lparmetis",
 					"-lmumps_common",
-					"-lscalapack",
 					"-lpetsc",
 					"-lmpi",
 				);
 				PRODUCT_NAME = tri_hp_axi_petsc;
+				threads = "";
 			};
 			name = Release;
 		};

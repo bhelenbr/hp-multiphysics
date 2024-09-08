@@ -152,9 +152,9 @@
 		E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CC2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6D3EFC92C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
-		E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6D3EFCB2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
-		E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
+		E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6D3EFCD2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
 		E6D3EFCE2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
 		E6D3EFCF2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };

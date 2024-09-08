@@ -1,0 +1,33 @@
+ntstep: 1
+log2p: 2
+adapt: 1
+error_estimator: energy_norm
+error_target: 1.000e-04
+logfile: generate
+growth factor: 500.0
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+nu: 1.0
+ax: 0.0
+ay: 0.0
+theta0: 3*_pi/4
+lambda: _pi/(2*theta0)
+ibc: symbolic
+#ibc0: r^lambda*sin(lambda*theta)
+ibc0: r^lambda*sin(-lambda*x0/b0_theta_length)
+r: exp(x1)*(b0_r0+b0_r_eps) -b0_r_eps
+b0_mesh: sector.d
+logmin: 8.0
+b0_type: cd_mapped
+b0_mapping: polar_log
+b0_r0: 1.0
+b0_r_eps: exp(-logmin)
+#b0_r_eps: 1.0e-12
+b0_pnt: 0.0 0.0
+b0_theta_length: 1.0
+b0_s1_hp_type: dirichlet
+b0_s2_hp_type: dirichlet
+b0_s3_hp_type: adiabatic
+b0_s4_hp_type: dirichlet
+#b0_s4_ibc: symbolic
+#b0_s4_ibc0: 0.0
+helper: l2error
