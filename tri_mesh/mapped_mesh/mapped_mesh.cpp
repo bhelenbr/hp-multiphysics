@@ -23,6 +23,22 @@ void spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVe
     spline_functions2D::interpolate(to, tan, curv, my_spline, from(0), scale, trsfm.theta,trsfm.pos, -from(1));
 }
 
+void spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+    TinyVector<FLT,2> pnt, tan, curv;
+    spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0), scale, trsfm.theta,trsfm.pos, -loc(1));
+    /* p = x(s) +n*norm_dist */
+    /* dp/ds = dx/ds +curv * norm_dist */
+    /* dp/dn = norm */
+    
+    /* Derivatives with respect to s*/
+    jacobian(0,0) = tan(0) -curv(0)*loc(1);
+    jacobian(1,0) = tan(1) -curv(1)*loc(1);
+    /* Derivaties with respect to norm_dist */
+    jacobian(0,1) = -tan(1);
+    jacobian(1,1) = +tan(0);
+}
+
+
 void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
     if (!input.get(idprefix+"_pnt",pnt.data(),2)) {
         *log << "Couldn't read location of polar pnt " << idprefix+"_pnt" << std::endl;;
@@ -40,6 +56,52 @@ void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVec
     to(0) = pnt(0) +r*cos(theta);
     to(1) = pnt(1) +r*sin(theta);
 }
+
+void polar_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+    const FLT r = loc(1);
+    const FLT theta = -loc(0)/theta_length;
+    
+    /* Derivatives with respect to theta*length */
+    jacobian(0,0) = +r*sin(theta)/theta_length;  // dx/dt
+    jacobian(1,0) = -r*cos(theta)/theta_length; // dy/dt
+    /* Derivaties with respect to r */
+    jacobian(0,1) = cos(theta); // dx/dr
+    jacobian(1,1) = sin(theta); // dy/dr
+}
+
+void polar_log_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
+    polar_mapping::init(input,idprefix,log);
+    
+    if (!input.get(idprefix+"_r0",r0)) {
+        *log << "Couldn't read r0 " << idprefix+"_r0" << std::endl;;
+        sim::abort(__LINE__,__FILE__,log);
+    }
+    input.getwdefault(idprefix+"_r_eps",r_eps,DBL_EPSILON);
+    r_eps = r_eps*r0;
+}
+
+void polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    const FLT r = exp(from(1))*(r0+r_eps) -r_eps;
+    const FLT theta = -from(0)/theta_length;
+    to(0) = pnt(0) +r*cos(theta);
+    to(1) = pnt(1) +r*sin(theta);
+}
+
+void polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+    const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
+    const FLT theta = -loc(0)/theta_length;
+    
+    const FLT drdlogr = exp(loc(1))*(r0+r_eps);
+    
+    /* Derivatives with respect to theta*length */
+    jacobian(0,0) = +r*sin(theta)/theta_length;  // dx/dt
+    jacobian(1,0) = -r*cos(theta)/theta_length; // dy/dt
+    /* Derivaties with respect to logr */
+    jacobian(0,1) = cos(theta)*drdlogr; // dx/dlogr
+    jacobian(1,1) = sin(theta)*drdlogr; // dy/dlogr
+}
+
+
 
 void mapped_mesh::init(input_map& input, void *gbl_in) {
     r_tri_mesh::init(input,gbl_in);

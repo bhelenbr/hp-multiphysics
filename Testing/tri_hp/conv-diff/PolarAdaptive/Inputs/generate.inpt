@@ -1,0 +1,28 @@
+ntstep: 1
+log2p: 2
+adapt: 1
+error_estimator: energy_norm
+error_target: 10^(-n)
+n: 1
+logfile: generate
+blocktype: cd
+growth factor: 100000
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+nu: 1.0
+ax: 0.0
+ay: 0.0
+theta0: 3*_pi/4
+lambda: _pi/(2*theta0)
+r: sqrt(x0^2 +x1^2)
+theta: atan2(x1,x0)
+ibc: symbolic
+ibc0: r^lambda*sin(lambda*theta)
+b0_mesh: sector.d
+b0_s1_hp_type: dirichlet
+b0_s2_type: circle
+b0_s2_center: 0.0 0.0
+b0_s2_curved: 1
+b0_s2_radius: 1.0
+b0_s2_hp_type: dirichlet
+b0_s3_hp_type: adiabatic
+helper: l2error

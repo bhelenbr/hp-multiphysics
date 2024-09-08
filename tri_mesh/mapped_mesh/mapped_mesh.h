@@ -22,29 +22,44 @@ public:
     virtual void init(input_map& inmap,std::string idprefix,std::ostream *log) {}
     virtual void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {}
     virtual void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {}
+    virtual void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {}
     virtual ~mapping() {}
 };
 
 class spline_mapping : public mapping {
+protected:
     spline<tri_mesh::ND> my_spline;
     FLT scale;
+public:
     rigid_movement_interface2D trsfm;
-    void init(input_map& inmap,std::string idprefix,std::ostream *log);
-    //void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to);
-    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to);
+    void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
+    //void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
 };
 
 class polar_mapping : public mapping {
+protected:
     TinyVector<FLT,2> pnt;
     FLT theta_length;
-    void init(input_map& inmap,std::string idprefix,std::ostream *log);
-    //void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to);
-    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to);
+    void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
+    //void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
 };
+
+class polar_log_mapping : public polar_mapping {
+    FLT r0, r_eps;
+    void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
+    //void to_geometry_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
+};
+
 
 class mapped_mesh : public r_tri_mesh {
 public:
-    mapping *map;
+    shared_ptr<mapping> map;
     Array<TinyVector<FLT,ND>,1> mapped_pnts; /**< Physical location of the points in the mesh */
 
     void init(input_map& input, void *gbl_in);
@@ -56,6 +71,5 @@ public:
     void output(const std::string &outname,block::output_purpose why);
     /** update physical location of points */
     void map_pnts();
-    ~mapped_mesh() {delete map;}
 };
 #endif /* mapped_hpp */
