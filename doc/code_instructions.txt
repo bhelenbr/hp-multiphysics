@@ -23,7 +23,6 @@ xcode-select --install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install muparser
 brew install netcdf
-#brew install libbinio
 brew install mpich
 #brew install open-mpi (open-mpi / mumps / petsc doesn't work)
 brew install cmake
@@ -51,7 +50,7 @@ brew install python (install python3)
 mkdir ~/.venv
 python3 -m venv ~/.venv
 source ~/.venv/bin/activate (add this to .zsh_profile)?
-cat "source ~/.venv/bin/activate" >> ~/.zprofile
+echo "source ~/.venv/bin/activate" >> ~/.zprofile
 pip install numpy scipy matplotlib
 
 To update installed packages
@@ -163,7 +162,7 @@ git clean -f -d -x         # remove all files that are not in the git repo
 
 # To know what packages are available: ./config/configure.py --help
 # on OS X
-./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hypre=1 --with-mpi-dir=/opt/homebrew
+./configure --prefix=${HOME}/Packages --with-x=0 --download-parmetis=1 --download-metis=1 --download-mumps=1 --download-scalapack=1 --download-hypre=1 --download-superlu_dist=1 --with-mpi-dir=/opt/homebrew
 
 --with-debugging=0 --COPTFLAGS="-O3 -march=native -mtune=native" --CXXOPTFLAGS="-O3 -march=native -mtune=native" --FOPTFLAGS="-O3 -march=native -mtune=native"
 
