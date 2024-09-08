@@ -3,7 +3,7 @@ ncycle: 0
 ntstep: 2
 logfile: run
 adapt: 1
-error: 1.0e-6
+#error_target: 1.0e-4
 error_estimator: energy_norm
 minimum_length: 0.0001
 maximum_length: 1.0e10

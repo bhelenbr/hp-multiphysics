@@ -324,6 +324,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	}
 	petsc_initialize();
 #endif
+    
+    *gbl->log << "# Initial mesh with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
 	
 	return;
 }
