@@ -256,6 +256,7 @@
 					"$(SRCROOT)/../include",
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
@@ -310,6 +311,7 @@
 					"$(SRCROOT)/../include",
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (

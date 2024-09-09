@@ -902,12 +902,14 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"$(PACKAGES)/lib",
 					/usr/local/lib,
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -960,12 +962,14 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					../lib,
 					"$(PACKAGES)/lib",
 					/usr/local/lib,
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";

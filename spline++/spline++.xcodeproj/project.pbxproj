@@ -264,6 +264,7 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = "";
@@ -309,6 +310,7 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";

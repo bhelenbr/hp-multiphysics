@@ -19,3 +19,17 @@ _*
 IDEWorkspaceChecks.plist
 build/
 xcschemes/
+
+input_map/.DS_Store
+
+quadtree/.DS_Store
+
+spline\+\+/.DS_Store
+
+Testing/tri_hp/conv-diff/PolarLogMapped/.DS_Store
+
+Testing/tri_mesh/partition/.DS_Store
+
+tri_mesh/.DS_Store
+
+utilities/.DS_Store

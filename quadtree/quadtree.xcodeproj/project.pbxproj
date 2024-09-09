@@ -276,6 +276,7 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
@@ -319,6 +320,7 @@
 					../include,
 					"$(PACKAGES)/include",
 					/usr/local/include,
+					/opt/homebrew/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
