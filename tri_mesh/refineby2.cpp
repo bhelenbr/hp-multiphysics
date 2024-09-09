@@ -15,7 +15,7 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
 	TinyVector<FLT,ND> xpt;
 
 	/* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
-	/* BECAUSE OF gbl->intwk USAGE */
+	/* BECAUSE OF tri_gbl->intwk USAGE */
 	if (!initialized) {
 		/* VERTEX STORAGE ALLOCATION */
 		init(inmesh,duplicate,0.5);

@@ -13,11 +13,18 @@
 #include "tet_basis.h"
 
 const int tet_basis::sbwth;
+using namespace blitz;
 
 /*comment this for nodal 3/4*/
 Array<tet_basis,1> basis::tet;
 
-void tet_basis::initialize(int pdegree, int gpoints) {   
+void tet_basis::initialize(int pdegree, int gpoints) { 
+#ifdef BZ_DEBUG
+    std::cerr << "#spline: BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    std::cerr << "#spline: Running in Xcode's DEBUG Mode\n";
+#endif
 	if (pdegree < 1) {
 		printf("error can't use 0th order basis with vertex based modes\n");
 		exit(1);

@@ -61,8 +61,8 @@ class r_fixed : public r_side_bdry {
 			for(int j=0;j<base.nseg;++j) {
 				int sind = base.seg(j);
 				for(int n=dstart;n<=dstop;++n) {
-					x.gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
-					x.gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
+					x.r_gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
+					x.r_gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
 				}
 			}
 			return;
@@ -115,9 +115,9 @@ class r_fixed_angled : public r_side_bdry {
 			for(int j=1;j<base.nseg;++j) {
 				int sind = base.seg(j);
 				/* Tangent Residual */
-				FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
-				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
-				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
+				FLT res = -x.r_gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.r_gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
+				x.r_gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
+				x.r_gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
 			}
 			
 			return;
@@ -200,12 +200,12 @@ class r_curved : public r_side_bdry {
 				base.mvpttobdry(j,1.0,pt);
 				
 				/* Tangent Residual */
-				FLT rest = -x.gbl->res(pnt)(0)*norm(1) +x.gbl->res(pnt)(1)*norm(0);
+				FLT rest = -x.r_gbl->res(pnt)(0)*norm(1) +x.r_gbl->res(pnt)(1)*norm(0);
 				/* Normal Residual */
-				FLT resn = ((x.pnts(pnt)(0)-pt(0))*norm(0) +(x.pnts(pnt)(1)-pt(1))*norm(1))/x.gbl->diag(pnt);
+				FLT resn = ((x.pnts(pnt)(0)-pt(0))*norm(0) +(x.pnts(pnt)(1)-pt(1))*norm(1))/x.r_gbl->diag(pnt);
 
-				x.gbl->res(pnt)(0) = -rest*norm(1) +resn*norm(0);
-				x.gbl->res(pnt)(1) = rest*norm(0) +resn*norm(1);
+				x.r_gbl->res(pnt)(0) = -rest*norm(1) +resn*norm(0);
+				x.r_gbl->res(pnt)(1) = rest*norm(0) +resn*norm(1);
 			}
 			
 			return;
@@ -250,13 +250,13 @@ class r_curved : public r_side_bdry {
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
 					if (J._col(row1+col) == row) {
-						vals(1,col) = norm(0)/x.gbl->diag(pnt);
+						vals(1,col) = norm(0)/x.r_gbl->diag(pnt);
 						break;
 					}
 				}
 				for(int col=0;col<nnz1;++col) {
 					if (J._col(row1+col) == row+1) {
-						vals(1,col) = norm(1)/x.gbl->diag(pnt);
+						vals(1,col) = norm(1)/x.r_gbl->diag(pnt);
 						break;
 					}
 				}
@@ -294,8 +294,8 @@ class r_fixed4 : public r_fixed {
 			for(int j=0;j<base.nseg;++j) {
 				int sind = base.seg(j);
 					for(int n=d2start;n<=d2stop;++n) {
-						x.gbl->res1(x.seg(sind).pnt(0))(n) = 0.0;
-						x.gbl->res1(x.seg(sind).pnt(1))(n) = 0.0;
+						x.r_gbl->res1(x.seg(sind).pnt(0))(n) = 0.0;
+						x.r_gbl->res1(x.seg(sind).pnt(1))(n) = 0.0;
 					}
 			}
 			return;
@@ -463,7 +463,7 @@ class r_vfixed : public r_vrtx_bdry {
 		void dirichlet() {
 			int pnt = base.pnt;
 			for(int n=dstart;n<=dstop;++n) {
-				x.gbl->res(pnt)(n) = 0.0;
+				x.r_gbl->res(pnt)(n) = 0.0;
 			}
 			return;
 		}

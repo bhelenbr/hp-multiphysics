@@ -51,8 +51,6 @@ int main(int argc, char **argv) {
 	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
-	
-    
     
     // parse args
    bool Debugger = false;
@@ -130,6 +128,13 @@ int main(int argc, char **argv) {
 		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	sim::blks.go(argv[index]);
+    
+#ifdef BZ_DEBUG
+    std::cerr << "#tri_hp: BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    std::cerr << "#tri_hp: Running in Xcode's DEBUG Mode\n";
+#endif
 
 #ifdef petsc
 	PetscFinalize();

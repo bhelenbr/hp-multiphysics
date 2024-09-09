@@ -22,23 +22,23 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 
 	/* PREPARE FOR COARSENING */
 	for(i=0;i<inmesh.npnt;++i)
-		gbl->fltwk(i) = 1.0e8;
+		tri_gbl->fltwk(i) = 1.0e8;
 
 	for(i=0;i<inmesh.nseg;++i) {
 		p0 = inmesh.seg(i).pnt(0);
 		p1 = inmesh.seg(i).pnt(1);
-		gbl->fltwk(p0) = MIN(inmesh.distance(p0,p1),gbl->fltwk(p0));
-		gbl->fltwk(p1) = MIN(inmesh.distance(p0,p1),gbl->fltwk(p1));
+		tri_gbl->fltwk(p0) = MIN(inmesh.distance(p0,p1),tri_gbl->fltwk(p0));
+		tri_gbl->fltwk(p1) = MIN(inmesh.distance(p0,p1),tri_gbl->fltwk(p1));
 	}
 
 	for(i=0;i<inmesh.npnt;++i)
-		gbl->fltwk(i) *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
+		tri_gbl->fltwk(i) *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
 
 	npnt = 0;
 	nseg = 0;
 	ntri  = 0;
 
-	/* USE gbl->intwk TO KEEP TRACK OF INDICES */
+	/* USE tri_gbl->intwk TO KEEP TRACK OF INDICES */
 
 	int inmeshbdrysides = 2*inmesh.nseg -3*inmesh.ntri;
 	if (maxpst < inmeshbdrysides/2) {
@@ -55,15 +55,15 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 
 		/* CHECK IF FIRST POINT INSERTED*/
 		p0 = inmesh.seg(inmesh.ebdry(i)->seg(0)).pnt(0);
-		if (gbl->intwk(p0) < 0) {
+		if (tri_gbl->intwk(p0) < 0) {
 			for(n=0;n<ND;++n)
 				pnts(npnt)(n) = inmesh.pnts(p0)(n);
-			gbl->intwk(p0) = npnt;
+			tri_gbl->intwk(p0) = npnt;
 			seg(nseg).pnt(0) = npnt;
 			++npnt;
 		}
 		else {
-			seg(nseg).pnt(0) = gbl->intwk(p0);
+			seg(nseg).pnt(0) = tri_gbl->intwk(p0);
 		}
 
 		odd = inmesh.ebdry(i)->nseg%2;
@@ -72,7 +72,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 				p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
 				for(n=0;n<ND;++n)
 					pnts(npnt)(n) = inmesh.pnts(p0)(n);
-				gbl->intwk(p0) = npnt;
+				tri_gbl->intwk(p0) = npnt;
 				seg(nseg).pnt(1) = npnt;
 				ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 				seg(nseg).tri(1) = -1;
@@ -89,8 +89,8 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 				p1 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(1);
 				for(n=0;n<ND;++n)
 					pnts(npnt)(n) = 0.5*(inmesh.pnts(p0)(n) +inmesh.pnts(p1)(n));
-				gbl->intwk(p0) = npnt;
-				gbl->intwk(p1)= npnt;
+				tri_gbl->intwk(p0) = npnt;
+				tri_gbl->intwk(p1)= npnt;
 				seg(nseg).pnt(1) = npnt;
 				ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 				seg(nseg).tri(1) = -1;
@@ -104,7 +104,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 				p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
 				for(n=0;n<ND;++n)
 					pnts(npnt)(n) = inmesh.pnts(p0)(n);
-				gbl->intwk(p0) = npnt;
+				tri_gbl->intwk(p0) = npnt;
 				seg(nseg).pnt(1) = npnt;
 				ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 				seg(nseg).tri(1) = -1;
@@ -119,7 +119,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 				p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
 				for(n=0;n<ND;++n)
 					pnts(npnt)(n) = inmesh.pnts(p0)(n);
-				gbl->intwk(p0) = npnt;
+				tri_gbl->intwk(p0) = npnt;
 				seg(nseg).pnt(1) = npnt;
 				ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 				seg(nseg).tri(1) = -1;
@@ -132,10 +132,10 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 
 		/* INSERT LAST POINT */
 		p0 = inmesh.seg(inmesh.ebdry(i)->seg(inmesh.ebdry(i)->nseg-1)).pnt(1);
-		if (gbl->intwk(p0) < 0) {
+		if (tri_gbl->intwk(p0) < 0) {
 			for(n=0;n<ND;++n)
 				pnts(npnt)(n) = inmesh.pnts(p0)(n);
-			gbl->intwk(p0) = npnt;
+			tri_gbl->intwk(p0) = npnt;
 			seg(nseg).pnt(1) = npnt;
 			ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 			seg(nseg).tri(1) = -1;
@@ -144,7 +144,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 			++npnt;
 		}
 		else {
-			seg(nseg).pnt(1) = gbl->intwk(p0);
+			seg(nseg).pnt(1) = tri_gbl->intwk(p0);
 			ebdry(i)->seg(ebdry(i)->nseg) = nseg;
 			seg(nseg).tri(1) = -1;
 			++nseg;
@@ -155,7 +155,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 	/* MOVE VERTEX BDRY INFORMATION */
 	for(i=0;i<inmesh.nvbd;++i) {
 		vbdry(i)->copy(*inmesh.vbdry(i));
-		vbdry(i)->pnt = gbl->intwk(inmesh.vbdry(i)->pnt);
+		vbdry(i)->pnt = tri_gbl->intwk(inmesh.vbdry(i)->pnt);
 	}
 
 	if (maxpst < nseg/2+nseg) {
@@ -171,7 +171,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 	}
 	
 	for(i=0;i<nseg;++i)
-		gbl->i2wk_lst1(i) = i+1;
+		tri_gbl->i2wk_lst1(i) = i+1;
 
 	triangulate(nseg);
 
@@ -191,37 +191,37 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 	/* Boyer-Watson Algorithm to insert interior points */
 	/****************************************************/
 	/* MARK BOUNDARY SO DON'T GET INSERTED */
-	/* FUNNY WAY OF MARKING SO CAN LEAVE gbl->intwk initialized to -1 */
+	/* FUNNY WAY OF MARKING SO CAN LEAVE tri_gbl->intwk initialized to -1 */
 	for(i=0;i<inmesh.nebd;++i) {
 		for(j=0;j<inmesh.ebdry(i)->nseg;++j) {
 			sind = inmesh.ebdry(i)->seg(j);
-			gbl->intwk(inmesh.seg(sind).pnt(0)) = SETSPEC;
-			gbl->intwk(inmesh.seg(sind).pnt(1)) = SETSPEC;
+			tri_gbl->intwk(inmesh.seg(sind).pnt(0)) = SETSPEC;
+			tri_gbl->intwk(inmesh.seg(sind).pnt(1)) = SETSPEC;
 		}
 	}
 
 	/* maxsrch must be high for triangulated domain with no interior points */
-	gbl->maxsrch = MIN(maxpst,inmesh.ntri);
+	tri_gbl->maxsrch = MIN(maxpst,inmesh.ntri);
 
 	for(i=0;i<inmesh.npnt;++i) {
-		if (ISSPEC(gbl->intwk(i))) continue;
+		if (ISSPEC(tri_gbl->intwk(i))) continue;
 
 		mindist = qtree.nearpt(inmesh.pnts(i),j);
-		if (sqrt(mindist) < gbl->fltwk(i)) continue;
+		if (sqrt(mindist) < tri_gbl->fltwk(i)) continue;
 
 		insert(inmesh.pnts(i));
 	}
 	cnt_nbor();
 
 	/* reset maxsrch */
-	gbl->maxsrch = 1000;
+	tri_gbl->maxsrch = 1000;
 
-	/* RESET gbl->intwk */
+	/* RESET tri_gbl->intwk */
 	for(i=0;i<inmesh.nebd;++i) {
 		for(j=0;j<inmesh.ebdry(i)->nseg;++j) {
 			sind = inmesh.ebdry(i)->seg(j);
-			gbl->intwk(inmesh.seg(sind).pnt(0)) = -1;
-			gbl->intwk(inmesh.seg(sind).pnt(1)) = -1;
+			tri_gbl->intwk(inmesh.seg(sind).pnt(0)) = -1;
+			tri_gbl->intwk(inmesh.seg(sind).pnt(1)) = -1;
 		}
 	}
 	bdrylabel();

@@ -37,7 +37,7 @@ void tri_mesh::offset_geometry(input_map& input) {
         }
         maxeid = max(ebdry(i)->idnum,maxeid);
         /* Fill in vertex information so we can move through the sides */
-        gbl->intwk(seg(ebdry(i)->seg(0)).pnt(0)) = i;
+        tri_gbl->intwk(seg(ebdry(i)->seg(0)).pnt(0)) = i;
         pnt(seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1)).info = i;
     }
     
@@ -237,7 +237,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                                 out << cnt << ": " << loc[0] << ' ' << loc[1] << ' ' << lngth(vnum) << ' ' << 0 << std::endl;
                                 idnums.push_back(ebdry(loop_ind)->idnum);
                                 vnum = seg(ebdry(loop_ind)->seg(ebdry(loop_ind)->nseg-1)).pnt(1);
-                                loop_ind = gbl->intwk(vnum);
+                                loop_ind = tri_gbl->intwk(vnum);
                                 ++cnt;
                                 
                             } while (loop_ind != loop_start);

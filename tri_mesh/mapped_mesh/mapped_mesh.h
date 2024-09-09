@@ -62,7 +62,7 @@ public:
     shared_ptr<mapping> map;
     Array<TinyVector<FLT,ND>,1> mapped_pnts; /**< Physical location of the points in the mesh */
 
-    void init(input_map& input, void *gbl_in);
+    void init(input_map& input, shared_ptr<block_global>);
     /** Routine to initialze from another mesh with option of increasing or decreasing storage (compatible with block.h) */
     void init(const multigrid_interface& mgin, init_purpose why=duplicate, FLT sizereduce1d=1.0);
     /** Routine to copy */

@@ -233,7 +233,7 @@ void edge_bdry::swap(int s1, int s2) {
 
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL */
-/* USES gbl->intwk & gbl->i2wk AS WORK ARRAYS */
+/* USES tri_gbl->intwk & tri_gbl->i2wk AS WORK ARRAYS */
 void edge_bdry::reorder() {
 	int i,count,total,sind,minp,first;
 
@@ -242,27 +242,27 @@ void edge_bdry::reorder() {
 	/* DON'T ASSUME wk INITIALIZED TO -1 */
 	for(i=0;i<nseg;++i) {
 		sind = seg(i);
-		x.gbl->intwk(x.seg(sind).pnt(0)) = -1;
-		x.gbl->i2wk(x.seg(sind).pnt(1)) = -1;
+		x.tri_gbl->intwk(x.seg(sind).pnt(0)) = -1;
+		x.tri_gbl->i2wk(x.seg(sind).pnt(1)) = -1;
 	}
 
 	/* STORE SIDE INDICES BY VERTEX NUMBER */
 	for(i=0; i < nseg; ++i) {
 		sind = seg(i);
-		x.gbl->intwk(x.seg(sind).pnt(1)) = i;
-		x.gbl->i2wk(x.seg(sind).pnt(0)) = i;
+		x.tri_gbl->intwk(x.seg(sind).pnt(1)) = i;
+		x.tri_gbl->i2wk(x.seg(sind).pnt(0)) = i;
 	}
 	
 	/* Implement a break at vertex boundaries */
 	/* For weird case of two boundaries with same number that must be split */
 	for(i=0;i<x.nvbd;++i)
-		x.gbl->i2wk(x.vbdry(i)->pnt) = -1;
+		x.tri_gbl->i2wk(x.vbdry(i)->pnt) = -1;
 
 	/* FIND FIRST SIDE */
 	first = -1;
 	for(i=0;i<nseg;++i) {
 		sind = seg(i);
-		if (x.gbl->intwk(x.seg(sind).pnt(0)) == -1) {
+		if (x.tri_gbl->intwk(x.seg(sind).pnt(0)) == -1) {
 			first = i;
             goto foundfirst;
 		}
@@ -273,7 +273,7 @@ void edge_bdry::reorder() {
     /* Check if there is an intersecting vertex point */
     for(i=0;i<nseg;++i) {
         sind = seg(i);
-        if (x.gbl->i2wk(x.seg(sind).pnt(0)) == -1) {
+        if (x.tri_gbl->i2wk(x.seg(sind).pnt(0)) == -1) {
             first = i;
             goto foundfirst;
         }
@@ -292,24 +292,24 @@ void edge_bdry::reorder() {
 	/* SWAP FIRST SIDE */
 	count = 0;
 	swap(count,first);
-	x.gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
-	x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
-	x.gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
-	x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
+	x.tri_gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
+	x.tri_gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
+	x.tri_gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
+	x.tri_gbl->i2wk(x.seg(seg(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
 	/* REORDER LIST */
-	while ((first = x.gbl->i2wk(x.seg(seg(count++)).pnt(1))) >= 0) {
+	while ((first = x.tri_gbl->i2wk(x.seg(seg(count++)).pnt(1))) >= 0) {
 		swap(count,first);
-		x.gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
-		x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
-		x.gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
-		x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = count;
+		x.tri_gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
+		x.tri_gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
+		x.tri_gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
+		x.tri_gbl->i2wk(x.seg(seg(count)).pnt(0)) = count;
 	}
 
-	/* RESET gbl->intwk TO -1 */
+	/* RESET tri_gbl->intwk TO -1 */
 	for(i=0; i <total; ++i) {
 		sind = seg(i);
-		x.gbl->intwk(x.seg(sind).pnt(1)) = -1;
+		x.tri_gbl->intwk(x.seg(sind).pnt(1)) = -1;
 	}
 
 	if (count < total) {
@@ -474,6 +474,7 @@ void epartition::alloc(int size) {
 	ecomm::alloc(size);
 	resize_buffers(4*size*(2+2+3)); // Four rows of pnts, seg pnts, tri pnts
 	remote_halo.gbl = x.gbl;
+    remote_halo.tri_gbl = x.tri_gbl;
 	remote_halo.allocate(8*size);
 	/* Make 2 Boundaries first is the matching boundary */
 	remote_halo.nebd = 2;
@@ -627,11 +628,11 @@ void epartition::calculate_halo() {
 	
 	nseg_h = 0;
 	/* MARK BOUNDARY SO DON'T GET INSERTED */
-	/* FUNNY WAY OF MARKING SO CAN LEAVE gbl->intwk initialized to -1 */
+	/* FUNNY WAY OF MARKING SO CAN LEAVE tri_gbl->intwk initialized to -1 */
 	for(int j=0;j<nseg;++j) {
 		int sind = seg(j);
 		seg_h(nseg_h++) = sind;
-		SETSSRCH(x.gbl->intwk(sind));
+		SETSSRCH(x.tri_gbl->intwk(sind));
 	}
 	
 	/* Find first side by going counter-clockwise */
@@ -648,7 +649,7 @@ void epartition::calculate_halo() {
 				
 	/* Found first side */
 	seg_h(nseg_h++) = x.tri(tind).seg((vn +1)%3);
-	SETSSRCH(x.gbl->intwk(seg_h(nseg_h-1)));
+	SETSSRCH(x.tri_gbl->intwk(seg_h(nseg_h-1)));
 	
 	ntri_h = 0;
 	for(int scnt=0;scnt<nseg+1;++scnt) {
@@ -660,20 +661,20 @@ void epartition::calculate_halo() {
 				if (x.tri(tind).pnt(vn) == ppivot) break;
 			assert(vn < 3);
 			
-			if (!ISTSRCH(x.gbl->intwk(tind))) {
+			if (!ISTSRCH(x.tri_gbl->intwk(tind))) {
 				tri_h(ntri_h++) = tind;
-				SETTSRCH(x.gbl->intwk(tind));
+				SETTSRCH(x.tri_gbl->intwk(tind));
 				
 				sind = x.tri(tind).seg(vn);
-				if (!ISSSRCH(x.gbl->intwk(sind))) {
+				if (!ISSSRCH(x.tri_gbl->intwk(sind))) {
 					seg_h(nseg_h++) = sind;
-					SETSSRCH(x.gbl->intwk(sind));
+					SETSSRCH(x.tri_gbl->intwk(sind));
 				}
 
 				sind = x.tri(tind).seg((vn+2)%3);
-				if (!ISSSRCH(x.gbl->intwk(sind))) {
+				if (!ISSSRCH(x.tri_gbl->intwk(sind))) {
 					seg_h(nseg_h++) = sind;
-					SETSSRCH(x.gbl->intwk(sind));
+					SETSSRCH(x.tri_gbl->intwk(sind));
 				}
 			}
 
@@ -685,11 +686,11 @@ void epartition::calculate_halo() {
 	}
 	
 	for(int i=0;i<ntri_h;++i)
-		CLRTSRCH(x.gbl->intwk(tri_h(i)));
+		CLRTSRCH(x.tri_gbl->intwk(tri_h(i)));
 	
 	for (int j=0;j<nseg_h;++j) {
 		sind = seg_h(j);
-		CLRSSRCH(x.gbl->intwk(sind));
+		CLRSSRCH(x.tri_gbl->intwk(sind));
 	}
 	
 	/* Extract Halo Mesh for sending to remote partition */
@@ -697,15 +698,15 @@ void epartition::calculate_halo() {
 	remote_halo.npnt = 0;
 	for (int j=0;j<nseg_h;++j) {
 		int pnt = x.seg(seg_h(j)).pnt(0);
-		if (x.gbl->intwk(pnt) == -1) {
-			x.gbl->intwk(pnt) = remote_halo.npnt;
+		if (x.tri_gbl->intwk(pnt) == -1) {
+			x.tri_gbl->intwk(pnt) = remote_halo.npnt;
 			pnt_h(remote_halo.npnt) = pnt;
 			remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
 		}
 		
 		pnt = x.seg(seg_h(j)).pnt(1);
-		if (x.gbl->intwk(pnt) == -1) {
-			x.gbl->intwk(pnt) = remote_halo.npnt;
+		if (x.tri_gbl->intwk(pnt) == -1) {
+			x.tri_gbl->intwk(pnt) = remote_halo.npnt;
 			pnt_h(remote_halo.npnt) = pnt;
 			remote_halo.pnts(remote_halo.npnt++) = x.pnts(pnt);
 		}
@@ -715,8 +716,8 @@ void epartition::calculate_halo() {
 	/* Create Side List */
 	remote_halo.nseg = 0;
 	for (int j=0;j<nseg_h;++j) {
-		remote_halo.seg(remote_halo.nseg).pnt(0) = x.gbl->intwk(x.seg(seg_h(j)).pnt(0));
-		remote_halo.seg(remote_halo.nseg).pnt(1) = x.gbl->intwk(x.seg(seg_h(j)).pnt(1));
+		remote_halo.seg(remote_halo.nseg).pnt(0) = x.tri_gbl->intwk(x.seg(seg_h(j)).pnt(0));
+		remote_halo.seg(remote_halo.nseg).pnt(1) = x.tri_gbl->intwk(x.seg(seg_h(j)).pnt(1));
 		++remote_halo.nseg;
 	}
 	
@@ -724,12 +725,12 @@ void epartition::calculate_halo() {
 	remote_halo.ntri = ntri_h;
 	for (int tind=0;tind<ntri_h;++tind) {
 		for(int vn=0;vn<3;++vn) {
-			remote_halo.tri(tind).pnt(vn) = x.gbl->intwk(x.tri(tri_h(tind)).pnt(vn));
+			remote_halo.tri(tind).pnt(vn) = x.tri_gbl->intwk(x.tri(tri_h(tind)).pnt(vn));
 		}
 	}
 
 	for(int j=0;j<npnt_h;++j)
-		x.gbl->intwk(pnt_h(j)) = -1;
+		x.tri_gbl->intwk(pnt_h(j)) = -1;
 	
 	/* Fill in connections between seg and tri so can figure out what segs are on boundary */
 	remote_halo.createsegtri();

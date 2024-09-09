@@ -131,7 +131,7 @@ struct block_global {
 /* THIS IS A BLOCK THAT HAS THE CAPABILITIES OF DRIVING A MULTIGRID CYCLE OR AN EXPLICT TIME ADVANCEMENT LOOP */
 class block {
 	protected:
-		block_global *gbl;  /**< Pointer to block globals */
+		shared_ptr<block_global> gbl;  /**< Pointer to block globals */
 		multigrid_interface* getnewlevel(input_map& blockdata);  /**< Allocates multigrid levels */
 		int ntstep;  /**< Number of time steps to perform */
 		int nstart; /**< Starting step (for restart from file */
@@ -212,9 +212,7 @@ class block {
 class multigrid_interface {
 	public:
 		/** Initialization functions */
-		virtual void* create_global_structure() {return 0;}
-		virtual void delete_global_structure() {return;}
-		virtual void init(input_map& input, void *gbl_in) {}
+		virtual void init(input_map& input, shared_ptr<block_global> gbl_in) {}
 		enum init_purpose {duplicate, multigrid, adapt_storage, user_defined};
 		virtual void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0) {}
 
@@ -225,7 +223,7 @@ class multigrid_interface {
 		virtual void tadvance() {}
         virtual void reset_timestep() {}
 
-		void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
+		void findmatch(shared_ptr<block_global> gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
 		class comm_info;  /**< Utility class for figuring out communication */
 		virtual void calculate_halo() {} /**< calculate halo mesh structures in partition boundaries */
 		virtual void matchboundaries() {} /**< Makes sure data on boundaries coinside */

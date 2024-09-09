@@ -32,6 +32,8 @@ class r_tri_mesh : public tri_mesh {
 			Array<TinyVector<FLT,ND>,1> pnts_frst;
 
 	public:
+            shared_ptr<block_global> gbl;
+
 			Array<r_side_bdry *,1> r_sbdry;
 			r_side_bdry* getnewedgeobject(int bnum, input_map& bdrydata);
 
@@ -64,17 +66,16 @@ class r_tri_mesh : public tri_mesh {
 			/* POINTER TO THINGS SHARED IN BLOCK CONTAINER */
 			/* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
 			/* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-			struct global : public tri_mesh::global {
+			struct r_global {
 				Array<FLT,1> diag;
 				Array<TinyVector<FLT,2>,1> res;
 				Array<TinyVector<FLT,2>,1> res1;
-			} *gbl;
+            };
+            shared_ptr<r_global> r_gbl;
 			~r_tri_mesh();
 
 			/* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-			void* create_global_structure() {return new global;}
-			void delete_global_structure() {delete gbl;}
-			void init(input_map& input, void *gin);
+			void init(input_map& input, shared_ptr<block_global> gbl_in);
 			void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 			void output(const std::string &outname,block::output_purpose why) {tri_mesh::output(outname,output_type);}
 			void mg_restrict();

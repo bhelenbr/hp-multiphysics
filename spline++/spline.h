@@ -21,7 +21,14 @@ private:
     blitz::Array<blitz::TinyVector<blitz::TinyVector<double,ND>,6>,1> c;
     
 public:
-    spline() : npts(0) {}
+    spline() : npts(0) {
+#ifdef BZ_DEBUG
+    std::cerr << "#spline: BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    std::cerr << "#spline: Running in Xcode's DEBUG Mode\n";
+#endif
+    }
     spline(const spline<ND>& inpt) : npts(inpt.npts) {
         x.resize(npts);
         y.resize(npts);

@@ -138,8 +138,8 @@ void tri_mesh::cut() {
 		vmin = 0.0;
 		vmax = 0.0;
 		for(vct=0;vct<3;++vct) {
-			vmin = MIN(vmin,gbl->fltwk(tri(i).pnt(vct)));
-			vmax = MAX(vmax,gbl->fltwk(tri(i).pnt(vct)));
+			vmin = MIN(vmin,tri_gbl->fltwk(tri(i).pnt(vct)));
+			vmax = MAX(vmax,tri_gbl->fltwk(tri(i).pnt(vct)));
 		}
 		if (vmax > fabs(vmin))
 			tri(i).info = 0;
@@ -188,8 +188,8 @@ void tri_mesh::cut() {
 					ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 				}
 				jcbi = 1./(ldcrd(0,0)*ldcrd(1,1) -ldcrd(0,1)*ldcrd(1,0));
-				dphi(0) = 0.5*(gbl->fltwk(v(2)) -gbl->fltwk(v(1)));
-				dphi(1) = 0.5*(gbl->fltwk(v(0)) -gbl->fltwk(v(1)));
+				dphi(0) = 0.5*(tri_gbl->fltwk(v(2)) -tri_gbl->fltwk(v(1)));
+				dphi(1) = 0.5*(tri_gbl->fltwk(v(0)) -tri_gbl->fltwk(v(1)));
 
 				grad(0) =  dphi(0)*ldcrd(1,1) -dphi(1)*ldcrd(1,0);
 				grad(1) = -dphi(0)*ldcrd(0,1) +dphi(1)*ldcrd(0,0);
@@ -206,14 +206,14 @@ void tri_mesh::cut() {
 					if (pnt(tri(tindold).pnt(vindold)).info == pind) break;
 				vindold = tri(tindold).pnt(vindold);
 
-				dnorm = -gbl->fltwk(vindold)/mag;
+				dnorm = -tri_gbl->fltwk(vindold)/mag;
 				dx(0) = dnorm*grad(0)/mag;
 				dx(1) = dnorm*grad(1)/mag;
 
 				zpart[m].pnts(pind) += dx;
 			}
 		}
-        nstr.clear();
+        nstr.str("");
         nstr << "cut" << m << std::flush;
 		zpart[m].output(nstr.str(),grid);
 	}
@@ -225,7 +225,7 @@ void tri_mesh::cut() {
 void tri_mesh::trim() {
 	int i,j,n,bsd,tin,tind,nsrch,ntdel;
 
-	/* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
+	/* ASSUMES tri_gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
 
 	for(i=0;i<ntri;++i)
 		tri(i).info = 0;
@@ -236,24 +236,24 @@ void tri_mesh::trim() {
 		tind = seg(ebdry(0)->seg(bsd)).tri(0);
 		if (tri(tind).info > 0) continue;
 
-		gbl->intwk(0) = tind;
+		tri_gbl->intwk(0) = tind;
 		tri(tind).info = 1;
 		nsrch = ntdel+1;
 
 		/* NEED TO SEARCH SURROUNDING TRIANGLES */
 		for(i=ntdel;i<nsrch;++i) {
-			tin = gbl->intwk(i);
+			tin = tri_gbl->intwk(i);
 			for (n=0;n<3;++n)
-				if (gbl->fltwk(tri(tin).pnt(n)) < 0.0) goto NEXT;
+				if (tri_gbl->fltwk(tri(tin).pnt(n)) < 0.0) goto NEXT;
 
-			gbl->intwk(ntdel++) = tin;
+			tri_gbl->intwk(ntdel++) = tin;
 
 			for(j=0;j<3;++j) {
 				tind = tri(tin).tri(j);
 				if (tind < 0) continue;
 				if (tri(tind).info > 0) continue;
 				tri(tind).info = 1;
-				gbl->intwk(nsrch++) = tind;
+				tri_gbl->intwk(nsrch++) = tind;
 			}
 			NEXT: continue;
 		}
@@ -263,10 +263,10 @@ void tri_mesh::trim() {
 		tri(i).info = 0;
 
 	for(i=0;i<ntdel;++i)
-		tri(gbl->intwk(i)).info = 1;
+		tri(tri_gbl->intwk(i)).info = 1;
 
 	for(i=0;i<maxpst;++i)
-		gbl->intwk(i) = -1;
+		tri_gbl->intwk(i) = -1;
 
 	tri_mesh ztrim;
 	ztrim.init(*this);
@@ -332,18 +332,18 @@ int tri_mesh::smooth_cofa(int niter) {
 		/* SMOOTH POINT DISTRIBUTION X*/
 		for(n=0;n<ND;++n) {
 			for(i=0;i<npnt;++i)
-				gbl->fltwk(i) = 0.0;
+				tri_gbl->fltwk(i) = 0.0;
 
 			for(i=0;i<nseg;++i) {
 				p0 = seg(i).pnt(0);
 				p1 = seg(i).pnt(1);
-				gbl->fltwk(p0) += pnts(p1)(n);
-				gbl->fltwk(p1) += pnts(p0)(n);
+				tri_gbl->fltwk(p0) += pnts(p1)(n);
+				tri_gbl->fltwk(p1) += pnts(p0)(n);
 			}
 
 			for(i=0;i<npnt;++i) {
 				if (pnt(i).info == 0) {
-					pnts(i)(n) = gbl->fltwk(i)/pnt(i).nnbor;
+					pnts(i)(n) = tri_gbl->fltwk(i)/pnt(i).nnbor;
 				}
 			}
 		}
@@ -358,14 +358,14 @@ int tri_mesh::smooth_lngth(int niter) {
 	/* Smooth distribution along each edge fixing endpoint */
 //	for(iter=0; iter< niter; ++iter) {
 //		for(int i=0;i<nebd;++i) {
-//			gbl->fltwk(0) = 0.0;
+//			tri_gbl->fltwk(0) = 0.0;
 //			for(int j=0;j<ebdry(i)->nseg;++j) {
-//				gbl->fltwk(j) += 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(1));
-//				gbl->fltwk(j+1) = 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(0));
+//				tri_gbl->fltwk(j) += 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(1));
+//				tri_gbl->fltwk(j+1) = 1.0/lngth(seg(ebdry(i)->seg(j)).pnt(0));
 //			}
 //			
 //			for(j=1;j<ebdry(i)->nseg;++j) {
-//				lngth(seg(ebdry(i)->seg(j)).pnt(0)) = 2.0/gbl->fltwk(j);
+//				lngth(seg(ebdry(i)->seg(j)).pnt(0)) = 2.0/tri_gbl->fltwk(j);
 //			}
 //		}
 //	}
@@ -384,18 +384,18 @@ int tri_mesh::smooth_lngth(int niter) {
 	for(iter=0; iter< niter; ++iter) {
 		/* SMOOTH POINT DISTRIBUTION X*/
 			for(i=0;i<npnt;++i)
-				gbl->fltwk(i) = 0.0;
+				tri_gbl->fltwk(i) = 0.0;
 
 			for(i=0;i<nseg;++i) {
 				p0 = seg(i).pnt(0);
 				p1 = seg(i).pnt(1);
-				gbl->fltwk(p0) += 1./lngth(p1);
-				gbl->fltwk(p1) += 1./lngth(p0);
+				tri_gbl->fltwk(p0) += 1./lngth(p1);
+				tri_gbl->fltwk(p1) += 1./lngth(p0);
 			}
 
 			for(i=0;i<npnt;++i) {
 //				if (pnt(i).info == 0) {
-					lngth(i) = 1./(gbl->fltwk(i)/pnt(i).nnbor);
+					lngth(i) = 1./(tri_gbl->fltwk(i)/pnt(i).nnbor);
 //				}
 			}
 	}

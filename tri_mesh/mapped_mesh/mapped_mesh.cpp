@@ -103,7 +103,7 @@ void polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT
 
 
 
-void mapped_mesh::init(input_map& input, void *gbl_in) {
+void mapped_mesh::init(input_map& input, shared_ptr<block_global> gbl_in) {
     r_tri_mesh::init(input,gbl_in);
     map->init(input,gbl->idprefix,gbl->log);
     mapped_pnts.resize(maxpst);

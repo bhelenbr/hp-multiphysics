@@ -691,7 +691,7 @@ int multigrid_interface::comm_info::unpack(blitz::Array<int,1> entitylist) {
 	return(count);
 }
 
-void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
+void multigrid_interface::findmatch(shared_ptr<block_global> gbl, int grdlvl) {
 
 	/* GET DATA FROM BLOCKS IN A THREAD SAFE WAY */
 #if defined(PTH)
@@ -950,7 +950,7 @@ void block::init(input_map &input) {
 	grd.resize(ngrid);
 	for (int i=0;i<ngrid;++i)
 		grd(i) = getnewlevel(input);
-	gbl = static_cast<block_global *>(grd(0)->create_global_structure());
+	gbl = make_shared<block_global>();
 	gbl->idnum = idnum;
 	gbl->idprefix = idprefix;
 
@@ -996,6 +996,13 @@ void block::init(input_map &input) {
 	input.echo = true;
 	input.log = gbl->log;
 	input.echoprefix = "#";
+    
+#ifdef BZ_DEBUG
+    *gbl->log << "#BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    *gbl->log << "#Running in Xcode's DEBUG Mode\n";
+#endif
 
 #ifdef CAPRI
 	int status = gi_uStart();
@@ -1921,9 +1928,8 @@ void block::adapt() {
 }
 
 block::~block() {
-	if (gbl->log != &std::cout) delete gbl->log;
-	if (gbl) grd(0)->delete_global_structure();
 	for(int i=ngrid-1;i>=0;--i) {
 		delete grd(i);
 	}
+    delete gbl->log;
 }

@@ -7,8 +7,8 @@ void tri_mesh::collapse(int sind, int delt) {
 	int i,j,vn,pnear,prev,tind,tind1,sind1,stoptri,dir;
 	int p0,p1,pt,sd1,sd2,sd3,t1,t2;
 
-	/* gbl->i2wk_lst1 = triangles surrounding delete point */
-	/* gbl->i2wk_lst2 = sides surrounding delete point */
+	/* tri_gbl->i2wk_lst1 = triangles surrounding delete point */
+	/* tri_gbl->i2wk_lst2 = sides surrounding delete point */
 	/* -1 indx lists how many */
 
 	/* FIND TRIANGLES / SIDES SURROUNDING ENDPOINT */
@@ -40,9 +40,9 @@ void tri_mesh::collapse(int sind, int delt) {
 		}
 
 		if (tind1 != seg(sind).tri(0) && tind1 != seg(sind).tri(1)) {
-			gbl->i2wk_lst1(ntsrnd++) = tind1;
+			tri_gbl->i2wk_lst1(ntsrnd++) = tind1;
 			if (!prev) {
-				gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
+				tri_gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
 			}
 			prev = 0;
 		}
@@ -53,15 +53,15 @@ void tri_mesh::collapse(int sind, int delt) {
 		tind = tind1;
 
 	} while(tind != stoptri);
-	gbl->i2wk_lst1(-1) = ntsrnd;
-	gbl->i2wk_lst2(-1) = nssrnd;
+	tri_gbl->i2wk_lst1(-1) = ntsrnd;
+	tri_gbl->i2wk_lst2(-1) = nssrnd;
 
 	/* UPDATE TRI.PNT & SEG.PNT */
 	p0 = seg(sind).pnt(1-delt);
 	p1 = seg(sind).pnt(delt);
 
 	for(i=0;i<ntsrnd;++i) {
-		tind = gbl->i2wk_lst1(i);
+		tind = tri_gbl->i2wk_lst1(i);
 		tri(tind).info |= TTOUC;
 		for(j=0;j<3;++j) {
 			if (tri(tind).pnt(j) == p1) {
@@ -76,7 +76,7 @@ void tri_mesh::collapse(int sind, int delt) {
 				pt = (1 -tri(tind).sgn((j+2)%3))/2;
 				assert(seg(sd3).pnt(pt) == p1 || seg(sd3).pnt(pt) == p0);
 				seg(sd3).pnt(pt) = p0;
-				gbl->i2wk_lst3(nperim++) = tri(tind).seg(j);
+				tri_gbl->i2wk_lst3(nperim++) = tri(tind).seg(j);
 				break;
 			}
 		}
@@ -118,7 +118,7 @@ void tri_mesh::collapse(int sind, int delt) {
 			sind1 = tri(tind).seg(sd2);
 		}
 		tri(sind1).info |= SDLTE;
-		gbl->i2wk_lst2(nssrnd++) = sind1;
+		tri_gbl->i2wk_lst2(nssrnd++) = sind1;
 
 		t1 = tri(tind).tri(sd1);
 		t2 = tri(tind).tri(sd2);
@@ -138,7 +138,7 @@ void tri_mesh::collapse(int sind, int delt) {
 		sind1 = tri(tind).seg(sd1);
 		pt = (1 -tri(tind).sgn(sd1))/2;
 		seg(sind1).tri(pt) = t2;
-		gbl->i2wk_lst3(nperim++) = sind1;
+		tri_gbl->i2wk_lst3(nperim++) = sind1;
 
 		/* UPDATE TTRI/TSIDE FOR T2 */
 		if (t2 > -1) {
@@ -160,9 +160,9 @@ void tri_mesh::collapse(int sind, int delt) {
 	tri(p1).info |= PDLTE;
 
 	/* SWAP AFFECTED SIDES */
-	swap(gbl->i2wk_lst2(-1),&gbl->i2wk_lst2(0));
-	gbl->i2wk_lst2(-1) = nssrnd;
-	gbl->i2wk_lst3(-1) = nperim;
+	swap(tri_gbl->i2wk_lst2(-1),&tri_gbl->i2wk_lst2(0));
+	tri_gbl->i2wk_lst2(-1) = nssrnd;
+	tri_gbl->i2wk_lst3(-1) = nperim;
 
 	return;
 }

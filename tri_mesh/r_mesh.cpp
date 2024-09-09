@@ -7,14 +7,15 @@
 #include <fstream>
 
 
-void r_tri_mesh::init(input_map& input, void *gin) {
+void r_tri_mesh::init(input_map& input, shared_ptr<block_global> gbl_in) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	int ival;
 
-	tri_mesh::init(input,gin);
-	gbl = static_cast<global *>(gin);
+    gbl = gbl_in;
+    r_gbl = make_shared<r_global>();
+	tri_mesh::init(input,gbl);
 
 	keyword = gbl->idprefix + "_r_fadd";
 	if (!input.get(keyword,fadd)) {
@@ -46,9 +47,10 @@ void r_tri_mesh::init(input_map& input, void *gin) {
 	isfrst = false;
 
 	/* BLOCK SHARED INFORMATION */
-	gbl->diag.resize(maxpst);
-	gbl->res.resize(maxpst);
-	gbl->res1.resize(maxpst);
+    r_gbl = make_shared<r_global>();
+	r_gbl->diag.resize(maxpst);
+	r_gbl->res.resize(maxpst);
+	r_gbl->res1.resize(maxpst);
 
 	r_sbdry.resize(nebd);
 	for(int i=0;i<nebd;++i)
@@ -68,7 +70,7 @@ void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizer
 
 	tri_mesh::init(in,why,sizereduce1d);
 	const r_tri_mesh& inmesh = dynamic_cast<const r_tri_mesh &>(in);
-	gbl = inmesh.gbl;
+	r_gbl = inmesh.r_gbl;
 	fadd = inmesh.fadd;
 	r_cfl = inmesh.r_cfl;
 
@@ -177,9 +179,9 @@ void r_tri_mesh::rkmgrid() {
 
 	/* Load Diag Locally */
 	Array<FLT,1> diag;
-	diag.reference(gbl->diag);
+	diag.reference(r_gbl->diag);
 	Array<TinyVector<FLT,ND>,1> res1;
-	res1.reference(gbl->res1);
+	res1.reference(r_gbl->res1);
 
 	/* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
 	for(i=0;i<fmesh->npnt;++i)
@@ -256,9 +258,9 @@ void r_tri_mesh::update() {
 	r_tri_mesh::rsdl();
 
 	Array<FLT,1> diag;
-	diag.reference(gbl->diag);
+	diag.reference(r_gbl->diag);
 	Array<TinyVector<FLT,ND>,1> res;
-	res.reference(gbl->res);
+	res.reference(r_gbl->res);
 
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
@@ -279,7 +281,7 @@ void r_tri_mesh::sumsrc() {
 	int i,n;
 
 	Array<TinyVector<FLT,ND>,1> res;
-	res.reference(gbl->res);
+	res.reference(r_gbl->res);
 
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
@@ -293,7 +295,7 @@ void r_tri_mesh::mg_restrict() {
 	int i,j,n,tind,p0;
 	r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
 
-	Array<TinyVector<FLT,ND>,1> fres(gbl->res);
+	Array<TinyVector<FLT,ND>,1> fres(r_gbl->res);
 	Array<transfer,1> fccnnct(fmesh->ccnnct);
 	int fnvrtx = fmesh->npnt;
 
@@ -376,7 +378,7 @@ void r_tri_mesh::mg_prolongate() {
 	/* TO DETERMINE CHANGE IN SOLUTION */
 	r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
 	int fnpnt = fmesh->npnt;
-	Array<TinyVector<FLT,ND>,1> res(gbl->res);
+	Array<TinyVector<FLT,ND>,1> res(r_gbl->res);
 
 	for(i=0;i<fnpnt;++i) {
 
@@ -434,7 +436,7 @@ FLT r_tri_mesh::maxres() {
 	FLT sum;
 
 	Array<TinyVector<FLT,ND>,1> res;
-	res.reference(gbl->res);
+	res.reference(r_gbl->res);
 
 	for(n=0;n<ND;++n)
 		mxr[n] = 0.0;
@@ -501,7 +503,7 @@ void r_tri_mesh::rsdl() {
 	int i,n,p0,p1;
 	FLT dx,dy;
 	Array<TinyVector<FLT,ND>,1> res;
-	res.reference(gbl->res);
+	res.reference(r_gbl->res);
 
 #ifdef FOURTH
 	/*************************************/
@@ -610,10 +612,10 @@ void r_tri_mesh::rsdl() {
 	
 	/* Communicate */
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
+		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) r_gbl->res.data(),0,1,2);
 		pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
 		last_phase = true;
-		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl->res.data(),0,1,2);
+		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) r_gbl->res.data(),0,1,2);
 	}
 
 	/* APPLY DIRICHLET BOUNDARY CONDITIONS FOR FIXING POSITION */
@@ -671,7 +673,7 @@ int r_tri_mesh::setup_preconditioner() {
 	int last_phase, mp_phase;
 	int i,p0,p1,sind;
 	Array<FLT,1> diag;
-	diag.reference(gbl->diag);
+	diag.reference(r_gbl->diag);
 
 #ifdef FOURTH
 	/**************************************************/
@@ -727,10 +729,10 @@ int r_tri_mesh::setup_preconditioner() {
 #endif
 
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,gbl->diag.data(),0,0,1);
+		pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,r_gbl->diag.data(),0,0,1);
 		pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
 		last_phase = true;
-		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, gbl->diag.data(),0,0,1);
+		last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, r_gbl->diag.data(),0,0,1);
 	}
 
 	for(i=0;i<npnt;++i)

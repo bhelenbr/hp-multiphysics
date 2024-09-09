@@ -36,15 +36,15 @@ void tri_mesh::yaber(FLT tolsize) {
 	/* TO ADJUST FOR INSCRIBED RADIUS */
 	tolsize *= 6./sqrt(3.);
 
-	/* SET UP gbl->fltwk */
-	gbl->nlst = 0;
+	/* SET UP tri_gbl->fltwk */
+	tri_gbl->nlst = 0;
 	for(i=0;i<ntri;++i) {
 		if (tri(i).info&TDLTE) continue;
 		minvl = lngth(tri(i).pnt(0));
 		minvl = MIN(minvl,lngth(tri(i).pnt(1)));
 		minvl = MIN(minvl,lngth(tri(i).pnt(2)));
-		gbl->fltwk(i) = minvl/inscribedradius(i);
-		if (gbl->fltwk(i) > tolsize) putinlst(i);
+		tri_gbl->fltwk(i) = minvl/inscribedradius(i);
+		if (tri_gbl->fltwk(i) > tolsize) putinlst(i);
 	}
 
 	/* MARK BOUNDARY VERTEX POINTS */
@@ -59,8 +59,8 @@ void tri_mesh::yaber(FLT tolsize) {
 
 	cnt = 0;
 	/* BEGIN COARSENING ALGORITHM */
-	while (gbl->nlst > 0) {
-		for(i=gbl->nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
+	while (tri_gbl->nlst > 0) {
+		for(i=tri_gbl->nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
 			for(j=0;j<3;++j) {
 				tind = tri(seg(i).info).tri(j);
 				if (tind < 0 || pnt(tind).info == -1)  goto TFOUND;
@@ -158,9 +158,9 @@ void tri_mesh::yaber(FLT tolsize) {
 						}
 
 						if (tind1 != seg(sind).tri(0) && tind1 != seg(sind).tri(1)) {
-							gbl->i2wk_lst1(ntsrnd++) = tind1;
+							tri_gbl->i2wk_lst1(ntsrnd++) = tind1;
 							if (!prev) {
-								gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
+								tri_gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
 							}
 							prev = 0;
 						}
@@ -182,7 +182,7 @@ void tri_mesh::yaber(FLT tolsize) {
 						}
 					}
 					for(j=0;j<ntsrnd;++j) {
-						tind = gbl->i2wk_lst1(j);
+						tind = tri_gbl->i2wk_lst1(j);
 						a = area(tind);
 						asum += a;
 						for(vn=0;vn<3;++vn) {
@@ -219,14 +219,14 @@ void tri_mesh::yaber(FLT tolsize) {
 
 
 		/* RECLASSIFY AFFECTED TRIANGLES */
-		for(i=0;i<gbl->i2wk_lst1(-1);++i) {
-			tind = gbl->i2wk_lst1(i);
+		for(i=0;i<tri_gbl->i2wk_lst1(-1);++i) {
+			tind = tri_gbl->i2wk_lst1(i);
 			if (pnt(tind).info > -1) tkoutlst(tind);
 			minvl = lngth(tri(tind).pnt(0));
 			minvl = MIN(minvl,lngth(tri(tind).pnt(1)));
 			minvl = MIN(minvl,lngth(tri(tind).pnt(2)));
-			gbl->fltwk(tind) = minvl/inscribedradius(tind);
-			if (gbl->fltwk(tind) > tolsize) putinlst(tind);
+			tri_gbl->fltwk(tind) = minvl/inscribedradius(tind);
+			if (tri_gbl->fltwk(tind) > tolsize) putinlst(tind);
 		}
 
 #ifdef DEBUG_ADAPT
@@ -247,8 +247,8 @@ void tri_mesh::checkintegrity() {
 	int i,j,sind,dir;
 
 	for(i=0;i<maxpst;++i) {
-		if (gbl->intwk(i) > -1) {
-			*gbl->log << "gbl->intwk check failed" << std::endl;
+		if (tri_gbl->intwk(i) > -1) {
+			*gbl->log << "tri_gbl->intwk check failed" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
@@ -339,21 +339,21 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 			continue;
 		}
 
-		gbl->nlst = 0;
+		tri_gbl->nlst = 0;
 		for(int indx=0;indx<ebdry(bnum)->nseg;++indx) {
 			sind = ebdry(bnum)->seg(indx);
 			if (tri(sind).info&SDLTE) continue;
-			gbl->fltwk(sind) = MIN(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)))/distance(seg(sind).pnt(0),seg(sind).pnt(1));
-			if (gbl->fltwk(sind) > tolsize) {
+			tri_gbl->fltwk(sind) = MIN(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)))/distance(seg(sind).pnt(0),seg(sind).pnt(1));
+			if (tri_gbl->fltwk(sind) > tolsize) {
 				putinlst(sind);
 			}
 		}
 
 		/* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
 		ebdry(bnum)->sndsize() = 1;
-		while (gbl->nlst > 0) {
+		while (tri_gbl->nlst > 0) {
 			// START WITH LARGEST SIDE LENGTH RATIO
-			sind = seg(gbl->nlst-1).info;
+			sind = seg(tri_gbl->nlst-1).info;
 			bseg = getbdryseg(seg(sind).tri(1));
 
 			/* ADJACENT SIDES */
@@ -380,7 +380,7 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 			}
 			else {
 				/* PICK MORE ARPROPRIATE VERTEX TO DELETE */
-				if (gbl->fltwk(sindprev) > gbl->fltwk(sindnext)) {
+				if (tri_gbl->fltwk(sindprev) > tri_gbl->fltwk(sindnext)) {
 					endpt = 0;
 					saffect = sindprev;
 				}
@@ -405,15 +405,15 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 
 			/* UPDATE AFFECTED SIDE */
 			if (pnt(saffect).info > -1) tkoutlst(saffect);
-			gbl->fltwk(saffect) = MIN(lngth(seg(saffect).pnt(0)),lngth(seg(saffect).pnt(1)))/distance(seg(saffect).pnt(0),seg(saffect).pnt(1));
-			if (gbl->fltwk(saffect) > tolsize) putinlst(saffect);
+			tri_gbl->fltwk(saffect) = MIN(lngth(seg(saffect).pnt(0)),lngth(seg(saffect).pnt(1)))/distance(seg(saffect).pnt(0),seg(saffect).pnt(1));
+			if (tri_gbl->fltwk(saffect) > tolsize) putinlst(saffect);
 			
 			/* Check for inverted interior triangles because of changing boundary geometry */
-			int ntsrnd = gbl->i2wk_lst1(-1);
+			int ntsrnd = tri_gbl->i2wk_lst1(-1);
 			std::vector<int> badpnt;
 			int nbadpnt = 0;
 			for(int i=0;i<ntsrnd;++i) {
-				int tind = gbl->i2wk_lst1(i);
+				int tind = tri_gbl->i2wk_lst1(i);
 				if (area(tind) > 0.0) continue;
 				
 				for(int vn=0;vn<3;++vn) {
@@ -490,11 +490,11 @@ void tri_mesh::bdry_yaber1() {
 				saffect = ebdry(bnum)->seg(nel);
 				
 			/* Check for inverted interior triangles because of changing boundary geometry */
-			int ntsrnd = gbl->i2wk_lst1(-1);
+			int ntsrnd = tri_gbl->i2wk_lst1(-1);
 			std::vector<int> badpnt;
 			int nbadpnt = 0;
 			for(int i=0;i<ntsrnd;++i) {
-				int tind = gbl->i2wk_lst1(i);
+				int tind = tri_gbl->i2wk_lst1(i);
 				if (area(tind) > 0.0) continue;
 				for(int vn=0;vn<3;++vn) {
 					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
@@ -533,8 +533,8 @@ void tri_mesh::bdry_yaber1() {
 void tri_mesh::checkintwk() const {
 	int i;
 
-	for(i=0;i<gbl->intwk.extent(firstDim)-1;++i)
-		if (gbl->intwk(i) != -1) *gbl->log << "failed gbl->intwk check " << i << ' ' << gbl->intwk(i) << std::endl;
+	for(i=0;i<tri_gbl->intwk.extent(firstDim)-1;++i)
+		if (tri_gbl->intwk(i) != -1) *gbl->log << "failed tri_gbl->intwk check " << i << ' ' << tri_gbl->intwk(i) << std::endl;
 
 	return;
 }

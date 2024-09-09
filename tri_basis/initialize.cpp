@@ -17,7 +17,12 @@ FLT func(FLT r,FLT s) {return(s*s*s*s);}
 #endif
 
 template<int _p, int ep> void tri_basis<_p,ep>::initialize() {	
-
+#ifdef BZ_DEBUG
+    std::cerr << "#tri_basis: BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    std::cerr << "#tri_basis: Running in Xcode's DEBUG Mode\n";
+#endif
 	/*****************************/
 	/* SETUP VALUES OF FUNCTIONS */
 	/*****************************/

@@ -19,25 +19,26 @@
 /* Boundaries */
 // vertex, edge, face
 
-void tri_mesh::init(input_map &input, void *gin) {
+void tri_mesh::init(input_map &input, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	std::string bdryfile;
 
-
 	if (gin != 0) {
-		gbl = static_cast<global *>(gin);
+		gbl = gin;
 	}
 	else {
 		/* gbl has not been set */
 		/* so create internal gbl_struct */
-		gbl = new global;
+        gbl = make_shared<block_global>();
 		gbl->idprefix = std::string("b0");
 		gbl->log = &std::cout;
 		gbl->adapt_interval	= 1;
 		gbl->tolerance = sqrt(2.0);
 	}
+    
+    tri_gbl = make_shared<tri_global>();
 
 	if (!initialized) {
 		FLT grwfac;
@@ -85,8 +86,10 @@ void tri_mesh::init(input_map &input, void *gin) {
 void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_mesh& inmesh = dynamic_cast<const tri_mesh &>(in);
 
+    gbl = inmesh.gbl;
+    tri_gbl = inmesh.tri_gbl;
+
 	if (!initialized) {
-		gbl = inmesh.gbl;
 		maxpst =  MAX((int) (inmesh.maxpst/(sizereduce1d*sizereduce1d)),20);
 		allocate(maxpst);
 		nebd = inmesh.nebd;
@@ -132,33 +135,34 @@ void tri_mesh::allocate(int mxsize) {
 	if (!gbl) {
 		/* gbl has not been set */
 		/* so create internal gbl_struct */
-		gbl = new global;
+		gbl = make_shared<block_global>();
 		gbl->idprefix = "";
 		gbl->log = &std::cout;
 		gbl->adapt_interval = 1;
 		gbl->tolerance = sqrt(2.0);
+        tri_gbl = make_shared<tri_global>();
 	}
 
-	if (gbl->intwk.ubound(firstDim) < maxpst) {
-		// gbl->intwk should always be kept initialized to -1
-		gbl->intwk.resize(Range(-1,maxpst));
-		gbl->intwk = -1;
-		gbl->maxsrch = 1000;
+	if (tri_gbl->intwk.ubound(firstDim) < maxpst) {
+		// tri_gbl->intwk should always be kept initialized to -1
+		tri_gbl->intwk.resize(Range(-1,maxpst));
+		tri_gbl->intwk = -1;
+		tri_gbl->maxsrch = 1000;
 
-		gbl->fltwk.resize(maxpst);
-		gbl->i2wk.resize(maxpst+1);
-		gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
+		tri_gbl->fltwk.resize(maxpst);
+		tri_gbl->i2wk.resize(maxpst+1);
+		tri_gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
 		// some smaller lists using i2 storage
 		int mvst3 = maxpst/3;
-		Array<int,1> temp1(gbl->i2wk.data(),mvst3,neverDeleteData);
-		gbl->i2wk_lst1.reference(temp1);
-		gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp2(gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-		gbl->i2wk_lst2.reference(temp2);
-		gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp3(gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-		gbl->i2wk_lst3.reference(temp3);
-		gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp1(tri_gbl->i2wk.data(),mvst3,neverDeleteData);
+		tri_gbl->i2wk_lst1.reference(temp1);
+		tri_gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp2(tri_gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+		tri_gbl->i2wk_lst2.reference(temp2);
+		tri_gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp3(tri_gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+		tri_gbl->i2wk_lst3.reference(temp3);
+		tri_gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
 	}
 
 	initialized = 1;
@@ -264,25 +268,25 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
 					for (int j = 0; j <nebd;++j) {
-						if (seg(i).info == gbl->intwk(j)) {
-							++gbl->i2wk(j);
+						if (seg(i).info == tri_gbl->intwk(j)) {
+							++tri_gbl->i2wk(j);
 							goto next1;
 						}
 					}
 					/* NEW SIDE */
-					gbl->intwk(nebd) = seg(i).info;
-					gbl->i2wk(nebd++) = 1;
+					tri_gbl->intwk(nebd) = seg(i).info;
+					tri_gbl->i2wk(nebd++) = 1;
 				}
 			next1:        continue;
 			}
 			
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
-				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
+				ebdry(i) = getnewedgeobject(tri_gbl->intwk(i),bdrymap);
+				ebdry(i)->alloc(static_cast<int>(tri_gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
-				gbl->intwk(i) = -1;
-				gbl->i2wk(i) = -1;
+				tri_gbl->intwk(i) = -1;
+				tri_gbl->i2wk(i) = -1;
 			}
 			
 			
@@ -956,25 +960,25 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 						}
 					}
 					for (j = 0; j <nebd;++j) {
-						if (seg(i).info == (gbl->intwk(j)&0xFFFF)) {
-							++gbl->i2wk(j);
+						if (seg(i).info == (tri_gbl->intwk(j)&0xFFFF)) {
+							++tri_gbl->i2wk(j);
 							goto next1b;
 						}
 					}
 					/* NEW SIDE */
-					gbl->intwk(nebd) = seg(i).info;
-					gbl->i2wk(nebd++) = 1;
+					tri_gbl->intwk(nebd) = seg(i).info;
+					tri_gbl->i2wk(nebd++) = 1;
 				}
 			next1b:        continue;
 			}
 			
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
-				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
+				ebdry(i) = getnewedgeobject(tri_gbl->intwk(i),bdrymap);
+				ebdry(i)->alloc(static_cast<int>(tri_gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
-				gbl->intwk(i) = -1;
-				gbl->i2wk(i) = -1;
+				tri_gbl->intwk(i) = -1;
+				tri_gbl->i2wk(i) = -1;
 			}
 			
 			for(int i=0;i<nseg;++i) {
@@ -1148,14 +1152,14 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			for(int i=0;i<nseg;++i) {
 				if (seg(i).info) {
 					for (int j = 0; j <nebd;++j) {
-						if (seg(i).info == gbl->intwk(j)) {
-							++gbl->i2wk(j);
+						if (seg(i).info == tri_gbl->intwk(j)) {
+							++tri_gbl->i2wk(j);
 							goto bdnext1;
 						}
 					}
 					/* NEW SIDE */
-					gbl->intwk(nebd) = seg(i).info;
-					gbl->i2wk(nebd++) = 1;
+					tri_gbl->intwk(nebd) = seg(i).info;
+					tri_gbl->i2wk(nebd++) = 1;
 				}
 				else {
 					*gbl->log << "All sides should be boundary sides in a .d file" << std::endl;
@@ -1167,11 +1171,11 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			
 			ebdry.resize(nebd);
 			for(int i=0;i<nebd;++i) {
-				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac1d));
+				ebdry(i) = getnewedgeobject(tri_gbl->intwk(i),bdrymap);
+				ebdry(i)->alloc(static_cast<int>(tri_gbl->i2wk(i)*4*grwfac1d));
 				ebdry(i)->nseg = 0;
-				gbl->intwk(i) = -1;
-				gbl->i2wk(i) = -1;
+				tri_gbl->intwk(i) = -1;
+				tri_gbl->i2wk(i) = -1;
 			}
 			
 			for(int i=0;i<nseg;++i) {
@@ -1189,7 +1193,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			}
 			
 			for(int i=0;i<nseg;++i)
-				gbl->i2wk_lst1(i) = i+1;
+				tri_gbl->i2wk_lst1(i) = i+1;
 			
 			ntri = 0;
 			triangulate(nseg);

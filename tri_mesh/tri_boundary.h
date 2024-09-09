@@ -271,8 +271,6 @@ class spline_bdry : public edge_bdry, public rigid_movement_interface2D {
             if (sloc0 >= smax) sloc0 = smin;
             if (sloc0 > sloc1) sloc1 = smax;
             
-
-
 			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
 			my_spline.offset(sloc, norm_dist, pt);
             

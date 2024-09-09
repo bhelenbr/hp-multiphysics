@@ -39,19 +39,19 @@ void tri_mesh::rebay(FLT tolsize) {
 	intrcnt = 0;
 
 	/* CLASSIFY TRIANGLES AS ACCEPTED OR UNACCEPTED */
-	gbl->nlst = 0;
+	tri_gbl->nlst = 0;
 	for(i=0;i<ntri;++i) {
 		if (tri(i).info&TDLTE) continue;
 		maxvl = lngth(tri(i).pnt(0));
 		maxvl = MAX(maxvl,lngth(tri(i).pnt(1)));
 		maxvl = MAX(maxvl,lngth(tri(i).pnt(2)));
-		gbl->fltwk(i) = circumradius(i)/maxvl;
-		if (gbl->fltwk(i) > tolsize) putinlst(i);
+		tri_gbl->fltwk(i) = circumradius(i)/maxvl;
+		if (tri_gbl->fltwk(i) > tolsize) putinlst(i);
 	}
 
 	/* BEGIN REFINEMENT ALGORITHM */
-	while (gbl->nlst > 0) {
-		for(i=gbl->nlst-1;i>=0;--i) {
+	while (tri_gbl->nlst > 0) {
+		for(i=tri_gbl->nlst-1;i>=0;--i) {
 			
 			/* FIND TRIANGLE FACES ON BOUNDARY FIRST */
 			for(j=0;j<3;++j) {
@@ -76,7 +76,7 @@ void tri_mesh::rebay(FLT tolsize) {
 			}
 		}
 					
-		for(i=gbl->nlst-1;i>=0;--i) {	
+		for(i=tri_gbl->nlst-1;i>=0;--i) {	
 			/* FIND TRIANGLES WITH 1 FACE ON BOUNDARY OF ACCEPTED REGIONS */
 			for(j=0;j<3;++j) {
 				tind = tri(seg(i).info).tri(j);
@@ -88,7 +88,7 @@ void tri_mesh::rebay(FLT tolsize) {
 			}
 		}
 		*gbl->log << "Didn't find triangle???" << std::endl;
-		tind = seg(gbl->nlst-1).info;
+		tind = seg(tri_gbl->nlst-1).info;
 		snum = 0;
 
 		TFOUND:
@@ -257,8 +257,8 @@ INSRT:
 			/* ADD POINT TO QUADTREE */
 			tri(npnt).info |= PTOUC;
 			qtree.addpt(npnt);
-			nsnew = gbl->i2wk_lst3(-1) +3;
-			ntnew = gbl->i2wk_lst1(-1) +2;
+			nsnew = tri_gbl->i2wk_lst3(-1) +3;
+			ntnew = tri_gbl->i2wk_lst1(-1) +2;
 			++intrcnt;
 		}
 		else {
@@ -280,19 +280,19 @@ INSRT:
 		}
 		++npnt;
 
-		for(i=0;i<gbl->i2wk_lst1(-1);++i)
-			if (pnt(gbl->i2wk_lst1(i)).info > -1) tkoutlst(gbl->i2wk_lst1(i));
+		for(i=0;i<tri_gbl->i2wk_lst1(-1);++i)
+			if (pnt(tri_gbl->i2wk_lst1(i)).info > -1) tkoutlst(tri_gbl->i2wk_lst1(i));
 
 		if (pnt(tind).info > -1) tkoutlst(tind);
 
 
 		for(i=0;i<ntnew;++i) {
-			tind = gbl->i2wk_lst1(i);
+			tind = tri_gbl->i2wk_lst1(i);
 			maxvl = lngth(tri(tind).pnt(0));
 			maxvl = MAX(maxvl,lngth(tri(tind).pnt(1)));
 			maxvl = MAX(maxvl,lngth(tri(tind).pnt(2)));
-			gbl->fltwk(tind) = circumradius(tind)/maxvl;
-			if (gbl->fltwk(tind) > tolsize) putinlst(tind);
+			tri_gbl->fltwk(tind) = circumradius(tind)/maxvl;
+			if (tri_gbl->fltwk(tind) > tolsize) putinlst(tind);
 		}
 #ifdef DEBUG_ADAPT
 		std::ostringstream nstr;
@@ -351,19 +351,19 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 			*gbl->log << "current" << pnts(p0)(0)  << ',' << pnts(p0)(1) << " projected " <<  (endpt+pnts(p0))(0) << ',' << (endpt+pnts(p0))(1) << '\n';
 		}
 
-		gbl->nlst = 0;
+		tri_gbl->nlst = 0;
 		for(int indx=0;indx<ebdry(bnum)->nseg;++indx) {
 			sind = ebdry(bnum)->seg(indx);
 			if (tri(sind).info&SDLTE) continue;
-			gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
-			if (gbl->fltwk(sind) > tolsize) putinlst(sind);
+			tri_gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
+			if (tri_gbl->fltwk(sind) > tolsize) putinlst(sind);
 		}
 
 		/* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
 		ebdry(bnum)->sndsize() = 1;
-		while (gbl->nlst > 0) {
+		while (tri_gbl->nlst > 0) {
 
-			for(int i=gbl->nlst-1;i>=0;--i) {
+			for(int i=tri_gbl->nlst-1;i>=0;--i) {
 				sind = seg(i).info;
 				bseg = getbdryseg(seg(sind).tri(1));
 				prev = ebdry(bnum)->prev(bseg);
@@ -412,13 +412,13 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 
 			/* UPDATE MODIFIED SIDE */
 			tkoutlst(sind);
-			gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
-			if (gbl->fltwk(sind) > tolsize) putinlst(sind);
+			tri_gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
+			if (tri_gbl->fltwk(sind) > tolsize) putinlst(sind);
 
 			/* UPDATE NEW BOUNDARY SIDE */
 			sind = ebdry(bnum)->seg(ebdry(bnum)->nseg -1);
-			gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
-			if (gbl->fltwk(sind) > tolsize) putinlst(sind);
+			tri_gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
+			if (tri_gbl->fltwk(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
 			nstr << adapt_count++ << std::flush;

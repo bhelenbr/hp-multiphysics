@@ -26,16 +26,16 @@
 /* fscr1(i) */
 
 /* in insert & bdry_insert */
-/* gbl->i2wk_lst1(ntdel++) = tnum; */
-/* gbl->i2wk_lst2(nskeep++) = sind; */
-/* gbl->i2wk_lst3(nsdel++) = sind; */
+/* tri_gbl->i2wk_lst1(ntdel++) = tnum; */
+/* tri_gbl->i2wk_lst2(nskeep++) = sind; */
+/* tri_gbl->i2wk_lst3(nsdel++) = sind; */
 
 /* in findtri */
 /* intwk mark for searches */
 /* i2wk list of triangles needing search */
 
 /* in yaber & collapse */
-/* gbl->i2wk_lst1, gbl->i2wk_lst2, gbl->i2wk_lst3 */
+/* tri_gbl->i2wk_lst1, tri_gbl->i2wk_lst2, tri_gbl->i2wk_lst3 */
 
 /* in reorder */
 /* intwk + i2wk */
@@ -264,27 +264,27 @@ void tri_mesh::calculate_halo() {
 void tri_mesh::putinlst(int sind) {
 	int i, temp, top, bot, mid;
 
-	/* CREATE ORDERED LIST OF SIDES SMALLEST gbl->fltwk TO LARGEST */
+	/* CREATE ORDERED LIST OF SIDES SMALLEST tri_gbl->fltwk TO LARGEST */
 	bot = 0;
-	if (gbl->nlst > 0) {
+	if (tri_gbl->nlst > 0) {
 		top = 0;
-		bot = gbl->nlst-1;
-		if (gbl->fltwk(sind) < gbl->fltwk(seg(top).info)) {
+		bot = tri_gbl->nlst-1;
+		if (tri_gbl->fltwk(sind) < tri_gbl->fltwk(seg(top).info)) {
 			bot = 0;
 		}
-		else if (gbl->fltwk(sind) > gbl->fltwk(seg(bot).info)) {
-			bot = gbl->nlst;
+		else if (tri_gbl->fltwk(sind) > tri_gbl->fltwk(seg(bot).info)) {
+			bot = tri_gbl->nlst;
 		}
 		else {
 			while(top < bot-1) {
 				mid = top + (bot -top)/2;
-				if (gbl->fltwk(sind) > gbl->fltwk(seg(mid).info))
+				if (tri_gbl->fltwk(sind) > tri_gbl->fltwk(seg(mid).info))
 					top = mid;
 				else
 					bot = mid;
 			}
 		}
-		for(i=gbl->nlst-1;i>=bot;--i) {
+		for(i=tri_gbl->nlst-1;i>=bot;--i) {
 			temp = seg(i).info;
 			seg(i+1).info = temp;
 			pnt(temp).info = i+1;
@@ -292,9 +292,9 @@ void tri_mesh::putinlst(int sind) {
 	}
 	seg(bot).info= sind;
 	pnt(sind).info = bot;
-	++gbl->nlst;
+	++tri_gbl->nlst;
 
-	assert(gbl->nlst < maxpst -1);
+	assert(tri_gbl->nlst < maxpst -1);
 
 	return;
 }
@@ -303,11 +303,11 @@ void tri_mesh::putinlst(int sind) {
 void tri_mesh::putinlst(int sind) {
 	int i, temp, top, bot, mid;
 	
-	seg(gbl->nlst).info= sind;
-	pnt(sind).info = gbl->nlst;
-	++gbl->nlst;
+	seg(tri_gbl->nlst).info= sind;
+	pnt(sind).info = tri_gbl->nlst;
+	++tri_gbl->nlst;
 	
-	assert(gbl->nlst < maxpst -1);
+	assert(tri_gbl->nlst < maxpst -1);
 	
 	return;
 }
@@ -317,14 +317,14 @@ void tri_mesh::tkoutlst(int sind) {
 	int bgn,temp,i;
 
 	bgn = pnt(sind).info;
-	for(i=bgn+1;i<gbl->nlst;++i) {
+	for(i=bgn+1;i<tri_gbl->nlst;++i) {
 		temp = seg(i).info;
 		seg(i-1).info = temp;
 		pnt(temp).info = i-1;
 	}
 	pnt(sind).info = -1;
-	--gbl->nlst;
-	seg(gbl->nlst).info = -1;
+	--tri_gbl->nlst;
+	seg(tri_gbl->nlst).info = -1;
 
 	return;
 }

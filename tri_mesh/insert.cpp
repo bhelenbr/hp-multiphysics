@@ -26,7 +26,7 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 	bool isfound = findtri(x,pnear,tind);
 	if (!isfound) {
 		*gbl->log << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
-		*gbl->log << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
+		*gbl->log << "maxsrch: " << tri_gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
 		output("error");
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
@@ -53,7 +53,7 @@ int tri_mesh::insert(int pnum, int tnum) {
 	nskeep = 0;
 	nsdel = 0;
 
-	gbl->i2wk_lst1(ntdel++) = tnum;
+	tri_gbl->i2wk_lst1(ntdel++) = tnum;
 	tri(tnum).info |= TSRCH;
 
 	tind = tnum;
@@ -67,15 +67,15 @@ int tri_mesh::insert(int pnum, int tnum) {
 	rstrt = 1;
 
 	if (tnxt < 0) {
-		gbl->i2wk_lst2(nskeep++) = sind;
-		gbl->i2wk_lst2(nskeep++) = dir;
+		tri_gbl->i2wk_lst2(nskeep++) = sind;
+		tri_gbl->i2wk_lst2(nskeep++) = dir;
 		p0 = seg(sind).pnt(dir);
 		snum = (snum+1)%3;
 	}
 	else if (incircle(tnxt,pnts(pnum)) > 0.0) {
-		if (dir > 0) gbl->i2wk_lst3(nsdel++) = sind;
+		if (dir > 0) tri_gbl->i2wk_lst3(nsdel++) = sind;
 		rstrt = 2;
-		gbl->i2wk_lst1(ntdel++) = tnxt;
+		tri_gbl->i2wk_lst1(ntdel++) = tnxt;
 		tri(tnxt).info |= TSRCH;
 		tind = tnxt;
 		for(snum=0;snum<3;++snum) {
@@ -84,8 +84,8 @@ int tri_mesh::insert(int pnum, int tnum) {
 		snum = (snum+2)%3;
 	}
 	else {
-		gbl->i2wk_lst2(nskeep++) = sind;
-		gbl->i2wk_lst2(nskeep++) = dir;
+		tri_gbl->i2wk_lst2(nskeep++) = sind;
+		tri_gbl->i2wk_lst2(nskeep++) = dir;
 		p0 = seg(sind).pnt(dir);
 		snum = (snum+1)%3;
 	}
@@ -98,13 +98,13 @@ int tri_mesh::insert(int pnum, int tnum) {
 	for(j=0;j<rstrt;++j) {
 		do  {
 			if (tnxt < 0) {
-				gbl->i2wk_lst2(nskeep++) = sind;
-				gbl->i2wk_lst2(nskeep++) = dir;
+				tri_gbl->i2wk_lst2(nskeep++) = sind;
+				tri_gbl->i2wk_lst2(nskeep++) = dir;
 				p0 = seg(sind).pnt(dir);
 				snum = (snum+1)%3;
 			}
 			else if (tri(tnxt).info&TSRCH) {
-				if (dir > 0) gbl->i2wk_lst3(nsdel++) = sind;
+				if (dir > 0) tri_gbl->i2wk_lst3(nsdel++) = sind;
 				tind = tnxt;
 				for(snum=0;snum<3;++snum) {
 					if (tri(tind).pnt(snum) == p0) break;
@@ -112,8 +112,8 @@ int tri_mesh::insert(int pnum, int tnum) {
 				snum = (snum+2)%3;
 			}
 			else if (incircle(tnxt,pnts(pnum)) > 0.0) {
-				if (dir > 0) gbl->i2wk_lst3(nsdel++) = sind;
-				gbl->i2wk_lst1(ntdel++) = tnxt;
+				if (dir > 0) tri_gbl->i2wk_lst3(nsdel++) = sind;
+				tri_gbl->i2wk_lst1(ntdel++) = tnxt;
 				tri(tnxt).info |= TSRCH;
 				tind = tnxt;
 				for(snum=0;snum<3;++snum) {
@@ -122,8 +122,8 @@ int tri_mesh::insert(int pnum, int tnum) {
 				snum = (snum+2)%3;
 			}
 			else {
-				gbl->i2wk_lst2(nskeep++) = sind;
-				gbl->i2wk_lst2(nskeep++) = dir;
+				tri_gbl->i2wk_lst2(nskeep++) = sind;
+				tri_gbl->i2wk_lst2(nskeep++) = dir;
 				p0 = seg(sind).pnt(dir);
 				snum = (snum+1)%3;
 			}
@@ -135,13 +135,13 @@ int tri_mesh::insert(int pnum, int tnum) {
 
 	/* RESET TSRCH FLAGS */
 	for(i=0;i<ntdel;++i)
-		tri(gbl->i2wk_lst1(i)).info &= ~TSRCH;
+		tri(tri_gbl->i2wk_lst1(i)).info &= ~TSRCH;
 
 	nskeep = nskeep >> 1;
 
 	/*	CHECK THAT WE AREN'T INSERTING POINT VERY CLOSE TO BOUNDARY */
 //    for(i=0;i<nskeep;++i) {
-//        sind = gbl->i2wk_lst2(i);
+//        sind = tri_gbl->i2wk_lst2(i);
 //        if(fabs(minangle(pnum, seg(sind).pnt(0) , seg(sind).pnt(1))) < 6.0*M_PI/180.0) {
 //            *gbl->log << "#Warning: inserting close to boundary" << std::endl;
 //        }
@@ -149,13 +149,13 @@ int tri_mesh::insert(int pnum, int tnum) {
 
 	/* APPEND NEW INDICES TO LIST OF INDICES TO USE FOR NEW SIDES & TRIS*/
 	for(i=nsdel;i<nskeep;++i)
-		gbl->i2wk_lst3(i) = nseg +(i-nsdel);
+		tri_gbl->i2wk_lst3(i) = nseg +(i-nsdel);
 
 	for(i=ntdel;i<nskeep;++i)
-		gbl->i2wk_lst1(i) = ntri +(i-ntdel);
+		tri_gbl->i2wk_lst1(i) = ntri +(i-ntdel);
 
 	/* PERIODIC TRIANGLE */
-	gbl->i2wk_lst1(nskeep) = gbl->i2wk_lst1(0);
+	tri_gbl->i2wk_lst1(nskeep) = tri_gbl->i2wk_lst1(0);
 
 	ntri += 2;
 	nseg += 3;
@@ -167,12 +167,12 @@ int tri_mesh::insert(int pnum, int tnum) {
 	}
 
 	for(i=0;i<nskeep;++i) {
-		tind = gbl->i2wk_lst1(i);
+		tind = tri_gbl->i2wk_lst1(i);
 		tri(tind).info |= TTOUC;
 
-		tnxt = gbl->i2wk_lst1(i+1);
-		sind = gbl->i2wk_lst2(i<<1);
-		dir = gbl->i2wk_lst2((i<<1) +1);
+		tnxt = tri_gbl->i2wk_lst1(i+1);
+		sind = tri_gbl->i2wk_lst2(i<<1);
+		dir = tri_gbl->i2wk_lst2((i<<1) +1);
 
 		/* CREATE NEW INFO */
 		p0 = seg(sind).pnt(1-dir);
@@ -202,7 +202,7 @@ int tri_mesh::insert(int pnum, int tnum) {
 
 		/* CREATE SIDE 0 */
 		p0 = seg(sind).pnt(dir);
-		sind1 = gbl->i2wk_lst3(i);
+		sind1 = tri_gbl->i2wk_lst3(i);
 		seg(sind1).tri(0) = tind;
 		seg(sind1).pnt(0) = p0;
 		seg(sind1).pnt(1) = pnum;
@@ -219,9 +219,9 @@ int tri_mesh::insert(int pnum, int tnum) {
 		tri(tnxt).tri(1) = tind;
 	}
 
-	gbl->i2wk_lst1(-1) = ntdel;
-	gbl->i2wk_lst2(-1) = nskeep;
-	gbl->i2wk_lst3(-1) = nsdel;
+	tri_gbl->i2wk_lst1(-1) = ntdel;
+	tri_gbl->i2wk_lst2(-1) = nskeep;
+	tri_gbl->i2wk_lst3(-1) = nsdel;
 
 	return(0);
 }
@@ -244,7 +244,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 	nsdel = 0;
 
 	tind = seg(sind).tri(0);
-	gbl->i2wk_lst1(ntdel++) = tind;
+	tri_gbl->i2wk_lst1(ntdel++) = tind;
 	tri(tind).info |= TSRCH;
 	for(snum=0;snum<3;++snum)
 		if (tri(tind).seg(snum) == sind) break;
@@ -259,13 +259,13 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 	/* GO COUNTER-CLOCKWISE AROUND POINTS OF HOLE */
 	do  {
 		if (tnxt < 0) {
-			gbl->i2wk_lst2(nskeep++) = sind;
-			gbl->i2wk_lst2(nskeep++) = dir;
+			tri_gbl->i2wk_lst2(nskeep++) = sind;
+			tri_gbl->i2wk_lst2(nskeep++) = dir;
 			p0 = seg(sind).pnt(dir);
 			snum = (snum+1)%3;
 		}
 		else if (tri(tnxt).info&TSRCH) {
-			if (dir > 0) gbl->i2wk_lst3(nsdel++) = sind;
+			if (dir > 0) tri_gbl->i2wk_lst3(nsdel++) = sind;
 			tind = tnxt;
 			for(snum=0;snum<3;++snum) {
 				if (tri(tind).pnt(snum) == p0) break;
@@ -273,8 +273,8 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 			snum = (snum+2)%3;
 		}
 		else if (incircle(tnxt,pnts(pnum)) > 0.0) {
-			if (dir > 0) gbl->i2wk_lst3(nsdel++) = sind;
-			gbl->i2wk_lst1(ntdel++) = tnxt;
+			if (dir > 0) tri_gbl->i2wk_lst3(nsdel++) = sind;
+			tri_gbl->i2wk_lst1(ntdel++) = tnxt;
 			tri(tnxt).info |= TSRCH;
 			tind = tnxt;
 			for(snum=0;snum<3;++snum) {
@@ -283,8 +283,8 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 			snum = (snum+2)%3;
 		}
 		else {
-			gbl->i2wk_lst2(nskeep++) = sind;
-			gbl->i2wk_lst2(nskeep++) = dir;
+			tri_gbl->i2wk_lst2(nskeep++) = sind;
+			tri_gbl->i2wk_lst2(nskeep++) = dir;
 			p0 = seg(sind).pnt(dir);
 			snum = (snum+1)%3;
 		}
@@ -295,7 +295,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 	/* RESET TSRCH FLAGS */
 	for(i=0;i<ntdel;++i)
-		tri(gbl->i2wk_lst1(i)).info &= ~TSRCH;
+		tri(tri_gbl->i2wk_lst1(i)).info &= ~TSRCH;
 
 	/* ALTER OLD BOUNDARY SIDE & CREATE NEW SIDE */
 	seg(nseg).pnt(endpt) = pnum;
@@ -320,10 +320,10 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 	/* APPEND NEW INDICES TO LIST OF INDICES TO USE FOR NEW SIDES & TRIS*/
 	for(i=nsdel;i<nskeep;++i)
-		gbl->i2wk_lst3(i) = nseg +(i-nsdel);
+		tri_gbl->i2wk_lst3(i) = nseg +(i-nsdel);
 
 	for(i=ntdel;i<nskeep;++i)
-		gbl->i2wk_lst1(i) = ntri +(i-ntdel);
+		tri_gbl->i2wk_lst1(i) = ntri +(i-ntdel);
 
 	++ntri;
 	++nseg;
@@ -336,13 +336,13 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 	/* FIX FIRST AND LAST TRIANGLE BOUNDARY SIDE */
 	if (endpt) {
-		tind = gbl->i2wk_lst1(0);
+		tind = tri_gbl->i2wk_lst1(0);
 		tri(tind).seg(1) = sind;
 		tri(tind).sgn(1) = 1;
 		tri(tind).tri(1) = seg(sind).tri(1);
 		seg(sind).tri(0) = tind;
 
-		tind = gbl->i2wk_lst1(nskeep-1);
+		tind = tri_gbl->i2wk_lst1(nskeep-1);
 		tri(tind).seg(0) = nseg-2;
 		tri(tind).sgn(0) = 1;
 		tri(tind).tri(0) = seg(nseg-2).tri(1);
@@ -350,13 +350,13 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 	}
 	else {
-		tind = gbl->i2wk_lst1(0);
+		tind = tri_gbl->i2wk_lst1(0);
 		tri(tind).seg(1) = nseg-2;
 		tri(tind).sgn(1) = 1;
 		tri(tind).tri(1) = seg(nseg-2).tri(1);
 		seg(nseg-2).tri(0) = tind;
 
-		tind = gbl->i2wk_lst1(nskeep-1);
+		tind = tri_gbl->i2wk_lst1(nskeep-1);
 		tri(tind).seg(0) = sind;
 		tri(tind).sgn(0) = 1;
 		tri(tind).tri(0) = seg(sind).tri(1);
@@ -365,12 +365,12 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 
 	for(i=0;i<nskeep-1;++i) {
-		tind = gbl->i2wk_lst1(i);
+		tind = tri_gbl->i2wk_lst1(i);
 		tri(tind).info |= TTOUC;
 
-		tnxt = gbl->i2wk_lst1(i+1);
-		sind = gbl->i2wk_lst2(i<<1);
-		dir = gbl->i2wk_lst2((i<<1) +1);
+		tnxt = tri_gbl->i2wk_lst1(i+1);
+		sind = tri_gbl->i2wk_lst2(i<<1);
+		dir = tri_gbl->i2wk_lst2((i<<1) +1);
 
 		/* CREATE NEW INFO */
 		p0 = seg(sind).pnt(1-dir);
@@ -400,7 +400,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 		/* CREATE SIDE 0 */
 		p0 = seg(sind).pnt(dir);
-		sind1 = gbl->i2wk_lst3(i);
+		sind1 = tri_gbl->i2wk_lst3(i);
 		seg(sind1).tri(0) = tind;
 		seg(sind1).pnt(0) = p0;
 		seg(sind1).pnt(1) = pnum;
@@ -419,11 +419,11 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 
 	/* LAST TRIANGLE */
 	i = nskeep-1;
-	tind = gbl->i2wk_lst1(i);
+	tind = tri_gbl->i2wk_lst1(i);
 	tri(tind).info |= TTOUC;
 
-	sind = gbl->i2wk_lst2(i<<1);
-	dir = gbl->i2wk_lst2((i<<1) +1);
+	sind = tri_gbl->i2wk_lst2(i<<1);
+	dir = tri_gbl->i2wk_lst2((i<<1) +1);
 
 	/* CREATE NEW INFO */
 	p0 = seg(sind).pnt(1-dir);
@@ -475,15 +475,15 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 #define CLRSRCH(A) A&=(~TSRCH)
 #endif
 
-	/* HERE WE USE gbl->intwk & gbl->i2wk THIS MUST BE -1 BEFORE USING */
+	/* HERE WE USE tri_gbl->intwk & tri_gbl->i2wk THIS MUST BE -1 BEFORE USING */
 	tind = pnt(pnear).tri;
 	stoptri = tind;
 	dir = 1;
 	ntdel = 0;
 	do {
 		if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
-		SETSRCH(gbl->intwk(tind));
-		gbl->i2wk(ntdel++) = tind;
+		SETSRCH(tri_gbl->intwk(tind));
+		tri_gbl->i2wk(ntdel++) = tind;
 
 		for(vn=0;vn<3;++vn)
 			if (tri(tind).pnt(vn) == pnear) break;
@@ -508,22 +508,22 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 	/* DIDN'T FIND TRIANGLE */
 	/* NEED TO SEARCH SURROUNDING TRIANGLES */
 	for(i=0;i<ntdel;++i) {
-		tin = gbl->i2wk(i);
+		tin = tri_gbl->i2wk(i);
 		for(j=0;j<3;++j) {
 			tind = tri(tin).tri(j);
 			if (tind < 0) continue;
-			if (ISSRCH(gbl->intwk(tind))) continue;
-			SETSRCH(gbl->intwk(tind));
-			gbl->i2wk(ntdel++) = tind;
+			if (ISSRCH(tri_gbl->intwk(tind))) continue;
+			SETSRCH(tri_gbl->intwk(tind));
+			tri_gbl->i2wk(ntdel++) = tind;
 			if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
 		}
-		if (ntdel >= gbl->maxsrch-4) break;
+		if (ntdel >= tri_gbl->maxsrch-4) break;
 	}
 	//    *gbl->log << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
 	minclosest = -1.0e16;
 	tclose = -1;
 	for (i=0;i<ntdel;++i) {
-		tind = gbl->i2wk(i);
+		tind = tri_gbl->i2wk(i);
 
 		p0 = tri(tind).pnt(0);
 		p1 = tri(tind).pnt(1);
@@ -566,9 +566,9 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 	found = false;
 
 FOUND:
-	/* RESET gbl->intwkW1 TO -1 */
+	/* RESET tri_gbl->intwkW1 TO -1 */
 	for(i=0;i<ntdel;++i) {
-		CLRSRCH(gbl->intwk(gbl->i2wk(i)));
+		CLRSRCH(tri_gbl->intwk(tri_gbl->i2wk(i)));
 	}
 
 	return(found);
@@ -586,27 +586,27 @@ bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 
 	ntdel = 0;
 	if (intri(tind,x) < area(tind)*10.*EPSILON) return(true);
-	SETSRCH(gbl->intwk(tind));
-	gbl->i2wk(ntdel++) = tind;
+	SETSRCH(tri_gbl->intwk(tind));
+	tri_gbl->i2wk(ntdel++) = tind;
 
 	/* SEARCH SURROUNDING TRIANGLES */
 	for(i=0;i<ntdel;++i) {
-		tin = gbl->i2wk(i);
+		tin = tri_gbl->i2wk(i);
 		for(j=0;j<3;++j) {
 			tind = tri(tin).tri(j);
 			if (tind < 0) continue;
-			if (ISSRCH(gbl->intwk(tind))) continue;
-			SETSRCH(gbl->intwk(tind));
-			gbl->i2wk(ntdel++) = tind;
+			if (ISSRCH(tri_gbl->intwk(tind))) continue;
+			SETSRCH(tri_gbl->intwk(tind));
+			tri_gbl->i2wk(ntdel++) = tind;
 			if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND2;
 		}
-		if (ntdel >= gbl->maxsrch-4) break;
+		if (ntdel >= tri_gbl->maxsrch-4) break;
 	}
 	//    *gbl->log << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
 	minclosest = -1.0e16;
 	tclose = -1;
 	for (i=0;i<ntdel;++i) {
-		tind = gbl->i2wk(i);
+		tind = tri_gbl->i2wk(i);
 
 		p0 = tri(tind).pnt(0);
 		p1 = tri(tind).pnt(1);
@@ -649,9 +649,9 @@ bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 	found = false;
 
 FOUND2:
-	/* RESET gbl->intwkW1 TO -1 */
+	/* RESET tri_gbl->intwkW1 TO -1 */
 	for(i=0;i<ntdel;++i) {
-		CLRSRCH(gbl->intwk(gbl->i2wk(i)));
+		CLRSRCH(tri_gbl->intwk(tri_gbl->i2wk(i)));
 	}
 
 	return(found);

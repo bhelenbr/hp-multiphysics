@@ -20,7 +20,14 @@ public:
     bool echo;
     std::string echoprefix;
     std::ostream *log;
-    input_map() : echo(false), echoprefix(""), log(&std::cout) {}
+    input_map() : echo(false), echoprefix(""), log(&std::cout) {
+#ifdef BZ_DEBUG
+    std::cerr << "#input_map: BZ_DEBUG is set\n";
+#endif
+#ifdef DEBUG
+    std::cerr << "#input_map: Running in Xcode's DEBUG Mode\n";
+#endif
+    }
     bool input(const std::string &filename);
     friend std::istream& operator >>(std::istream &is,input_map &obj);
     friend std::ostream& operator <<(std::ostream &os,const input_map &obj);

@@ -45,13 +45,13 @@ void tri_mesh::triangulate(int nsd) {
 	/* CREATE VERTEX LIST */
 	nv = 0;
 	for(i=0;i<nsd;++i) {
-		sind = abs(gbl->i2wk_lst1(i)) -1;
-		dir = (1 -SIGN(gbl->i2wk_lst1(i)))/2;
+		sind = abs(tri_gbl->i2wk_lst1(i)) -1;
+		dir = (1 -SIGN(tri_gbl->i2wk_lst1(i)))/2;
 		seg(sind).tri(dir) = -1;
 		// Using pnt.nnbor to keep pointer to preceding side
 		pnt(seg(sind).pnt(1-dir)).nnbor = sind;
 		// i2wk_lst1(nv) is the following side
-		gbl->i2wk_lst2(nv++) = seg(sind).pnt(dir);
+		tri_gbl->i2wk_lst2(nv++) = seg(sind).pnt(dir);
 	}
 
 	/* SETUP SIDE POINTER INFO */
@@ -59,10 +59,10 @@ void tri_mesh::triangulate(int nsd) {
 	/* seg(sind).info point to next side connected to that point */
 	/* In the end each seg is associated with its minimum vertex */
 	for(i=0;i<nv;++i)
-		pnt(gbl->i2wk_lst2(i)).info = -1;
+		pnt(tri_gbl->i2wk_lst2(i)).info = -1;
 
 	for(i=0;i<nsd;++i) {
-		sind = abs(gbl->i2wk_lst1(i)) -1;
+		sind = abs(tri_gbl->i2wk_lst1(i)) -1;
 		v(0) = seg(sind).pnt(0);
 		v(1) = seg(sind).pnt(1);
 		if (v(1) > v(0)) {
@@ -92,8 +92,8 @@ void tri_mesh::triangulate(int nsd) {
 	while(bgn < end) {
 		nsidebefore = nseg;
 		for(sind2=bgn;sind2<end;++sind2) {
-			sind = abs(gbl->i2wk_lst1(sind2)) -1;
-			dir =  (1 -SIGN(gbl->i2wk_lst1(sind2)))/2;
+			sind = abs(tri_gbl->i2wk_lst1(sind2)) -1;
+			dir =  (1 -SIGN(tri_gbl->i2wk_lst1(sind2)))/2;
 
 			if (seg(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED
 
@@ -110,7 +110,7 @@ void tri_mesh::triangulate(int nsd) {
 
 			/* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
 			for(i=0;i<nv;++i) {
-				vtry = gbl->i2wk_lst2(i);
+				vtry = tri_gbl->i2wk_lst2(i);
 				if (vtry == v(0) || vtry == v(1)) continue;
 
 
@@ -135,7 +135,7 @@ void tri_mesh::triangulate(int nsd) {
 				/* Check that new sides aren't coming from back of boundary sides adjacent to point*/
 				/* Help is difficult case with poorly defined boundaries that self intersect */
 				/* Boundary sides are assumed to be ccw defined */
-				int snext = abs(gbl->i2wk_lst1(i))-1;
+				int snext = abs(tri_gbl->i2wk_lst1(i))-1;
 				int sprev = pnt(vtry).nnbor;
 				if (area(seg(sprev).pnt(0),seg(sprev).pnt(1),seg(snext).pnt(1)) > 0.0) {
 					/* If sides are acute then must make positive triangles with both edges */
@@ -173,9 +173,9 @@ void tri_mesh::triangulate(int nsd) {
 					}
 
 					for(sck=0;sck<ntest;++sck) {
-						stest = abs(gbl->i2wk_lst1(sck))-1;
+						stest = abs(tri_gbl->i2wk_lst1(sck))-1;
 						if (stest == sind) continue;
-						dirck =  (1 -SIGN(gbl->i2wk_lst1(sck)))/2;
+						dirck =  (1 -SIGN(tri_gbl->i2wk_lst1(sck)))/2;
 						p2 = seg(stest).pnt(dirck);
 						v3 = seg(stest).pnt(1-dirck);
 
@@ -226,12 +226,12 @@ next_vrt:        continue;
 
 				/* CHECK IF DEGENERATE */
 				if (height > hmin-200.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1))) {
-					gbl->i2wk_lst3(ngood++) = vtry;
+					tri_gbl->i2wk_lst3(ngood++) = vtry;
 					continue;
 				}
 
 				ngood = 0;
-				gbl->i2wk_lst3(ngood++) = vtry;
+				tri_gbl->i2wk_lst3(ngood++) = vtry;
 				hmin = height+100.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1));
 vtry_failed:continue;
 			}
@@ -241,46 +241,46 @@ vtry_failed:continue;
 				/* CALCULATE SIDE ANGLE */
 				ds2 = 1./sqrt(dx2(0)*dx2(0) +dx2(1)*dx2(1));
 				for(i=0;i<ngood;++i) {
-					vtry = gbl->i2wk_lst3(i);
+					vtry = tri_gbl->i2wk_lst3(i);
 					dx1(0) = pnts(v(0))(0) -pnts(vtry)(0);
 					dx1(1) = pnts(v(0))(1) -pnts(vtry)(1);
 					ds1 = 1./sqrt(dx1(0)*dx1(0) +dx1(1)*dx1(1));
-					gbl->fltwk(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
+					tri_gbl->fltwk(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
 				}
 
 				/* ORDER POINTS BY ANGLE */
 				for(i=0;i<ngood-1;++i) {
 					for(j=i+1;j<ngood;++j) {
 
-						/* TO ELIMINATE POSSIBILITY OF REPEATED POINTS IN gbl->i2wk_lst2 */
-						if (gbl->i2wk_lst3(i) == gbl->i2wk_lst3(j)) {
-							gbl->i2wk_lst3(j) = gbl->i2wk_lst3(ngood-1);
+						/* TO ELIMINATE POSSIBILITY OF REPEATED POINTS IN tri_gbl->i2wk_lst2 */
+						if (tri_gbl->i2wk_lst3(i) == tri_gbl->i2wk_lst3(j)) {
+							tri_gbl->i2wk_lst3(j) = tri_gbl->i2wk_lst3(ngood-1);
 							--ngood;
 						}
 
 						/* ORDER BY ANGLE */
-						if(gbl->fltwk(i) > gbl->fltwk(j)) {
-							temp = gbl->fltwk(i);
-							gbl->fltwk(i) = gbl->fltwk(j);
-							gbl->fltwk(j) = temp;
-							itemp = gbl->i2wk_lst3(i);
-							gbl->i2wk_lst3(i) = gbl->i2wk_lst3(j);
-							gbl->i2wk_lst3(j) = itemp;
+						if(tri_gbl->fltwk(i) > tri_gbl->fltwk(j)) {
+							temp = tri_gbl->fltwk(i);
+							tri_gbl->fltwk(i) = tri_gbl->fltwk(j);
+							tri_gbl->fltwk(j) = temp;
+							itemp = tri_gbl->i2wk_lst3(i);
+							tri_gbl->i2wk_lst3(i) = tri_gbl->i2wk_lst3(j);
+							tri_gbl->i2wk_lst3(j) = itemp;
 						}
 					}
 					// *gbl->log << "degenerate case" << v(0) << ' ' << v(1) << std::endl;
 				}
 			}
-			addtri(v(0),v(1),gbl->i2wk_lst3(0),sind,dir);
+			addtri(v(0),v(1),tri_gbl->i2wk_lst3(0),sind,dir);
 			/* ADD ANY DEGENERATE TRIANGLES */
 			for(i=1;i<ngood;++i)
-				addtri(gbl->i2wk_lst3(i-1),v(1),gbl->i2wk_lst3(i),-1,-1);
+				addtri(tri_gbl->i2wk_lst3(i-1),v(1),tri_gbl->i2wk_lst3(i),-1,-1);
 		}
 
 		bgn = end;
 		end += nseg -nsidebefore;
 		for(i=nsidebefore;i<nseg;++i)
-			gbl->i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
+			tri_gbl->i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
 	}
 
 	return;

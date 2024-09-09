@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
 		class tri_mesh zx;
 		zx.input(input_file,in,1.0,inmap);
 		for(int i=0;i<zx.npnt;++i)
-			zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
+			zx.tri_gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
 		zx.cut();
 		return(0);
 	}
