@@ -311,11 +311,13 @@
 					../include,
 					"$(PACKAGES)/include",
 					"${HOME}/Packages/include",
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib/",
 					../lib,
 					"${HOME}/Packages/lib",
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = /usr/local;
@@ -359,11 +361,13 @@
 					../include,
 					"$(PACKAGES)/include",
 					"${HOME}/Packages/include",
+					/opt/homebrew/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(PACKAGES)/lib/",
 					../lib,
 					"${HOME}/Packages/lib",
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = /usr/local;

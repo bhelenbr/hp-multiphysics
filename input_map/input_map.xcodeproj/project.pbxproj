@@ -264,6 +264,7 @@
 					"$(PACKAGES)/lib",
 					"$(SRCROOT)/../lib",
 					/usr/local/lib,
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
@@ -320,6 +321,7 @@
 					"$(PACKAGES)/lib",
 					"$(SRCROOT)/../lib",
 					/usr/local/lib,
+					/opt/homebrew/lib,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
