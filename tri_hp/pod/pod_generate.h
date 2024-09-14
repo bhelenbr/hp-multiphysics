@@ -51,7 +51,7 @@ template<class BASE> class pod_generate : public BASE {
 #endif
 
 	public:
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 		void create_mass_matrix(sparse_row_major& mass);
@@ -66,7 +66,7 @@ template<class BASE> class pod_generate : public BASE {
 
 template<class BASE> class pod_generate_with_r_mesh : public pod_generate<BASE> {
 	public:
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };

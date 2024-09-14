@@ -25,7 +25,7 @@ namespace bdry_cd {
 	class melt_cd : public hp_coupled_bdry {
 		
 	public:
-		struct global : public hp_coupled_bdry::global {
+		struct melt_cd_global {
 			/* PROPERTIES */
 			FLT Lf, rho_s, cp_s, k_s, rho_l, cp_l, k_l;
 			
@@ -42,15 +42,15 @@ namespace bdry_cd {
 			
 			Array<FLT,1> vdt_kinetic;
 			Array<FLT,1> sdt_kinetic;
-		} *gbl;
+		};
+        shared_ptr<melt_cd_global> melt_cd_gbl;
+        
 		
 	public:
 		melt_cd(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin) {mytype = "melt_cd";}
-		melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin), gbl(inbdry.gbl) {}
+		melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin), melt_cd_gbl(inbdry.melt_cd_gbl) {}
 		melt_cd* create(tri_hp& xin, edge_bdry &bin) const {return new melt_cd(*this,xin,bin);}
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() { if(shared_owner) delete gbl;}
-		void init(input_map& inmap, void* gbl_in);
+		void init(input_map& inmap);
 		void output(const std::string& filename, tri_hp::filetype typ,int tlvl);
 		int setup_preconditioner();
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
@@ -66,7 +66,7 @@ namespace bdry_cd {
 		melt_facet_pt(const melt_facet_pt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_free_pnt(inbdry,xin,bin) {}
 		melt_facet_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_facet_pt(*this,xin,bin);}
 		
-		void init(input_map& inmap, void* gbl_in);
+		void init(input_map& inmap);
 		void rsdl(int stage);
 		void element_rsdl(Array<FLT,1> lf);
 #ifdef petsc

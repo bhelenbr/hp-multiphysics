@@ -1931,5 +1931,4 @@ block::~block() {
 	for(int i=ngrid-1;i>=0;--i) {
 		delete grd(i);
 	}
-    delete gbl->log;
 }

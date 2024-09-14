@@ -28,13 +28,13 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	TinyVector<FLT,NV> tres;
     TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
     const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	const FLT gam = gbl->gamma;
+	const FLT gam = hp_cns_gbl->gamma;
 	const FLT gm1 = gam-1.0;
 	const FLT ogm1 = 1.0/gm1;
 	const FLT gogm1 = gam*ogm1;
 #ifndef SUTHERLAND
-    const FLT lmu = gbl->mu;
-    const FLT lkcond = gbl->kcond;
+    const FLT lmu = hp_cns_gbl->mu;
+    const FLT lkcond = hp_cns_gbl->kcond;
 #endif
 
 	/* LOAD INDICES OF VERTEX POINTS */
@@ -149,15 +149,15 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
                     
 #ifdef SUTHERLAND
                     Sutherland(u(NV-1)(i,j));
-                    const FLT lmu = gbl->mu;
-                    const FLT lkcond = gbl->kcond;
+                    const FLT lmu = hp_cns_gbl->mu;
+                    const FLT lkcond = hp_cns_gbl->kcond;
 #endif
                     
 					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 					const FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
                     const FLT mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/hp_cns_gbl->R;
 
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
@@ -177,7 +177,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
-						res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+						res(n)(i,j) -= cjcb*hp_cns_gbl->src->f(n,pt,gbl->time);
 #endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -282,7 +282,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
                     tres = 0.0;
                     for(int m = 0; m < NV; ++m)
                         for(int n = 0; n < NV; ++n)
-                            tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+                            tres(m) += hp_cns_gbl->tau(tind,m,n)*res(n)(i,j);
 #endif
                     
 					FLT rho = pr/rt;
@@ -372,15 +372,15 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
                     
 #ifdef SUTHERLAND
                     Sutherland(u(NV-1)(i,j));
-                    const FLT lmu = gbl->mu;
-                    const FLT lkcond = gbl->kcond;
+                    const FLT lmu = hp_cns_gbl->mu;
+                    const FLT lkcond = hp_cns_gbl->kcond;
 #endif
                     
 					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 					const FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					const FLT mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					const FLT kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/hp_cns_gbl->R;
 					
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
@@ -401,7 +401,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
-						res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+						res(n)(i,j) -= cjcb*hp_cns_gbl->src->f(n,pt,gbl->time);
 #endif
 					
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -505,7 +505,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
                     tres = 0.0;
                     for(int m = 0; m < NV; ++m)
                         for(int n = 0; n < NV; ++n)
-                            tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+                            tres(m) += hp_cns_gbl->tau(tind,m,n)*res(n)(i,j);
 #endif
 
 					FLT rho = pr/rt;
@@ -551,8 +551,8 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 #ifdef SUTHERLAND
 void tri_hp_cns::Sutherland(FLT RT) {
-    gbl->mu = gbl->s1*pow(RT,1.5)/(RT+gbl->s2);
-    gbl->kcond = gbl->R*gbl->mu/gbl->prandtl*gbl->gamma/(gbl->gamma-1.0);
+    hp_cns_gbl->mu = hp_cns_gbl->s1*pow(RT,1.5)/(RT+hp_cns_gbl->s2);
+    hp_cns_gbl->kcond = hp_cns_gbl->R*hp_cns_gbl->mu/hp_cns_gbl->prandtl*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
     return;
 }
 #endif

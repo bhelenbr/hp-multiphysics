@@ -21,7 +21,7 @@ cp ../Inputs/* .
 
 HP="tri_hp"
 
-% Tests real cas
+# Tests real cas
 ${HP} run
 mod_map run.inpt extrapolate 1
 ${HP} run

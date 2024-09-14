@@ -46,7 +46,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-    FLT lmu = gbl->mu, rhorbd0, lrhobd0, cjcb, cjcbi;
+    FLT lmu = hp_ins_gbl->mu, rhorbd0, lrhobd0, cjcb, cjcbi;
     FLT psiktld, psinktld, psinktldshftd, ktrb, omg, omgMx, tmu, tmuLmtd, mutld, cjcbik, cjcbiomg, strninv;
     FLT vrtctinv; // only used for WILCOX1988KL
     FLT dktlddx, dktlddy, dkdx, dkdy, CrssD, omgLmtr; // only used for WILCOX2006
@@ -59,14 +59,14 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
     
     /* Turbulence Model Constants*/
-    const FLT kinf = gbl->kinf;
-    const FLT omginf = gbl->omginf;
-    const FLT epslnk = gbl->epslnk;
-    const FLT Clim = gbl->Clim;
-    const int version = gbl->version;
+    const FLT kinf = hp_komega_gbl->kinf;
+    const FLT omginf = hp_komega_gbl->omginf;
+    const FLT epslnk = hp_komega_gbl->epslnk;
+    const FLT Clim = hp_komega_gbl->Clim;
+    const int version = hp_komega_gbl->version;
     enum Version {WILCOX1988 = 1, WILCOX1988KL, WILCOX2006};
-    const bool kmom_on = static_cast<bool>(gbl->kmom_on);
-    const bool sust_on = static_cast<bool>(gbl->sust_on);
+    const bool kmom_on = static_cast<bool>(hp_komega_gbl->kmom_on);
+    const bool sust_on = static_cast<bool>(hp_komega_gbl->sust_on);
     const FLT sgmomg = 0.5,  betastr = 0.09;
     const FLT sgmdo = 1./8.; // Only used for WILCOX2006
     const FLT k_mom = kmom_on ? 1.0 : 0.0; // the term in the momentum equation including k
@@ -112,8 +112,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif                        
 		}
 	}
@@ -155,8 +155,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
 
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
@@ -187,13 +187,13 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 			for(int i=0;i<lgpx;++i) {
 				for(int j=0;j<lgpn;++j) {
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                    rhorbd0 = gbl->rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
+                    rhorbd0 = hp_ins_gbl->rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
                     psiktld = psifunc(u(2)(i,j),epslnk);
                     psinktld = psifunc(-u(2)(i,j),epslnk);
                     psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
-                    tmu = gbl->rho*ktrb/omg;
+                    tmu = hp_ins_gbl->rho*ktrb/omg;
                     FLT dudx = (dcrd(1,1)(i,j)*du(0,0)(i,j) -dcrd(1,0)(i,j)*du(0,1)(i,j))/cjcb;
                     FLT dvdx = (dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j))/cjcb;
                     FLT dudy = (dcrd(0,0)(i,j)*du(0,1)(i,j) -dcrd(0,1)(i,j)*du(0,0)(i,j))/cjcb;
@@ -210,9 +210,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         /* STRESS-LIMITER MODIFICATION */
                         omgLmtr = Clim*sqrt(2.0*strninv/betastr);
                         omgMx = std::max(omg,omgLmtr);
-                        tmuLmtd = gbl->rho*ktrb/omgMx;
+                        tmuLmtd = hp_ins_gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -alphMutld*gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
+                    mutld = tmu -alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -223,11 +223,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 
 #ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*hp_ins_gbl->rho*ktrb);
 #endif
 #ifdef BODYFORCE
-					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
-					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(0)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif
                     
 #ifdef MMS
@@ -235,7 +235,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     pt(0) = crd(0)(i,j);
                     pt(1) = crd(1)(i,j);
                     for(int n = 0; n < NV; ++n)
-                        res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+                        res(n)(i,j) -= cjcb*hp_komega_gbl->src->f(n,pt,gbl->time);
 #endif
                             
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -274,16 +274,16 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #define                 viscI3II3II1II0I visc(3,3)(0,1)
 
 					df(0,0)(i,j) = +visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-									+visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j) +k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*dcrd(1,1)(i,j)*ktrb;
+									+visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j) +k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*dcrd(1,1)(i,j)*ktrb;
 
 					df(0,1)(i,j) = +viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-									+visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j) -k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*dcrd(1,0)(i,j)*ktrb;
+									+visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j) -k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*dcrd(1,0)(i,j)*ktrb;
 
 					df(1,0)(i,j) = +viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-									+viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j) -k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*dcrd(0,1)(i,j)*ktrb;
+									+viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j) -k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*dcrd(0,1)(i,j)*ktrb;
 
 					df(1,1)(i,j) = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-									+viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j) +k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*dcrd(0,0)(i,j)*ktrb;
+									+viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j) +k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*dcrd(0,0)(i,j)*ktrb;
                     
                     df(2,0)(i,j) = visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j);
                     df(2,1)(i,j) = viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j);
@@ -298,12 +298,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /*PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
                     if (version != WILCOX1988KL) {
                         res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
-                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgMx*cjcb;
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*strninv/omgMx*cjcb;
                     }
                     else {
                         vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
                         res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
-                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
                     }
                     
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -321,8 +321,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb;
-                    res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb;
+                    res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*hp_ins_gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
                         /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
@@ -332,12 +332,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         dkdy = dpsifunc(u(2)(i,j),epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),epslnk)*dktlddy;
                         CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
                         if ( CrssD > 0.0)
-                            res(3)(i,j) -= RAD(crd(0)(i,j))*gbl->rho*CrssD/omg*sgmdo*cjcb;
+                            res(3)(i,j) -= RAD(crd(0)(i,j))*hp_ins_gbl->rho*CrssD/omg*sgmdo*cjcb;
                     }
 
                     /* TURBULENCE SUSTAINING TERMS */
-                    res(2)(i,j) -= RAD(crd(0)(i,j))*susk*betastr*gbl->rho*kinf*omginf*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*susomg*betastr*gbl->rho*omginf*omginf/omg*cjcb;
+                    res(2)(i,j) -= RAD(crd(0)(i,j))*susk*betastr*hp_ins_gbl->rho*kinf*omginf*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*susomg*betastr*hp_ins_gbl->rho*omginf*omginf/omg*cjcb;
                       
 #ifdef CALC_TAU1
                     jcbmin = MIN(jcbmin,cjcb);
@@ -394,11 +394,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             tmuLmtdav = tmuLmtdav/lgpx/lgpn;
             tmuav = tmuav/lgpx/lgpn;
             mutldav = mutldav/lgpx/lgpn;
-            FLT nu = (lmu + tmuLmtdav)/gbl->rho;
-            FLT nuk = (lmu + sgmk*mutldav)/gbl->rho;
-            FLT nuomg = (lmu + sgmomg*tmuav)/gbl->rho;
+            FLT nu = (lmu + tmuLmtdav)/hp_ins_gbl->rho;
+            FLT nuk = (lmu + sgmk*mutldav)/hp_ins_gbl->rho;
+            FLT nuomg = (lmu + sgmomg*tmuav)/hp_ins_gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-            if (tmuLmtdav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+            if (tmuLmtdav + hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
             
             FLT q2 = sqrt(qmax2);
             FLT lam2k  = (q2 +1.5*nuk/h +hmax*gbl->bd(0));
@@ -406,10 +406,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             
             
             /* SET UP DISSIPATIVE COEFFICIENTS */
-            gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-            gbl->tau(tind,2)  = adis*h/(jcb*lam2k);
-            gbl->tau(tind,3)  = adis*h/(jcb*lam2omg);
-            gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+            hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+            hp_ins_gbl->tau(tind,2)  = adis*h/(jcb*lam2k);
+            hp_ins_gbl->tau(tind,3)  = adis*h/(jcb*lam2omg);
+            hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 #endif
             
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
@@ -424,31 +424,31 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     psinktld = psifunc(-u(2)(i,j),epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
-                    tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    tmu = hp_ins_gbl->rho*ktrb/omg;
+                    mutld = tmu - hp_ins_gbl->rho*psinktld*u(2)(i,j)/omginf;
 
-                    FLT nu = (gbl->mu +tmu)/gbl->rho;
-                    FLT nuk = (lmu +sgmk*mutld)/gbl->rho;
-                    FLT nuomg = (lmu +sgmomg*tmu)/gbl->rho;
+                    FLT nu = (hp_ins_gbl->mu +tmu)/hp_ins_gbl->rho;
+                    FLT nuk = (lmu +sgmk*mutld)/hp_ins_gbl->rho;
+                    FLT nuomg = (lmu +sgmomg*tmu)/hp_ins_gbl->rho;
                     
                     FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
-                    if (tmu + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+                    if (tmu + hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
                     FLT lam2k  = sqrt(q2) +1.5*nuk/h +h*gbl->bd(0);
                     FLT lam2omg  = sqrt(q2) +1.5*nuomg/h +h*gbl->bd(0);
                     
                     /* SET UP DISSIPATIVE COEFFICIENTS */
-                    gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
-                    gbl->tau(tind,2)  = adis*h/(cjcb*lam2k);
-                    gbl->tau(tind,3)  = adis*h/(cjcb*lam2omg);
-                    gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+                    hp_ins_gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+                    hp_ins_gbl->tau(tind,2)  = adis*h/(cjcb*lam2k);
+                    hp_ins_gbl->tau(tind,3)  = adis*h/(cjcb*lam2omg);
+                    hp_ins_gbl->tau(tind,NV-1) = sqrt(q)*hp_ins_gbl->tau(tind,0);
 #endif
                     
 
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-                    tres(2) = gbl->tau(tind,2)*res(2)(i,j);
-                    tres(3) = gbl->tau(tind,3)*res(3)(i,j);
-					tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+                    tres(2) = hp_ins_gbl->tau(tind,2)*res(2)(i,j);
+                    tres(3) = hp_ins_gbl->tau(tind,3)*res(3)(i,j);
+					tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 					df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
 									-dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
@@ -499,8 +499,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
 
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
@@ -530,7 +530,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 		if (gbl->beta(stage) > 0.0) {
 
             cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-			lrhobd0 = gbl->rho*gbl->bd(0)*cjcb;
+			lrhobd0 = hp_ins_gbl->rho*gbl->bd(0)*cjcb;
            
 
 			/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -599,7 +599,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
-                    tmu = gbl->rho*ktrb/omg;
+                    tmu = hp_ins_gbl->rho*ktrb/omg;
                     FLT dudx = (ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j))/cjcb;
                     FLT dvdx = (ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j))/cjcb;
                     FLT dudy = (ldcrd(0,0)*du(0,1)(i,j) -ldcrd(0,1)*du(0,0)(i,j))/cjcb;
@@ -616,9 +616,9 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         /* STRESS-LIMITER MODIFICATION */
                         omgLmtr = Clim*sqrt(2.0*strninv/betastr);
                         omgMx = std::max(omg,omgLmtr);
-                        tmuLmtd = gbl->rho*ktrb/omgMx;
+                        tmuLmtd = hp_ins_gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -alphMutld*gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
+                    mutld = tmu -alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -629,11 +629,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(NV-1)(i,j) = rhorbd0 +dugdt(log2p)(tind,NV-1,i,j);
 
 #ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*gbl->rho*ktrb);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*(lmu +tmuLmtd)*u(0)(i,j)/crd(0)(i,j) +k_mom*2./3.*hp_ins_gbl->rho*ktrb);
 #endif
 #ifdef BODYFORCE
-					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
-					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(0)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif
                     
 #ifdef MMS
@@ -641,19 +641,19 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     pt(0) = crd(0)(i,j);
                     pt(1) = crd(1)(i,j);
                     for(int n = 0; n < NV; ++n)
-                        res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+                        res(n)(i,j) -= cjcb*hp_komega_gbl->src->f(n,pt,gbl->time);
 #endif
                     df(0,0)(i,j) = cjcbi*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-                    +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*ldcrd(1,1)*ktrb;
+                    +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*ldcrd(1,1)*ktrb;
                     
                     df(0,1)(i,j) = cjcbi*(+viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-                    +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j)) -k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*ldcrd(1,0)*ktrb;
+                    +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j)) -k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*ldcrd(1,0)*ktrb;
                     
                     df(1,0)(i,j) = cjcbi*(+viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-                    +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j)) -k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*ldcrd(0,1)*ktrb;
+                    +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j)) -k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*ldcrd(0,1)*ktrb;
                     
                     df(1,1)(i,j) = cjcbi*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-                    +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*gbl->rho*ldcrd(0,0)*ktrb;
+                    +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*ldcrd(0,0)*ktrb;
                     
                     df(2,0)(i,j) = cjcbik*(visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j));
                     df(2,1)(i,j) = cjcbik*(viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j));
@@ -668,13 +668,13 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     /*PRODUCTION TERMS FOR K-TILDE AND ln(omega) */
                     if (version != WILCOX1988KL) {
                         res(2)(i,j) -= RAD(crd(0)(i,j))*tmuLmtd*2.0*strninv*cjcb;
-                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*strninv/omgMx*cjcb;
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*strninv/omgMx*cjcb;
                     }
                     else {
                     /* KATO-LAUNDER */
                     vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
                     res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
                     }
 
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -692,8 +692,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*gbl->rho*(omg*ktrb + alphDk*omginf*psinktld*u(2)(i,j))*cjcb;
-                    res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*gbl->rho*omg*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*hp_ins_gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
                         /* CROSS-DIFFUSION TERM FOR ln(OMEGA) */
@@ -703,12 +703,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         dkdy = dpsifunc(u(2)(i,j),epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),epslnk)*dktlddy;
                         CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
                         if ( CrssD > 0.0)
-                            res(3)(i,j) -= RAD(crd(0)(i,j))*gbl->rho*CrssD/omg*sgmdo*cjcb;
+                            res(3)(i,j) -= RAD(crd(0)(i,j))*hp_ins_gbl->rho*CrssD/omg*sgmdo*cjcb;
                     }
                     
                     /* TURBULENCE SUSTAINING TERMS */
-                    res(2)(i,j) -= RAD(crd(0)(i,j))*susk*betastr*gbl->rho*kinf*omginf*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*susomg*betastr*gbl->rho*omginf*omginf/omg*cjcb;
+                    res(2)(i,j) -= RAD(crd(0)(i,j))*susk*betastr*hp_ins_gbl->rho*kinf*omginf*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*susomg*betastr*hp_ins_gbl->rho*omginf*omginf/omg*cjcb;
 
 #ifdef CALC_TAU1
                     FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0)  +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
@@ -749,21 +749,21 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
             tmuLmtdav = tmuLmtdav/lgpx/lgpn;
             tmuav = tmuav/lgpx/lgpn;
             mutldav = mutldav/lgpx/lgpn;
-            FLT nu = (lmu + tmuLmtdav)/gbl->rho;
-            FLT nuk = (lmu + sgmk*mutldav)/gbl->rho;
-            FLT nuomg = (lmu + sgmomg*tmuav)/gbl->rho;
+            FLT nu = (lmu + tmuLmtdav)/hp_ins_gbl->rho;
+            FLT nuk = (lmu + sgmk*mutldav)/hp_ins_gbl->rho;
+            FLT nuomg = (lmu + sgmomg*tmuav)/hp_ins_gbl->rho;
             FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-            if (tmuLmtdav + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+            if (tmuLmtdav + hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
             
             FLT q2 = sqrt(qmax2);
             FLT lam2k  = (q2 +1.5*nuk/h +hmax*gbl->bd(0));
             FLT lam2omg  = (q2 +1.5*nuomg/h +hmax*gbl->bd(0));
             
             /* SET UP DISSIPATIVE COEFFICIENTS */
-            gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-            gbl->tau(tind,2)  = adis*h/(jcb*lam2k);
-            gbl->tau(tind,3)  = adis*h/(jcb*lam2omg);
-            gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+            hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+            hp_ins_gbl->tau(tind,2)  = adis*h/(jcb*lam2k);
+            hp_ins_gbl->tau(tind,3)  = adis*h/(jcb*lam2omg);
+            hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 #endif
 
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
@@ -777,29 +777,29 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     psinktld = psifunc(-u(2)(i,j),epslnk);
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
-                    tmu = gbl->rho*ktrb/omg;
-                    mutld = tmu - gbl->rho*psinktld*u(2)(i,j)/omginf;
-                    FLT nu = (gbl->mu +tmu)/gbl->rho;
-                    FLT nuk = (lmu +sgmk*mutld)/gbl->rho;
-                    FLT nuomg = (lmu +sgmomg*tmu)/gbl->rho;
+                    tmu = hp_ins_gbl->rho*ktrb/omg;
+                    mutld = tmu - hp_ins_gbl->rho*psinktld*u(2)(i,j)/omginf;
+                    FLT nu = (hp_ins_gbl->mu +tmu)/hp_ins_gbl->rho;
+                    FLT nuk = (lmu +sgmk*mutld)/hp_ins_gbl->rho;
+                    FLT nuomg = (lmu +sgmomg*tmu)/hp_ins_gbl->rho;
                     
                     FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
-                    if (tmu + gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+                    if (tmu + hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
                     FLT lam2k  = sqrt(q2) +1.5*nuk/h +h*gbl->bd(0);
                     FLT lam2omg  = sqrt(q2) +1.5*nuomg/h +h*gbl->bd(0);
                     
                     /* SET UP DISSIPATIVE COEFFICIENTS */
-                    gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
-                    gbl->tau(tind,2)  = adis*h/(cjcb*lam2k);
-                    gbl->tau(tind,3)  = adis*h/(cjcb*lam2omg);
-                    gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+                    hp_ins_gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+                    hp_ins_gbl->tau(tind,2)  = adis*h/(cjcb*lam2k);
+                    hp_ins_gbl->tau(tind,3)  = adis*h/(cjcb*lam2omg);
+                    hp_ins_gbl->tau(tind,NV-1) = sqrt(q)*hp_ins_gbl->tau(tind,0);
 #endif
 
-                    tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-                    tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-                    tres(2) = gbl->tau(tind,2)*res(2)(i,j);
-                    tres(3) = gbl->tau(tind,3)*res(3)(i,j);
-                    tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+                    tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+                    tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+                    tres(2) = hp_ins_gbl->tau(tind,2)*res(2)(i,j);
+                    tres(3) = hp_ins_gbl->tau(tind,3)*res(3)(i,j);
+                    tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 					df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
 									-ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)

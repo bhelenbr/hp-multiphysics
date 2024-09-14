@@ -76,7 +76,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
 					
-					x.cjcb(0,i) = x.gbl->kcond/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					x.cjcb(0,i) = x.hp_cd_gbl->kcond/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 										
 					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
 					visc[0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
@@ -87,16 +87,16 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
-						mvel(n) += x.gbl->mesh_ref_vel(n);
+						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}					
 #ifdef CONST_A
-					conv = x.u(0)(0,i)*((x.gbl->ax -mvel(0))*norm(0) +(x.gbl->ay -mvel(1))*norm(1));
+					conv = x.u(0)(0,i)*((x.hp_cd_gbl->ax -mvel(0))*norm(0) +(x.hp_cd_gbl->ay -mvel(1))*norm(1));
 #else
 					TinyVector<FLT,tri_mesh::ND> pt;
 					pt(0) = x.crd(0)(0,i);
 					pt(1) = x.crd(1)(0,i);
-					conv = x.u(0)(0,i)*((x.gbl->a->f(0,pt,x.gbl->time) -mvel(0))*norm(0) +(x.gbl->a->f(1,pt,x.gbl->time) -mvel(1))*norm(1));
+					conv = x.u(0)(0,i)*((x.hp_cd_gbl->a->f(0,pt,x.gbl->time) -mvel(0))*norm(0) +(x.hp_cd_gbl->a->f(1,pt,x.gbl->time) -mvel(1))*norm(1));
 #endif
 					conv_total -= basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*conv*l;
 					

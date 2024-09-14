@@ -5,8 +5,8 @@
 
 using namespace bdry_buoyancy;
 
-void surface_marangoni::init(input_map& inmap,void* gbl_in) {
-	bdry_ins::surface::init(inmap,gbl_in);
+void surface_marangoni::init(input_map& inmap) {
+	bdry_ins::surface::init(inmap);
 	
 	if (!is_master) return;
 	
@@ -53,19 +53,19 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
     mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
     mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
-    mvel(0) -= x.gbl->mesh_ref_vel(0);
-    mvel(1) -= x.gbl->mesh_ref_vel(1);
+    mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+    mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
     FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
     
     mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
     mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
-    mvel(0) -= x.gbl->mesh_ref_vel(0);
-    mvel(1) -= x.gbl->mesh_ref_vel(1);
+    mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+    mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
     FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
-    gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+    hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
 #endif
     
 	for(n=0;n<tri_mesh::ND;++n)
@@ -83,7 +83,7 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef MESH_REF_VEL
-			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+			mvel(n,i) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 		}
 		
@@ -104,10 +104,10 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 		/* NORMAL FLUX */
 		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1)) +flx(x.NV-1);
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
-		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*hp_bdry_gbl->meshc(indx);
 		
 		/* SURFACE TENSION SOURCE TERM X-DIRECTION */
-		res(4,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(0) +flx(0)*jcb;
+		res(4,i) = +RAD(crd(0,i))*((x.hp_ins_gbl->rho -surface_gbl->rho2)*x.gbl->g*crd(1,i) +surface_gbl->p_ext)*norm(0) +flx(0)*jcb;
 #ifdef AXISYMMETRIC
 		res(4,i) += sigma*jcb;
 #endif
@@ -116,7 +116,7 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 		
 		
 		/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
-		res(6,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(1) +flx(1)*jcb;
+		res(6,i) = +RAD(crd(0,i))*((x.hp_ins_gbl->rho -surface_gbl->rho2)*x.gbl->g*crd(1,i) +surface_gbl->p_ext)*norm(1) +flx(1)*jcb;
 		/* AND INTEGRATION BY PARTS TERM */
 		res(7,i) = -RAD(crd(0,i))*sigma*norm(0)/jcb;
 		
@@ -143,8 +143,8 @@ void surface_marangoni::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf)
 	return;
 }
 
-void triple_junction::init(input_map& inmap,void* gbl_in) {
-	melt_facet_pt::init(inmap, gbl_in);
+void triple_junction::init(input_map& inmap) {
+	melt_facet_pt::init(inmap);
 	inmap.getwdefault(base.idprefix +"_growth_angle",growth_angle,0.0);
 	growth_angle *= M_PI/180.0;
 	
@@ -196,7 +196,7 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 	for(int n=0;n<tri_mesh::ND;++n) {
 		mvel(n) = u(n) -x.gbl->bd(0)*(xp(n) -x.vrtxbd(1)(v0)(n));
 #ifdef MESH_REF_VEL
-		mvel(n) -= x.gbl->mesh_ref_vel(n);
+		mvel(n) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 	}
 	
@@ -206,14 +206,14 @@ void triple_junction::element_rsdl(Array<FLT,1> lf) {
 #ifdef TWOFACETS
 	/* This is to allow the general expression at the triple point */
      anorm(0)= dxpdpsi(1)/jcb; anorm(1) = -dxpdpsi(0)/jcb;
-     FLT sint = -surf1->gbl->facetdir(0)*anorm(1) +surf1->gbl->facetdir(1)*anorm(0);
+     FLT sint = -surf1->bdry_cd_gbl->facetdir(0)*anorm(1) +surf1->bdry_cd_gbl->facetdir(1)*anorm(0);
      FLT K = surf1->calculate_kinetic_coefficients(DT,sint);
 #else
 	FLT K = surf1->calculate_kinetic_coefficients(DT,0.0);
 #endif
-	FLT res1 = jcb*RAD(xp(0))*surf1->gbl->rho_s*(mvel(0)*surf1->gbl->facetdir(0) +mvel(1)*surf1->gbl->facetdir(1));
+	FLT res1 = jcb*RAD(xp(0))*surf1->melt_cd_gbl->rho_s*(mvel(0)*surf1->melt_cd_gbl->facetdir(0) +mvel(1)*surf1->melt_cd_gbl->facetdir(1));
 	/* Kinetic equation for surface temperature */
-	lf(x.NV+1) = RAD(xp(0))*surf1->gbl->rho_s*(-DT)*jcb +res1*K;  // -gbl->K_gt*kappa?;
+	lf(x.NV+1) = RAD(xp(0))*surf1->melt_cd_gbl->rho_s*(-DT)*jcb +res1*K;  // -gbl->K_gt*kappa?;
 	
 	/* Motion constraint */
 	/* Constraint is that motion of triple junction relative to solid is in direction of free surface + growth angle */

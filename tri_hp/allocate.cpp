@@ -20,13 +20,14 @@ tri_basis_array<1> basis::tri;
 tri_basis_array<0> basis::tri;
 #endif
 
-void tri_hp::init(input_map& inmap, void *gin) {
+void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 	int i,ival;
 	std::string keyword, line;
 	std::istringstream data;
 	std::string filename;
 
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
+    hp_gbl = make_shared<hp_global>();
 
 	coarse_flag = false;
 	isfrst = true;
@@ -164,18 +165,15 @@ void tri_hp::init(input_map& inmap, void *gin) {
 			*gbl->log << "couldn't find ibc" << std::endl;
 		}
 	}
-	gbl->ibc = getnewibc(ibcname);
-	gbl->ibc->init(inmap,keyword);
+	hp_gbl->ibc = getnewibc(ibcname);
+	hp_gbl->ibc->init(inmap,keyword);
 	
 	/* SET MESH VELOCITY TO ZERO */
 #ifdef MESH_REF_VEL
-	gbl->mesh_ref_vel = 0;
+	hp_gbl->mesh_ref_vel = 0;
 #endif
 
 	/* ALLOCATE BOUNDARY CONDITION STUFF */
-	gbl->ebdry_gbls.resize(nebd);
-	gbl->vbdry_gbls.resize(nvbd);
-
 	hp_ebdry.resize(nebd);
 	hp_vbdry.resize(nvbd);
 	for(i=0;i<nebd;++i) {
@@ -190,8 +188,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		inmap.getwdefault(keyword,val,string("plain"));
 		hp_vbdry(i) = getnewvrtxobject(i,val);
 	}
-	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
-	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl->vbdry_gbls(i));
+	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap);
+	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap);
 	setinfo();
 
 	inmap.getwdefault("hp_fadd",fadd,1.0);
@@ -220,24 +218,24 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	}
 	
 	/* To make a vector of residuals that is contiguous in memory */
-	//	gbl->res1d.resize(maxpst*(1 +sm0 +im0)*NV);
-	//	Array<FLT,2> vtoreference(gbl->res1d.data(),shape(npnt,NV),neverDeleteData);
-	//	gbl->res.v.reference(vtoreference);
-	//	Array<FLT,3> storeference(gbl->res1d.data() +npnt*NV,shape(nseg,sm0,NV),neverDeleteData);
-	//	gbl->res.s.reference(storeference);
-	//	Array<FLT,3> itoreference(gbl->res1d.data() +npnt*NV +nseg*sm0*NV,shape(ntri,im0,NV),neverDeleteData);
-	//	gbl->res.i.reference(itoreference);
+	//	hp_gbl->res1d.resize(maxpst*(1 +sm0 +im0)*NV);
+	//	Array<FLT,2> vtoreference(hp_gbl->res1d.data(),shape(npnt,NV),neverDeleteData);
+	//	hp_gbl->res.v.reference(vtoreference);
+	//	Array<FLT,3> storeference(hp_gbl->res1d.data() +npnt*NV,shape(nseg,sm0,NV),neverDeleteData);
+	//	hp_gbl->res.s.reference(storeference);
+	//	Array<FLT,3> itoreference(hp_gbl->res1d.data() +npnt*NV +nseg*sm0*NV,shape(ntri,im0,NV),neverDeleteData);
+	//	hp_gbl->res.i.reference(itoreference);
 	
-	gbl->res.v.resize(maxpst,NV);
-	gbl->res.s.resize(maxpst,sm0,NV);
-	gbl->res.i.resize(maxpst,im0,NV);
+	hp_gbl->res.v.resize(maxpst,NV);
+	hp_gbl->res.s.resize(maxpst,sm0,NV);
+	hp_gbl->res.i.resize(maxpst,im0,NV);
 	
-	gbl->res_r.v.resize(maxpst,NV);
-	gbl->res_r.s.resize(maxpst,sm0,NV);
-	gbl->res_r.i.resize(maxpst,im0,NV);
-	gbl->res_r.v = 0.;
-	gbl->res_r.s = 0.;
-	gbl->res_r.i = 0.;
+	hp_gbl->res_r.v.resize(maxpst,NV);
+	hp_gbl->res_r.s.resize(maxpst,sm0,NV);
+	hp_gbl->res_r.i.resize(maxpst,im0,NV);
+	hp_gbl->res_r.v = 0.;
+	hp_gbl->res_r.s = 0.;
+	hp_gbl->res_r.i = 0.;
 
 	
 #ifndef petsc
@@ -251,28 +249,28 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	}
 	
 	/* Allocate block stuff */
-	gbl->ug0.v.resize(maxpst,NV);
-	gbl->ug0.s.resize(maxpst,sm0,NV);
-	gbl->ug0.i.resize(maxpst,im0,NV);
+	hp_gbl->ug0.v.resize(maxpst,NV);
+	hp_gbl->ug0.s.resize(maxpst,sm0,NV);
+	hp_gbl->ug0.i.resize(maxpst,im0,NV);
 
-	gbl->res0.v.resize(maxpst,NV);
-	gbl->res0.s.resize(maxpst,basis::tri(log2p)->sm(),NV);
-	gbl->res0.i.resize(maxpst,basis::tri(log2p)->im(),NV); 
+	hp_gbl->res0.v.resize(maxpst,NV);
+	hp_gbl->res0.s.resize(maxpst,basis::tri(log2p)->sm(),NV);
+	hp_gbl->res0.i.resize(maxpst,basis::tri(log2p)->im(),NV); 
 #endif
 	
-	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
-	if (gbl->diagonal_preconditioner) {
-		gbl->vprcn.resize(maxpst,NV);
-		gbl->sprcn.resize(maxpst,NV);
-		gbl->tprcn.resize(maxpst,NV);
+	inmap.getwdefault("diagonal_preconditioner",hp_gbl->diagonal_preconditioner,true);
+	if (hp_gbl->diagonal_preconditioner) {
+		hp_gbl->vprcn.resize(maxpst,NV);
+		hp_gbl->sprcn.resize(maxpst,NV);
+		hp_gbl->tprcn.resize(maxpst,NV);
 	} else {
-		gbl->vprcn_ut.resize(maxpst,NV,NV);
-		gbl->sprcn_ut.resize(maxpst,NV,NV);
-		gbl->tprcn_ut.resize(maxpst,NV,NV);
+		hp_gbl->vprcn_ut.resize(maxpst,NV,NV);
+		hp_gbl->sprcn_ut.resize(maxpst,NV,NV);
+		hp_gbl->tprcn_ut.resize(maxpst,NV,NV);
 	}
 
 	double CFLdflt[4] = {2.5, 1.5, 1.0, 0.5};
-	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
+	if (!inmap.get(gbl->idprefix +"_cfl",hp_gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",hp_gbl->cfl.data(),log2pmax+1,CFLdflt); 
 
 	/***************************************************/
 	/* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
@@ -290,7 +288,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 			hp_ebdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
 
 		/* USE TOBASIS TO INITALIZE SOLUTION */
-		tobasis(gbl->ibc);
+		tobasis(hp_gbl->ibc);
 	}
 
 
@@ -301,17 +299,17 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		std::string estring;
 		if (!inmap.get(gbl->idprefix + "_error_estimator",estring)) inmap.getwdefault("error_estimator",estring,std::string("none"));
 		if (estring == "none") 
-			gbl->error_estimator = global::none;
+			hp_gbl->error_estimator = hp_global::none;
 		else if (estring == "energy_norm")
-			gbl->error_estimator = global::energy_norm;
+			hp_gbl->error_estimator = hp_global::energy_norm;
 		else if (estring == "scale_independent")
-			gbl->error_estimator = global::scale_independent;
+			hp_gbl->error_estimator = hp_global::scale_independent;
 		else {
 			*gbl->log << "Error estimator not recognized" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
-		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,0.0);
+		inmap.getwdefault("curvature_sensitivity",hp_gbl->curvature_sensitivity,0.0);
 	}
 	
 #ifdef petsc
@@ -337,6 +335,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 
 	const tri_hp& inmesh = dynamic_cast<const tri_hp &>(in);
 	gbl = inmesh.gbl;
+    hp_gbl = inmesh.hp_gbl;
 
 	/* Initialize stuff for r_tri_mesh */
 	mmovement = inmesh.mmovement;
@@ -475,15 +474,6 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 	return;
 }
 
-void tri_hp::delete_global_structure() {
-	for(int i=0;i<nebd;++i) {
-		hp_ebdry(i)->delete_global_structure();
-	}
-	delete gbl->ibc;
-	
-	/* This is generic physics classes must delete gbl pointer */
-}
-
 tri_hp::~tri_hp() {
 	
 	delete helper;
@@ -557,7 +547,7 @@ FLT tri_hp::maxres() {
 
 	for(i=0;i<npnt;++i) {
 		for(n=0;n<NV;++n) {
-			mxr(n) = MAX(mxr(n),fabs(gbl->res.v(i,n)));
+			mxr(n) = MAX(mxr(n),fabs(hp_gbl->res.v(i,n)));
 		}
 	}
 

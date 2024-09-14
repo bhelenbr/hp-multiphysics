@@ -83,18 +83,18 @@ void tri_hp_cd::minvrt() {
 	
 	/* Preconditioner */
 	/* vprcn is predivided by vdiag so multiply by vdiag to cancel out */
-	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tri(log2p)->vdiag();
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) *= hp_gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tri(log2p)->vdiag();
 	
 	for(int mode=0;mode<sm;++mode)
-		gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all());
+		hp_gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= hp_gbl->sprcn(Range(0,nseg-1),Range::all());
 	
 	for(int mode=0;mode<im;++mode)
-		gbl->res.i(Range(0,ntri-1),mode,Range::all()) /= gbl->tprcn(Range(0,ntri-1),Range::all());
+		hp_gbl->res.i(Range(0,ntri-1),mode,Range::all()) /= hp_gbl->tprcn(Range(0,ntri-1),Range::all());
 	
 	/* Jacobi's relaxation */
-	gbl->res.v(Range(0,npnt-1),Range::all()) /= gbl->stiff_diag.v(Range(0,npnt-1),Range::all());
-	if(sm) gbl->res.s(Range(0,nseg-1),Range(0,sm-1),Range::all()) /= gbl->stiff_diag.s(Range(0,nseg-1),Range(0,sm-1),Range::all());
-	if(im) gbl->res.i(Range(0,ntri-1),Range(0,im-1),Range::all()) /= gbl->stiff_diag.i(Range(0,ntri-1),Range(0,im-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) /= gbl->stiff_diag.v(Range(0,npnt-1),Range::all());
+	if(sm) hp_gbl->res.s(Range(0,nseg-1),Range(0,sm-1),Range::all()) /= gbl->stiff_diag.s(Range(0,nseg-1),Range(0,sm-1),Range::all());
+	if(im) hp_gbl->res.i(Range(0,ntri-1),Range(0,im-1),Range::all()) /= gbl->stiff_diag.i(Range(0,ntri-1),Range(0,im-1),Range::all());
 	
 	/* Apply BC's */
 	for(int i=0;i<nebd;++i)

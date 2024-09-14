@@ -17,20 +17,18 @@
 class tri_hp_cns_explicit : public tri_hp {
 	public:
 		/* THINGS SHARED BY ALL tri_hp_cns in same multigrid block */
-		struct global : public tri_hp::global {
+		struct hp_cns_explicit_global {
 			/* STABILIZATION */
 			Array<FLT,3> tau;
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond, mu, gamma,R;
-            
-			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-			TinyVector<FLT,2> eanda, eanda_recv;
 			
 			/* SOURCE FUNCTION FOR MMS */
 			//init_bdry_cndtn *src;
 			
-		} *gbl;
+        };
+        shared_ptr<hp_cns_explicit_global> hp_cns_explicit_gbl;
 
 		FLT adis; // DISSIPATION CONSTANT
 
@@ -39,11 +37,9 @@ class tri_hp_cns_explicit : public tri_hp {
 		init_bdry_cndtn* getnewibc(std::string name);
 
     public:
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_cns_explicit* create() { return new tri_hp_cns_explicit(); }
 
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		void error_estimator();

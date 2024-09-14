@@ -16,24 +16,20 @@
 
 class tri_hp_buoyancy : public tri_hp_ins {
 	public:
-		struct global : public tri_hp_ins::global {
-
+		struct hp_buoyancy_global {
 			/* PHYSICAL CONSTANTS */
 			FLT adapt_energy_scaling;
 			FLT kcond,cp;
 			symbolic_function<1> rho_vs_T;
-			
-
-		} *gbl;
+		};
+        shared_ptr<hp_buoyancy_global> hp_buoyancy_gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, std::string name);
 		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 
 	public:
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_buoyancy* create() { return new tri_hp_buoyancy(); }
 
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		
 		void error_estimator();

@@ -20,7 +20,7 @@
 
 //#define MPDEBUG
 
-void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
+void hp_edge_bdry::init(input_map& inmap) {
 	int i;
 	std::string keyword,ibcname;
 	std::istringstream data;
@@ -439,7 +439,7 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
-						mvel(n) += x.gbl->mesh_ref_vel(n);
+						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}
 					
@@ -685,11 +685,11 @@ void hp_edge_bdry::vdirichlet() {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-			x.gbl->res.v(v0,*n)= 0.0;
+			x.hp_gbl->res.v(v0,*n)= 0.0;
 	} while (++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-		x.gbl->res.v(v0,*n) = 0.0;
+		x.hp_gbl->res.v(v0,*n) = 0.0;
 }
 
 void hp_edge_bdry::sdirichlet(int mode) {
@@ -698,7 +698,7 @@ void hp_edge_bdry::sdirichlet(int mode) {
 	for(int j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-			x.gbl->res.s(sind,mode,*n) = 0.0;
+			x.hp_gbl->res.s(sind,mode,*n) = 0.0;
 	}
 }
 
@@ -1003,7 +1003,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 			pt(n) = x.crd(n)(0,k);
 			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
 #ifdef MESH_REF_VEL
-			mvel(n) += x.gbl->mesh_ref_vel(n);
+			mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 			
 		}
@@ -1036,14 +1036,14 @@ void hp_edge_bdry::rsdl(int stage) {
 		element_rsdl(j,x.lf);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += x.lf(n)(0);
+			x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += x.lf(n)(1);
+			x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
 		
 		for(int k=0;k<basis::tri(x.log2p)->sm();++k) {
 			for(int n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+				x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
 	}
 }
@@ -2029,13 +2029,13 @@ void tri_hp::matchboundaries() {
 	return;
 }
 
-void symbolic_with_integration_by_parts::init(input_map& inmap,void* gbl_in) {
+void symbolic_with_integration_by_parts::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 	input_map zeromap;
 	zeromap["zero"] = "0.0";
 	
-	hp_edge_bdry::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap);
 	
 	derivative_fluxes.resize(x.NV);
 	Array<string,1> names(4);
@@ -2095,7 +2095,7 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i));
 #ifdef MESH_REF_VEL
-			mvel(n,i) += x.gbl->mesh_ref_vel(n);
+			mvel(n,i) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 		}
 		
@@ -2130,10 +2130,10 @@ void symbolic_with_integration_by_parts::element_rsdl(int indx, Array<TinyVector
 	return;
 }
 
-void hp_partition::init(input_map& inmap,void* gbl_in) {
+void hp_partition::init(input_map& inmap) {
 	epartition& tgt = dynamic_cast<epartition&>(base);
 	
-	hp_edge_bdry::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap);
 	
 	/** Arrays for time history information for adaptation */
 	ugbd.resize(x.gbl->nadapt);

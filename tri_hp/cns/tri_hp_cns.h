@@ -20,7 +20,7 @@
 class tri_hp_cns : public tri_hp {
 	public:
 		/* THINGS SHARED BY ALL tri_hp_cns in same multigrid block */
-		struct global : public tri_hp::global {
+		struct hp_cns_global {
 			/* STABILIZATION */
 			Array<FLT,3> tau;
 
@@ -29,10 +29,6 @@ class tri_hp_cns : public tri_hp {
 #ifdef SUTHERLAND
             FLT s1, s2;
 #endif
-
-			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-//			TinyVector<FLT,3> eanda, eanda_recv;
-			
 			/* SOURCE FUNCTION FOR MMS */
 #ifdef MMS
 			init_bdry_cndtn *src;
@@ -41,9 +37,8 @@ class tri_hp_cns : public tri_hp {
 			
 			/* preconditioner could make 2d but keep general for now */
 			Array<FLT,3> vpreconditioner, spreconditioner, tpreconditioner;
-
-
-		} *gbl;
+        };
+        shared_ptr<hp_cns_global> hp_cns_gbl;
 
 		FLT adis; // DISSIPATION CONSTANT
 
@@ -52,11 +47,9 @@ class tri_hp_cns : public tri_hp {
 		init_bdry_cndtn* getnewibc(std::string name);
 
     public:
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_cns* create() { return new tri_hp_cns(); }
 
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
 		void update();

@@ -18,7 +18,7 @@ void tri_hp_ins::error_estimator() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	if (gbl->error_estimator == global::none) {
+	if (hp_gbl->error_estimator == hp_global::none) {
 		if (gbl->adapt_output) {
 			ostringstream fname;
 			fname << "adapt_diagnostic" << gbl->tstep;
@@ -100,16 +100,16 @@ void tri_hp_ins::error_estimator() {
 				FLT dvdyl = -ldcrd(0,1)*dul(1,0)(i,j) +ldcrd(0,0)*dul(1,1)(i,j);		
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-				energy = gbl->rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
+				energy = hp_ins_gbl->rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
+				energy += hp_ins_gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
 				
-				// energy /= gbl->rho;  
+				// energy /= hp_ins_gbl->rho;  
 				
-				denergy = gbl->rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
-				denergy += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				denergy = hp_ins_gbl->rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
+				denergy += hp_ins_gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
 				
-				// denergy /= gbl->rho; 
+				// denergy /= hp_ins_gbl->rho; 
 				
 				denergy -= energy;
 				
@@ -119,13 +119,13 @@ void tri_hp_ins::error_estimator() {
 		}
 		totalerror2 += error2;
 		e2to_pow += pow(error2,1./(1.+alpha));
-		gbl->fltwk(tind) = error2;
+		tri_gbl->fltwk(tind) = error2;
 	}
 
 	/* Need to all-reduce norm,totalerror2,and totalenergy2 */
-	gbl->eanda(0) = totalenergy2;
-	gbl->eanda(1) = e2to_pow;
-	gbl->eanda(2) = totalerror2;
+	hp_gbl->eanda(0) = totalenergy2;
+	hp_gbl->eanda(1) = e2to_pow;
+	hp_gbl->eanda(2) = totalerror2;
 
 	tri_hp::error_estimator();
 	

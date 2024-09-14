@@ -24,33 +24,34 @@ using namespace bdry_ins;
 //#define NEW_STABILIZATION
 
 
-void surface::init(input_map& inmap,void* gin) {
+void surface::init(input_map& inmap) {
 	std::string keyword,matching_block,side_id,master_block,master_id;
 	std::istringstream data;
 	std::string filename;
 	
-	find_matching_boundary_name(inmap, matching_block, side_id);
+    surface_gbl = make_shared<surface_global>();
 	
-	gbl = static_cast<global *>(gin);
-	gbl->mu2 = 0.0;
-	gbl->rho2 = 0.0;
+    find_matching_boundary_name(inmap, matching_block, side_id);
+	
+	surface_gbl->mu2 = 0.0;
+    surface_gbl->rho2 = 0.0;
 	master_block = x.gbl->idprefix;
 	is_master = true;
 	if (base.is_comm()) {
 		keyword = matching_block +"_mu";
-		if (!inmap.get(keyword,gbl->mu2)) {
+		if (!inmap.get(keyword,surface_gbl->mu2)) {
 			*x.gbl->log << "couldn't find matching blocks viscosity " << keyword << std::endl;
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		
 		keyword = matching_block +"_rho";
-		if (!inmap.get(keyword,gbl->rho2)) {
+		if (!inmap.get(keyword,surface_gbl->rho2)) {
 			*x.gbl->log << "couldn't find matching blocks density" << keyword << std::endl;
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		
 		// Decide who is the master
-		if (fabs(x.gbl->rho - gbl->rho2) < 100.*FLT_EPSILON) {
+		if (fabs(x.hp_ins_gbl->rho - surface_gbl->rho2) < 100.*FLT_EPSILON) {
 			if (x.gbl->idprefix < matching_block) {
 				is_master = true;
 				master_block = x.gbl->idprefix;
@@ -60,7 +61,7 @@ void surface::init(input_map& inmap,void* gin) {
 				master_block = matching_block;
 			}
 		}
-		else if (x.gbl->rho > gbl->rho2) {
+		else if (x.hp_ins_gbl->rho > surface_gbl->rho2) {
 			is_master = true;
 			master_block = x.gbl->idprefix;
 		}
@@ -78,10 +79,10 @@ void surface::init(input_map& inmap,void* gin) {
 		vars << n << ' ';
 	}
 	inmap[base.idprefix +"_c0_indices"] = vars.str();
-	hp_coupled_bdry::init(inmap,gin);
+	hp_coupled_bdry::init(inmap);
 	
-	inmap.getwdefault(master_id +"_sigma",gbl->sigma,0.0);
-	inmap.getwdefault(master_id +"_p_ext",gbl->p_ext,0.0);
+	inmap.getwdefault(master_id +"_sigma",surface_gbl->sigma,0.0);
+	inmap.getwdefault(master_id +"_p_ext",surface_gbl->p_ext,0.0);
 	
 	return;
 }
@@ -118,19 +119,19 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	mvel(0) = x.uht(0)(0) -(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 	mvel(1) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
-	mvel(0) -= x.gbl->mesh_ref_vel(0);
-	mvel(1) -= x.gbl->mesh_ref_vel(1);
+	mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+	mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 	FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
 
 	mvel(0) = x.uht(0)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 	mvel(1) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
-	mvel(0) -= x.gbl->mesh_ref_vel(0);
-	mvel(1) -= x.gbl->mesh_ref_vel(1);
+	mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+	mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 	FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
-	gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+	hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
 #endif
     
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
@@ -142,7 +143,7 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef MESH_REF_VEL
-			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+			mvel(n,i) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 		}
 		
@@ -151,21 +152,21 @@ void surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* NORMAL FLUX */
         res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));        
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
-		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*hp_bdry_gbl->meshc(indx);
 		
 		/* surface TENSION SOURCE TERM X-DIRECTION */
-		res(4,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(0);
+		res(4,i) = +RAD(crd(0,i))*((x.hp_ins_gbl->rho -surface_gbl->rho2)*x.gbl->g*crd(1,i) +surface_gbl->p_ext)*norm(0);
 #ifdef AXISYMMETRIC
-		res(4,i) += gbl->sigma*jcb;
+		res(4,i) += surface_gbl->sigma*jcb;
 #endif
 		/* AND INTEGRATION BY PARTS TERM */
-		res(5,i) = +RAD(crd(0,i))*gbl->sigma*norm(1)/jcb;
+		res(5,i) = +RAD(crd(0,i))*surface_gbl->sigma*norm(1)/jcb;
 		
 		
 		/* surface TENSION SOURCE TERM Y-DIRECTION */
-		res(6,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(1);
+		res(6,i) = +RAD(crd(0,i))*((x.hp_ins_gbl->rho -surface_gbl->rho2)*x.gbl->g*crd(1,i) +surface_gbl->p_ext)*norm(1);
 		/* AND INTEGRATION BY PARTS TERM */
-		res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
+		res(7,i) = -RAD(crd(0,i))*surface_gbl->sigma*norm(0)/jcb;
 	}
 	
 	lf = 0.0;
@@ -201,19 +202,19 @@ int surface::setup_preconditioner() {
     
 	int err = hp_coupled_bdry::setup_preconditioner();
 
-	if (!gbl->symmetric && !is_master) return(err);
+	if (!hp_bdry_gbl->symmetric && !is_master) return(err);
 	
-	drho = x.gbl->rho -gbl->rho2;
-	nu1 = x.gbl->mu/x.gbl->rho;
-	if (gbl->rho2 > 0.0)
-		nu2 = gbl->mu2/gbl->rho2;
+	drho = x.hp_ins_gbl->rho -surface_gbl->rho2;
+	nu1 = x.hp_ins_gbl->mu/x.hp_ins_gbl->rho;
+	if (surface_gbl->rho2 > 0.0)
+		nu2 = surface_gbl->mu2/surface_gbl->rho2;
 	else
 		nu2 = 0.0;
 	
 	/**************************************************/
 	/* DETERMINE surface MOVEMENT TIME STEP              */
 	/**************************************************/
-	gbl->vdt(0,Range::all(),Range::all()) = 0.0;
+	hp_bdry_gbl->vdt(0,Range::all(),Range::all()) = 0.0;
 	
 	for(indx=0; indx < base.nseg; ++indx) {
 		sind = base.seg(indx);
@@ -232,7 +233,7 @@ int surface::setup_preconditioner() {
 		
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
-		gbl->meshc(indx) = 1.0e99;
+		hp_bdry_gbl->meshc(indx) = 1.0e99;
 		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
@@ -242,7 +243,7 @@ int surface::setup_preconditioner() {
 			for(n=0;n<tri_mesh::ND;++n) {
 				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef MESH_REF_VEL
-				mvel(n) -= x.gbl->mesh_ref_vel(n);
+				mvel(n) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 			}
 			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
@@ -251,21 +252,21 @@ int surface::setup_preconditioner() {
 			
 			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
 #ifndef BODYFORCE
-			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
+			strss =  4.*surface_gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
 #else
-			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
+			strss =  4.*surface_gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
 #endif
 			
 			gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
 			gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 			
-			if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+			if (x.gbl->bd(0) + x.hp_ins_gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 			
 #ifdef INERTIALESS
 			gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
 			gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));
+			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.hp_ins_gbl->rho*sqrt(qmax +gam1) +surface_gbl->rho2*sqrt(qmax +gam2)));
 			
 			/* SET UP DISSIPATIVE COEFFICIENT */
 			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -273,9 +274,9 @@ int surface::setup_preconditioner() {
 			/* |a| dx/2 dv/dx  dx/2 dpsi */
 			/* |a| dx/2 2/dx dv/dpsi  dpsi */
 			/* |a| dv/dpsi  dpsi */
-			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
-			// gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
-			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
+			// hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
+			// hp_bdry_gbl->meshc(indx) = MIN(hp_bdry_gbl->meshc(indx),hp_bdry_gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+			hp_bdry_gbl->meshc(indx) = MIN(hp_bdry_gbl->meshc(indx),hp_bdry_gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
 		}
 		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
@@ -287,8 +288,8 @@ int surface::setup_preconditioner() {
 		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
-		mvel(0) -= x.gbl->mesh_ref_vel(0);
-		mvel(1) -= x.gbl->mesh_ref_vel(1);
+		mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+		mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 		
 		FLT qmax0 = mvel(0)*mvel(0)+mvel(1)*mvel(1);
@@ -297,8 +298,8 @@ int surface::setup_preconditioner() {
 		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
-		mvel(0) -= x.gbl->mesh_ref_vel(0);
-		mvel(1) -= x.gbl->mesh_ref_vel(1);
+		mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+		mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 		FLT qmax1 = mvel(0)*mvel(0)+mvel(1)*mvel(1);
 		FLT vslp1 = (-mvel(0)*nrm(1) +mvel(1)*nrm(0))/h;
@@ -307,22 +308,22 @@ int surface::setup_preconditioner() {
 		
 		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
 #ifndef BODYFORCE
-		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
+		strss =  4.*surface_gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
 #else
-		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
+		strss =  4.*surface_gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
 #endif
         FLT qmax = MAX(qmax0,qmax1);
         FLT vslp = MAX(abs(vslp0),abs(vslp1));
 		gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
 		gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 		
-		if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+		if (x.gbl->bd(0) + x.hp_ins_gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 		
 #ifdef INERTIALESS
 		gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
 		gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));
+		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.hp_ins_gbl->rho*sqrt(qmax +gam1) +surface_gbl->rho2*sqrt(qmax +gam2));
 		
 		/* SET UP DISSIPATIVE COEFFICIENT */
 		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -330,30 +331,30 @@ int surface::setup_preconditioner() {
 		/* |a| dx/2 dv/dx  dx/2 dpsi */
 		/* |a| dx/2 2/dx dv/dpsi  dpsi */
 		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
-		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
-		 gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
-       //gbl->meshc(indx) = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
+		// hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
+		// hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+		 hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+       //hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +vslp0-vslp1)/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+10*FLT_EPSILON)*2/h;
 #endif
 		
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		
 		nrm *= 0.5;
 		
-		gbl->vdt(indx,0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
 		
 		if (basis::tri(x.log2p)->sm()) {
-			gbl->sdt(indx,0,0) = -dttang*nrm(1);
-			gbl->sdt(indx,0,1) =  dttang*nrm(0);
-			gbl->sdt(indx,1,0) =  dtnorm*nrm(0);
-			gbl->sdt(indx,1,1) =  dtnorm*nrm(1);
+			hp_bdry_gbl->sdt(indx,0,0) = -dttang*nrm(1);
+			hp_bdry_gbl->sdt(indx,0,1) =  dttang*nrm(0);
+			hp_bdry_gbl->sdt(indx,1,0) =  dtnorm*nrm(0);
+			hp_bdry_gbl->sdt(indx,1,1) =  dtnorm*nrm(1);
 			
 #ifdef DETAILED_MINV
 			int lsm = basis::tri(x.log2p)->sm();
@@ -377,31 +378,31 @@ int surface::setup_preconditioner() {
 				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
 				
 				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0) /= gbl->cfl(x.log2p,0);
-				lf(1) /= gbl->cfl(x.log2p,0);
-				lf(2) /= gbl->cfl(x.log2p,1);
-				lf(3) /= gbl->cfl(x.log2p,1);
+				lf(0) /= hp_gbl->cfl(x.log2p,0);
+				lf(1) /= hp_gbl->cfl(x.log2p,0);
+				lf(2) /= hp_gbl->cfl(x.log2p,1);
+				lf(3) /= hp_gbl->cfl(x.log2p,1);
 				
 				for (n=0;n<lsm;++n) {
-					gbl->ms(indx,2*m,2*n) = lf(0,n+2);
-					gbl->ms(indx,2*m,2*n+1) = lf(1,n+2);
-					gbl->ms(indx,2*m+1,2*n) = lf(2,n+2);
-					gbl->ms(indx,2*m+1,2*n+1) = lf(3,n+2);
+					hp_bdry_gbl->ms(indx,2*m,2*n) = lf(0,n+2);
+					hp_bdry_gbl->ms(indx,2*m,2*n+1) = lf(1,n+2);
+					hp_bdry_gbl->ms(indx,2*m+1,2*n) = lf(2,n+2);
+					hp_bdry_gbl->ms(indx,2*m+1,2*n+1) = lf(3,n+2);
 				}
 				
 				/* tang/norm, x/y,  mode,  vert */
-				gbl->vms(indx,0,0,m,0) = lf(0,0);
-				gbl->vms(indx,0,1,m,0) = lf(1,0);
-				gbl->vms(indx,0,0,m,1) = lf(0,1);
-				gbl->vms(indx,0,1,m,1) = lf(1,1);
-				gbl->vms(indx,1,0,m,0) = lf(2,0);
-				gbl->vms(indx,1,1,m,0) = lf(3,0);
-				gbl->vms(indx,1,0,m,1) = lf(2,1);
-				gbl->vms(indx,1,1,m,1) = lf(3,1);
+				hp_bdry_gbl->vms(indx,0,0,m,0) = lf(0,0);
+				hp_bdry_gbl->vms(indx,0,1,m,0) = lf(1,0);
+				hp_bdry_gbl->vms(indx,0,0,m,1) = lf(0,1);
+				hp_bdry_gbl->vms(indx,0,1,m,1) = lf(1,1);
+				hp_bdry_gbl->vms(indx,1,0,m,0) = lf(2,0);
+				hp_bdry_gbl->vms(indx,1,1,m,0) = lf(3,0);
+				hp_bdry_gbl->vms(indx,1,0,m,1) = lf(2,1);
+				hp_bdry_gbl->vms(indx,1,1,m,1) = lf(3,1);
 			}
 			
 			int info;
-			GETRF(2*lsm,2*lsm,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),info);
+			GETRF(2*lsm,2*lsm,&hp_bdry_gbl->ms(indx,0,0),2*MAXP,&hp_bdry_gbl->ipiv(indx,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
                 err = 1;
@@ -415,8 +416,8 @@ int surface::setup_preconditioner() {
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vdt(0,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vdt(base.nseg,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -426,55 +427,55 @@ int surface::setup_preconditioner() {
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vdt(0,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vdt(base.nseg,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
 	}
 	
-	if (gbl->is_loop) {
+	if (hp_bdry_gbl->is_loop) {
 		for(m=0;m<tri_mesh::ND;++m)
 			for(n=0;n<tri_mesh::ND;++n)
-				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
-		gbl->vdt(base.nseg+1,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
+				hp_bdry_gbl->vdt(0,m,n) = 0.5*(hp_bdry_gbl->vdt(0,m,n) +hp_bdry_gbl->vdt(base.nseg+1,m,n));
+		hp_bdry_gbl->vdt(base.nseg+1,Range::all(),Range::all()) = hp_bdry_gbl->vdt(0,Range::all(),Range::all());
 	}
 	
 	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {
 		/* INVERT VERTEX MATRIX */
-		jcbi = 1.0/(gbl->vdt(indx,0,0)*gbl->vdt(indx,1,1) -gbl->vdt(indx,0,1)*gbl->vdt(indx,1,0));
+		jcbi = 1.0/(hp_bdry_gbl->vdt(indx,0,0)*hp_bdry_gbl->vdt(indx,1,1) -hp_bdry_gbl->vdt(indx,0,1)*hp_bdry_gbl->vdt(indx,1,0));
 		
-		temp = gbl->vdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
-		gbl->vdt(indx,0,0) = gbl->vdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
-		gbl->vdt(indx,1,1) = temp;
-		gbl->vdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
-		gbl->vdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+		temp = hp_bdry_gbl->vdt(indx,0,0)*jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+		hp_bdry_gbl->vdt(indx,0,0) = hp_bdry_gbl->vdt(indx,1,1)*jcbi*hp_bdry_gbl->cfl(x.log2p,0);
+		hp_bdry_gbl->vdt(indx,1,1) = temp;
+		hp_bdry_gbl->vdt(indx,0,1) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+		hp_bdry_gbl->vdt(indx,1,0) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,0);
 		
 		/* DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
 		//		FLT theta =  100.0*M_PI/180.0;
-		//		gbl->vdt(indx,0,0) = -sin(theta);
-		//		gbl->vdt(indx,1,1) =  sin(theta);
-		//		gbl->vdt(indx,0,1) = cos(theta);
-		//		gbl->vdt(indx,1,0) = cos(theta);
+		//		hp_bdry_gbl->vdt(indx,0,0) = -sin(theta);
+		//		hp_bdry_gbl->vdt(indx,1,1) =  sin(theta);
+		//		hp_bdry_gbl->vdt(indx,0,1) = cos(theta);
+		//		hp_bdry_gbl->vdt(indx,1,0) = cos(theta);
 	}
 	
 	/* INVERT SIDE MATRIX */
 	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT SIDE MVDT MATRIX */
-			jcbi = 1.0/(gbl->sdt(indx,0,0)*gbl->sdt(indx,1,1) -gbl->sdt(indx,0,1)*gbl->sdt(indx,1,0));
+			jcbi = 1.0/(hp_bdry_gbl->sdt(indx,0,0)*hp_bdry_gbl->sdt(indx,1,1) -hp_bdry_gbl->sdt(indx,0,1)*hp_bdry_gbl->sdt(indx,1,0));
 			
-			temp = gbl->sdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
-			gbl->sdt(indx,0,0) = gbl->sdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
-			gbl->sdt(indx,1,1) = temp;
-			gbl->sdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
-			gbl->sdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+			temp = hp_bdry_gbl->sdt(indx,0,0)*jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+			hp_bdry_gbl->sdt(indx,0,0) = hp_bdry_gbl->sdt(indx,1,1)*jcbi*hp_bdry_gbl->cfl(x.log2p,0);
+			hp_bdry_gbl->sdt(indx,1,1) = temp;
+			hp_bdry_gbl->sdt(indx,0,1) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+			hp_bdry_gbl->sdt(indx,1,0) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,0);
 		}
 	}
 
 	return(err);
 }
 
-void surface_outflow::init(input_map& inmap,void* gbl_in) {
-	hp_deformable_free_pnt::init(inmap,gbl_in);
+void surface_outflow::init(input_map& inmap) {
+	hp_deformable_free_pnt::init(inmap);
 	
 	if (surf->is_master) {
 		inmap.getwdefault(base.idprefix +"_contact_angle",contact_angle,90.0);
@@ -528,15 +529,15 @@ void surface_outflow::element_rsdl(Array<FLT,1> lf) {
 			/* Surf-boundary then point then wall (in ccw sense) */
 			tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
 			tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(0);
-			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(1);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->surface_gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->surface_gbl->sigma*tangent(1);
 		}
 		else {
 			/* Wall then point then Surf-boundary (in ccw sense) */
 			tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
 			tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(0);
-			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->gbl->sigma*tangent(1);
+			lf(0) -= RAD(x.pnts(base.pnt)(0))*surf2->surface_gbl->sigma*tangent(0);
+			lf(1) -= RAD(x.pnts(base.pnt)(0))*surf2->surface_gbl->sigma*tangent(1);
 		}
 	}
 	

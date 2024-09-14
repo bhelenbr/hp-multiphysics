@@ -138,7 +138,7 @@ namespace ibc_cns_explicit {
 	
 		private:
 			FLT angle,xshift,yshift;
-			FLT gam; // temp figure out how to load gbl->gamma
+			FLT gam; // temp figure out how to load hp_cns_explicit_gbl->gamma
 			double q0;  // Initial guess for q in iteration //
 			double theta0; // Initial guess for theta in iteration //
 			double scale; // Scale point before calculating solution //

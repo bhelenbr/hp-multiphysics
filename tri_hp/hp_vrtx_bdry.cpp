@@ -10,7 +10,7 @@
 
 //#define MPDEBUG
 
-void hp_vrtx_bdry::init(input_map& inmap,void* gbl_in) {
+void hp_vrtx_bdry::init(input_map& inmap) {
 	std::string keyword,ibcname;
 	
 	/* FIND INITIAL CONDITION TYPE */
@@ -130,7 +130,7 @@ void hp_vrtx_bdry::rsdl(int stage) {
 	element_rsdl(lf);
 	
 	for(int n=0;n<x.NV;++n)
-		x.gbl->res.v(base.pnt,n) += lf(n);
+		x.hp_gbl->res.v(base.pnt,n) += lf(n);
 	
 }
 
@@ -424,13 +424,13 @@ void hp_vrtx_bdry::petsc_jacobian_dirichlet() {
 #endif
 
 
-void multi_physics_pnt::init(input_map& inmap,void* gbl_in) {
+void multi_physics_pnt::init(input_map& inmap) {
     /* Make sure c0vars is not used so send will not */
     /* skip any variables */
     if (inmap.find(base.idprefix+"_c0_indices") != inmap.end()) {
         sim::abort(__LINE__,__FILE__,&std::cerr);
     }
-    hp_vrtx_bdry::init(inmap,gbl_in);
+    hp_vrtx_bdry::init(inmap);
     
 	match_pairs.resize(base.nmatches());
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;

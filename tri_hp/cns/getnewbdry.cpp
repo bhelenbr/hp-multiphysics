@@ -51,7 +51,6 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, std::string name) {
             return(tri_hp::getnewvrtxobject(bnum,name));
 		}
 	} 
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
 	return(temp);
 }
 
@@ -144,7 +143,6 @@ hp_edge_bdry* tri_hp_cns::getnewedgeobject(int bnum, std::string name) {
 			return(tri_hp::getnewedgeobject(bnum,name));
 		}
 	}    
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 
 	return(temp);
 }

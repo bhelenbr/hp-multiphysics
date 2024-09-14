@@ -16,7 +16,7 @@ void tri_hp_cd::error_estimator() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 
-	if (gbl->error_estimator == global::none) 
+	if (hp_gbl->error_estimator == hp_global::none)
 	return;
 
 	int sm = basis::tri(log2p)->sm();
@@ -78,13 +78,13 @@ void tri_hp_cd::error_estimator() {
 				//				FLT dtdyl = -ldcrd(0,1)*dul(0,0)(i,j) +ldcrd(0,0)*dul(0,1)(i,j);
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-				energy = gbl->rhocv*u(0)(i,j);	
+				energy = hp_cd_gbl->rhocv*u(0)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += (0 /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+				energy += (0 /* +hp_cd_gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				
 				
-				denergy = gbl->rhocv*ul(0)(i,j);
-				denergy += (0 /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+				denergy = hp_cd_gbl->rhocv*ul(0)(i,j);
+				denergy += (0 /* +hp_cd_gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
 				denergy -= energy;
 				
@@ -94,13 +94,13 @@ void tri_hp_cd::error_estimator() {
 		}
 		totalerror2 += error2;
 		e2to_pow += pow(error2,1./(1.+alpha));
-		gbl->fltwk(tind) = error2;
+		tri_gbl->fltwk(tind) = error2;
 	}
 
 	/* Need to all-reduce norm,totalerror2,and totalenergy2 */
-	gbl->eanda(0) = totalenergy2;
-	gbl->eanda(1) = e2to_pow;
-	gbl->eanda(2) = totalerror2;
+	hp_gbl->eanda(0) = totalenergy2;
+	hp_gbl->eanda(1) = e2to_pow;
+	hp_gbl->eanda(2) = totalerror2;
 
 	return;
 }

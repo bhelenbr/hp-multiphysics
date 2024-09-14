@@ -10,15 +10,16 @@
 #include "tri_hp_swe.h"
 #include "../hp_boundary.h"
 
-void tri_hp_swe::init(input_map& inmap, void *gin) {
+void tri_hp_swe::init(input_map& inmap, shared_ptr<block_global> gin) {
 
-	gbl = static_cast<global *>(gin);    
+	gbl = gin;
+    hp_swe_gbl = make_shared<hp_swe_global>();
 	tri_hp_ins::init(inmap,gin);
 
-	if (!inmap.get(gbl->idprefix + "_f0",gbl->f0)) inmap.getwdefault("f0",gbl->f0,0.0);
-	if (!inmap.get(gbl->idprefix + "_beta",gbl->beta)) inmap.getwdefault("beta",gbl->cbeta,0.0);
-	if (!inmap.get(gbl->idprefix + "_cd",gbl->cd)) inmap.getwdefault("cd",gbl->cd,0.0);
-	if (!inmap.get(gbl->idprefix + "_ptest",gbl->ptest)) inmap.getwdefault("ptest",gbl->ptest,1.0);
+	if (!inmap.get(gbl->idprefix + "_f0",hp_swe_gbl->f0)) inmap.getwdefault("f0",gbl->f0,0.0);
+	if (!inmap.get(gbl->idprefix + "_beta",gbl->beta)) inmap.getwdefault("beta",hp_swe_gbl->cbeta,0.0);
+	if (!inmap.get(gbl->idprefix + "_cd",hp_swe_gbl->cd)) inmap.getwdefault("cd",hp_swe_gbl->cd,0.0);
+	if (!inmap.get(gbl->idprefix + "_ptest",hp_swe_gbl->ptest)) inmap.getwdefault("ptest",hp_swe_gbl->ptest,1.0);
 
 	/* FIND INITIAL CONDITION TYPE */
 	std::string keyword, ibcname;
@@ -29,8 +30,8 @@ void tri_hp_swe::init(input_map& inmap, void *gin) {
 			*gbl->log << "couldn't find bathymettry function" << std::endl;
 		}
 	}
-	gbl->bathy = getnewibc(ibcname);
-	gbl->bathy->init(inmap,keyword);
+	hp_swe_gbl->bathy = getnewibc(ibcname);
+	hp_swe_gbl->bathy->init(inmap,keyword);
 
 	return;
 }

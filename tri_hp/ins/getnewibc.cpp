@@ -756,7 +756,7 @@ class force_coupling : public tri_hp_helper {
 				}
 
 #ifdef MESH_REF_VEL
-				x.gbl->mesh_ref_vel = vel;
+				x.hp_gbl->mesh_ref_vel = vel;
 #endif
 
 				for (int i=0; i<nboundary; ++i) {
@@ -814,7 +814,7 @@ class force_coupling : public tri_hp_helper {
 //				std::cout << force << std::endl;
 
 				double L = 0.05;  // HACK HACK HACK FIX ME FOR GETTING HYDROSTATIC PRESSURE CORRECT
-				force(1) += -x.gbl->rho*x.gbl->g*w(2)*L; // -mass*x.gbl->g;				
+				force(1) += -x.hp_ins_gbl->rho*x.gbl->g*w(2)*L; // -mass*x.gbl->g;				
 				
 				if (horizontal) {
 					// translational displacement
@@ -1174,11 +1174,11 @@ class force_coupling : public tri_hp_helper {
 				TinyVector<FLT,tri_mesh::ND> dx;
 				dx(0) = (rake_pts(1,0)-rake_pts(0,0))/ndiv;
 				dx(1) = (rake_pts(1,1)-rake_pts(0,1))/ndiv;
-				FLT re_over_v = x.gbl->rho*d/x.gbl->mu;
+				FLT re_over_v = x.hp_ins_gbl->rho*d/x.hp_ins_gbl->mu;
 				FLT vol = M_PI*d*d*d/6.;
 				FLT m = rho*vol;
-				FLT buoy = (rho-x.gbl->rho)*vol*x.gbl->g/m;
-				FLT rhoAo2m = 0.5*M_PI*d*d/4.*x.gbl->rho/m;
+				FLT buoy = (rho-x.hp_ins_gbl->rho)*vol*x.gbl->g/m;
+				FLT rhoAo2m = 0.5*M_PI*d*d/4.*x.hp_ins_gbl->rho/m;
 
 									
 				TinyVector<FLT,tri_mesh::ND> ppt0, ppt1, vel0, vel1;

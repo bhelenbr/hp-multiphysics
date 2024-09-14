@@ -46,8 +46,8 @@ namespace bdry_ps {
 			dirichlet(tri_hp_ps &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "dirichlet";}
 			dirichlet(const dirichlet& inbdry, tri_hp_ps &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
 			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				neumann::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				neumann::init(inmap);
 				for(int n=0;n<x.ND;++n) {
 					essential_indices.push_back(n);
 					type[n] = essential;
@@ -83,7 +83,7 @@ namespace bdry_ps {
 			void init(input_map& inmap, void* gbl_in) {
 				std::string keyword;
 
-				hp_edge_bdry::init(inmap,gbl_in);
+				hp_edge_bdry::init(inmap);
 
 				keyword = base.idprefix + "_friction";
 				inmap.getwdefault(keyword,muwall,0.2);
@@ -102,10 +102,10 @@ namespace bdry_ps {
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j);
 					v0 = x.seg(sind).pnt(0);
-					x.gbl->res.v(v0,dir) = 0.0;
+					x.hp_gbl->res.v(v0,dir) = 0.0;
 				}
 				v0 = x.seg(sind).pnt(1);
-				x.gbl->res.v(v0,dir) = 0.0;
+				x.hp_gbl->res.v(v0,dir) = 0.0;
 			}
 
 			void sdirichlet(int mode) {
@@ -113,7 +113,7 @@ namespace bdry_ps {
 
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j);
-					x.gbl->res.s(sind,mode,dir) = 0.0;
+					x.hp_gbl->res.s(sind,mode,dir) = 0.0;
 				}
 			}
 
@@ -126,7 +126,7 @@ namespace bdry_ps {
             curve_edges* create(tri_hp& xin, edge_bdry &bin) const {return new curve_edges(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
             void init(input_map& inmap, void* gbl_in) {
                 inmap[base.idprefix+"_curved"] = "0";
-                dirichlet::init(inmap,gbl_in);
+                dirichlet::init(inmap);
                 return;
             }
             void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);

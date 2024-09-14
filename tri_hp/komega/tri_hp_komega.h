@@ -18,7 +18,7 @@
 
 class tri_hp_komega : public tri_hp_ins {
 public:
-    struct global : public tri_hp_ins::global {
+    struct hp_komega_global {
         /* Physical Constants */
         FLT linf,uinf;
         
@@ -33,16 +33,15 @@ public:
             init_bdry_cndtn *src;
         #endif
         
-    } *gbl;
+    };
+    shared_ptr<hp_komega_global> hp_komega_gbl;
 
 
     
 public:
-    void* create_global_structure() {return new global;}
-    void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
     tri_hp_komega* create() { return new tri_hp_komega(); }
     
-    void init(input_map& inmap, void *gin);
+    void init(input_map& inmap,shared_ptr<block_global> gin);
     void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
     
     void error_estimator();

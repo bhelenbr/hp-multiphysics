@@ -10,13 +10,14 @@
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
 
-void tri_hp_cns::init(input_map& inmap, void *gin) {
+void tri_hp_cns::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
-	gbl = static_cast<global *>(gin);
-
+	gbl = gin;
+    hp_cns_gbl = make_shared<hp_cns_global>();
+    
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
 		inmap[gbl->idprefix + "_nvariable"] = "4";
 	}
@@ -25,24 +26,24 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
 
 	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 
-	gbl->tau.resize(maxpst,NV,NV);
+	hp_cns_gbl->tau.resize(maxpst,NV,NV);
 
-	gbl->res_temp.v.resize(maxpst,NV);
-	gbl->res_temp.s.resize(maxpst,sm0,NV);
-	gbl->res_temp.i.resize(maxpst,im0,NV);
+	hp_cns_gbl->res_temp.v.resize(maxpst,NV);
+	hp_cns_gbl->res_temp.s.resize(maxpst,sm0,NV);
+	hp_cns_gbl->res_temp.i.resize(maxpst,im0,NV);
 	
-	gbl->vpreconditioner.resize(maxpst,NV,NV);
-	gbl->spreconditioner.resize(maxpst,NV,NV);
-	gbl->tpreconditioner.resize(maxpst,NV,NV);
+	hp_cns_gbl->vpreconditioner.resize(maxpst,NV,NV);
+	hp_cns_gbl->spreconditioner.resize(maxpst,NV,NV);
+	hp_cns_gbl->tpreconditioner.resize(maxpst,NV,NV);
 
 	double prandtl;
-	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
-	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.716e-5);
-	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",gbl->prandtl,0.713);
-	if (!inmap.get(gbl->idprefix + "_Rgas",gbl->R)) inmap.getwdefault("Rgas",gbl->R,287.058);
+	if (!inmap.get(gbl->idprefix + "_gamma",hp_cns_gbl->gamma)) inmap.getwdefault("gamma",hp_cns_gbl->gamma,1.4);
+	if (!inmap.get(gbl->idprefix + "_mu",hp_cns_gbl->mu)) inmap.getwdefault("mu",hp_cns_gbl->mu,1.716e-5);
+	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",hp_cns_gbl->prandtl,0.713);
+	if (!inmap.get(gbl->idprefix + "_Rgas",hp_cns_gbl->R)) inmap.getwdefault("Rgas",hp_cns_gbl->R,287.058);
 
     /* Pr = mu/(k/cp) with cp = gamma/(gamma-1)*R */
-	gbl->kcond = gbl->mu/gbl->prandtl*gbl->R*gbl->gamma/(gbl->gamma-1.0);
+	hp_cns_gbl->kcond = hp_cns_gbl->mu/hp_cns_gbl->prandtl*hp_cns_gbl->R*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
     
 #ifdef SUTHERLAND
     /*
@@ -68,8 +69,8 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
         inmap.getwdefault("Sutherland_C",C,110.4);
     
     /* Now convert so they can be used with RT instead of T */
-    gbl->s1 = gbl->mu/pow(gbl->R*T0,1.5)*(T0+C)*gbl->R;
-    gbl->s2 = gbl->R*C;
+    hp_cns_gbl->s1 = hp_cns_gbl->mu/pow(hp_cns_gbl->R*T0,1.5)*(T0+C)*hp_cns_gbl->R;
+    hp_cns_gbl->s2 = hp_cns_gbl->R*C;
 #endif
 
 #ifdef MMS
@@ -83,8 +84,8 @@ void tri_hp_cns::init(input_map& inmap, void *gin) {
             *gbl->log << "couldn't find src" << std::endl;
         }
     }
-    gbl->src = getnewibc(ibcname);
-    gbl->src->init(inmap,keyword);
+    hp_cns_gbl->src = getnewibc(ibcname);
+    hp_cns_gbl->src->init(inmap,keyword);
 #endif
 
 }
@@ -109,7 +110,7 @@ void tri_hp_cns::init(const multigrid_interface& in, init_purpose why, FLT sizer
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_cns::calculate_unsteady_sources() {
 	int i,j,n,tind;
-	FLT	ogm1 = 1.0/(gbl->gamma-1.0);
+	FLT	ogm1 = 1.0/(hp_cns_gbl->gamma-1.0);
 #ifdef petsc
 	int start = log2pmax;
 #else

@@ -16,7 +16,7 @@
 class tri_hp_ins : public tri_hp {
 	public:		
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-		struct global : public tri_hp::global {
+		struct hp_ins_global {
 			/* STABILIZATION */
 			Array<FLT,2> tau;
 
@@ -24,7 +24,8 @@ class tri_hp_ins : public tri_hp {
 			FLT rho, mu;
 			Array<FLT,1> D;
 
-		} *gbl;
+		};
+        shared_ptr<hp_ins_global> hp_ins_gbl;
 
 		FLT adis; // DISSIPATION CONSTANT
 
@@ -34,11 +35,9 @@ class tri_hp_ins : public tri_hp {
 		tri_hp_helper* getnewhelper(std::string name);
 
 	public:
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_ins* create() { return new tri_hp_ins(); }
 
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		void error_estimator();

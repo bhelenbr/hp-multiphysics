@@ -10,20 +10,21 @@
 #include "tri_hp_komega.h"
 #include "../hp_boundary.h"
 
-void tri_hp_komega::init(input_map& inmap, void *gin) {
-	gbl = static_cast<global *>(gin);
+void tri_hp_komega::init(input_map& inmap, shared_ptr<block_global> gin) {
+	gbl = gin;
+    hp_komega_gbl = make_shared<hp_komega_global>();
 	inmap[gbl->idprefix + "_nvariable"] = "5";
 	tri_hp_ins::init(inmap,gin);
 	
-	if (!inmap.get(gbl->idprefix + "_linf",gbl->linf)) inmap.getwdefault("linf",gbl->linf,1.0);
-	if (!inmap.get(gbl->idprefix + "_uinf",gbl->uinf)) inmap.getwdefault("uinf",gbl->uinf,1.0);
-	if (!inmap.get(gbl->idprefix + "_epslnk",gbl->epslnk)) inmap.getwdefault("epslnk",gbl->epslnk,1.0);
-    if (!inmap.get(gbl->idprefix + "_kinf",gbl->kinf)) inmap.getwdefault("kinf",gbl->kinf,1.0);
-    if (!inmap.get(gbl->idprefix + "_omginf",gbl->omginf)) inmap.getwdefault("omginf",gbl->omginf,1.0);
-    if (!inmap.get(gbl->idprefix + "_Clim",gbl->Clim)) inmap.getwdefault("omginf",gbl->Clim,7.0/8.0);
-    if (!inmap.get(gbl->idprefix + "_version",gbl->version)) inmap.getwdefault("version",gbl->version,3);
-    if (!inmap.get(gbl->idprefix + "_kmom_on",gbl->kmom_on)) inmap.getwdefault("kmom_on",gbl->kmom_on,1);
-    if (!inmap.get(gbl->idprefix + "_sust_on",gbl->sust_on)) inmap.getwdefault("sust_on",gbl->sust_on,1);
+	if (!inmap.get(gbl->idprefix + "_linf",hp_komega_gbl->linf)) inmap.getwdefault("linf",hp_komega_gbl->linf,1.0);
+	if (!inmap.get(gbl->idprefix + "_uinf",hp_komega_gbl->uinf)) inmap.getwdefault("uinf",hp_komega_gbl->uinf,1.0);
+	if (!inmap.get(gbl->idprefix + "_epslnk",hp_komega_gbl->epslnk)) inmap.getwdefault("epslnk",hp_komega_gbl->epslnk,1.0);
+    if (!inmap.get(gbl->idprefix + "_kinf",hp_komega_gbl->kinf)) inmap.getwdefault("kinf",hp_komega_gbl->kinf,1.0);
+    if (!inmap.get(gbl->idprefix + "_omginf",hp_komega_gbl->omginf)) inmap.getwdefault("omginf",hp_komega_gbl->omginf,1.0);
+    if (!inmap.get(gbl->idprefix + "_Clim",hp_komega_gbl->Clim)) inmap.getwdefault("omginf",hp_komega_gbl->Clim,7.0/8.0);
+    if (!inmap.get(gbl->idprefix + "_version",hp_komega_gbl->version)) inmap.getwdefault("version",hp_komega_gbl->version,3);
+    if (!inmap.get(gbl->idprefix + "_kmom_on",hp_komega_gbl->kmom_on)) inmap.getwdefault("kmom_on",hp_komega_gbl->kmom_on,1);
+    if (!inmap.get(gbl->idprefix + "_sust_on",hp_komega_gbl->sust_on)) inmap.getwdefault("sust_on",hp_komega_gbl->sust_on,1);
     
 #ifdef MMS
     /* source term for MMS */
@@ -35,8 +36,8 @@ void tri_hp_komega::init(input_map& inmap, void *gin) {
             *gbl->log << "couldn't find src" << std::endl;
         }
     }
-    gbl->src = getnewibc(ibcname);
-    gbl->src->init(inmap,keyword);
+    hp_komega_gbl->src = getnewibc(ibcname);
+    hp_komega_gbl->src->init(inmap,keyword);
 #endif
    
     return;

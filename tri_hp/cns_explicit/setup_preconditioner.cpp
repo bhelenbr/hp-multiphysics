@@ -17,11 +17,11 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
-	gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
+	hp_gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
 
 #ifdef TIMEACCURATE
 	FLT dtstari = 0.0;
@@ -58,8 +58,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j)); 
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 					jcbmin = MIN(jcbmin,dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					
@@ -106,8 +106,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 				
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
@@ -146,7 +146,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		calculate_tau(umax,hmax,tprcn,tau,tstep);
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
+		hp_cns_explicit_gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
 		/* SET UP DIAGONAL PRECONDITIONER */
 		jcb /= tstep;  // temp fix me
@@ -171,16 +171,16 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-		gbl->tprcn(tind,0) = jcb;
-		gbl->tprcn(tind,1) = jcb;
-		gbl->tprcn(tind,2) = jcb;
-		gbl->tprcn(tind,3) = jcb;
+		hp_gbl->tprcn(tind,0) = jcb;
+		hp_gbl->tprcn(tind,1) = jcb;
+		hp_gbl->tprcn(tind,2) = jcb;
+		hp_gbl->tprcn(tind,3) = jcb;
 
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}
@@ -193,7 +193,7 @@ void tri_hp_cns_explicit::calculate_tau(Array<double,1> cvu, FLT h, Array<FLT,2>
 	Array<FLT,2> P(NV,NV), A(NV,NV), V(NV,NV), VINV(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
 	
-	FLT gam = gbl->gamma;
+	FLT gam = hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
 	FLT rho = cvu(0);
@@ -280,10 +280,10 @@ void tri_hp_cns_explicit::calculate_tau(Array<double,1> cvu, FLT h, Array<FLT,2>
 			for(int k=0; k<NV; ++k)
 				B(i,j)+=V(i,k)*VINV(k,j);	
 	
-	FLT nu = gbl->mu/rho;
+	FLT nu = hp_cns_explicit_gbl->mu/rho;
 	
-	FLT cp = gogm1*gbl->R;
-	FLT alpha = gbl->kcond/(rho*cp);
+	FLT cp = gogm1*hp_cns_explicit_gbl->R;
+	FLT alpha = hp_cns_explicit_gbl->kcond/(rho*cp);
 	
 	S = 0.0, 0.0,      0.0,      0.0,
 		0.0, nu/(h*h), 0.0,      0.0,

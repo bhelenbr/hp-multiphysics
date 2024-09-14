@@ -55,7 +55,6 @@ hp_edge_bdry* tri_hp_swe::getnewedgeobject(int bnum, std::string name) {
 			break;
 		}
 	}
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 
 	return(temp);
 }

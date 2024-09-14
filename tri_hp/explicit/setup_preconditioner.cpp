@@ -16,11 +16,11 @@ int tri_hp_explicit::setup_preconditioner() {
 	Array<FLT,2> mass(ltm,ltm);
 	Array<FLT,1> uht(ltm), lf(ltm);
 	Range all(0,ltm-1);
-	const FLT alpha = gbl->kcond/gbl->rhocv;
+	const FLT alpha = hp_cd_gbl->kcond/hp_cd_gbl->rhocv;
     int err = 0;
     
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-	gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_explicit_gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 
 	
 	/* Determine appropriate time step */
@@ -51,25 +51,25 @@ int tri_hp_explicit::setup_preconditioner() {
 			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
 			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
 #ifdef MESH_REF_VEL
-			mvel += gbl->mesh_ref_vel;
+			mvel += hp_gbl->mesh_ref_vel;
 #endif
 			
 #ifdef CONST_A
-			FLT q = pow(gbl->ax -mvel(0),2.0)
-			+pow(gbl->ay -mvel(1),2.0);
+			FLT q = pow(hp_cd_gbl->ax -mvel(0),2.0)
+			+pow(hp_cd_gbl->ay -mvel(1),2.0);
 #else
-			FLT q = pow(gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0)
-			+pow(gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
+			FLT q = pow(hp_cd_gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0)
+			+pow(hp_cd_gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
 #endif
 			
 			qmax = MAX(qmax,q);
 		}
 		FLT q = sqrt(qmax);
 		
-		FLT lam1  = (q +1.5*alpha/h +h*gbl->sigma);
+		FLT lam1  = (q +1.5*alpha/h +h*hp_explicit_gbl->sigma);
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind)  = adis*h/(jcb*lam1);
+		hp_cd_gbl->tau(tind)  = adis*h/(jcb*lam1);
 
 		/* DETERMINE MAX TIME STEP */
 		dtstari = MAX(lam1/h,dtstari);
@@ -98,7 +98,7 @@ int tri_hp_explicit::setup_preconditioner() {
 				}
 			}
 
-			Array<FLT,2>& lmass = gbl->mass[tind];
+			Array<FLT,2>& lmass = hp_explicit_gbl->mass[tind];
 			/* JUST GOING TO BE BRUTE FORCE FOR NOW */
 			for (int m=0;m<ltm;++m) {
 				uht(m) = 1.0;
@@ -163,26 +163,26 @@ int tri_hp_explicit::setup_preconditioner() {
 
 			indx = 3;
 			for(int i=0;i<3;++i) {
-				gbl->vprcn(v(i),Range::all())  += lmass(i,0) +lmass(i,1) +lmass(i,2);
+				hp_gbl->vprcn(v(i),Range::all())  += lmass(i,0) +lmass(i,1) +lmass(i,2);
 				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
 					for (int m=0;m<lsm;++m) {
-						gbl->sprcn2(side,m,Range::all()) += lmass(indx,indx);
+						hp_explicit_gbl->sprcn2(side,m,Range::all()) += lmass(indx,indx);
 						++indx;
 					}
 				}
 			}
-			gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+			hp_gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 		}
 		else {
-			gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+			hp_gbl->tprcn(tind,Range::all()) = gbl->bd(0)*jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 			for(int i=0;i<3;++i) {
-				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all())*basis::tri(log2p)->vdiag();
+				hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all())*basis::tri(log2p)->vdiag();
 				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
 					for (int m=0;m<lsm;++m) {
-						gbl->sprcn2(side,m,Range::all()) += gbl->tprcn(tind,Range::all())/basis::tri(log2p)->sdiag(m);
+						hp_explicit_gbl->sprcn2(side,m,Range::all()) += hp_gbl->tprcn(tind,Range::all())/basis::tri(log2p)->sdiag(m);
 					}
 				}
 			}
@@ -191,14 +191,14 @@ int tri_hp_explicit::setup_preconditioner() {
 	
 	err += tri_hp::setup_preconditioner();
 	
-	gbl->vprcn(Range(0,npnt-1),Range::all()) *= basis::tri(log2p)->vdiag();  // undoes vdiag term done by tri_hp::setup_preconditioner
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) *= basis::tri(log2p)->vdiag();  // undoes vdiag term done by tri_hp::setup_preconditioner
 
 	if (log2p) {
-		sc0load(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);
+		sc0load(hp_explicit_gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);
 		smsgpass(boundary::all,0,boundary::symmetric);
-		sc0wait_rcv(gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);   
+		sc0wait_rcv(hp_explicit_gbl->sprcn2.data(),0,lsm*NV-1,lsm*NV);   
 		/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */                
-		gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 1.0/gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all());
+		hp_explicit_gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all()) = 1.0/hp_explicit_gbl->sprcn2(Range(0,nseg-1),Range::all(),Range::all());
 	}
 
 	return(err); 

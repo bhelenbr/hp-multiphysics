@@ -46,8 +46,8 @@ namespace bdry_cns {
 				conv_flux.resize(x.NV);  
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				hp_edge_bdry::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				hp_edge_bdry::init(inmap);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);            
@@ -101,7 +101,7 @@ namespace bdry_cns {
 			applied_stress(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 	
 	class symmetry : public generic {
@@ -111,8 +111,8 @@ namespace bdry_cns {
 			symmetry(tri_hp_cns &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
 			symmetry(const symmetry& inbdry, tri_hp_cns &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
 			symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				std::string keyword = base.idprefix +"_dir";
 				inmap.getwdefault(keyword,dir,0);
 				essential_indices.push_back(dir+1);
@@ -134,12 +134,12 @@ namespace bdry_cns {
 			
 			void tadvance() { 
 				for(int n=1;n<x.NV;++n)
-					x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+					x.ug.v(base.pnt,n) = x.hp_gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
 				return;
 			}
 			
 			void vdirichlet() {
-				x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
+				x.hp_gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
 			}
 		};
     

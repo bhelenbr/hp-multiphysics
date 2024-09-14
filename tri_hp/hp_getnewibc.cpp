@@ -165,7 +165,7 @@ class translating : public tri_hp_helper {
 
 			if (x.coarse_level) return;
 
-			if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
+			if (x.gbl->substep == 0) x.l2error(x.hp_gbl->ibc);
 
 			TinyVector<FLT,2> dx;
 #ifdef DIRK
@@ -218,7 +218,7 @@ class gcl_test : public tri_hp_helper {
 		void tadvance() {
 			if (x.coarse_level) return;
 
-			if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
+			if (x.gbl->substep == 0) x.l2error(x.hp_gbl->ibc);
 
 			FLT dt;
 #ifdef DIRK
@@ -241,7 +241,7 @@ class l2_error : public tri_hp_helper {
 		tri_hp &x;
 		l2_error(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
 		void output() {
-			x.l2error(x.gbl->ibc);
+			x.l2error(x.hp_gbl->ibc);
 		}
 };
 
@@ -293,8 +293,8 @@ class cartesian_interpolation : public tri_hp_helper {
 			post_process = true;
 			std::ofstream out;
 			std::ostringstream filename;
-			int oldmax = x.gbl->maxsrch;
-			x.gbl->maxsrch = 100;
+			int oldmax = x.tri_gbl->maxsrch;
+			x.tri_gbl->maxsrch = 100;
 			
 			TinyVector<FLT,tri_mesh::ND> xmin, xmax;
 			for(int n=0;n<tri_mesh::ND;++n) {
@@ -349,7 +349,7 @@ class cartesian_interpolation : public tri_hp_helper {
 			}
 			out.close();
 			
-			x.gbl->maxsrch = oldmax;
+			x.tri_gbl->maxsrch = oldmax;
 			return;
 		}
 };
@@ -469,7 +469,7 @@ class reinitialize : public tri_hp_helper {
 	public:
 		reinitialize(tri_hp &xin) :tri_hp_helper(xin) {}
 		void update(int stage) {
-			x.tobasis(x.gbl->ibc);
+			x.tobasis(x.hp_gbl->ibc);
 		}
 };
 

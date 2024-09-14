@@ -10,7 +10,7 @@
 
 //#define DEBUG
 
-void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
+void hp_coupled_bdry::init(input_map& inmap) {
 	std::string keyword,val;
 	std::istringstream data;
 	std::string filename;
@@ -25,7 +25,8 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 	keyword = base.idprefix + "_curved";
 	inmap[keyword] = "1";
 	
-	hp_edge_bdry::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap);
+    hp_bdry_gbl = make_shared<hp_bdry_global>();
 	
 	/* Stuff for a surface variable */
 //	ugbd.resize(x.gbl->nhist+1);
@@ -47,119 +48,117 @@ void hp_coupled_bdry::init(input_map& inmap,void* gbl_in) {
 //	for(int i=start;i<=x.log2pmax;++i) {
 //		dugdt(i).resize(base.maxseg,NV,basis::tri(i)->gpx());
 //	}
-	
-	gbl = static_cast<global *>(gbl_in);
-	
+		
 	std::string side_id, matching_block, matching_boundary;
 	find_matching_boundary_name(inmap, matching_block, side_id);
 	matching_boundary = matching_block +"_" +side_id;
 
 	// These only matter for petsc
-	if (!inmap.get(base.idprefix + "_one_sided",gbl->one_sided)) {
-		if (!inmap.get(matching_boundary + "_one_sided",gbl->one_sided)) {
-			gbl->one_sided = false;
+	if (!inmap.get(base.idprefix + "_one_sided",hp_bdry_gbl->one_sided)) {
+		if (!inmap.get(matching_boundary + "_one_sided",hp_bdry_gbl->one_sided)) {
+			hp_bdry_gbl->one_sided = false;
 		}
 	}
-	else if (inmap.get(matching_boundary + "_one_sided",gbl->one_sided)) {
+	else if (inmap.get(matching_boundary + "_one_sided",hp_bdry_gbl->one_sided)) {
 		*x.gbl->log << "only specify one_sided for one or the other side.  doesn't matter which" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	
-	if (!inmap.get(base.idprefix + "_symmetric",gbl->symmetric)) {
-		if (!inmap.get(matching_boundary + "_symmetric",gbl->symmetric)) {
-			gbl->symmetric = false;
+	if (!inmap.get(base.idprefix + "_symmetric",hp_bdry_gbl->symmetric)) {
+		if (!inmap.get(matching_boundary + "_symmetric",hp_bdry_gbl->symmetric)) {
+			hp_bdry_gbl->symmetric = false;
 		}
 	}
-	else if (inmap.get(matching_boundary + "_symmetric",gbl->symmetric)) {
+	else if (inmap.get(matching_boundary + "_symmetric",hp_bdry_gbl->symmetric)) {
 		*x.gbl->log << "only specify symmetric for one or the other side.  doesn't matter which" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	
-	if (!inmap.get(base.idprefix + "_precondition",gbl->precondition)) {
-		if (!inmap.get(matching_boundary + "_precondition",gbl->precondition)) {
-			gbl->precondition = false;
+	if (!inmap.get(base.idprefix + "_precondition",hp_bdry_gbl->precondition)) {
+		if (!inmap.get(matching_boundary + "_precondition",hp_bdry_gbl->precondition)) {
+			hp_bdry_gbl->precondition = false;
 		}
 	}
-	else if (inmap.get(matching_boundary + "_precondition",gbl->precondition)) {
+	else if (inmap.get(matching_boundary + "_precondition",hp_bdry_gbl->precondition)) {
 		*x.gbl->log << "only specify precondition for one or the other side.  It doesn't matter which" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 
-	if (gbl->precondition && (!gbl->one_sided && !gbl->symmetric)) {
+	if (hp_bdry_gbl->precondition && (!hp_bdry_gbl->one_sided && !hp_bdry_gbl->symmetric)) {
 		*x.gbl->log << "precondition can only be used with symmetric or one_sided" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	
 	int NVcoupled;
-	inmap.getwdefault(base.idprefix + "_field_is_coupled",gbl->field_is_coupled,false);
-	if (gbl->field_is_coupled) {
+	inmap.getwdefault(base.idprefix + "_field_is_coupled",hp_bdry_gbl->field_is_coupled,false);
+	if (hp_bdry_gbl->field_is_coupled) {
 		NVcoupled = NV +c0_indices.size();
 	}
 	else {
 		NVcoupled = NV; // Default is two variables (x,y)
 	}
 
-	gbl->vdt.resize(base.maxseg+1,NVcoupled,NVcoupled);
-	gbl->vpiv.resize(base.maxseg+1,NVcoupled);
-	gbl->sdt.resize(base.maxseg,NVcoupled,NVcoupled);
-	gbl->spiv.resize(base.maxseg,NVcoupled);
-	gbl->sdt2.resize(base.maxseg,x.sm0,NVcoupled,NVcoupled);
-	gbl->spiv2.resize(base.maxseg,x.sm0,NVcoupled);
-	gbl->meshc.resize(base.maxseg,NV);
+	hp_bdry_gbl->vdt.resize(base.maxseg+1,NVcoupled,NVcoupled);
+	hp_bdry_gbl->vpiv.resize(base.maxseg+1,NVcoupled);
+	hp_bdry_gbl->sdt.resize(base.maxseg,NVcoupled,NVcoupled);
+	hp_bdry_gbl->spiv.resize(base.maxseg,NVcoupled);
+	hp_bdry_gbl->sdt2.resize(base.maxseg,x.sm0,NVcoupled,NVcoupled);
+	hp_bdry_gbl->spiv2.resize(base.maxseg,x.sm0,NVcoupled);
+	hp_bdry_gbl->meshc.resize(base.maxseg,NV);
 	
-	gbl->cfl.resize(x.log2p+1,NV);
+	hp_bdry_gbl->cfl.resize(x.log2p+1,NV);
 	for (int n=0;n<NV;++n) {
 		stringstream nstr;
 		nstr << n;
 		inmap.getlinewdefault(base.idprefix+"_cfl"+nstr.str(),val,std::string("2.5 1.5 1.0"));
 		data.str(val);
 		for (int m=0;m<x.log2p+1;++m) {
-				data >> gbl->cfl(m,n);
+				data >> hp_bdry_gbl->cfl(m,n);
 		}
 		data.clear();
 	}
 	
-	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
-	else gbl->is_loop = false;
+	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) hp_bdry_gbl->is_loop = true;
+	else hp_bdry_gbl->is_loop = false;
 	
-	if (!gbl->symmetric && !is_master) return;   /* This is all that is necessary for a slave boundary */
+	if (!hp_bdry_gbl->symmetric && !is_master) return;   /* This is all that is necessary for a slave boundary */
 	
 	ksprg.resize(base.maxseg);
 
-	gbl->vug0.resize(base.maxseg+1,NV);
-	gbl->sug0.resize(base.maxseg,x.sm0,NV);
+	hp_bdry_gbl->vug0.resize(base.maxseg+1,NV);
+	hp_bdry_gbl->sug0.resize(base.maxseg,x.sm0,NV);
 	
-	gbl->vres0.resize(base.maxseg+1,NV);
-	gbl->sres0.resize(base.maxseg,x.sm0,NV);
+	hp_bdry_gbl->vres0.resize(base.maxseg+1,NV);
+	hp_bdry_gbl->sres0.resize(base.maxseg,x.sm0,NV);
 		
 #ifdef DETAILED_MINV
 	const int sm0 = x.sm0;
-	gbl->ms.resize(base.maxseg,NV*sm0,NV*sm0);
-	gbl->vms.resize(base.maxseg,NV,2,sm0,2);
-	gbl->ipiv.resize(base.maxseg,NV*sm0);
+	hp_bdry_gbl->ms.resize(base.maxseg,NV*sm0,NV*sm0);
+	hp_bdry_gbl->vms.resize(base.maxseg,NV,2,sm0,2);
+	hp_bdry_gbl->ipiv.resize(base.maxseg,NV*sm0);
 #endif
     
 	/* These are used by the slave to store transmitted preconditioner and residuals */
 	/* Mostly assume that this is one way transmission for now */
-	gbl->vres.resize(base.maxseg+1,NV);
-	gbl->sres.resize(base.maxseg,x.sm0,NV);
+	hp_bdry_gbl->vres.resize(base.maxseg+1,NV);
+	hp_bdry_gbl->sres.resize(base.maxseg,x.sm0,NV);
 		
 	/* Multigrid Storage all except highest order (log2p+1)*/
 	vdres.resize(x.log2p+1,base.maxseg+1,NV);
 	sdres.resize(x.log2p+1,base.maxseg,x.sm0,NV);
 	
-	gbl->fadd.resize(NV);
-	gbl->fadd = 1.0; // default multiplier is 1.0
+	hp_bdry_gbl->fadd.resize(NV);
+	hp_bdry_gbl->fadd = 1.0; // default multiplier is 1.0
 	keyword = base.idprefix + "_fadd";
 	if (inmap.getline(keyword,val)) {
 		data.str(val);
 		for (int n=0;n<NV;++n) {
-			data >> gbl->fadd(n);
+			data >> hp_bdry_gbl->fadd(n);
 		}
 		data.clear();
 	}
 	
-	inmap.getwdefault(base.idprefix +"_adis",gbl->adis,1.0);
+	inmap.getwdefault(base.idprefix +"_adis",hp_bdry_gbl->adis,1.0);
 	
 	return;
 }
@@ -172,7 +171,7 @@ void hp_coupled_bdry::tadvance() {
 	/* Fixme: Need to fill in stuff for extra variables here */
 	
 	if (x.gbl->substep == 0) {
-		if (gbl->symmetric || is_master) {
+		if (hp_bdry_gbl->symmetric || is_master) {
 			/* SET SPRING CONSTANTS */
 			for(j=0;j<base.nseg;++j) {
 				sind = base.seg(j);
@@ -180,7 +179,7 @@ void hp_coupled_bdry::tadvance() {
 			}
 		}
 		
-		if (!gbl->symmetric) {
+		if (!hp_bdry_gbl->symmetric) {
 			if (is_master) {
 				/* CALCULATE TANGENT SOURCE TERM FOR FINE MESH */
 				/* ZERO TANGENTIAL MESH MOVEMENT SOURCE */
@@ -195,11 +194,11 @@ void hp_coupled_bdry::tadvance() {
 					rsdl(x.gbl->nstage);
 					
 					for(i=0;i<base.nseg+1;++i)
-						vdres(x.log2p,i,0) = -gbl->vres(i,0);
+						vdres(x.log2p,i,0) = -hp_bdry_gbl->vres(i,0);
 					
 					for(i=0;i<base.nseg;++i)
 						for(m=0;m<basis::tri(x.log2p)->sm();++m)
-							sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
+							sdres(x.log2p,i,m,0) = -hp_bdry_gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
 				}
 			}
 			else {
@@ -222,11 +221,11 @@ void hp_coupled_bdry::tadvance() {
 				rsdl(x.gbl->nstage);
 				
 				for(i=0;i<base.nseg+1;++i)
-					vdres(x.log2p,i,0) = -gbl->vres(i,0);
+					vdres(x.log2p,i,0) = -hp_bdry_gbl->vres(i,0);
 				
 				for(i=0;i<base.nseg;++i)
 					for(m=0;m<basis::tri(x.log2p)->sm();++m)
-						sdres(x.log2p,i,m,0) = -gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
+						sdres(x.log2p,i,m,0) = -hp_bdry_gbl->sres(i,m,0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
 			}
 		}
 	}
@@ -235,7 +234,7 @@ void hp_coupled_bdry::tadvance() {
 
 void hp_coupled_bdry::rsdl(int stage) {
 	
-	if (!gbl->symmetric && !is_master) return;
+	if (!hp_bdry_gbl->symmetric && !is_master) return;
 	
 	int m,n,sind,indx,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
@@ -249,7 +248,7 @@ void hp_coupled_bdry::rsdl(int stage) {
 	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
 	/**************************************************/
 	for(n=0;n<NV;++n)
-		gbl->vres(0,n) = 0.0;
+		hp_bdry_gbl->vres(0,n) = 0.0;
 	
 	for(indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
@@ -261,55 +260,54 @@ void hp_coupled_bdry::rsdl(int stage) {
 		
 		/* ADD FLUXES TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf(n)(0);
+			x.hp_gbl->res.v(v0,n) += lf(n)(0);
 		
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf(n)(1);
+			x.hp_gbl->res.v(v1,n) += lf(n)(1);
 		
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf(n)(m+2);
+				x.hp_gbl->res.s(sind,m,n) += lf(n)(m+2);
 		}
 		
 		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
 		for(n=0;n<NV;++n) {
-			gbl->vres(indx,n) += lf(x.NV+n)(0);
-			gbl->vres(indx+1,n) = lf(x.NV+n)(1);
+			hp_bdry_gbl->vres(indx,n) += lf(x.NV+n)(0);
+			hp_bdry_gbl->vres(indx+1,n) = lf(x.NV+n)(1);
 			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(indx,m,n) = lf(x.NV+n)(m+2);
+				hp_bdry_gbl->sres(indx,m,n) = lf(x.NV+n)(m+2);
 		}
 	}
 	
 	if (!x.coarse_flag) {
 		/* ADD TANGENTIAL MESH MOVEMENT SOURCE */
 		for(int i=0;i<base.nseg+1;++i)
-			gbl->vres(i,0) += vdres(x.log2p,i,0);
+			hp_bdry_gbl->vres(i,0) += vdres(x.log2p,i,0);
 		
 		for(int i=0;i<base.nseg;++i)
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(i,m,0) += sdres(x.log2p,i,m,0);
+				hp_bdry_gbl->sres(i,m,0) += sdres(x.log2p,i,m,0);
 	}
 	
 	
 #ifdef petsc
 	/* Store vertex mesh residual in r_mesh residual vector? */
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	int i = 0;
 	do {
 		sind = base.seg(i);
 		int v0 = x.seg(sind).pnt(0);
-		r_gbl->res(v0)(0) = gbl->vres(i,0);
-		r_gbl->res(v0)(1) = gbl->vres(i,1);
+		x.r_gbl->res(v0)(0) = hp_bdry_gbl->vres(i,0);
+		x.r_gbl->res(v0)(1) = hp_bdry_gbl->vres(i,1);
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
-	r_gbl->res(v0)(0) = gbl->vres(i,0);
-	r_gbl->res(v0)(1) = gbl->vres(i,1);
+	x.r_gbl->res(v0)(0) = hp_bdry_gbl->vres(i,0);
+	x.r_gbl->res(v0)(1) = hp_bdry_gbl->vres(i,1);
 #endif
 	
 }
 
 void hp_coupled_bdry::maxres() {
-	if (!gbl->symmetric && !is_master) return;
+	if (!hp_bdry_gbl->symmetric && !is_master) return;
 	
 	int i,n;
 	TinyVector<FLT,tri_mesh::ND> mxr;
@@ -318,7 +316,7 @@ void hp_coupled_bdry::maxres() {
 	
 	for(i=0;i<base.nseg+1;++i)
 		for(n=0;n<NV;++n)
-			mxr(n) = MAX(fabs(gbl->vres(i,n)),mxr(n));
+			mxr(n) = MAX(fabs(hp_bdry_gbl->vres(i,n)),mxr(n));
 	
 	for(n=0;n<tri_mesh::ND;++n)
 		*x.gbl->log << ' ' << mxr(n) << ' ';
@@ -328,7 +326,7 @@ void hp_coupled_bdry::maxres() {
 
 void hp_coupled_bdry::update(int stage) {
 	
-	if (gbl->symmetric || is_master) {
+	if (hp_bdry_gbl->symmetric || is_master) {
 		int i,sind,v0;
 		
 		if (stage < 0) {
@@ -337,17 +335,17 @@ void hp_coupled_bdry::update(int stage) {
 				sind = base.seg(i);
 				v0 = x.seg(sind).pnt(0);
 				for (int n=0;n<tri_mesh::ND;++n)
-					gbl->vug0(i,n) = x.pnts(v0)(n);
+                    hp_bdry_gbl->vug0(i,n) = x.pnts(v0)(n);
 			} while (++i < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			for (int n=0;n<tri_mesh::ND;++n)
-				gbl->vug0(base.nseg,n) = x.pnts(v0)(n);
+                hp_bdry_gbl->vug0(base.nseg,n) = x.pnts(v0)(n);
 			
 			if (basis::tri(x.log2p)->sm() > 0) {
 				for(int i=0;i<base.nseg;++i)
 					for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 						for(int n=0;n<tri_mesh::ND;++n)
-							gbl->sug0(i,m,n) = crv(i,m)(n);
+							hp_bdry_gbl->sug0(i,m,n) = crv(i,m)(n);
 			}
 			
 			return;
@@ -357,13 +355,13 @@ void hp_coupled_bdry::update(int stage) {
 		
 #ifdef DEBUG
 //		if (x.coarse_flag) {
-		const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+		const int ncoupled = NV +hp_bdry_gbl->field_is_coupled*c0_indices.size();
 
 		for(int i=0;i<base.nseg+1;++i) {
 			for(int row=0;row<ncoupled;++row) {
 				*x.gbl->log << "vdt: " << i << ' ' << row << ' ';
 				for(int col=0;col<ncoupled;++col) {
-					*x.gbl->log << gbl->vdt(i,row,col) << ' ';
+					*x.gbl->log << hp_bdry_gbl->vdt(i,row,col) << ' ';
 				}
 				*x.gbl->log << std::endl;
 			}
@@ -373,7 +371,7 @@ void hp_coupled_bdry::update(int stage) {
 				for(int row=0;row<ncoupled;++row) {
 					*x.gbl->log << "sdt: " << i << ' ' << row << ' ';
 					for(int col=0;col<ncoupled;++col) {
-						*x.gbl->log << gbl->sdt(i,row,col) << ' ';
+						*x.gbl->log << hp_bdry_gbl->sdt(i,row,col) << ' ';
 					}
 					*x.gbl->log << std::endl;
 				}
@@ -383,7 +381,7 @@ void hp_coupled_bdry::update(int stage) {
 		for(int i=0;i<base.nseg+1;++i) {
 			*x.gbl->log << "vres: " << i << ' ';
 			for(int n=0;n<tri_mesh::ND;++n) {
-				if (fabs(gbl->vres(i,n)) > 1.0e-9) *x.gbl->log << gbl->vres(i,n) << ' ';
+				if (fabs(hp_bdry_gbl->vres(i,n)) > 1.0e-9) *x.gbl->log << hp_bdry_gbl->vres(i,n) << ' ';
 				else *x.gbl->log << "0.0 ";
 			}
 			*x.gbl->log << '\n';
@@ -393,7 +391,7 @@ void hp_coupled_bdry::update(int stage) {
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 				*x.gbl->log << "sres: " << i << ' ';
 				for(int n=0;n<tri_mesh::ND;++n) {
-					if (fabs(gbl->sres(i,m,n)) > 1.0e-9) *x.gbl->log << gbl->sres(i,m,n) << ' ';
+					if (fabs(hp_bdry_gbl->sres(i,m,n)) > 1.0e-9) *x.gbl->log << hp_bdry_gbl->sres(i,m,n) << ' ';
 					else *x.gbl->log << "0.0 ";
 				}
 				*x.gbl->log << '\n';
@@ -416,39 +414,39 @@ void hp_coupled_bdry::update(int stage) {
 #endif
 		
 		FLT alpha = x.gbl->alpha(stage);
-        if (gbl->field_is_coupled)
-            alpha *= x.gbl->cfl(x.log2p);
+        if (hp_bdry_gbl->field_is_coupled)
+            alpha *= x.hp_gbl->cfl(x.log2p);
         
 		i = 0;
 		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
 			for (int n=0;n<NV;++n)
-				x.pnts(v0)(n) = gbl->vug0(i,n) -alpha*gbl->vres(i,n);
+				x.pnts(v0)(n) = hp_bdry_gbl->vug0(i,n) -alpha*hp_bdry_gbl->vres(i,n);
 		} while (++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (int n=0;n<NV;++n)
-			x.pnts(v0)(n) = gbl->vug0(base.nseg,n) -alpha*gbl->vres(base.nseg,n);
+			x.pnts(v0)(n) = hp_bdry_gbl->vug0(base.nseg,n) -alpha*hp_bdry_gbl->vres(base.nseg,n);
 		
 		if (basis::tri(x.log2p)->sm() > 0) {
 			for(int i=0;i<base.nseg;++i)
 				for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 					for(int n=0;n<tri_mesh::ND;++n)
-						crv(i,m)(n) = gbl->sug0(i,m,n) -alpha*gbl->sres(i,m,n);
+						crv(i,m)(n) = hp_bdry_gbl->sug0(i,m,n) -alpha*hp_bdry_gbl->sres(i,m,n);
 		}
 		
-		if (gbl->field_is_coupled) {
+		if (hp_bdry_gbl->field_is_coupled) {
 			i = 0;
 			do {
 				sind = base.seg(i);
 				v0 = x.seg(sind).pnt(0);
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-					x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -alpha*x.gbl->res.v(v0,*n);
+					x.ug.v(v0,*n) = x.hp_gbl->ug0.v(v0,*n) -alpha*x.hp_gbl->res.v(v0,*n);
 				}
 			} while (++i < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				x.ug.v(v0,*n) = x.gbl->ug0.v(v0,*n) -alpha*x.gbl->res.v(v0,*n);
+				x.ug.v(v0,*n) = x.hp_gbl->ug0.v(v0,*n) -alpha*x.hp_gbl->res.v(v0,*n);
 			}
 			
 			if (basis::tri(x.log2p)->sm() > 0) {
@@ -456,7 +454,7 @@ void hp_coupled_bdry::update(int stage) {
 					sind = base.seg(i);
 					for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-							x.ug.s(sind,m,*n) = x.gbl->ug0.s(sind,m,*n) -alpha*x.gbl->res.s(sind,m,*n);
+							x.ug.s(sind,m,*n) = x.hp_gbl->ug0.s(sind,m,*n) -alpha*x.hp_gbl->res.s(sind,m,*n);
 						}
 					}
 				}
@@ -487,7 +485,7 @@ void hp_coupled_bdry::update(int stage) {
 #endif
 	}
 
-	if (!gbl->symmetric) {
+	if (!hp_bdry_gbl->symmetric) {
 		if (is_master) {
 			if (base.is_comm()) {
 				int count = 0;
@@ -509,7 +507,7 @@ void hp_coupled_bdry::update(int stage) {
 							base.fsndbuf(count++) = crv(i,m)(n);
 					}
 				}
-				if (gbl->field_is_coupled) {
+				if (hp_bdry_gbl->field_is_coupled) {
 					i = 0;
 					do {
 						sind = base.seg(i);
@@ -574,7 +572,7 @@ void hp_coupled_bdry::update(int stage) {
 				}
 			}
 			
-			if (gbl->field_is_coupled) {
+			if (hp_bdry_gbl->field_is_coupled) {
 				i = base.nseg-1;
 				do {
 					sind = base.seg(i);
@@ -615,8 +613,8 @@ void hp_coupled_bdry::minvrt() {
 			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */
 			for (int m=0; m < sm; ++m) {
 				for(int n=0;n<NV;++n) {
-					gbl->vres(indx,n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m,n);
-					gbl->vres(indx+1,n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m,n);
+					hp_bdry_gbl->vres(indx,n) -= basis::tri(x.log2p)->sfmv1d(0,m)*hp_bdry_gbl->sres(indx,m,n);
+					hp_bdry_gbl->vres(indx+1,n) -= basis::tri(x.log2p)->sfmv1d(1,m)*hp_bdry_gbl->sres(indx,m,n);
 				}
 			}
 		}
@@ -624,8 +622,8 @@ void hp_coupled_bdry::minvrt() {
 	}
 	
 	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vres(0,0),0,1,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vres(base.nseg,0),0,1,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vres(0,0),0,1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vres(base.nseg,0),0,1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -637,26 +635,26 @@ void hp_coupled_bdry::minvrt() {
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(0,0),0,1,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vres(base.nseg,0),0,1,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vres(0,0),0,1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vres(base.nseg,0),0,1,0);
 	}
 	
-	if (gbl->is_loop) {
+	if (hp_bdry_gbl->is_loop) {
 		for(int n=0;n<NV;++n) {
-			gbl->vres(0,n) = 0.5*(gbl->vres(0,n) +gbl->vres(base.nseg,n));
-			gbl->vres(base.nseg,n) = gbl->vres(0,n);
+			hp_bdry_gbl->vres(0,n) = 0.5*(hp_bdry_gbl->vres(0,n) +hp_bdry_gbl->vres(base.nseg,n));
+			hp_bdry_gbl->vres(base.nseg,n) = hp_bdry_gbl->vres(0,n);
 		}
-		gbl->vres(0,0) = 0.0;
-		gbl->vres(base.nseg,0) = 0.0;
+		hp_bdry_gbl->vres(0,0) = 0.0;
+		hp_bdry_gbl->vres(base.nseg,0) = 0.0;
 	}
 	x.hp_vbdry(base.vbdry(0))->vdirichlet();
 	x.hp_vbdry(base.vbdry(1))->vdirichlet();
 	
 	/* SOLVE FOR VERTEX MODES */
-	if (gbl->field_is_coupled) {
+	if (hp_bdry_gbl->field_is_coupled) {
 		int info;
 		char trans[] = "T";
-		const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+		const int ncoupled = NV +hp_bdry_gbl->field_is_coupled*c0_indices.size();
 		Array<FLT,1> res_vec(ncoupled);
 
 		for(int i=0;i<base.nseg;++i) {
@@ -664,18 +662,18 @@ void hp_coupled_bdry::minvrt() {
 			int v0 = x.seg(sind).pnt(0);
 			int indx = 0;
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				res_vec(indx++) = x.gbl->res.v(v0,*n);
+				res_vec(indx++) = x.hp_gbl->res.v(v0,*n);
 			}
 			for(int n=0;n<NV;++n) {
-				res_vec(indx++) = gbl->vres(i,n);
+				res_vec(indx++) = hp_bdry_gbl->vres(i,n);
 			}
 
 #ifdef F2CFortran
-			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+			GETRS(trans,ncoupled,1,&hp_bdry_gbl->vdt(i,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
 #else
             const int one = 1;
-            const int length = gbl->vdt.length(secondDim);
-            dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+            const int length = hp_bdry_gbl->vdt.length(secondDim);
+            dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->vdt(i,0,0),&length,&hp_bdry_gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
 #endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
@@ -683,28 +681,28 @@ void hp_coupled_bdry::minvrt() {
 			}
 			indx = 0;
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-				x.gbl->res.v(v0,*n) = res_vec(indx++);
+				x.hp_gbl->res.v(v0,*n) = res_vec(indx++);
 			}
 			for(int n=0;n<NV;++n) {
-			 gbl->vres(i,n) = res_vec(indx++);
+			 hp_bdry_gbl->vres(i,n) = res_vec(indx++);
 			}
 		}
 		int sind = base.seg(base.nseg-1);
 		int v0 = x.seg(sind).pnt(1);
 		int indx = 0;
 		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-			res_vec(indx++) = x.gbl->res.v(v0,*n);
+			res_vec(indx++) = x.hp_gbl->res.v(v0,*n);
 		}
 		for(int n=0;n<NV;++n) {
-			res_vec(indx++) = gbl->vres(base.nseg,n);
+			res_vec(indx++) = hp_bdry_gbl->vres(base.nseg,n);
 		}
 		
 #ifdef F2CFortran
-        GETRS(trans,ncoupled,1,&gbl->vdt(base.nseg,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(base.nseg,0),res_vec.data(),ncoupled,info);
+        GETRS(trans,ncoupled,1,&hp_bdry_gbl->vdt(base.nseg,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(base.nseg,0),res_vec.data(),ncoupled,info);
 #else
         const int one = 1;
-        const int length = gbl->vdt.length(secondDim);
-        dgetrs_(trans,&ncoupled,&one,&gbl->vdt(base.nseg,0,0),&length,&gbl->vpiv(base.nseg,0),res_vec.data(),&ncoupled,&info);
+        const int length = hp_bdry_gbl->vdt.length(secondDim);
+        dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->vdt(base.nseg,0,0),&length,&hp_bdry_gbl->vpiv(base.nseg,0),res_vec.data(),&ncoupled,&info);
 #endif
 		if (info != 0) {
 			*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
@@ -713,10 +711,10 @@ void hp_coupled_bdry::minvrt() {
 		
 		indx = 0;
 		for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-			x.gbl->res.v(v0,*n) = res_vec(indx++);
+			x.hp_gbl->res.v(v0,*n) = res_vec(indx++);
 		}
 		for(int n=0;n<NV;++n) {
-			 gbl->vres(base.nseg,n) = res_vec(indx++);
+			 hp_bdry_gbl->vres(base.nseg,n) = res_vec(indx++);
 		}
 		
 		if (sm > 0) {
@@ -726,20 +724,20 @@ void hp_coupled_bdry::minvrt() {
 				for(int m=0;m<sm;++m) {
 					int indx = 0;
 					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-						res_vec(indx++) = x.gbl->res.s(sind,m,*n);
+						res_vec(indx++) = x.hp_gbl->res.s(sind,m,*n);
 					}
 					for(int n=0;n<NV;++n) {
-						res_vec(indx++) = gbl->sres(j,m,n);
+						res_vec(indx++) = hp_bdry_gbl->sres(j,m,n);
 					}
 					
 					int info;
 					char trans[] = "T";
 #ifdef F2CFortran
-					GETRS(trans,ncoupled,1,&gbl->sdt(j,0,0),gbl->sdt.length(secondDim),&gbl->spiv(j,0),res_vec.data(),ncoupled,info);
+					GETRS(trans,ncoupled,1,&hp_bdry_gbl->sdt(j,0,0),hp_bdry_gbl->sdt.length(secondDim),&hp_bdry_gbl->spiv(j,0),res_vec.data(),ncoupled,info);
 #else
                     const int one = 1;
-                    const int length = gbl->sdt.length(secondDim);
-                    dgetrs_(trans,&ncoupled,&one,&gbl->sdt(j,0,0),&length,&gbl->spiv(j,0),res_vec.data(),&ncoupled,&info);
+                    const int length = hp_bdry_gbl->sdt.length(secondDim);
+                    dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->sdt(j,0,0),&length,&hp_bdry_gbl->spiv(j,0),res_vec.data(),&ncoupled,&info);
 #endif
 					if (info != 0) {
 						*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
@@ -748,10 +746,10 @@ void hp_coupled_bdry::minvrt() {
 					
 					indx = 0;
 					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
-						x.gbl->res.s(sind,m,*n) = res_vec(indx++);
+						x.hp_gbl->res.s(sind,m,*n) = res_vec(indx++);
 					}
 					for(int n=0;n<NV;++n) {
-						gbl->sres(j,m,n) = res_vec(indx++);
+						hp_bdry_gbl->sres(j,m,n) = res_vec(indx++);
 					}
 				}
 			}
@@ -759,8 +757,8 @@ void hp_coupled_bdry::minvrt() {
 			// FIXME: THIS IS MESSED UP.  MINVRT FOR THE FLOW SCREWS THIS ALL UP
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(int n=0;n<NV;++n) {
-					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx,n);
-					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1,n);
+					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*hp_bdry_gbl->vres(indx,n);
+					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*hp_bdry_gbl->vres(indx+1,n);
 				}
 			}
 		}
@@ -768,9 +766,9 @@ void hp_coupled_bdry::minvrt() {
 	else {
 		// FIXME: THIS ONLY WORKS FOR 2 DECOUPLED SIDE VARIABLES (X & Y)
 		for(int i=0;i<base.nseg+1;++i) {
-			temp                     = gbl->vres(i,0)*gbl->vdt(i,0,0) +gbl->vres(i,1)*gbl->vdt(i,0,1);
-			gbl->vres(i,1) = gbl->vres(i,0)*gbl->vdt(i,1,0) +gbl->vres(i,1)*gbl->vdt(i,1,1);
-			gbl->vres(i,0) = temp;
+			temp                     = hp_bdry_gbl->vres(i,0)*hp_bdry_gbl->vdt(i,0,0) +hp_bdry_gbl->vres(i,1)*hp_bdry_gbl->vdt(i,0,1);
+			hp_bdry_gbl->vres(i,1) = hp_bdry_gbl->vres(i,0)*hp_bdry_gbl->vdt(i,1,0) +hp_bdry_gbl->vres(i,1)*hp_bdry_gbl->vdt(i,1,1);
+			hp_bdry_gbl->vres(i,0) = temp;
 		}
 
 		/* SOLVE FOR SIDE MODES */
@@ -779,32 +777,32 @@ void hp_coupled_bdry::minvrt() {
 #ifdef DETAILED_MINV
 			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<NV;++n) {
-					gbl->sres(indx,m,n) -= gbl->vms(indx,n,0,m,0)*gbl->vres(indx,0);
-					gbl->sres(indx,m,n) -= gbl->vms(indx,n,0,m,1)*gbl->vres(indx+1,0);
-					gbl->sres(indx,m,n) -= gbl->vms(indx,n,1,m,0)*gbl->vres(indx,1);
-					gbl->sres(indx,m,n) -= gbl->vms(indx,n,1,m,1)*gbl->vres(indx+1,1);
+					hp_bdry_gbl->sres(indx,m,n) -= hp_bdry_gbl->vms(indx,n,0,m,0)*hp_bdry_gbl->vres(indx,0);
+					hp_bdry_gbl->sres(indx,m,n) -= hp_bdry_gbl->vms(indx,n,0,m,1)*hp_bdry_gbl->vres(indx+1,0);
+					hp_bdry_gbl->sres(indx,m,n) -= hp_bdry_gbl->vms(indx,n,1,m,0)*hp_bdry_gbl->vres(indx,1);
+					hp_bdry_gbl->sres(indx,m,n) -= hp_bdry_gbl->vms(indx,n,1,m,1)*hp_bdry_gbl->vres(indx+1,1);
 				}
 			}
 			int info;
 			char trans[] = "T";
-			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),&gbl->sres(indx,0,0),2*MAXP,info);
+			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&hp_bdry_gbl->ms(indx,0,0),2*MAXP,&hp_bdry_gbl->ipiv(indx,0),&hp_bdry_gbl->sres(indx,0,0),2*MAXP,info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED FOR SIDE MODE UPDATE" << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 #else
 			/* INVERT SIDE MODES */
-			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0,0)),NV);
+			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(hp_bdry_gbl->sres(indx,0,0)),NV);
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-				temp                             = gbl->sres(indx,m,0)*gbl->sdt(indx,0,0) +gbl->sres(indx,m,1)*gbl->sdt(indx,0,1);
-				gbl->sres(indx,m,1) = gbl->sres(indx,m,0)*gbl->sdt(indx,1,0) +gbl->sres(indx,m,1)*gbl->sdt(indx,1,1);
-				gbl->sres(indx,m,0) = temp;
+				temp                             = hp_bdry_gbl->sres(indx,m,0)*hp_bdry_gbl->sdt(indx,0,0) +hp_bdry_gbl->sres(indx,m,1)*hp_bdry_gbl->sdt(indx,0,1);
+				hp_bdry_gbl->sres(indx,m,1) = hp_bdry_gbl->sres(indx,m,0)*hp_bdry_gbl->sdt(indx,1,0) +hp_bdry_gbl->sres(indx,m,1)*hp_bdry_gbl->sdt(indx,1,1);
+				hp_bdry_gbl->sres(indx,m,0) = temp;
 			}
 			
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(int n=0;n<NV;++n) {
-					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx,n);
-					gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1,n);
+					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*hp_bdry_gbl->vres(indx,n);
+					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*hp_bdry_gbl->vres(indx+1,n);
 				}
 			}
 #endif
@@ -816,24 +814,24 @@ void hp_coupled_bdry::minvrt() {
 
 void hp_coupled_bdry::mg_restrict() {
 	
-	if (!gbl->symmetric && !is_master) return;
+	if (!hp_bdry_gbl->symmetric && !is_master) return;
 
 	int i,bnum,indx,tind,v0,snum,sind;
 	
 	if(x.p0 > 1) {
 		/* TRANSFER IS ON FINEST MESH */
-		gbl->vres0(Range(0,base.nseg),Range::all()) = gbl->vres(Range(0,base.nseg),Range::all());
-		if (basis::tri(x.log2p)->sm() > 0) gbl->sres0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1),Range::all()) = gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1),Range::all());
+		hp_bdry_gbl->vres0(Range(0,base.nseg),Range::all()) = hp_bdry_gbl->vres(Range(0,base.nseg),Range::all());
+		if (basis::tri(x.log2p)->sm() > 0) hp_bdry_gbl->sres0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1),Range::all()) = hp_bdry_gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1),Range::all());
 		return;
 	}
 	else {
 		/* TRANSFER IS BETWEEN DIFFERENT MESHES */
-		gbl->vres0(Range(0,base.nseg),Range::all()) = 0.0;
+		hp_bdry_gbl->vres0(Range(0,base.nseg),Range::all()) = 0.0;
 		
 		/* CALCULATE COARSE RESIDUALS */
 		/* DO ENDPOINTS FIRST */
-		gbl->vres0(0,Range::all()) = gbl->vres(0,Range::all());
-		gbl->vres0(base.nseg,Range::all()) = gbl->vres(fine->base.nseg,Range::all());
+		hp_bdry_gbl->vres0(0,Range::all()) = hp_bdry_gbl->vres(0,Range::all());
+		hp_bdry_gbl->vres0(base.nseg,Range::all()) = hp_bdry_gbl->vres(fine->base.nseg,Range::all());
 		
 		tri_mesh *fmesh = dynamic_cast<tri_mesh *>(x.fine);
 		for (bnum = 0; x.hp_ebdry(bnum) != this; ++bnum);
@@ -845,8 +843,8 @@ void hp_coupled_bdry::mg_restrict() {
 				if (x.getbdrynum(x.tri(tind).tri(snum))  == bnum) break;
 			assert(snum != 3);
 			indx = x.getbdryseg(x.tri(tind).tri(snum));
-			gbl->vres0(indx,Range::all()) += fmesh->ccnnct(v0).wt((snum+1)%3)*gbl->vres(i,Range::all());
-			gbl->vres0(indx+1,Range::all()) += fmesh->ccnnct(v0).wt((snum+2)%3)*gbl->vres(i,Range::all());
+			hp_bdry_gbl->vres0(indx,Range::all()) += fmesh->ccnnct(v0).wt((snum+1)%3)*hp_bdry_gbl->vres(i,Range::all());
+			hp_bdry_gbl->vres0(indx+1,Range::all()) += fmesh->ccnnct(v0).wt((snum+2)%3)*hp_bdry_gbl->vres(i,Range::all());
 		}
 	}
 	
@@ -858,28 +856,28 @@ void hp_coupled_bdry::mg_source() {
 	/* MODIFY SURFACE RESIDUALS ON COARSER MESHES    */
 	/************************************************/
 	
-	if(!gbl->symmetric && !is_master) return;
+	if(!hp_bdry_gbl->symmetric && !is_master) return;
 
 	if(x.coarse_flag) {
 		if (x.isfrst) {
 			for(int i=0;i<base.nseg+1;++i)
 				for(int n=0;n<NV;++n)
-					vdres(x.log2p,i,n) = gbl->fadd(n)*gbl->vres0(i,n) -gbl->vres(i,n);
+					vdres(x.log2p,i,n) = hp_bdry_gbl->fadd(n)*hp_bdry_gbl->vres0(i,n) -hp_bdry_gbl->vres(i,n);
 			
 			for(int i=0;i<base.nseg;++i)
 				for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 					for(int n=0;n<NV;++n)
-						sdres(x.log2p,i,m,n) = gbl->fadd(n)*gbl->sres0(i,m,n) -gbl->sres(i,m,n);
+						sdres(x.log2p,i,m,n) = hp_bdry_gbl->fadd(n)*hp_bdry_gbl->sres0(i,m,n) -hp_bdry_gbl->sres(i,m,n);
 			
 		}
 		for(int i=0;i<base.nseg+1;++i)
 			for(int n=0;n<NV;++n)
-				gbl->vres(i,n) += vdres(x.log2p,i,n);
+				hp_bdry_gbl->vres(i,n) += vdres(x.log2p,i,n);
 		
 		for(int i=0;i<base.nseg;++i)
 			for(int m=0;m<basis::tri(x.log2p)->sm();++m)
 				for(int n=0;n<NV;++n)
-					gbl->sres(i,m,n) += sdres(x.log2p,i,m,n);
+					hp_bdry_gbl->sres(i,m,n) += sdres(x.log2p,i,m,n);
 	}
 }
 
@@ -889,13 +887,13 @@ void hp_coupled_bdry::mg_source() {
 void hp_coupled_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	
 	hp_edge_bdry::smatchsolution_snd(sdata, bgn, end, stride);
-	if (!gbl->symmetric) return;
+	if (!hp_bdry_gbl->symmetric) return;
 	
 	const int sm = basis::tri(x.log2p)->sm();
 	for(int i=0;i<base.nseg;++i) {
 		for(int m=0;m<sm;++m) {
 			for(int n=0;n<NV;++n) {
-				base.fsndbuf(base.sndsize()++) = gbl->sres(i,m,n);
+				base.fsndbuf(base.sndsize()++) = hp_bdry_gbl->sres(i,m,n);
 			}
 		}
 	}
@@ -905,7 +903,7 @@ void hp_coupled_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int strid
 
 int hp_coupled_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 	int count = hp_edge_bdry::smatchsolution_rcv(sdata, bgn, end, stride);
-	if (!gbl->symmetric) return(count);
+	if (!hp_bdry_gbl->symmetric) return(count);
 	
 	const int sm = basis::tri(x.log2p)->sm();
 
@@ -913,7 +911,7 @@ int hp_coupled_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride
 		int msgn = 1;
 		for(int m=0;m<sm;++m) {
 			for(int n=0;n<NV;++n) {
-				gbl->sres(i,m,n) = 0.5*(gbl->sres(i,m,n) +msgn*base.frcvbuf(0,count++));
+				hp_bdry_gbl->sres(i,m,n) = 0.5*(hp_bdry_gbl->sres(i,m,n) +msgn*base.frcvbuf(0,count++));
 			}
 			msgn *= -1;
 		}
@@ -1042,7 +1040,7 @@ void hp_coupled_bdry::petsc_jacobian() {
     MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL,PETSC_NULL,PETSC_NULL);
 #endif
 
-    if (gbl->symmetric || is_master) {
+    if (hp_bdry_gbl->symmetric || is_master) {
         /* This is effect of variables u,v,p,x,y on */
         /* source terms added to flow residuals */
         /* and x,y mesh movement equations */
@@ -1165,7 +1163,7 @@ void hp_coupled_bdry::non_sparse(Array<int,1> &nnzero) {
 	const int begin_tri = begin_seg+x.nseg*sm*x.NV;
 	
 	if(x.sm0 > 0) {
-		if (gbl->field_is_coupled) {
+		if (hp_bdry_gbl->field_is_coupled) {
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +NV*sm;
 		}
 		else {
@@ -1194,7 +1192,7 @@ void hp_coupled_bdry::non_sparse(Array<int,1> &nnzero) {
 			
 			for(int endpt=0;endpt<2;++endpt) {
 				int pind = x.seg(sind).pnt(endpt);
-				if (!gbl->symmetric) {
+				if (!hp_bdry_gbl->symmetric) {
 					if (is_master) {
 						 // if I am the master all equations affected by side modes including x,y
 						nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += NV*sm;
@@ -1256,10 +1254,10 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 		}
 	}
 	
-	if (!gbl->symmetric) {
+	if (!hp_bdry_gbl->symmetric) {
 		if (is_master) {
 				/* Add to mpi (below) to allow preconditioning otherwise zero is fine */
-			if (sm && !gbl->field_is_coupled) {
+			if (sm && !hp_bdry_gbl->field_is_coupled) {
 				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 0;
 			}
 		}
@@ -1270,7 +1268,7 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 				nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*NV-1)) = 1;
 			}
 			
-			if (gbl->one_sided) {
+			if (hp_bdry_gbl->one_sided) {
 				const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 
 				/* If one_sided all c0 variables are followers */
@@ -1305,7 +1303,7 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 	}
 	
 	// make sure flow and coupled side variables have same number of entries
-	if (is_master && gbl->field_is_coupled && gbl->precondition) {
+	if (is_master && hp_bdry_gbl->field_is_coupled && hp_bdry_gbl->precondition) {
 		const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 		const int c0var = c0_indices[0];
 		
@@ -1345,7 +1343,7 @@ int hp_coupled_bdry::non_sparse_rcv(int phase, Array<int,1> &nnzero, Array<int,1
 void hp_coupled_bdry::petsc_matchjacobian_snd() {
 	
 	hp_edge_bdry::petsc_matchjacobian_snd();
-	if (!gbl->symmetric) return;
+	if (!hp_bdry_gbl->symmetric) return;
 	
 
 	/* This is extra stuff for symmetric matching not used otherwise */
@@ -1404,7 +1402,7 @@ int hp_coupled_bdry::petsc_matchjacobian_rcv(int phase) {
 		count = hp_edge_bdry::petsc_matchjacobian_rcv(phase);
 	}
 	else {
-		if (!gbl->one_sided) {
+		if (!hp_bdry_gbl->one_sided) {
 			count = hp_edge_bdry::petsc_matchjacobian_rcv(phase);
 		}
 		else {
@@ -1523,7 +1521,7 @@ int hp_coupled_bdry::petsc_matchjacobian_rcv(int phase) {
 		}
 	}
 
-	if (!gbl->symmetric) {
+	if (!hp_bdry_gbl->symmetric) {
 		/* Apply matching curvature constraint */
 		if (sm && !is_master) {
 			int Jstart_mpi = static_cast<int>(base.frcvbuf(0,0));
@@ -1702,33 +1700,33 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	const int sm = basis::tri(x.log2p)->sm();
 	int ind = jacobian_start;
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+	const int ncoupled = NV +hp_bdry_gbl->field_is_coupled*c0_indices.size();
 	Array<FLT,1> res_vec(ncoupled);
 	
 
-	if ((gbl->symmetric || is_master)) {
-		if (gbl->precondition)  {
+	if ((hp_bdry_gbl->symmetric || is_master)) {
+		if (hp_bdry_gbl->precondition)  {
 			for(int j=0;j<base.nseg;++j) {
 				int ind1 = x.npnt*vdofs +base.seg(j)*sm*x.NV;
 
 				for(int m=0;m<sm;++m) {
 					int indx = 0;
-					if (gbl->field_is_coupled) {
+					if (hp_bdry_gbl->field_is_coupled) {
 						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 							res_vec(indx++) = res(ind1+*n);
 						}
 					}
 					for(int n=0;n<NV;++n) {
-						res_vec(indx++) = gbl->sres(j,m,n);
+						res_vec(indx++) = hp_bdry_gbl->sres(j,m,n);
 					}
 					
 					int info;
 					char trans[] = "T";
 #ifdef F2CFortran
-					GETRS(trans,ncoupled,1,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
+					GETRS(trans,ncoupled,1,&hp_bdry_gbl->sdt2(j,m,0,0),hp_bdry_gbl->sdt2.length(thirdDim),&hp_bdry_gbl->spiv2(j,m,0),res_vec.data(),ncoupled,info);
 #else
-                    const int one = 1, length = gbl->sdt2.length(thirdDim);
-                    dgetrs_(trans,&ncoupled,&one,&gbl->sdt2(j,m,0,0),&length,&gbl->spiv2(j,m,0),res_vec.data(),&ncoupled,&info);
+                    const int one = 1, length = hp_bdry_gbl->sdt2.length(thirdDim);
+                    dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->sdt2(j,m,0,0),&length,&hp_bdry_gbl->spiv2(j,m,0),res_vec.data(),&ncoupled,&info);
 #endif
 					if (info != 0) {
 						*x.gbl->log << "DGETRS FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
@@ -1736,7 +1734,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 					}
 
 					indx = 0;
-					if (gbl->field_is_coupled) {
+					if (hp_bdry_gbl->field_is_coupled) {
 						for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 							res(ind1+*n) = res_vec(indx++);
 						}
@@ -1752,7 +1750,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			for(int j=0;j<base.nseg;++j) {
 				for(int m=0;m<sm;++m) {
 					for(int n=0;n<NV;++n) {
-						res(ind++) = gbl->sres(j,m,n);
+						res(ind++) = hp_bdry_gbl->sres(j,m,n);
 					}
 				}
 			}
@@ -1766,7 +1764,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 				for(int n=0;n<NV;++n)
 					res(ind++) = 0.0; // all local variables assumed to be equal on both sides
 				
-				if (gbl->one_sided) {  // if one_sided then continuous flow variables are forced to be continuous
+				if (hp_bdry_gbl->one_sided) {  // if one_sided then continuous flow variables are forced to be continuous
 					for(std::vector<int>::iterator it = c0_indices.begin();it != c0_indices.end();++it)
 						res(ind1+*it) = 0.0;
 					ind1 += x.NV;
@@ -1776,15 +1774,15 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 	}
 	
 	/* Swap kinetic and energy vertex residuals */
-	if ((!gbl->one_sided || is_master)) {
-		if (gbl->precondition) {
+	if ((!hp_bdry_gbl->one_sided || is_master)) {
+		if (hp_bdry_gbl->precondition) {
 			int i = 0;
 			int sind;
 			do {
 				sind = base.seg(i);
 				int row = x.seg(sind).pnt(0)*vdofs;
 				int indx = 0;
-				if (gbl->field_is_coupled) {
+				if (hp_bdry_gbl->field_is_coupled) {
 					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 						res_vec(indx++) = res(row +*n);
 					}
@@ -1796,10 +1794,10 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 				int info;
 				char trans[] = "T";
 #ifdef F2CFortran
-				GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+				GETRS(trans,ncoupled,1,&hp_bdry_gbl->vdt(i,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
 #else
-                const int one = 1, length = gbl->vdt.length(secondDim);
-                dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+                const int one = 1, length = hp_bdry_gbl->vdt.length(secondDim);
+                dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->vdt(i,0,0),&length,&hp_bdry_gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
 #endif
 				if (info != 0) {
 					*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
@@ -1807,7 +1805,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 				}
 				
 				indx = 0;
-				if (gbl->field_is_coupled) {
+				if (hp_bdry_gbl->field_is_coupled) {
 					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 						res(row +*n) = res_vec(indx++);
 					}
@@ -1818,7 +1816,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			} while (++i < base.nseg);
 			int row = x.seg(sind).pnt(1)*vdofs;
 			int indx = 0;
-			if (gbl->field_is_coupled) {
+			if (hp_bdry_gbl->field_is_coupled) {
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 					res_vec(indx++) = res(row +*n);
 				}
@@ -1830,10 +1828,10 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			int info;
 			char trans[] = "T";
 #ifdef F2CFortran
-			GETRS(trans,ncoupled,1,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
+			GETRS(trans,ncoupled,1,&hp_bdry_gbl->vdt(i,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(i,0),res_vec.data(),ncoupled,info);
 #else
-            const int one = 1, length = gbl->vdt.length(secondDim);
-            dgetrs_(trans,&ncoupled,&one,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
+            const int one = 1, length = hp_bdry_gbl->vdt.length(secondDim);
+            dgetrs_(trans,&ncoupled,&one,&hp_bdry_gbl->vdt(i,0,0),&length,&hp_bdry_gbl->vpiv(i,0),res_vec.data(),&ncoupled,&info);
 #endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRS FAILED IN VERTEX PRECONDITIONER " << info << std::endl;
@@ -1841,7 +1839,7 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 			}
 			
 			indx = 0;
-			if (gbl->field_is_coupled) {
+			if (hp_bdry_gbl->field_is_coupled) {
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 					res(row +*n) = res_vec(indx++);
 				}
@@ -1872,11 +1870,11 @@ void hp_coupled_bdry::petsc_make_1D_rsdl_vector(Array<double,1> res) {
 
 void hp_coupled_bdry::petsc_premultiply_jacobian() {
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
-	const int ncoupled = NV +gbl->field_is_coupled*c0_indices.size();
+	const int ncoupled = NV +hp_bdry_gbl->field_is_coupled*c0_indices.size();
 	Array<int,1> row_ind(ncoupled);
 	
 	/* Swap side equations */
-	if ((gbl->symmetric || is_master) && gbl->precondition) {
+	if ((hp_bdry_gbl->symmetric || is_master) && hp_bdry_gbl->precondition) {
 		int row0 = jacobian_start; // Index of motion equations
 		
 		const int sm = basis::tri(x.log2p)->sm();
@@ -1885,7 +1883,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			for(int m=0;m<sm;++m) {
 				
 				int ind = 0;
-				if (gbl->field_is_coupled) {
+				if (hp_bdry_gbl->field_is_coupled) {
 					for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 						row_ind(ind++) = row1+*n;
 					}
@@ -1895,45 +1893,45 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 				}
 
 				// Store Jacobian
-				gbl->sdt2(j,m,Range::all(),Range::all()) = 0.0;
-				if (gbl->precondition) {
+				hp_bdry_gbl->sdt2(j,m,Range::all(),Range::all()) = 0.0;
+				if (hp_bdry_gbl->precondition) {
 					for(int row=0;row<ncoupled;++row) {
 						for(int col=0;col<ncoupled;++col) {
-							gbl->sdt2(j,m,row,col) = x.J(row_ind(row),row_ind(col));
+							hp_bdry_gbl->sdt2(j,m,row,col) = x.J(row_ind(row),row_ind(col));
 						}
 					}
 				}
 				else {
 					// To shut off preconditioning
 					for(int row=0;row<ncoupled;++row) {
-						gbl->sdt2(j,m,row,row) = 1.0;
+						hp_bdry_gbl->sdt2(j,m,row,row) = 1.0;
 					}
 				}
 
 				int info;
 #ifdef F2CFortran
-				GETRF(ncoupled,ncoupled,&gbl->sdt2(j,m,0,0),gbl->sdt2.length(thirdDim),&gbl->spiv2(j,m,0),info);
+				GETRF(ncoupled,ncoupled,&hp_bdry_gbl->sdt2(j,m,0,0),hp_bdry_gbl->sdt2.length(thirdDim),&hp_bdry_gbl->spiv2(j,m,0),info);
 #else
-                const int length = gbl->sdt2.length(thirdDim);
-                dgetrf_(&ncoupled,&ncoupled,&gbl->sdt2(j,m,0,0),&length,&gbl->spiv2(j,m,0),&info);
+                const int length = hp_bdry_gbl->sdt2.length(thirdDim);
+                dgetrf_(&ncoupled,&ncoupled,&hp_bdry_gbl->sdt2(j,m,0,0),&length,&hp_bdry_gbl->spiv2(j,m,0),&info);
 #endif
 				if (info != 0) {
 					*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER " << info << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
-				Array<FLT,2> A = gbl->sdt2(j,m,Range::all(),Range::all());
-				Array<int,1> ipiv = gbl->spiv2(j,m,Range::all());
+				Array<FLT,2> A = hp_bdry_gbl->sdt2(j,m,Range::all(),Range::all());
+				Array<int,1> ipiv = hp_bdry_gbl->spiv2(j,m,Range::all());
 				x.J.match_patterns(ncoupled,row_ind);
-				x.J.combine_rows(ncoupled, row_ind, A, gbl->sdt2.length(thirdDim), ipiv);
+				x.J.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->sdt2.length(thirdDim), ipiv);
 				x.J_mpi.match_patterns(ncoupled, row_ind);
-				x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->sdt2.length(thirdDim), ipiv);
+				x.J_mpi.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->sdt2.length(thirdDim), ipiv);
 				row0 += NV;
 				row1 += x.NV;
 			}
 		}
 	}
 	
-	if ((!gbl->one_sided || is_master) && gbl->precondition) {
+	if ((!hp_bdry_gbl->one_sided || is_master) && hp_bdry_gbl->precondition) {
 		/* Swap rows */
 		int i = 0;
 		int sind;
@@ -1941,7 +1939,7 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			sind = base.seg(i);
 			int row = x.seg(sind).pnt(0)*vdofs;
 			int ind = 0;
-			if (gbl->field_is_coupled) {
+			if (hp_bdry_gbl->field_is_coupled) {
 				for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 					row_ind(ind++) = row +*n;
 				}
@@ -1951,43 +1949,43 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 			}
 
 			// Store Jacobian
-			gbl->vdt(i,Range::all(),Range::all()) = 0.0;
-			if (gbl->precondition) {
+			hp_bdry_gbl->vdt(i,Range::all(),Range::all()) = 0.0;
+			if (hp_bdry_gbl->precondition) {
 				for(int row=0;row<ncoupled;++row) {
 					for(int col=0;col<ncoupled;++col) {
-						gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+						hp_bdry_gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
 					}
 				}
 			}
 			else {
 				// To shut off preconditioning
 				for(int row=0;row<ncoupled;++row) {
-					gbl->vdt(i,row,row) = 1.0;
+					hp_bdry_gbl->vdt(i,row,row) = 1.0;
 				}
 			}
 			int info;
 #ifdef F2CFortran
-			GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
+			GETRF(ncoupled,ncoupled,&hp_bdry_gbl->vdt(i,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(i,0),info);
 #else
-            const int length = gbl->vdt.length(secondDim);
-            dgetrf_(&ncoupled,&ncoupled,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),&info);
+            const int length = hp_bdry_gbl->vdt.length(secondDim);
+            dgetrf_(&ncoupled,&ncoupled,&hp_bdry_gbl->vdt(i,0,0),&length,&hp_bdry_gbl->vpiv(i,0),&info);
 
 #endif
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
-			Array<FLT,2> A = gbl->vdt(i,Range::all(),Range::all());
-			Array<int,1> vpiv = gbl->vpiv(i,Range::all());
+			Array<FLT,2> A = hp_bdry_gbl->vdt(i,Range::all(),Range::all());
+			Array<int,1> vpiv = hp_bdry_gbl->vpiv(i,Range::all());
 			x.J.match_patterns(ncoupled, row_ind);
-			x.J.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
+			x.J.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->vdt.length(secondDim), vpiv);
 			x.J_mpi.match_patterns(ncoupled, row_ind);
-			x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
+			x.J_mpi.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->vdt.length(secondDim), vpiv);
 			
 		} while (++i < base.nseg);
 		int row = x.seg(sind).pnt(1)*vdofs;
 		int ind = 0;
-		if (gbl->field_is_coupled) {
+		if (hp_bdry_gbl->field_is_coupled) {
 			for(std::vector<int>::iterator n=c0_indices.begin();n != c0_indices.end();++n) {
 				row_ind(ind++) = row +*n;
 			}
@@ -1997,48 +1995,48 @@ void hp_coupled_bdry::petsc_premultiply_jacobian() {
 		}
 		
 		// Store Jacobian
-		gbl->vdt(i,Range::all(),Range::all()) = 0.0;
-		if (gbl->precondition) {
+		hp_bdry_gbl->vdt(i,Range::all(),Range::all()) = 0.0;
+		if (hp_bdry_gbl->precondition) {
 			for(int row=0;row<ncoupled;++row) {
 				for(int col=0;col<ncoupled;++col) {
-					gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
+					hp_bdry_gbl->vdt(i,row,col) = x.J(row_ind(row),row_ind(col));
 				}
 			}
 		}
 		else {
 			// To shut off preconditioning
 			for(int row=0;row<ncoupled;++row) {
-				gbl->vdt(i,row,row) = 1.0;
+				hp_bdry_gbl->vdt(i,row,row) = 1.0;
 			}
 		}
 		int info;
 #ifdef F2CFortran
-		GETRF(ncoupled,ncoupled,&gbl->vdt(i,0,0),gbl->vdt.length(secondDim),&gbl->vpiv(i,0),info);
+		GETRF(ncoupled,ncoupled,&hp_bdry_gbl->vdt(i,0,0),hp_bdry_gbl->vdt.length(secondDim),&hp_bdry_gbl->vpiv(i,0),info);
 #else
-        const int length = gbl->vdt.length(secondDim);
-        dgetrf_(&ncoupled,&ncoupled,&gbl->vdt(i,0,0),&length,&gbl->vpiv(i,0),&info);
+        const int length = hp_bdry_gbl->vdt.length(secondDim);
+        dgetrf_(&ncoupled,&ncoupled,&hp_bdry_gbl->vdt(i,0,0),&length,&hp_bdry_gbl->vpiv(i,0),&info);
 #endif
 		if (info != 0) {
 			*x.gbl->log << "DGETRF FAILED IN VERTEX MODE PRECONDITIONER\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
-		Array<FLT,2> A = gbl->vdt(i,Range::all(),Range::all());
-		Array<int,1> vpiv = gbl->vpiv(i,Range::all());
+		Array<FLT,2> A = hp_bdry_gbl->vdt(i,Range::all(),Range::all());
+		Array<int,1> vpiv = hp_bdry_gbl->vpiv(i,Range::all());
 		x.J.match_patterns(ncoupled, row_ind);
-		x.J.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
+		x.J.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->vdt.length(secondDim), vpiv);
 		x.J_mpi.match_patterns(ncoupled, row_ind);
-		x.J_mpi.combine_rows(ncoupled, row_ind, A, gbl->vdt.length(secondDim), vpiv);
+		x.J_mpi.combine_rows(ncoupled, row_ind, A, hp_bdry_gbl->vdt.length(secondDim), vpiv);
 	
 	}
 }
 #endif
 
-void hp_deformable_fixed_pnt::init(input_map& inmap,void* gbl_in) {
+void hp_deformable_fixed_pnt::init(input_map& inmap) {
 	std::string keyword,val;
 	std::istringstream data;
 	std::string filename;
 	
-	multi_physics_pnt::init(inmap,gbl_in);
+	multi_physics_pnt::init(inmap);
 
 	
 	if ((surf = dynamic_cast<hp_coupled_bdry *>(x.hp_ebdry(base.ebdry(0))))) {
@@ -2085,20 +2083,19 @@ void hp_deformable_fixed_pnt::vdirichlet() {
 		if (surf->is_master) {
 			if (surfbdry == 0) {
 				for(int n=0;n<nfix;++n) {
-					surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;
+					surf->hp_bdry_gbl->vres(x.ebdry(base.ebdry(0))->nseg,n) = 0.0;
 				}
 			}
 			else if (surfbdry == 1) {
 				for(int n=0;n<nfix;++n) {
-					surf->gbl->vres(0,n) = 0.0;
+					surf->hp_bdry_gbl->vres(0,n) = 0.0;
 				}
 			}
 		}
 	}
 #ifdef petsc
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	for(int n=0;n<nfix;++n) {
-		r_gbl->res(base.pnt)(n) = 0.0;
+		x.r_gbl->res(base.pnt)(n) = 0.0;
 	}
 #endif
 }
@@ -2127,21 +2124,21 @@ int hp_deformable_fixed_pnt::setup_preconditioner() {
 	const int nfix = tri_mesh::ND;
 
 	/* Turn off preconditioner for r_tri_mesh */
-	x.gbl->r_tri_mesh::global::diag(base.pnt) = 1.0;
+	x.r_gbl->diag(base.pnt) = 1.0;
 	
 	/* Turn off side preconditioner as well */
 	if (surf) {
 		if (surf->is_master) {
 			if (surfbdry == 0) {
 				for(int n=0;n<nfix;++n) {
-					surf->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,Range::all()) = 0.0;
-					surf->gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,n) = 1.0;
+					surf->hp_bdry_gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,Range::all()) = 0.0;
+					surf->hp_bdry_gbl->vdt(x.ebdry(base.ebdry(0))->nseg,n,n) = 1.0;
 				}
 			}
 			else if (surfbdry == 1) {
 				for(int n=0;n<nfix;++n) {
-					surf->gbl->vdt(0,n,Range::all()) = 0.0;
-					surf->gbl->vdt(0,n,n) = 1.0;
+					surf->hp_bdry_gbl->vdt(0,n,Range::all()) = 0.0;
+					surf->hp_bdry_gbl->vdt(0,n,n) = 1.0;
 				}
 			}
 		}
@@ -2151,8 +2148,8 @@ int hp_deformable_fixed_pnt::setup_preconditioner() {
 
 #endif
 	
-void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
-	hp_deformable_fixed_pnt::init(inmap,gbl_in);
+void hp_deformable_free_pnt::init(input_map& inmap) {
+	hp_deformable_fixed_pnt::init(inmap);
 	
 	std::string input;
 	if (inmap.get(base.idprefix + "_wall_type",input)) {
@@ -2183,7 +2180,7 @@ void hp_deformable_free_pnt::init(input_map& inmap,void* gbl_in) {
 }
 
 void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-	if (surf->is_master || surf->gbl->symmetric) {
+	if (surf->is_master || surf->hp_bdry_gbl->symmetric) {
 		switch(wall_type) {
 			case vertical: {
 				x.pnts(base.pnt)(0) = position;
@@ -2207,7 +2204,7 @@ void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 
 void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 	lf = 0.0;
-	if (surf->is_master || surf->gbl->symmetric) {
+	if (surf->is_master || surf->hp_bdry_gbl->symmetric) {
 		switch(wall_type) {
 			case vertical: {
 				lf(x.NV) = x.pnts(base.pnt)(0) -position;
@@ -2246,13 +2243,13 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 /* Routine to add surface tension stress or endpoint movement residual */
 void hp_deformable_free_pnt::rsdl(int stage) {
 	
-	if (!surf->is_master && !surf->gbl->symmetric) return;
+	if (!surf->is_master && !surf->hp_bdry_gbl->symmetric) return;
 	
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	Array<FLT,1> lf(vdofs);
 	element_rsdl(lf);
 	
-	x.gbl->res.v(base.pnt,Range::all()) += lf(Range(0,x.NV-1));
+	x.hp_gbl->res.v(base.pnt,Range::all()) += lf(Range(0,x.NV-1));
 	
 	int endpt;
 	if (surfbdry == 0)
@@ -2261,13 +2258,12 @@ void hp_deformable_free_pnt::rsdl(int stage) {
 		endpt = 0;
 	
 #ifdef petsc
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	/* equation for tangential poistion */
-	r_gbl->res(base.pnt)(0) = lf(x.NV);
+	x.r_gbl->res(base.pnt)(0) = lf(x.NV);
 #endif
 	
 	// FIXME: This should be deleted eventually
-	surf->gbl->vres(endpt,0) = lf(x.NV);
+	surf->hp_bdry_gbl->vres(endpt,0) = lf(x.NV);
 }
 
 #ifdef petsc
@@ -2291,8 +2287,8 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 #endif
 
 
-void translating_surface::init(input_map& inmap, void *gin) {
-	hp_coupled_bdry::init(inmap,gin);
+void translating_surface::init(input_map& inmap) {
+	hp_coupled_bdry::init(inmap);
 	if (!inmap.get(base.idprefix + "_velx",vel(0))) inmap.getwdefault("velx",vel(0),1.0);
 	if (!inmap.get(base.idprefix + "_vely",vel(0))) inmap.getwdefault("vely",vel(1),0.0);
 }
@@ -2327,7 +2323,7 @@ void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> l
 		for(n=0;n<tri_mesh::ND;++n) {
 			mvel(n,i) =  vel(n) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef MESH_REF_VEL
-			mvel(n,i) -= x.gbl->mesh_ref_vel(n);
+			mvel(n,i) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 		}
 		
@@ -2336,7 +2332,7 @@ void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> l
 		/* NORMAL FLUX */
 		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
-		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*hp_bdry_gbl->meshc(indx);
 	}
 	
 	
@@ -2361,12 +2357,12 @@ int translating_surface::setup_preconditioner() {
 	int last_phase, mp_phase;
     
 	int err = hp_coupled_bdry::setup_preconditioner();
-    if (!gbl->symmetric && !is_master) return(err);
+    if (!hp_bdry_gbl->symmetric && !is_master) return(err);
 	
 	/**************************************************/
 	/* DETERMINE MOVEMENT TIME STEP              */
 	/**************************************************/
-	gbl->vdt(0,Range::all(),Range::all()) = 0.0;
+	hp_bdry_gbl->vdt(0,Range::all(),Range::all()) = 0.0;
 	
 	for(indx=0; indx < base.nseg; ++indx) {
 		sind = base.seg(indx);
@@ -2381,7 +2377,7 @@ int translating_surface::setup_preconditioner() {
 		
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
-		gbl->meshc(indx) = 1.0e99;
+		hp_bdry_gbl->meshc(indx) = 1.0e99;
 		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
@@ -2391,7 +2387,7 @@ int translating_surface::setup_preconditioner() {
 			for(n=0;n<tri_mesh::ND;++n) {
 				mvel(n) = vel(n) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef MESH_REF_VEL
-				mvel(n) -= x.gbl->mesh_ref_vel(n);
+				mvel(n) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
 			}
 			vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
@@ -2406,8 +2402,8 @@ int translating_surface::setup_preconditioner() {
 			/* |a| dx/2 dv/dx  dx/2 dpsi */
 			/* |a| dx/2 2/dx dv/dpsi  dpsi */
 			/* |a| dv/dpsi  dpsi */
-			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
-			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+			// hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM surface WAVE CASE */
+			hp_bdry_gbl->meshc(indx) = MIN(hp_bdry_gbl->meshc(indx),hp_bdry_gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
 		}
 		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
@@ -2419,16 +2415,16 @@ int translating_surface::setup_preconditioner() {
 		mvel(0) = vel(0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
 		mvel(1) = vel(1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
-		mvel(0) -= x.gbl->mesh_ref_vel(0);
-		mvel(1) -= x.gbl->mesh_ref_vel(1);
+		mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+		mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
 		
 		mvel(0) = vel(0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
 		mvel(1) = vel(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
-		mvel(0) -= x.gbl->mesh_ref_vel(0);
-		mvel(1) -= x.gbl->mesh_ref_vel(1);
+		mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+		mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
 		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
 		
@@ -2443,28 +2439,28 @@ int translating_surface::setup_preconditioner() {
 		/* |a| dx/2 dv/dx  dx/2 dpsi */
 		/* |a| dx/2 2/dx dv/dpsi  dpsi */
 		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
-		gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+		// hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM surface WAVE CASE */
+		hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
 #endif
 		
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 		
 		nrm *= 0.5;
 		
-		gbl->vdt(indx,0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx,1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1,1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx,1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		hp_bdry_gbl->vdt(indx+1,1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
 		
 		if (basis::tri(x.log2p)->sm()) {
-			gbl->sdt(indx,0,0) = -dttang*nrm(1);
-			gbl->sdt(indx,0,1) =  dttang*nrm(0);
-			gbl->sdt(indx,1,0) =  dtnorm*nrm(0);
-			gbl->sdt(indx,1,1) =  dtnorm*nrm(1);
+			hp_bdry_gbl->sdt(indx,0,0) = -dttang*nrm(1);
+			hp_bdry_gbl->sdt(indx,0,1) =  dttang*nrm(0);
+			hp_bdry_gbl->sdt(indx,1,0) =  dtnorm*nrm(0);
+			hp_bdry_gbl->sdt(indx,1,1) =  dtnorm*nrm(1);
 			
 #ifdef DETAILED_MINV
 			int lsm = basis::tri(x.log2p)->sm();
@@ -2488,31 +2484,31 @@ int translating_surface::setup_preconditioner() {
 				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
 				
 				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0) /= gbl->cfl(x.log2p,0);
-				lf(1) /= gbl->cfl(x.log2p,0);
-				lf(2) /= gbl->cfl(x.log2p,1);
-				lf(3) /= gbl->cfl(x.log2p,1);
+				lf(0) /= hp_gbl->cfl(x.log2p,0);
+				lf(1) /= hp_gbl->cfl(x.log2p,0);
+				lf(2) /= hp_gbl->cfl(x.log2p,1);
+				lf(3) /= hp_gbl->cfl(x.log2p,1);
 				
 				for (n=0;n<lsm;++n) {
-					gbl->ms(indx,2*m,2*n) = lf(0,n+2);
-					gbl->ms(indx,2*m,2*n+1) = lf(1,n+2);
-					gbl->ms(indx,2*m+1,2*n) = lf(2,n+2);
-					gbl->ms(indx,2*m+1,2*n+1) = lf(3,n+2);
+					hp_bdry_gbl->ms(indx,2*m,2*n) = lf(0,n+2);
+					hp_bdry_gbl->ms(indx,2*m,2*n+1) = lf(1,n+2);
+					hp_bdry_gbl->ms(indx,2*m+1,2*n) = lf(2,n+2);
+					hp_bdry_gbl->ms(indx,2*m+1,2*n+1) = lf(3,n+2);
 				}
 				
 				/* tang/norm, x/y,  mode,  vert */
-				gbl->vms(indx,0,0,m,0) = lf(0,0);
-				gbl->vms(indx,0,1,m,0) = lf(1,0);
-				gbl->vms(indx,0,0,m,1) = lf(0,1);
-				gbl->vms(indx,0,1,m,1) = lf(1,1);
-				gbl->vms(indx,1,0,m,0) = lf(2,0);
-				gbl->vms(indx,1,1,m,0) = lf(3,0);
-				gbl->vms(indx,1,0,m,1) = lf(2,1);
-				gbl->vms(indx,1,1,m,1) = lf(3,1);
+				hp_bdry_gbl->vms(indx,0,0,m,0) = lf(0,0);
+				hp_bdry_gbl->vms(indx,0,1,m,0) = lf(1,0);
+				hp_bdry_gbl->vms(indx,0,0,m,1) = lf(0,1);
+				hp_bdry_gbl->vms(indx,0,1,m,1) = lf(1,1);
+				hp_bdry_gbl->vms(indx,1,0,m,0) = lf(2,0);
+				hp_bdry_gbl->vms(indx,1,1,m,0) = lf(3,0);
+				hp_bdry_gbl->vms(indx,1,0,m,1) = lf(2,1);
+				hp_bdry_gbl->vms(indx,1,1,m,1) = lf(3,1);
 			}
 			
 			int info;
-			GETRF(2*lsm,2*lsm,&gbl->ms(indx,0,0),2*MAXP,&gbl->ipiv(indx,0),info);
+			GETRF(2*lsm,2*lsm,&hp_bdry_gbl->ms(indx,0,0),2*MAXP,&hp_bdry_gbl->ipiv(indx,0),info);
 			if (info != 0) {
 				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n";
                 err = 1;
@@ -2526,8 +2522,8 @@ int translating_surface::setup_preconditioner() {
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vdt(0,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&hp_bdry_gbl->vdt(base.nseg,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
 		
@@ -2537,55 +2533,55 @@ int translating_surface::setup_preconditioner() {
 		last_phase = true;
 		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
 		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg,0,0),0,gbl->vdt.length(secondDim)*gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vdt(0,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&hp_bdry_gbl->vdt(base.nseg,0,0),0,hp_bdry_gbl->vdt.length(secondDim)*hp_bdry_gbl->vdt.length(secondDim)-1,0);
 	}
 	
-	if (gbl->is_loop) {
+	if (hp_bdry_gbl->is_loop) {
 		for(m=0;m<tri_mesh::ND;++m)
 			for(n=0;n<tri_mesh::ND;++n)
-				gbl->vdt(0,m,n) = 0.5*(gbl->vdt(0,m,n) +gbl->vdt(base.nseg+1,m,n));
-		gbl->vdt(base.nseg+1,Range::all(),Range::all()) = gbl->vdt(0,Range::all(),Range::all());
+				hp_bdry_gbl->vdt(0,m,n) = 0.5*(hp_bdry_gbl->vdt(0,m,n) +hp_bdry_gbl->vdt(base.nseg+1,m,n));
+		hp_bdry_gbl->vdt(base.nseg+1,Range::all(),Range::all()) = hp_bdry_gbl->vdt(0,Range::all(),Range::all());
 	}
 	
 	FLT jcbi,temp;
 	for(indx=0;indx<base.nseg+1;++indx) {
 		/* INVERT VERTEX MATRIX */
-		jcbi = 1.0/(gbl->vdt(indx,0,0)*gbl->vdt(indx,1,1) -gbl->vdt(indx,0,1)*gbl->vdt(indx,1,0));
+		jcbi = 1.0/(hp_bdry_gbl->vdt(indx,0,0)*hp_bdry_gbl->vdt(indx,1,1) -hp_bdry_gbl->vdt(indx,0,1)*hp_bdry_gbl->vdt(indx,1,0));
 		
-		temp = gbl->vdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
-		gbl->vdt(indx,0,0) = gbl->vdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
-		gbl->vdt(indx,1,1) = temp;
-		gbl->vdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
-		gbl->vdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+		temp = hp_bdry_gbl->vdt(indx,0,0)*jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+		hp_bdry_gbl->vdt(indx,0,0) = hp_bdry_gbl->vdt(indx,1,1)*jcbi*hp_bdry_gbl->cfl(x.log2p,0);
+		hp_bdry_gbl->vdt(indx,1,1) = temp;
+		hp_bdry_gbl->vdt(indx,0,1) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+		hp_bdry_gbl->vdt(indx,1,0) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,0);
 
 #ifdef TEMPO
-		gbl->vdt(indx,Range::all(),Range::all()) = 0.0;
-		gbl->vdt(indx,0,0) = 1.0;
-		gbl->vdt(indx,1,1) = 1.0;
-		gbl->vdt(indx+1,Range::all(),Range::all()) = 0.0;
-		gbl->vdt(indx+1,0,0) = 1.0;
-		gbl->vdt(indx+1,1,1) = 1.0;
+		hp_bdry_gbl->vdt(indx,Range::all(),Range::all()) = 0.0;
+		hp_bdry_gbl->vdt(indx,0,0) = 1.0;
+		hp_bdry_gbl->vdt(indx,1,1) = 1.0;
+		hp_bdry_gbl->vdt(indx+1,Range::all(),Range::all()) = 0.0;
+		hp_bdry_gbl->vdt(indx+1,0,0) = 1.0;
+		hp_bdry_gbl->vdt(indx+1,1,1) = 1.0;
 #endif
 		/* DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
 		//		FLT theta =  100.0*M_PI/180.0;
-		//		gbl->vdt(indx,0,0) = -sin(theta);
-		//		gbl->vdt(indx,1,1) =  sin(theta);
-		//		gbl->vdt(indx,0,1) = cos(theta);
-		//		gbl->vdt(indx,1,0) = cos(theta);
+		//		hp_bdry_gbl->vdt(indx,0,0) = -sin(theta);
+		//		hp_bdry_gbl->vdt(indx,1,1) =  sin(theta);
+		//		hp_bdry_gbl->vdt(indx,0,1) = cos(theta);
+		//		hp_bdry_gbl->vdt(indx,1,0) = cos(theta);
 	}
 	
 	/* INVERT SIDE MATRIX */
 	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT SIDE MVDT MATRIX */
-			jcbi = 1.0/(gbl->sdt(indx,0,0)*gbl->sdt(indx,1,1) -gbl->sdt(indx,0,1)*gbl->sdt(indx,1,0));
+			jcbi = 1.0/(hp_bdry_gbl->sdt(indx,0,0)*hp_bdry_gbl->sdt(indx,1,1) -hp_bdry_gbl->sdt(indx,0,1)*hp_bdry_gbl->sdt(indx,1,0));
 			
-			temp = gbl->sdt(indx,0,0)*jcbi*gbl->cfl(x.log2p,1);
-			gbl->sdt(indx,0,0) = gbl->sdt(indx,1,1)*jcbi*gbl->cfl(x.log2p,0);
-			gbl->sdt(indx,1,1) = temp;
-			gbl->sdt(indx,0,1) *= -jcbi*gbl->cfl(x.log2p,1);
-			gbl->sdt(indx,1,0) *= -jcbi*gbl->cfl(x.log2p,0);
+			temp = hp_bdry_gbl->sdt(indx,0,0)*jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+			hp_bdry_gbl->sdt(indx,0,0) = hp_bdry_gbl->sdt(indx,1,1)*jcbi*hp_bdry_gbl->cfl(x.log2p,0);
+			hp_bdry_gbl->sdt(indx,1,1) = temp;
+			hp_bdry_gbl->sdt(indx,0,1) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,1);
+			hp_bdry_gbl->sdt(indx,1,0) *= -jcbi*hp_bdry_gbl->cfl(x.log2p,0);
 		}
 	}
     return(err);
@@ -2594,10 +2590,9 @@ int translating_surface::setup_preconditioner() {
 /* Routine to make sure r_gbl residual doesn't get screwed up at triple junction */
 void hp_deformable_follower_pnt::rsdl(int stage) {
 #ifdef petsc
-	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
 	/* equation for tangential poistion */
-	r_gbl->res(base.pnt)(0) = 0.0;
-	r_gbl->res(base.pnt)(1) = 0.0;
+	x.r_gbl->res(base.pnt)(0) = 0.0;
+	x.r_gbl->res(base.pnt)(1) = 0.0;
 #endif
 	
 	if (!surf->is_master) return;
@@ -2609,8 +2604,8 @@ void hp_deformable_follower_pnt::rsdl(int stage) {
 		endpt = 0;
 	
 	// FIXME: This should be deleted eventually
-	surf->gbl->vres(endpt,0) = 0.0;
-	surf->gbl->vres(endpt,1) = 0.0;
+	surf->hp_bdry_gbl->vres(endpt,0) = 0.0;
+	surf->hp_bdry_gbl->vres(endpt,1) = 0.0;
 }
 
 #ifdef petsc

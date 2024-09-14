@@ -58,10 +58,10 @@ private:
 public:
 	quadtree() : maxvrtx(0), vrtx(0), size(0), current(0) {
 #ifdef BZ_DEBUG
-    *gbl->log << "#input_map: BZ_DEBUG is set\n";
+    std:cerr << "#quadtree: BZ_DEBUG is set\n";
 #endif
 #ifdef DEBUG
-    *gbl->log << "#input_map: Running in Xcode's DEBUG Mode\n";
+    std:cerr << "#quadtree: Running in Xcode's DEBUG Mode\n";
 #endif
     }
 	quadtree(const class quadtree& tgt) {

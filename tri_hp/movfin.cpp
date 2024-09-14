@@ -34,25 +34,25 @@ void tri_hp::mg_prolongate() {
     for(i=0;i<fnvrtx;++i) {
 		tind = fmesh->ccnnct(i).tri;
 
-		gbl->res.v(i,Range::all()) = 0.0;
+		hp_gbl->res.v(i,Range::all()) = 0.0;
 
 		for(j=0;j<3;++j) {
 			ind = tri(tind).pnt(j);
-			gbl->res.v(i,Range::all()) -= fmesh->ccnnct(i).wt(j)*vug_frst(ind,Range::all());
+			hp_gbl->res.v(i,Range::all()) -= fmesh->ccnnct(i).wt(j)*vug_frst(ind,Range::all());
 		}
 	}
 
 #ifdef DEBUG
-	*gbl->log << gbl->res.v(Range(0,fnvrtx-1),Range::all());
+	*gbl->log << hp_gbl->res.v(Range(0,fnvrtx-1),Range::all());
 #endif
 
 
 	/* Need to communicate for partition boundaries */
 	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		for(i=0;i<nvbd;++i)
-			vbdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
+			vbdry(i)->vloadbuff(boundary::partitions,hp_gbl->res0.v.data(),0,NV-1,NV);
 		for(i=0;i<nebd;++i)
-			ebdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
+			ebdry(i)->vloadbuff(boundary::partitions,hp_gbl->res0.v.data(),0,NV-1,NV);
 		
 		for(i=0;i<nebd;++i) 
 			ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
@@ -67,16 +67,16 @@ void tri_hp::mg_prolongate() {
 		last_phase = true;
 		for(i=0;i<nebd;++i) {
 			last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,gbl->res0.v.data(),0,NV-1,NV);
+			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,hp_gbl->res0.v.data(),0,NV-1,NV);
 		}
 		for(i=0;i<nvbd;++i) {
 			vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
-			vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,gbl->res0.v.data(),0,NV-1,NV);
+			vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,hp_gbl->res0.v.data(),0,NV-1,NV);
 		}
 	}
 
 	/* ADD CORRECTION */
-	fmesh->ug.v(Range(0,fnvrtx-1),Range::all()) += gbl->res.v(Range(0,fnvrtx-1),Range::all());      
+	fmesh->ug.v(Range(0,fnvrtx-1),Range::all()) += hp_gbl->res.v(Range(0,fnvrtx-1),Range::all());      
 
 	return;
 }

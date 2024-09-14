@@ -23,13 +23,13 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	TinyMatrix<FLT,NV,NV> A,B;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lmu = gbl->mu, rhorbd0, cjcb;
+	FLT lmu = hp_cns_explicit_gbl->mu, rhorbd0, cjcb;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,NV> cv, df;
 	TinyMatrix<FLT,ND,ND> kcond;
 	TinyVector<FLT,NV> tres,cvu;
-	FLT lkcond = gbl->kcond;
-	FLT gam = gbl->gamma;
+	FLT lkcond = hp_cns_explicit_gbl->kcond;
+	FLT gam = hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/(gam-1.0);
 	FLT gogm1 = gam*ogm1;
@@ -67,8 +67,8 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif                        
 		}
 	}
@@ -83,7 +83,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 			for(int n = 0; n < NV; ++n)
 				cvu(n) = u(n)(i,j);
 			
-			u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
+			u(0)(i,j) = (hp_cns_explicit_gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
 			u(1)(i,j) = cvu(1)/cvu(0);
 			u(2)(i,j) = cvu(2)/cvu(0);
 			u(3)(i,j) = u(0)(i,j)/cvu(0);
@@ -161,7 +161,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					double mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/hp_cns_explicit_gbl->R;
 
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
@@ -181,7 +181,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
-						res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+						res(n)(i,j) -= cjcb*hp_cns_explicit_gbl->src->f(n,pt,gbl->time);
 #endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -260,7 +260,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					tres = 0.0;
 					for(int m = 0; m < NV; ++m)
 						for(int n = 0; n < NV; ++n)							
-							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+							tres(m) += hp_cns_explicit_gbl->tau(tind,m,n)*res(n)(i,j);
 
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
@@ -350,7 +350,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					double mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
+					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/hp_cns_explicit_gbl->R;
 					
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p)(tind,0,i,j);
@@ -371,7 +371,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
-						res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+						res(n)(i,j) -= cjcb*hp_cns_explicit_gbl->src->f(n,pt,gbl->time);
 #endif
 					
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -450,7 +450,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					tres = 0.0;
 					for(int m = 0; m < NV; ++m)
 						for(int n = 0; n < NV; ++n)							
-							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
+							tres(m) += hp_cns_explicit_gbl->tau(tind,m,n)*res(n)(i,j);
 					
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);

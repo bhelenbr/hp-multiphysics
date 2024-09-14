@@ -17,28 +17,28 @@ void tri_hp::adapt() {
 	treeinit();  // FIXME??
 	
 	/* Create storage for adaptation */
-	gbl->pstr = create();
-	gbl->pstr->init(*this,adapt_storage);
+	hp_gbl->pstr = create();
+	hp_gbl->pstr->init(*this,adapt_storage);
 	for(int i=0;i<nebd;++i)
-		hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
+		hp_ebdry(i)->adapt_storage = hp_gbl->pstr->hp_ebdry(i);
 	
 	/* Communicate halo information */
 	transfer_halo_solutions();
 	
 	/* Copy to storage for updating solution after adaptation */
-	gbl->pstr->copy(*this);
+	hp_gbl->pstr->copy(*this);
 
 	/* Append halo solution for partition meshes to make searching near partition boundaries work */
-	gbl->pstr->append_halos();
+	hp_gbl->pstr->append_halos();
 	
-	gbl->pstr->checkintwk();
+	hp_gbl->pstr->checkintwk();
 	checkintwk();
 	
 	tri_mesh::adapt();
 	setinfo();
 	
 	/* Delete adaptation storage */
-	delete gbl->pstr;
+	delete hp_gbl->pstr;
 	
 #ifdef petsc
 	petsc_finalize();
@@ -55,7 +55,7 @@ void tri_hp::adapt() {
 	*gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
 	
 	// FOR TESTING ADAPTATION TO A SPECIFIED FUNCTION
-	// tobasis(gbl->ibc);
+	// tobasis(hp_gbl->ibc);
 	
 	return;
 }
@@ -63,50 +63,50 @@ void tri_hp::adapt() {
 
 void tri_hp::length() {
 	
-	if (gbl->error_estimator != gbl->none) {
+	if (hp_gbl->error_estimator != hp_gbl->none) {
 		error_estimator();
 		
 		const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
 		const FLT expon = -1./(ND*(1.+alpha));
 		
-		sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
-		FLT energy2 = gbl->eanda_recv(0);
-		FLT e2to_pow = gbl->eanda_recv(1);
-		FLT totalerror2 = gbl->eanda_recv(2);
+		sim::blks.allreduce(hp_gbl->eanda.data(),hp_gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
+		FLT energy2 = hp_gbl->eanda_recv(0);
+		FLT e2to_pow = hp_gbl->eanda_recv(1);
+		FLT totalerror2 = hp_gbl->eanda_recv(2);
 
-		if (gbl->error_estimator == global::energy_norm) {
+		if (hp_gbl->error_estimator == hp_global::energy_norm) {
 			*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Energy2 " << energy2 << " Normalized Error " << sqrt(totalerror2/energy2) << " Target " << gbl->error_target << '\n';
 			
 			/* Determine error target (SEE AEA Paper) */
 			FLT etarget2 = gbl->error_target*gbl->error_target*energy2;
 			FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-			gbl->res.v(Range(0,npnt-1),0) = 1.0;
-			gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+			hp_gbl->res.v(Range(0,npnt-1),0) = 1.0;
+			hp_gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 			for(int tind=0;tind<ntri;++tind) {
-				FLT error2 = gbl->fltwk(tind);
+				FLT error2 = tri_gbl->fltwk(tind);
 				FLT ri = K*pow(error2, expon);				
 				for (int j=0;j<3;++j) {
 					int p0 = tri(tind).pnt(j);
 					/* Calculate average at vertices */
-					gbl->res.v(p0,0) *= ri;
-					gbl->res_r.v(p0,0) += 1.0;
+					hp_gbl->res.v(p0,0) *= ri;
+					hp_gbl->res_r.v(p0,0) += 1.0;
 				}
 			}
 		}
-		else if (gbl->error_estimator == global::scale_independent) {
+		else if (hp_gbl->error_estimator == hp_global::scale_independent) {
 			/* This is to maintain a constant local truncation error (independent of scale) */
-			gbl->res.v(Range(0,npnt-1),0) = 1.0;
-			gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+			hp_gbl->res.v(Range(0,npnt-1),0) = 1.0;
+			hp_gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 			for(int tind=0;tind<ntri;++tind) {
 				FLT jcb = 0.25*area(tind);
-				gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
-				FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+				tri_gbl->fltwk(tind) = sqrt(tri_gbl->fltwk(tind)/jcb)/gbl->error_target;
+				FLT error = tri_gbl->fltwk(tind);  // Magnitude of local truncation error
 				FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
 				for (int j=0;j<3;++j) {
 					int p0 = tri(tind).pnt(j);
 					/* Calculate average at vertices */
-					gbl->res.v(p0,0) *= ri;
-					gbl->res_r.v(p0,0) += 1.0;
+					hp_gbl->res.v(p0,0) *= ri;
+					hp_gbl->res_r.v(p0,0) += 1.0;
 				}
 			}	
 		}
@@ -116,10 +116,10 @@ void tri_hp::length() {
 		}
 		
 		for (int pind=0;pind<npnt;++pind) {
-			FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
+			FLT ri = pow(hp_gbl->res.v(pind,0),1.0/hp_gbl->res_r.v(pind,0));
 //			if (ri < 2.0 && ri > 0.5)
 //				ri = 1.0;
-			gbl->res.v(pind,0) = ri;
+			hp_gbl->res.v(pind,0) = ri;
 		}
 		
 //		/* This is to smooth the change to the length function */
@@ -140,18 +140,18 @@ void tri_hp::length() {
 //		for(iter=0; iter< niter; ++iter) {
 //			/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
 //			for(i=0;i<npnt;++i)
-//				gbl->res_r.v(i,0) = 0.0;
+//				hp_gbl->res_r.v(i,0) = 0.0;
 //			
 //			for(i=0;i<nseg;++i) {
 //				p0 = seg(i).pnt(0);
 //				p1 = seg(i).pnt(1);
-//				gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
-//				gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
+//				hp_gbl->res_r.v(p0,0) += 1./hp_gbl->res.v(p1,0);
+//				hp_gbl->res_r.v(p1,0) += 1./hp_gbl->res.v(p0,0);
 //			}
 //			
 //			for(i=0;i<npnt;++i) {
 //				if (pnt(i).info == 0) {
-//					gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+//					hp_gbl->res.v(i,0) = 1./(hp_gbl->res_r.v(i,0)/pnt(i).nnbor);
 //				}
 //			}
 //		}
@@ -161,16 +161,16 @@ void tri_hp::length() {
             
             for(int j=0;j<ebdry(i)->nseg;++j) {
                 int v1 = seg(ebdry(i)->seg(j)).pnt(0);
-                gbl->res.v(v1,0) = 1;
+                hp_gbl->res.v(v1,0) = 1;
             }
             int v1 = seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1);
-            gbl->res.v(v1,0) = 1;
+            hp_gbl->res.v(v1,0) = 1;
         }
 		
         if (gbl->adaptable) {
             /* NOW RESCALE AT VERTICES */
             for (int pind=0;pind<npnt;++pind)
-                lngth(pind) *= gbl->res.v(pind,0);
+                lngth(pind) *= hp_gbl->res.v(pind,0);
             
             /* LIMIT BOUNDARY CURVATURE */
             for(int i=0;i<nebd;++i) {
@@ -223,7 +223,7 @@ void tri_hp::length() {
                     
                     
                     // FIXME: end points are wrong for periodic boundary or communication boundary
-                    FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
+                    FLT sum = hp_gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
                     lngth(v1) /= 1. +sum;
                     lngth(v2) /= 1. +sum;
                 }
@@ -291,7 +291,7 @@ void tri_hp::updatepdata(int v0) {
 	int n,tind=-1,step; 
 	FLT r,s;      
 
-	bool found = gbl->pstr->findinteriorpt(pnts(v0),tind,r,s);
+	bool found = hp_gbl->pstr->findinteriorpt(pnts(v0),tind,r,s);
 	if (!found) {
 		*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatepdata for " << v0 << ' ' << pnts(v0) << std::endl;
 		//			std::ostringstream fname;
@@ -301,25 +301,25 @@ void tri_hp::updatepdata(int v0) {
 	}
 	
 	
-	// gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);  // old bad way
+	// hp_gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);  // old bad way
 
 	for(step=0;step<gbl->nadapt;++step) {
-		gbl->pstr->ugtouht(tind,step);
-		basis::tri(log2p)->ptprobe(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
+		hp_gbl->pstr->ugtouht(tind,step);
+		basis::tri(log2p)->ptprobe(NV,&ugbd(step).v(v0,0),&hp_gbl->pstr->uht(0)(0),MXTM);
 	}
 
-	if (gbl->pstr->tri(tind).info > -1) {
+	if (hp_gbl->pstr->tri(tind).info > -1) {
 		for(step=1;step<gbl->nadapt;++step) {
-			gbl->pstr->crdtocht(tind,step);
-			basis::tri(log2p)->ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
+			hp_gbl->pstr->crdtocht(tind,step);
+			basis::tri(log2p)->ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&hp_gbl->pstr->cht(0,0),MXTM);
 		}
 	}
 	else {
 		for(step=1;step<gbl->nadapt;++step) {
 			for(n=0;n<ND;++n) 
-				vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(0))(n)*(s +1.)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(1))(n)*(-r -s)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(2))(n)*(r +1.)/2.;
+				vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(0))(n)*(s +1.)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(1))(n)*(-r -s)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(2))(n)*(r +1.)/2.;
 		}
 	}
 
@@ -335,21 +335,21 @@ void tri_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
 	sind = hp_ebdry(bnum)->adapt_storage->base.seg(sidloc);
 
 	for(step=0;step<gbl->nadapt;++step) {
-		gbl->pstr->ugtouht1d(sind,step);
-		basis::tri(log2p)->ptprobe1d(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
+		hp_gbl->pstr->ugtouht1d(sind,step);
+		basis::tri(log2p)->ptprobe1d(NV,&ugbd(step).v(v0,0),&hp_gbl->pstr->uht(0)(0),MXTM);
 	}
 
 	if (hp_ebdry(bnum)->is_curved()) {
 		for(step=1;step<gbl->nadapt;++step) {
-			gbl->pstr->crdtocht1d(sind,step);
-			basis::tri(log2p)->ptprobe1d(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
+			hp_gbl->pstr->crdtocht1d(sind,step);
+			basis::tri(log2p)->ptprobe1d(ND,&vrtxbd(step)(v0)(0),&hp_gbl->pstr->cht(0,0),MXTM);
 		}
 	}
 	else {
 		for(step=1;step<gbl->nadapt;++step) {
 			for(n=0;n<ND;++n) 
-				vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(0))(n)*(1. -psi)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(1))(n)*(1. +psi)/2.;
+				vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->seg(sind).pnt(0))(n)*(1. -psi)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->seg(sind).pnt(1))(n)*(1. +psi)/2.;
 		}
 	}
 
@@ -402,7 +402,7 @@ void tri_hp::updatesdata(int sind) {
 	for(i=0;i<basis::tri(log2p)->gpx();++i) {
 		pt(0) = crd(0)(0,i);
 		pt(1) = crd(1)(0,i);
-		found = gbl->pstr->findinteriorpt(pt,tind,r,s);
+		found = hp_gbl->pstr->findinteriorpt(pt,tind,r,s);
 		if (!found) {
 			*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatesdata for " << sind << ' ' << pt << std::endl;
 //			std::ostringstream fname;
@@ -412,8 +412,8 @@ void tri_hp::updatesdata(int sind) {
 		}
 
 		for(step=0;step<gbl->nadapt;++step) {
-			gbl->pstr->ugtouht(tind,step);
-			basis::tri(log2p)->ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+			hp_gbl->pstr->ugtouht(tind,step);
+			basis::tri(log2p)->ptprobe(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 			for(n=0;n<NV;++n)    {
 				bdwk(step,n)(0,i) -= upt[n];
 			}
@@ -472,13 +472,13 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 			stgt = hp_ebdry(bnum)->adapt_storage->base.seg(stgt);
 
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht1d(stgt,step);
-				basis::tri(log2p)->ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht1d(stgt,step);
+				basis::tri(log2p)->ptprobe1d(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)    
 					bdwk(step,n)(0,m) -= upt[n];
 
-				gbl->pstr->crdtocht1d(stgt,step);
-				basis::tri(log2p)->ptprobe1d(ND,upt,&gbl->pstr->cht(0,0),MXTM);
+				hp_gbl->pstr->crdtocht1d(stgt,step);
+				basis::tri(log2p)->ptprobe1d(ND,upt,&hp_gbl->pstr->cht(0,0),MXTM);
 				for(n=0;n<ND;++n)    
 					bdwk(step,n)(1,m) -= upt[n];
 			}                          
@@ -512,8 +512,8 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
 
 			/* CALCULATE VALUE OF SOLUTION AT POINT */
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht1d(stgt,step);
-				basis::tri(log2p)->ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht1d(stgt,step);
+				basis::tri(log2p)->ptprobe1d(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)    
 					bdwk(step,n)(0,m) -= upt[n];
 			}
@@ -587,7 +587,7 @@ void tri_hp::updatetdata(int tind) {
 		for (j=0; j < basis::tri(log2p)->gpn(); ++j ) {
 			pt(0) = crd(0)(i,j);
 			pt(1) = crd(1)(i,j);
-			found = gbl->pstr->findinteriorpt(pt,ttgt,r,s);
+			found = hp_gbl->pstr->findinteriorpt(pt,ttgt,r,s);
 			if (!found) {
 				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
 				*gbl->log << "Using triangle " << ttgt << " with (r,s) = (" << r << ',' << s << ')' << std::endl;
@@ -597,8 +597,8 @@ void tri_hp::updatetdata(int tind) {
 //				tri_hp::output(fname.str(),tri_hp::tecplot);
 			}            
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht(ttgt,step);
-				basis::tri(log2p)->ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht(ttgt,step);
+				basis::tri(log2p)->ptprobe(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)
 					bdwk(step,n)(i,j) -= upt[n];
 			}
@@ -644,28 +644,28 @@ void tri_hp::refineby2() {
     treeinit();  // FIXME??
     
     /* Create storage for adaptation */
-    gbl->pstr = create();
-    gbl->pstr->init(*this,adapt_storage);
+    hp_gbl->pstr = create();
+    hp_gbl->pstr->init(*this,adapt_storage);
     for(int i=0;i<nebd;++i)
-        hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
+        hp_ebdry(i)->adapt_storage = hp_gbl->pstr->hp_ebdry(i);
     
     /* Communicate halo information */
     transfer_halo_solutions();
     
     /* Copy to storage for updating solution after adaptation */
-    gbl->pstr->copy(*this);
+    hp_gbl->pstr->copy(*this);
 
     /* Append halo solution for partition meshes to make searching near partition boundaries work */
-    gbl->pstr->append_halos();
+    hp_gbl->pstr->append_halos();
     
-    gbl->pstr->checkintwk();
+    hp_gbl->pstr->checkintwk();
     checkintwk();
     
     tri_mesh::refineby2();
     setinfo();
     
     /* Delete adaptation storage */
-    delete gbl->pstr;
+    delete hp_gbl->pstr;
     
 #ifdef petsc
     petsc_finalize();
@@ -682,7 +682,7 @@ void tri_hp::refineby2() {
     *gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
     
     // FOR TESTING ADAPTATION TO A SPECIFIED FUNCTION
-    // tobasis(gbl->ibc);
+    // tobasis(hp_gbl->ibc);
     
     return;
 }

@@ -35,14 +35,14 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	ul = hul/hl -um;
 	vl = hvl/hl -vm;
 	qmax = ul*ul +vl*vl;
-	fmax = fabs(x.gbl->f0 +x.gbl->cbeta*xpt(1));
+	fmax = fabs(x.hp_swe_gbl->f0 +x.hp_swe_gbl->cbeta*xpt(1));
 	c2 = x.gbl->g*hl;
 	dxmax = 2.*side_length/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
-	alpha = x.gbl->cd*dxmax/(2*hl);
+	alpha = x.hp_swe_gbl->cd*dxmax/(2*hl);
 	alpha2 = alpha*alpha;
 	sigma = MAX((qmax -c2)/qmax,0);
-//    pre = x.gbl->ptest*(pow(dxmax*(gbl->bd(0)+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd(0)*gbl->bd(0) +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
-	pre = x.gbl->ptest*(pow(dxmax*(x.gbl->bd(0)*.5 +fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(x.gbl->bd(0)*x.gbl->bd(0)*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
+//    pre = x.hp_swe_gbl->ptest*(pow(dxmax*(gbl->bd(0)+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd(0)*gbl->bd(0) +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
+	pre = x.hp_swe_gbl->ptest*(pow(dxmax*(x.gbl->bd(0)*.5 +fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(x.gbl->bd(0)*x.gbl->bd(0)*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
 
 	lam0 = ul;
 	c = sqrt(ul*ul*(1-pre) +pre*c2);

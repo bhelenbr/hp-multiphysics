@@ -9,14 +9,14 @@ int tri_hp_swirl::setup_preconditioner() {
 	TinyVector<int,3> v;
     int err = 0;
     
-	FLT nu = gbl->mu/gbl->rho;
+	FLT nu = hp_ins_gbl->mu/hp_ins_gbl->rho;
 
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 
 	for(tind = 0; tind < ntri; ++tind) {
@@ -47,7 +47,7 @@ int tri_hp_swirl::setup_preconditioner() {
 			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
 			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
 #ifdef MESH_REF_VEL
-			mvel += gbl->mesh_ref_vel;
+			mvel += hp_gbl->mesh_ref_vel;
 #endif
 			
 			q = pow(ug.v(v0,0)-0.5*mvel(0),2.0) +pow(ug.v(v0,1)-0.5*mvel(1),2.0);
@@ -63,21 +63,21 @@ int tri_hp_swirl::setup_preconditioner() {
         }
         
 		gam = 3.0*qsmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-		if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.01);
+		if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.01);
 		qs = sqrt(qsmax);
 		lam1 = qs + sqrt(qsmax +gam);
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-		gbl->tau(tind,NV-1) = qsmax*gbl->tau(tind,0);
+		hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+		hp_ins_gbl->tau(tind,NV-1) = qsmax*hp_ins_gbl->tau(tind,0);
 
 		/* THIS IS FOR SCALARS */
 		for (int n=3;n<NV-1;++n) {
-			double diff = gbl->D(n)/gbl->rho;
+			double diff = hp_ins_gbl->D(n)/hp_ins_gbl->rho;
 			double dth = qmax +(0.5*hmax*gbl->bd(0) +2.*diff/hmax)*(0.5*hmax*gbl->bd(0) +2.*diff/hmax);
 			double rtdth = sqrt(dth);
-			gbl->tau(tind,n) = adis*h/(jcb*rtdth);
-			gbl->tprcn(tind,n) = gbl->rho*rtdth/h*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.)*jcb;
+			hp_ins_gbl->tau(tind,n) = adis*h/(jcb*rtdth);
+			hp_gbl->tprcn(tind,n) = hp_ins_gbl->rho*rtdth/h*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.)*jcb;
 		}
 
 		/* SET UP DIAGONAL PRECONDITIONER */
@@ -85,15 +85,15 @@ int tri_hp_swirl::setup_preconditioner() {
 		jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-		gbl->tprcn(tind,0) = gbl->rho*jcb;    
-		gbl->tprcn(tind,1) = gbl->rho*jcb;  
-		gbl->tprcn(tind,2) = gbl->rho*jcb;      
-		gbl->tprcn(tind,NV-1) =  jcb/gam;
+		hp_gbl->tprcn(tind,0) = hp_ins_gbl->rho*jcb;    
+		hp_gbl->tprcn(tind,1) = hp_ins_gbl->rho*jcb;  
+		hp_gbl->tprcn(tind,2) = hp_ins_gbl->rho*jcb;      
+		hp_gbl->tprcn(tind,NV-1) =  jcb/gam;
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}

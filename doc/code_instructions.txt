@@ -287,6 +287,7 @@ cd ../symbolic_function
 xcodebuild -scheme install -configuration Release
 cd ../tri_mesh
 xcodebuild -scheme tri_mesh -configuration Release
+xcodebuild -scheme tri_mesh_mpi -configuration Release clean
 xcodebuild -scheme libtri_mesh -configuration Release
 xcodebuild -scheme libtri_mesh_mpi -configuration Release
 cd ../tri_basis

@@ -9,26 +9,27 @@
 
 #include "tri_hp_explicit.h"
 
-void tri_hp_explicit::init(input_map& inmap, void *gin) {
+void tri_hp_explicit::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
+    hp_explicit_gbl = make_shared<hp_explicit_global>();
 
 	tri_hp_cd::init(inmap,gin);
-    if (!inmap.get(gbl->idprefix + "_sigma",gbl->sigma)) {
-        inmap.getwdefault("sigma",gbl->sigma,1.0);
+    if (!inmap.get(gbl->idprefix + "_sigma",hp_explicit_gbl->sigma)) {
+        inmap.getwdefault("sigma",hp_explicit_gbl->sigma,1.0);
     }
     
-	gbl->sprcn2.resize(maxpst,sm0,NV);
+	hp_explicit_gbl->sprcn2.resize(maxpst,sm0,NV);
 
 
 	int tm0 = basis::tri(log2pmax)->tm();
 	for (int tind=0; tind < ntri;++tind) {
 		// tri(tind).info = 0; // FOR TESTING CURVED ALGORITHM
 		if (tri(tind).info > -1)
-			gbl->mass[tind].resize(tm0,tm0);
+			hp_explicit_gbl->mass[tind].resize(tm0,tm0);
 	}
 
 	return;

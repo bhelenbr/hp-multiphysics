@@ -29,7 +29,7 @@ struct bd_str {
 };
 #endif
 
-template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, void *gin) {
+template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
@@ -253,28 +253,28 @@ template<class BASE> void pod_simulate<BASE>::tadvance() {
 	/* EXTRAPOLATE GUESS FOR COEFF'S HERE FOR NEXT TIME STEP??*/
 	
 	/* CALCULATE SOLUTION BASED ON COEFFS */
-	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
-	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
-	BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+	BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+	BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+	BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
 
 	for (int m=0;m<nmodes;++m) {
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) += coeffs(m)*modes(m).v(Range(0,BASE::npnt-1));
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) += coeffs(m)*modes(m).s(Range(0,BASE::nseg-1));
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) += coeffs(m)*modes(m).i(Range(0,BASE::ntri-1));
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) += coeffs(m)*modes(m).v(Range(0,BASE::npnt-1));
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) += coeffs(m)*modes(m).s(Range(0,BASE::nseg-1));
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) += coeffs(m)*modes(m).i(Range(0,BASE::ntri-1));
 	}
 
 #ifdef POD_BDRY
 	for (int m=nmodes;m<tmodes;++m) {
 		for (int bind=0;bind<BASE::nebd;++bind) {		
-			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,m,coeffs(m));
+			pod_ebdry(bind)->addto2Dsolution(BASE::hp_gbl->res,m,coeffs(m));
 		}
 	}
 #endif
 
 	/* NOW SUBTRACT CURRENT SOLUTION TO CALCULATE DEVIATION */
-	BASE::gbl->res.v(Range(0,BASE::npnt-1)) -= BASE::ug.v(Range(0,BASE::npnt-1));
-	BASE::gbl->res.s(Range(0,BASE::nseg-1)) -= BASE::ug.s(Range(0,BASE::nseg-1));
-	BASE::gbl->res.i(Range(0,BASE::ntri-1)) -= BASE::ug.i(Range(0,BASE::ntri-1));
+	BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) -= BASE::ug.v(Range(0,BASE::npnt-1));
+	BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) -= BASE::ug.s(Range(0,BASE::nseg-1));
+	BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) -= BASE::ug.i(Range(0,BASE::ntri-1));
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nebd;++i)
@@ -288,9 +288,9 @@ template<class BASE> void pod_simulate<BASE>::tadvance() {
 		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
-	BASE::ug.v(Range(0,BASE::npnt-1)) += BASE::gbl->res.v(Range(0,BASE::npnt-1));
-	BASE::ug.s(Range(0,BASE::nseg-1)) += BASE::gbl->res.s(Range(0,BASE::nseg-1));
-	BASE::ug.i(Range(0,BASE::ntri-1)) += BASE::gbl->res.i(Range(0,BASE::ntri-1));
+	BASE::ug.v(Range(0,BASE::npnt-1)) += BASE::hp_gbl->res.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) += BASE::hp_gbl->res.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) += BASE::hp_gbl->res.i(Range(0,BASE::ntri-1));
 }
 
 
@@ -303,14 +303,14 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 	int last_phase, mp_phase;
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		vc0load(mp_phase,BASE::gbl->res.v.data());
+		vc0load(mp_phase,BASE::hp_gbl->res.v.data());
 		BASE::pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
-		last_phase &= vc0wait_rcv(mp_phase,BASE::gbl->res.v.data());
+		last_phase &= vc0wait_rcv(mp_phase,BASE::hp_gbl->res.v.data());
 	}
-	sc0load(BASE::gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::gbl->res.s.extent(secondDim));
+	sc0load(BASE::hp_gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::hp_gbl->res.s.extent(secondDim));
 	BASE::smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(BASE::gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::gbl->res.s.extent(secondDim));
+	sc0wait_rcv(BASE::hp_gbl->res.s.data(),0,basis::tri(BASE::log2p)->sm()-1,BASE::hp_gbl->res.s.extent(secondDim));
 #endif
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -329,17 +329,17 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 	for (int k = 0; k < nmodes; ++k) {
 		for(int i=0; i<BASE::npnt;++i)
 			for(int n=0;n<BASE::NV;++n) 
-				rsdls(k) += modes(k).v(i,n)*BASE::gbl->res.v(i,n);
+				rsdls(k) += modes(k).v(i,n)*BASE::hp_gbl->res.v(i,n);
 
 		for(int i=0; i<BASE::nseg;++i)
 			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 				for(int n=0;n<BASE::NV;++n) 
-					rsdls(k) += modes(k).s(i,sm,n)*BASE::gbl->res.s(i,sm,n);
+					rsdls(k) += modes(k).s(i,sm,n)*BASE::hp_gbl->res.s(i,sm,n);
 
 		for(int i=0; i<BASE::ntri;++i)
 			for(int im=0;im<basis::tri(BASE::log2p)->im();++im)
 				for(int n=0;n<BASE::NV;++n) 
-					rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
+					rsdls(k) += modes(k).i(i,im,n)*BASE::hp_gbl->res.i(i,im,n);
 	}
 
 #ifdef POD_BDRY
@@ -380,16 +380,16 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 
 	/* STORE BASELINE IN LAST COLUMN */
 	jacobian(Range(0,tmodes-1),tmodes-1) = rsdls_recv;
-	BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) = BASE::ug.v(Range(0,BASE::npnt-1));
-	BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) = BASE::ug.s(Range(0,BASE::nseg-1));
-	BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) = BASE::ug.i(Range(0,BASE::ntri-1));
+	BASE::hp_gbl->ug0.v(Range(0,BASE::npnt-1)) = BASE::ug.v(Range(0,BASE::npnt-1));
+	BASE::hp_gbl->ug0.s(Range(0,BASE::nseg-1)) = BASE::ug.s(Range(0,BASE::nseg-1));
+	BASE::hp_gbl->ug0.i(Range(0,BASE::ntri-1)) = BASE::ug.i(Range(0,BASE::ntri-1));
 
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
 		/* PERTURB EACH COEFFICIENT */
 		FLT delta = 1.0e-2*coeffs(modeloop) +1.0e-8;
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = delta*modes(modeloop).v(Range(0,BASE::npnt-1));
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = delta*modes(modeloop).s(Range(0,BASE::nseg-1));
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = delta*modes(modeloop).i(Range(0,BASE::ntri-1));
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = delta*modes(modeloop).v(Range(0,BASE::npnt-1));
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = delta*modes(modeloop).s(Range(0,BASE::nseg-1));
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = delta*modes(modeloop).i(Range(0,BASE::ntri-1));
 
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nebd;++i)
@@ -403,9 +403,9 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 				BASE::hp_ebdry(i)->sdirichlet(sm);
 
-		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
-		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
-		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
+		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::hp_gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::hp_gbl->res.v(Range(0,BASE::npnt-1));
+		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::hp_gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::hp_gbl->res.s(Range(0,BASE::nseg-1));
+		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::hp_gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::hp_gbl->res.i(Range(0,BASE::ntri-1));
 
 		rsdl(BASE::gbl->nstage);
 
@@ -418,12 +418,12 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 	for (int modeloop = nmodes; modeloop < tmodes; ++modeloop) {
 
 		/* ZERO COEFFICIENT */
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0; 
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = 0.0; 
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
 
 		for (int bind=0;bind<BASE::nebd;++bind) {		
-			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,modeloop,1.0e-4);
+			pod_ebdry(bind)->addto2Dsolution(BASE::hp_gbl->res,modeloop,1.0e-4);
 		}
 
 		/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -433,9 +433,9 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 		for(int i=0;i<BASE::nvbd;++i)
 			BASE::hp_vbdry(i)->vdirichlet();
 
-		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
-		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
-		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
+		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::hp_gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::hp_gbl->res.v(Range(0,BASE::npnt-1));
+		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::hp_gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::hp_gbl->res.s(Range(0,BASE::nseg-1));
+		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::hp_gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::hp_gbl->res.i(Range(0,BASE::ntri-1));
 
 		rsdl(BASE::gbl->nstage);
 
@@ -445,9 +445,9 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 #endif
 
 	/* RESTORE UG & COEFF VECTOR */
-	BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1));
-	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
-	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
+	BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::hp_gbl->ug0.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::hp_gbl->ug0.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::hp_gbl->ug0.i(Range(0,BASE::ntri-1));
 
 //  *BASE::gbl->log << jacobian << std::endl;
 //	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
@@ -485,9 +485,9 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 	/* Now compress it using phi^T J phi */
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
 		/* MAKE 1D Vector of Mode with B.C.'s */
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop).v(Range(0,BASE::npnt-1));
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop).s(Range(0,BASE::nseg-1));
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop).i(Range(0,BASE::ntri-1));
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop).v(Range(0,BASE::npnt-1));
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop).s(Range(0,BASE::nseg-1));
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop).i(Range(0,BASE::ntri-1));
 		
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nebd;++i)
@@ -505,26 +505,26 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 		/* Make 1D vector */
 		for (int i=0;i<BASE::npnt;++i)
 			for(int n=0;n<BASE::NV;++n)
-				phi1D(ind++) = BASE::gbl->res.v(i,n);
+				phi1D(ind++) = BASE::hp_gbl->res.v(i,n);
 		
 		for (int i=0;i<BASE::nseg;++i)
 			for(int m=0;m<sm;++m)
 				for(int n=0;n<BASE::NV;++n)
-					phi1D(ind++) = BASE::gbl->res.s(i,m,n);
+					phi1D(ind++) = BASE::hp_gbl->res.s(i,m,n);
 		
 		for (int i=0;i<BASE::ntri;++i)
 			for(int m=0;m<im;++m)
 				for(int n=0;n<BASE::NV;++n)
-					phi1D(ind++) = BASE::gbl->res.i(i,m,n);
+					phi1D(ind++) = BASE::hp_gbl->res.i(i,m,n);
 		
 		/* J times mode */
 		BASE::J.mmult(phi1D,JPhi);
 		
 		for (int modeloop1 = 0; modeloop1 < nmodes; ++modeloop1) {
 			/* MAKE 1D Vector of Mode with B.C.'s */
-			BASE::gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop1).v(Range(0,BASE::npnt-1));
-			BASE::gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop1).s(Range(0,BASE::nseg-1));
-			BASE::gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop1).i(Range(0,BASE::ntri-1));
+			BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = modes(modeloop1).v(Range(0,BASE::npnt-1));
+			BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = modes(modeloop1).s(Range(0,BASE::nseg-1));
+			BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = modes(modeloop1).i(Range(0,BASE::ntri-1));
 			
 			/* APPLY VERTEX DIRICHLET B.C.'S */
 			for(int i=0;i<BASE::nebd;++i)
@@ -542,17 +542,17 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 			/* Make 1D vector */
 			for (int i=0;i<BASE::npnt;++i)
 				for(int n=0;n<BASE::NV;++n)
-					phi1D(ind++) = BASE::gbl->res.v(i,n);
+					phi1D(ind++) = BASE::hp_gbl->res.v(i,n);
 			
 			for (int i=0;i<BASE::nseg;++i)
 				for(int m=0;m<sm;++m)
 					for(int n=0;n<BASE::NV;++n)
-						phi1D(ind++) = BASE::gbl->res.s(i,m,n);
+						phi1D(ind++) = BASE::hp_gbl->res.s(i,m,n);
 			
 			for (int i=0;i<BASE::ntri;++i)
 				for(int m=0;m<im;++m)
 					for(int n=0;n<BASE::NV;++n)
-						phi1D(ind++) = BASE::gbl->res.i(i,m,n);
+						phi1D(ind++) = BASE::hp_gbl->res.i(i,m,n);
 			
 			jacobian_send(modeloop1,modeloop) = dot(phi1D,JPhi);
 		}
@@ -564,12 +564,12 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 	for (int modeloop = nmodes; modeloop < tmodes; ++modeloop) {
 		
 		/* ZERO COEFFICIENT */
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
 		
 		for (int bind=0;bind<BASE::nebd;++bind) {
-			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,modeloop,1.0e-4);
+			pod_ebdry(bind)->addto2Dsolution(BASE::hp_gbl->res,modeloop,1.0e-4);
 		}
 		
 		/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -579,9 +579,9 @@ template<class BASE> int pod_simulate<BASE>::setup_preconditioner() {
 		for(int i=0;i<BASE::nvbd;++i)
 			BASE::hp_vbdry(i)->vdirichlet();
 		
-		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
-		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
-		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
+		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::hp_gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::hp_gbl->res.v(Range(0,BASE::npnt-1));
+		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::hp_gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::hp_gbl->res.s(Range(0,BASE::nseg-1));
+		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::hp_gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::hp_gbl->res.i(Range(0,BASE::ntri-1));
 		
 		rsdl(BASE::gbl->nstage);
 		
@@ -623,24 +623,24 @@ template<class BASE> void pod_simulate<BASE>::update() {
 #ifdef DEBUG
 	for(int i=0; i<BASE::npnt;++i)
 		for(int n=0;n<BASE::NV;++n) {
-			if (fabs(BASE::gbl->res.v(i,n)) > 1.0e-9) {
-				*BASE::gbl->log << "v" << i << ' ' << n << ' ' << BASE::gbl->res.v(i,n) << std::endl;
+			if (fabs(BASE::hp_gbl->res.v(i,n)) > 1.0e-9) {
+				*BASE::gbl->log << "v" << i << ' ' << n << ' ' << BASE::hp_gbl->res.v(i,n) << std::endl;
 			}
 		}
 	
 	for(int i=0; i<BASE::nseg;++i)
 		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 			for(int n=0;n<BASE::NV;++n) {
-				if (fabs(BASE::gbl->res.s(i,sm,n)) > 1.0e-9) {
-					*BASE::gbl->log <<  "s" << i << ' ' << sm << ' ' << n << ' ' << BASE::gbl->res.s(i,sm,n) << std::endl;
+				if (fabs(BASE::hp_gbl->res.s(i,sm,n)) > 1.0e-9) {
+					*BASE::gbl->log <<  "s" << i << ' ' << sm << ' ' << n << ' ' << BASE::hp_gbl->res.s(i,sm,n) << std::endl;
 				}
 			}
 	
 	for(int i=0; i<BASE::ntri;++i)
 		for(int im=0;im<basis::tri(BASE::log2p)->im();++im)
 			for(int n=0;n<BASE::NV;++n) {
-				if (fabs(BASE::gbl->res.i(i,im,n)) > 1.0e-9) {
-					*BASE::gbl->log << "i" << i << ' ' << im << ' ' << n << ' ' << BASE::gbl->res.i(i,im,n) << std::endl;
+				if (fabs(BASE::hp_gbl->res.i(i,im,n)) > 1.0e-9) {
+					*BASE::gbl->log << "i" << i << ' ' << im << ' ' << n << ' ' << BASE::hp_gbl->res.i(i,im,n) << std::endl;
 				}
 			}
 			
@@ -701,20 +701,20 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	coeffs -= rsdls_recv;	// update POD coefficients
 
 	/* Now use that to update flow solution */
-	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
-	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
-	BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+	BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+	BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+	BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
 
 	for (int m=0;m<nmodes;++m) {
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) += rsdls_recv(m)*modes(m).v(Range(0,BASE::npnt-1));
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) += rsdls_recv(m)*modes(m).s(Range(0,BASE::nseg-1));
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1));
+		BASE::hp_gbl->res.v(Range(0,BASE::npnt-1)) += rsdls_recv(m)*modes(m).v(Range(0,BASE::npnt-1));
+		BASE::hp_gbl->res.s(Range(0,BASE::nseg-1)) += rsdls_recv(m)*modes(m).s(Range(0,BASE::nseg-1));
+		BASE::hp_gbl->res.i(Range(0,BASE::ntri-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1));
 	}
 
 #ifdef POD_BDRY
 	for (int m=nmodes;m<tmodes;++m) {
 		for (int bind=0;bind<BASE::nebd;++bind) {		
-			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,m,rsdls_recv(m));
+			pod_ebdry(bind)->addto2Dsolution(BASE::hp_gbl->res,m,rsdls_recv(m));
 		}
 	}
 #endif
@@ -732,9 +732,9 @@ template<class BASE> void pod_simulate<BASE>::update() {
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
 
-	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
-	BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::gbl->res.s(Range(0,BASE::nseg-1));
-	BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::gbl->res.i(Range(0,BASE::ntri-1));
+	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::hp_gbl->res.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::hp_gbl->res.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::hp_gbl->res.i(Range(0,BASE::ntri-1));
 	
 	
 	BASE::helper->update(-1);
@@ -1019,17 +1019,17 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 			sind = base.seg(bsind);
 			v0 = x.seg(sind).pnt(0);
 			for (int n=0;n<x.NV;++n)
-				x.rsdls(bindex+k) += modes(k).v(bsind,n)*x.gbl->res.v(v0,n);
+				x.rsdls(bindex+k) += modes(k).v(bsind,n)*x.hp_gbl->res.v(v0,n);
 		} while (++bsind < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (int n=0;n<x.NV;++n)
-			x.rsdls(bindex+k) += modes(k).v(base.nseg,n)*x.gbl->res.v(v0,n);
+			x.rsdls(bindex+k) += modes(k).v(base.nseg,n)*x.hp_gbl->res.v(v0,n);
 
 		for (int bsind=0;bsind<base.nseg;++bsind) {
 			sind = base.seg(bsind);
 			for(int sm=0;sm<basis::tri(x.log2p)->sm();++sm)
 				for(int n=0;n<x.NV;++n)
-					x.rsdls(bindex+k) += modes(k).s(bsind,sm,n)*x.gbl->res.s(sind,sm,n);
+					x.rsdls(bindex+k) += modes(k).s(bsind,sm,n)*x.hp_gbl->res.s(sind,sm,n);
 		}		
 	}
 

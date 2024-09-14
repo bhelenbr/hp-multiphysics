@@ -10,14 +10,15 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-void tri_hp_ins::init(input_map& inmap, void *gin) {
+void tri_hp_ins::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 
-	gbl = static_cast<global *>(gin);
-    if (!inmap.get(gbl->idprefix + "_rho",gbl->rho)) inmap.getwdefault("rho",gbl->rho,1.0);
-    if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,0.0);
+	gbl = gin;
+    hp_ins_gbl = make_shared<hp_ins_global>();
+    if (!inmap.get(gbl->idprefix + "_rho",hp_ins_gbl->rho)) inmap.getwdefault("rho",hp_ins_gbl->rho,1.0);
+    if (!inmap.get(gbl->idprefix + "_mu",hp_ins_gbl->mu)) inmap.getwdefault("mu",hp_ins_gbl->mu,0.0);
 
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
 		inmap[gbl->idprefix + "_nvariable"] = "3";
@@ -26,16 +27,16 @@ void tri_hp_ins::init(input_map& inmap, void *gin) {
 
 	tri_hp::init(inmap,gin);
 
-	gbl->tau.resize(maxpst,NV);
+	hp_ins_gbl->tau.resize(maxpst,NV);
     /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-    gbl->D.resize(NV);
+    hp_ins_gbl->D.resize(NV);
     if (NV > 3) {
         for (int n=2;n<NV-1;++n) {
             stringstream nstr;
             nstr << n-2;
-            if (!inmap.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n)))
-                if (!inmap.get("D" +nstr.str(),gbl->D(n)))
-                    gbl->D(n) = 0.0;
+            if (!inmap.get(gbl->idprefix + "_D" +nstr.str(),hp_ins_gbl->D(n)))
+                if (!inmap.get("D" +nstr.str(),hp_ins_gbl->D(n)))
+                    hp_ins_gbl->D(n) = 0.0;
         }
     }
 
@@ -95,7 +96,7 @@ void tri_hp_ins::calculate_unsteady_sources() {
 
 			for(i=0;i<basis::tri(log2p)->gpx();++i) {
 				for(j=0;j<basis::tri(log2p)->gpn();++j) {    
-					cjcb(i,j) = -gbl->bd(0)*gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+					cjcb(i,j) = -gbl->bd(0)*hp_ins_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					for(n=0;n<NV-1;++n)
 						dugdt(log2p)(tind,n,i,j) = u(n)(i,j)*cjcb(i,j);
 					dugdt(log2p)(tind,NV-1,i,j) = cjcb(i,j);

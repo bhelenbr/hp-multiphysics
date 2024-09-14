@@ -53,8 +53,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif
 		}
 	}
@@ -74,13 +74,13 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(int j=0;j<lgpn;++j) {
 
 #ifdef CONST_A
-			FLT fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ax -mvel(0)(i,j))*u(0)(i,j);
-			FLT fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->ay -mvel(1)(i,j))*u(0)(i,j);
+			FLT fluxx = hp_cd_gbl->rhocv*RAD(crd(0)(i,j))*(hp_cd_gbl->ax -mvel(0)(i,j))*u(0)(i,j);
+			FLT fluxy = hp_cd_gbl->rhocv*RAD(crd(0)(i,j))*(hp_cd_gbl->ay -mvel(1)(i,j))*u(0)(i,j);
 #else
 			pt(0) = crd(0)(i,j);
 			pt(1) = crd(1)(i,j);
-			FLT fluxx = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(0,pt,gbl->time) -mvel(0)(i,j))*u(0)(i,j);
-			FLT fluxy = gbl->rhocv*RAD(crd(0)(i,j))*(gbl->a->f(1,pt,gbl->time) -mvel(1)(i,j))*u(0)(i,j);
+			FLT fluxx = hp_cd_gbl->rhocv*RAD(crd(0)(i,j))*(hp_cd_gbl->a->f(0,pt,gbl->time) -mvel(0)(i,j))*u(0)(i,j);
+			FLT fluxy = hp_cd_gbl->rhocv*RAD(crd(0)(i,j))*(hp_cd_gbl->a->f(1,pt,gbl->time) -mvel(1)(i,j))*u(0)(i,j);
 #endif
 			cv00[i][j] = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
 			cv01[i][j] = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
@@ -98,8 +98,8 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 			for(int j=0;j<lgpn;++j) {
                 TinyVector<FLT,ND> pt(crd(0)(i,j),crd(1)(i,j));
 				cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-				res(0)(i,j) = gbl->rhocv*RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p)(tind,0,i,j);
-				res(0)(i,j) -= RAD(crd(0)(i,j))*cjcb(i,j)*gbl->src->f(0,pt,gbl->time);
+				res(0)(i,j) = hp_cd_gbl->rhocv*RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p)(tind,0,i,j);
+				res(0)(i,j) -= RAD(crd(0)(i,j))*cjcb(i,j)*hp_cd_gbl->src->f(0,pt,gbl->time);
 			}
 		}			
 		basis::tri(log2p)->intgrt(&lf_re(0)(0),&res(0)(0,0),MXGP);
@@ -108,7 +108,7 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
 
-				cjcb(i,j) = gbl->kcond*RAD(crd(0)(i,j))/cjcb(i,j);
+				cjcb(i,j) = hp_cd_gbl->kcond*RAD(crd(0)(i,j))/cjcb(i,j);
 
 				/* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
 				/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -131,18 +131,18 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
 				TinyVector<FLT,ND> pt(crd(0)(i,j),crd(1)(i,j));
-				tres[0] = gbl->tau(tind)*res(0)(i,j);
+				tres[0] = hp_cd_gbl->tau(tind)*res(0)(i,j);
 
 #ifdef CONST_A
-				e00[i][j] -= (dcrd(1,1)(i,j)*(gbl->ax-mvel(0)(i,j))
-					-dcrd(0,1)(i,j)*(gbl->ay-mvel(1)(i,j)))*tres[0];
-				e01[i][j] -= (-dcrd(1,0)(i,j)*(gbl->ax-mvel(0)(i,j))
-					+dcrd(0,0)(i,j)*(gbl->ay-mvel(1)(i,j)))*tres[0];
+				e00[i][j] -= (dcrd(1,1)(i,j)*(hp_cd_gbl->ax-mvel(0)(i,j))
+					-dcrd(0,1)(i,j)*(hp_cd_gbl->ay-mvel(1)(i,j)))*tres[0];
+				e01[i][j] -= (-dcrd(1,0)(i,j)*(hp_cd_gbl->ax-mvel(0)(i,j))
+					+dcrd(0,0)(i,j)*(hp_cd_gbl->ay-mvel(1)(i,j)))*tres[0];
 #else
-				e00[i][j] -= (dcrd(1,1)(i,j)*(gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
-											-dcrd(0,1)(i,j)*(gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
-				e01[i][j] -= (-dcrd(1,0)(i,j)*(gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
-											+dcrd(0,0)(i,j)*(gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
+				e00[i][j] -= (dcrd(1,1)(i,j)*(hp_cd_gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
+											-dcrd(0,1)(i,j)*(hp_cd_gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
+				e01[i][j] -= (-dcrd(1,0)(i,j)*(hp_cd_gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
+											+dcrd(0,0)(i,j)*(hp_cd_gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
 #endif
 			}
 		}

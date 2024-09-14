@@ -16,10 +16,10 @@ void tri_hp::mg_restrict() {
 		--log2p;
 
 		/* TRANSFER IS ON FINE MESH */
-		gbl->res0.v(Range(0,npnt-1),Range::all()) = gbl->res.v(Range(0,npnt-1),Range::all());
+		hp_gbl->res0.v(Range(0,npnt-1),Range::all()) = hp_gbl->res.v(Range(0,npnt-1),Range::all());
 
 		if (basis::tri(log2p)->p() > 1) {
-			gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+			hp_gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
 
 			if (basis::tri(log2p)->p() > 2) {
 
@@ -28,7 +28,7 @@ void tri_hp::mg_restrict() {
 					indx1 = 0;
 					for(m=1;m<basis::tri(log2p)->sm();++m) {
 						for(k=0;k<basis::tri(log2p)->sm()-m;++k) {
-							gbl->res0.i(tind,indx,Range::all()) = gbl->res.i(tind,indx1,Range::all());
+							hp_gbl->res0.i(tind,indx,Range::all()) = hp_gbl->res.i(tind,indx1,Range::all());
 							++indx;
 							++indx1;
 						}
@@ -45,7 +45,7 @@ void tri_hp::mg_restrict() {
 
 		tri_hp *fmesh = dynamic_cast<tri_hp *>(fine);
 
-		gbl->res0.v(Range(0,npnt-1),Range::all()) = 0.0;
+		hp_gbl->res0.v(Range(0,npnt-1),Range::all()) = 0.0;
 
 		/* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
 		for(i=0;i<fmesh->npnt;++i) {
@@ -53,16 +53,16 @@ void tri_hp::mg_restrict() {
 			for(j=0;j<3;++j) {
 				v0 = tri(tind).pnt(j);
 				for(n=0;n<NV;++n)
-					gbl->res0.v(v0,n) += fmesh->ccnnct(i).wt(j)*gbl->res.v(i,n);
+					hp_gbl->res0.v(v0,n) += fmesh->ccnnct(i).wt(j)*hp_gbl->res.v(i,n);
 			}
 		}
 		
 		/* Need to communicate for partition boundaries */
 		for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 			for(i=0;i<nvbd;++i)
-				vbdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
+				vbdry(i)->vloadbuff(boundary::partitions,hp_gbl->res0.v.data(),0,NV-1,NV);
 			for(i=0;i<nebd;++i)
-				ebdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
+				ebdry(i)->vloadbuff(boundary::partitions,hp_gbl->res0.v.data(),0,NV-1,NV);
 			
 			for(i=0;i<nebd;++i) 
 				ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
@@ -77,11 +77,11 @@ void tri_hp::mg_restrict() {
 			last_phase = true;
 			for(i=0;i<nebd;++i) {
 				last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-				ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,gbl->res0.v.data(),0,NV-1,NV);
+				ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,hp_gbl->res0.v.data(),0,NV-1,NV);
 			}
 			for(i=0;i<nvbd;++i) {
 				vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
-				vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,gbl->res0.v.data(),0,NV-1,NV);
+				vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,hp_gbl->res0.v.data(),0,NV-1,NV);
 			}
 		}	
 		

@@ -33,8 +33,8 @@ namespace bdry_cd {
 			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "dirichlet";}
 			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				type[0] = essential;
 				essential_indices.push_back(0);
 			}
@@ -49,15 +49,15 @@ namespace bdry_cd {
 				hp_edge_bdry::flux(u,xpt,mv,norm,side_length,flx);
 				
 #ifdef CONST_A
-				vel =  (x.gbl->ax-mv(0))*norm(0) +(x.gbl->ay -mv(1))*norm(1);        
+				vel =  (x.hp_cd_gbl->ax-mv(0))*norm(0) +(x.hp_cd_gbl->ay -mv(1))*norm(1);        
 #else
-				vel =  (x.gbl->a->f(0,pt,x.gbl->time)-mv(0))*norm(0) +(x.gbl->a->f(1,pt,x.gbl->time) -mv(1))*norm(1);
+				vel =  (x.hp_cd_gbl->a->f(0,pt,x.gbl->time)-mv(0))*norm(0) +(x.hp_cd_gbl->a->f(1,pt,x.gbl->time) -mv(1))*norm(1);
 #endif
 
 				if (vel > 0.0)
-					flx(0) += x.gbl->rhocv*vel*u(0);
+					flx(0) += x.hp_cd_gbl->rhocv*vel*u(0);
 				else
-					flx(0) += x.gbl->rhocv*vel*ibc->f(0, xpt, x.gbl->time);
+					flx(0) += x.hp_cd_gbl->rhocv*vel*ibc->f(0, xpt, x.gbl->time);
 			}
 			characteristic(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}

@@ -9,8 +9,10 @@
 
 #include "tri_hp_nonnewtonian.h"
 
-void tri_hp_nonnewtonian::init(input_map& inmap, void *gin) {
-	gbl = static_cast<global *>(gin);
+void tri_hp_nonnewtonian::init(input_map& inmap, shared_ptr<block_global> gin) {
+	gbl = gin;
+    hp_nonnewtonian_gbl = make_shared<hp_nonnewtonian_global>();
+    
 	tri_hp_ins::init(inmap,gin);
 	
 	Array<string,1> names(4);
@@ -23,13 +25,13 @@ void tri_hp_nonnewtonian::init(input_map& inmap, void *gin) {
 	dims(3) = 3;
 	names(3) = "s";
 
-	gbl->mu_of_strain.set_arguments(4,dims,names);
+	hp_nonnewtonian_gbl->mu_of_strain.set_arguments(4,dims,names);
 
 	if (inmap.find(gbl->idprefix +"_mu_function") != inmap.end()) {
-		gbl->mu_of_strain.init(inmap,gbl->idprefix +"_mu_function");
+		hp_nonnewtonian_gbl->mu_of_strain.init(inmap,gbl->idprefix +"_mu_function");
 	}
 	else if (inmap.find("mu_function") != inmap.end()){
-		gbl->mu_of_strain.init(inmap,"mu_function");
+		hp_nonnewtonian_gbl->mu_of_strain.init(inmap,"mu_function");
 	}
 	else {
 		*gbl->log << "couldn't find nonnewtonian viscosity function " << gbl->idprefix +"_mu_function" << std::endl;
@@ -55,7 +57,7 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT rhobd0 = gbl->rho*gbl->bd(0), rhorbd0, lrhorbd0, cjcb, cjcbi;
+	FLT rhobd0 = hp_ins_gbl->rho*gbl->bd(0), rhorbd0, lrhorbd0, cjcb, cjcbi;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
@@ -94,8 +96,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif                        
 		}
 	}
@@ -127,8 +129,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 				
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 				
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
@@ -176,7 +178,7 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					as(1) = dcrd(0,0)(i,j)*du(1,1)(i,j) -dcrd(0,1)(i,j)*du(1,0)(i,j);
 					as(2) = dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j)+ dcrd(0,0)(i,j)*du(0,1)(i,j) -dcrd(0,1)(i,j)*du(0,0)(i,j); 
 					as /= cjcb;
-					FLT lmu = gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
+					FLT lmu = hp_nonnewtonian_gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
 					
 					
 					rhorbd0 = rhobd0*RAD(crd(0)(i,j))*cjcb;
@@ -195,8 +197,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 #ifdef BODYFORCE
-					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
-					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(0)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif                  
 					
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -255,9 +257,9 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 					
 #ifndef INERTIALESS
 					df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
@@ -298,8 +300,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 				
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 				
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
@@ -375,7 +377,7 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					as(1) = ldcrd(0,0)*du(1,1)(i,j) -ldcrd(0,1)*du(1,0)(i,j);
 					as(2) = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j)+ ldcrd(0,0)*du(0,1)(i,j) -ldcrd(0,1)*du(0,0)(i,j); 
 					as /= cjcb;
-					FLT lmu = gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
+					FLT lmu = hp_nonnewtonian_gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
 					
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
@@ -390,8 +392,8 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 #ifdef BODYFORCE
-					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
-					res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
+					res(0)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif        
 					df(0,0)(i,j) = lmu*RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
 																					 +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
@@ -425,9 +427,9 @@ void tri_hp_nonnewtonian::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 					
 #ifndef INERTIALESS
 					df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
@@ -476,9 +478,9 @@ int tri_hp_nonnewtonian::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 	
 	for(tind = 0; tind < ntri; ++tind) {
@@ -512,8 +514,8 @@ int tri_hp_nonnewtonian::setup_preconditioner() {
 				mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 				mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-				mvel(0) += gbl->mesh_ref_vel(0);
-				mvel(1) += gbl->mesh_ref_vel(1);
+				mvel(0) += hp_gbl->mesh_ref_vel(0);
+				mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 				FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 
@@ -529,8 +531,8 @@ int tri_hp_nonnewtonian::setup_preconditioner() {
 				as(1) = dcrd(0,0)(i,j)*du(1,1)(i,j) -dcrd(0,1)(i,j)*du(1,0)(i,j);
 				as(2) = dcrd(1,1)(i,j)*du(1,0)(i,j) -dcrd(1,0)(i,j)*du(1,1)(i,j)+ dcrd(0,0)(i,j)*du(0,1)(i,j) -dcrd(0,1)(i,j)*du(0,0)(i,j); 
 				as /= cjcb;
-				FLT lmu = gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
-				nu = MAX(nu,lmu/gbl->rho);
+				FLT lmu = hp_nonnewtonian_gbl->mu_of_strain.Eval(au,axpt,amv,as,gbl->time);	
+				nu = MAX(nu,lmu/hp_ins_gbl->rho);
 				
 				/* CALCULATE CURVED SIDE LENGTHS */
 				h = 0.0;
@@ -571,27 +573,27 @@ int tri_hp_nonnewtonian::setup_preconditioner() {
 		}
 		
 		gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-		if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+		if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 		q = sqrt(qmax);
 		lam1 = q + sqrt(qmax +gam);
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-		gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+		hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+		hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 		
 		/* SET UP DIAGONAL PRECONDITIONER */
 		jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 		
-		gbl->tprcn(tind,0) = gbl->rho*jcb;   
-		gbl->tprcn(tind,1) = gbl->rho*jcb;   
-		gbl->tprcn(tind,2) = jcb/gam; 			
+		hp_gbl->tprcn(tind,0) = hp_ins_gbl->rho*jcb;   
+		hp_gbl->tprcn(tind,1) = hp_ins_gbl->rho*jcb;   
+		hp_gbl->tprcn(tind,2) = jcb/gam; 			
 		
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}

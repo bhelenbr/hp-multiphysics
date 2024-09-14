@@ -131,7 +131,7 @@ namespace ibc_cns {
 		
 		private:
 			FLT angle,xshift,yshift;
-			FLT gam; // temp figure out how to load gbl->gamma
+			FLT gam; // temp figure out how to load hp_cns_gbl->gamma
 			double q0;  // Initial guess for q in iteration //
 			double theta0; // Initial guess for theta in iteration //
 			double scale; // Scale point before calculating solution //
@@ -289,7 +289,7 @@ namespace ibc_cns {
         
         private:
             FLT RTo, Po, xthroat;
-            FLT gam; // temp figure out how to load gbl->gamma
+            FLT gam; // temp figure out how to load hp_cns_gbl->gamma
             symbolic_function<2> Aratio;
             symbolic_function<2> dArdx;
         

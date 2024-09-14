@@ -9,13 +9,14 @@
 
 #include "tri_hp_cd.h"
 
-void tri_hp_cd::init(input_map& inmap, void *gin) {
+void tri_hp_cd::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	std::string ibcname;
 
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
+    hp_cd_gbl = make_shared<hp_cd_global>();
 	keyword = gbl->idprefix + "_nvariable";
 	inmap[keyword] = "1";
 
@@ -31,14 +32,14 @@ void tri_hp_cd::init(input_map& inmap, void *gin) {
 	FLT cv;
 	keyword = gbl->idprefix + "_cv";
 	if (!inmap.get(keyword,cv)) inmap.getwdefault("cv",cv,1.0);
-	gbl->rhocv = rho*cv;
+	hp_cd_gbl->rhocv = rho*cv;
 
 #ifdef CONST_A
 	keyword = gbl->idprefix + "_ax";
-	if (!inmap.get(keyword,gbl->ax)) inmap.getwdefault("ax",gbl->ax,1.0);
+	if (!inmap.get(keyword,hp_cd_gbl->ax)) inmap.getwdefault("ax",hp_cd_gbl->ax,1.0);
 	
 	keyword = gbl->idprefix + "_ay";
-	if (!inmap.get(keyword,gbl->ay)) inmap.getwdefault("ay",gbl->ay,0.0);
+	if (!inmap.get(keyword,hp_cd_gbl->ay)) inmap.getwdefault("ay",hp_cd_gbl->ay,0.0);
 #else
 	/* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_a";
@@ -48,18 +49,18 @@ void tri_hp_cd::init(input_map& inmap, void *gin) {
 			*gbl->log << "couldn't find cd velocity field" << std::endl;
 		}
 	}
-	gbl->a = getnewibc(ibcname);
-	gbl->a->init(inmap,keyword);
+	hp_cd_gbl->a = getnewibc(ibcname);
+	hp_cd_gbl->a->init(inmap,keyword);
 #endif
 
-	if (!inmap.get(gbl->idprefix + "_nu",gbl->kcond)) {
-		if (!inmap.get("nu",gbl->kcond)) {
-			if (!inmap.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
-				inmap.getwdefault("conductivity",gbl->kcond,0.0);
+	if (!inmap.get(gbl->idprefix + "_nu",hp_cd_gbl->kcond)) {
+		if (!inmap.get("nu",hp_cd_gbl->kcond)) {
+			if (!inmap.get(gbl->idprefix + "_conductivity",hp_cd_gbl->kcond)) {
+				inmap.getwdefault("conductivity",hp_cd_gbl->kcond,0.0);
 			}
 		}
 	}
-	gbl->tau.resize(maxpst);
+	hp_cd_gbl->tau.resize(maxpst);
 
 	/* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_src";
@@ -69,8 +70,8 @@ void tri_hp_cd::init(input_map& inmap, void *gin) {
 			ibcname = "zero";
 		}
 	}
-	gbl->src = getnewibc(ibcname);
-	gbl->src->init(inmap,keyword);
+	hp_cd_gbl->src = getnewibc(ibcname);
+	hp_cd_gbl->src->init(inmap,keyword);
 	
 	/* Stuff for Mike's minvrt */
 //	gbl->stiff_diag.v.resize(maxpst,NV);
@@ -131,7 +132,7 @@ void tri_hp_cd::calculate_unsteady_sources() {
 			for(i=0;i<basis::tri(log2p)->gpx();++i) {
 				for(j=0;j<basis::tri(log2p)->gpn();++j) {
 					cjcb(i,j) = -gbl->bd(0)*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
-					dugdt(log2p)(tind,0,i,j) = gbl->rhocv*u(0)(i,j)*cjcb(i,j);
+					dugdt(log2p)(tind,0,i,j) = hp_cd_gbl->rhocv*u(0)(i,j)*cjcb(i,j);
 					
 					for(n=0;n<ND;++n)
 						dxdt(log2p)(tind,n,i,j) = crd(n)(i,j);

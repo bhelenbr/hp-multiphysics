@@ -60,8 +60,8 @@ void tri_hp_swe::rsdl(int stage) {
 				mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 				mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-				mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-				mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+				mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+				mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif
 			}
 		}
@@ -113,7 +113,7 @@ void tri_hp_swe::rsdl(int stage) {
 			basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-			lftog(tind,gbl->res);
+			lftog(tind,hp_gbl->res);
 
 			/* NEGATIVE REAL TERMS */
 			if (gbl->beta(stage) > 0.0) {
@@ -124,19 +124,19 @@ void tri_hp_swe::rsdl(int stage) {
 						pt(0) = crd(0)(i,j);
 						pt(1) = crd(1)(i,j);
 
-						drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
+						drag = hp_swe_gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
 
 						/* UNSTEADY TERMS */
-						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
-						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
+						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*hp_swe_gbl->bathy->f(0,pt,gbl->time) -(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
+						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*hp_swe_gbl->bathy->f(1,pt,gbl->time) +(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
 						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p)(tind,NV-1,i,j);
 
 						/* TO MAINTAIN FREE-STREAM SOLUTION */
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;
-//                                res(0)(i,j) += cjcb*(-gbl->cd*pow(gbl->ibc->f(0,xtemp,gbl->time),2));
-//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->cbeta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);                                
+//                                res(0)(i,j) += cjcb*(-hp_swe_gbl->cd*pow(hp_gbl->ibc->f(0,xtemp,gbl->time),2));
+//                                res(1)(i,j) += cjcb*(-(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j)))*hp_gbl->ibc->f(0,xtemp,gbl->time);                                
 					}
 				}
 				for(n=0;n<NV;++n)
@@ -154,9 +154,9 @@ void tri_hp_swe::rsdl(int stage) {
 				for(i=0;i<lgpx;++i) {
 					for(j=0;j<lgpn;++j) {
 
-						tres(0) = -gbl->tau(tind,0)*res(0)(i,j);
-						tres(1) = -gbl->tau(tind,1)*res(1)(i,j);
-						tres(NV-1) = -gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+						tres(0) = -hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+						tres(1) = -hp_ins_gbl->tau(tind,1)*res(1)(i,j);
+						tres(NV-1) = -hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 						vel(0) = u(0)(i,j)/u(NV-1)(i,j);
 						vel(1) = u(1)(i,j)/u(NV-1)(i,j);
@@ -190,7 +190,7 @@ void tri_hp_swe::rsdl(int stage) {
 					for(i=0;i<basis::tri(log2p)->tm();++i)
 						lf(n)(i) *= gbl->beta(stage);
 
-				lftog(tind,gbl->res_r);
+				lftog(tind,hp_gbl->res_r);
 			}
 		}
 		else {
@@ -230,7 +230,7 @@ void tri_hp_swe::rsdl(int stage) {
 
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-			lftog(tind,gbl->res);
+			lftog(tind,hp_gbl->res);
 
 			/* NEGATIVE REAL TERMS */
 			if (gbl->beta(stage) > 0.0) {
@@ -242,10 +242,10 @@ void tri_hp_swe::rsdl(int stage) {
 						pt(0) = crd(0)(i,j);
 						pt(1) = crd(1)(i,j);
 
-						drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
+						drag = hp_swe_gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
 						/* UNSTEADY TERMS */
-						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
-						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
+						res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*hp_swe_gbl->bathy->f(0,pt,gbl->time) -(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p)(tind,0,i,j);
+						res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*hp_swe_gbl->bathy->f(1,pt,gbl->time) +(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p)(tind,1,i,j);                                
 						res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p)(tind,NV-1,i,j);
 
 
@@ -253,8 +253,8 @@ void tri_hp_swe::rsdl(int stage) {
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;
-//                                res(0)(i,j) += cjcb*(-gbl->cd*pow(gbl->ibc->f(0,xtemp,gbl->time),2));
-//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->cbeta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);     
+//                                res(0)(i,j) += cjcb*(-hp_swe_gbl->cd*pow(hp_gbl->ibc->f(0,xtemp,gbl->time),2));
+//                                res(1)(i,j) += cjcb*(-(hp_swe_gbl->f0 +hp_swe_gbl->cbeta*crd(1)(i,j)))*hp_gbl->ibc->f(0,xtemp,gbl->time);     
 
 					}
 				}                        
@@ -273,9 +273,9 @@ void tri_hp_swe::rsdl(int stage) {
 				for(i=0;i<lgpx;++i) {
 					for(j=0;j<lgpn;++j) {
 
-						tres(0) = -gbl->tau(tind,0)*res(0)(i,j);
-						tres(1) = -gbl->tau(tind,1)*res(1)(i,j);
-						tres(NV-1) = -gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+						tres(0) = -hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+						tres(1) = -hp_ins_gbl->tau(tind,1)*res(1)(i,j);
+						tres(NV-1) = -hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 						vel(0) = u(0)(i,j)/u(NV-1)(i,j);
 						vel(1) = u(1)(i,j)/u(NV-1)(i,j);
@@ -310,17 +310,17 @@ void tri_hp_swe::rsdl(int stage) {
 					for(i=0;i<basis::tri(log2p)->tm();++i)
 						lf(n)(i) *= gbl->beta(stage);
 
-				lftog(tind,gbl->res_r);
+				lftog(tind,hp_gbl->res_r);
 			}
 		}
 	}
 
 	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
-	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) += hp_gbl->res_r.v(Range(0,npnt-1),Range::all());
 	if (basis::tri(log2p)->sm()) {
-		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
+		hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += hp_gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
 		if (basis::tri(log2p)->im()) {
-			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
+			hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
 		}
 	}
 
@@ -330,14 +330,14 @@ void tri_hp_swe::rsdl(int stage) {
 	if (coarse_flag) {
 		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
-			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,npnt-1),Range::all()) -hp_gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
+			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
 			isfrst = false;
 		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
-		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
+		hp_gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+		if (basis::tri(log2p)->sm()) hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+		if (basis::tri(log2p)->im()) hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
 	}
 
 	return;

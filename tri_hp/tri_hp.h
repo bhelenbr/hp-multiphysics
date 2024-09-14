@@ -107,7 +107,7 @@ public:
     FLT fadd; //!< Controls addition of residuals on coarse mesh
     
     /* THESE THINGS ARE SHARED BY MESHES OF THE SAME BLOCK */
-    struct global : public r_tri_mesh::global {
+    struct hp_global {
         
         /**< Pointer to adaptation solution storage
          * Also used for backwards difference storage in tadvance
@@ -141,21 +141,15 @@ public:
         
         /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
         init_bdry_cndtn *ibc;
-        
 #ifdef MESH_REF_VEL
         TinyVector<FLT,ND> mesh_ref_vel;
 #endif
-        
-        /* Pointers to block storage objects for edge boundary conditions */
-        Array<void *,1> ebdry_gbls;
-        
-        /* Pointers to block storage objects for pnts boundary conditions */
-        Array<void *,1> vbdry_gbls;
-        
         /* Time step factor for different polynomial degree */
         TinyVector<FLT,MXGP> cfl;
         
-    } *gbl;
+    };
+    shared_ptr<hp_global> hp_gbl;
+    
     virtual init_bdry_cndtn* getnewibc(std::string name);
     virtual tri_hp_helper* getnewhelper(std::string name);
     
@@ -181,10 +175,8 @@ public:
 public:
     tri_hp() : r_tri_mesh() {}
     virtual tri_hp* create() {return new tri_hp;}
-    void* create_global_structure() {return new global;}
-    void delete_global_structure();
     /* Fixme: Replace init with a constructor that accepts an input_map? */
-    void init(input_map& inmap, void *gin);
+    void init(input_map& inmap, shared_ptr<block_global> gin);
     void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
     void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);
     //void curvinit();
@@ -287,7 +279,8 @@ public:
     void petsc_jacobian();
     void petsc_premultiply_jacobian();
     void test_jacobian();
-    void enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts);
+    void enforce_mesh_continuity(Array<TinyVector<FLT,ND>,1>& pnts);
+    void enforce_solution_continuity(vsi& ug);
     void petsc_rsdl();
     void petsc_update();
     void petsc_setup_preconditioner();

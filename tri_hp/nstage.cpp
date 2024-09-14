@@ -20,30 +20,30 @@ void tri_hp::rsdl(int stage) {
 
     if (stage<gbl->nstage) {
         FLT oneminusbeta = 1.0-gbl->beta(stage);
-        gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-        gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
+        hp_gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+        hp_gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
         
         if (basis::tri(log2p)->sm()) {
-            gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
-            gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) *= oneminusbeta;
+            hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
+            hp_gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) *= oneminusbeta;
             
             if (basis::tri(log2p)->im()) {
-                gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
-                gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
+                hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+                hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
             }
         }
     }
     else {
-        gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-        gbl->res_r.v(Range(0,npnt-1),Range::all()) = 0.0;
+        hp_gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+        hp_gbl->res_r.v(Range(0,npnt-1),Range::all()) = 0.0;
         
         if (basis::tri(log2p)->sm()) {
-            gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
-            gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all())=  0.0;
+            hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
+            hp_gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all())=  0.0;
             
             if (basis::tri(log2p)->im()) {
-                gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
-                gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+                hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+                hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
             }
         }
     }
@@ -62,22 +62,22 @@ void tri_hp::rsdl(int stage) {
 			for (int n = 0; n < NV; ++n)
 				lf(n)(m) = lf_im(n)(m);
 		
-		lftog(tind,gbl->res);
+		lftog(tind,hp_gbl->res);
 		
 		/* load real local residual into global residual */
 		for (int m = 0; m < basis::tri(log2p)->tm(); ++m) 
 			for (int n = 0; n < NV; ++n)
 				lf(n)(m) = lf_re(n)(m);
 		
-		lftog(tind,gbl->res_r);
+		lftog(tind,hp_gbl->res_r);
 	}
 	
 	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
-	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) += hp_gbl->res_r.v(Range(0,npnt-1),Range::all());
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
+		hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += hp_gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
 		if (basis::tri(log2p)->im() > 0) {
-			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
+			hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
 		}
 	}
 
@@ -117,14 +117,14 @@ void tri_hp::mg_source() {
 	if(coarse_flag) {
 		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
-			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,npnt-1),Range::all()) -hp_gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
 			isfrst = false;
 		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all());
-		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
-		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+		hp_gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all());
+		if (basis::tri(log2p)->sm()) hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+		if (basis::tri(log2p)->im()) hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
 	}
 }
 
@@ -269,11 +269,11 @@ void tri_hp::update() {
 	}
 
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
+	hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
 	if (basis::tri(log2p)->sm()) {
-		gbl->ug0.s(Range(0,nseg-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nseg-1),Range::all(),Range::all());
+		hp_gbl->ug0.s(Range(0,nseg-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nseg-1),Range::all(),Range::all());
 		if (basis::tri(log2p)->im()) {
-			gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
+			hp_gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
 		}
 	}
 
@@ -312,7 +312,7 @@ void tri_hp::update() {
 		for(i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " nstage: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->vprcn(i,n)) > DEBUG_TOL) *gbl->log << gbl->vprcn(i,n) << ' ';
+				if (fabs(hp_gbl->vprcn(i,n)) > DEBUG_TOL) *gbl->log << hp_gbl->vprcn(i,n) << ' ';
 				else *gbl->log << "0.0 ";
 			}
 			*gbl->log << '\n';
@@ -321,7 +321,7 @@ void tri_hp::update() {
 		for(i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+				if (fabs(hp_gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.v(i,n) << ' ';
 				else *gbl->log << "0.0 ";
 			}
 			*gbl->log << '\n';
@@ -331,7 +331,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+					if (fabs(hp_gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.s(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
 				}
 				*gbl->log << '\n';
@@ -343,7 +343,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->im();++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+					if (fabs(hp_gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.i(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
 				}
 				*gbl->log << '\n';
@@ -384,11 +384,11 @@ void tri_hp::update() {
 	//  }
 #endif
 
-		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
-		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
+		cflalpha = gbl->alpha(stage)*hp_gbl->cfl(log2p);
+		ug.v(Range(0,npnt-1),Range::all()) = hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,npnt-1),Range::all());
 
 		if (basis::tri(log2p)->sm() > 0) {
-			ug.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = gbl->ug0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -cflalpha*gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+			ug.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = hp_gbl->ug0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -cflalpha*hp_gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
 
 			if (basis::tri(log2p)->im() > 0) {
 
@@ -398,7 +398,7 @@ void tri_hp::update() {
 					for(m=1;m<basis::tri(log2p)->sm();++m) {
 						for(k=0;k<basis::tri(log2p)->sm()-m;++k) {
 							for(n=0;n<NV;++n) {
-								ug.i(i,indx1,n) =  gbl->ug0.i(i,indx1,n) -cflalpha*gbl->res.i(i,indx,n);
+								ug.i(i,indx1,n) =  hp_gbl->ug0.i(i,indx1,n) -cflalpha*hp_gbl->res.i(i,indx,n);
 							}
 							++indx; ++indx1;
 						}

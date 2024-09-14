@@ -19,7 +19,7 @@ void tri_hp_ps::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lmu = gbl->mu, cjcb, cjcbi;
+	FLT lmu = hp_ps_gbl->mu, cjcb, cjcbi;
     TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
     TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
     TinyVector<FLT,NV> tres;
@@ -108,7 +108,7 @@ void tri_hp_ps::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
                     /* UNSTEADY TERMS */
                     res(0)(i,j) = 0.0;
                     res(1)(i,j) = 0.0;
-                    res(2)(i,j) = gbl->lami*u(2)(i,j)*cjcb;
+                    res(2)(i,j) = hp_ps_gbl->lami*u(2)(i,j)*cjcb;
 
                     /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                     /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -168,8 +168,8 @@ void tri_hp_ps::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
             for(i=0;i<lgpx;++i) {
                 for(j=0;j<lgpn;++j) {
                     /* SET UP DISSIPATIVE COEFFICIENTS */
-                    tres(0) = gbl->tau(tind)*res(0)(i,j);
-                    tres(1) = gbl->tau(tind)*res(1)(i,j);
+                    tres(0) = hp_ps_gbl->tau(tind)*res(0)(i,j);
+                    tres(1) = hp_ps_gbl->tau(tind)*res(1)(i,j);
 
                     du(NV-1,0)(i,j) = -(dcrd(1,1)(i,j)*tres(0) -dcrd(0,1)(i,j)*tres(1));
                     du(NV-1,1)(i,j) = -(-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1));
@@ -245,7 +245,7 @@ void tri_hp_ps::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
                     /* UNSTEADY TERMS */
                     res(0)(i,j) = 0.0;
                     res(1)(i,j) = 0.0;
-                    res(2)(i,j) = gbl->lami*u(2)(i,j)*cjcb;
+                    res(2)(i,j) = hp_ps_gbl->lami*u(2)(i,j)*cjcb;
 
                     df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                                                     +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
@@ -279,8 +279,8 @@ void tri_hp_ps::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
             /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
             for(i=0;i<lgpx;++i) {
                 for(j=0;j<lgpn;++j) {
-                    tres(0) = gbl->tau(tind)*res(0)(i,j);
-                    tres(1) = gbl->tau(tind)*res(1)(i,j);
+                    tres(0) = hp_ps_gbl->tau(tind)*res(0)(i,j);
+                    tres(1) = hp_ps_gbl->tau(tind)*res(1)(i,j);
 
                     du(2,0)(i,j) = -(ldcrd(1,1)*tres(0) -ldcrd(0,1)*tres(1));
                     du(2,1)(i,j) = -(-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1));

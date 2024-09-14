@@ -17,7 +17,7 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND);
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT rhobd0 = gbl->rho*gbl->bd(0), lmu = gbl->mu, rhorbd0, cjcb, cjcbi;
+	FLT rhobd0 = hp_ins_gbl->rho*gbl->bd(0), lmu = hp_ins_gbl->mu, rhorbd0, cjcb, cjcbi;
 	Array<TinyMatrix<FLT,ND,ND>,2> visc(NV-1,NV-1);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> cv(NV-1,NV-1), df(NV-1,NV-1), e(NV-1,NV-1);
 	Array<FLT,1> tres(NV);
@@ -53,8 +53,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += x.gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += x.gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += x.hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += x.hp_gbl->mesh_ref_vel(1);
 #endif
 		}
 	}
@@ -86,8 +86,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
@@ -126,18 +126,18 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 
 #ifdef AXISYMMETRIC
 					/* SOURCE TERMS */
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +gbl->rho*u(2)(i,j)*u(2)(i,j));
-					res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +hp_ins_gbl->rho*u(2)(i,j)*u(2)(i,j));
+					res(2)(i,j) += cjcb*hp_ins_gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
 #else
 					res(2)(i,j) -= cjcb*RAD(crd(0)(i,j))*dpdz;
 #endif
 
 					/* Source Terms for Test Function */
-					//res(0)(i,j) -= crd(0)(i,j)*cjcb*(gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
+					//res(0)(i,j) -= crd(0)(i,j)*cjcb*(hp_ins_gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
 
-					//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*gbl->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
+					//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*hp_ins_gbl->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
 
-					//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*gbl->rho*pow(crd(0)(i,j),3.0) -3*lmu);
+					//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*hp_ins_gbl->rho*pow(crd(0)(i,j),3.0) -3*lmu);
 
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
@@ -191,8 +191,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 #endif
 
 					for (n=3;n<NV-1;++n) {
-						e(n,0)(i,j) = +gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
-						e(n,1)(i,j) = +gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
+						e(n,0)(i,j) = +hp_ins_gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
+						e(n,1)(i,j) = +hp_ins_gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
 					}
 
 					for (n=0;n<NV-1;++n) {
@@ -217,11 +217,11 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(2) = gbl->tau(tind,0)*res(2)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(2) = hp_ins_gbl->tau(tind,0)*res(2)(i,j);
 					for (n=3;n<NV;++n)
-						tres(n) = gbl->tau(tind,n)*res(n)(i,j);
+						tres(n) = hp_ins_gbl->tau(tind,n)*res(n)(i,j);
 
 
 					e(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
@@ -275,8 +275,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
 
-				fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-				fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
 				/* CONTINUITY EQUATION FLUXES */
 				du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
@@ -315,17 +315,17 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 
 #ifdef AXISYMMETRIC
 					/* SOURCE TERMS */
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +gbl->rho*u(2)(i,j)*u(2)(i,j));
-					res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*ldcrd(1,1)*du(2,0)(i,j) +lmu*ldcrd(1,0)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +hp_ins_gbl->rho*u(2)(i,j)*u(2)(i,j));
+					res(2)(i,j) += cjcb*hp_ins_gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*ldcrd(1,1)*du(2,0)(i,j) +lmu*ldcrd(1,0)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
 #else
 					res(2)(i,j) -= cjcb*RAD(crd(0)(i,j))*dpdz;
 #endif                        
 					/* Source Terms for Test Function */
-					//res(0)(i,j) -= crd(0)(i,j)*cjcb*(gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
+					//res(0)(i,j) -= crd(0)(i,j)*cjcb*(hp_ins_gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
 
-					//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*gbl->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
+					//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*hp_ins_gbl->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
 
-					//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*gbl->rho*pow(crd(0)(i,j),3.0) -3*lmu);
+					//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*hp_ins_gbl->rho*pow(crd(0)(i,j),3.0) -3*lmu);
 
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
@@ -379,8 +379,8 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 #endif                
 
 					for (n=3;n<NV-1;++n) {
-						e(n,0)(i,j) = +gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
-						e(n,1)(i,j) = +gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
+						e(n,0)(i,j) = +hp_ins_gbl->D(n)*(visc(2,2)(0,0)*du(n,0)(i,j) +visc(2,2)(0,1)*du(n,1)(i,j));
+						e(n,1)(i,j) = +hp_ins_gbl->D(n)*(viscI2II2II1II0I*du(n,0)(i,j) +visc(2,2)(1,1)*du(n,1)(i,j));
 					}
 
 					for (n=0;n<NV-1;++n) {
@@ -404,11 +404,11 @@ void tri_hp_swirl::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(2) = gbl->tau(tind,0)*res(2)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(2) = hp_ins_gbl->tau(tind,0)*res(2)(i,j);
 					for (n=3;n<NV;++n)
-						tres(n) = gbl->tau(tind,n)*res(n)(i,j);
+						tres(n) = hp_ins_gbl->tau(tind,n)*res(n)(i,j);
 
 
 					e(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))

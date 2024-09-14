@@ -112,7 +112,7 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 	   let ngrid=0
 	   while [ $ngrid -lt ${#SUBSGRID[@]} ]; do
 	     let mesh=${SUBSGRID[ngrid]}*4/${SUBSP[np]}
-	     mod_map run.inpt b0_mesh ${HOME}/Codes/Testing/grids/${SUBSAR[nar]}${mesh}		 
+	     mod_map run.inpt b0_mesh ${HOME}/Codes/grids/${SUBSAR[nar]}${mesh}		 
 
 		 if [ $MGFLAG -eq 1 ]; then
 			 let lvls=$ngrid-${log2p}+3

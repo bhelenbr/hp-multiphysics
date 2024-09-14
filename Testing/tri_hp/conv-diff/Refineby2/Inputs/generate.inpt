@@ -1,4 +1,4 @@
-ncycle: 1
+ncycle: 0
 ntstep: 2
 log2p: 2
 adapt: 1

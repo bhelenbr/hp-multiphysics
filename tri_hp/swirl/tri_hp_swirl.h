@@ -20,7 +20,7 @@ class tri_hp_swirl : public tri_hp_ins {
 		init_bdry_cndtn* getnewibc(std::string name);
 
 	public:
-		void init(input_map& inmap, void *gin);  
+		void init(input_map& inmap,shared_ptr<block_global> gin);  
 		tri_hp_swirl* create() { return new tri_hp_swirl(); }
 		void length();
 		int setup_preconditioner();

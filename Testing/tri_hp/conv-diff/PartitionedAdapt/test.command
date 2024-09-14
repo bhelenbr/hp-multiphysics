@@ -7,11 +7,11 @@ cd "$(dirname "$0")"
 
 if [ -e Results ]; then
 	cd Results
+	rm -rf *
 else
 	mkdir Results
 	cd Results
 fi
-rm *
 
 cp ../Inputs/* .
 

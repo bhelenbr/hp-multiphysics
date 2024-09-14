@@ -18,19 +18,18 @@ using namespace bdry_cns;
 // extern FLT body[ND];
 
 
-void shock::init(input_map& inmap,void* gin) {
+void shock::init(input_map& inmap) {
 	std::string keyword,matching_block,side_id,master_block,master_id;
 	std::istringstream data;
 	std::string filename;
 
 	const int sm = basis::tri(x.log2p)->sm();
-    gbl = static_cast<global *>(gin);
 
     /* Both sides have to do work for this Boundary Condition */
     inmap[base.idprefix+"_symmetric"] = "1";
     inmap[base.idprefix+"_c0_indices"] = " ";
     
-	hp_coupled_bdry::init(inmap,gin);
+	hp_coupled_bdry::init(inmap);
 #ifdef WAY1
     c0_indices_xy.clear();
 #endif
@@ -155,20 +154,20 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
     mvel(0) = x.uht(1)(0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
     mvel(1) = x.uht(2)(0)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef MESH_REF_VEL
-    mvel(0) -= x.gbl->mesh_ref_vel(0);
-    mvel(1) -= x.gbl->mesh_ref_vel(1);
+    mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+    mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif  
     FLT vslp0 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
 
     mvel(0) = x.uht(1)(1)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
     mvel(1) = x.uht(2)(1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef MESH_REF_VEL
-    mvel(0) -= x.gbl->mesh_ref_vel(0);
-    mvel(1) -= x.gbl->mesh_ref_vel(1);
+    mvel(0) -= x.hp_gbl->mesh_ref_vel(0);
+    mvel(1) -= x.hp_gbl->mesh_ref_vel(1);
 #endif
     FLT vslp1 = (-mvel(0)*norm(1) +mvel(1)*norm(0))/h;
     
-    FLT meshc = gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +(vslp0-vslp1))/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
+    FLT meshc = hp_bdry_gbl->adis*hsm*(3*(abs(vslp0)+abs(vslp1)) +(vslp0-vslp1))/(4*(vslp0*vslp0+vslp0*vslp1+vslp1*vslp1)+100*FLT_EPSILON)*2/h;
 #endif
     
 	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
@@ -180,7 +179,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         for (int n=0;n<x.ND;++n) {
             mvel(n) = x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i));
 #ifdef MESH_REF_VEL
-            mvel(n) -= x.gbl->mesh_ref_vel(n);
+            mvel(n) -= x.hp_gbl->mesh_ref_vel(n);
 #endif
             urel(n) = u(n+1)(i) -mvel(n);
             urel_opp(n) = u_opp(n+1)(i)-mvel(n);
@@ -196,12 +195,12 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         uu = u(1)(i);
         vu = u(2)(i);
         RTu = u(3)(i);
-        cd = sqrt(x.gbl->gamma*u_opp(3)(i));
+        cd = sqrt(x.hp_cns_gbl->gamma*u_opp(3)(i));
         vslpu = (-urel(0)*norm(1) +urel(1)*norm(0))/jcb;  // This flips sign but gets flipped again because of integral with dv/dxi
 
         FLT rhou = pu/RTu;
-        FLT Eu = RTu/(x.gbl->gamma-1.0)+0.5*(uu*uu +vu*vu);
-        FLT cu = sqrt(x.gbl->gamma*RTu);
+        FLT Eu = RTu/(x.hp_cns_gbl->gamma-1.0)+0.5*(uu*uu +vu*vu);
+        FLT cu = sqrt(x.hp_cns_gbl->gamma*RTu);
         FLT Mu = unorm_rel/cu;
         if (shock_mach(Mu, cu, cd, unorm+unorm_opp)) {
             *x.gbl->log << "#Trouble finding Mach number\n";
@@ -219,8 +218,8 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
         
         /* UPWINDING BASED ON TANGENTIAL VELOCITY */
 #ifndef NEW_STABILIZATION
-        // gbl->meshc(indx) = gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
-        FLT meshc = gbl->adis/(fabs(vslpu) +100.0*FLT_EPSILON);
+        // hp_bdry_gbl->meshc(indx) = hp_bdry_gbl->adis/((basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1)*fabs(vslp));
+        FLT meshc = hp_bdry_gbl->adis/(fabs(vslpu) +100.0*FLT_EPSILON);
 #endif
         res(2,i) = -res(1,i)*vslpu*meshc;
         
@@ -258,7 +257,7 @@ void shock::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 }
 
 int shock::shock_mach(FLT &M, FLT cu, FLT cd, FLT vdiff) {
-    const FLT gam = x.gbl->gamma;
+    const FLT gam = x.hp_cns_gbl->gamma;
     const FLT RHS = (gam+1)/(2*cu)*(2*cd/(gam-1)+vdiff);
     const int maxit = 100;
     const FLT tol = 1.0e-13;
@@ -414,7 +413,7 @@ void shock::petsc_jacobian() {
     base.comm_wait(boundary::all,0,boundary::symmetric);
     base.comm_finish(boundary::all,0,boundary::symmetric,boundary::replace);
 
-    if (gbl->symmetric || is_master) {
+    if (hp_bdry_gbl->symmetric || is_master) {
         /* This is effect of variables u,v,p,x,y on */
         /* source terms added to flow residuals */
         /* and x,y mesh movement equations */

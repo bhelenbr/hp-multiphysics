@@ -16,9 +16,9 @@ int tri_hp_buoyancy::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 	
 #ifdef TIMEACCURATE
@@ -59,8 +59,8 @@ int tri_hp_buoyancy::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));  
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 					jcbmin = MIN(jcbmin,dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					
@@ -87,7 +87,7 @@ int tri_hp_buoyancy::setup_preconditioner() {
 					qmax2 = MAX(qmax2,q2);
 					
 					
-					rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
+					rho = fabs(hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j)));
 					rhoav = MAX(rhoav,rho);
 				}
 			}	
@@ -95,8 +95,8 @@ int tri_hp_buoyancy::setup_preconditioner() {
 			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			nu = gbl->mu/rhoav;
-			alpha = gbl->kcond/(rhoav*gbl->cp);
+			nu = hp_ins_gbl->mu/rhoav;
+			alpha = hp_buoyancy_gbl->kcond/(rhoav*hp_buoyancy_gbl->cp);
 		}
 		else {
 			/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -115,8 +115,8 @@ int tri_hp_buoyancy::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
                      
 					q = pow(u(0)(i,j)-0.5*mvel(0),2.0)  +pow(u(1)(i,j)-0.5*mvel(1),2.0);
@@ -125,7 +125,7 @@ int tri_hp_buoyancy::setup_preconditioner() {
 					q2 = pow(u(0)(i,j)-mvel(0),2.0)  +pow(u(1)(i,j)-mvel(1),2.0);
 					qmax2 = MAX(qmax2,q2);
 
-					rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
+					rho = fabs(hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j)));
 					rhoav = MAX(rhoav,rho);
 					
 				}
@@ -138,8 +138,8 @@ int tri_hp_buoyancy::setup_preconditioner() {
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			nu = gbl->mu/rhoav;
-			alpha = gbl->kcond/(rhoav*gbl->cp);
+			nu = hp_ins_gbl->mu/rhoav;
+			alpha = hp_buoyancy_gbl->kcond/(rhoav*hp_buoyancy_gbl->cp);
 		}
 		
 #else
@@ -156,7 +156,7 @@ int tri_hp_buoyancy::setup_preconditioner() {
 			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
 			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
 #ifdef MESH_REF_VEL
-			mvel += gbl->mesh_ref_vel;
+			mvel += hp_gbl->mesh_ref_vel;
 #endif
 			q = pow(ug.v(v0,0)-0.5*mvel(0),2.0) +pow(ug.v(v0,1)-0.5*mvel(1),2.0);  
 			qmax = MAX(qmax,q);
@@ -164,15 +164,15 @@ int tri_hp_buoyancy::setup_preconditioner() {
 			q2 = pow(ug.v(v0,0)-mvel(0),2.0) +pow(ug.v(v0,1)-mvel(1),2.0);  
 			qmax2 = MAX(qmax2,q2);
 			
-			rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
+			rho = fabs(hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j)));
 			rhoav = MAX(rhoav,rho);
 		}
 		hmax = sqrt(hmax);
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 		
-		nu = gbl->mu/rhoav;
-		alpha = gbl->kcond/(rhoav*gbl->cp);
+		nu = hp_ins_gbl->mu/rhoav;
+		alpha = hp_buoyancy_gbl->kcond/(rhoav*hp_buoyancy_gbl->cp);
 		
 #endif
 		
@@ -192,7 +192,7 @@ int tri_hp_buoyancy::setup_preconditioner() {
 				
 #ifndef TIMEACCURATE
 		gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-		if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+		if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 #endif
 		q = sqrt(qmax);
 		lam1 = q + sqrt(qmax +gam);
@@ -200,9 +200,9 @@ int tri_hp_buoyancy::setup_preconditioner() {
 		lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-		gbl->tau(tind,2)  = adis*h/(jcb*lam2);
-		gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+		hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+		hp_ins_gbl->tau(tind,2)  = adis*h/(jcb*lam2);
+		hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 		
 		
 		/* SET UP DIAGONAL PRECONDITIONER */
@@ -221,16 +221,16 @@ int tri_hp_buoyancy::setup_preconditioner() {
 		
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 		
-		gbl->tprcn(tind,0) = rhoav*jcb;    
-		gbl->tprcn(tind,1) = rhoav*jcb;  
-		gbl->tprcn(tind,2) =  rhoav*gbl->cp*jcb1;      
-		gbl->tprcn(tind,3) =  jcb/gam;		
+		hp_gbl->tprcn(tind,0) = rhoav*jcb;    
+		hp_gbl->tprcn(tind,1) = rhoav*jcb;  
+		hp_gbl->tprcn(tind,2) =  rhoav*hp_buoyancy_gbl->cp*jcb1;      
+		hp_gbl->tprcn(tind,3) =  jcb/gam;		
 		
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}

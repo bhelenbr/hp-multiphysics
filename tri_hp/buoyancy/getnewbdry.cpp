@@ -55,7 +55,6 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, std::string name) {
 			return(tri_hp_ins::getnewvrtxobject(bnum,name));
 		}
 	}
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
 	return(temp);
 }
 
@@ -130,7 +129,6 @@ hp_edge_bdry* tri_hp_buoyancy::getnewedgeobject(int bnum, std::string name) {
 			break;
 		}
 	}
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 	
 	return(temp);
 }

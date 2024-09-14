@@ -16,24 +16,24 @@ int tri_hp_cns::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	if(gbl->diagonal_preconditioner){
-		gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-		gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
+	if(hp_gbl->diagonal_preconditioner){
+		hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+		hp_cns_gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
 		if (basis::tri(log2p)->sm() > 0) {
-			gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
-			gbl->spreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+			hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+			hp_cns_gbl->spreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 		}
-		gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
-		gbl->tpreconditioner(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
+		hp_gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
+		hp_cns_gbl->tpreconditioner(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
 		
 	} else {
 
-		gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
+		hp_gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
 		if (basis::tri(log2p)->sm() > 0) {
-			gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+			hp_gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 		}
-		gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
+		hp_gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 	}
 
 #ifdef TIMEACCURATE
@@ -72,8 +72,8 @@ int tri_hp_cns::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));  
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 					jcbmin = MIN(jcbmin,dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					
@@ -129,8 +129,8 @@ int tri_hp_cns::setup_preconditioner() {
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-					mvel(0) += gbl->mesh_ref_vel(0);
-					mvel(1) += gbl->mesh_ref_vel(1);
+					mvel(0) += hp_gbl->mesh_ref_vel(0);
+					mvel(1) += hp_gbl->mesh_ref_vel(1);
 #endif
 					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
 					qmax = MAX(qmax,q);
@@ -174,14 +174,14 @@ int tri_hp_cns::setup_preconditioner() {
 
 		dtstari = 1.0/tstep;
 		
-		if(gbl->diagonal_preconditioner) {
-			gbl->tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
+		if(hp_gbl->diagonal_preconditioner) {
+			hp_cns_gbl->tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
 		}
 		else {
-			gbl->tprcn_ut(tind,Range::all(),Range::all()) = tprcn;
+			hp_gbl->tprcn_ut(tind,Range::all(),Range::all()) = tprcn;
 		}
 		
-		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
+		hp_cns_gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 
 #ifdef TIMEACCURATE
 		dtstarimax = MAX(dtstari,dtstarimax);
@@ -202,33 +202,33 @@ int tri_hp_cns::setup_preconditioner() {
 		dtstari = dtstarimax;
 #endif
 		
-		if(gbl->diagonal_preconditioner){
-			gbl->tprcn(tind,Range::all()) = jcb;
-			gbl->tpreconditioner(tind,Range::all(),Range::all()) *= dtstari;
+		if(hp_gbl->diagonal_preconditioner){
+			hp_gbl->tprcn(tind,Range::all()) = jcb;
+			hp_cns_gbl->tpreconditioner(tind,Range::all(),Range::all()) *= dtstari;
 			
 			for(i=0;i<3;++i) {
 			
-				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
-				gbl->vpreconditioner(v(i),Range::all(),Range::all())  += gbl->tpreconditioner(tind,Range::all(),Range::all())*jcb;
+				hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+				hp_cns_gbl->vpreconditioner(v(i),Range::all(),Range::all())  += hp_cns_gbl->tpreconditioner(tind,Range::all(),Range::all())*jcb;
 
 				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
 					
-					gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
-					gbl->spreconditioner(side,Range::all(),Range::all()) += gbl->tpreconditioner(tind,Range::all(),Range::all());
+					hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+					hp_cns_gbl->spreconditioner(side,Range::all(),Range::all()) += hp_cns_gbl->tpreconditioner(tind,Range::all(),Range::all());
 				}
 			}
 		}
 		else {
-			gbl->tprcn_ut(tind,Range::all(),Range::all()) *= jcb*dtstari;
+			hp_gbl->tprcn_ut(tind,Range::all(),Range::all()) *= jcb*dtstari;
 			
 			for(i=0;i<3;++i) {
 				
-				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += gbl->tprcn_ut(tind,Range::all(),Range::all());
+				hp_gbl->vprcn_ut(v(i),Range::all(),Range::all())  += hp_gbl->tprcn_ut(tind,Range::all(),Range::all());
 				
 				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
-					gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
+					hp_gbl->sprcn_ut(side,Range::all(),Range::all()) += hp_gbl->tprcn_ut(tind,Range::all(),Range::all());
 				}
 			}
 
@@ -243,7 +243,7 @@ void tri_hp_cns::calculate_tau(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, A
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
 	
-	const FLT gam = gbl->gamma;
+	const FLT gam = hp_cns_gbl->gamma;
 	const FLT gm1 = gam-1.0;
 	const FLT gogm1 = gam/gm1;
     const FLT pr = pvu(0);
@@ -258,9 +258,9 @@ void tri_hp_cns::calculate_tau(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, A
 #ifdef SUTHERLAND
     Sutherland(rt);
 #endif
-	const FLT nu = gbl->mu/rho;
-	const FLT cp = gogm1*gbl->R;
-	const FLT alpha = gbl->kcond/(rho*cp);
+	const FLT nu = hp_cns_gbl->mu/rho;
+	const FLT cp = gogm1*hp_cns_gbl->R;
+	const FLT alpha = hp_cns_gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
 //	FLT hdt = 0.25*pow(h*gbl->bd(0),2.0);

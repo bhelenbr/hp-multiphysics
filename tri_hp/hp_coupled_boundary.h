@@ -47,7 +47,7 @@ public:
 	/* Should distinguish those that can be changed i.e. physical parameters and those that can't i.e. NV */
 	/* Could make a structure of constants, then just keep a reference sort of like gbl now except don't have to keep inheriting globals?? */
 	/* That's a little weird too, what would subclasses name their structures of globals? */
-	struct global {
+	struct hp_bdry_global {
 		bool is_loop;  //!< true if boundary is a loop
 		//  Different ways of treating continuity between sides of boundary in iteration
 		//  traditional way is that vertex variable equations are duplicated and side modes are treated with explicit constraint
@@ -85,22 +85,21 @@ public:
 		Array<FLT,1> fadd; //!< Multiplier for driving term of multigrid (NV)
 		Array<FLT,2> cfl; //!< CFL #'s for each system at each order (log2p+1,NV)
 		FLT adis;  //!< Dissipation constant multiplier
-	} *gbl;
+    };
+    shared_ptr<hp_bdry_global> hp_bdry_gbl;
 	
 public:
-	void* create_global_structure() {return new global;}
-	void delete_global_structure() { if(shared_owner) delete gbl;}
 	hp_coupled_bdry(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "hp_coupled_bdry"; is_master = base.is_frst();}
-	hp_coupled_bdry(const hp_coupled_bdry& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), NV(inbdry.NV), is_master(inbdry.is_master), gbl(inbdry.gbl) {
+	hp_coupled_bdry(const hp_coupled_bdry& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_edge_bdry(inbdry,xin,bin), NV(inbdry.NV), is_master(inbdry.is_master), hp_bdry_gbl(inbdry.hp_bdry_gbl) {
 		fine = &inbdry;
-		if (!gbl->symmetric && !is_master) return;
+		if (!hp_bdry_gbl->symmetric && !is_master) return;
 		/* default initializer for p=1 multigrid (overriddent in init for fine level) */
 		ksprg.resize(base.maxseg);
 		vug_frst.resize(base.maxseg+1,NV);
 		vdres.resize(1,base.maxseg+1,NV);
 	};
 	hp_coupled_bdry* create(tri_hp& xin, edge_bdry &bin) const {return new hp_coupled_bdry(*this,dynamic_cast<tri_hp&>(xin),bin);}
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	
 	/* FOR COUPLED DYNAMIC BOUNDARIES (COMMENTED ROUTINES NEED TO BE WRITTEN) */
 	void tadvance();
@@ -148,7 +147,7 @@ public:
 	}
 	hp_deformable_fixed_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_fixed_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
 	
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	void vdirichlet();
 #ifdef petsc
 	void petsc_jacobian_dirichlet();
@@ -171,7 +170,7 @@ public:
 	hp_deformable_free_pnt(const hp_deformable_free_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(inbdry,xin,bin), position(inbdry.position) {}
 	hp_deformable_free_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_free_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
 	
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	void element_rsdl(Array<FLT,1> lf);
 	void rsdl(int stage);
 	void vdirichlet() {hp_vrtx_bdry::vdirichlet();}
@@ -193,7 +192,7 @@ public:
 	translating_surface(const translating_surface& inbdry, tri_hp &xin, edge_bdry &bin)  : hp_coupled_bdry(inbdry,xin,bin), vel(inbdry.vel) {};
 	translating_surface* create(tri_hp& xin, edge_bdry &bin) const {return new translating_surface(*this,xin,bin);}
 	
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	int setup_preconditioner();
 };

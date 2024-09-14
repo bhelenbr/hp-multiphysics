@@ -15,7 +15,7 @@
 
 class tri_hp_swe : public tri_hp_ins {
 	public:
-		struct global : public tri_hp_ins::global {
+		struct hp_swe_global {
 
 			/* PHYSICAL CONSTANTS */
 			FLT f0, cbeta, cd, ptest;
@@ -23,17 +23,16 @@ class tri_hp_swe : public tri_hp_ins {
 			/* BATHYMETRY DATA */
 			init_bdry_cndtn *bathy;
 
-		} *gbl;
+		};
+        shared_ptr<hp_swe_global> hp_swe_gbl;
 
 		init_bdry_cndtn* getnewibc(std::string name);
 		hp_edge_bdry* getnewedgeobject(int bnum, std::string name);
 
 	public:
-		void* create_global_structure() {return new global;}
-		void delete_global_structure() {tri_hp::delete_global_structure(); delete gbl;}
 		tri_hp_swe* create() { return new tri_hp_swe(); }
 
-		void init(input_map& inmap, void *gin);  
+		void init(input_map& inmap,shared_ptr<block_global> gin);  
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		int setup_preconditioner();

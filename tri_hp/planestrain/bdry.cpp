@@ -41,7 +41,7 @@ void friction_wall::rsdl(int stage) {
 			basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
 		for (k=0;k<basis::tri(x.log2p)->gpx();++k) {
-			x.cjcb(0,k) = x.gbl->mu/(x.dcrd(0,0)(0,k)*x.dcrd(1,1)(0,k) -x.dcrd(1,0)(0,k)*x.dcrd(0,1)(0,k));
+			x.cjcb(0,k) = x.hp_ps_gbl->mu/(x.dcrd(0,0)(0,k)*x.dcrd(1,1)(0,k) -x.dcrd(1,0)(0,k)*x.dcrd(0,1)(0,k));
 
 			/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 			/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -93,14 +93,14 @@ void friction_wall::rsdl(int stage) {
 			basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += x.lf(n)(0);
+			x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += x.lf(n)(1);
+			x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
 
 		for(k=0;k<basis::tri(x.log2p)->sm();++k) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+				x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
 	}
 

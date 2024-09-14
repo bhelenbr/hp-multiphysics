@@ -38,7 +38,7 @@ template<class BASE> class pod_simulate : public BASE {
 #endif
 
 	public:
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap,shared_ptr<block_global> gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
 		tri_hp_helper* getnewhelper(std::string name);
 		void output(const std::string& fname, block::output_purpose why);
@@ -94,7 +94,7 @@ class svv_ins : public pod_simulate<tri_hp_ins> {
 		bool remove_pressure; // Flag to remove pressure from equations based on incompressibility
 	
 		svv_ins* create() { return new svv_ins();}
-		void init(input_map& inmap, void *gin) { 
+		void init(input_map& inmap, shared_ptr<block_global> gin) { 
 			pod_simulate<tri_hp_ins>::init(inmap,gin);
 			if (!inmap.get("svv_cutoff", cutoff)) {
 				*gbl->log << "Failed to find svv cutoff number" << std::endl;
@@ -123,7 +123,7 @@ class svv_ins : public pod_simulate<tri_hp_ins> {
 			rsdls0 = rsdls_recv;
 
 			// Add spetral vanishing viscosity
-			gbl->mu += alpha;
+			hp_ins_gbl->mu += alpha;
 			// Recalculate residuals 
 			pod_simulate<tri_hp_ins>::rsdl(stage);
 			
@@ -131,7 +131,7 @@ class svv_ins : public pod_simulate<tri_hp_ins> {
 			rsdls_recv(Range(0,cutoff-1)) = rsdls0(Range(0,cutoff-1));
 			
 			// Remove spectral vansishing viscosity
-			gbl->mu -= alpha;
+			hp_ins_gbl->mu -= alpha;
 		}
 };
 

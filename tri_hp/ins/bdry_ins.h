@@ -33,7 +33,7 @@ namespace bdry_ins {
 			tri_hp_ins &x;
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+				flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tri_mesh::ND;++n)
@@ -63,8 +63,8 @@ namespace bdry_ins {
 				conv_flux = 0.0;
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				hp_edge_bdry::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				hp_edge_bdry::init(inmap);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);
@@ -81,8 +81,8 @@ namespace bdry_ins {
 			inflow(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "inflow";}
 			inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				for (int n=0;n<x.NV-1;++n) {
 					essential_indices.push_back(n);
 					type[n] = essential;
@@ -99,7 +99,7 @@ namespace bdry_ins {
 				for(int n=0;n<x.NV;++n)
 					ub(n) = ibc->f(n,xpt,x.gbl->time);
 
-				flx(x.NV-1) = x.gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+				flx(x.NV-1) = x.hp_ins_gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
 
 				/* X&Y MOMENTUM */
 				for (int n=0;n<tri_mesh::ND;++n)
@@ -159,8 +159,8 @@ namespace bdry_ins {
 			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin), rigid() {mytype = "force_coupling"; /* ibc = this; */}
 			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), rigid(inbdry) {/*ibc = this;*/}
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				inflow::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				inflow::init(inmap);
 				rigid::init(inmap,base.idprefix);
 				report_flag = true;
 			}
@@ -212,9 +212,9 @@ namespace bdry_ins {
 				// FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);
 				FLT un = 0.0;			// No flux through the surface	
 				TinyVector<FLT,tri_mesh::ND> tang(-norm(1),norm(0));
-				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.gbl->mu/(slip_length);
+				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.hp_ins_gbl->mu/(slip_length);
 				
-				flx(x.NV-1) = x.gbl->rho*un;
+				flx(x.NV-1) = x.hp_ins_gbl->rho*un;
 
 				/* X&Y MOMENTUM */
 				for (int n=0;n<tri_mesh::ND;++n)
@@ -230,8 +230,8 @@ namespace bdry_ins {
 			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin), rigid(), slip_length(0.0) {mytype = "friction_slip";}
 			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), rigid(inbdry), slip_length(inbdry.slip_length) {}
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				rigid::init(inmap,base.idprefix);
 				std::string keyword = base.idprefix +"_sliplength";
 				if (!inmap.get(keyword,slip_length)) {
@@ -286,8 +286,8 @@ namespace bdry_ins {
 			symmetry(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
 			symmetry(const symmetry& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
 			symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				std::string keyword = base.idprefix +"_dir";
 				inmap.getwdefault(keyword,dir,0);
 				essential_indices.push_back(dir);
@@ -303,7 +303,7 @@ namespace bdry_ins {
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 
 				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+				flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tri_mesh::ND;++n)
@@ -323,7 +323,7 @@ namespace bdry_ins {
 			applied_stress(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 	
 	class actuator_disc : public generic {
@@ -332,10 +332,10 @@ namespace bdry_ins {
 		
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 			/* CONTINUITY */
-			flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+			flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 			
 			if (base.is_frst()) {
-				FLT norm_vel = flx(x.NV-1)/x.gbl->rho;
+				FLT norm_vel = flx(x.NV-1)/x.hp_ins_gbl->rho;
 				TinyVector<FLT,3> inpt(xpt(0),xpt(1),norm_vel);
 				FLT delta_p = dp.Eval(inpt,x.gbl->time);			
 				
@@ -360,7 +360,7 @@ namespace bdry_ins {
 			actuator_disc* create(tri_hp& xin, edge_bdry &bin) const {return new actuator_disc(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			/* To read in data */
-			void init(input_map& inmap,void* gbl_in) {
+			void init(input_map& inmap) {
                 
                 /* Let pressure be discontinuous */
                 ostringstream vars;
@@ -369,7 +369,7 @@ namespace bdry_ins {
                 }
                 inmap[base.idprefix +"_c0_indices"] = vars.str();
                 
-				generic::init(inmap,gbl_in);
+				generic::init(inmap);
 				
 				/* LOAD PRESSURE JUMP FUNCTION */
 				dp.init(inmap,base.idprefix+"_jump");

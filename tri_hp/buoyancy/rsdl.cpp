@@ -21,8 +21,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi;
-	FLT lkcond = gbl->kcond, cjcbi2;
+	FLT lrho, lmu = hp_ins_gbl->mu, lbd0, rhorbd0, cjcb, cjcbi;
+	FLT lkcond = hp_buoyancy_gbl->kcond, cjcbi2;
 	TinyMatrix<FLT,MXGP,MXGP> rho;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
@@ -59,8 +59,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p)(tind,0,i,j));
 			mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p)(tind,1,i,j));
 #ifdef MESH_REF_VEL
-			mvel(0)(i,j) += gbl->mesh_ref_vel(0);
-			mvel(1)(i,j) += gbl->mesh_ref_vel(1);
+			mvel(0)(i,j) += hp_gbl->mesh_ref_vel(0);
+			mvel(1)(i,j) += hp_gbl->mesh_ref_vel(1);
 #endif
 		}
 	}
@@ -101,9 +101,9 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
-				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
+				lrho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
-				u(2)(i,j) *= gbl->cp;
+				u(2)(i,j) *= hp_buoyancy_gbl->cp;
 
 				fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
 				fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
@@ -152,7 +152,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef BOUSSINESQ
 					res(1)(i,j) += u(2)(i,j)*RAD(crd(0)(i,j))*cjcb*gbl->g;
 #else
-					res(1)(i,j) += (rho(i,j)-gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+					res(1)(i,j) += (rho(i,j)-hp_ins_gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
 #endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -255,18 +255,18 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			FLT nu = gbl->mu/rhoav;
-			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			FLT nu = hp_ins_gbl->mu/rhoav;
+			FLT alpha = hp_buoyancy_gbl->kcond/(rhoav*hp_buoyancy_gbl->cp);
 			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+			if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 
 			FLT q2 = sqrt(qmax2);
 			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
 			
 			/* SET UP DISSIPATIVE COEFFICIENTS */
-			gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-			gbl->tau(tind,2)  = adis*h/(jcb*lam2);
-			gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+			hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			hp_ins_gbl->tau(tind,2)  = adis*h/(jcb*lam2);
+			hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 #endif
 			
 			
@@ -277,24 +277,24 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
-					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
-					FLT nu = gbl->mu/rho;
-					FLT alpha = gbl->kcond/(rho*gbl->cp);
+					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT nu = hp_ins_gbl->mu/rho;
+					FLT alpha = hp_buoyancy_gbl->kcond/(rho*hp_buoyancy_gbl->cp);
                     cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 
 					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
-					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+					if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 					FLT lam2  = sqrt(q2) +1.5*alpha/h +h*gbl->bd(0);
 					
 					/* SET UP DISSIPATIVE COEFFICIENTS */
-					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
-					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
-					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+					hp_ins_gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+					hp_ins_gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
+					hp_ins_gbl->tau(tind,NV-1) = sqrt(q)*hp_ins_gbl->tau(tind,0);
 #endif
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(2) = gbl->tau(tind,2)*res(2)(i,j);
-					tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(2) = hp_ins_gbl->tau(tind,2)*res(2)(i,j);
+					tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 					df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
 									-dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
@@ -338,9 +338,9 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
-				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
+				lrho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
-				u(2)(i,j) *= gbl->cp;
+				u(2)(i,j) *= hp_buoyancy_gbl->cp;
 				fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
 				fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
@@ -440,7 +440,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef BOUSSINESQ
 					res(1)(i,j) += u(2)(i,j)*RAD(crd(0)(i,j))*cjcb*gbl->g;
 #else
-					res(1)(i,j) += (rho(i,j)-gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
+					res(1)(i,j) += (rho(i,j)-hp_ins_gbl->rho)*RAD(crd(0)(i,j))*cjcb*gbl->g;
 #endif
 
 					df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
@@ -495,18 +495,18 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			FLT nu = gbl->mu/rhoav;
-			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			FLT nu = hp_ins_gbl->mu/rhoav;
+			FLT alpha = hp_buoyancy_gbl->kcond/(rhoav*hp_buoyancy_gbl->cp);
 			FLT gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+			if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 			
 			FLT q2 = sqrt(qmax2);
 			FLT lam2  = (q2 +1.5*alpha/h +hmax*gbl->bd(0));
 			
 			/* SET UP DISSIPATIVE COEFFICIENTS */
-			gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-			gbl->tau(tind,2)  = adis*h/(jcb*lam2);
-			gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+			hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			hp_ins_gbl->tau(tind,2)  = adis*h/(jcb*lam2);
+			hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 #endif
 			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
@@ -516,24 +516,24 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
-					FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
-					FLT nu = gbl->mu/rho;
-					FLT alpha = gbl->kcond/(rho*gbl->cp);
+					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT nu = hp_ins_gbl->mu/rho;
+					FLT alpha = hp_buoyancy_gbl->kcond/(rho*hp_buoyancy_gbl->cp);
 
 					FLT gam = 3.0*q +(0*0.5*h*gbl->bd(0) +2.*nu/h)*(0*0.5*h*gbl->bd(0) +2.*nu/h);
-					if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+					if (hp_ins_gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
 					FLT lam2  = sqrt(q2) +1.5*alpha/h +h*gbl->bd(0);
 					
 					/* SET UP DISSIPATIVE COEFFICIENTS */
-					gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
-					gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
-					gbl->tau(tind,NV-1) = sqrt(q)*gbl->tau(tind,0);
+					hp_ins_gbl->tau(tind,0) = adis*h/(cjcb*sqrt(gam));
+					hp_ins_gbl->tau(tind,2)  = adis*h/(cjcb*lam2);
+					hp_ins_gbl->tau(tind,NV-1) = sqrt(q)*hp_ins_gbl->tau(tind,0);
 #endif
 
-					tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-					tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-					tres(2) = gbl->tau(tind,2)*res(2)(i,j);
-					tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
+					tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i,j);
+					tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i,j);
+					tres(2) = hp_ins_gbl->tau(tind,2)*res(2)(i,j);
+					tres(NV-1) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 					df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
 									-ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)

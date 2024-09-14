@@ -16,7 +16,7 @@ class cd_mapped : public tri_hp_cd {
 public:
     shared_ptr<mapping> map;
     cd_mapped* create() override { return new cd_mapped(); }
-    void init(input_map& inmap, void *gin) override;
+    void init(input_map& inmap, shared_ptr<block_global> gin) override;
     void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0) override;
     void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND>& dcrd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& mvel) const;
     void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) override;

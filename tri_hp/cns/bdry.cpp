@@ -15,10 +15,10 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> kcond;
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
 #ifndef SUTHERLAND
-    const FLT lkcond = x.gbl->kcond;
-    const FLT lmu = x.gbl->mu;
+    const FLT lkcond = x.hp_cns_gbl->kcond;
+    const FLT lmu = x.hp_cns_gbl->mu;
 #endif
-	const FLT gam = x.gbl->gamma;
+	const FLT gam = x.hp_cns_gbl->gamma;
 	const FLT gm1 = gam-1.0;
 	const FLT ogm1 = 1.0/gm1;
 	const FLT gogm1 = gam*ogm1;
@@ -78,11 +78,11 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					circumference += jcb;
 #ifdef SUTHERLAND
                     x.Sutherland(x.u(x.NV-1)(0,i));
-                    const FLT lmu = x.gbl->mu;
-                    const FLT lkcond = x.gbl->kcond;
+                    const FLT lmu = x.hp_cns_gbl->mu;
+                    const FLT lkcond = x.hp_cns_gbl->kcond;
 #endif
 					const FLT mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-					const FLT kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					const FLT kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.hp_cns_gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -129,7 +129,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
-						mvel(n) += x.gbl->mesh_ref_vel(n);
+						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}
 					double rho = x.u(0)(0,i)/x.u(NV-1)(0,i);
@@ -217,7 +217,7 @@ void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector
 	//			fluxtemp(1) = fluxtemp(0)*ul+pr;
 	//			fluxtemp(2) = fluxtemp(0)*vl;
 	//			
-	//			FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(ul*ul+vl*vl);
+	//			FLT h = x.hp_cns_gbl->gamma/(x.hp_cns_gbl->gamma-1.0)*RT +0.5*(ul*ul+vl*vl);
 	//			fluxtemp(3) = fluxtemp(0)*h;
 	//			
 	//			/* CHANGE BACK TO X,Y COORDINATES */
@@ -241,9 +241,9 @@ void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector
 #endif
 	
 	/* ENERGY EQUATION */
-    //double E = u(x.NV-1)/(x.gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
+    //double E = u(x.NV-1)/(x.hp_cns_gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
     double rho = u(0)/u(x.NV-1);
-    double E = ibc->f(0, xpt, x.gbl->time)/(rho*(x.gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
+    double E = ibc->f(0, xpt, x.gbl->time)/(rho*(x.hp_cns_gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
     flx(x.NV-1) = rho*E*((u(1)-mv(0))*norm(0)+(u(2)-mv(1))*norm(1))+ibc->f(0, xpt, x.gbl->time)*(u(1)*norm(0)+u(2)*norm(1));
 	
 	return;
@@ -256,7 +256,7 @@ void inflow::modify_boundary_residual() {
 	TinyVector<double,MXTM> rescoef;
 	char uplo[] = "U";
 	
-	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+	FLT ogm1 = 1.0/(x.hp_cns_gbl->gamma-1.0);
 	
 	j = 0;
 	do {
@@ -265,9 +265,9 @@ void inflow::modify_boundary_residual() {
 		
 		FLT KE = 0.5*(ibc->f(1, x.pnts(v0), x.gbl->time)*ibc->f(1, x.pnts(v0), x.gbl->time)+ibc->f(2, x.pnts(v0), x.gbl->time)*ibc->f(2, x.pnts(v0), x.gbl->time));
 		
-		x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-		x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
-		x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
+		x.hp_gbl->res.v(v0,1) = x.hp_gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+		x.hp_gbl->res.v(v0,2) = x.hp_gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+		x.hp_gbl->res.v(v0,3) = x.hp_gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
 		
 	} while (++j < base.nseg);
 	
@@ -275,9 +275,9 @@ void inflow::modify_boundary_residual() {
 	
 	FLT KE = 0.5*(ibc->f(1, x.pnts(v0), x.gbl->time)*ibc->f(1, x.pnts(v0), x.gbl->time)+ibc->f(2, x.pnts(v0), x.gbl->time)*ibc->f(2, x.pnts(v0), x.gbl->time));
 	
-	x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-	x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
-	x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
+	x.hp_gbl->res.v(v0,1) = x.hp_gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+	x.hp_gbl->res.v(v0,2) = x.hp_gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+	x.hp_gbl->res.v(v0,3) = x.hp_gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
 	
 	if(basis::tri(x.log2p)->sm()) {
 		for(j=0;j<base.nseg;++j) {
@@ -302,15 +302,15 @@ void inflow::modify_boundary_residual() {
 			/* take global coefficients and put into local vector */
 			/*  only need res_rho */
 			for (m=0; m<2; ++m) 
-				rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+				rescoef(m) = x.hp_gbl->res.v(x.seg(sind).pnt(m),0);					
 			
 			for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-				rescoef(m+2) = x.gbl->res.s(sind,m,0);					
+				rescoef(m+2) = x.hp_gbl->res.s(sind,m,0);					
 			
 			basis::tri(x.log2p)->proj1d(&rescoef(0),&res1d(0));
 			
 			for(n=1;n<x.NV;++n)
-				basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res(n)(0,0));
+				basis::tri(x.log2p)->proj1d(x.hp_gbl->res.v(v0,n),x.hp_gbl->res.v(v1,n),&x.res(n)(0,0));
 			
 			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 				pt(0) = x.crd(0)(0,k);
@@ -333,7 +333,7 @@ void inflow::modify_boundary_residual() {
                 dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.lf(n)(2),&sm,&info);
 #endif
                 for(m=0;m<basis::tri(x.log2p)->sm();++m)
-					x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
+					x.hp_gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
 				
 			}								
 		}
@@ -354,7 +354,7 @@ void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVect
 		flx(n) = 0.0;
 	
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*ibc->f(x.NV-1, xpt, x.gbl->time) +0.5*(u(1)*u(1)+u(2)*u(2));
+	double h = x.hp_cns_gbl->gamma/(x.hp_cns_gbl->gamma-1.0)*ibc->f(x.NV-1, xpt, x.gbl->time) +0.5*(u(1)*u(1)+u(2)*u(2));
 	flx(x.NV-1) = h*flx(0);
 	
 	return;
@@ -368,22 +368,22 @@ void adiabatic::modify_boundary_residual() {
 	TinyVector<double,MXTM> rescoef;
 	char uplo[] = "U";
 	
-//	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+//	FLT ogm1 = 1.0/(x.hp_cns_gbl->gamma-1.0);
 	
 	j = 0;
 	do {
 		sind = base.seg(j);	
 		v0 = x.seg(sind).pnt(0);		
 
-		x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-		x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+		x.hp_gbl->res.v(v0,1) = x.hp_gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+		x.hp_gbl->res.v(v0,2) = x.hp_gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
 		
 	} while (++j < base.nseg);
 	
 	v0 = x.seg(sind).pnt(1);
 	
-	x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-	x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+	x.hp_gbl->res.v(v0,1) = x.hp_gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+	x.hp_gbl->res.v(v0,2) = x.hp_gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
 	
 	if(basis::tri(x.log2p)->sm()) {
 		for(j=0;j<base.nseg;++j) {
@@ -408,15 +408,15 @@ void adiabatic::modify_boundary_residual() {
 			/* take global coefficients and put into local vector */
 			/*  only need res_rho */
 			for (m=0; m<2; ++m) 
-				rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+				rescoef(m) = x.hp_gbl->res.v(x.seg(sind).pnt(m),0);					
 			
 			for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-				rescoef(m+2) = x.gbl->res.s(sind,m,0);					
+				rescoef(m+2) = x.hp_gbl->res.s(sind,m,0);					
 			
 			basis::tri(x.log2p)->proj1d(&rescoef(0),&res1d(0));
 			
 			for(n=1;n<x.NV;++n)
-				basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res(n)(0,0));
+				basis::tri(x.log2p)->proj1d(x.hp_gbl->res.v(v0,n),x.hp_gbl->res.v(v1,n),&x.res(n)(0,0));
 			
 			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 				pt(0) = x.crd(0)(0,k);
@@ -437,7 +437,7 @@ void adiabatic::modify_boundary_residual() {
                 dpbtrs_(uplo,&sm,&sbwth,&one,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),&sbp1,&x.lf(n)(2),&sm,&info);
 #endif
 				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-					x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
+					x.hp_gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
 				
 			}								
 		}
@@ -452,7 +452,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp,fluxleft, fluxright;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
-	FLT gam = x.gbl->gamma;
+	FLT gam = x.hp_cns_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
     
@@ -521,9 +521,9 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 #ifdef SUTHERLAND
     x.Sutherland(rt);
 #endif
-	const FLT nu = x.gbl->mu/rho;
-//	FLT cp = gogm1*x.gbl->R;
-//	FLT alpha = x.gbl->kcond/(rho*cp);
+	const FLT nu = x.hp_cns_gbl->mu/rho;
+//	FLT cp = gogm1*x.hp_cns_gbl->R;
+//	FLT alpha = x.hp_cns_gbl->kcond/(rho*cp);
 	FLT h = side_length; 
 	
 //	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
@@ -635,11 +635,11 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	return;
 }
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
+void applied_stress::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 	
-	generic::init(inmap,gbl_in);
+	generic::init(inmap);
 	
 	stress.resize(x.NV-1);
 	
@@ -673,7 +673,7 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 #endif
 	
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+	double h = x.hp_cns_gbl->gamma/(x.hp_cns_gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
 	flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time);
 	
 	return;
@@ -724,7 +724,7 @@ void outflow_supersonic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt,
     
     /* ENERGY EQUATION */
     double rho = u(0)/u(x.NV-1);
-    double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
+    double E = u(0)/(rho*(x.hp_cns_gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
     flx(x.NV-1) = rho*E*((u(1)-mv(0))*norm(0)+(u(2)-mv(1))*norm(1))+u(0)*(u(1)*norm(0)+u(2)*norm(1));
     
     return;
@@ -751,7 +751,7 @@ void euler::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<F
     
     /* ENERGY EQUATION */
     double rho = u(0)/u(x.NV-1);
-    double E = u(0)/(rho*(x.gbl->gamma-1.0))+0.5*(ub(1)*ub(1)+ub(2)*ub(2));
+    double E = u(0)/(rho*(x.hp_cns_gbl->gamma-1.0))+0.5*(ub(1)*ub(1)+ub(2)*ub(2));
     flx(x.NV-1) = rho*E*((ub(1)-mv(0))*norm(0)+(ub(2)-mv(1))*norm(1))+u(0)*(ub(1)*norm(0)+ub(2)*norm(1));
     
     return;
@@ -789,7 +789,7 @@ void wall::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FL
 //
 //    /* ENERGY EQUATION */
 //    double rho = u(0)/u(x.NV-1);
-//    double E = u(x.NV-1)/(x.gbl->gamma-1.0)+0.5*(u_x*u_x+u_y*u_y);
+//    double E = u(x.NV-1)/(x.hp_cns_gbl->gamma-1.0)+0.5*(u_x*u_x+u_y*u_y);
 //    flx(x.NV-1) = rho*E*((u_x-mv(0))*norm(0)+(u_y-mv(1))*norm(1))+u(0)*(u_x*norm(0)+u_y*norm(1));
     
     

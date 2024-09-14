@@ -10,10 +10,9 @@
 #include "tri_hp_swirl.h"
 #include "../hp_boundary.h"
 
- void tri_hp_swirl::init(input_map& inmap, void *gin) { 
+ void tri_hp_swirl::init(input_map& inmap, shared_ptr<block_global> gin) { 
 
-	gbl = static_cast<global *>(gin);    
-
+	gbl = gin;
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end())
 		inmap[gbl->idprefix + "_nvariable"] = "4";
 

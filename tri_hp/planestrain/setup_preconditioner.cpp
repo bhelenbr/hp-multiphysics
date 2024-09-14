@@ -12,9 +12,9 @@ int tri_hp_ps::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 
 	for(tind = 0; tind < ntri; ++tind) {
@@ -37,22 +37,22 @@ int tri_hp_ps::setup_preconditioner() {
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 
-		gami = pow(hmax/(2.*gbl->mu),2.0) +gbl->lami*hmax*hmax/gbl->mu;
+		gami = pow(hmax/(2.*hp_ps_gbl->mu),2.0) +hp_ps_gbl->lami*hmax*hmax/hp_ps_gbl->mu;
 		gam = 1./gami; 
 		lam1 = sqrt(gam);
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind)  = adis*h/(jcb*lam1);
-		jcb *= (8.*gbl->mu*(1./(hmax*hmax) +1./(h*h))) ;
+		hp_ps_gbl->tau(tind)  = adis*h/(jcb*lam1);
+		jcb *= (8.*hp_ps_gbl->mu*(1./(hmax*hmax) +1./(h*h))) ;
 
-		gbl->tprcn(tind,0) = jcb;    
-		gbl->tprcn(tind,1) = jcb;      
-		gbl->tprcn(tind,2) =  jcb/gam;
+		hp_gbl->tprcn(tind,0) = jcb;    
+		hp_gbl->tprcn(tind,1) = jcb;      
+		hp_gbl->tprcn(tind,2) =  jcb/gam;
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}

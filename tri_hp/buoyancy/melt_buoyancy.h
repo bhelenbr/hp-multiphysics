@@ -29,7 +29,7 @@ namespace bdry_buoyancy {
 		surface_marangoni(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) { mytype = "surface_marangoni";}
 		surface_marangoni(const surface_marangoni& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : bdry_ins::surface(inbdry,xin,bin), sigma_vs_T(inbdry.sigma_vs_T) {}
 		surface_marangoni* create(tri_hp& xin, edge_bdry &bin) const {return new surface_marangoni(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in);
+		void init(input_map& inmap);
 		void element_rsdl(int sind, Array<TinyVector<FLT,MXTM>,1> lf);
 	};
 	
@@ -50,10 +50,10 @@ namespace bdry_buoyancy {
 		FLT growth_angle;
 	public:
 		triple_junction(tri_hp &xin, vrtx_bdry &bin) : bdry_cd::melt_facet_pt(xin,bin) {mytype = "triple_junction";}
-		triple_junction(const triple_junction& inbdry, tri_hp &xin, vrtx_bdry &bin) : melt_facet_pt(inbdry,xin,bin) {}
+		triple_junction(const triple_junction& inbdry, tri_hp &xin, vrtx_bdry &bin) : melt_facet_pt(inbdry,xin,bin), growth_angle(inbdry.growth_angle) {}
 		triple_junction* create(tri_hp& xin, vrtx_bdry &bin) const {return new triple_junction(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 		
-		void init(input_map& inmap,void* gbl_in);
+		void init(input_map& inmap);
 		void element_rsdl(Array<FLT,1> lf);
 #ifdef petsc
 		void petsc_jacobian();

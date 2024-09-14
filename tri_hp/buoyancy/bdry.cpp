@@ -20,7 +20,7 @@ using namespace bdry_buoyancy;
 
 using namespace bdry_buoyancy;
 
-void solid_fluid::init(input_map& inmap,void* gbl_in) {
+void solid_fluid::init(input_map& inmap) {
 	std::string keyword,val;
 	std::istringstream data;
 	std::string filename;
@@ -38,7 +38,7 @@ void solid_fluid::init(input_map& inmap,void* gbl_in) {
 	}
 	
 	inmap[base.idprefix+"_c0_indices"] = "2";
-	hp_edge_bdry::init(inmap,gbl_in);
+	hp_edge_bdry::init(inmap);
 	
 	return;
 }

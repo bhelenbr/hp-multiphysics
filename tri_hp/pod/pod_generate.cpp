@@ -46,7 +46,7 @@ extern "C" {
 }
 
 
-template<class BASE> void pod_generate<BASE>::init(input_map& inmap, void *gin) {
+template<class BASE> void pod_generate<BASE>::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;

@@ -1268,10 +1268,15 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 		for(int i=0;i<interior_pts;++i) {
 			qtree.addpt(npnt);
 			qtree.nearpt(npnt,pnear);
+            std::cout << pnts(npnt) << ' ' << pnear << std::endl;
 			found = findtri(pnts(npnt),pnear,tind);
 			assert(found);
 			err = insert(npnt,tind);
 			++npnt;
+            
+            ostringstream nstr;
+            nstr << i;
+            output("what" +nstr.str());
 		}
 		cnt_nbor();
 	}

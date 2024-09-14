@@ -18,7 +18,7 @@ void tri_hp_buoyancy::error_estimator() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	if (gbl->error_estimator == global::none) 
+	if (hp_gbl->error_estimator == hp_global::none) 
 		return;
 
 	int sm = basis::tri(log2p)->sm();
@@ -73,8 +73,8 @@ void tri_hp_buoyancy::error_estimator() {
 		FLT energy, denergy;
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
-				FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
-				FLT rhol = gbl->rho_vs_T.Eval(ul(2)(i,j));
+				FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
+				FLT rhol = hp_buoyancy_gbl->rho_vs_T.Eval(ul(2)(i,j));
 				
 				rho = 1;  // TEMPO
 				rhol = 1; // TEMPO
@@ -94,30 +94,30 @@ void tri_hp_buoyancy::error_estimator() {
 //				FLT dtdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-//				energy = rho*(gbl->cp*u(2)(i,j) +0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))) +u(NV-1)(i,j);
+//				energy = rho*(hp_buoyancy_gbl->cp*u(2)(i,j) +0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))) +u(NV-1)(i,j);
 				/* VISCOUS PART TO ERROR MEASURE */
-//				energy += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+//				energy += (hp_ins_gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +hp_buoyancy_gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				
 				
-//				denergy = rhol*(gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
-//				denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+//				denergy = rhol*(hp_buoyancy_gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
+//				denergy += (hp_ins_gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +hp_buoyancy_gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
 				energy = rho*0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);
 				/* VISCOUS PART TO ERROR MEASURE */
-				// energy += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
+				// energy += (hp_ins_gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +hp_buoyancy_gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				/* Energy part */
-				energy *= gbl->adapt_energy_scaling;
-				energy += rho*gbl->cp*u(2)(i,j);
+				energy *= hp_buoyancy_gbl->adapt_energy_scaling;
+				energy += rho*hp_buoyancy_gbl->cp*u(2)(i,j);
                 
 				
 				/* low order same stuff */
 				denergy = rhol*0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
-				// denergy += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
-				denergy *= gbl->adapt_energy_scaling;
-				denergy += rhol*gbl->cp*ul(2)(i,j);
-//                cout<< "The  Error from temperature: " << rho*gbl->cp*(u(2)(i,j) - ul(2)(i,j)) << "\n";
+				// denergy += (hp_ins_gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +hp_buoyancy_gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
+				denergy *= hp_buoyancy_gbl->adapt_energy_scaling;
+				denergy += rhol*hp_buoyancy_gbl->cp*ul(2)(i,j);
+//                cout<< "The  Error from temperature: " << rho*hp_buoyancy_gbl->cp*(u(2)(i,j) - ul(2)(i,j)) << "\n";
 //                cout<< "The  Error from flow: " << rho*0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j) -  (rhol*0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j))<< "\n";
 				
 				denergy -= energy;
@@ -130,13 +130,13 @@ void tri_hp_buoyancy::error_estimator() {
 //        cout<<"error2 is raised to " << 1./(1.+alpha) <<"\n";
 		totalerror2 += error2;
 		e2to_pow += pow(error2,1./(1.+alpha));
-		gbl->fltwk(tind) = error2;
+		tri_gbl->fltwk(tind) = error2;
 	}
 
 	/* Need to all-reduce norm,totalerror2,and totalenergy2 */
-	gbl->eanda(0) = totalenergy2;
-	gbl->eanda(1) = e2to_pow;
-	gbl->eanda(2) = totalerror2;
+	hp_gbl->eanda(0) = totalenergy2;
+	hp_gbl->eanda(1) = e2to_pow;
+	hp_gbl->eanda(2) = totalerror2;
 	
 	tri_hp::error_estimator();
 			

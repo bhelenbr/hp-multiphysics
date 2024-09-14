@@ -657,7 +657,10 @@ void tri_hp::petsc_rsdl() {
 	
 	rsdl();
 	
-    enforce_continuity(gbl->res, gbl->r_tri_mesh::global::res);
+    if (mmovement == coupled_deformable) {
+        enforce_mesh_continuity(r_gbl->res);
+    }
+    enforce_solution_continuity(hp_gbl->res);
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
@@ -676,17 +679,17 @@ void tri_hp::petsc_rsdl() {
 		for(int i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(int n=0;n<NV;++n) {
-                if (fabs(gbl->res.v(i,n)) < DEBUG_TOL)
+                if (fabs(hp_gbl->res.v(i,n)) < DEBUG_TOL)
                     *gbl->log << "0.0 ";
                 else
-                    *gbl->log << gbl->res.v(i,n) << ' ';
+                    *gbl->log << hp_gbl->res.v(i,n) << ' ';
 			}
 			
 			for(int n=0;n<vdofs-NV;++n) {
-				if (fabs(gbl->r_tri_mesh::global::res(i)(n)) < DEBUG_TOL)
+				if (fabs(r_gbl->res(i)(n)) < DEBUG_TOL)
                     *gbl->log << "0.0 ";
                 else
-                    *gbl->log << gbl->r_tri_mesh::global::res(i)(n) << ' ';
+                    *gbl->log << r_gbl->res(i)(n) << ' ';
 			}
 			*gbl->log << '\n';
 		}
@@ -695,10 +698,10 @@ void tri_hp::petsc_rsdl() {
 			for(int m=0;m<basis::tri(log2p)->sm();++m) {
 				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(gbl->res.s(i,m,n)) < DEBUG_TOL)
+					if (fabs(hp_gbl->res.s(i,m,n)) < DEBUG_TOL)
                         *gbl->log << "0.0 ";
                     else
-                        *gbl->log << gbl->res.s(i,m,n) << ' ';
+                        *gbl->log << hp_gbl->res.s(i,m,n) << ' ';
 				}
 				*gbl->log << '\n';
 			}
@@ -709,10 +712,10 @@ void tri_hp::petsc_rsdl() {
 			for(int m=0;m<basis::tri(log2p)->im();++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(int n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) < DEBUG_TOL)
+					if (fabs(hp_gbl->res.i(i,m,n)) < DEBUG_TOL)
                         *gbl->log << "0.0 ";
                     else
-                        *gbl->log << gbl->res.i(i,m,n) << ' ';
+                        *gbl->log << hp_gbl->res.i(i,m,n) << ' ';
 				}
 				*gbl->log << '\n';
 			}
@@ -737,26 +740,26 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 	if (mmovement != coupled_deformable) {
 		for (int i=0;i<npnt;++i)
 			for(int n=0;n<NV;++n)
-				rv(ind++) = gbl->res.v(i,n);
+				rv(ind++) = hp_gbl->res.v(i,n);
 	}
 	else {
 		for (int i=0;i<npnt;++i) {
 			for(int n=0;n<NV;++n)
-				rv(ind++) = gbl->res.v(i,n);
+				rv(ind++) = hp_gbl->res.v(i,n);
 			for(int n=0;n<ND;++n)
-				rv(ind++) = gbl->r_tri_mesh::global::res(i)(n);
+				rv(ind++) = r_gbl->res(i)(n);
 		}
 	}
 	
 	for (int i=0;i<nseg;++i)
 		for(int m=0;m<sm0;++m)
 			for(int n=0;n<NV;++n)
-				rv(ind++) = gbl->res.s(i,m,n);
+				rv(ind++) = hp_gbl->res.s(i,m,n);
 	
 	for (int i=0;i<ntri;++i)
 		for(int m=0;m<im0;++m)
 			for(int n=0;n<NV;++n)
-				rv(ind++) = gbl->res.i(i,m,n);
+				rv(ind++) = hp_gbl->res.i(i,m,n);
 	
 	
 	for (int i=0;i<nebd;++i) {
@@ -979,19 +982,19 @@ void tri_hp::ug_to_petsc(){
 	return;
 }
 
+void tri_hp::enforce_mesh_continuity(Array<TinyVector<FLT,ND>,1>& pnts) {
+    int last_phase, mp_phase;
 
-void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        r_tri_mesh::pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) pnts.data(),0,1,2);
+        r_tri_mesh::pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= r_tri_mesh::pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,(FLT *) pnts.data(),0,1,2);
+    }
+}
+
+void tri_hp::enforce_solution_continuity(vsi& ug) {
 	int last_phase, mp_phase;
-	
-	if (mmovement == coupled_deformable) {
-		/* Residual for r_mesh vertices */
-		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-			r_tri_mesh::pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) pnts.data(),0,1,2);
-			r_tri_mesh::pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
-			last_phase = true;
-			last_phase &= r_tri_mesh::pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,(FLT *) pnts.data(),0,1,2);
-		}
-	}
 	
 	/* Do flow communication */
 	/* Vertices */
@@ -1005,7 +1008,7 @@ void tri_hp::enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts) {
 	/* Sides */
 	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
 	smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(gbl->res.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	sc0wait_rcv(hp_gbl->res.s.data(),0,sm0-1,ug.s.extent(secondDim));
 	
 	return;
 }

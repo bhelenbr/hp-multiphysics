@@ -22,7 +22,7 @@ void tri_hp_ps::length() {
 	FLT norm;
 
 
-	gbl->eanda = 0.0;
+	hp_gbl->eanda = 0.0;
 	for(tind=0;tind<ntri;++tind) {
 		q = 0.0;
 		p = 0.0;
@@ -34,22 +34,22 @@ void tri_hp_ps::length() {
 			p += fabs(ug.v(v0,2));
 			duv += fabs(ug.v(v0,0)-um)+fabs(ug.v(v0,1)-vm);
 		}
-		gbl->eanda(0) += 1./3.*(p*area(tind) +duv*gbl->mu*sqrt(area(tind)) );
-		gbl->eanda(1) += area(tind);
+		hp_gbl->eanda(0) += 1./3.*(p*area(tind) +duv*hp_ps_gbl->mu*sqrt(area(tind)) );
+		hp_gbl->eanda(1) += area(tind);
 	}
-	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
-	norm = gbl->eanda_recv(0)/gbl->eanda_recv(1);
-	gbl->fltwk(Range(0,npnt-1)) = 0.0;
+	sim::blks.allreduce(hp_gbl->eanda.data(),hp_gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
+	norm = hp_gbl->eanda_recv(0)/hp_gbl->eanda_recv(1);
+	tri_gbl->fltwk(Range(0,npnt-1)) = 0.0;
 
 	switch(basis::tri(log2p)->p()) {
 		case(1): {
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
 				v1 = seg(i).pnt(1);
-				ruv = gbl->mu/distance(v0,v1);
+				ruv = hp_ps_gbl->mu/distance(v0,v1);
 				sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,2) -ug.v(v1,2)));
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
+				tri_gbl->fltwk(v0) += sum;
+				tri_gbl->fltwk(v1) += sum;
 			}                            
 			break;
 		}
@@ -59,10 +59,10 @@ void tri_hp_ps::length() {
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
 				v1 = seg(i).pnt(1);
-				ruv = +gbl->mu/distance(v0,v1);
+				ruv = +hp_ps_gbl->mu/distance(v0,v1);
 				sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,2)));
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
+				tri_gbl->fltwk(v0) += sum;
+				tri_gbl->fltwk(v1) += sum;
 			}
 
 			/* BOUNDARY CURVATURE */
@@ -107,9 +107,9 @@ void tri_hp_ps::length() {
 					ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
 					curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
 
-					sum = gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
-					gbl->fltwk(v0) += sum*gbl->error_target*norm*pnt(v0).nnbor;
-					gbl->fltwk(v1) += sum*gbl->error_target*norm*pnt(v1).nnbor;
+					sum = hp_gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
+					tri_gbl->fltwk(v0) += sum*gbl->error_target*norm*pnt(v0).nnbor;
+					tri_gbl->fltwk(v1) += sum*gbl->error_target*norm*pnt(v1).nnbor;
 				}
 			}
 			break;
@@ -117,8 +117,8 @@ void tri_hp_ps::length() {
 	}
 
 	for(i=0;i<npnt;++i) {
-		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p)->p()+1+ND));
-		lngth(i) /= gbl->fltwk(i);        
+		tri_gbl->fltwk(i) = pow(tri_gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p)->p()+1+ND));
+		lngth(i) /= tri_gbl->fltwk(i);        
 	}
 
 	/* AVOID HIGH ASPECT RATIOS */

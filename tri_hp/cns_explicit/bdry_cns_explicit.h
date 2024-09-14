@@ -44,9 +44,9 @@ namespace bdry_cns_explicit {
 				Array<FLT,1> cvu(x.NV);
 				cvu=u;
 				
-				double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
+				double pr = (x.hp_cns_explicit_gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
 				
-				u(0) = (x.gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
+				u(0) = (x.hp_cns_explicit_gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
 				u(1) = cvu(1)/cvu(0);
 				u(2) = cvu(2)/cvu(0);
 				u(3) = u(0)/cvu(0);
@@ -60,7 +60,7 @@ namespace bdry_cns_explicit {
 					flx(n) = flx(0)*u(n) +pr*norm(n-1);
 				
 				/* ENERGY EQUATION */
-				double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+				double h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
 				flx(x.NV-1) = h*flx(0);
 				
 				
@@ -76,8 +76,8 @@ namespace bdry_cns_explicit {
 				conv_flux.resize(x.NV);  
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_cns_explicit&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				hp_edge_bdry::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				hp_edge_bdry::init(inmap);
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
 				conv_flux.resize(x.NV);            
@@ -97,7 +97,7 @@ namespace bdry_cns_explicit {
 			flx(1) = 0.0;
 			flx(2) = 0.0; 
 			// doesn't work yet
-			flx(3) = u(1)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(1);
+			flx(3) = u(1)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(1);
 
 			flx = 0.0;
 			
@@ -131,9 +131,9 @@ namespace bdry_cns_explicit {
 				u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 				v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 				KE = 0.5*(u*u+v*v);
-				RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+				RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 							
-				rho = x.ug.v(v0,3)/(RT/(x.gbl->gamma-1.0)+KE);
+				rho = x.ug.v(v0,3)/(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 				
 				x.ug.v(v0,0) = rho;
 				x.ug.v(v0,1) = rho*u;
@@ -145,9 +145,9 @@ namespace bdry_cns_explicit {
 			u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 			v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 			KE = 0.5*(u*u+v*v);
-			RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+			RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 			
-			rho = x.ug.v(v0,3)/(RT/(x.gbl->gamma-1.0)+KE);
+			rho = x.ug.v(v0,3)/(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 			
 			x.ug.v(v0,0) = rho;
 			x.ug.v(v0,1) = rho*u;
@@ -193,9 +193,9 @@ namespace bdry_cns_explicit {
 						u = ibc->f(1, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 						v = ibc->f(2, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 						KE = 0.5*(u*u+v*v);
-						RT = (ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+						RT = (ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 						
-						rho = u1d(k)/(RT/(x.gbl->gamma-1.0)+KE);
+						rho = u1d(k)/(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 						
 						x.res(0)(0,k) -= rho;
 						x.res(1)(0,k) -= rho*u;
@@ -228,7 +228,7 @@ namespace bdry_cns_explicit {
 			flx(1) = 0.0;
 			flx(2) = 0.0; 
 			// doesn't work yet
-			flx(3) = u(1)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(1);
+			flx(3) = u(1)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(1);
 			
 			flx = 0.0;
 			
@@ -262,13 +262,13 @@ namespace bdry_cns_explicit {
 				u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 				v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 				KE = 0.5*(u*u+v*v);
-				RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+				RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 				
 				rho = x.ug.v(v0,0);
 				
 				x.ug.v(v0,1) = rho*u;
 				x.ug.v(v0,2) = rho*v;
-				x.ug.v(v0,3) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+				x.ug.v(v0,3) = rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 				
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
@@ -276,13 +276,13 @@ namespace bdry_cns_explicit {
 			u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 			v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 			KE = 0.5*(u*u+v*v);
-			RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+			RT = (ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 			
 			rho = x.ug.v(v0,0);
 			
 			x.ug.v(v0,1) = rho*u;
 			x.ug.v(v0,2) = rho*v;
-			x.ug.v(v0,3) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+			x.ug.v(v0,3) = rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 			
 			if(basis::tri(x.log2p)->sm()){
 				for(j=0;j<base.nseg;++j) {
@@ -324,13 +324,13 @@ namespace bdry_cns_explicit {
 						u = ibc->f(1, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 						v = ibc->f(2, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 						KE = 0.5*(u*u+v*v);
-						RT = (ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+						RT = (ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 						
 						rho = u1d(k);
 						
 						x.res(1)(0,k) -= rho*u;
 						x.res(2)(0,k) -= rho*v;
-						x.res(3)(0,k) -= rho*(RT/(x.gbl->gamma-1.0)+KE);
+						x.res(3)(0,k) -= rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 						
 						
 					}
@@ -360,7 +360,7 @@ namespace bdry_cns_explicit {
 				flx(0) = u(1)*norm(0)+u(2)*norm(1);//doesnt work
 				flx(1) = 0.0;
 				flx(2) = 0.0; 
-				flx(3) = u(1)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(1);
+				flx(3) = u(1)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.hp_cns_explicit_gbl->gamma-1.0)*(u(3)-KE))*norm(1);
 				
 				return;
 			}
@@ -475,10 +475,10 @@ namespace bdry_cns_explicit {
 				Array<FLT,1> cvu(x.NV);
 				cvu=u;
 				
-				double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
+				double pr = (x.hp_cns_explicit_gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
 				
 				
-				u(0) = (x.gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
+				u(0) = (x.hp_cns_explicit_gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
 				u(1) = cvu(1)/cvu(0);
 				u(2) = cvu(2)/cvu(0);
 				u(3) = u(0)/cvu(0);
@@ -496,7 +496,7 @@ namespace bdry_cns_explicit {
 #endif
 
 				/* ENERGY EQUATION */
-				double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+				double h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
 				flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time);				
 				
 				return;
@@ -505,7 +505,7 @@ namespace bdry_cns_explicit {
 			applied_stress(tri_hp_cns_explicit &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tri_hp_cns_explicit &xin, edge_bdry &bin) : generic(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_cns_explicit&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 
 
@@ -520,12 +520,12 @@ namespace bdry_cns_explicit {
 		
 		void tadvance() { 
 			for(int n=1;n<x.NV;++n)
-				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+				x.ug.v(base.pnt,n) = x.hp_gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
 			return;
 		}
 		
 		void vdirichlet() {
-			x.gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
+			x.hp_gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
 		}
 	};
 

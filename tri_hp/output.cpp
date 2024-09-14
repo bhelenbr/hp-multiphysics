@@ -1072,7 +1072,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			for(int i=0;i<npnt;++i) {
 				for(int n=0;n<ND;++n)
 					out << pnts(i)(n) << ' ';
-				out << lngth(i) << ' ' << gbl->res.v(i,0) << '\n';
+				out << lngth(i) << ' ' << hp_gbl->res.v(i,0) << '\n';
 			}
 
 			/* OUTPUT CONNECTIVY INFO */
@@ -1096,7 +1096,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				for(int j=0;j<3;++j) {
 					for(int n=0;n<ND;++n)
 						out << pnts(tri(tind).pnt(j))(n) << ' ';
-					out << gbl->fltwk(tind) << '\n';
+					out << tri_gbl->fltwk(tind) << '\n';
 				}
 			}
 

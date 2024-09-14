@@ -20,7 +20,7 @@ void tri_hp_cns_explicit::error_estimator() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	Array<FLT,1> cvu(NV);
 
-	if (gbl->error_estimator == global::none) 
+	if (hp_gbl->error_estimator == global::none) 
 		return;
 
 	int sm = basis::tri(log2p)->sm();
@@ -68,7 +68,7 @@ void tri_hp_cns_explicit::error_estimator() {
 				for(int n = 0; n < NV; ++n)
 					cvu(n) = u(n)(i,j);
 				
-				u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2))); // pressure
+				u(0)(i,j) = (hp_cns_explicit_gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2))); // pressure
 				u(1)(i,j) = cvu(1)/cvu(0);// x-velocity
 				u(2)(i,j) = cvu(2)/cvu(0);// y-velocity
 				u(3)(i,j) = u(0)(i,j)/cvu(0);// RT Temperature
@@ -97,7 +97,7 @@ void tri_hp_cns_explicit::error_estimator() {
 				for(int n = 0; n < NV; ++n)
 					cvu(n) = ul(n)(i,j);
 				
-				ul(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));// pressure
+				ul(0)(i,j) = (hp_cns_explicit_gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));// pressure
 				ul(1)(i,j) = cvu(1)/cvu(0);// x-velocity
 				ul(2)(i,j) = cvu(2)/cvu(0);// y-velocity
 				ul(3)(i,j) = ul(0)(i,j)/cvu(0);// RT Temperature
@@ -131,12 +131,12 @@ void tri_hp_cns_explicit::error_estimator() {
 				/* INVISCID PARTS TO ERROR MEASURE */
 				energy = rho*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j)) +u(0)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				energy += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
+				energy += hp_cns_explicit_gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
 				
 				rho = ul(0)(i,j)/ul(NV-1)(i,j);
 
 				denergy = rho*(ul(1)(i,j)*ul(1)(i,j) +ul(2)(i,j)*ul(2)(i,j)) +ul(0)(i,j);
-				denergy += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				denergy += hp_cns_explicit_gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
 				
 				denergy -= energy;
 				
@@ -146,13 +146,13 @@ void tri_hp_cns_explicit::error_estimator() {
 		}
 		totalerror2 += error2;
 		e2to_pow += pow(error2,1./(1.+alpha));
-		gbl->fltwk(tind) = error2;
+		tri_gbl->fltwk(tind) = error2;
 	}
 
 	/* Need to all-reduce norm,totalerror2,and totalenergy2 */
-	gbl->eanda(0) = totalenergy2;
-	gbl->eanda(1) = e2to_pow;
-	gbl->eanda(2) = totalerror2;
+	hp_gbl->eanda(0) = totalenergy2;
+	hp_gbl->eanda(1) = e2to_pow;
+	hp_gbl->eanda(2) = totalerror2;
 		
 	return;
 }

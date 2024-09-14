@@ -70,7 +70,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
 
-					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					x.cjcb(0,i) = x.hp_ins_gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -102,7 +102,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 
 					ldiff_flux = 0.0;
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
+						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.hp_ins_gbl->D(n)/x.hp_ins_gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
                     ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(x.NV-1)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i)
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
@@ -119,7 +119,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 					for(n=0;n<tri_mesh::ND;++n) {
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
-						mvel(n) += x.gbl->mesh_ref_vel(n);
+						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}
 
@@ -174,7 +174,7 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			do {
 				sind = base.seg(ind);
 				v0 = x.seg(sind).pnt(0);
-				total_flux += x.gbl->res.v(v0,Range::all());
+				total_flux += x.hp_gbl->res.v(v0,Range::all());
 			} while (++ind < base.nseg);
             /* Skip last point because it will be done as first point (must be loop) */
 			
@@ -189,11 +189,11 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	return;
 }
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
+void applied_stress::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 
-	generic::init(inmap,gbl_in);
+	generic::init(inmap);
 
 	stress.resize(tri_mesh::ND);
 
@@ -254,8 +254,8 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 
 
 	/* CHARACTERISTIC FAR-FIELD B.C. */
-	rho = x.gbl->rho;
-	nu = x.gbl->mu/x.gbl->rho;
+	rho = x.hp_ins_gbl->rho;
+	nu = x.hp_ins_gbl->mu/x.hp_ins_gbl->rho;
 	rhoi = 1./rho;
 	hmax = side_length*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
 	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
@@ -352,7 +352,7 @@ void actuator_disc::output(const std::string& filename, tri_hp::filetype typ,int
 						pt(n) = x.crd(n)(0,k);
 						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,ind)(n,k));
 #ifdef MESH_REF_VEL
-						mvel(n) += x.gbl->mesh_ref_vel(n);
+						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}
 					

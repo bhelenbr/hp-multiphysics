@@ -9,11 +9,11 @@
 using namespace bdry_cns_explicit;
 
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
+void applied_stress::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 
-	generic::init(inmap,gbl_in);
+	generic::init(inmap);
 
 	stress.resize(x.NV-1);
 
@@ -73,7 +73,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT v = Roe(2)/Roe(0);
 	FLT ke = 0.5*(u*u+v*v);
 	FLT E = Roe(3)/Roe(0);
-	FLT gam = x.gbl->gamma;
+	FLT gam = x.hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT RT = gm1*(E-ke);
 	FLT c2 = gam*RT;

@@ -23,7 +23,7 @@ void tri_hp_explicit::minvrt() {
 				for (i=0; i<2; ++i) {
 					v0 = seg(sind).pnt(i);
 					for(n=0;n<NV;++n)
-						gbl->res.v(v0,n) -= basis::tri(log2p)->sfmv(i,k)*gbl->res.s(sind,k,n);
+						hp_gbl->res.v(v0,n) -= basis::tri(log2p)->sfmv(i,k)*hp_gbl->res.s(sind,k,n);
 				}
 				++indx;
 			}
@@ -38,7 +38,7 @@ void tri_hp_explicit::minvrt() {
 					v0 = tri(tind).pnt(i);
 					for (k=0;k<basis::tri(log2p)->im();++k)
 						for(n=0;n<NV;++n)
-							gbl->res.v(v0,n) -= basis::tri(log2p)->ifmb(i,k)*gbl->res.i(tind,k,n);
+							hp_gbl->res.v(v0,n) -= basis::tri(log2p)->ifmb(i,k)*hp_gbl->res.i(tind,k,n);
 
 					sind = tri(tind).seg(i);
 					sgn = tri(tind).sgn(i);
@@ -46,7 +46,7 @@ void tri_hp_explicit::minvrt() {
 					for (j=0;j<basis::tri(log2p)->sm();++j) {
 						for (k=0;k<basis::tri(log2p)->im();++k)
 							for(n=0;n<NV;++n)
-								gbl->res.s(sind,j,n) -= msgn*basis::tri(log2p)->ifmb(indx2,k)*gbl->res.i(tind,k,n);
+								hp_gbl->res.s(sind,j,n) -= msgn*basis::tri(log2p)->ifmb(indx2,k)*hp_gbl->res.i(tind,k,n);
 						msgn *= sgn;
 						++indx2;
 					}
@@ -56,13 +56,13 @@ void tri_hp_explicit::minvrt() {
 		}
 	}
 
-	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) *= hp_gbl->vprcn(Range(0,npnt-1),Range::all());
 
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		vc0load(mp_phase,gbl->res.v.data());
+		vc0load(mp_phase,hp_gbl->res.v.data());
 		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
-		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
+		last_phase &= vc0wait_rcv(mp_phase,hp_gbl->res.v.data());
 	}
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -81,7 +81,7 @@ void tri_hp_explicit::minvrt() {
 		for(i=0;i<3;++i) {
 			v0 = tri(tind).pnt(i);
 			for(n=0;n<NV;++n)
-				uht(n)(i) = gbl->res.v(v0,n);
+				uht(n)(i) = hp_gbl->res.v(v0,n);
 		}
 
 		if (tri(tind).info > -1) {
@@ -93,7 +93,7 @@ void tri_hp_explicit::minvrt() {
 					msgn = 1;
 					for(k=0;k<basis::tri(log2p)->sm();++k) {
 					for(n=0;n<NV;++n)
-						gbl->res.s(sind,k,n) -= msgn*gbl->mass[tind](indx1,j)*uht(n)(j);
+						hp_gbl->res.s(sind,k,n) -= msgn*hp_explicit_gbl->mass[tind](indx1,j)*uht(n)(j);
 					msgn *= sgn;
 					++indx1;
 					}
@@ -109,7 +109,7 @@ void tri_hp_explicit::minvrt() {
 					msgn = 1;
 					for(k=0;k<basis::tri(log2p)->sm();++k) {
 					for(n=0;n<NV;++n)
-						gbl->res.s(sind,k,n) -= msgn*basis::tri(log2p)->vfms(j,k)*uht(n)(indx1)*gbl->tprcn(tind,n);
+						hp_gbl->res.s(sind,k,n) -= msgn*basis::tri(log2p)->vfms(j,k)*uht(n)(indx1)*hp_gbl->tprcn(tind,n);
 					msgn *= sgn;
 					}
 				}
@@ -120,19 +120,19 @@ void tri_hp_explicit::minvrt() {
 
 	for (int mode = 0; mode < basis::tri(log2p)->sm()-1; ++ mode) {
 		/* SOLVE FOR SIDE MODE */
-		if (gbl->diagonal_preconditioner) {
-			gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn2(Range(0,nseg-1),mode,Range::all());
+		if (hp_gbl->diagonal_preconditioner) {
+			hp_gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= hp_explicit_gbl->sprcn2(Range(0,nseg-1),mode,Range::all());
 		}
 		else {
 			for(sind = 0; sind < nseg; ++sind) {
-				DGETUS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
-				gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
+				DGETUS(&hp_gbl->sprcn_ut(sind,0,0), NV, NV, &hp_gbl->res.s(sind,mode,0));
+				hp_gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
 			}
 		}
 
-		sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+		sc0load(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
 		smsgpass(boundary::all,0,boundary::symmetric);
-		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+		sc0wait_rcv(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
 
 
 		/* APPLY DIRCHLET B.C.S TO MODE */
@@ -149,7 +149,7 @@ void tri_hp_explicit::minvrt() {
 					sign(i) = tri(tind).sgn(i);
 					sgn      = (mode % 2 ? sign(i) : 1);
 					for(n=0;n<NV;++n)
-					uht(n)(i) = sgn*gbl->res.s(side(i),mode,n);
+					uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n);
 				}
 
 
@@ -160,7 +160,7 @@ void tri_hp_explicit::minvrt() {
 						for(j=0;j<3;++j) {
 //								if (i == j) continue;  // FOR 0 LOWER TRIANGULAR SIDE TO ITSELF
 							for(n=0;n<NV;++n) {
-								gbl->res.s(side(i),m,n) -= msgn*gbl->mass[tind](i*lsm+3+m,j*lsm+3+mode)*uht(n)(j);
+								hp_gbl->res.s(side(i),m,n) -= msgn*hp_explicit_gbl->mass[tind](i*lsm+3+m,j*lsm+3+mode)*uht(n)(j);
 							}
 						}
 						msgn *= sign(i);
@@ -173,7 +173,7 @@ void tri_hp_explicit::minvrt() {
 					sign(i) = tri(tind).sgn(i);
 					sgn      = (mode % 2 ? sign(i) : 1);
 					for(n=0;n<NV;++n)
-					uht(n)(i) = sgn*gbl->res.s(side(i),mode,n)*gbl->tprcn(tind,n);
+					uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n)*hp_gbl->tprcn(tind,n);
 				}
 
 				/* REMOVE MODES J,K FROM MODE I,M */
@@ -183,7 +183,7 @@ void tri_hp_explicit::minvrt() {
 					for(j=0;j<3;++j) {
 						indx = (i+j)%3;
 						for(n=0;n<NV;++n) {
-							gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p)->sfms(mode,m,j)*uht(n)(indx);
+							hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p)->sfms(mode,m,j)*uht(n)(indx);
 						}
 					}
 					msgn *= sign(i);
@@ -194,19 +194,19 @@ void tri_hp_explicit::minvrt() {
 	}
 	/* SOLVE FOR HIGHEST MODE */
 	int mode = basis::tri(log2p)->sm()-1;
-	if (gbl->diagonal_preconditioner) {
-		gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn2(Range(0,nseg-1),mode,Range::all());
+	if (hp_gbl->diagonal_preconditioner) {
+		hp_gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= hp_explicit_gbl->sprcn2(Range(0,nseg-1),mode,Range::all());
 	}
 	else {
 		for(sind = 0; sind < nseg; ++sind) {
-			DGETUS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
-			gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
+			DGETUS(&hp_gbl->sprcn_ut(sind,0,0), NV, NV, &hp_gbl->res.s(sind,mode,0));
+			hp_gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
 		}
 	}
 
-	sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+	sc0load(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
 	smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+	sc0wait_rcv(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(i=0;i<nebd;++i)
@@ -223,9 +223,9 @@ void tri_hp_explicit::minvrt() {
 			for(k=0;k<basis::tri(log2p)->im();++k) {
 				for (i=0;i<basis::tri(log2p)->bm();++i) {
 					for (n=0;n<NV;++n)
-					gbl->res.i(tind,k,n) -= gbl->mass[tind](k+lbm,i)*uht(n)(i);
+					hp_gbl->res.i(tind,k,n) -= hp_explicit_gbl->mass[tind](k+lbm,i)*uht(n)(i);
 				}
-//					gbl->res.i(tind,k,Range::all()) /= gbl->mass[tind](k+lbm,k+lbm);  // DIAGONAL INTERIOR MASS MATRIX
+//					hp_gbl->res.i(tind,k,Range::all()) /= hp_explicit_gbl->mass[tind](k+lbm,k+lbm);  // DIAGONAL INTERIOR MASS MATRIX
 			}
 
 
@@ -235,26 +235,26 @@ void tri_hp_explicit::minvrt() {
 				/* SOLVE FOR INTERIOR MODES AT THIS DEGREE */
 				for (k=0;k<m+1;++k) {
 					indx = (2*(lsm-1)-(k-1))*k/2 +(m-k);
-					gbl->res.i(tind,indx,Range::all()) /= gbl->mass[tind](indx+lbm,indx+lbm);
+					hp_gbl->res.i(tind,indx,Range::all()) /= hp_explicit_gbl->mass[tind](indx+lbm,indx+lbm);
 
 					/* SUBTRACT FROM MODES AT HIGHER DEGREES */
 					for (int m2=m+1;m2<lsm-1;++m2) {
 					for (int k2=0;k2<m2+1;++k2) {
 						indx2 = (2*(lsm-1)-(k2-1))*k2/2 +(m2-k2);
-						gbl->res.i(tind,indx2,Range::all()) -= gbl->mass[tind](indx2+lbm,indx+lbm)*gbl->res.i(tind,indx,Range::all());
+						hp_gbl->res.i(tind,indx2,Range::all()) -= hp_explicit_gbl->mass[tind](indx2+lbm,indx+lbm)*hp_gbl->res.i(tind,indx,Range::all());
 					}
 					}
 				}
 			}
 		}
 		else {
-			DPBTRSNU2((double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),&(gbl->res.i(tind,0,0)),NV);
+			DPBTRSNU2((double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),&(hp_gbl->res.i(tind,0,0)),NV);
 			for(k=0;k<basis::tri(log2p)->im();++k) {
-				gbl->res.i(tind,k,Range::all()) /= gbl->tprcn(tind,Range::all());
+				hp_gbl->res.i(tind,k,Range::all()) /= hp_gbl->tprcn(tind,Range::all());
 
 				for (i=0;i<basis::tri(log2p)->bm();++i)
 					for(n=0;n<NV;++n) 
-					gbl->res.i(tind,k,n) -= basis::tri(log2p)->bfmi(i,k)*uht(n)(i);
+					hp_gbl->res.i(tind,k,n) -= basis::tri(log2p)->bfmi(i,k)*uht(n)(i);
 			}
 		}
 	}

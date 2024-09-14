@@ -9,14 +9,14 @@ int tri_hp_cd::setup_preconditioner() {
 	TinyVector<int,3> v;
 	TinyVector<FLT,ND> mvel;
     int err = 0;
-	FLT alpha = gbl->kcond/gbl->rhocv;
+	FLT alpha = hp_cd_gbl->kcond/hp_cd_gbl->rhocv;
 
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		hp_gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 
 #ifdef TIMEACCURATE
@@ -49,15 +49,15 @@ int tri_hp_cd::setup_preconditioner() {
 			mvel(0) = gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0));
 			mvel(1) = gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1));
 #ifdef MESH_REF_VEL
-			mvel += gbl->mesh_ref_vel;
+			mvel += hp_gbl->mesh_ref_vel;
 #endif
 			
 #ifdef CONST_A
-			q = pow(gbl->ax -mvel(0),2.0) 
-					+pow(gbl->ay -mvel(1),2.0);
+			q = pow(hp_cd_gbl->ax -mvel(0),2.0) 
+					+pow(hp_cd_gbl->ay -mvel(1),2.0);
 #else
-			q = pow(gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0) 
-					+pow(gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
+			q = pow(hp_cd_gbl->a->f(0,pnts(v0),gbl->time) -mvel(0),2.0) 
+					+pow(hp_cd_gbl->a->f(1,pnts(v0),gbl->time) -mvel(1)),2.0);
 #endif	
 			
 			qmax = MAX(qmax,q);
@@ -67,9 +67,9 @@ int tri_hp_cd::setup_preconditioner() {
 		lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind)  = adis*h/(jcb*lam1);
+		hp_cd_gbl->tau(tind)  = adis*h/(jcb*lam1);
 
-		jcb *= gbl->rhocv*lam1/h;
+		jcb *= hp_cd_gbl->rhocv*lam1/h;
 
 
 		/* SET UP DIAGONAL PRECONDITIONER */
@@ -83,12 +83,12 @@ int tri_hp_cd::setup_preconditioner() {
 		jcb = 0.25*area(tind)*dtstari;
 #endif
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
-		gbl->tprcn(tind,0) = jcb;    
+		hp_gbl->tprcn(tind,0) = jcb;    
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
-				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
 			}
 		}
 	}

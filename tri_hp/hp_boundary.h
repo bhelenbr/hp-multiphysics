@@ -38,17 +38,15 @@ protected:
 	std::vector<int> essential_indices, c0_indices, c0_indices_xy; //<! Indices of essential b.c. vars and continuous variables (for communication routines)
 	
 public:
-	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain";}
+	hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), ibc(x.hp_gbl->ibc), coupled(false), frozen(false), report_flag(false), jacobian_start(0) {mytype = "plain";}
 	hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), coupled(inbdry.coupled), frozen(inbdry.frozen),report_flag(inbdry.report_flag),
 	type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy) {
 #ifdef petsc
 		base.resize_buffers((x.NV+x.ND)*60*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent
 #endif
 	}
-	virtual void* create_global_structure() {return 0;}
-	virtual void delete_global_structure() {return;}
 	virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
-	virtual void init(input_map& inmap,void* gbl_in); /**< This is to read definition data only (not solution data) */
+	virtual void init(input_map& inmap); /**< This is to read definition data only (not solution data) */
 	virtual void copy(const hp_vrtx_bdry& tgt) {}
 	virtual ~hp_vrtx_bdry() {}
 	
@@ -62,7 +60,7 @@ public:
 	/* BOUNDARY CONDITION FUNCTIONS */
 	virtual void vdirichlet() {
 		for(std::vector<int>::iterator n=essential_indices.begin();n != essential_indices.end();++n)
-		x.gbl->res.v(base.pnt,*n)= 0.0;
+		x.hp_gbl->res.v(base.pnt,*n)= 0.0;
 	}
 	virtual void pmatchsolution_snd(FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,c0_indices.front(),c0_indices.back(),vrtstride*x.NV);}
 	virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,c0_indices.front(),c0_indices.back(), x.NV*vrtstride);}
@@ -126,7 +124,7 @@ public:
 	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(false), curved(false), coupled(false), frozen(false), report_flag(false), ibc_owner(false), ibc(x.gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(false), curved(false), coupled(false), frozen(false), report_flag(false), ibc_owner(false), ibc(x.hp_gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
 	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc_owner(false), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage) {
 		
 		if (curved && !x.coarse_level) {
@@ -145,9 +143,7 @@ public:
 #endif
 	}
 	virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
-	virtual void* create_global_structure() {return 0;}
-	virtual void delete_global_structure() {}
-	virtual void init(input_map& inmap,void* gbl_in);
+	virtual void init(input_map& inmap);
 	void find_matching_boundary_name(input_map& inmap, std::string& blockname, std::string& sidename);
 	virtual void copy(const hp_edge_bdry& tgt);
 	virtual ~hp_edge_bdry() {
@@ -266,7 +262,7 @@ class symbolic_with_integration_by_parts : public hp_edge_bdry {
 		symbolic_with_integration_by_parts(tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin) {mytype = "symbolic_with_integration_by_parts";}
 	symbolic_with_integration_by_parts(const symbolic_with_integration_by_parts& inbdry, tri_hp &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), derivative_fluxes(inbdry.derivative_fluxes) {}
 		symbolic_with_integration_by_parts* create(tri_hp& xin, edge_bdry &bin) const {return new symbolic_with_integration_by_parts(*this,xin,bin);}
-		void init(input_map& inmap,void* gbl_in);
+		void init(input_map& inmap);
 		void element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf);
 		~symbolic_with_integration_by_parts() {
 			if (shared_owner) {
@@ -305,7 +301,7 @@ public:
 #endif
 	}
 	hp_partition* create(tri_hp& xin, edge_bdry &bin) const {return new hp_partition(*this,xin,bin);}
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	void copy(const hp_edge_bdry& tgt);
 	void snd_solution();
 	void rcv_solution();
@@ -321,7 +317,7 @@ public:
 	multi_physics_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin) {mytype = "smulti_physics_pnt";}
 	multi_physics_pnt(const multi_physics_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), match_pairs(inbdry.match_pairs) {}
 	multi_physics_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new multi_physics_pnt(*this,xin,bin);}
-	void init(input_map& inmap,void* gbl_in);
+	void init(input_map& inmap);
 	void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
 	int non_sparse_rcv(int phase,Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 	int petsc_matchjacobian_rcv(int phase);

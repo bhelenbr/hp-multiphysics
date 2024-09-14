@@ -10,22 +10,23 @@
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 
-void tri_hp_ps::init(input_map& inmap, void *gin) {
+void tri_hp_ps::init(input_map& inmap, shared_ptr<block_global> gin) {
 	FLT nu, E;
 
-	gbl = static_cast<global *>(gin);
-
+    gbl = gin;
+    hp_ps_gbl = make_shared<hp_ps_global>();
+    
 	inmap[gbl->idprefix + "_nvariable"] = "3";
 	tri_hp::init(inmap,gin);
 
 
-	gbl->tau.resize(maxpst);
+	hp_ps_gbl->tau.resize(maxpst);
 	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 	inmap.getwdefault(gbl->idprefix + "_nu",nu,0.3);
 	inmap.getwdefault(gbl->idprefix + "_E",E,1.0);
 
-	gbl->mu = E/(2.*(1.+nu));
-	gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
+	hp_ps_gbl->mu = E/(2.*(1.+nu));
+	hp_ps_gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
 
 	return;
 }
