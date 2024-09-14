@@ -108,7 +108,7 @@ while [ $log2p -lt 3 ]; do
 		mkdir ${NAME}
 		cd ${NAME}
 		cp ../run.inpt .
-		mod_map run.inpt b0_mesh ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square2
+		mod_map run.inpt b0_mesh ${HOME}/Codes/grids/SQUARE/INOUT/square2
 		mod_map run.inpt log2p ${log2p}
 		mod_map run.inpt extra_finest_levels ${log2p}
 		mod_map run.inpt logfile ${NAME}
@@ -137,7 +137,7 @@ while [ $log2p -lt 3 ]; do
 		mkdir ${NAME}
 		cd ${NAME}
 		cp ../run.inpt .
-		mod_map run.inpt b0_mesh ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square2
+		mod_map run.inpt b0_mesh ${HOME}/Codes/grids/SQUARE/INOUT/square2
 		mod_map run.inpt log2p ${log2p}
 		mod_map run.inpt extra_finest_levels ${log2p}
 		mod_map run.inpt logfile ${NAME}
