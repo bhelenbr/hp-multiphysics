@@ -217,7 +217,6 @@
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					../include,
@@ -237,7 +236,6 @@
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
-				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					../include,
@@ -353,7 +351,6 @@
 				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = quad;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -369,7 +366,6 @@
 				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = ..;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_VERSION = "";
 				INSTALL_PATH = /lib;
 				PRODUCT_NAME = quad;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;

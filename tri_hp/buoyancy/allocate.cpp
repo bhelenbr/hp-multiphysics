@@ -41,6 +41,7 @@ void tri_hp_buoyancy::init(input_map& inmap, shared_ptr<block_global> gin) {
 void tri_hp_buoyancy::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_hp_buoyancy& inmesh = dynamic_cast<const tri_hp_buoyancy &>(in);
 	gbl = inmesh.gbl;
+    hp_buoyancy_gbl = inmesh.hp_buoyancy_gbl;
 	tri_hp_ins::init(in,why,sizereduce1d);
 	return;
 }

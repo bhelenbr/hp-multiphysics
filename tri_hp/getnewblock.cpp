@@ -254,3 +254,43 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 	return(0);
 }
 
+/* This routine waits for everyone to exit nicely */
+void sim::finalize(int line,const char *file, std::ostream *log) {
+    *log << "Exiting at line " << line << " of file " << file << std::endl;
+#ifdef PTH
+    pth_exit(NULL);
+#endif
+#ifdef BOOST
+    throw boost::thread_interrupted();
+#endif
+#ifdef PTH
+    pth_kill();
+#endif
+#ifdef petsc
+    PetscFinalize();
+#endif
+#ifdef MPISRC
+    MPI_Finalize();
+#endif
+    
+    std::exit(0);
+}
+
+/* This routine forces everyone to die */
+void sim::abort(int line,const char *file, std::ostream *log) {
+    *log << "Exiting at line " << line << " of file " << file << std::endl;
+    for (int b=0;b<blks.myblock;++b) {
+        sim::blks.blk(b)->output("aborted_solution", block::display);
+        sim::blks.blk(b)->output("aborted_solution", block::restart);
+    }
+#ifdef petsc
+    PetscFinalize();
+#endif
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    
+    /* Terminates all threads */
+    std::exit(1);
+}
+

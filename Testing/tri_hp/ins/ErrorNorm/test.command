@@ -117,6 +117,10 @@ while [ $log2p -lt 3 ]; do
 		mod_map run.inpt ngrid ${ngrid}
 
 		${HP} run
+		if [ "$?" -ne "0" ]; then
+        	echo "run failed"
+        	exit 1
+		fi
 		grep error_target ${NAME}_b0.log | tail -1 | cut -d\  -f3 | tr -d '\n' >> ../cnvg${log2p}.dat
 		echo -n ' ' >> ../cnvg${log2p}.dat
 		grep DOF ${NAME}_b0.log | tail -1 | cut -d\  -f6 | tr -d '\n' >> ../cnvg${log2p}.dat
@@ -145,6 +149,10 @@ while [ $log2p -lt 3 ]; do
 		let ngrid=${nerror}+1
 		mod_map run.inpt ngrid ${ngrid}
 		${HP} run
+		if [ "$?" -ne "0" ]; then
+        	echo "run failed"
+        	exit 1
+		fi
 		grep error_target ${NAME}_b0.log | tail -1 | cut -d\  -f3 | tr -d '\n' >> ../cnvg_curved${log2p}.dat
 		echo -n ' ' >> ../cnvg_curved${log2p}.dat
 		grep DOF ${NAME}_b0.log | tail -1 | cut -d\  -f6 | tr -d '\n' >> ../cnvg_curved${log2p}.dat

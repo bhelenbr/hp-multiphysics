@@ -46,6 +46,7 @@ void tri_hp_komega::init(input_map& inmap, shared_ptr<block_global> gin) {
 void tri_hp_komega::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_hp_komega& inmesh = dynamic_cast<const tri_hp_komega &>(in);
 	gbl = inmesh.gbl;
+    hp_komega_gbl = inmesh.hp_komega_gbl;
 	tri_hp_ins::init(in,why,sizereduce1d);
 	return;
 }

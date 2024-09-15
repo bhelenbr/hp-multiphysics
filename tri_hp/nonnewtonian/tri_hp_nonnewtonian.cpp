@@ -44,6 +44,7 @@ void tri_hp_nonnewtonian::init(input_map& inmap, shared_ptr<block_global> gin) {
 void tri_hp_nonnewtonian::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_hp_nonnewtonian& inmesh = dynamic_cast<const tri_hp_nonnewtonian &>(in);
 	gbl = inmesh.gbl;
+    hp_nonnewtonian_gbl = inmesh.hp_nonnewtonian_gbl;
 	tri_hp_ins::init(in,why,sizereduce1d);
 	return;
 }

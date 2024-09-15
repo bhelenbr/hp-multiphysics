@@ -264,6 +264,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				DEAD_CODE_STRIPPING = YES;
 				INSTALL_PATH = "$(HOME)/bin";
+				"OTHER_LDFLAGS[arch=*]" = "-lblitz";
 				PRODUCT_NAME = utilities;
 			};
 			name = Debug;
@@ -326,6 +327,7 @@
 					"$(HOMEBREW_PREFIX)/include",
 				);
 				HOMEBREW_PREFIX = /opt/homebrew;
+				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
 			};
@@ -374,6 +376,7 @@
 					"$(HOMEBREW_PREFIX)/include",
 				);
 				HOMEBREW_PREFIX = /opt/homebrew;
+				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "${HOME}/Packages";
 			};

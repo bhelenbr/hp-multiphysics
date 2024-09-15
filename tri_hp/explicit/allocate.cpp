@@ -42,6 +42,7 @@ void tri_hp_explicit::init(const multigrid_interface& in, init_purpose why, FLT 
 	
 	const tri_hp_explicit& inmesh = dynamic_cast<const tri_hp_explicit &>(in);
 	gbl = inmesh.gbl;
+    hp_explicit_gbl = inmesh.hp_explicit_gbl;
 	tri_hp_cd::init(in,why,sizereduce1d);
 	
 	return;

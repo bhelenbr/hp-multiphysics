@@ -35,7 +35,8 @@ void tri_hp_ps::init(const multigrid_interface& in, init_purpose why, FLT sizere
 
 	const tri_hp_ps& inmesh = dynamic_cast<const tri_hp_ps &>(in);
 	gbl = inmesh.gbl;
-
+    hp_ps_gbl = inmesh.hp_ps_gbl;
+    
 	tri_hp::init(in,why,sizereduce1d);
 
 	adis = inmesh.adis;

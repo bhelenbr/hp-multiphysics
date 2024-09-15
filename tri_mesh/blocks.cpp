@@ -259,47 +259,6 @@ void blocks::go(input_map& input) {
 
 }
 
-
-/* This routine waits for everyone to exit nicely */
-void sim::finalize(int line,const char *file, std::ostream *log) {
-	*log << "Exiting at line " << line << " of file " << file << std::endl;
-#ifdef PTH
-	pth_exit(NULL);
-#endif
-#ifdef BOOST
-	throw boost::thread_interrupted();
-#endif
-#ifdef PTH
-	pth_kill();
-#endif
-#ifdef petsc
-	PetscFinalize();
-#endif
-#ifdef MPISRC
-	MPI_Finalize();
-#endif
-    
-    std::exit(0);
-}
-
-/* This routine forces everyone to die */
-void sim::abort(int line,const char *file, std::ostream *log) {
-	*log << "Exiting at line " << line << " of file " << file << std::endl;
-	for (int b=0;b<blks.myblock;++b) {
-		sim::blks.blk(b)->output("aborted_solution", block::display);
-		sim::blks.blk(b)->output("aborted_solution", block::restart);
-	}
-#ifdef petsc
-	PetscFinalize();
-#endif
-#ifdef MPI
-	MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-    
-	/* Terminates all threads */
-	std::exit(1);
-}
-
 /* each block has a list of group #'s that it belongs to: integer array of size "n_comm_purposes" */
 /* typicaally there will be 2 comm_purposes: everyone to everyone, and only 1 with user defined groups in it */
 /* Each entry in array corresponds to different communication purpose entry 1 always has value 1 and that */
@@ -1610,11 +1569,11 @@ void block::time_step() {
             }
         }
         catch(int e) {
-            *gbl->log << "#Convergence error for time step " << gbl->tstep << '\n';
+            *gbl->log << "#Convergence error for time step " << gbl->tstep << std::endl;
             if (gbl->auto_timestep_tries) {
                 reset_timestep();
                 gbl->dti = gbl->auto_timestep_ratio*gbl->dti;
-                *gbl->log << "#Setting time step to " << gbl->dti << '\n';
+                *gbl->log << "#Setting time step to " << gbl->dti << std::endl;
                 if (gbl->dti > gbl->auto_dti_max) {
                     *gbl->log << "dti is too large. Aborting" << std::endl;
                     sim::abort(__LINE__,__FILE__,&std::cerr);

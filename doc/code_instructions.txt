@@ -273,73 +273,40 @@ make -j 2
 ###################################################################
 #### OS X ####
 ###################################################################
+# Pick configuration (Debug or Release)
+#export CONFIG=Debug
+export CONFIG=Release
+# Pick architecture (Intel or Mac chips)
+#export ARCH=x86
+export ARCH=arm64
 cd ${HOME}/hp-multiphysics
-cd utilities
-xcodebuild -scheme myblas -configuration Release
-xcodebuild -scheme util -configuration Release
-cd ../quadtree
-xcodebuild -scheme quad -configuration Release
-cd ../spline++
-xcodebuild -scheme spline++ -configuration Release
-cd ../input_map
-xcodebuild -scheme input_map -configuration Release
-cd ../symbolic_function
-xcodebuild -scheme install -configuration Release
-cd ../tri_mesh
-xcodebuild -scheme tri_mesh -configuration Release
-xcodebuild -scheme tri_mesh_mpi -configuration Release clean
-xcodebuild -scheme libtri_mesh -configuration Release
-xcodebuild -scheme libtri_mesh_mpi -configuration Release
-cd ../tri_basis
-xcodebuild -scheme tri_basis -configuration Release
-cd ../tri_hp
-xcodebuild -scheme tri_hp_petsc -configuration Release
-xcodebuild -scheme tri_hp_mpi -configuration Release
-xcodebuild -scheme tri_hp -configuration Release
-xcodebuild -scheme tri_hp_axi_petsc -configuration Release
-xcodebuild -scheme tri_hp_axi_mpi -configuration Release
-xcodebuild -scheme tri_hp_axi -configuration Release
-cd ../tet_mesh
-xcodebuild -alltargets -configuration Release
-cd ../tet_basis
-xcodebuild -alltargets -configuration Release
-cd ../tet_hp
-xcodebuild -alltargets -configuration Release
+cd utilities; xcodebuild -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd quadtree; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd spline++; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd input_map; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd symbolic_function; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tri_mesh; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tri_basis; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tri_hp; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tet_mesh; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tet_basis; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+cd tet_hp; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
 
 ###################################################################
 # TO CLEAN
 cd ${HOME}/hp-multiphysics
-cd utilities
-xcodebuild -scheme myblas -configuration Release clean
-xcodebuild -scheme util -configuration Release clean
-cd ../quadtree
-xcodebuild -scheme quad -configuration Release clean
-cd ../spline++
-xcodebuild -scheme spline++ -configuration Release clean
-cd ../input_map
-xcodebuild -scheme input_map -configuration Release clean
-cd ../symbolic_function
-xcodebuild -scheme install -configuration Release clean
-cd ../tri_mesh
-xcodebuild -scheme tri_mesh -configuration Release clean
-xcodebuild -scheme tri_mesh_mpi -configuration Release clean
-xcodebuild -scheme libtri_mesh -configuration Release clean
-xcodebuild -scheme libtri_mesh_mpi -configuration Release clean
-cd ../tri_basis
-xcodebuild -scheme tri_basis -configuration Release clean
-cd ../tri_hp
-xcodebuild -scheme tri_hp_petsc -configuration Release clean
-xcodebuild -scheme tri_hp_mpi -configuration Release clean
-xcodebuild -scheme tri_hp -configuration Release clean
-xcodebuild -scheme tri_hp_axi_petsc -configuration Release clean
-xcodebuild -scheme tri_hp_axi_mpi -configuration Release clean
-xcodebuild -scheme tri_hp_axi -configuration Release clean
-cd ../tet_mesh
-xcodebuild -alltargets -configuration Release clean
-cd ../tet_basis
-xcodebuild -alltargets -configuration Release clean
-cd ../tet_hp
-xcodebuild -alltargets -configuration Release clean
+cd utilities; xcodebuild -alltargets clean; cd ..
+cd quadtree; xcodebuild  -alltargets clean; cd ..
+cd spline++; xcodebuild  -alltargets clean; cd ..
+cd input_map; xcodebuild  -alltargets clean; cd ..
+cd symbolic_function; xcodebuild  -alltargets clean; cd ..
+cd tri_mesh; xcodebuild  -alltargets clean; cd ..
+cd tri_basis; xcodebuild  -alltargets clean; cd ..
+cd tri_hp; xcodebuild  -alltargets clean; cd ..
+cd tet_mesh; xcodebuild  -alltargets clean; cd ..
+cd tet_basis; xcodebuild  -alltargets clean; cd ..
+cd tet_hp; xcodebuild  -alltargets clean; cd ..
+rm -rf include/* lib/* bin/spline bin/tri_hp* bin/tri_mesh*
 ###################################################################
 
 

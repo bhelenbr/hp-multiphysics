@@ -97,6 +97,7 @@ void tri_hp_cns::init(const multigrid_interface& in, init_purpose why, FLT sizer
 
 	const tri_hp_cns& inmesh = dynamic_cast<const tri_hp_cns &>(in);
 	gbl = inmesh.gbl;
+    hp_cns_gbl = inmesh.hp_cns_gbl;
 
 	tri_hp::init(in,why,sizereduce1d);
 

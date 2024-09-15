@@ -39,6 +39,7 @@ void tri_hp_swe::init(input_map& inmap, shared_ptr<block_global> gin) {
 void tri_hp_swe::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_hp_swe& inmesh = dynamic_cast<const tri_hp_swe &>(in);
 	gbl = inmesh.gbl;
+    hp_swe_gbl = inmesh.hp_swe_gbl;
 	tri_hp_ins::init(in,why,sizereduce1d);
 	return;
 }

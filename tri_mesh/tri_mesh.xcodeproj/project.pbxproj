@@ -14,6 +14,7 @@
 				6F27980508B9FA49007BECA9 /* ShellScript */,
 			);
 			dependencies = (
+				E63C92332C966D7D00AE626C /* PBXTargetDependency */,
 			);
 			name = Documentation;
 			productName = Documentation;
@@ -22,7 +23,7 @@
 
 /* Begin PBXBuildFile section */
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
-		6F2262C508673029001017D0 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262C508673029001017D0 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; };
 		6F2262C60867302A001017D0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6F2262C70867302A001017D0 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
 		6F2262C80867302B001017D0 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
@@ -39,16 +40,16 @@
 		6F2262D308673048001017D0 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
 		6F2262D408673049001017D0 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
 		6F2262D50867304A001017D0 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
-		6F2262D808673092001017D0 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6F2262D908673093001017D0 /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262D808673092001017D0 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
+		6F2262D908673093001017D0 /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; };
 		6F2262DA08673095001017D0 /* tri_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* tri_boundary.cpp */; };
 		6F2262DC086730A5001017D0 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
-		6F2262DD086730A6001017D0 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262DD086730A6001017D0 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; };
 		6F2262DE086730A6001017D0 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
-		6F2262DF086730A7001017D0 /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262DF086730A7001017D0 /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; };
 		6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
-		6F2262E2086730AD001017D0 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6F2262E3086730AE001017D0 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262E2086730AD001017D0 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; };
+		6F2262E3086730AE001017D0 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; };
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
@@ -152,7 +153,7 @@
 		E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CC2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6D3EFC92C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
-		E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E6D3EFCA2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; };
 		E6D3EFCB2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
 		E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6D3EFCD2C11B08B007BC477 /* mapped_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */; };
@@ -164,6 +165,16 @@
 		E6F1CDE31533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
 		E6F1CDE41533E774009F6A6B /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE21533E774009F6A6B /* Accelerate.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E63C92322C966D7D00AE626C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6FB91AB50ACCB10300792B04;
+			remoteInfo = libtri_mesh_mpi;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		00E0854300CAD1857F000001 /* collapse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = collapse.cpp; sourceTree = SOURCE_ROOT; };
@@ -391,13 +402,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E632EA8427A371640013B0CC /* boundary.h in Headers */,
-				E632EA8227A371560013B0CC /* block.h in Headers */,
-				E632EA7F27A3713F0013B0CC /* tri_boundary.h in Headers */,
-				E632EA8127A3714F0013B0CC /* r_tri_boundary.h in Headers */,
-				E632EA8027A371470013B0CC /* r_tri_mesh.h in Headers */,
-				E632EA8327A3715E0013B0CC /* blocks.h in Headers */,
 				E632EA7E27A371220013B0CC /* tri_mesh.h in Headers */,
+				E632EA8427A371640013B0CC /* boundary.h in Headers */,
+				E632EA7F27A3713F0013B0CC /* tri_boundary.h in Headers */,
+				E632EA8027A371470013B0CC /* r_tri_mesh.h in Headers */,
+				E632EA8127A3714F0013B0CC /* r_tri_boundary.h in Headers */,
+				E632EA8227A371560013B0CC /* block.h in Headers */,
+				E632EA8327A3715E0013B0CC /* blocks.h in Headers */,
 				E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -539,16 +550,16 @@
 /* Begin PBXShellScriptBuildPhase section */
 		6F27980508B9FA49007BECA9 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 8;
 			files = (
 			);
 			inputPaths = (
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0";
+			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -685,6 +696,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		E63C92332C966D7D00AE626C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6FB91AB50ACCB10300792B04 /* libtri_mesh_mpi */;
+			targetProxy = E63C92322C966D7D00AE626C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		6F2262C208672FD1001017D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -781,7 +800,6 @@
 					MY_SPARSE,
 					MPISRC,
 					METIS,
-					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
@@ -799,7 +817,6 @@
 					MY_SPARSE,
 					MPISRC,
 					METIS,
-					petsc,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
