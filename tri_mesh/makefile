@@ -45,7 +45,7 @@ VPATH = ../
 OBJ = coarsen.o copy.o getnewblock.o insert.o output.o r_mesh.o \
 tprims.o collapse.o findmatch.o getnewr_bdry.o rebay.o setup.o\
 triangulate.o tri_boundary.o connect.o getnewbdry.o input.o meshutilities.o \
-refineby2.o swap.o yaber.o adapt.o blocks.o mapped_mesh.o
+refineby2.o swap.o yaber.o adapt.o blocks.o offset_geometry.o mapped_mesh.o
 
 MAINOBJ = main.o
 

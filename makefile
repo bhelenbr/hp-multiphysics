@@ -54,37 +54,37 @@ export LIBBLAS
 
 all: dirs tri_hp tet_hp 
 
-tet_hp: tet_mesh tet_basis tri_mesh $(DIRS) force_look
+tet_hp: tet_mesh tet_basis tri_mesh $(DIRS) dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tet_mesh: tri_mesh $(DIRS) force_look
+tet_mesh: tri_mesh $(DIRS) dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tet_basis: utilities force_look
+tet_basis: utilities dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tri_hp: tri_mesh tri_basis force_look
+tri_hp: tri_mesh tri_basis dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tri_mesh: $(DIRS) utilities input_map quadtree spline++ symbolic_function force_look
+tri_mesh: $(DIRS) utilities input_map quadtree spline++ symbolic_function dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-tri_basis: utilities force_look
+tri_basis: utilities dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-quadtree: utilities input_map force_look
+quadtree: utilities input_map dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-spline++: utilities input_map force_look
+spline++: utilities input_map dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-symbolic_function: utilities input_map force_look
+symbolic_function: utilities input_map dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-input_map: utilities force_look
+input_map: utilities dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 
-utilities: force_look
+utilities: dirs force_look
 	cd $@; $(MAKE) $(MFLAGS)
 	
 dirs: 
