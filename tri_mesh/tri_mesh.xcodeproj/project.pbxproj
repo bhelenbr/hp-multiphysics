@@ -280,8 +280,8 @@
 			children = (
 				6F92F9F008B94B22006F9C2C /* Documentation */,
 				08FB7795FE84155DC02AAC07 /* tri_mesh */,
+				E67BBA4F2C9BB9E000FB5A74 /* mapped_mesh */,
 				6FFD05E30CC3D9C6001CE474 /* r_tri_mesh */,
-				E6D3EFC62C11B00F007BC477 /* mapped_mesh */,
 				6FFD05E20CC3D97F001CE474 /* block */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
 				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
@@ -362,13 +362,13 @@
 			name = r_tri_mesh;
 			sourceTree = "<group>";
 		};
-		E6D3EFC62C11B00F007BC477 /* mapped_mesh */ = {
+		E67BBA4F2C9BB9E000FB5A74 /* mapped_mesh */ = {
 			isa = PBXGroup;
 			children = (
 				E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */,
 				E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */,
 			);
-			path = mapped_mesh;
+			name = mapped_mesh;
 			sourceTree = "<group>";
 		};
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
