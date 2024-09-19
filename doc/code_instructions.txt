@@ -339,27 +339,27 @@ ma
 ###################################################################
 cd ${HOME}/hp-multiphysics
 cd utilities
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../quadtree
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../spline++
-xcodebuild -alltargets  -configuration Release
+xcodebuild -alltargets  -configuration Release -arch arm64
 cd ../input_map
-xcodebuild -alltargets  -configuration Release
+xcodebuild -alltargets  -configuration Release -arch arm64
 cd ../symbolic_function
-xcodebuild -alltargets  -configuration Release
+xcodebuild -alltargets  -configuration Release -arch arm64
 cd ../tri_mesh
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../tri_basis
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../tri_hp
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../tet_mesh
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../tet_basis
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 cd ../tet_hp
-xcodebuild -alltargets -configuration Release
+xcodebuild -alltargets -configuration Release -arch arm64
 
 ###################################################################
 # TO CLEAN
