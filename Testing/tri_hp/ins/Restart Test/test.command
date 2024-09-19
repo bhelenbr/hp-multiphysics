@@ -17,8 +17,8 @@ export HP
 P="1 2 4"
 #P="1"
 MGFLAG=0
-#TYPES=(1 2 6)
-TYPES=(1 6)
+#TYPES=(1 2 7)
+TYPES=(1 7)
 
 export P
 export MGFLAG
