@@ -9,7 +9,7 @@
 #define _cd_mapped_h_
 
 #include <stdio.h>
-#include "tri_hp_cd.h"
+#include "../cd/tri_hp_cd.h"
 #include <mapped_mesh.h>
 
 class cd_mapped : public tri_hp_cd {
