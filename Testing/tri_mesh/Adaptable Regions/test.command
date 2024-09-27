@@ -1,6 +1,8 @@
 #!/bin/bash
 #  This is a test of a mesh generation where one block is adaptable
 #  and the other is a fixed mesh
+#  should run to completion
+# and show adaptation calls on b0 but not on b1
 
 # cd to the directory where the script resides.
 # Necessary for platforms where script can be 
