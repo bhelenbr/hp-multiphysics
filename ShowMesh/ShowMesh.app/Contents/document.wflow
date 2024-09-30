@@ -84,7 +84,7 @@
 				<key>isViewVisible</key>
 				<integer>1</integer>
 				<key>location</key>
-				<string>207.000000:68.000000</string>
+				<string>1089.000000:348.000000</string>
 			</dict>
 			<key>isViewVisible</key>
 			<integer>1</integer>
@@ -143,43 +143,28 @@
 # Showmesh by Boran Niceno
 # script by Brian Helenbrook | helenbrk@clarkson.edu
 # Conversion to Automator Application in 2019
-##
-
-# EXTENSIONS  : "*"
-# OSTYPES     :	"****"
-# ROLE        : Viewer
-
 #
-# Check for a running X server
-#
-X11Running=`/bin/ps -axww | /usr/bin/grep Contents | /usr/bin/grep X11 | /usr/bin/wc | /usr/bin/awk '{print \$1}'`
 
-if [ $X11Running -eq 0 ] ; then
 #
 # Attempt to launch an X server
 #
-  if [ -d /Applications/Utilities/XQuartz.app ] ; then
-    open -a /Applications/Utilities/XQuartz.app
-    sleep 5
-  fi
+if [ -d /Applications/Utilities/XQuartz.app ] ; then
+  open -a /Applications/Utilities/XQuartz.app
+  sleep 5
 fi
 
-source ${HOME}/.zprofile
-
-#DISPLAY=:0.0; export DISPLAY
 location="${HOME}/hp-multiphysics/bin"
-#for file in "$@"; do
-#	case "$file" in
-#      *.[e,n,s])  
-#		"${location}/showmesh" "${file%.*}"
-#		;;
-#      *.grd)
-#		"${location}/showgrid" "${file%.*}" &amp;
-#		;;
-#
-#    esac
-#done
-"${location}/showgrid" "$@"
+for file in "$@"; do
+	case "$file" in
+      *.[e,n,s])  
+		"$location/showmesh" "${file%.*}"
+		;;
+      *.grd)
+		"$location/showgrid" "${file%.*}"
+		;;
+
+    esac
+done
 wait
 echo finished</string>
 					<key>CheckedForUserDefaultShell</key>
@@ -294,7 +279,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>411.000000:689.000000</string>
+				<string>1089.000000:677.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -304,7 +289,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>FF605165-58CB-46C1-8038-470DD505BF50</key>
+		<key>AE2E5840-1D7D-4D69-9CB0-10CCB0157518</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
