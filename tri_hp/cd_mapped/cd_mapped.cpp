@@ -142,13 +142,13 @@ void cd_mapped::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 }
 
 void cd_mapped::l2error(init_bdry_cndtn *comparison) {
-    int i,j,n,tind;
+    int i,j,tind;
     FLT err;
     Array<int,1> loc(NV);
     Array<FLT,1> mxr(NV),l2r(NV);
     TinyVector<FLT,2> pt;
     
-    for(n=0;n<NV;++n) {
+    for(int n=0;n<NV;++n) {
         mxr(n) = 0.0;
         l2r(n) = 0.0;
     }
@@ -169,7 +169,7 @@ void cd_mapped::l2error(init_bdry_cndtn *comparison) {
             basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
         
         ugtouht(tind);
-        for(n=0;n<NV;++n)
+        for(int n=0;n<NV;++n)
             basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
         
         for (i=0;i<basis::tri(log2p)->gpx();++i) {
@@ -177,7 +177,7 @@ void cd_mapped::l2error(init_bdry_cndtn *comparison) {
                 cjcb(i,j) = (dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                 pt(0) = crd(0)(i,j);
                 pt(1) = crd(1)(i,j);
-                for(n=0;n<NV;++n) {
+                for(int n=0;n<NV;++n) {
                     err =  fabs(u(n)(i,j)-comparison->f(n,pt,gbl->time));
                     if (err >= mxr(n)) {
                         mxr(n) = err;
@@ -189,7 +189,7 @@ void cd_mapped::l2error(init_bdry_cndtn *comparison) {
         }
     }
     
-    for(n=0;n<NV;++n) {
+    for(int n=0;n<NV;++n) {
         l2r(n) = sqrt(l2r(n));
         *gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n);
     }
