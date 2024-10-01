@@ -436,6 +436,7 @@ void multi_physics_pnt::init(input_map& inmap) {
 	const int vdofs = x.NV +(x.mmovement == tri_hp::coupled_deformable)*x.ND;
 	denom.resize(vdofs);
 	denom = 1.0;
+    
 	
 	std::string match_name;
 	for(int m=0;m<base.nmatches();++m) {
@@ -444,10 +445,13 @@ void multi_physics_pnt::init(input_map& inmap) {
 		std::string vals;
 		if (base.idprefix <= match_name) {
 			if (!inmap.getline(base.idprefix +'_' +match_name +"_matching",vals)) {
+                *x.gbl->log << '#' << base.idprefix +'_' +match_name +"_matching: ";
 				for(int n=0;n<vdofs;++n) {
 					match_pairs[m].push_back(std::pair<int,int>(n,n));
+                    *x.gbl->log << n << ' ' << n;
 				}
 				denom += 1.0;  // All matched
+                *x.gbl->log << std::endl;
 			}
 			else {
 				nstr.str(vals);
@@ -460,10 +464,13 @@ void multi_physics_pnt::init(input_map& inmap) {
 		}
 		else {
 			if (!inmap.getline(match_name +'_' +base.idprefix +"_matching",vals)) {
+                *x.gbl->log << '#' << match_name +'_' +base.idprefix +"_matching: ";
 				for(int n=0;n<vdofs;++n) {
 					match_pairs[m].push_back(std::pair<int,int>(n,n));
+                    *x.gbl->log << n << ' ' << n;
 				}
 				denom += 1.0;  // All matched
+                *x.gbl->log << std::endl;
 			}
 			else {
 				nstr.str(vals);

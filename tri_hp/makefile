@@ -67,7 +67,8 @@ nstage.o output.o ptprobe.o tadvance.o tobasis.o hp_coupled_boundary.o hp_getnew
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/setup_preconditioner.o ins/surface.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/setup_preconditioner.o cns/update.o cns/shock.o
 OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns_explicit/rsdl.o cns_explicit/setup_preconditioner.o 
-OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/setup_preconditioner.o cd/melt_cd.o # cd/minvrt.o 
+OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/setup_preconditioner.o cd/melt_cd.o # cd/minvrt.o
+OBJCDMAPPED = cd_mapped/cd_mapped.o
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/setup_preconditioner.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/setup_preconditioner.o
 OBJBUOY = buoyancy/allocate.o buoyancy/setup_preconditioner.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
@@ -81,6 +82,7 @@ OBJKOMEGA = komega/rsdl.o komega/allocate.o komega/length.o
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
 OBJ += $(OBJCD)
+OBJ += $(OBJCDMAPPED)
 OBJ += $(OBJINS)
 OBJ += $(OBJCNS) 
 #OBJ += $(OBJCNSEXPLICIT)
@@ -119,6 +121,7 @@ dirs:
 	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
+	+@[ -d  cd_mapped ] || mkdir -p cd_mapped
 	+@[ -d  planestrain ] || mkdir -p planestrain
 	+@[ -d  swirl ] || mkdir -p swirl
 	+@[ -d  buoyancy ] || mkdir -p buoyancy
