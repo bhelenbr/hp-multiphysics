@@ -183,10 +183,12 @@ public:
         std::ostringstream nstr;
         
         BASE::init(inmap);
-        
-        keyword = BASE::idprefix +"_first";
-        inmap.getwdefault(keyword,first,true);
-        
+                
+        first = true;
+        if (inmap.get(BASE::idprefix +"_first",first)) {
+            *BASE::x.gbl->log << "#Setting first flag for " << BASE::idprefix << std::endl;
+            *BASE::x.gbl->log << "#This only works if all other matches are set to false" << std::endl;
+        }
         
         /* SET GROUP MEMBERSHIP FLAGS */
         /* For each group and each bdry match there is a phase */
