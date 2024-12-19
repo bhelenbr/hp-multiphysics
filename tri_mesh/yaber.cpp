@@ -268,7 +268,11 @@ void tri_mesh::checkintegrity() {
 	for(i=0;i<ntri;++i) {
 		if (tri(i).info < 0) continue;
 
-		if (area(i) < 0.0) *gbl->log << "negative area" << i << std::endl;
+        if (area(i) < 0.0) {
+            *gbl->log << "negative area triangle " << i << std::endl;
+            output("error");
+            sim::abort(__LINE__,__FILE__,gbl->log);
+        }
 
 		for(j=0;j<3;++j) {
 			sind = tri(i).seg(j);

@@ -487,6 +487,7 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 
 		for(vn=0;vn<3;++vn)
 			if (tri(tind).pnt(vn) == pnear) break;
+        assert(vn < 3);
 
 		tind = tri(tind).tri((vn +dir)%3);
 		if (tind < 0) {

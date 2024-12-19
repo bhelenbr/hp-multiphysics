@@ -510,7 +510,7 @@ void r_tri_mesh::rsdl() {
 	/* FOURTH ORDER MESH MOVEMENT SCHEME */
 	/*************************************/
 	Array<TinyVector<FLT,ND>,1> res1;
-	res1.reference(gbl->res1);
+	res1.reference(r_gbl->res1);
 
 	/* loop through points and set S residual to 0 */
 	/* npnt is number of pnts and ND is number of dimensions (2) */
@@ -546,10 +546,10 @@ void r_tri_mesh::rsdl() {
 
 	/* Communicate for parallel or periodic */
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
+		pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) r_gbl->res1.data(),0,1,2);
 		pmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
 		last_phase = true;
-		last_phase &= pmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) gbl->res1.data(),0,1,2);
+		last_phase &= pmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) r_gbl->res1.data(),0,1,2);
 	}
 
 	/* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */

@@ -153,16 +153,23 @@ void tri_mesh::allocate(int mxsize) {
 		tri_gbl->i2wk.resize(maxpst+1);
 		tri_gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
 		// some smaller lists using i2 storage
-		int mvst3 = maxpst/3;
-		Array<int,1> temp1(tri_gbl->i2wk.data(),mvst3,neverDeleteData);
-		tri_gbl->i2wk_lst1.reference(temp1);
-		tri_gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp2(tri_gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-		tri_gbl->i2wk_lst2.reference(temp2);
-		tri_gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp3(tri_gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-		tri_gbl->i2wk_lst3.reference(temp3);
-		tri_gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+//		int mvst3 = maxpst/3;
+//		Array<int,1> temp1(tri_gbl->i2wk.data(),mvst3,neverDeleteData);
+//		tri_gbl->i2wk_lst1.reference(temp1);
+//		tri_gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+//		Array<int,1> temp2(tri_gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+//		tri_gbl->i2wk_lst2.reference(temp2);
+//		tri_gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+//		Array<int,1> temp3(tri_gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+//		tri_gbl->i2wk_lst3.reference(temp3);
+//		tri_gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+        
+        tri_gbl->i2wk_lst1.resize(maxpst+1);
+        tri_gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+        tri_gbl->i2wk_lst2.resize(maxpst+1);
+        tri_gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+        tri_gbl->i2wk_lst3.resize(maxpst+1);
+        tri_gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
 	}
 
 	initialized = 1;
