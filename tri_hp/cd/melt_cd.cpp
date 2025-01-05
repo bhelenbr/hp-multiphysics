@@ -190,7 +190,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 #else
 FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	FLT K;
-	const int p = 4;
+	const int p = 1;
 	
     FLT K2Dn_exp = melt_cd_gbl->K2Dn*exp(melt_cd_gbl->A2Dn/(max(abs(DT),melt_cd_gbl->K2Dn_DT_min)))*pow(abs(DT),melt_cd_gbl->DTexponent2Dn);
 
@@ -208,7 +208,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		K = K2Dn_exp;
 	}
 	else {
-		K = pow(pow(melt_cd_gbl->Krough,p) + pow(melt_cd_gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
+		K = pow(pow(melt_cd_gbl->Krough,p) + pow(melt_cd_gbl->Ksn/(-sint +fabs(sint) +EPSILON),p),1.0/p);
 	}
 	
 	return(K);
@@ -686,7 +686,7 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
 			
 			/* This is from Weinsteins expression */
-			sint = sign_dir*(-bdry_cd_gbl->facetdir(0)*anorm(1) +bdry_cd_gbl->facetdir(1)*anorm(0));
+            sint = sign_dir*(-melt_cd_gbl->facetdir(0)*anorm(1) +melt_cd_gbl->facetdir(1)*anorm(0));
 			FLT DT = ibc->f(Tindx, aloc, x.gbl->time) -u(Tindx)(i);
 			FLT Kc = calculate_kinetic_coefficients(DT,sint);
 			/* Calculate relative velocity */
@@ -696,9 +696,9 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			/* TANGENTIAL SPACING */
 			// res(0,i) = -ksprg(indx)*sign_dir*jcb;
 			/* NORMAL FLUX */
-			res(1,i) = RAD(crd(0,i))*bdry_cd_gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1));
+            res(1,i) = RAD(crd(0,i))*melt_cd_gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1));
 			/* Kinetic equation for surface temperature */
-			res(2,i) = RAD(crd(0,i))*bdry_cd_gbl->rho_s*(-DT)*jcb +Kc*res(1,i);
+            res(2,i) = RAD(crd(0,i))*melt_cd_gbl->rho_s*(-DT)*jcb +Kc*res(1,i);
 			/* Heat source */
 			// res(3,i) =  -(is_master)*bdry_cd_gbl->Lf*res(1,i) +(!base.is_comm())*(RAD(crd(0,i))*flx(Tindx)*jcb +bdry_cd_gbl->rho_s*bdry_cd_gbl->cp_s*u(Tindx)(i)*res(1,i));
 			
@@ -714,8 +714,8 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			TinyVector<FLT,tri_mesh::ND> dsintdanorm,djcbdnorm,djcbdcht,dsintdcht;
 			TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dnormdcht,danormdcht;
 			
-			dsintdanorm(0) = sign_dir*bdry_cd_gbl->facetdir(1);
-			dsintdanorm(1) = -sign_dir*bdry_cd_gbl->facetdir(0);
+            dsintdanorm(0) = sign_dir*melt_cd_gbl->facetdir(1);
+            dsintdanorm(1) = -sign_dir*melt_cd_gbl->facetdir(0);
 //			FLT K2Dn_exp = bdry_cd_gbl->K2Dn*exp(bdry_cd_gbl->A2Dn/(max(abs(DT),bdry_cd_gbl->K2Dn_DT_min)));
 //			
 //			if (sint == 0.0) {
@@ -728,10 +728,10 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			const int p=2;
 			if (sint == 0.0) {
 				dKdsint = 0.0;
-				dKdT = Kc*bdry_cd_gbl->A2Dn/(DT*DT);
+                dKdT = Kc*melt_cd_gbl->A2Dn/(DT*DT);
 			}
 			else {
-				dKdsint = 1.0/p*pow(Kc,1.-p)*p*pow(bdry_cd_gbl->Ksn/(fabs(sint) +EPSILON),p-1.)*bdry_cd_gbl->Ksn/pow(fabs(sint) +EPSILON,2.0)*(sint > 0 ? -1 : 1);
+                dKdsint = 1.0/p*pow(Kc,1.-p)*p*pow(melt_cd_gbl->Ksn/(fabs(sint) +EPSILON),p-1.)*melt_cd_gbl->Ksn/pow(fabs(sint) +EPSILON,2.0)*(sint > 0 ? -1 : 1);
 				dKdT = 0.0;
 			}
 			djcbdnorm(0) = 1/jcb*norm(0);
@@ -755,18 +755,18 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 				dsintdcht(n) = dsintdanorm(0)*danormdcht(0,n) +dsintdanorm(1)*danormdcht(1,n);
 				dres(0,n,i) = -ksprg(indx)*sign_dir*djcbdcht(n);
 			}
-			dres(1,0,i) = (1-RAD(0))*dxdcht*bdry_cd_gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1)) +
-										RAD(crd(0,i))*bdry_cd_gbl->rho_s*sign_dir*(damvdcht*norm(0) +amv(1)*dnormdcht(1,0));
-			dres(1,1,i) = RAD(crd(0,i))*bdry_cd_gbl->rho_s*sign_dir*(amv(0)*dnormdcht(0,1) +damvdcht*norm(1));
-			dres(2,0,i) =  (1-RAD(0))*dxdcht*bdry_cd_gbl->rho_s*(-DT)*jcb
-										+RAD(crd(0,i))*bdry_cd_gbl->rho_s*(-DT)*djcbdcht(0)
+            dres(1,0,i) = (1-RAD(0))*dxdcht*melt_cd_gbl->rho_s*sign_dir*(amv(0)*norm(0) +amv(1)*norm(1)) +
+            RAD(crd(0,i))*melt_cd_gbl->rho_s*sign_dir*(damvdcht*norm(0) +amv(1)*dnormdcht(1,0));
+            dres(1,1,i) = RAD(crd(0,i))*melt_cd_gbl->rho_s*sign_dir*(amv(0)*dnormdcht(0,1) +damvdcht*norm(1));
+            dres(2,0,i) =  (1-RAD(0))*dxdcht*melt_cd_gbl->rho_s*(-DT)*jcb
+            +RAD(crd(0,i))*melt_cd_gbl->rho_s*(-DT)*djcbdcht(0)
 										+dKdsint*dsintdcht(0)*res(1,i) +Kc*dres(1,0,i);
-			dres(2,1,i) = RAD(crd(0,i))*bdry_cd_gbl->rho_s*(-DT)*djcbdcht(1)
+            dres(2,1,i) = RAD(crd(0,i))*melt_cd_gbl->rho_s*(-DT)*djcbdcht(1)
 										+dKdsint*dsintdcht(1)*res(1,i) +Kc*dres(1,1,i);
-			dres(2,2,i) = (RAD(crd(0,i))*bdry_cd_gbl->rho_s*jcb +dKdT*res(1,i))*basis::tri(x.log2p)->gx(i,m+1);
+            dres(2,2,i) = (RAD(crd(0,i))*melt_cd_gbl->rho_s*jcb +dKdT*res(1,i))*basis::tri(x.log2p)->gx(i,m+1);
 			
 			for (int n=0;n<tri_mesh::ND;++n) {
-				dres(3,n,i) = -(is_master)*bdry_cd_gbl->Lf*dres(1,n,i);
+                dres(3,n,i) = -(is_master)*melt_cd_gbl->Lf*dres(1,n,i);
 			}
 			
 			/* UPWINDING KINETIC EQUATION BASED ON TANGENTIAL VELOCITY */
@@ -778,8 +778,8 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 										+res(2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/(jcb*jcb)*djcbdcht(1)*hp_bdry_gbl->meshc(indx);
 			dres(4,2,i) = -dres(2,2,i)*sign_dir*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*hp_bdry_gbl->meshc(indx);
 			
-			dres(4,0,i) += (1-RAD(0))*dxdcht*bdry_cd_gbl->Kgt*anorm(0) +RAD(crd(0,i))*bdry_cd_gbl->Kgt*danormdcht(0,0);
-			dres(4,1,i) += RAD(crd(0,i))*bdry_cd_gbl->Kgt*danormdcht(0,1);
+            dres(4,0,i) += (1-RAD(0))*dxdcht*melt_cd_gbl->Kgt*anorm(0) +RAD(crd(0,i))*melt_cd_gbl->Kgt*danormdcht(0,0);
+            dres(4,1,i) += RAD(crd(0,i))*melt_cd_gbl->Kgt*danormdcht(0,1);
 		}
 		
 		Array<TinyVector<FLT,MXTM>,1> lf(x.NV+NV);
@@ -824,10 +824,15 @@ void melt_facet_pt::init(input_map& inmap) {
 	std::string keyword;
 	
 	if (x.NV == 1) {
+		/* Let temperature be continuous */
+		inmap[base.idprefix +"_c0_indices"] = "0";
 		keyword = base.idprefix + "_hp_typelist";
 		inmap[keyword] = "1";
 	}
 	else {
+		/* Let temperature be continuous */
+		inmap[base.idprefix +"_c0_indices"] = "2";
+		
 		/* Make u & v dirichlet B.C.'s */
 		keyword = base.idprefix + "_hp_typelist";
 		inmap[keyword] = "0 0 1 1";

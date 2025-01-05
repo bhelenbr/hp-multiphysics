@@ -1070,8 +1070,8 @@ void block::init(input_map &input) {
 	}
 	
 	input.getwdefault("extrapolate",gbl->extrapolate,0.0);
-	if (gbl->extrapolate < 0.0 || gbl->extrapolate > 1.0) {
-		*gbl->log << "Guess extrapolation constant should between 0 and 1" << std::endl;
+	if (gbl->extrapolate < 0.0) {
+		*gbl->log << "Guess extrapolation constant should be >= than 0" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
     
