@@ -83,7 +83,7 @@ let RESTART=1
 
 mv startup.inpt run.inpt
 # 100 steps with small time step
-mod_map run.inpt auto_timestep 1
+mod_map run.inpt auto_timestep_tries 2
 mod_map run.inpt auto_timestep_ratio 1.25
 mod_map run.inpt ntstep 100
 mod_map run.inpt restart $RESTART
@@ -100,7 +100,7 @@ RESTART=100
 echo "unsteady evolution 1 ${RESTART}"
 
 # Steady State
-mod_map -c run.inpt auto_timestep
+mod_map -c run.inpt auto_timestep_tries
 mod_map run.inpt restart ${RESTART}
 mod_map run.inpt ntstep 1
 mod_map run.inpt restart_interval 1
