@@ -7,20 +7,20 @@
 #include "MAdLibInterface.h"
 #endif
 
-void tet_mesh::init(input_map &input, void *gin) {
+void tet_mesh::init(input_map &input, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	std::string bdryfile;
 	
 	if (gin != 0) {
-		gbl = static_cast<global *>(gin);   
+		gbl = gin;
 	}
 	else {
 		/* gbl has not been set */
 		/* so create internal gbl_struct */
-		gbl = new global;
-		gbl->idprefix = "";
+        gbl = make_shared<block_global>();
+        gbl->idprefix = "";
 		gbl->log = &std::cout;
 		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;
@@ -129,33 +129,34 @@ void tet_mesh::allocate(int mxsize) {
 	if (!gbl) {
 		/* gbl has not been set */
 		/* so create internal gbl_struct */
-		gbl = new global;
-		gbl->idprefix = "";
+        gbl = make_shared<block_global>();
+        gbl->idprefix = "";
 		gbl->log = &std::cout;
 		gbl->adapt_interval = 1;
 		gbl->tolerance = 1.25;
+        tet_gbl = make_shared<tet_global>();
 	}
 	
-	if (gbl->i1wk.ubound(firstDim) < maxvst) {
-		// gbl->i1wk should always be kept initialized to -1
-		gbl->i1wk.resize(Range(-1,maxvst));
-		gbl->i1wk = -1;
-		gbl->maxsrch = 100;
+	if (tet_gbl->i1wk.ubound(firstDim) < maxvst) {
+		// tet_gbl->i1wk should always be kept initialized to -1
+        tet_gbl->i1wk.resize(Range(-1,maxvst));
+        tet_gbl->i1wk = -1;
+        tet_gbl->maxsrch = 100;
 		
-		gbl->fltwk.resize(maxvst);
-		gbl->i2wk.resize(maxvst+1);
-		gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
+        tet_gbl->fltwk.resize(maxvst);
+        tet_gbl->i2wk.resize(maxvst+1);
+        tet_gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
 		// some smaller lists using i2 storage
 		int mvst3 = maxvst/3;
-		Array<int,1> temp1(gbl->i2wk.data(),mvst3,neverDeleteData);
-		gbl->i2wk_lst1.reference(temp1);
-		gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp2(gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-		gbl->i2wk_lst2.reference(temp2);
-		gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-		Array<int,1> temp3(gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-		gbl->i2wk_lst3.reference(temp3);
-		gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp1(tet_gbl->i2wk.data(),mvst3,neverDeleteData);
+        tet_gbl->i2wk_lst1.reference(temp1);
+        tet_gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp2(tet_gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+        tet_gbl->i2wk_lst2.reference(temp2);
+        tet_gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+		Array<int,1> temp3(tet_gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+        tet_gbl->i2wk_lst3.reference(temp3);
+        tet_gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
 	}
 	
 	initialized = 1;
@@ -630,10 +631,6 @@ tet_mesh::~tet_mesh() {
 		delete ebdry(i);
 	for(int i=0;i<nfbd;++i)
 		delete fbdry(i);
-	
-	// FIXME: WHO IS RESPONSIBLE FOR THIS?
-	if (gbl) delete gbl;
-	gbl = 0;
 }
 	
 

@@ -41,7 +41,7 @@ void tet_hp::conjugate_gradient() {
 
 	all_dirichlet();
 	
-	z = gbl->res;
+	z = hp_gbl->res;
 	
 //#ifdef JACOBI
 //	jacobi_relaxation();
@@ -49,9 +49,9 @@ void tet_hp::conjugate_gradient() {
 //	tet_hp::minvrt();
 //#endif
 	
-	p = gbl->res;	
+	p = hp_gbl->res;	
 	
-	inner_product(rtrold,z,gbl->res);
+	inner_product(rtrold,z,hp_gbl->res);
 
 	for(int i = 0; i < max_iter; ++i) {
 
@@ -60,19 +60,19 @@ void tet_hp::conjugate_gradient() {
 		inner_product(ptAp,p,Ap);
 		
 		alpha = rtrold/ptAp;
-		//alpha *= gbl->cfl(log2p);
+		//alpha *= hp_gbl->cfl(log2p);
 		
 		/* ug = ug - alpha*p */ 
 		saxpy(-alpha,1.0,p,ug);
 		
 		/* res = res-alpha*Ap */
-		saxpy(-alpha,1.0,Ap,gbl->res);
+		saxpy(-alpha,1.0,Ap,hp_gbl->res);
 		
 		//rsdl();		
 		
 		all_dirichlet();
 		
-		z = gbl->res;
+		z = hp_gbl->res;
 		
 //#ifdef JACOBI
 //		jacobi_relaxation();
@@ -80,12 +80,12 @@ void tet_hp::conjugate_gradient() {
 //		tet_hp::minvrt();
 //#endif
 		
-		inner_product(rtrnew,z,gbl->res);
+		inner_product(rtrnew,z,hp_gbl->res);
 		
 		beta = rtrnew/rtrold;
 		
 		/* p = res + beta*p */
-		saxpy(1.0,beta,gbl->res,p);
+		saxpy(1.0,beta,hp_gbl->res,p);
 		
 		rtrold = rtrnew;
 	
@@ -157,24 +157,24 @@ void tet_hp::bicgstab() {
 	
 	rsdl();
 	
-	gbl->res.v = -gbl->res.v;
-	gbl->res.e = -gbl->res.e;
-	gbl->res.f = -gbl->res.f;
-	gbl->res.i = -gbl->res.i;
-	rtilde = gbl->res;
+	hp_gbl->res.v = -hp_gbl->res.v;
+	hp_gbl->res.e = -hp_gbl->res.e;
+	hp_gbl->res.f = -hp_gbl->res.f;
+	hp_gbl->res.i = -hp_gbl->res.i;
+	rtilde = hp_gbl->res;
 
 	all_dirichlet();
 	
 	
-	p = gbl->res;
+	p = hp_gbl->res;
 	
-	inner_product(rho_1,rtilde,gbl->res);
+	inner_product(rho_1,rtilde,hp_gbl->res);
 
 	for (int i = 0; i < max_iter; i++) {
 		
-		s = gbl->res;//store to use later		
+		s = hp_gbl->res;//store to use later		
 
-		gbl->res = p;
+		hp_gbl->res = p;
 		
 #ifdef JACOBI
 		jacobi_relaxation();
@@ -184,7 +184,7 @@ void tet_hp::bicgstab() {
 		
 		all_dirichlet();
 		
-		phat = gbl->res;
+		phat = hp_gbl->res;
 		
 		matrix_multiply(phat,v);
 		
@@ -195,7 +195,7 @@ void tet_hp::bicgstab() {
 		
 		saxpy(-alpha, 1.0, v, s);
 		
-		gbl->res = s;
+		hp_gbl->res = s;
 		
 #ifdef JACOBI
 		jacobi_relaxation();
@@ -205,7 +205,7 @@ void tet_hp::bicgstab() {
 		
 		all_dirichlet();
 		
-		shat = gbl->res;
+		shat = hp_gbl->res;
 		
 		matrix_multiply(shat,t);
 		
@@ -220,31 +220,31 @@ void tet_hp::bicgstab() {
 		ug.f = ug.f + alpha*phat.f + omega*shat.f;
 		ug.i = ug.i + alpha*phat.i + omega*shat.i;
 		
-//		gbl->res.v = s.v - omega*t.v;
-//		gbl->res.e = s.e - omega*t.e;
-//		gbl->res.f = s.f - omega*t.f;
-//		gbl->res.i = s.i - omega*t.i;
+//		hp_gbl->res.v = s.v - omega*t.v;
+//		hp_gbl->res.e = s.e - omega*t.e;
+//		hp_gbl->res.f = s.f - omega*t.f;
+//		hp_gbl->res.i = s.i - omega*t.i;
 		
 		rsdl();		
-		gbl->res.v = -gbl->res.v;
-		gbl->res.e = -gbl->res.e;
-		gbl->res.f = -gbl->res.f;
-		gbl->res.i = -gbl->res.i;
+		hp_gbl->res.v = -hp_gbl->res.v;
+		hp_gbl->res.e = -hp_gbl->res.e;
+		hp_gbl->res.f = -hp_gbl->res.f;
+		hp_gbl->res.i = -hp_gbl->res.i;
 		
 		all_dirichlet();		
 		
 		rho_2 = rho_1;	
 		
-		inner_product(rho_1,rtilde,gbl->res);
+		inner_product(rho_1,rtilde,hp_gbl->res);
 
 		beta = (rho_1/rho_2)*(alpha/omega);
-		p.v = gbl->res.v + beta*p.v - beta*omega*v.v;
-		p.e = gbl->res.e + beta*p.e - beta*omega*v.e;
-		p.f = gbl->res.f + beta*p.f - beta*omega*v.f;
-		p.i = gbl->res.i + beta*p.i - beta*omega*v.i;
+		p.v = hp_gbl->res.v + beta*p.v - beta*omega*v.v;
+		p.e = hp_gbl->res.e + beta*p.e - beta*omega*v.e;
+		p.f = hp_gbl->res.f + beta*p.f - beta*omega*v.f;
+		p.i = hp_gbl->res.i + beta*p.i - beta*omega*v.i;
 		
 		FLT rtr;
-		inner_product(rtr,gbl->res,gbl->res);
+		inner_product(rtr,hp_gbl->res,hp_gbl->res);
 		rtr = sqrt(rtr);
 		
 //		cout << i << ' ' << rtv << ' ' << alpha << ' ' << beta << ' ' << omega << ' ' << rtr << endl;
@@ -317,30 +317,30 @@ void tet_hp::cgs() {
 		
 	rsdl();
 	
-	gbl->res.v = -gbl->res.v;
-	gbl->res.e = -gbl->res.e;
-	gbl->res.f = -gbl->res.f;
-	gbl->res.i = -gbl->res.i;
+	hp_gbl->res.v = -hp_gbl->res.v;
+	hp_gbl->res.e = -hp_gbl->res.e;
+	hp_gbl->res.f = -hp_gbl->res.f;
+	hp_gbl->res.i = -hp_gbl->res.i;
 	
-	rtilde = gbl->res;
+	rtilde = hp_gbl->res;
 
 	all_dirichlet();
 	
 	
 	for (int i = 0; i <= max_iter; i++) {
 		
-		inner_product(rho_1,rtilde,gbl->res);
+		inner_product(rho_1,rtilde,hp_gbl->res);
 
 		if (i == 0) {
-			u = gbl->res;
+			u = hp_gbl->res;
 			p = u;
 		} else {
 			beta = rho_1/rho_2;
-			u.v = gbl->res.v + beta*q.v;
+			u.v = hp_gbl->res.v + beta*q.v;
 			p.v = u.v + beta*q.v+beta*beta*p.v;
 		}
 		
-		gbl->res = p;
+		hp_gbl->res = p;
 		
 #ifdef JACOBI
 		jacobi_relaxation();
@@ -349,11 +349,11 @@ void tet_hp::cgs() {
 #endif
 		all_dirichlet();
 		
-		matrix_multiply(gbl->res,vhat);
+		matrix_multiply(hp_gbl->res,vhat);
 		
-		gbl->res = vhat;
+		hp_gbl->res = vhat;
 		all_dirichlet();
-		vhat = gbl->res;
+		vhat = hp_gbl->res;
 		
 		FLT rtv;
 		inner_product(rtv,rtilde,vhat);
@@ -362,7 +362,7 @@ void tet_hp::cgs() {
 		
 		q.v = u.v - alpha*vhat.v;
 		
-		gbl->res.v = u.v + q.v;
+		hp_gbl->res.v = u.v + q.v;
 		
 #ifdef JACOBI
 		jacobi_relaxation();
@@ -372,24 +372,24 @@ void tet_hp::cgs() {
 		
 		all_dirichlet();
 		
-		saxpy(alpha,1.0,gbl->res,ug);
+		saxpy(alpha,1.0,hp_gbl->res,ug);
 		
 		rsdl();
-		gbl->res.v = -gbl->res.v;
-		gbl->res.e = -gbl->res.e;
-		gbl->res.f = -gbl->res.f;
-		gbl->res.i = -gbl->res.i;
-		//gbl->res.v = -gbl->res.v;
+		hp_gbl->res.v = -hp_gbl->res.v;
+		hp_gbl->res.e = -hp_gbl->res.e;
+		hp_gbl->res.f = -hp_gbl->res.f;
+		hp_gbl->res.i = -hp_gbl->res.i;
+		//hp_gbl->res.v = -hp_gbl->res.v;
 
 		all_dirichlet();
 		
-//		matrix_multiply(gbl->res, qhat)
+//		matrix_multiply(hp_gbl->res, qhat)
 //		saxpy(alpha,1.0,qhat,gbl->res_store)
 		
 		rho_2 = rho_1;	
 		
 		FLT rtr;
-		inner_product(rtr,gbl->res,gbl->res);
+		inner_product(rtr,hp_gbl->res,hp_gbl->res);
 		cout << i << ' ' << rtr << endl;
 
 	}
@@ -441,10 +441,10 @@ void tet_hp::cgs() {
 //	rhs.e.resize(npnt,em,NV);
 //	rhs.f.resize(npnt,fm,NV);
 //	rhs.i.resize(npnt,im,NV);
-//	rhs.v = gbl->res.v;
-//	rhs.e = gbl->res.e;
-//	rhs.f = gbl->res.f;
-//	rhs.i = gbl->res.i;
+//	rhs.v = hp_gbl->res.v;
+//	rhs.e = hp_gbl->res.e;
+//	rhs.f = hp_gbl->res.f;
+//	rhs.i = hp_gbl->res.i;
 //	
 //	Array<vefi,1> vv(im+1);
 //	for(int ind = 0; ind < im+1; ++ind) {	
@@ -500,10 +500,10 @@ void tet_hp::cgs() {
 //		for(int i=0;i<nfbd;++i)
 //			hp_fbdry(i)->fdirichlet();
 //		
-//		vv(0).v = gbl->res.v;
-//		vv(0).e = gbl->res.e;
-//		vv(0).f = gbl->res.f;
-//		vv(0).i = gbl->res.i;		
+//		vv(0).v = hp_gbl->res.v;
+//		vv(0).e = hp_gbl->res.e;
+//		vv(0).f = hp_gbl->res.f;
+//		vv(0).i = hp_gbl->res.i;		
 //		
 //		vv(0).v = rhs.v - vv(0).v;
 //		vv(0).e = rhs.e - vv(0).e;
@@ -514,7 +514,7 @@ void tet_hp::cgs() {
 //
 //		//cout << "initial residual of system Ax-b: " << beta << endl;
 //		FLT rtr;
-//		inner_product(rtr, gbl->res, gbl->res);
+//		inner_product(rtr, hp_gbl->res, hp_gbl->res);
 //
 //		if ( !(beta > tol * rtr) )
 //			break;
@@ -707,7 +707,7 @@ void tet_hp::matrix_multiply(struct vefi vecx, struct vefi& vecb) {
 	
 	rsdl();// rsdl may already be called
 	
-	temp = gbl->res;
+	temp = hp_gbl->res;
 	
 	saxpy(dw,1.0,vecx,ug);
 	
@@ -715,12 +715,12 @@ void tet_hp::matrix_multiply(struct vefi vecx, struct vefi& vecb) {
 	
 	saxpy(-dw,1.0,vecx,ug);
 	
-	vecb.v = (gbl->res.v - temp.v)/dw;
-	if(em) vecb.e = (gbl->res.e - temp.e)/dw;
-	if(fm) vecb.f = (gbl->res.f - temp.f)/dw;
-	if(im) vecb.i = (gbl->res.i - temp.i)/dw;
+	vecb.v = (hp_gbl->res.v - temp.v)/dw;
+	if(em) vecb.e = (hp_gbl->res.e - temp.e)/dw;
+	if(fm) vecb.f = (hp_gbl->res.f - temp.f)/dw;
+	if(im) vecb.i = (hp_gbl->res.i - temp.i)/dw;
 	
-	gbl->res = temp;	
+	hp_gbl->res = temp;	
 	
 	return;
 	

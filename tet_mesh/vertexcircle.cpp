@@ -20,20 +20,20 @@ void face_bdry::vertexcircle(int vind) {
 			
 	ind = 0;
 	// known tri connected to vertex
-	x.gbl->i2wk(ind) = pnt(vind).tri;
-	x.gbl->i1wk(x.gbl->i2wk(ind)) = 0;
+	x.tet_gbl->i2wk(ind) = pnt(vind).tri;
+	x.tet_gbl->i1wk(x.tet_gbl->i2wk(ind)) = 0;
 	
 	for(i = 0; i < nbor; ++i) {    
-		tind = x.gbl->i2wk(i);  
+		tind = x.tet_gbl->i2wk(i);  
 		for(j = 0; j < 3; ++j) {            
 			tind2 = tri(tind).tri(j);
 			if (tind2 == -1)
 				goto NEXTSIDE;
-			if (x.gbl->i1wk(tind2) < 0) {            
+			if (x.tet_gbl->i1wk(tind2) < 0) {            
 				for(k = 0; k < 3; ++k) {
 					if (tri(tind2).pnt(k) == vind) {
-						x.gbl->i2wk(++ind) = tind2; // connected tri found
-						x.gbl->i1wk(tind2) = 0;
+						x.tet_gbl->i2wk(++ind) = tind2; // connected tri found
+						x.tet_gbl->i1wk(tind2) = 0;
 						goto NEXTSIDE;                            
 					}
 				}
@@ -43,7 +43,7 @@ void face_bdry::vertexcircle(int vind) {
 	}
 	
 	for(i = 0; i < nbor; ++i) {    
-		x.gbl->i1wk(x.gbl->i2wk(i))=-1; // reset i1wk to -1
+		x.tet_gbl->i1wk(x.tet_gbl->i2wk(i))=-1; // reset i1wk to -1
 	}
 	return;
 }

@@ -231,20 +231,20 @@ void edge_bdry::setup_next_prev() {
 		sind = seg(i).gindx;
 		seg(i).prev = -1;
 		seg(i).next = -1;
-		x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
-		x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
+		x.tet_gbl->i1wk(x.seg(sind).pnt(0)) = -1;
+		x.tet_gbl->i1wk(x.seg(sind).pnt(1)) = -1;
 	}
 	
 	/* FILL IN NEXT/PREV DATA */
 	for(i=0; i < nseg; ++i) {
 		sind = seg(i).gindx;
 		int v0 = x.seg(sind).pnt(0);
-		if (x.gbl->i1wk(v0) == -1) {
-			x.gbl->i1wk(v0) = i;
+		if (x.tet_gbl->i1wk(v0) == -1) {
+			x.tet_gbl->i1wk(v0) = i;
 		}
 		else {
 			/* found match */
-			prev = x.gbl->i1wk(v0);
+			prev = x.tet_gbl->i1wk(v0);
 			seg(i).prev = prev;
 			sind2 = seg(prev).gindx;
 			if (x.seg(sind2).pnt(0) == v0)
@@ -254,12 +254,12 @@ void edge_bdry::setup_next_prev() {
 		}
 
 		int v1 = x.seg(sind).pnt(1);
-		if (x.gbl->i1wk(v1) == -1) {
-		   x.gbl->i1wk(v1) = i;
+		if (x.tet_gbl->i1wk(v1) == -1) {
+		   x.tet_gbl->i1wk(v1) = i;
 		}
 		else {
 			/* found match */
-			next = x.gbl->i1wk(v1);
+			next = x.tet_gbl->i1wk(v1);
 			seg(i).next = next;
 			sind2 = seg(next).gindx;
 			if (x.seg(sind2).pnt(1) == v1)
@@ -269,11 +269,11 @@ void edge_bdry::setup_next_prev() {
 		}
 	 }
 	 
-	 /* RESET gbl->i1wk TO -1 */
+	 /* RESET tet_gbl->i1wk TO -1 */
 	for(i=0; i <nseg; ++i) {
 		sind = seg(i).gindx;
-		x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
-		x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
+		x.tet_gbl->i1wk(x.seg(sind).pnt(1)) = -1;
+		x.tet_gbl->i1wk(x.seg(sind).pnt(0)) = -1;
 	}
 	
 	return;
@@ -281,7 +281,7 @@ void edge_bdry::setup_next_prev() {
 
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL & REORIENTS EDGES TO ALL BE ALIGNED IN THE SAME DIRECTION */
-/* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
+/* USES tet_gbl->i1wk & tet_gbl->i2wk AS WORK ARRAYS */
 void edge_bdry::reorder() {
 	int i,count,next,sind,first,completed=0;
 	bool loop = false;

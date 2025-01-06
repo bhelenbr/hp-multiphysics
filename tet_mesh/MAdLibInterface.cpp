@@ -25,7 +25,7 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 	fnmapp = filename + ".msh";
 
 	pGModel MAdModel = NULL;
-	GM_create(&MAdModel,"theModel");
+	GM_create(&MAdModel);
 	GM_readFromMSH(MAdModel, fnmapp.c_str());
 	pMesh MAdMesh = M_new(MAdModel);
 	M_load(MAdMesh,fnmapp.c_str());
@@ -103,34 +103,27 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 			}
 		}
 		else {
-			int Ntotal = M_numGeomFeatures(MAdMesh);
+            
+            // GEntity2Physical gentity2phys(MAdMesh->getGeoFeatures());
+            
 			nvbd = 0;
 			nebd = 0;
 			nfbd = 0;
-			for (int i=0;i<Ntotal;) {
-				int thisID = M_geomFeatureId(MAdMesh,i);
-				pPGList list = M_geomFeature(MAdMesh, thisID);
-				void * tmp = NULL;
-				pGEntity pge;
-				while ( ( pge = PGList_next(list,&tmp) ) ) {
-	// 			std::vector<pGEntity>::iterator it = list->entities.begin();
-	// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-					int gDim = GEN_type(pge);
-	// 			int gDim = GEN_type(*it);						
-					switch (gDim) {
-						case(0):
-							++nvbd;
-							break;
-						case(1):
-							++nebd;
-							break;
-						case(2):
-							++nfbd;
-							break;
-					}
-					++i;
-				}
-				PGList_delete(list);
+            for(std::multimap<int,pGEntity>::iterator it=MAdMesh->getGeoFeatures().begin(); it!=MAdMesh->getGeoFeatures().end(); it++) {
+                int thisID = it->first;
+                pGEntity pge = it->second;
+                int gDim = GEN_type(pge);
+                switch (gDim) {
+                    case(0):
+                        ++nvbd;
+                        break;
+                    case(1):
+                        ++nebd;
+                        break;
+                    case(2):
+                        ++nfbd;
+                        break;
+                }
 			}
 			
 			vbdry.resize(nvbd);
@@ -140,36 +133,28 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 			nvbd = 0;
 			nebd = 0;
 			nfbd = 0;
-			for (int i=0;i<Ntotal;) {
-				int thisID = M_geomFeatureId(MAdMesh,i);
-				pPGList list = M_geomFeature(MAdMesh, thisID);
-				void * tmp = NULL;
-				pGEntity pge;
-				while ( ( pge = PGList_next(list,&tmp) ) ) {
-	// 			std::vector<pGEntity>::iterator it = list->entities.begin();
-	// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-					int gDim = GEN_type(pge);
-					int gId = GEN_tag(pge);			
-					switch (gDim) {
-						case(0):
-							vbdry(nvbd) = getnewvrtxobject(gId,input);
-							vbdry(nvbd)->alloc(4);
-							++nvbd;
-							break;
-						case(1):
-							ebdry(nebd) = getnewedgeobject(gId,input);
-							ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pge));
-							++nebd;
-							break;
-						case(2):
-							fbdry(nfbd) = getnewfaceobject(gId,input);
-							fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pge));
-							++nfbd;
-							break;
-					}
-					++i;
-				}
-				PGList_delete(list);
+            for(std::multimap<int,pGEntity>::iterator it=MAdMesh->getGeoFeatures().begin(); it!=MAdMesh->getGeoFeatures().end(); it++) {
+                int thisID = it->first;
+                pGEntity pge = it->second;
+                int gDim = GEN_type(pge);
+                int gId = GEN_tag(pge);
+                switch (gDim) {
+                    case(0):
+                        vbdry(nvbd) = getnewvrtxobject(gId,input);
+                        vbdry(nvbd)->alloc(4);
+                        ++nvbd;
+                        break;
+                    case(1):
+                        ebdry(nebd) = getnewedgeobject(gId,input);
+                        ebdry(nebd)->alloc(grwfac*10*M_numClassifiedEdges(MAdMesh,pge));
+                        ++nebd;
+                        break;
+                    case(2):
+                        fbdry(nfbd) = getnewfaceobject(gId,input);
+                        fbdry(nfbd)->alloc(grwfac*10*M_numClassifiedFaces(MAdMesh,pge));
+                        ++nfbd;
+                        break;
+                }
 			}
 		}
 	}
@@ -182,7 +167,7 @@ void tet_mesh::MAdLib_output(const std::string filename) const {
 	fnmapp = filename + ".msh";
 	
 	pGModel MAdModel = NULL;
-	GM_create(&MAdModel,"theModel");
+	GM_create(&MAdModel);
 	MAdLibInterface::exportToMAdModel(this, MAdModel);
 	
 	// 1.C. Build the MadLib mesh and delete the solver mesh.
@@ -213,7 +198,7 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	// 1.B. Build the MAdLib geometrical model.
 	//			(see note in MAdLibInterface.h about models)
 	pGModel MAdModel = NULL;
-	GM_create(&MAdModel,"theModel");
+	GM_create(&MAdModel);
 	exportToMAdModel(mesh, MAdModel);
 
 	// 1.C. Build the MadLib mesh and delete the solver mesh.
@@ -234,7 +219,7 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	sizeField->scale(factor);
 	
 	// 1.E. Build the adaptation tool
-	MeshAdapter * adapter = new MeshAdapter(MAdMesh,sizeField);
+	CMeshAdapter * adapter = new CMeshAdapter(MAdMesh,sizeField);
 	adapter->clearConstraints();
 	adapter->setMaxIterationsNumber(10);
 
@@ -294,7 +279,7 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // Converts a MAdLib mesh into a 'Solver_mesh'
-void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh) {
+void MAdLibInterface::importFromMAdMesh(const pMesh MAdMesh, tet_mesh* mesh) {
 	std::map<int,int> MAdToSolverIds;
 	std::map<int,int> SolverToMAdIds;
 
@@ -439,7 +424,7 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 
 
 		// add the element to the solver mesh
-		mesh->gbl->fltwk(mesh->ntet) = gId+EPSILON;
+		mesh->tet_gbl->fltwk(mesh->ntet) = gId+EPSILON;
 		mesh->tet(mesh->ntet++).pnt = nodes;
 	}
 	RIter_delete(rit);
@@ -496,51 +481,51 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 
 //-----------------------------------------------------------------------------
 // Converts a 'tet_mesh' into a MAdLib mesh
-void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) {
+void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, pMesh MAdMesh) {
 	
 	// --- Build the vertices ---
 	int nVerts = mesh->npnt;
 	for (int i=0; i < nVerts; ++i) {
-		MAdMesh->add_point(i,mesh->pnts(i)(0),mesh->pnts(i)(1),mesh->pnts(i)(2));
+		MAdMesh->addVertex(i,mesh->pnts(i)(0),mesh->pnts(i)(1),mesh->pnts(i)(2));
 	}
 	
 	for (int i=0;i<mesh->nvbd;++i) {
 		int idnum = mesh->vbdry(i)->idnum;
-		pGVertex geom = GM_vertexByTag(MAdMesh->model,idnum);
-		pVertex pv = MAdMesh->find_point(mesh->vbdry(i)->pnt);
+		pGVertex geom = GM_vertexByTag(MAdMesh->getModel(),idnum);
+		pVertex pv = MAdMesh->findVertex(mesh->vbdry(i)->pnt);
 		V_setWhatIn(pv, geom);
 	}
 	
 	// --- Build the edges
 	for (int i=0;i<mesh->nseg;++i)
-		MAdMesh->add_edge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
+        MAdMesh->addEdge(mesh->seg(i).pnt(0), mesh->seg(i).pnt(1));
 		
 	for (int i=0;i<mesh->nebd;++i) {
 		int idnum = mesh->ebdry(i)->idnum;
-		pGEdge geom = GM_edgeByTag(MAdMesh->model,idnum);
+		pGEdge geom = GM_edgeByTag(MAdMesh->getModel(),idnum);
 		for (int j=0;j<mesh->ebdry(i)->nseg;++j) {
 			int gindx = mesh->ebdry(i)->seg(j).gindx;
-			MAdMesh->add_edge(mesh->seg(gindx).pnt(0), mesh->seg(gindx).pnt(1),geom);
+            MAdMesh->addEdge(mesh->seg(gindx).pnt(0), mesh->seg(gindx).pnt(1),geom);
 		}
 	}	
 	
 	// --- Build the faces ---
 	for (int i=0;i<mesh->ntri;++i)
-		MAdMesh->add_triangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
+        MAdMesh->addTriangle(mesh->tri(i).pnt(0), mesh->tri(i).pnt(1),mesh->tri(i).pnt(2));
 	
 	for (int i=0;i<mesh->nfbd;++i) {
 		int idnum = mesh->fbdry(i)->idnum;
-		pGFace geom = GM_faceByTag(MAdMesh->model,idnum);
+		pGFace geom = GM_faceByTag(MAdMesh->getModel(),idnum);
 		for (int j=0;j<mesh->fbdry(i)->ntri;++j) {
 			int gindx = mesh->fbdry(i)->tri(j).gindx;
-			MAdMesh->add_triangle(mesh->tri(gindx).pnt(0), mesh->tri(gindx).pnt(1),mesh->tri(gindx).pnt(2),geom);
+            MAdMesh->addTriangle(mesh->tri(gindx).pnt(0), mesh->tri(gindx).pnt(1),mesh->tri(gindx).pnt(2),geom);
 		}
 	}
 
 	// --- Build the elements ---
-	pGRegion geom = GM_regionByTag(MAdMesh->model,mesh->gbl->idnum);
+	pGRegion geom = GM_regionByTag(MAdMesh->getModel(),mesh->gbl->idnum);
 	for (int i=0; i < mesh->ntet; ++i) {
-		MAdMesh->add_tet(mesh->tet(i).pnt(0), mesh->tet(i).pnt(1),
+        MAdMesh->addTet(mesh->tet(i).pnt(0), mesh->tet(i).pnt(1),
 										mesh->tet(i).pnt(2), mesh->tet(i).pnt(3),
 										(pGEntity)geom); 
 	}
@@ -551,7 +536,7 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 
 //-----------------------------------------------------------------------------
 // Create in MAdModel all geometrical entities listed in solverModel.
-void MAdLibInterface::exportToMAdModel(const tet_mesh *mesh, MAd::pGModel MAdModel) {	
+void MAdLibInterface::exportToMAdModel(const tet_mesh *mesh, pGModel MAdModel) {	
 	for (int i=0;i<mesh->nvbd;++i)
 		GM_entityByTag(MAdModel,0,mesh->vbdry(i)->idnum);
 

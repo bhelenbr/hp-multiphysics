@@ -48,7 +48,6 @@ hp_vrtx_bdry* tet_hp::getnewvrtxobject(int bnum, std::string name) {
 			temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
 		}
 	}
-	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
 	return(temp);
 }
 
@@ -85,7 +84,6 @@ hp_edge_bdry* tet_hp::getnewedgeobject(int bnum, std::string name) {
 			temp = new hp_edge_bdry(*this,*ebdry(bnum));
 		}
 	}
-	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 	
 	return(temp);
 }
@@ -124,7 +122,6 @@ hp_face_bdry* tet_hp::getnewfaceobject(int bnum, std::string name) {
 			temp = new hp_face_bdry(*this,*fbdry(bnum));
 		}
 	}
-	gbl->fbdry_gbls(bnum) = temp->create_global_structure();
 	
 	return(temp);
 }

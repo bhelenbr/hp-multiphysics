@@ -137,8 +137,8 @@
 //        vmin = 0.0;
 //        vmax = 0.0;
 //        for(vct=0;vct<3;++vct) {
-//            vmin = MIN(vmin,gbl->fltwk(tri(i).pnt(vct)));
-//            vmax = MAX(vmax,gbl->fltwk(tri(i).pnt(vct)));
+//            vmin = MIN(vmin,tet_gbl->fltwk(tri(i).pnt(vct)));
+//            vmax = MAX(vmax,tet_gbl->fltwk(tri(i).pnt(vct)));
 //        }
 //        if (vmax > fabs(vmin)) 
 //            tri(i).info = 0;
@@ -188,8 +188,8 @@
 //                    ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 //                }
 //                jcbi = 1./(ldcrd(0,0)*ldcrd(1,1) -ldcrd(0,1)*ldcrd(1,0));
-//                dphi(0) = 0.5*(gbl->fltwk(v(2)) -gbl->fltwk(v(1)));
-//                dphi(1) = 0.5*(gbl->fltwk(v(0)) -gbl->fltwk(v(1)));
+//                dphi(0) = 0.5*(tet_gbl->fltwk(v(2)) -tet_gbl->fltwk(v(1)));
+//                dphi(1) = 0.5*(tet_gbl->fltwk(v(0)) -tet_gbl->fltwk(v(1)));
 //
 //                grad(0) =  dphi(0)*ldcrd(1,1) -dphi(1)*ldcrd(1,0);
 //                grad(1) = -dphi(0)*ldcrd(0,1) +dphi(1)*ldcrd(0,0);
@@ -206,7 +206,7 @@
 //                    if (pnt(tri(tindold).pnt(vindold)).info == pind) break;
 //                vindold = tri(tindold).pnt(vindold);
 //                
-//                dnorm = -gbl->fltwk(vindold)/mag;
+//                dnorm = -tet_gbl->fltwk(vindold)/mag;
 //                dx(0) = dnorm*grad(0)/mag;
 //                dx(1) = dnorm*grad(1)/mag;
 //                
@@ -224,7 +224,7 @@
 //void tet_mesh::trim() {
 //    int i,j,n,bsd,tin,tind,nsrch,ntdel;
 //    
-//    /* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
+//    /* ASSUMES tet_gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
 //    
 //    for(i=0;i<ntri;++i)
 //        tri(i).info = 0;
@@ -243,7 +243,7 @@
 //        for(i=ntdel;i<nsrch;++i) {
 //            tin = gbl->intwk(i);
 //            for (n=0;n<3;++n)
-//                if (gbl->fltwk(tri(tin).pnt(n)) < 0.0) goto NEXT;
+//                if (tet_gbl->fltwk(tri(tin).pnt(n)) < 0.0) goto NEXT;
 //                
 //            gbl->intwk(ntdel++) = tin;
 //
@@ -315,18 +315,18 @@ int tet_mesh::smooth_cofa(int niter) {
 		/* SMOOTH POINT DISTRIBUTION X*/
 		for(n=0;n<ND;++n) {
 			for(i=0;i<npnt;++i)
-				gbl->fltwk(i) = 0.0;
+				tet_gbl->fltwk(i) = 0.0;
 	
 			for(i=0;i<nseg;++i) {
 				p0 = seg(i).pnt(0);
 				p1 = seg(i).pnt(1);
-				gbl->fltwk(p0) += pnts(p1)(n);
-				gbl->fltwk(p1) += pnts(p0)(n);
+				tet_gbl->fltwk(p0) += pnts(p1)(n);
+				tet_gbl->fltwk(p1) += pnts(p0)(n);
 			}
 	
 			for(i=0;i<npnt;++i) {
 				if (pnt(i).info == 0) {
-					pnts(i)(n) = gbl->fltwk(i)/pnt(i).nnbor;
+					pnts(i)(n) = tet_gbl->fltwk(i)/pnt(i).nnbor;
 				}
 			}
 		}

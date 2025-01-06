@@ -11,12 +11,12 @@
 #include "../hp_boundary.h"
 
 
-void tet_hp_ins::init(input_map& inmap, void *gin) {
+void tet_hp_ins::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
 		inmap[gbl->idprefix + "_nvariable"] = "4";
@@ -26,20 +26,20 @@ void tet_hp_ins::init(input_map& inmap, void *gin) {
 	
 	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 		
-	gbl->tau.resize(maxvst,NV);
+	hp_ins_gbl->tau.resize(maxvst,NV);
 
-	if (!inmap.get(gbl->idprefix + "_rho",gbl->rho)) inmap.getwdefault("rho",gbl->rho,1.0);
-	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,0.0);
+	if (!inmap.get(gbl->idprefix + "_rho",hp_ins_gbl->rho)) inmap.getwdefault("rho",hp_ins_gbl->rho,1.0);
+	if (!inmap.get(gbl->idprefix + "_mu",hp_ins_gbl->mu)) inmap.getwdefault("mu",hp_ins_gbl->mu,0.0);
 	
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-	gbl->D.resize(NV);
+	hp_ins_gbl->D.resize(NV);
 	if (NV > 4) {
 		for (int n=2;n<NV-1;++n) {
 			stringstream nstr;
 			nstr << n-2;
-			if (!inmap.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n))) 
-				if (!inmap.get("D" +nstr.str(),gbl->D(n)))
-					gbl->D(n) = 0.0;
+			if (!inmap.get(gbl->idprefix + "_D" +nstr.str(),hp_ins_gbl->D(n))) 
+				if (!inmap.get("D" +nstr.str(),hp_ins_gbl->D(n)))
+					hp_ins_gbl->D(n) = 0.0;
 		}
     }
 	
@@ -102,7 +102,7 @@ void tet_hp_ins::calculate_unsteady_sources() {
             for(i=0;i<basis::tet(log2p).gpx;++i) { 
                 for(j=0;j<basis::tet(log2p).gpy;++j) {    
 					for(k=0;k<basis::tet(log2p).gpz;++k) {    
-						cjcb(i)(j)(k) = -gbl->bd(0)*gbl->rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
+						cjcb(i)(j)(k) = -gbl->bd(0)*hp_ins_gbl->rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						for(n=0;n<NV-1;++n)
 							dugdt(log2p,tind,n)(i)(j)(k) = u(n)(i)(j)(k)*cjcb(i)(j)(k);
 						dugdt(log2p,tind,NV-1)(i)(j)(k) = cjcb(i)(j)(k);

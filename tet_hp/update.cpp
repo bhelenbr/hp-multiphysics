@@ -11,20 +11,20 @@ void tet_hp::rsdl(int stage) {
 //    if (mmovement == coupled_deformable && stage == gbl->nstage && log2p == 0) r_tet_mesh::rsdl(); 
 	
 	FLT oneminusbeta = 1.0-gbl->beta(stage);
-	gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-	gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
 
 	if (basis::tet(log2p).em) {
-		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = 0.0;
-		gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) *= oneminusbeta;
+		hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = 0.0;
+		hp_gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) *= oneminusbeta;
 		
 		if (basis::tet(log2p).fm) {
-			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = 0.0;
-			gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) *= oneminusbeta;
+			hp_gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = 0.0;
+			hp_gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) *= oneminusbeta;
 			
 			if (basis::tet(log2p).im) {
-				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = 0.0;
-				gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) *= oneminusbeta;
+				hp_gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = 0.0;
+				hp_gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) *= oneminusbeta;
 			}
 		}
 	}
@@ -55,25 +55,25 @@ void tet_hp::rsdl(int stage) {
 			for (int n = 0; n < NV; ++n)
 				lf(n)(m) = lf_im(n)(m);
 		
-		lftog(tind,gbl->res);
+		lftog(tind,hp_gbl->res);
 		
 		/* load real local residual into global residual */
 		for (int m = 0; m < basis::tet(log2p).tm; ++m) 
 			for (int n = 0; n < NV; ++n)
 				lf(n)(m) = lf_re(n)(m);
 		
-		lftog(tind,gbl->res_r);
+		lftog(tind,hp_gbl->res_r);
 	}
 	
 	
 	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
-	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) += hp_gbl->res_r.v(Range(0,npnt-1),Range::all());
 	if (basis::tet(log2p).em > 0) {
-		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
+		hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += hp_gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
 		if (basis::tet(log2p).fm > 0) {
-			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
+			hp_gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += hp_gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
 			if (basis::tet(log2p).im > 0) {
-				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
+				hp_gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
 			}
 		}
 	}
@@ -84,7 +84,7 @@ void tet_hp::rsdl(int stage) {
 		for(int i=0;i<npnt;++i) {
 			printf("rsdl v: %d ",i);
 			for (int n=0;n<NV;++n) 
-				printf("%e ",gbl->res.v(i,n));
+				printf("%e ",hp_gbl->res.v(i,n));
 			printf("\n");
 		}
 		
@@ -92,7 +92,7 @@ void tet_hp::rsdl(int stage) {
 			for(int m=0;m<basis::tet(log2p).em;++m) {
 				printf("rsdl s: %d %d ",i,m); 
 				for(int n=0;n<NV;++n)
-					printf("%e ",gbl->res.e(i,m,n));
+					printf("%e ",hp_gbl->res.e(i,m,n));
 				printf("\n");
 			}
 		}
@@ -101,7 +101,7 @@ void tet_hp::rsdl(int stage) {
 			for(int m=0;m<basis::tet(log2p).fm;++m) {
 				printf("rsdl i: %d %d ",i,m);
 				for(int n=0;n<NV;++n) 
-					printf("%e \n",gbl->res.f(i,m,n));
+					printf("%e \n",hp_gbl->res.f(i,m,n));
 				printf("\n");
 			}
 		}
@@ -114,16 +114,16 @@ void tet_hp::rsdl(int stage) {
 	if (coarse_flag) {
 		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
-			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
-			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,npnt-1),Range::all()) -hp_gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*hp_gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
+			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*hp_gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -hp_gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
+			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
 			isfrst = false;
 		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
-		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
-		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
+		hp_gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+		if (basis::tet(log2p).em) hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+		if (basis::tet(log2p).fm) hp_gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
+		if (basis::tet(log2p).im) hp_gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
 	}
 
 	
@@ -184,7 +184,7 @@ void tet_hp::update() {
 	
 	
 	
-	//l2error(gbl->ibc);
+	//l2error(hp_gbl->ibc);
 	
 //#ifdef petsc
 //	petsc_solve();
@@ -206,13 +206,13 @@ void tet_hp::update() {
 //    }
 
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
+	hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
 	if (basis::tet(log2p).em) {
-		gbl->ug0.e(Range(0,nseg-1),Range(0,em0-1),Range::all()) = ug.e(Range(0,nseg-1),Range::all(),Range::all());
+		hp_gbl->ug0.e(Range(0,nseg-1),Range(0,em0-1),Range::all()) = ug.e(Range(0,nseg-1),Range::all(),Range::all());
 		if (basis::tet(log2p).fm) {
-			gbl->ug0.f(Range(0,ntri-1),Range(0,fm0-1),Range::all()) = ug.f(Range(0,ntri-1),Range::all(),Range::all());
+			hp_gbl->ug0.f(Range(0,ntri-1),Range(0,fm0-1),Range::all()) = ug.f(Range(0,ntri-1),Range::all(),Range::all());
 			if (basis::tet(log2p).im) {
-				gbl->ug0.i(Range(0,ntet-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntet-1),Range::all(),Range::all());
+				hp_gbl->ug0.i(Range(0,ntet-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntet-1),Range::all(),Range::all());
 			}
 		}
 	}
@@ -251,7 +251,7 @@ void tet_hp::update() {
 		for(i=0;i<npnt;++i) {
 			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+				if (fabs(hp_gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.v(i,n) << ' ';
 				else *gbl->log << "0.0 ";
 			}
 			*gbl->log << '\n';
@@ -261,7 +261,7 @@ void tet_hp::update() {
 			for(m=0;m<basis::tet(log2p).em;++m) {
 				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.e(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.e(i,m,n) << ' ';
+					if (fabs(hp_gbl->res.e(i,m,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.e(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
 				}
 				*gbl->log << '\n';
@@ -273,7 +273,7 @@ void tet_hp::update() {
 			for(m=0;m<basis::tet(log2p).fm;++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.f(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.f(i,m,n) << ' ';
+					if (fabs(hp_gbl->res.f(i,m,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.f(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
 				}
 				*gbl->log << '\n';
@@ -284,7 +284,7 @@ void tet_hp::update() {
 			for(m=0;m<basis::tet(log2p).im;++m) {
 				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+					if (fabs(hp_gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << hp_gbl->res.i(i,m,n) << ' ';
 					else *gbl->log << "0.0 ";
 				}
 				*gbl->log << '\n';
@@ -345,13 +345,13 @@ void tet_hp::update() {
 		if (!coarse_flag) continue; // TO TEST COARSE GRID CORRECTION ONLY
 #endif
 
-		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
+		cflalpha = gbl->alpha(stage)*hp_gbl->cfl(log2p);
 		
-		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
+		ug.v(Range(0,npnt-1),Range::all()) = hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,npnt-1),Range::all());
 
 		if (basis::tet(log2p).em > 0) {
 			
-			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = hp_gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 
 			if (basis::tet(log2p).fm > 0) {
 
@@ -361,7 +361,7 @@ void tet_hp::update() {
 					for(m=1;m<=basis::tet(log2p).em;++m) {
 						for(k=1;k<=basis::tet(log2p).em-m;++k) {
 							for(n=0;n<NV;++n) {
-								ug.f(i,indx1,n) =  gbl->ug0.f(i,indx1,n) -cflalpha*gbl->res.f(i,indx,n);
+								ug.f(i,indx1,n) =  hp_gbl->ug0.f(i,indx1,n) -cflalpha*hp_gbl->res.f(i,indx,n);
 							}
 							++indx; ++indx1;
 						}
@@ -377,7 +377,7 @@ void tet_hp::update() {
 							for(j=1;j<=basis::tet(log2p).em-m;++j) {
 								for(k=1;k<=basis::tet(log2p).em-m-j;++k) {
 									for(n=0;n<NV;++n) {
-										ug.i(i,indx1,n) =  gbl->ug0.i(i,indx1,n) -cflalpha*gbl->res.i(i,indx,n);
+										ug.i(i,indx1,n) =  hp_gbl->ug0.i(i,indx1,n) -cflalpha*hp_gbl->res.i(i,indx,n);
 									}
 								   ++indx; ++indx1;
 								}

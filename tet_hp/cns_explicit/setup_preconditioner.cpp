@@ -5,7 +5,7 @@
 
 //#define TIMEACCURATE
 
-void tet_hp_cns_explicit::setup_preconditioner() {
+int tet_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int gpx = basis::tet(log2p).gpx;
 	int gpy = basis::tet(log2p).gpy;
@@ -17,18 +17,19 @@ void tet_hp_cns_explicit::setup_preconditioner() {
 	TinyVector<int,4> v;
 	TinyVector<int,3> vtri;
 	TinyVector<double,3> vec1,vec2,vec3;
-
+    int err = 0;
+    
 	Array<double,1> umax(NV),ubar(NV);
 	Array<double,2> tprcn(NV,NV),tau(NV,NV);
 	
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tet(log2p).em > 0) {
-		gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;	
+		hp_gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;	
 		if (basis::tet(log2p).fm > 0) {
-			gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
+			hp_gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
 		}
 	}
 
@@ -80,18 +81,18 @@ void tet_hp_cns_explicit::setup_preconditioner() {
 			*gbl->log << "negative tetrahedral area caught in tstep. Problem tet is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << ' ' << pnts(v(0))(2) << std::endl;
 			tet_mesh::output("negative",grid);
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
+            err = 1;
+        }
 		
 		if  (std::isnan(umax(1)+umax(2)+umax(3))) { 
 			*gbl->log << "flow solution has nan's" << std::endl;
 			output("nan",tecplot);
-			sim::abort(__LINE__,__FILE__,gbl->log);
-		}		
+            err = 1;
+        }
 		//cout << hmin << ' ' << hmax << endl;
 		calculate_preconditioner_tau_timestep(umax,hmin,tprcn,tau,tstep);
 
-		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
+		hp_cns_explicit_gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 			 
 	    jcb /= tstep;
 			 
@@ -113,26 +114,26 @@ void tet_hp_cns_explicit::setup_preconditioner() {
 		jcb = 0.125*tet(tind).vol*dtstari;   /* volume is 8 x tet volume */
 #endif
 		
-		gbl->iprcn(tind,Range::all()) = jcb;
+		hp_gbl->iprcn(tind,Range::all()) = jcb;
 		
 		for(int i=0;i<4;++i) {
 			
-			gbl->vprcn(v(i),Range::all())  += gbl->iprcn(tind,Range::all());
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->iprcn(tind,Range::all());
 			
 			if (basis::tet(log2p).fm > 0) {
-				gbl->fprcn(tet(tind).tri(i),Range::all()) += gbl->iprcn(tind,Range::all());
+				hp_gbl->fprcn(tet(tind).tri(i),Range::all()) += hp_gbl->iprcn(tind,Range::all());
 			}
 		}
 
 		if (basis::tet(log2p).em > 0) {
 			for(int i=0;i<6;++i) {
-				gbl->eprcn(tet(tind).seg(i),Range::all()) += gbl->iprcn(tind,Range::all());
+				hp_gbl->eprcn(tet(tind).seg(i),Range::all()) += hp_gbl->iprcn(tind,Range::all());
 			}
 		}
 
 	}
 	
-	tet_hp::setup_preconditioner();
+	return(err +tet_hp::setup_preconditioner());
 
 }
 
@@ -141,7 +142,7 @@ void tet_hp_cns_explicit::calculate_preconditioner_tau_timestep(Array<double,1> 
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> eigs(NV);
 
-	FLT gam = gbl->gamma;
+	FLT gam = hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
 	
@@ -159,9 +160,9 @@ void tet_hp_cns_explicit::calculate_preconditioner_tau_timestep(Array<double,1> 
 	FLT c2 = gam*gm1*(E-ke);
 	FLT c = sqrt(c2);
 	
-	FLT nu = gbl->mu/rho;
-	FLT cp = gogm1*gbl->R;
-	FLT alpha = gbl->kcond/(rho*cp);
+	FLT nu = hp_cns_explicit_gbl->mu/rho;
+	FLT cp = gogm1*hp_cns_explicit_gbl->R;
+	FLT alpha = hp_cns_explicit_gbl->kcond/(rho*cp);
 	
 	/* Preconditioner */
 	P = 1.0, 0.0, 0.0, 0.0, 0.0,

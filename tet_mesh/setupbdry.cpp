@@ -29,20 +29,20 @@ void face_bdry::create_from_gbl_tri_pnt() {
 	for(int i = 0; i < ntri; ++i) {
 		for(int j = 0; j < 3; ++j) {
 			int v0 = tri(i).pnt(j);
-			if (x.gbl->i1wk(v0) < 0) {
-				x.gbl->i1wk(v0) = npnt;
+			if (x.tet_gbl->i1wk(v0) < 0) {
+				x.tet_gbl->i1wk(v0) = npnt;
 				tri(i).pnt(j) = npnt;
 				pnt(npnt).gindx = v0;
 				++npnt;
 			}
 			else {
-				tri(i).pnt(j) = x.gbl->i1wk(v0);
+				tri(i).pnt(j) = x.tet_gbl->i1wk(v0);
 			}
 		}
 	}
 	
 	for(int i = 0; i < npnt; ++i) {
-		x.gbl->i1wk(pnt(i).gindx) = -1;
+		x.tet_gbl->i1wk(pnt(i).gindx) = -1;
 	}
 	
 	/* Fill in gbl indices of triangles */
@@ -65,7 +65,7 @@ void face_bdry::create_from_gbl_tri_pnt() {
 		for(int j=0;j<3;++j) {
 			assert(x.tri(gtind).pnt(j) == pnt(tri(tind).pnt(j)).gindx);
 			int gsind = x.tri(gtind).seg(j);
-			if (x.gbl->i1wk(gsind) == -1) {
+			if (x.tet_gbl->i1wk(gsind) == -1) {
 				tri(tind).seg(j) = nseg;
 				seg(nseg).gindx = gsind;
 				int sign = tri(tind).sgn(j);
@@ -73,10 +73,10 @@ void face_bdry::create_from_gbl_tri_pnt() {
 				seg(nseg).pnt((1+sign)/2) = v2;
 				seg(nseg).tri((1-sign)/2) = tind;
 				seg(nseg).tri((1+sign)/2) = -1;
-				x.gbl->i1wk(gsind) = nseg++;
+				x.tet_gbl->i1wk(gsind) = nseg++;
 			}
 			else {
-				int sind = x.gbl->i1wk(gsind);
+				int sind = x.tet_gbl->i1wk(gsind);
 				tri(tind).seg(j) = sind;
 				int sign = tri(tind).sgn(j);
 				
@@ -95,7 +95,7 @@ void face_bdry::create_from_gbl_tri_pnt() {
 	}
 	
 	for(int sind=0;sind<nseg;++sind) {
-		x.gbl->i1wk(seg(sind).gindx) = -1;
+		x.tet_gbl->i1wk(seg(sind).gindx) = -1;
 	}
 	create_pntnnbor_tritri_pnttri();
 
@@ -115,7 +115,7 @@ void face_bdry::create_seg_gindx() {
 		x.vertexball(v(0));
 		for(i=0; i < x.pnt(v(0)).nnbor; ++i) {
 			for(j = 0; j < 6; ++j) {
-				eind=x.tet(x.gbl->i2wk(i)).seg(j);        
+				eind=x.tet(x.tet_gbl->i2wk(i)).seg(j);        
 				a(0)=x.seg(eind).pnt(0);    
 				a(1)=x.seg(eind).pnt(1);
 				lcl2=abs(lcl0-a(0)-a(1));
@@ -147,7 +147,7 @@ void face_bdry::create_tri_gindx() {
 		x.vertexball(v(0));
 		for(i = 0; i < x.pnt(v(0)).nnbor; ++i) {
 			for(j = 0; j < 4; ++j) {
-				find=x.tet(x.gbl->i2wk(i)).tri(j);        
+				find=x.tet(x.tet_gbl->i2wk(i)).tri(j);        
 				a(0)=x.tri(find).pnt(0);    
 				a(1)=x.tri(find).pnt(1);
 				a(2)=x.tri(find).pnt(2);
@@ -166,13 +166,13 @@ NEXTTRI:;
 		*x.gbl->log << "Reoreinting face boundary tri to global tri definitions " << idprefix << ' ' << tind << ' ' << find << ' ' << v(0) << ' ' << v(1) << ' ' << v(2) << ' ' << a(0) << ' ' << a(1) << ' ' << a(2) << std::endl;
 		
 		for(int j=0;j<3;++j)
-			x.gbl->i1wk(v(j)) = tri(tind).pnt(j);
+			x.tet_gbl->i1wk(v(j)) = tri(tind).pnt(j);
 		
 		for(int j=0;j<3;++j)
-			tri(tind).pnt(j) = x.gbl->i1wk(a(j));
+			tri(tind).pnt(j) = x.tet_gbl->i1wk(a(j));
 		
 		for(int j=0;j<3;++j)
-			x.gbl->i1wk(v(j)) = -1;
+			x.tet_gbl->i1wk(v(j)) = -1;
 	}
 	
 	return;
@@ -184,39 +184,39 @@ void face_bdry::create_from_gindx() {
 	
 	/* fill in pnt data */
 	for(int i = 0; i < npnt; ++i) {
-		x.gbl->i1wk(pnt(i).gindx)=i;
+		x.tet_gbl->i1wk(pnt(i).gindx)=i;
 	}
 	
 	for(int i = 0; i < nseg; ++i) {
 		ind = seg(i).gindx;
-		seg(i).pnt(0)=x.gbl->i1wk(x.seg(ind).pnt(0));
-		seg(i).pnt(1)=x.gbl->i1wk(x.seg(ind).pnt(1));
+		seg(i).pnt(0)=x.tet_gbl->i1wk(x.seg(ind).pnt(0));
+		seg(i).pnt(1)=x.tet_gbl->i1wk(x.seg(ind).pnt(1));
 		seg(i).tri = -1;
 	}
 	
 	for(int i = 0; i < ntri; ++i) {
 		ind = tri(i).gindx;
-		tri(i).pnt(0)=x.gbl->i1wk(x.tri(ind).pnt(0));
-		tri(i).pnt(1)=x.gbl->i1wk(x.tri(ind).pnt(1));
-		tri(i).pnt(2)=x.gbl->i1wk(x.tri(ind).pnt(2));
+		tri(i).pnt(0)=x.tet_gbl->i1wk(x.tri(ind).pnt(0));
+		tri(i).pnt(1)=x.tet_gbl->i1wk(x.tri(ind).pnt(1));
+		tri(i).pnt(2)=x.tet_gbl->i1wk(x.tri(ind).pnt(2));
 	}
 	
 	/* Reset i1wk */
 	for(int i = 0; i < npnt; ++i) {
-		x.gbl->i1wk(pnt(i).gindx) = -1;
+		x.tet_gbl->i1wk(pnt(i).gindx) = -1;
 	}
 
 	
 	/* Fill in tri.seg and seg.tri data */
 	for(int i = 0; i < nseg; ++i) {
-		x.gbl->i1wk(seg(i).gindx)=i;
+		x.tet_gbl->i1wk(seg(i).gindx)=i;
 	}
 	
 	for(int i = 0; i < ntri; ++i) {
 		int tind = tri(i).gindx;
 		tri(i).sgn = x.tri(tind).sgn;
 		for (int j=0;j<3;++j) {
-			int sind = x.gbl->i1wk(x.tri(tind).seg(j));
+			int sind = x.tet_gbl->i1wk(x.tri(tind).seg(j));
 			tri(i).seg(j)=sind;
 			int sign = tri(i).sgn(j);
 			if (seg(sind).tri((1-sign)/2) == -1)
@@ -228,7 +228,7 @@ void face_bdry::create_from_gindx() {
 		}
 	}
 	for(int i = 0; i < nseg; ++i) {
-		x.gbl->i1wk(seg(i).gindx) = -1;
+		x.tet_gbl->i1wk(seg(i).gindx) = -1;
 	}
 
 	create_pntnnbor_tritri_pnttri();

@@ -5,22 +5,23 @@
 //#define TIMEACCURATE
 #define NEWWAY
 
-void tet_hp_cd_multi::setup_preconditioner() {
+int tet_hp_cd_multi::setup_preconditioner() {
 	int tind,find,i,j,side,p0,p1,p2,v0;
 	FLT jcb,a,h,amax,lam1,q,qmax,dtcheck;
 	FLT dx1,dy1,dx2,dy2,dz1,dz2,cpi,cpj,cpk;
 	TinyVector<int,4> v;
-	
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-	gbl->vprcn(Range::all(),Range::all())=0.0;
+	hp_gbl->vprcn(Range::all(),Range::all())=0.0;
 	if (basis::tet(log2p).em > 0) {
-		gbl->eprcn(Range::all(),Range::all())=0.0;
+		hp_gbl->eprcn(Range::all(),Range::all())=0.0;
 		if (basis::tet(log2p).fm > 0) {
-			gbl->fprcn(Range::all(),Range::all())=0.0;
+			hp_gbl->fprcn(Range::all(),Range::all())=0.0;
 			if (basis::tet(log2p).im > 0) {
-				gbl->iprcn(Range::all(),Range::all())=0.0;
+				hp_gbl->iprcn(Range::all(),Range::all())=0.0;
 			}
 		}
 	}
@@ -33,8 +34,8 @@ void tet_hp_cd_multi::setup_preconditioner() {
 	dtcheck = 0.0;
 	for(tind = 0; tind < ntet; ++tind) {
 		
-		const FLT rhocv = gbl->rhocv(marks(tind));
-		const FLT kcond = gbl->kcond(marks(tind));
+		const FLT rhocv = hp_cd_multi_gbl->rhocv(marks(tind));
+		const FLT kcond = hp_cd_multi_gbl->kcond(marks(tind));
 		const FLT alpha = kcond/rhocv;
 
 		jcb = 0.125*tet(tind).vol;
@@ -107,9 +108,9 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		qmax = 0.0;
 		for(j=0;j<4;++j) {
 			v0 = v(j);
-			q = pow(gbl->ax -(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-				+pow(gbl->ay -(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)
-				+pow(gbl->az -(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
+			q = pow(hp_cd_gbl->ax -(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+				+pow(hp_cd_gbl->ay -(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)
+				+pow(hp_cd_gbl->az -(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
 			qmax = MAX(qmax,q);
 		}
 		q = sqrt(qmax);
@@ -117,7 +118,7 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		lam1  = (q +1.5*alpha/h +h*gbl->bd(0));
 
         /* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind)  = adis*h/(jcb*lam1);
+		hp_gbl->tau(tind)  = adis*h/(jcb*lam1);
 		
 		jcb *= rhocv*lam1/h;
 
@@ -138,29 +139,27 @@ void tet_hp_cd_multi::setup_preconditioner() {
 		//jcb = 0.125*tet(tind).vol*12000.0;
 #endif
 		
-		gbl->iprcn(tind,0) = jcb; 
+		hp_gbl->iprcn(tind,0) = jcb; 
 			
 		for(i=0;i<4;++i) 
-			gbl->vprcn(v(i),0) += gbl->iprcn(tind,0);
+			hp_gbl->vprcn(v(i),0) += hp_gbl->iprcn(tind,0);
 			
 		if (basis::tet(log2p).em > 0) {
 			for(i=0;i<6;++i){
 				side = tet(tind).seg(i);
-				gbl->eprcn(side,0) += gbl->iprcn(tind,0);
+				hp_gbl->eprcn(side,0) += hp_gbl->iprcn(tind,0);
 			}
 		
 			if (basis::tet(log2p).fm > 0) {
 				for(i=0;i<4;++i){
-					gbl->fprcn(tet(tind).tri(i),0) += gbl->iprcn(tind,0);
+					hp_gbl->fprcn(tet(tind).tri(i),0) += hp_gbl->iprcn(tind,0);
 				}
 			}
 		}	
 
 	}
-	 
-	tet_hp::setup_preconditioner();
 	
-	return; 
+    return(err +tet_hp::setup_preconditioner());
 }
 
 void tet_hp_cd_multi::connect(multigrid_interface& in) {

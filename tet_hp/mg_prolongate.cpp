@@ -36,21 +36,21 @@ void tet_hp::mg_prolongate() {
 	for(i=0;i<fnvrtx;++i) {
 		tind = fmesh->ccnnct(i).tet;
 
-		gbl->res.v(i,Range::all()) = 0.0;
+		hp_gbl->res.v(i,Range::all()) = 0.0;
 		
 		for(j=0;j<4;++j) {
 			ind = tet(tind).pnt(j);
-			gbl->res.v(i,Range::all()) -= fmesh->ccnnct(i).wt(j)*vug_frst(ind,Range::all());
+			hp_gbl->res.v(i,Range::all()) -= fmesh->ccnnct(i).wt(j)*vug_frst(ind,Range::all());
 		}
 	}
 	
 #ifdef DEBUG
-	*gbl->log << gbl->res.v(Range(0,fnvrtx-1),Range::all());
+	*gbl->log << hp_gbl->res.v(Range(0,fnvrtx-1),Range::all());
 #endif
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		for(i=0;i<nfbd;++i)
-			fmesh->fbdry(i)->ploadbuff(boundary::partitions,(FLT *) gbl->res.v.data(),0,NV-1,NV);
+			fmesh->fbdry(i)->ploadbuff(boundary::partitions,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
 
 		for(i=0;i<nfbd;++i) 
 			fmesh->fbdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
@@ -61,12 +61,12 @@ void tet_hp::mg_prolongate() {
 		last_phase = true;
 		for(i=0;i<nfbd;++i) {
 			last_phase &= fmesh->fbdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-			fmesh->fbdry(i)->pfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::average,(FLT *) gbl->res.v.data(),0,NV-1,NV);
+			fmesh->fbdry(i)->pfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::average,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
 		}
 	}
 
 	/* ADD CORRECTION */
-	fmesh->ug.v(Range(0,fnvrtx-1),Range::all()) += gbl->res.v(Range(0,fnvrtx-1),Range::all());      
+	fmesh->ug.v(Range(0,fnvrtx-1),Range::all()) += hp_gbl->res.v(Range(0,fnvrtx-1),Range::all());      
 
 	return;
 }

@@ -9,12 +9,12 @@
 
 #include "tet_hp_cd.h"
 
-void tet_hp_cd::init(input_map& inmap, void *gin) {
+void tet_hp_cd::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	keyword = gbl->idprefix + "_nvariable";
 	inmap[keyword] = "1";
 	
@@ -30,26 +30,26 @@ void tet_hp_cd::init(input_map& inmap, void *gin) {
 	FLT cv;
 	keyword = gbl->idprefix + "_cv";
 	if (!inmap.get(keyword,cv)) inmap.getwdefault("cv",cv,1.0);
-	gbl->rhocv = rho*cv;
+	hp_cd_gbl->rhocv = rho*cv;
 	
 	keyword = gbl->idprefix + "_ax";
-	if (!inmap.get(keyword,gbl->ax)) inmap.getwdefault("ax",gbl->ax,1.0);
+	if (!inmap.get(keyword,hp_cd_gbl->ax)) inmap.getwdefault("ax",hp_cd_gbl->ax,1.0);
 
 	keyword = gbl->idprefix + "_ay";
-	if (!inmap.get(keyword,gbl->ay)) inmap.getwdefault("ay",gbl->ay,0.0);
+	if (!inmap.get(keyword,hp_cd_gbl->ay)) inmap.getwdefault("ay",hp_cd_gbl->ay,0.0);
 	
 	keyword = gbl->idprefix + "_az";
-	if (!inmap.get(keyword,gbl->ay)) inmap.getwdefault("az",gbl->az,0.0);
+	if (!inmap.get(keyword,hp_cd_gbl->ay)) inmap.getwdefault("az",hp_cd_gbl->az,0.0);
 
-	if (!inmap.get(gbl->idprefix + "_nu",gbl->kcond)) {
-		if (!inmap.get("nu",gbl->kcond)) {
-			if (!inmap.get(gbl->idprefix + "_conductivity",gbl->kcond)) {
-				inmap.getwdefault("conductivity",gbl->kcond,0.0);
+	if (!inmap.get(gbl->idprefix + "_nu",hp_cd_gbl->kcond)) {
+		if (!inmap.get("nu",hp_cd_gbl->kcond)) {
+			if (!inmap.get(gbl->idprefix + "_conductivity",hp_cd_gbl->kcond)) {
+				inmap.getwdefault("conductivity",hp_cd_gbl->kcond,0.0);
 			}
 		}
 	}
 	
-	gbl->tau.resize(maxvst);
+	hp_cd_gbl->tau.resize(maxvst);
 	
 	keyword = gbl->idprefix + "_src";
 	std::string ibcname;
@@ -59,8 +59,8 @@ void tet_hp_cd::init(input_map& inmap, void *gin) {
 			*gbl->log << "couldn't find cd src" << std::endl;
 		}
 	}
-	gbl->src = getnewibc(ibcname);
-	gbl->src->init(inmap,keyword);
+	hp_cd_gbl->src = getnewibc(ibcname);
+	hp_cd_gbl->src->init(inmap,keyword);
 	
 	return;
 }
@@ -123,7 +123,7 @@ void tet_hp_cd::calculate_unsteady_sources() {
 					for(k=0;k<lgpz;++k) {
 						cjcb(i)(j)(k) = -gbl->bd(0)*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						
-						dugdt(log2p,tind,0)(i)(j)(k) = gbl->rhocv*u(0)(i)(j)(k)*cjcb(i)(j)(k);
+						dugdt(log2p,tind,0)(i)(j)(k) = hp_cd_gbl->rhocv*u(0)(i)(j)(k)*cjcb(i)(j)(k);
 						for(n=0;n<ND;++n)
 							dxdt(log2p,tind,n)(i)(j)(k) = crd(n)(i)(j)(k);
 					}

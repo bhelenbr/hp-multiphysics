@@ -137,14 +137,17 @@ class tet_mesh : public multigrid_interface {
 		Array<tstruct,1> tet; /**< Array of tetrahedral data */
 		//@}
 		
+        shared_ptr<block_global> gbl;
+
 		/** /struct For information shared between meshes not used simultaneously (multigrid levels) */
-		struct global : public block_global {            
+		struct tet_global {
 			Array<int,1> i1wk; /**< Integer work array, any routine that uses i1wk should reset it to -1 */
 			Array<FLT,1> fltwk; /**< Floating point work array */
 			int nlst; /**< variable to keep track of number of entities in list */
 			Array<int,1> i2wk,i2wk_lst1, i2wk_lst2, i2wk_lst3; /**< Arrays for storing lists */
 			int maxsrch; /**< integer describing maximum number of triangles to search before giving up */
-		} *gbl;
+        };
+        shared_ptr<tet_global> tet_gbl;
 
 		bool initialized;
 
@@ -153,10 +156,8 @@ class tet_mesh : public multigrid_interface {
 		/**************/
 		/* INITIALIZATION & ALLOCATION */
 		tet_mesh() : nvbd(0), nebd(0), nfbd(0), gbl(0), initialized(0)  {}
-		/** Routine to allocate shared variables */
-		void* create_global_structure() {return new global;}
 		/** Routine to initialize with using information in map and shared resource in gbl_in */
-		void init(input_map& input, void *gbl_in);
+		void init(input_map& input, shared_ptr<block_global> gin);
 		/** Routine to initialze from another mesh with option of increasing or decreasing storage (compatible with block.h) */
 		void init(const multigrid_interface& mgin, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		/** Routine to copy */

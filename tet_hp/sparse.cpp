@@ -195,7 +195,7 @@ void tet_hp::find_sparse_bandwidth(){
 	
 
 #ifdef petsc
-	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
+	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,0,bw.data(),&petsc_J);  // FIXME?? IS THIS CORRECT?
 	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
 #else
 	sparse_ptr(0)=0;
@@ -245,7 +245,7 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 //	return;
 	
 	
-	MatZeroRows(petsc_J,1,&row,1.0,PETSC_NULL,PETSC_NULL);
+	MatZeroRows(petsc_J,1,&row,1.0,PETSC_NULLPTR,PETSC_NULLPTR);
 
 	
 	return;
@@ -717,7 +717,7 @@ void tet_hp::vec_to_ug(){
 	
 	for(int i = 0; i < npnt; ++i){
 		for(int n = 0; n < NV; ++n){
-			gbl->res.v(i,n) = res_vec(ind);
+			hp_gbl->res.v(i,n) = res_vec(ind);
 			ug.v(i,n) = ug_vec(ind++);
 		}
 	}
@@ -727,7 +727,7 @@ void tet_hp::vec_to_ug(){
 	for(int i = 0; i < nseg; ++i){
 		for(int m = 0; m < basis::tet(log2p).em; ++m){
 			for(int n = 0; n < NV; ++n){
-				gbl->res.e(i,m,n) = res_vec(ind);
+				hp_gbl->res.e(i,m,n) = res_vec(ind);
 				ug.e(i,m,n) = ug_vec(ind++);
 			}
 		}
@@ -737,7 +737,7 @@ void tet_hp::vec_to_ug(){
 	for(int i = 0; i < ntri; ++i){
 		for(int m = 0; m < basis::tet(log2p).fm; ++m){
 			for(int n = 0; n < NV; ++n){
-				gbl->res.f(i,m,n) = res_vec(ind);
+				hp_gbl->res.f(i,m,n) = res_vec(ind);
 				ug.f(i,m,n) = ug_vec(ind++);		
 			}
 		}
@@ -748,7 +748,7 @@ void tet_hp::vec_to_ug(){
 	for(int i = 0; i < ntet; ++i){
 		for(int m = 0; m < basis::tet(log2p).im; ++m){
 			for(int n = 0; n < NV; ++n){
-				gbl->res.i(i,m,n) = res_vec(ind);
+				hp_gbl->res.i(i,m,n) = res_vec(ind);
 				ug.i(i,m,n) = ug_vec(ind++);	
 			}
 		}

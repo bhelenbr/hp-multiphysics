@@ -112,10 +112,10 @@ void tet_hp_cns::length() {
 					/* INVISCID PARTS TO ERROR MEASURE */
 					bernoulli = gbl->rho*(u(0)(i)(j)(k)*u(0)(i)(j)(k) +u(1)(i)(j)(k)*u(1)(i)(j)(k)+u(2)(i)(j)(k)*u(2)(i)(j)(k)) +u(NV-1)(i)(j)(k);	
 					/* VISCOUS PART TO ERROR MEASURE */
-					bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dudz)+fabs(dvdx)+fabs(dvdy)+fabs(dvdz)+fabs(dwdx)+fabs(dwdy)+fabs(dwdz))/jcb;
+					bernoulli += hp_cns_gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dudz)+fabs(dvdx)+fabs(dvdy)+fabs(dvdz)+fabs(dwdx)+fabs(dwdy)+fabs(dwdz))/jcb;
 					
 					dbernoulli = gbl->rho*(ul(0)(i)(j)(k)*ul(0)(i)(j)(k) +ul(1)(i)(j)(k)*ul(1)(i)(j)(k)+ul(2)(i)(j)(k)*ul(2)(i)(j)(k)) +ul(NV-1)(i)(j)(k);	
-					dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dudzl)+fabs(dvdxl)+fabs(dvdyl)+fabs(dvdzl)+fabs(dwdxl)+fabs(dwdyl)+fabs(dwdzl))/jcb;
+					dbernoulli += hp_cns_gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dudzl)+fabs(dvdxl)+fabs(dvdyl)+fabs(dvdzl)+fabs(dwdxl)+fabs(dwdyl)+fabs(dwdzl))/jcb;
 					
 					dbernoulli -= bernoulli;
 					
@@ -126,29 +126,29 @@ void tet_hp_cns::length() {
 		}
 		totalerror += error2;
 		denom += pow(error2,1./(1.+alpha));
-		gbl->fltwk(tind) = error2;
+		tet_gbl->fltwk(tind) = error2;
 	}
 	
 	/* Need to all-reduce norm,totalerror,and totalbernoulli */
-	gbl->eanda(0) = totalbernoulli;
-	gbl->eanda(1) = denom;
-	gbl->eanda(2) = totalerror;
-	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
+	hp_gbl->eanda(0) = totalbernoulli;
+	hp_gbl->eanda(1) = denom;
+	hp_gbl->eanda(2) = totalerror;
+	sim::blks.allreduce(hp_gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
 	
 	/* Determine error target (SEE AEA Paper) */
 	FLT etarget2 = gbl->error_target*gbl->error_target*gbl->eanda_recv(0);
 	*gbl->log << "# Normalized Error " << sqrt(gbl->eanda_recv(2)/gbl->eanda_recv(0)) << " Target " << gbl->error_target << '\n';
 	FLT K = pow(etarget2/denom,1./(ND*alpha));
-	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
-	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	hp_gbl->res.v(0,Range(0,npnt-1)) = 1.0;
+	hp_gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
 	for(int tind=0;tind<ntet;++tind) {
-		FLT error2 = gbl->fltwk(tind)+FLT_EPSILON;
+		FLT error2 = tet_gbl->fltwk(tind)+FLT_EPSILON;
 		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
 		for (int j=0;j<4;++j) {
 			int p0 = tet(tind).pnt(j);
 			/* Calculate average at vertices */
-			gbl->res.v(0,p0) *= ri;
-			gbl->res_r.v(0,p0) += 1.0;
+			hp_gbl->res.v(0,p0) *= ri;
+			hp_gbl->res_r.v(0,p0) += 1.0;
 		}
 	}
 	
@@ -156,7 +156,7 @@ void tet_hp_cns::length() {
 	FLT maxlngth = 50.0;
 	FLT minlngth = 0.0;
 	for (int pind=0;pind<npnt;++pind) {
-		lngth(pind) *= pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
+		lngth(pind) *= pow(hp_gbl->res.v(0,pind),1.0/hp_gbl->res_r.v(0,pind));
 		lngth(pind) = MIN(lngth(pind),maxlngth);
 		lngth(pind) = MAX(lngth(pind),minlngth);
 	}
@@ -209,7 +209,7 @@ void tet_hp_cns::length() {
 //			FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
 //			
 //			// FIXME: end points are wrong for periodic boundary or communication boundary
-//			FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
+//			FLT sum = hp_gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
 //			lngth(v1) /= 1. +sum;
 //			lngth(v2) /= 1. +sum;
 //		}

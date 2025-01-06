@@ -16,10 +16,10 @@ void tet_hp::mg_restrict() {
 		--log2p;
 		
 		/* TRANSFER IS ON FINE MESH */
-		gbl->res0.v(Range(0,npnt-1),Range::all()) = gbl->res.v(Range(0,npnt-1),Range::all());
+		hp_gbl->res0.v(Range(0,npnt-1),Range::all()) = hp_gbl->res.v(Range(0,npnt-1),Range::all());
 
 		if (basis::tet(log2p).p > 1) {
-			gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+			hp_gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 
 			if (basis::tet(log2p).p > 2) {
 			
@@ -28,7 +28,7 @@ void tet_hp::mg_restrict() {
 					indx1 = 0;
 					for(m=1;m<basis::tet(log2p).em;++m) {
 						for(k=0;k<basis::tet(log2p).em-m;++k) {
-							gbl->res0.f(tind,indx,Range::all()) = gbl->res.f(tind,indx1,Range::all());
+							hp_gbl->res0.f(tind,indx,Range::all()) = hp_gbl->res.f(tind,indx1,Range::all());
 							++indx;
 							++indx1;
 						}
@@ -42,7 +42,7 @@ void tet_hp::mg_restrict() {
 						for(m=1;m<=basis::tet(log2p).em;++m) {
 							for(k=1;k<=basis::tet(log2p).em-m;++k) {
 								for(j=1;j<=basis::tet(log2p).em-m-k;++j){
-									gbl->res0.i(tind,indx,Range::all()) = gbl->res.i(tind,indx1,Range::all());
+									hp_gbl->res0.i(tind,indx,Range::all()) = hp_gbl->res.i(tind,indx1,Range::all());
 									++indx;
 									++indx1;
 								}
@@ -61,7 +61,7 @@ void tet_hp::mg_restrict() {
 
 		tet_hp *fmesh = dynamic_cast<tet_hp *>(fine);
 		
-		gbl->res0.v(Range(0,npnt-1),Range::all()) = 0.0;
+		hp_gbl->res0.v(Range(0,npnt-1),Range::all()) = 0.0;
 
 		/* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
 		for(i=0;i<fmesh->npnt;++i) {
@@ -69,7 +69,7 @@ void tet_hp::mg_restrict() {
 			for(j=0;j<4;++j) {
 				v0 = tet(tind).pnt(j);
 				for(n=0;n<NV;++n)
-						gbl->res0.v(v0,n) += fmesh->ccnnct(i).wt(j)*gbl->res.v(i,n);
+						hp_gbl->res0.v(v0,n) += fmesh->ccnnct(i).wt(j)*hp_gbl->res.v(i,n);
 			}
 		}
 		

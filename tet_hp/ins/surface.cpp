@@ -13,7 +13,7 @@ using namespace bdry_ins;
 
 // extern FLT body[ND];
 
-void surface_slave::init(input_map& inmap,void* gbl_in) {
+void surface_slave::init(input_map& inmap) {
 	std::string keyword;
 	
 	keyword = base.idprefix + "_curved";
@@ -34,7 +34,7 @@ void surface::init(input_map& inmap,void* gin) {
 
 	surface_slave::init(inmap,gin);
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	ksprg.resize(base.maxseg);
 	vdres.resize(x.log2pmax,base.maxseg);
 	sdres.resize(x.log2pmax,base.maxseg,x.sm0);
@@ -100,10 +100,10 @@ void surface::init(input_map& inmap,void* gin) {
 	data.clear(); 
 	
 	double CFLtdflt[3] = {2.5, 1.5, 1.0};
-	inmap.getwdefault(base.idprefix + "_cfltangent",&gbl->cfl(0,0),3,CFLtdflt); 
+	inmap.getwdefault(base.idprefix + "_cfltangent",&hp_gbl->cfl(0,0),3,CFLtdflt); 
 
 	double CFLndflt[3] = {2.0, 1.25, 0.75};
-	inmap.getwdefault(base.idprefix + "_cflnormal",&gbl->cfl(1,0),3,CFLndflt); 
+	inmap.getwdefault(base.idprefix + "_cflnormal",&hp_gbl->cfl(1,0),3,CFLndflt); 
 	
 	inmap.getwdefault(base.idprefix +"_adis",gbl->adis,1.0);
 
@@ -211,7 +211,7 @@ void surface::rsdl(int stage) {
 #endif 
 
 			/* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
-			res(4,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(0);
+			res(4,i) = +RAD(crd(0,i))*(x.hp_ins_gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(0);
 #ifdef AXISYMMETRIC
 			res(4,i) += gbl->sigma*jcb;
 #endif
@@ -220,7 +220,7 @@ void surface::rsdl(int stage) {
 
 
 			/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
-			res(6,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(1);                
+			res(6,i) = +RAD(crd(0,i))*(x.hp_ins_gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(1);                
 			/* AND INTEGRATION BY PARTS TERM */
 			res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
 		}
@@ -268,29 +268,29 @@ void surface::rsdl(int stage) {
 				lf1(n,m) = 0.0;
 
 		for(m=0;m<basis::tri(x.log2p).sm+2;++m)
-			lf1(x.NV-1,m) = -x.gbl->rho*lf(1,m); 
+			lf1(x.NV-1,m) = -x.hp_ins_gbl->rho*lf(1,m); 
 
 #ifndef INERTIALESS
 		for (n=0;n<x.NV-1;++n) 
 			ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
 
 		for (n=0;n<x.NV-1;++n) {
-			lf1(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(1,0);
-			lf1(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(1,1);
+			lf1(n,0) -= x.uht(n)(0)*(x.hp_ins_gbl->rho -gbl->rho2)*lf(1,0);
+			lf1(n,1) -= x.uht(n)(1)*(x.hp_ins_gbl->rho -gbl->rho2)*lf(1,1);
 			for(m=0;m<basis::tri(x.log2p).sm;++m)
-				lf1(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(1,m+2);
+				lf1(n,m+2) -= ubar(n)*(x.hp_ins_gbl->rho -gbl->rho2)*lf(1,m+2);
 		}
 #endif
 		/* ADD TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf1(n,0);
+			x.hp_gbl->res.v(v0,n) += lf1(n,0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf1(n,1);
+			x.hp_gbl->res.v(v1,n) += lf1(n,1);
 		
 		for(m=0;m<basis::tri(x.log2p).sm;++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf1(n,m+2);
+				x.hp_gbl->res.s(sind,m,n) += lf1(n,m+2);
 		}  
 	}
 
@@ -371,21 +371,21 @@ void surface_slave::rsdl(int stage) {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(1);
 #ifdef MPDEBUG
-		*x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+		*x.gbl->log << x.hp_gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
 #endif
-		x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+		x.hp_gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
 	}
 	v0 = x.seg(sind).pnt(0);
 #ifdef MPDEBUG
-	*x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+	*x.gbl->log << x.hp_gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
 #endif     
-	x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+	x.hp_gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
 
 	for(i=base.nseg-1;i>=0;--i) {
 		sind = base.seg(i);
 		msgn = 1;
 		for(m=0;m<basis::tri(x.log2p).sm;++m) {
-			x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
+			x.hp_gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
 			msgn *= -1;
 		}
 	}
@@ -406,16 +406,16 @@ void surface_outflow_endpt::rsdl(int stage) {
 		x.crdtocht1d(sind);
 		basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
 		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+		x.hp_gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+		x.hp_gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
 	}
 	else {
 		sind = x.ebdry(bnum)->seg(0);
 		x.crdtocht1d(sind);
 		basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
 		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+		x.hp_gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+		x.hp_gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
 	}
 	return;
 }
@@ -532,10 +532,10 @@ void surface::setup_preconditioner() {
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	int last_phase, mp_phase;
 
-	drho = x.gbl->rho -gbl->rho2;
-	srho = x.gbl->rho +gbl->rho2;
-	smu = x.gbl->mu +gbl->mu2;
-	nu1 = x.gbl->mu/x.gbl->rho;
+	drho = x.hp_ins_gbl->rho -gbl->rho2;
+	srho = x.hp_ins_gbl->rho +gbl->rho2;
+	smu = x.hp_ins_gbl->mu +gbl->mu2;
+	nu1 = x.hp_ins_gbl->mu/x.hp_ins_gbl->rho;
 	if (gbl->rho2 > 0.0) 
 		nu2 = gbl->mu2/gbl->rho2;
 	else
@@ -593,13 +593,13 @@ void surface::setup_preconditioner() {
 			gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
 			gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 
-			if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+			if (x.gbl->bd(0) + x.hp_ins_gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 
 #ifdef INERTIALESS
 			gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
 			gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
+			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.hp_ins_gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
 	
 			/* SET UP DISSIPATIVE COEFFICIENT */
 			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -649,13 +649,13 @@ void surface::setup_preconditioner() {
 		gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
 		gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 
-		if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+		if (x.gbl->bd(0) + x.hp_ins_gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 
 #ifdef INERTIALESS
 		gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
 		gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
+		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.hp_ins_gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
 		
 		/* SET UP DISSIPATIVE COEFFICIENT */
 		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -709,10 +709,10 @@ void surface::setup_preconditioner() {
 				basis::tri(x.log2p).intgrt1d(&lf(3,0),&res(3,0));
 
 				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(1,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(2,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);
-				lf(3,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);                        
+				lf(0,Range(0,lsm+1) /= hp_gbl->cfl(0,x.log2p);
+				lf(1,Range(0,lsm+1) /= hp_gbl->cfl(0,x.log2p);
+				lf(2,Range(0,lsm+1) /= hp_gbl->cfl(1,x.log2p);
+				lf(3,Range(0,lsm+1) /= hp_gbl->cfl(1,x.log2p);                        
 
 				for (n=0;n<lsm;++n) {
 						gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
@@ -774,11 +774,11 @@ void surface::setup_preconditioner() {
 		/* INVERT VERTEX MATRIX */
 		jcbi = 1.0/(gbl->vdt(indx)(0,0)*gbl->vdt(indx)(1,1) -gbl->vdt(indx)(0,1)*gbl->vdt(indx)(1,0));
 
-		temp = gbl->vdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
-		gbl->vdt(indx)(0,0) = gbl->vdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
+		temp = gbl->vdt(indx)(0,0)*jcbi*hp_gbl->cfl(1,x.log2p);
+		gbl->vdt(indx)(0,0) = gbl->vdt(indx)(1,1)*jcbi*hp_gbl->cfl(0,x.log2p);
 		gbl->vdt(indx)(1,1) = temp;
-		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
-		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+		gbl->vdt(indx)(0,1) *= -jcbi*hp_gbl->cfl(1,x.log2p);
+		gbl->vdt(indx)(1,0) *= -jcbi*hp_gbl->cfl(0,x.log2p);
 	}
 
 	/* INVERT SIDE MATRIX */    
@@ -787,11 +787,11 @@ void surface::setup_preconditioner() {
 			/* INVERT SIDE MVDT MATRIX */
 			jcbi = 1.0/(gbl->sdt(indx)(0,0)*gbl->sdt(indx)(1,1) -gbl->sdt(indx)(0,1)*gbl->sdt(indx)(1,0));
 
-			temp = gbl->sdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
-			gbl->sdt(indx)(0,0) = gbl->sdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
+			temp = gbl->sdt(indx)(0,0)*jcbi*hp_gbl->cfl(1,x.log2p);
+			gbl->sdt(indx)(0,0) = gbl->sdt(indx)(1,1)*jcbi*hp_gbl->cfl(0,x.log2p);
 			gbl->sdt(indx)(1,1) = temp;
-			gbl->sdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
-			gbl->sdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+			gbl->sdt(indx)(0,1) *= -jcbi*hp_gbl->cfl(1,x.log2p);
+			gbl->sdt(indx)(1,0) *= -jcbi*hp_gbl->cfl(0,x.log2p);
 		}
 	}
 	return;

@@ -64,8 +64,8 @@ namespace bdry_cns_explicit {
 			}
 		}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_face_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_face_bdry::init(inmap);
 			std::string keyword = base.idprefix +"_report";
 			inmap.getwdefault(keyword,report_flag,false);
 			
@@ -172,7 +172,7 @@ namespace bdry_cns_explicit {
 			applied_stress(tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 	
 	class specified_flux : public neumann {
@@ -184,7 +184,7 @@ namespace bdry_cns_explicit {
 		specified_flux(tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "specified_flux";}
 		specified_flux(const specified_flux& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 		specified_flux* create(tet_hp& xin, face_bdry &bin) const {return new specified_flux(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in);
+		void init(input_map& inmap);
 	};
 	
 }

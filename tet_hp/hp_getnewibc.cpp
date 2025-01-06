@@ -101,7 +101,7 @@ class translating : public tet_hp_helper {
 
 			if (x.coarse_level) return;
 
-			if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
+			if (x.gbl->substep == 0) x.l2error(x.hp_gbl->ibc);
 
 			TinyVector<FLT,tet_mesh::ND> dx;
 #ifdef DIRK
@@ -155,7 +155,7 @@ class gcl_test : public tet_hp_helper {
 		void tadvance() {
 			if (x.coarse_level) return;
 
-			if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
+			if (x.gbl->substep == 0) x.l2error(x.hp_gbl->ibc);
 
 			FLT dt;
 			dt = x.gbl->cdirk(x.gbl->substep)/x.gbl->dti;          
@@ -174,7 +174,7 @@ class l2_error : public tet_hp_helper {
 		tet_hp &x;
 		l2_error(tet_hp &xin) :tet_hp_helper(xin), x(xin) {}
 		void output() {
-			x.l2error(x.gbl->ibc);
+			x.l2error(x.hp_gbl->ibc);
 		}
 };
 

@@ -16,7 +16,7 @@
 class tet_hp_ins : public tet_hp {
 	public:
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-		struct global : public tet_hp::global {
+		struct hp_ins_global {
 			/* STABILIZATION */
 			Array<FLT,2> tau;
 
@@ -27,7 +27,8 @@ class tet_hp_ins : public tet_hp {
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 			TinyVector<FLT,2> eanda, eanda_recv;
 
-		} *gbl;
+		};
+        shared_ptr<hp_ins_global> hp_ins_gbl;
 
 
 		FLT adis; // DISSIPATION CONSTANT
@@ -39,14 +40,13 @@ class tet_hp_ins : public tet_hp {
 		tet_hp_helper* getnewhelper(std::string helpername);
 
 	public:
-		void* create_global_structure() {return new global;}
 		tet_hp_ins* create() { return new tet_hp_ins(); }
 
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap, shared_ptr<block_global> gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
 		void length(); 
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
 

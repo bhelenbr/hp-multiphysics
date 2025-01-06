@@ -25,13 +25,13 @@ void neumann::rsdl(int stage){
 		element_rsdl(find,stage);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
+			x.hp_gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
+			x.hp_gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
+			x.hp_gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
 		
 		int indx = 3;
 		for(int j=0;j<3;++j) {
@@ -40,7 +40,7 @@ void neumann::rsdl(int stage){
 			msgn = 1.0;
 			for(int k=0;k<basis::tet(x.log2p).em;++k) {
 				for(int n=0;n<x.NV;++n)
-					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+					x.hp_gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
 				msgn *= sgn;
 				++indx;
 			}
@@ -48,7 +48,7 @@ void neumann::rsdl(int stage){
 		
 	    for(int k=0;k<basis::tet(x.log2p).fm;++k) {
 		    for(int n=0;n<x.NV;++n)
-				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+				x.hp_gbl->res.f(find,k,n) += x.lf(n)(indx);
 			++indx;
 		}		
 	}
@@ -151,13 +151,13 @@ void neumann::element_rsdl(int find,int stage) {
 //			basis::tet(x.log2p).intgrt2d(&x.lf(n)(0),&x.res2d(n)(0)(0),MXGP);
 //
 //		for(n=0;n<x.NV;++n)
-//			x.gbl->res.v(v0,n) += x.lf(n)(0);
+//			x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
 //
 //		for(n=0;n<x.NV;++n)
-//			x.gbl->res.v(v1,n) += x.lf(n)(1);
+//			x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
 //		
 //		for(n=0;n<x.NV;++n)
-//			x.gbl->res.v(v2,n) += x.lf(n)(2);
+//			x.hp_gbl->res.v(v2,n) += x.lf(n)(2);
 //		
 //		indx = 3;
 //		for(j=0;j<3;++j) {
@@ -166,7 +166,7 @@ void neumann::element_rsdl(int find,int stage) {
 //			msgn = 1.0;
 //			for(k=0;k<basis::tet(x.log2p).em;++k) {
 //				for(n=0;n<x.NV;++n)
-//					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+//					x.hp_gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
 //				msgn *= sgn;
 //				++indx;
 //			}
@@ -174,7 +174,7 @@ void neumann::element_rsdl(int find,int stage) {
 //													  
 //	    for(k=0;k<basis::tet(x.log2p).fm;++k) {
 //		    for(n=0;n<x.NV;++n)
-//				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+//				x.hp_gbl->res.f(find,k,n) += x.lf(n)(indx);
 //			++indx;
 //		}		
 //	}
@@ -212,11 +212,11 @@ void symmetry::tadvance() {
 
 
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
+void applied_stress::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 
-	neumann::init(inmap,gbl_in);
+	neumann::init(inmap);
 	
 	stress.resize(tet_mesh::ND);
 	for(int n=0;n<tet_mesh::ND;++n) {

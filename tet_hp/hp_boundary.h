@@ -22,11 +22,10 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 
 	public:
 		init_bdry_cndtn *ibc;
-		hp_vrtx_bdry(tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";ibc=x.gbl->ibc;}
+		hp_vrtx_bdry(tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";ibc=x.hp_gbl->ibc;}
 		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
-		virtual void* create_global_structure() {return 0;}
 		virtual hp_vrtx_bdry* create(tet_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
-		virtual void init(input_map& inmap,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
+		virtual void init(input_map& inmap) {} /**< This is to read definition data only (not solution data) */
 		virtual void copy(const hp_vrtx_bdry& tgt) {}
 		virtual ~hp_vrtx_bdry() {}
 		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
@@ -81,7 +80,7 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 		virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.pfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
 			
 		/* FOR COUPLED DYNAMIC BOUNDARIES */
-		virtual void setup_preconditioner() {}
+        virtual int setup_preconditioner() {return(0);}
 		virtual void tadvance() {
 			int pnt = base.pnt;
 			base.mvpttobdry(x.pnts(pnt));
@@ -107,7 +106,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		Array<TinyMatrix<FLT,tet_mesh::ND,MXGP>,2> dxdt;
 
 	public:
-		hp_edge_bdry(tet_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
+		hp_edge_bdry(tet_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.hp_gbl->ibc;}
 		hp_edge_bdry(const hp_edge_bdry &inbdry, tet_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
 			if (curved && !x.coarse_level) {
 				crv.resize(base.maxseg,x.em0);
@@ -120,8 +119,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 			base.resize_buffers(base.maxseg*(x.em0+2)*x.NV);   
 		}
 		virtual hp_edge_bdry* create(tet_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
-		virtual void* create_global_structure() {return 0;}
-		virtual void init(input_map& inmap,void* gbl_in);
+		virtual void init(input_map& inmap);
 		virtual void copy(const hp_edge_bdry& tgt);
 		virtual ~hp_edge_bdry() {}
 			
@@ -153,7 +151,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		base.sfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
 		}
 		/* FOR COUPLED DYNAMIC BOUNDARIES */
-		virtual void setup_preconditioner() {}
+        virtual int setup_preconditioner() {return(0);}
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
 		virtual void rsdl(int stage) {}
@@ -204,8 +202,8 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		Array<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,tet_mesh::ND>,2> dxdt;
 
 	public:
-		hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
-		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {			
+		hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.hp_gbl->ibc;}
+		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
 			if (curved && !x.coarse_level) {
 				ecrvbd.resize(x.gbl->nhist+1);
 				ecrv.resize(base.maxpst,x.em0);
@@ -223,9 +221,8 @@ class hp_face_bdry : public fgeometry_interface<3> {
 			dxdt.resize(x.log2pmax+1,base.maxpst);
 			base.resize_buffers(base.maxpst*(x.fm0+2)*x.NV);	
 		}
-		virtual void* create_global_structure() {return 0;}
 		virtual hp_face_bdry* create(tet_hp& xin, face_bdry &bin) const {return(new hp_face_bdry(*this,xin,bin));}
-		virtual void init(input_map& inmap,void *gbl_in); 
+		virtual void init(input_map& inmap);
 		virtual void copy(const hp_face_bdry& tgt);
 		virtual ~hp_face_bdry() {}
 			
@@ -265,7 +262,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void tmatchsolution_rcv(FLT *fdata, int bgnmode, int endmode, int modestride); 
 	
 		/* FOR COUPLED DYNAMIC BOUNDARIES */
-		virtual void setup_preconditioner() {}
+        virtual int setup_preconditioner() {return(0);}
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
 		virtual void rsdl(int stage) {}

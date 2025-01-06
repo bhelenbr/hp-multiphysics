@@ -87,9 +87,9 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 				d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 				d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 				
-				fluxx = gbl->rhocv*(gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxy = gbl->rhocv*(gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxz = gbl->rhocv*(gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxx = hp_cd_gbl->rhocv*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxy = hp_cd_gbl->rhocv*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxz = hp_cd_gbl->rhocv*(hp_cd_gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
 
 				cv00(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
 				cv01(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;
@@ -111,8 +111,8 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 					pt(1) = crd(1)(i)(j)(k);
 					pt(2) = crd(2)(i)(j)(k);
 					cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
-					res(0)(i)(j)(k) = gbl->rhocv*gbl->bd(0)*cjcb(i)(j)(k)*u(0)(i)(j)(k)+dugdt(log2p,tind,0)(i)(j)(k);
-					res(0)(i)(j)(k) -= cjcb(i)(j)(k)*gbl->src->f(0,pt,gbl->time);
+					res(0)(i)(j)(k) = hp_cd_gbl->rhocv*gbl->bd(0)*cjcb(i)(j)(k)*u(0)(i)(j)(k)+dugdt(log2p,tind,0)(i)(j)(k);
+					res(0)(i)(j)(k) -= cjcb(i)(j)(k)*hp_cd_gbl->src->f(0,pt,gbl->time);
 				}
 			}
 		}   
@@ -123,7 +123,7 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpy;++j) {
 				for(k=0;k<lgpz;++k) {
-					jcb = gbl->kcond/cjcb(i)(j)(k);
+					jcb = hp_cd_gbl->kcond/cjcb(i)(j)(k);
 					
 					/* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES EQ. DERIVATIVE (R OR S) THEN VAR DERIVATIVE (R OR S)*/
@@ -177,11 +177,11 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
-					tres[0] = gbl->tau(tind)*res(0)(i)(j)(k);
+					tres[0] = hp_cd_gbl->tau(tind)*res(0)(i)(j)(k);
 				
-					e00(i)(j)(k) -= (d(0)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(0)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(0)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-					e01(i)(j)(k) -= (d(1)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(1)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-					e02(i)(j)(k) -= (d(2)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(2)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e00(i)(j)(k) -= (d(0)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(0)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(0)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e01(i)(j)(k) -= (d(1)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(1)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e02(i)(j)(k) -= (d(2)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(2)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
 					
 					
 				}

@@ -64,8 +64,8 @@ namespace bdry_ins {
 			}
 		}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_face_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_face_bdry::init(inmap);
 			std::string keyword = base.idprefix +"_report";
 			inmap.getwdefault(keyword,report_flag,false);
 			
@@ -87,7 +87,7 @@ namespace bdry_ins {
 			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
 
 				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
+				flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
 
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
@@ -122,7 +122,7 @@ namespace bdry_ins {
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 			
 			/* CONTINUITY */
-			flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
+			flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
 			
 			/* EVERYTHING ELSE DOESN'T MATTER */
 			for (int n=0;n<x.NV-1;++n)
@@ -147,7 +147,7 @@ namespace bdry_ins {
 			
 			for(int j=0;j<base.npnt;++j) {
 				v0 = base.pnt(j).gindx;
-				x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
+				x.hp_gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
 			}
 		}
 		
@@ -156,7 +156,7 @@ namespace bdry_ins {
 //			
 //			for(int j=0;j<base.nseg;++j) {
 //				sind = base.seg(j).gindx;
-//				x.gbl->res.e(sind,mode,Range(0,x.NV-2)) = 0.0;
+//				x.hp_gbl->res.e(sind,mode,Range(0,x.NV-2)) = 0.0;
 //			}
 //		}
 		void edirichlet() {
@@ -164,7 +164,7 @@ namespace bdry_ins {
 			if (basis::tet(x.log2p).em > 0) {
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j).gindx;
-					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),Range(0,x.NV-2)) = 0.0;
+					x.hp_gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),Range(0,x.NV-2)) = 0.0;
 				}
 			}
 		}		
@@ -173,7 +173,7 @@ namespace bdry_ins {
 //			
 //			for(int j=0;j<base.ntri;++j) {
 //				find = base.tri(j).gindx;
-//				x.gbl->res.f(find,mode,Range(0,x.NV-2)) = 0.0;
+//				x.hp_gbl->res.f(find,mode,Range(0,x.NV-2)) = 0.0;
 //			}
 //		}
 		void fdirichlet() {
@@ -181,7 +181,7 @@ namespace bdry_ins {
 			if (basis::tet(x.log2p).fm > 0) {
 				for(int j=0;j<base.ntri;++j) {
 					find = base.tri(j).gindx;
-					x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),Range(0,x.NV-2)) = 0.0;
+					x.hp_gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),Range(0,x.NV-2)) = 0.0;
 				}
 			}
 		}	
@@ -227,8 +227,8 @@ namespace bdry_ins {
 			symmetry(tet_hp_ins &xin, face_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
 			symmetry(const symmetry& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
 			symmetry* create(tet_hp& xin, face_bdry &bin) const {return new symmetry(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				generic::init(inmap,gbl_in);
+			void init(input_map& inmap) {
+				generic::init(inmap);
 				std::string keyword = base.idprefix +"_dir";
 				inmap.getwdefault(keyword,dir,0);
 			}
@@ -238,7 +238,7 @@ namespace bdry_ins {
 				
 				for(int j=0;j<base.npnt;++j) {
 					v0 = base.pnt(j).gindx;
-					x.gbl->res.v(v0,dir) = 0.0;
+					x.hp_gbl->res.v(v0,dir) = 0.0;
 				}
 			}
 			
@@ -247,7 +247,7 @@ namespace bdry_ins {
 				if (basis::tet(x.log2p).em > 0) {
 					for(int j=0;j<base.nseg;++j) {
 						sind = base.seg(j).gindx;
-						x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),dir) = 0.0;
+						x.hp_gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),dir) = 0.0;
 					}
 				}
 			}		
@@ -257,7 +257,7 @@ namespace bdry_ins {
 				if (basis::tet(x.log2p).fm > 0) {
 					for(int j=0;j<base.ntri;++j) {
 						find = base.tri(j).gindx;
-						x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),dir) = 0.0;
+						x.hp_gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),dir) = 0.0;
 					}
 				}
 			}	
@@ -301,7 +301,7 @@ namespace bdry_ins {
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
 
 				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
+				flx(x.NV-1) = x.hp_ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
 
 				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1) +norm(2)*norm(2));
 				/* XYZ MOMENTUM */
@@ -324,7 +324,7 @@ namespace bdry_ins {
 			applied_stress(tet_hp_ins &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tet_hp_ins &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 	
 }

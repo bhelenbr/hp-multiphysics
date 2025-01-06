@@ -22,8 +22,12 @@
 #include <MAdLib/MeshDataBase.h>
 #include <MAdLib/MAdModel.h>
 #include <MAdLib/ModelInterface.h>
-#include <MAdLib/AdaptInterface.h>
+#include <MAdLib/AdaptationInterface.h>
 #include <MAdLib/PWLinearSField.h>
+#include <MAdLib/CMeshAdapter.h>
+#include <MAdLib/MeshDataBaseGEntity2Physical.h>
+
+
 #include <input_map.h>
 #include <utility>
 #include <set>
@@ -49,9 +53,9 @@ namespace MAdLibInterface {
 	// void input(tet_mesh *, const std::string filename, FLT grwfac, input_map& input);
 
 	// Mesh to mesh conversion
-	void importFromMAdMesh(const MAd::pMesh, tet_mesh *);
-	void exportToMAdMesh(const tet_mesh *, MAd::pMesh);
-	void exportToMAdModel(const tet_mesh *, MAd::pGModel);
+	void importFromMAdMesh(const pMesh, tet_mesh *);
+	void exportToMAdMesh(const tet_mesh *, pMesh);
+	void exportToMAdModel(const tet_mesh *, pGModel);
 
 	// Size field construction
 	void buildSizeField(MAd::PWLSField *);

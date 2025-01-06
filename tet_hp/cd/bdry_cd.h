@@ -21,8 +21,8 @@ namespace bdry_cd {
 		generic(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
 		generic(const generic& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_face_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_face_bdry::init(inmap);
 			std::string keyword = base.idprefix +"_report";
 			inmap.getwdefault(keyword,report_flag,false);       
 		}
@@ -40,7 +40,7 @@ namespace bdry_cd {
 			int v0; 											
 			for(int j=0;j<base.npnt;++j) {
 				v0 = base.pnt(j).gindx;
-					x.gbl->res.v(v0,0) = 0.0;
+					x.hp_gbl->res.v(v0,0) = 0.0;
 			}			
 		}
 
@@ -49,7 +49,7 @@ namespace bdry_cd {
 			if (basis::tet(x.log2p).em > 0) {
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j).gindx;
-					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
+					x.hp_gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
 				}
 			}
 		}
@@ -60,7 +60,7 @@ namespace bdry_cd {
 			if (basis::tet(x.log2p).fm > 0) {
 				for(int j=0;j<base.ntri;++j) {
 					find = base.tri(j).gindx;
-					x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
+					x.hp_gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
 				}
 			}
 		}
@@ -110,8 +110,8 @@ namespace bdry_cd {
 		generic_edge(tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_edge";}
 		generic_edge(const generic_edge& inbdry, tet_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_edge_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_edge_bdry::init(inmap);
 			std::string keyword = base.idprefix +"_report";
 			inmap.getwdefault(keyword,report_flag,false);       
 		}
@@ -131,10 +131,10 @@ namespace bdry_cd {
 			for(int j=0;j<base.nseg;++j) {
 				sind = base.seg(j).gindx;
 				v0 = x.seg(sind).pnt(0);
-				x.gbl->res.v(v0,0) = 0.0;
+				x.hp_gbl->res.v(v0,0) = 0.0;
 			}
 			v0 = x.seg(sind).pnt(1);
-			x.gbl->res.v(v0,0) = 0.0;
+			x.hp_gbl->res.v(v0,0) = 0.0;
 		}
 		
 		void edirichlet3d() {			
@@ -142,7 +142,7 @@ namespace bdry_cd {
 			if (basis::tet(x.log2p).em > 0) {
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j).gindx;
-					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
+					x.hp_gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
 				}
 			}
 		}
@@ -172,8 +172,8 @@ namespace bdry_cd {
 		generic_pt(tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic_pt";}
 		generic_pt(const generic_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
 		generic_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new generic_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_vrtx_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_vrtx_bdry::init(inmap);
 			std::string keyword = base.idprefix +"_report";
 			inmap.getwdefault(keyword,report_flag,false);       
 		}
@@ -188,7 +188,7 @@ namespace bdry_cd {
 		dirichlet_pt(const dirichlet_pt& inbdry, tet_hp_cd &xin, vrtx_bdry &bin) : generic_pt(inbdry,xin,bin), x(xin) {}
 		dirichlet_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new dirichlet_pt(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
 		void vdirichlet3d() { 
-			x.gbl->res.v(base.pnt,0) = 0.0;					
+			x.hp_gbl->res.v(base.pnt,0) = 0.0;					
 		}
 		
 		void tadvance(); 

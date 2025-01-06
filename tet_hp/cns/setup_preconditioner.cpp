@@ -6,7 +6,7 @@
 
 //#define TIMEACCURATE
 
-void tet_hp_cns::setup_preconditioner() {
+int tet_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int gpx = basis::tet(log2p).gpx;
 	int gpy = basis::tet(log2p).gpy;
@@ -21,20 +21,21 @@ void tet_hp_cns::setup_preconditioner() {
 
 	Array<double,1> umax(NV),ubar(NV);
 	Array<double,2> tprcn(NV,NV),tau(NV,NV);
-	
+    int err = 0;
+    
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
 	Array<double,3> tpreconditioner(ntet,NV,NV);
 
-	gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
-	gbl->epreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+	hp_cns_gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
+	hp_cns_gbl->epreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 
-	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	hp_gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tet(log2p).em > 0) {
-		gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;	
+		hp_gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;	
 		if (basis::tet(log2p).fm > 0) {
-			gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
+			hp_gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
 		}
 	}
 
@@ -65,7 +66,7 @@ void tet_hp_cns::setup_preconditioner() {
 					FLT q = pow(u(1)(i)(j)(k)-0.5*mvel(0),2.0)  +pow(u(2)(i)(j)(k)-0.5*mvel(1),2.0) +pow(u(3)(i)(j)(k)-0.5*mvel(2),2.0);
 					qmax = MAX(qmax,q);
 					
-					umax(0) = MAX(umax(0),fabs(u(0)(i)(j)(k)+gbl->atm_pressure));
+					umax(0) = MAX(umax(0),fabs(u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure));
 					umax(1) = MAX(umax(1),fabs(u(1)(i)(j)(k)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i)(j)(k)-0.5*mvel(1)));
 					umax(3) = MAX(umax(3),fabs(u(3)(i)(j)(k)-0.5*mvel(2)));
@@ -79,7 +80,7 @@ void tet_hp_cns::setup_preconditioner() {
 
 //		umax = 0.0;
 //		for(int j=0;j<4;++j) { 			
-//			umax(0) = MAX(umax(0),fabs(ug.v(v(j),0)+gbl->atm_pressure));
+//			umax(0) = MAX(umax(0),fabs(ug.v(v(j),0)+hp_cns_gbl->atm_pressure));
 //			umax(1) = MAX(umax(1),fabs(ug.v(v(j),1))); /* put back in mvel */
 //			umax(2) = MAX(umax(2),fabs(ug.v(v(j),2)));
 //			umax(3) = MAX(umax(3),fabs(ug.v(v(j),3)));
@@ -117,13 +118,13 @@ void tet_hp_cns::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}		
 		
-		calculate_preconditioner_tau_timestep(umax,hmin,hmax,tprcn,tau,tstep,gbl->betasquared(tind));
+		calculate_preconditioner_tau_timestep(umax,hmin,hmax,tprcn,tau,tstep,hp_cns_gbl->betasquared(tind));
 
 		dtstari = tstep;
 
 		tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
 
-		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
+		hp_cns_gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 		
 #ifdef TIMEACCURATE
 		dtstarimax = MAX(dtstari,dtstarimax);
@@ -144,23 +145,23 @@ void tet_hp_cns::setup_preconditioner() {
 		dtstari = dtstarimax;
 #endif
 		
-		gbl->iprcn(tind,Range::all()) = jcb;
+		hp_gbl->iprcn(tind,Range::all()) = jcb;
 		tpreconditioner(tind,Range::all(),Range::all()) *= dtstari;
 		
 		for(int i=0;i<4;++i) {
 			
-			gbl->vprcn(v(i),Range::all())  += gbl->iprcn(tind,Range::all());
-			gbl->vpreconditioner(v(i),Range::all(),Range::all())  += tpreconditioner(tind,Range::all(),Range::all())*jcb;
+			hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->iprcn(tind,Range::all());
+			hp_cns_gbl->vpreconditioner(v(i),Range::all(),Range::all())  += tpreconditioner(tind,Range::all(),Range::all())*jcb;
 			
 			if (basis::tet(log2p).fm > 0) {
-				gbl->fprcn(tet(tind).tri(i),Range::all()) += gbl->iprcn(tind,Range::all());
+				hp_gbl->fprcn(tet(tind).tri(i),Range::all()) += hp_gbl->iprcn(tind,Range::all());
 			}
 		}
 
 		if (basis::tet(log2p).em > 0) {
 			for(int i=0;i<6;++i) {
-				gbl->eprcn(tet(tind).seg(i),Range::all()) += gbl->iprcn(tind,Range::all());
-				gbl->epreconditioner(tet(tind).seg(i),Range::all(),Range::all())  += tpreconditioner(tind,Range::all(),Range::all())*jcb;
+				hp_gbl->eprcn(tet(tind).seg(i),Range::all()) += hp_gbl->iprcn(tind,Range::all());
+				hp_cns_gbl->epreconditioner(tet(tind).seg(i),Range::all(),Range::all())  += tpreconditioner(tind,Range::all(),Range::all())*jcb;
 			}
 		}
 
@@ -168,36 +169,34 @@ void tet_hp_cns::setup_preconditioner() {
 	
 	// could eliminate this here and in minvrt
 	for(int i=0;i<npnt;++i) {
-		gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
+		hp_cns_gbl->vpreconditioner(i,Range::all(),Range::all()) /=  hp_gbl->vprcn(i,0);
 	}
 	if (basis::tet(log2p).em > 0) {
 		for(int i=0;i<nseg;++i) {
-			gbl->epreconditioner(i,Range::all(),Range::all()) /=  gbl->eprcn(i,0);
+			hp_cns_gbl->epreconditioner(i,Range::all(),Range::all()) /=  hp_gbl->eprcn(i,0);
 		}
 	}	
-	tet_hp::setup_preconditioner();
+	err += tet_hp::setup_preconditioner();
 	
 	int last_phase,mp_phase;
 	
 	for(int stage = 0; stage<NV; ++stage) {
 		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-			pc0load(mp_phase,gbl->vpreconditioner.data() +stage*NV,NV);
+			pc0load(mp_phase,hp_cns_gbl->vpreconditioner.data() +stage*NV,NV);
 			pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 			last_phase = true;
-			last_phase &= pc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
+			last_phase &= pc0wait_rcv(mp_phase,hp_cns_gbl->vpreconditioner.data()+stage*NV,NV);
 		}
 		if (log2p) {
 			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				sc0load(mp_phase,gbl->epreconditioner.data()+stage*NV,0,0,NV);
+				sc0load(mp_phase,hp_cns_gbl->epreconditioner.data()+stage*NV,0,0,NV);
 				smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 				last_phase = true;
-				last_phase &= sc0wait_rcv(mp_phase,gbl->epreconditioner.data()+stage*NV,0,0,NV);
+				last_phase &= sc0wait_rcv(mp_phase,hp_cns_gbl->epreconditioner.data()+stage*NV,0,0,NV);
 			}
 		}
 	}
-	
-
-	
+    return(err);
 	
 }
 
@@ -209,7 +208,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV),Ceigs(NV);
 
-	FLT gam = gbl->gamma;
+	FLT gam = hp_cns_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
 	FLT pr = pvu(0);
@@ -221,16 +220,16 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	FLT ke = 0.5*(u*u+v*v+w*w);
 	FLT c2 = gam*rt;
 	FLT c = sqrt(c2);
-	FLT nu = gbl->mu/rho;
-	FLT cp = gogm1*gbl->R;
-	FLT alpha = gbl->kcond/(rho*cp);
+	FLT nu = hp_cns_gbl->mu/rho;
+	FLT cp = gogm1*hp_cns_gbl->R;
+	FLT alpha = hp_cns_gbl->kcond/(rho*cp);
 	
 	FLT hdt = 0.5*hmax*gbl->bd(0)/c;
 	FLT umag = sqrt(u*u+v*v+w*w);
 	FLT M = MAX(umag/c,1.0e-5);
 	FLT nuh = 3.0*MAX(4.0*nu/(3.0*hmax*c),alpha/(hmax*c));	
 	
-	if(M < 0.8 && gbl->preconditioner > 0){
+	if(M < 0.8 && hp_cns_gbl->preconditioner > 0){
 	    //b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh, 1.0);
 		b2 = MIN(3.0*M*M + (hdt+nuh)*(hdt+nuh), 1.0);
 		//b2 = MIN(M*M/(1.0-M*M) + (hdt+nuh)*(hdt+nuh), 1.0);
@@ -282,7 +281,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	P = temp;
 
 	/* Replace Pinv with dcdp*Pinv */
-	if(gbl->preconditioner == 2) {
+	if(hp_cns_gbl->preconditioner == 2) {
 		temp = 0.0;
 		for(int i=0; i<NV; ++i)
 			for(int j=0; j<NV; ++j)
@@ -423,7 +422,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 	//cout << ' ' << maxeig << endl;
 	
 	/* preconditioning squared -> Pinv = dcdp*Pinv*(|P*dpdc*A|+|P*dpdc*B|+|P*dpdc*C|+h*P*dpdc*S) */	
-	if(gbl->preconditioner == 2) {
+	if(hp_cns_gbl->preconditioner == 2) {
 		//maxeig = MAX(maxeig,4.0*nu/3.0/h);
 		//maxeig = MAX(maxeig,0.1*hmax*gbl->bd(0));
 		temp = hmax*S;
@@ -495,7 +494,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 //	Array<FLT,1> Aeigs(NV),Beigs(NV),Ceigs(NV);
 //	
-//	FLT gam = gbl->gamma;
+//	FLT gam = hp_cns_gbl->gamma;
 //	FLT gm1 = gam-1.0;
 //	FLT gogm1 = gam/gm1;
 //	FLT pr = pvu(0);
@@ -508,9 +507,9 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	FLT c2 = gam*rt;
 //	FLT c = sqrt(c2);
 //	
-//	FLT nu = gbl->mu/rho;
-//	FLT cp = gogm1*gbl->R;
-//	FLT alpha = gbl->kcond/(rho*cp);
+//	FLT nu = hp_cns_gbl->mu/rho;
+//	FLT cp = gogm1*hp_cns_gbl->R;
+//	FLT alpha = hp_cns_gbl->kcond/(rho*cp);
 //	
 //	FLT hdt = 0.5*h*gbl->bd(0)/c;
 //	FLT umag = sqrt(u*u+v*v+w*w);
@@ -519,7 +518,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 //	
 //	FLT b2,alph;
-//	if(gbl->preconditioner) {
+//	if(hp_cns_gbl->preconditioner) {
 //		b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh, 1.0);
 //		alph = 1.0+b2;
 //	} else {
@@ -696,7 +695,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 //	Array<FLT,1> Aeigs(NV),Beigs(NV),Ceigs(NV);
 //	
-//	FLT gam = gbl->gamma;
+//	FLT gam = hp_cns_gbl->gamma;
 //	FLT gm1 = gam-1.0;
 //	FLT gogm1 = gam/gm1;
 //	FLT pr = pvu(0);
@@ -709,9 +708,9 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	FLT c2 = gam*rt;
 //	FLT c = sqrt(c2);
 //	
-//	FLT nu = gbl->mu/rho;
-//	FLT cp = gogm1*gbl->R;
-//	FLT alpha = gbl->kcond/(rho*cp);
+//	FLT nu = hp_cns_gbl->mu/rho;
+//	FLT cp = gogm1*hp_cns_gbl->R;
+//	FLT alpha = hp_cns_gbl->kcond/(rho*cp);
 //	
 //	FLT hdt = 0.5*h*gbl->bd(0)/c;
 //	FLT umag = sqrt(u*u+v*v+w*w);
@@ -720,7 +719,7 @@ void tet_hp_cns::calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT 
 //	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 //	
 //	FLT b2;
-//	if(gbl->preconditioner) {
+//	if(hp_cns_gbl->preconditioner) {
 //		b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh, 1.0);
 //	} else {
 //		b2 = 1.0; // turn off preconditioner 

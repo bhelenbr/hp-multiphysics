@@ -18,10 +18,10 @@ void tet_hp::jacobi_relaxation() {
 
 	/* Jacobi's relaxation */
 	FLT omega = 0.5;
-	gbl->res.v(Range(0,npnt-1),Range::all()) = omega*gbl->res.v(Range(0,npnt-1),Range::all())/gbl->jacob_diag.v(Range(0,npnt-1),Range::all());
-	if(em) gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all()) = omega*gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all())/gbl->jacob_diag.e(Range(0,nseg-1),Range(0,em-1),Range::all());
-	if(fm) gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all()) = omega*gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all())/gbl->jacob_diag.f(Range(0,ntri-1),Range(0,fm-1),Range::all());
-	if(im) gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all()) = omega*gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all())/gbl->jacob_diag.i(Range(0,ntet-1),Range(0,im-1),Range::all());
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) = omega*hp_gbl->res.v(Range(0,npnt-1),Range::all())/hp_gbl->jacob_diag.v(Range(0,npnt-1),Range::all());
+	if(em) hp_gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all()) = omega*hp_gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all())/hp_gbl->jacob_diag.e(Range(0,nseg-1),Range(0,em-1),Range::all());
+	if(fm) hp_gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all()) = omega*hp_gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all())/hp_gbl->jacob_diag.f(Range(0,ntri-1),Range(0,fm-1),Range::all());
+	if(im) hp_gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all()) = omega*hp_gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all())/hp_gbl->jacob_diag.i(Range(0,ntet-1),Range(0,im-1),Range::all());
 	
 	all_dirichlet();
 	
@@ -47,10 +47,10 @@ void tet_hp::jacobian_diagonal() {
 	int dof = tm*NV;
 	Array<FLT,1> Kdiag(dof);
 	
-	gbl->jacob_diag.v = 0.0;
-	gbl->jacob_diag.e = 0.0;
-	gbl->jacob_diag.f = 0.0;
-	gbl->jacob_diag.i = 0.0;
+	hp_gbl->jacob_diag.v = 0.0;
+	hp_gbl->jacob_diag.e = 0.0;
+	hp_gbl->jacob_diag.f = 0.0;
+	hp_gbl->jacob_diag.i = 0.0;
 	
 	
 	/* Calculate diagonal stiffness matrix terms */
@@ -88,21 +88,21 @@ void tet_hp::jacobian_diagonal() {
 		ind = 0;	
 		for (int i=0; i < 4; ++i) 
 			for(int n=0;n<NV;++n)
-				gbl->jacob_diag.v(tet(tind).pnt(i),n) += Kdiag(ind++);
+				hp_gbl->jacob_diag.v(tet(tind).pnt(i),n) += Kdiag(ind++);
 		
 		for (int i=0; i < 6; ++i) 
 			for(int m=0;m<em;++m)
 				for(int n=0;n<NV;++n)
-					gbl->jacob_diag.e(tet(tind).seg(i),m,n) += Kdiag(ind++);
+					hp_gbl->jacob_diag.e(tet(tind).seg(i),m,n) += Kdiag(ind++);
 		
 		for (int i=0; i < 4; ++i) 
 			for(int m=0;m<fm;++m)
 				for(int n=0;n<NV;++n)
-					gbl->jacob_diag.f(tet(tind).tri(i),m,n) += Kdiag(ind++);
+					hp_gbl->jacob_diag.f(tet(tind).tri(i),m,n) += Kdiag(ind++);
 		
 		for(int m=0;m<im;++m)
 			for(int n=0;n<NV;++n)
-				gbl->jacob_diag.i(tind,m,n) += Kdiag(ind++);			
+				hp_gbl->jacob_diag.i(tind,m,n) += Kdiag(ind++);			
 		
 		
 	}

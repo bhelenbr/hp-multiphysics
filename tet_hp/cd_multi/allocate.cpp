@@ -10,9 +10,9 @@
 #include "tet_hp_cd_multi.h"
 #include <iostream> 
 
-void tet_hp_cd_multi::init(input_map& inmap, void *gin) {
+void tet_hp_cd_multi::init(input_map& inmap, shared_ptr<block_global> gin) {
 
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	tet_hp_cd::init(inmap,gin);
 	
 	
@@ -50,15 +50,15 @@ void tet_hp_cd_multi::init(input_map& inmap, void *gin) {
 	}
 	
 	std::ostringstream nstr;
-	for(gbl->nmaterials=0, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush; inmap.find(nstr.str()) != inmap.end(); ++gbl->nmaterials, nstr.str(""), nstr << "Material" << gbl->nmaterials << "_conductivity" << std::flush);
+	for(hp_cd_multi_gbl->nmaterials=0, nstr.str(""), nstr << "Material" << hp_cd_multi_gbl->nmaterials << "_conductivity" << std::flush; inmap.find(nstr.str()) != inmap.end(); ++hp_cd_multi_gbl->nmaterials, nstr.str(""), nstr << "Material" << hp_cd_multi_gbl->nmaterials << "_conductivity" << std::flush);
 	
-	gbl->kcond.resize(gbl->nmaterials);
-	gbl->rhocv.resize(gbl->nmaterials);
+	hp_cd_multi_gbl->kcond.resize(hp_cd_multi_gbl->nmaterials);
+	hp_cd_multi_gbl->rhocv.resize(hp_cd_multi_gbl->nmaterials);
 
-	for(int n=0;n<gbl->nmaterials;++n) {
+	for(int n=0;n<hp_cd_multi_gbl->nmaterials;++n) {
 		nstr.str("");
 		nstr << "Material" << n << "_conductivity";
-		if (!inmap.get(nstr.str(),gbl->kcond(n))) {
+		if (!inmap.get(nstr.str(),hp_cd_multi_gbl->kcond(n))) {
 			*gbl->log << "Couldn't load " << nstr.str() << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
@@ -79,7 +79,7 @@ void tet_hp_cd_multi::init(input_map& inmap, void *gin) {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
-		gbl->rhocv(n) = rho*cv;
+		hp_cd_multi_gbl->rhocv(n) = rho*cv;
 	}
 
 	return;
@@ -107,7 +107,7 @@ void tet_hp_cd_multi::calculate_unsteady_sources() {
 	
 	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntet;++tind) {
-			FLT rhocv = gbl->rhocv(marks(tind));
+			FLT rhocv = hp_cd_multi_gbl->rhocv(marks(tind));
 			v = tet(tind).pnt;
 			
 			if (tet(tind).info > -1) {

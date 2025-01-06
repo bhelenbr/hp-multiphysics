@@ -16,13 +16,13 @@
 const int nmovetypes = 5;
 const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid","uncoupled_deformable","coupled_deformable"};
 
-void tet_hp::init(input_map& inmap, void *gin) {
+void tet_hp::init(input_map& inmap, std::shared_ptr<block_global> gin) {
 	int i,ival,p;
 	std::string keyword, line;
 	std::istringstream data;
 	std::string filename;
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	
 	coarse_flag = false;
 	isfrst = true;
@@ -134,13 +134,8 @@ void tet_hp::init(input_map& inmap, void *gin) {
 			*gbl->log << "couldn't find ibc" << std::endl;
 		}
 	}
-	gbl->ibc = getnewibc(ibcname);
-	gbl->ibc->init(inmap,keyword);
-	
-	/* ALLOCATE BOUNDARY CONDITION STUFF */
-	gbl->vbdry_gbls.resize(nvbd);
-	gbl->ebdry_gbls.resize(nebd);
-	gbl->fbdry_gbls.resize(nfbd);
+	hp_gbl->ibc = getnewibc(ibcname);
+	hp_gbl->ibc->init(inmap,keyword);
 	
 	hp_fbdry.resize(nfbd);
 	hp_ebdry.resize(nebd);
@@ -163,9 +158,9 @@ void tet_hp::init(input_map& inmap, void *gin) {
 		inmap.getwdefault(keyword,val,string("plain"));
 		hp_vbdry(i) = getnewvrtxobject(i,val);
 	}
-	for(i=0;i<nfbd;++i) hp_fbdry(i)->init(inmap,gbl->fbdry_gbls(i));
-	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
-	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl->vbdry_gbls(i));
+	for(i=0;i<nfbd;++i) hp_fbdry(i)->init(inmap);
+	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap);
+	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap);
 	setinfo();
 	
 	inmap.getwdefault("hp_fadd",fadd,1.0);
@@ -192,52 +187,52 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	}
 		
 	/* Allocate block stuff */
-	gbl->ug0.v.resize(maxvst,NV);
-	gbl->ug0.e.resize(maxvst,em0,NV);
-	gbl->ug0.f.resize(maxvst,fm0,NV);
-	gbl->ug0.i.resize(maxvst,im0,NV);
+	hp_gbl->ug0.v.resize(maxvst,NV);
+	hp_gbl->ug0.e.resize(maxvst,em0,NV);
+	hp_gbl->ug0.f.resize(maxvst,fm0,NV);
+	hp_gbl->ug0.i.resize(maxvst,im0,NV);
 		
-	gbl->res.v.resize(maxvst,NV);
-	gbl->res.e.resize(maxvst,em0,NV);
-	gbl->res.f.resize(maxvst,fm0,NV);
-	gbl->res.i.resize(maxvst,im0,NV);
+	hp_gbl->res.v.resize(maxvst,NV);
+	hp_gbl->res.e.resize(maxvst,em0,NV);
+	hp_gbl->res.f.resize(maxvst,fm0,NV);
+	hp_gbl->res.i.resize(maxvst,im0,NV);
 	
-	gbl->res_r.v.resize(maxvst,NV);
-	gbl->res_r.e.resize(maxvst,em0,NV);
-	gbl->res_r.f.resize(maxvst,fm0,NV);
-	gbl->res_r.i.resize(maxvst,im0,NV);
-	gbl->res_r.v = 0.0;
-	gbl->res_r.e = 0.0;
-	gbl->res_r.f = 0.0;
-	gbl->res_r.i = 0.0;
+	hp_gbl->res_r.v.resize(maxvst,NV);
+	hp_gbl->res_r.e.resize(maxvst,em0,NV);
+	hp_gbl->res_r.f.resize(maxvst,fm0,NV);
+	hp_gbl->res_r.i.resize(maxvst,im0,NV);
+	hp_gbl->res_r.v = 0.0;
+	hp_gbl->res_r.e = 0.0;
+	hp_gbl->res_r.f = 0.0;
+	hp_gbl->res_r.i = 0.0;
 
-	gbl->res0.v.resize(maxvst,NV);
-	gbl->res0.e.resize(maxvst,basis::tet(log2p).em,NV);
-	gbl->res0.f.resize(maxvst,basis::tet(log2p).fm,NV);
-	gbl->res0.i.resize(maxvst,basis::tet(log2p).im,NV); 
+	hp_gbl->res0.v.resize(maxvst,NV);
+	hp_gbl->res0.e.resize(maxvst,basis::tet(log2p).em,NV);
+	hp_gbl->res0.f.resize(maxvst,basis::tet(log2p).fm,NV);
+	hp_gbl->res0.i.resize(maxvst,basis::tet(log2p).im,NV); 
 
 #ifdef JACOBI
-	gbl->jacob_diag.v.resize(maxvst,NV);
-	gbl->jacob_diag.e.resize(maxvst,em0,NV);
-	gbl->jacob_diag.f.resize(maxvst,fm0,NV);
-	gbl->jacob_diag.i.resize(maxvst,im0,NV);
+	hp_gbl->jacob_diag.v.resize(maxvst,NV);
+	hp_gbl->jacob_diag.e.resize(maxvst,em0,NV);
+	hp_gbl->jacob_diag.f.resize(maxvst,fm0,NV);
+	hp_gbl->jacob_diag.i.resize(maxvst,im0,NV);
 #endif
 	
-	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
-	if (gbl->diagonal_preconditioner) {
-		gbl->vprcn.resize(maxvst,NV);
-		gbl->eprcn.resize(maxvst,NV);
-		gbl->fprcn.resize(maxvst,NV);
-		gbl->iprcn.resize(maxvst,NV);
+	inmap.getwdefault("diagonal_preconditioner",hp_gbl->diagonal_preconditioner,true);
+	if (hp_gbl->diagonal_preconditioner) {
+		hp_gbl->vprcn.resize(maxvst,NV);
+		hp_gbl->eprcn.resize(maxvst,NV);
+		hp_gbl->fprcn.resize(maxvst,NV);
+		hp_gbl->iprcn.resize(maxvst,NV);
 	} else {
-		gbl->vprcn_ut.resize(maxvst,NV,NV);
-		gbl->eprcn_ut.resize(maxvst,NV,NV);
-		gbl->fprcn_ut.resize(maxvst,NV,NV);
-		gbl->iprcn_ut.resize(maxvst,NV,NV);
+		hp_gbl->vprcn_ut.resize(maxvst,NV,NV);
+		hp_gbl->eprcn_ut.resize(maxvst,NV,NV);
+		hp_gbl->fprcn_ut.resize(maxvst,NV,NV);
+		hp_gbl->iprcn_ut.resize(maxvst,NV,NV);
 	}
 
 	double CFLdflt[4] = {2.2, 1.5, 1.0, 0.5};
-	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
+	if (!inmap.get(gbl->idprefix +"_cfl",hp_gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",hp_gbl->cfl.data(),log2pmax+1,CFLdflt); 
 
 	/***************************************************/
 	/* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
@@ -257,7 +252,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 			hp_fbdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
 		
 		/* USE TOBASIS TO INITALIZE SOLUTION */
-		tobasis(gbl->ibc);
+		tobasis(hp_gbl->ibc);
 	}
 	
 	/* fix volume of tets after they are curved */
@@ -313,13 +308,13 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	/* ALLOCATE ADAPTATION STORAGE   */
 	/*********************************/
 	if (gbl->adapt_interval) {
-		inmap.getwdefault("curvature_sensitivity",gbl->curvature_sensitivity,20.0);
-		gbl->pstr = create();
-		gbl->pstr->init(*this,adapt_storage);
+		inmap.getwdefault("curvature_sensitivity",hp_gbl->curvature_sensitivity,20.0);
+		hp_gbl->pstr = create();
+		hp_gbl->pstr->init(*this,adapt_storage);
 
 		/* LET EACH BOUNDARY CONDITION DIRECTLY FIND ITS ADAPTATION STORAGE */
 		for(i=0;i<nebd;++i)
-		hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
+		hp_ebdry(i)->adapt_storage = hp_gbl->pstr->hp_ebdry(i);
 	}
 
 	return;
@@ -542,7 +537,7 @@ FLT tet_hp::maxres() {
 
 	for(i=0;i<npnt;++i) {
 		for(n=0;n<NV;++n) {
-			mxr(n) = MAX(mxr(n),fabs(gbl->res.v(i,n)));
+			mxr(n) = MAX(mxr(n),fabs(hp_gbl->res.v(i,n)));
 		}
 	}
 			

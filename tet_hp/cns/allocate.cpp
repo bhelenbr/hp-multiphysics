@@ -11,12 +11,12 @@
 //#include "../hp_boundary.h"
 
 
-void tet_hp_cns::init(input_map& inmap, void *gin) {
+void tet_hp_cns::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
 		inmap[gbl->idprefix + "_nvariable"] = "5";
@@ -27,29 +27,29 @@ void tet_hp_cns::init(input_map& inmap, void *gin) {
 	if (!inmap.get(gbl->idprefix + "_dissipation",adis)) inmap.getwdefault("dissipation",adis,1.0);
 
 	/* no preconditioner = 0, weiss-smith preconditioner = 1, squared preconditioner = 2 */
-	inmap.getwdefault("preconditioner",gbl->preconditioner,1);
+	inmap.getwdefault("preconditioner",hp_cns_gbl->preconditioner,1);
 
-	gbl->tau.resize(maxvst,NV,NV);
+	hp_cns_gbl->tau.resize(maxvst,NV,NV);
 
-	gbl->vpreconditioner.resize(maxvst,NV,NV);
-	gbl->epreconditioner.resize(maxvst,NV,NV);
-	gbl->betasquared.resize(ntet);
+	hp_cns_gbl->vpreconditioner.resize(maxvst,NV,NV);
+	hp_cns_gbl->epreconditioner.resize(maxvst,NV,NV);
+	hp_cns_gbl->betasquared.resize(ntet);
 
 	double prandtl;
 	
 	double bodydflt[3] = {0.0,0.0,0.0};
 	if (!inmap.get(gbl->idprefix +"_body_force",gbl->body.data(),3)) inmap.getwdefault("body_force",gbl->body.data(),3,bodydflt); 
 	
-	if (!inmap.get(gbl->idprefix + "_atm_pressure",gbl->atm_pressure)) inmap.getwdefault("atm_pressure",gbl->atm_pressure,0.0);	
-	if (!inmap.get(gbl->idprefix + "_density",gbl->density)) inmap.getwdefault("density",gbl->density,0.0);	
-	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
-	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
+	if (!inmap.get(gbl->idprefix + "_atm_pressure",hp_cns_gbl->atm_pressure)) inmap.getwdefault("atm_pressure",hp_cns_gbl->atm_pressure,0.0);	
+	if (!inmap.get(gbl->idprefix + "_density",hp_cns_gbl->density)) inmap.getwdefault("density",hp_cns_gbl->density,0.0);	
+	if (!inmap.get(gbl->idprefix + "_gamma",hp_cns_gbl->gamma)) inmap.getwdefault("gamma",hp_cns_gbl->gamma,1.4);
+	if (!inmap.get(gbl->idprefix + "_mu",hp_cns_gbl->mu)) inmap.getwdefault("mu",hp_cns_gbl->mu,1.0);
 	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",prandtl,0.713);
-	if (!inmap.get(gbl->idprefix + "_R",gbl->R)) inmap.getwdefault("R",gbl->R,287.058);
+	if (!inmap.get(gbl->idprefix + "_R",hp_cns_gbl->R)) inmap.getwdefault("R",hp_cns_gbl->R,287.058);
 	
-	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
+	hp_cns_gbl->kcond = hp_cns_gbl->R*hp_cns_gbl->mu/prandtl*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
 
-	*gbl->log << "#conductivity: " << gbl->kcond << endl;
+	*gbl->log << "#conductivity: " << hp_cns_gbl->kcond << endl;
 	
 	/* source term for MMS */
 //	keyword = gbl->idprefix + "_src";
@@ -88,7 +88,7 @@ void tet_hp_cns::calculate_unsteady_sources() {
     int i,j,k,n,tind;
 	int stridex=MXGP*MXGP;
 	int stridey=MXGP;
-	FLT	ogm1 = 1.0/(gbl->gamma-1.0);
+	FLT	ogm1 = 1.0/(hp_cns_gbl->gamma-1.0);
 
         
     for (log2p=0;log2p<=log2pmax;++log2p) {
@@ -124,7 +124,7 @@ void tet_hp_cns::calculate_unsteady_sources() {
             for(i=0;i<basis::tet(log2p).gpx;++i) { 
                 for(j=0;j<basis::tet(log2p).gpy;++j) {    
 					for(k=0;k<basis::tet(log2p).gpz;++k) {    
-						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 
 						cjcb(i)(j)(k) = -gbl->bd(0)*rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						

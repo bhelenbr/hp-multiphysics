@@ -47,7 +47,7 @@ void neumann_pt::rsdl(int stage){
 	element_rsdl(stage);
 		
 	for(int n=0;n<x.NV;++n)
-		x.gbl->res.v(v0,n) += x.lf(n)(0);
+		x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
 
 	return;
 }
@@ -107,7 +107,7 @@ void dirichlet_edge::tadvance() {
                 pt(1) = x.crd1d(1)(k);
                 pt(2) = x.crd1d(2)(k);
                 for(n=0;n<x.NV;++n)
-                    x.res1d(n)(k) -= x.gbl->ibc->f(n,pt,x.gbl->time);
+                    x.res1d(n)(k) -= x.hp_gbl->ibc->f(n,pt,x.gbl->time);
             }
             for(n=0;n<x.NV;++n)
                 basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.res1d(n)(0));
@@ -133,16 +133,16 @@ void neumann_edge::rsdl(int stage){
 		element_rsdl(sind,stage);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.seg(sind).pnt(0),n) += x.lf(n)(0);
+			x.hp_gbl->res.v(x.seg(sind).pnt(0),n) += x.lf(n)(0);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.seg(sind).pnt(1),n) += x.lf(n)(1);
+			x.hp_gbl->res.v(x.seg(sind).pnt(1),n) += x.lf(n)(1);
 		
 		int indx = 3;
 
 		for(int k=0;k<basis::tet(x.log2p).em;++k) {
 			for(int n=0;n<x.NV;++n)
-				x.gbl->res.e(sind,k,n) += x.lf(n)(indx);
+				x.hp_gbl->res.e(sind,k,n) += x.lf(n)(indx);
 			++indx;
 		}	
 	}
@@ -205,7 +205,7 @@ void dirichlet::tadvance() {
                 pt(1) = x.crd1d(1)(k);
                 pt(2) = x.crd1d(2)(k);
                 for(n=0;n<x.NV;++n)
-                    x.res1d(n)(k) -= x.gbl->ibc->f(n,pt,x.gbl->time);
+                    x.res1d(n)(k) -= x.hp_gbl->ibc->f(n,pt,x.gbl->time);
             }
             for(n=0;n<x.NV;++n)
                 basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.res1d(n)(0));
@@ -232,13 +232,13 @@ void neumann::rsdl(int stage){
 		element_rsdl(find,stage);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
+			x.hp_gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
+			x.hp_gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
+			x.hp_gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
 		
 		int indx = 3;
 		for(int j=0;j<3;++j) {
@@ -247,7 +247,7 @@ void neumann::rsdl(int stage){
 			msgn = 1.0;
 			for(int k=0;k<basis::tet(x.log2p).em;++k) {
 				for(int n=0;n<x.NV;++n)
-					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+					x.hp_gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
 				msgn *= sgn;
 				++indx;
 			}
@@ -255,7 +255,7 @@ void neumann::rsdl(int stage){
 		
 	    for(int k=0;k<basis::tet(x.log2p).fm;++k) {
 		    for(int n=0;n<x.NV;++n)
-				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+				x.hp_gbl->res.f(find,k,n) += x.lf(n)(indx);
 			++indx;
 		}		
 	}

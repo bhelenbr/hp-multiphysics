@@ -13,7 +13,7 @@
 
 void tet_hp::adapt() {
 	treeinit();  // FIXME??
-	gbl->pstr->copy(*this);
+	hp_gbl->pstr->copy(*this);
 	tet_mesh::adapt();
 	setinfo();
 	return;
@@ -23,25 +23,25 @@ void tet_hp::updatepdata(int v0) {
 	int n,tind,step; 
 	FLT r,s;      
 		
-	gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);
+	hp_gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);
 		
 	for(step=0;step<gbl->nadapt;++step) {
-		gbl->pstr->ugtouht(tind,step);
-		basis::tri(log2p).ptprobe(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
+		hp_gbl->pstr->ugtouht(tind,step);
+		basis::tri(log2p).ptprobe(NV,&ugbd(step).v(v0,0),&hp_gbl->pstr->uht(0)(0),MXTM);
 	}
 	
-	if (gbl->pstr->tri(tind).info > -1) {
+	if (hp_gbl->pstr->tri(tind).info > -1) {
 		for(step=1;step<gbl->nadapt;++step) {
-			gbl->pstr->crdtocht(tind,step);
-			basis::tri(log2p).ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
+			hp_gbl->pstr->crdtocht(tind,step);
+			basis::tri(log2p).ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&hp_gbl->pstr->cht(0,0),MXTM);
 		}
 	}
 	else {
 		for(step=1;step<gbl->nadapt;++step) {
 			for(n=0;n<ND;++n) 
-				vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(0))(n)*(s +1.)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(1))(n)*(-r -s)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(2))(n)*(r +1.)/2.;
+				vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(0))(n)*(s +1.)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(1))(n)*(-r -s)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->tri(tind).pnt(2))(n)*(r +1.)/2.;
 		}
 	}
 
@@ -53,30 +53,30 @@ void tet_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
 	FLT psi;
 	
 	v0 = seg(ebdry(bnum)->seg(bel)).pnt(endpt);
-	gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pnts(v0),sidloc,psi);
-	sind = gbl->pstr->ebdry(bnum)->seg(sidloc);
+	hp_gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pnts(v0),sidloc,psi);
+	sind = hp_gbl->pstr->ebdry(bnum)->seg(sidloc);
 	
 	for(step=0;step<gbl->nadapt;++step) {
-		gbl->pstr->ugtouht1d(sind,step);
-		basis::tri(log2p).ptprobe1d(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
+		hp_gbl->pstr->ugtouht1d(sind,step);
+		basis::tri(log2p).ptprobe1d(NV,&ugbd(step).v(v0,0),&hp_gbl->pstr->uht(0)(0),MXTM);
 	}
 
 	if (hp_ebdry(bnum)->is_curved()) {
 		for(step=1;step<gbl->nadapt;++step) {
-			gbl->pstr->crdtocht1d(sind,step);
-			basis::tri(log2p).ptprobe1d(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
+			hp_gbl->pstr->crdtocht1d(sind,step);
+			basis::tri(log2p).ptprobe1d(ND,&vrtxbd(step)(v0)(0),&hp_gbl->pstr->cht(0,0),MXTM);
 		}
 	}
 	else {
 		for(step=1;step<gbl->nadapt;++step) {
 			for(n=0;n<ND;++n) 
-				vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(0))(n)*(1. -psi)/2.
-					+gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(1))(n)*(1. +psi)/2.;
+				vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->seg(sind).pnt(0))(n)*(1. -psi)/2.
+					+hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->seg(sind).pnt(1))(n)*(1. +psi)/2.;
 		}
 	}
 	
 	/* FOR INTERNALLY STORED DATA */
-	hp_ebdry(bnum)->updatepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->updatepdata_bdry(bel,endpt,hp_gbl->pstr->hp_ebdry(bnum));
 	
 	return;
 }
@@ -97,7 +97,7 @@ void tet_hp::movepdata(int from, int to) {
 
 void tet_hp::movepdata_bdry(int bnum,int bel,int endpt) {
 	/* This is just for internal data (if any) */
-	hp_ebdry(bnum)->movepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->movepdata_bdry(bel,endpt,hp_gbl->pstr->hp_ebdry(bnum));
 }
 
 static int error_count = 0;
@@ -124,7 +124,7 @@ void tet_hp::updatesdata(int sind) {
 	for(i=0;i<basis::tri(log2p).gpx;++i) {
 		pt(0) = crd(0)(0,i);
 		pt(1) = crd(1)(0,i);
-		ierr = gbl->pstr->findinteriorpt(pt,tind,r,s);
+		ierr = hp_gbl->pstr->findinteriorpt(pt,tind,r,s);
 		if (ierr) {
 			*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatesdata for " << sind << ' ' << pt << std::endl;
 			std::ostringstream fname;
@@ -134,8 +134,8 @@ void tet_hp::updatesdata(int sind) {
 		}
 		
 		for(step=0;step<gbl->nadapt;++step) {
-			gbl->pstr->ugtouht(tind,step);
-			basis::tri(log2p).ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+			hp_gbl->pstr->ugtouht(tind,step);
+			basis::tri(log2p).ptprobe(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 			for(n=0;n<NV;++n)    {
 				bdwk(step,n)(0,i) -= upt[n];
 			}
@@ -181,17 +181,17 @@ void tet_hp::updatesdata_bdry(int bnum,int bel) {
 		for(m=0;m<basis::tri(log2p).gpx;++m) {
 			pt(0) = bdwk(0,0)(1,m);
 			pt(1) = bdwk(0,1)(1,m);
-			gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
-			stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
+			hp_gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
+			stgt = hp_gbl->pstr->ebdry(bnum)->seg(stgt);
 
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht1d(stgt,step);
-				basis::tri(log2p).ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht1d(stgt,step);
+				basis::tri(log2p).ptprobe1d(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)    
 						bdwk(step,n)(0,m) -= upt[n];
 			
-				gbl->pstr->crdtocht1d(stgt,step);
-				basis::tri(log2p).ptprobe1d(ND,upt,&gbl->pstr->cht(0,0),MXTM);
+				hp_gbl->pstr->crdtocht1d(stgt,step);
+				basis::tri(log2p).ptprobe1d(ND,upt,&hp_gbl->pstr->cht(0,0),MXTM);
 				for(n=0;n<ND;++n)    
 						bdwk(step,n)(1,m) -= upt[n];
 			}                          
@@ -212,13 +212,13 @@ void tet_hp::updatesdata_bdry(int bnum,int bel) {
 			pt(1) = bdwk(0,1)(1,m);
 
 			/* FIND PSI */                
-			gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
-			stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
+			hp_gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
+			stgt = hp_gbl->pstr->ebdry(bnum)->seg(stgt);
 
 			/* CALCULATE VALUE OF SOLUTION AT POINT */
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht1d(stgt,step);
-				basis::tri(log2p).ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht1d(stgt,step);
+				basis::tri(log2p).ptprobe1d(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)    
 						bdwk(step,n)(0,m) -= upt[n];
 			}
@@ -238,7 +238,7 @@ void tet_hp::updatesdata_bdry(int bnum,int bel) {
 	}
 	
 	/* UPDATE INTERNAL INFORMATION */
-	hp_ebdry(bnum)->updatesdata_bdry(bel,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->updatesdata_bdry(bel,hp_gbl->pstr->hp_ebdry(bnum));
 	
 	return;
 }
@@ -256,7 +256,7 @@ void tet_hp::movesdata(int from, int to) {
 
 void tet_hp::movesdata_bdry(int bnum,int bel) {
 	
-	hp_ebdry(bnum)->movesdata_bdry(bel,gbl->pstr->hp_ebdry(bnum));
+	hp_ebdry(bnum)->movesdata_bdry(bel,hp_gbl->pstr->hp_ebdry(bnum));
 
 	return;
 }
@@ -285,7 +285,7 @@ void tet_hp::updatetdata(int tind) {
 		for (j=0; j < basis::tri(log2p).gpn; ++j ) {
 			pt(0) = crd(0)(i,j);
 			pt(1) = crd(1)(i,j);
-			ierr = gbl->pstr->findinteriorpt(pt,ttgt,r,s);
+			ierr = hp_gbl->pstr->findinteriorpt(pt,ttgt,r,s);
 			if (ierr) {
 				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
 				std::ostringstream fname;
@@ -294,8 +294,8 @@ void tet_hp::updatetdata(int tind) {
 				tet_hp::output(fname.str().c_str(),tet_hp::tecplot);
 			}            
 			for(step=0;step<gbl->nadapt;++step) {
-				gbl->pstr->ugtouht(ttgt,step);
-				basis::tri(log2p).ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
+				hp_gbl->pstr->ugtouht(ttgt,step);
+				basis::tri(log2p).ptprobe(NV,upt,&hp_gbl->pstr->uht(0)(0),MXTM);
 				for(n=0;n<NV;++n)
 						bdwk(step,n)(i,j) -= upt[n];
 			}

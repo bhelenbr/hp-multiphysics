@@ -46,8 +46,8 @@ namespace bdry_cns {
 		generic(tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "generic";}
 		generic(const generic& inbdry, tet_hp_cns &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
 		generic* create(tet_hp& xin, face_bdry &bin) const {return new generic(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_face_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_face_bdry::init(inmap);
 		}
 	};
 		
@@ -144,7 +144,7 @@ namespace bdry_cns {
 			applied_stress(tet_hp_cns &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
 			applied_stress(const applied_stress& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in);
+			void init(input_map& inmap);
 	};
 	
 	class pure_slip : public neumann {
@@ -180,8 +180,8 @@ namespace bdry_cns {
 		generic_edge(tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic_edge";}
 		generic_edge(const generic_edge& inbdry, tet_hp_cns &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 		generic_edge* create(tet_hp& xin, edge_bdry &bin) const {return new generic_edge(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
-		void init(input_map& inmap,void* gbl_in) {
-			hp_edge_bdry::init(inmap,gbl_in);
+		void init(input_map& inmap) {
+			hp_edge_bdry::init(inmap);
 		}
 	};
 	
@@ -276,7 +276,7 @@ namespace bdry_cns {
 
 		void vdirichlet3d() {
 			for(int n=0; n<ndirichlets; ++n) {
-				x.gbl->res.v(base.pnt,dirichlets(n)) = 0.0;
+				x.hp_gbl->res.v(base.pnt,dirichlets(n)) = 0.0;
 			}
 		}
 		
@@ -293,12 +293,12 @@ namespace bdry_cns {
 		
 		void tadvance() { 
 			for(int n=1;n<x.NV-1;++n)
-				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+				x.ug.v(base.pnt,n) = x.hp_gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
 			return;
 		}
 		
 		void vdirichlet3d() {
-			x.gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
+			x.hp_gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
 		}
 		
 	};
@@ -313,12 +313,12 @@ namespace bdry_cns {
 		outflow_pt* create(tet_hp& xin, vrtx_bdry &bin) const {return new outflow_pt(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
 		
 		void tadvance() { 
-			x.ug.v(base.pnt,0) = x.gbl->ibc->f(0,x.pnts(base.pnt),x.gbl->time);  
+			x.ug.v(base.pnt,0) = x.hp_gbl->ibc->f(0,x.pnts(base.pnt),x.gbl->time);  
 			return;
 		}
 		
 		void vdirichlet3d() {
-			x.gbl->res.v(base.pnt,0) = 0.0;
+			x.hp_gbl->res.v(base.pnt,0) = 0.0;
 		}
 		
 	};

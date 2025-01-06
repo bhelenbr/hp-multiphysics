@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -45,12 +45,6 @@
 		6F6565570FACD24700428C3C /* tet_prims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tet_prims.cpp */; };
 		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
-		6F90CCE60FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
-		6F90CCE70FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
-		6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
-		6F90CCE90FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
-		6F90CCEC0FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
-		6F90CCED0FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		6F956D730FE65610009B5B29 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F956D720FE65610009B5B29 /* Accelerate.framework */; };
 		6F956D740FE65610009B5B29 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F956D720FE65610009B5B29 /* Accelerate.framework */; };
 		6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; };
@@ -72,8 +66,6 @@
 		6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
-		959CF3A010890B7E002293FD /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
-		959CF3A110890B7F002293FD /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		B2152F680C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
 		B2152F690C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
 		B2152F6A0C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
@@ -106,6 +98,14 @@
 		E63DFFB0161BDC6100C02744 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
 		E63DFFB1161BDC7F00C02744 /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
 		E63DFFB2161BDC8000C02744 /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
+		E6BB2DF72D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		E6BB2DF82D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		E6BB2DF92D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		E6BB2DFA2D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		E6BB2DFB2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		E6BB2DFC2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		E6BB2DFD2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		E6BB2DFE2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
 		E6F8CDBA1D3F31010010D881 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
 		E6F8CDBB1D3F31080010D881 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F8CDB71D3F30E70010D881 /* libtri_mesh_mpi.a */; };
 /* End PBXBuildFile section */
@@ -284,8 +284,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F2262C508673029001017D0 /* tet_mesh.h in Headers */,
+				E6BB2DFB2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */,
 				B24117800C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
-				959CF3A010890B7E002293FD /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,7 +294,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B24117810C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
-				6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */,
+				E6BB2DFC2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,8 +303,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB91AE30ACCB1E100792B04 /* tet_mesh.h in Headers */,
+				E6BB2DFE2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */,
 				B24117830C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
-				6F90CCEC0FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,8 +313,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */,
+				E6BB2DFD2D2BEF0C007A0A15 /* MAdLibInterface.h in Headers */,
 				B24117820C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
-				6F90CCE60FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +395,8 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1120;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1620;
 			};
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -424,6 +425,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		6F27980508B9FA49007BECA9 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -433,7 +435,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0";
+			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -456,8 +458,8 @@
 				6F6565570FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE120FBA86FB006DD167 /* copy.cpp in Sources */,
+				E6BB2DF72D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */,
 				6F14BE130FBA86FB006DD167 /* refineby2.cpp in Sources */,
-				959CF3A110890B7F002293FD /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,8 +480,8 @@
 				6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE100FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE110FBA86FB006DD167 /* refineby2.cpp in Sources */,
-				6F90CCE90FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 				E63DFFAF161BDC6100C02744 /* setup.cpp in Sources */,
+				E6BB2DF82D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */,
 				E63DFFB1161BDC7F00C02744 /* tet_boundary.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -501,8 +503,8 @@
 				6FBD0E8D0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE0E0FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE0F0FBA86FB006DD167 /* refineby2.cpp in Sources */,
-				6F90CCED0FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 				E63DFFB0161BDC6100C02744 /* setup.cpp in Sources */,
+				E6BB2DFA2D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */,
 				E63DFFB2161BDC8000C02744 /* tet_boundary.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -525,8 +527,8 @@
 				6F6565540FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE0C0FBA86FB006DD167 /* copy.cpp in Sources */,
+				E6BB2DF92D2BEF02007A0A15 /* MAdLibInterface.cpp in Sources */,
 				6F14BE2C0FBAAA15006DD167 /* refineby2.cpp in Sources */,
-				6F90CCE70FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -538,6 +540,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					METIS,
@@ -552,6 +555,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					METIS,
@@ -565,6 +569,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = Documentation;
 			};
 			name = Debug;
@@ -573,6 +578,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				PRODUCT_NAME = Documentation;
 			};
 			name = Release;
@@ -582,6 +588,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -595,6 +602,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -608,6 +616,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -632,6 +641,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					MPISRC,
@@ -656,6 +666,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
@@ -678,6 +689,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"${inherited}",
 					PTH,
@@ -713,23 +725,26 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					USING_MADLIB,
 					f2cFortran,
 					BZ_DEBUG,
 					METIS,
+					USING_MADLIB,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -740,14 +755,15 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					../include,
-					/usr/local/include,
 					"$(PACKAGES)/include",
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					/usr/local/lib,
 					../lib,
 					"$(PACKAGES)/lib",
+					"$(HOMEBREW_PREFIX)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";
@@ -773,21 +789,24 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = ..;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					USING_MADLIB,
 					f2cFortran,
 					METIS,
+					USING_MADLIB,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -798,14 +817,15 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					../include,
-					/usr/local/include,
 					"$(PACKAGES)/include",
+					"$(HOMEBREW_PREFIX)/include",
 				);
+				HOMEBREW_PREFIX = /opt/homebrew;
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
-					/usr/local/lib,
 					../lib,
 					"$(PACKAGES)/lib",
+					"$(HOMEBREW_PREFIX)/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PACKAGES = "$(HOME)/Packages";

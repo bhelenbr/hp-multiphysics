@@ -16,7 +16,7 @@
 class tet_hp_cns : public tet_hp {
 public:
 	/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-	struct global : public tet_hp::global {
+	struct hp_cns_global {
 		/* STABILIZATION */
 		Array<FLT,3> tau;
 		
@@ -37,8 +37,8 @@ public:
 		//init_bdry_cndtn *src;
 
 		
-	} *gbl;
-	
+	};
+    shared_ptr<hp_cns_global> hp_cns_gbl;
 	
 	FLT adis; // DISSIPATION CONSTANT
 	
@@ -48,17 +48,16 @@ public:
 	init_bdry_cndtn* getnewibc(std::string ibcname);
 	
 public:
-	void* create_global_structure() {return new global;}
 	tet_hp_cns* create() { return new tet_hp_cns(); }
 	
-	void init(input_map& inmap, void *gin); 
+	void init(input_map& inmap, shared_ptr<block_global> gin); 
 	void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
 	void update();
 	void minvrt();
 	
 	//void length(); 
-	void setup_preconditioner();
+	int setup_preconditioner();
 	void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 	void calculate_unsteady_sources();
 	void calculate_preconditioner_tau_timestep(Array<double,1> pvu, FLT h, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep, FLT &b2);

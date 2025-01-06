@@ -25,13 +25,13 @@ void neumann::rsdl(int stage){
 		element_rsdl(find,stage);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
+			x.hp_gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
+			x.hp_gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
 		
 		for(int n=0;n<x.NV;++n)
-			x.gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
+			x.hp_gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
 		
 		int indx = 3;
 		for(int j=0;j<3;++j) {
@@ -40,7 +40,7 @@ void neumann::rsdl(int stage){
 			msgn = 1.0;
 			for(int k=0;k<basis::tet(x.log2p).em;++k) {
 				for(int n=0;n<x.NV;++n)
-					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+					x.hp_gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
 				msgn *= sgn;
 				++indx;
 			}
@@ -48,7 +48,7 @@ void neumann::rsdl(int stage){
 		
 	    for(int k=0;k<basis::tet(x.log2p).fm;++k) {
 		    for(int n=0;n<x.NV;++n)
-				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+				x.hp_gbl->res.f(find,k,n) += x.lf(n)(indx);
 			++indx;
 		}		
 	}
@@ -117,7 +117,7 @@ void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector
 #endif
 	
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+	double h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
 	flx(x.NV-1) = h*flx(0);
 	
 	return;
@@ -131,11 +131,11 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 	
 	
 	Array<FLT,1> v(3);
-	FLT pr = (x.gbl->gamma-1.0)*(u(4)-0.5/u(0)*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3)));
+	FLT pr = (x.hp_cns_explicit_gbl->gamma-1.0)*(u(4)-0.5/u(0)*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3)));
 	v(0) = ibc->f(1,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(0);
 	v(1) = ibc->f(2,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(1);
 	v(2) = ibc->f(3,xpt,x.gbl->time)/ibc->f(0,xpt,x.gbl->time)-mv(2);
-	FLT RT = (x.gbl->gamma-1.0)*(ibc->f(4,xpt,x.gbl->time)-0.5/ibc->f(0,xpt,x.gbl->time)*(ibc->f(1,xpt,x.gbl->time)*ibc->f(1,xpt,x.gbl->time)+ibc->f(2,xpt,x.gbl->time)*ibc->f(2,xpt,x.gbl->time)+ibc->f(3,xpt,x.gbl->time)*ibc->f(3,xpt,x.gbl->time)))/ibc->f(0,xpt,x.gbl->time);
+	FLT RT = (x.hp_cns_explicit_gbl->gamma-1.0)*(ibc->f(4,xpt,x.gbl->time)-0.5/ibc->f(0,xpt,x.gbl->time)*(ibc->f(1,xpt,x.gbl->time)*ibc->f(1,xpt,x.gbl->time)+ibc->f(2,xpt,x.gbl->time)*ibc->f(2,xpt,x.gbl->time)+ibc->f(3,xpt,x.gbl->time)*ibc->f(3,xpt,x.gbl->time)))/ibc->f(0,xpt,x.gbl->time);
 	FLT rho = pr/RT;
 	
 	/* CONTINUITY */
@@ -146,7 +146,7 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 		flx(n) = flx(0)*v(n-1) + pr*norm(n-1);
 	
 	/* ENERGY EQUATION */
-	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
+	FLT h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
 	flx(x.NV-1) = h*flx(0);
 	
 	
@@ -158,7 +158,7 @@ void inflow::vdirichlet() {
 		int v0 = base.pnt(j).gindx;
 		
 		for (int n=0; n<ndirichlets; ++n) 
-			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+			x.hp_gbl->res.v(v0,dirichlets(n)) = 0.0;
 		
 	}
 }
@@ -168,7 +168,7 @@ void inflow::edirichlet() {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
 			for (int n=0; n<ndirichlets; ++n) 
-				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+				x.hp_gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
 }		
@@ -178,7 +178,7 @@ void inflow::fdirichlet() {
 		for(int j=0;j<base.ntri;++j) {
 			int find = base.tri(j).gindx;
 			for (int n=0; n<ndirichlets; ++n) 
-				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
+				x.hp_gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
 }	
@@ -199,14 +199,14 @@ void inflow::update(int stage) {
 		v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 		w = ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 		KE = 0.5*(u*u+v*v+w*w);
-		RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+		RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 		
 		rho = x.ug.v(v0,0);
 		
 		x.ug.v(v0,1) = rho*u;
 		x.ug.v(v0,2) = rho*v;
 		x.ug.v(v0,3) = rho*w;
-		x.ug.v(v0,4) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+		x.ug.v(v0,4) = rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 		
 	} while (++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
@@ -215,14 +215,14 @@ void inflow::update(int stage) {
 	v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 	w = ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
 	KE = 0.5*(u*u+v*v+w*w);
-	RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+	RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 	
 	rho = x.ug.v(v0,0);
 	
 	x.ug.v(v0,1) = rho*u;
 	x.ug.v(v0,2) = rho*v;
 	x.ug.v(v0,3) = rho*w;
-	x.ug.v(v0,4) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+	x.ug.v(v0,4) = rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 	
 	if(basis::tet(x.log2p).p > 2){
 		*x.gbl->log << "update in boundary face only works for p=1,2" << endl;
@@ -267,14 +267,14 @@ void inflow::update(int stage) {
 				v = ibc->f(2, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 				w = ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
 				KE = 0.5*(u*u+v*v+w*w);
-				RT = (ibc->f(4, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+				RT = (ibc->f(4, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 				
 				rho = x.u1d(0)(k);
 				
 				x.u1d(1)(k) -= rho*u;
 				x.u1d(2)(k) -= rho*v;
 				x.u1d(3)(k) -= rho*w;
-				x.u1d(4)(k) -= rho*(RT/(x.gbl->gamma-1.0)+KE);
+				x.u1d(4)(k) -= rho*(RT/(x.hp_cns_explicit_gbl->gamma-1.0)+KE);
 				
 				
 			}
@@ -296,12 +296,12 @@ void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVect
 				  +pow(ibc->f(2, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
 				  +pow(ibc->f(3, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0));
 	
-	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.gbl->gamma-1.0);
+	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 	
 	FLT u1 = u(1)/u(0);
 	FLT u2 = u(2)/u(0);
 	FLT u3 = u(3)/u(0);
-	FLT RT = (x.gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
+	FLT RT = (x.hp_cns_explicit_gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
 	
 	FLT rho = pr/RT;
 	
@@ -312,7 +312,7 @@ void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVect
 		flx(n+1) = 0.0;
 	
 	/* ENERGY EQUATION */
-	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
+	FLT h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
 	flx(4) = h*flx(0);
 	
 	return;
@@ -323,7 +323,7 @@ void adiabatic::vdirichlet() {
 		int v0 = base.pnt(j).gindx;
 		
 		for (int n=0; n<ndirichlets; ++n) 
-			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+			x.hp_gbl->res.v(v0,dirichlets(n)) = 0.0;
 		
 	}
 }
@@ -333,7 +333,7 @@ void adiabatic::edirichlet() {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
 			for (int n=0; n<ndirichlets; ++n) 
-				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+				x.hp_gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
 }		
@@ -343,7 +343,7 @@ void adiabatic::fdirichlet() {
 		for(int j=0;j<base.ntri;++j) {
 			int find = base.tri(j).gindx;
 			for (int n=0; n<ndirichlets; ++n) 
-				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
+				x.hp_gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
 }		
@@ -355,7 +355,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	TinyVector<FLT,3> vec1,vec2,vec3,vecr;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
 	Array<FLT,1> eigs(x.NV);
-	FLT gam = x.gbl->gamma;
+	FLT gam = x.hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 
 	FLT mag = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
@@ -482,11 +482,11 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 }
 
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
+void applied_stress::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 
-	neumann::init(inmap,gbl_in);
+	neumann::init(inmap);
 	
 	stress.resize(tet_mesh::ND+1);
 	for(int n=0;n<tet_mesh::ND+1;++n) {
@@ -512,12 +512,12 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, Tin
 				  +pow(ibc->f(2, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
 				  +pow(ibc->f(3, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0));
 	
-	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.gbl->gamma-1.0);
+	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.hp_cns_explicit_gbl->gamma-1.0);
 	
 	FLT u1 = u(1)/u(0);
 	FLT u2 = u(2)/u(0);
 	FLT u3 = u(3)/u(0);
-	FLT RT = (x.gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
+	FLT RT = (x.hp_cns_explicit_gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
 
 	FLT rho = pr/RT;
 	
@@ -538,17 +538,17 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, Tin
 #endif
 	
 	/* ENERGY EQUATION */
-	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
+	FLT h = x.hp_cns_explicit_gbl->gamma/(x.hp_cns_explicit_gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
 	flx(4) = h*flx(0)-stress(3).Eval(xpt,x.gbl->time)*length;		
 	
 	return;
 }
 
-void specified_flux::init(input_map& inmap,void* gbl_in) {
+void specified_flux::init(input_map& inmap) {
 	std::string keyword;
 	std::ostringstream nstr;
 	
-	neumann::init(inmap,gbl_in);
+	neumann::init(inmap);
 	
 	stress.resize(x.NV);
 	for(int n=0;n<x.NV;++n) {

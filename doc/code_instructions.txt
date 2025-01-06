@@ -195,18 +195,11 @@ make PETSC_DIR=/Users/bhelenbr/Packages/petsc PETSC_ARCH="" check
 #### FOR TETRAHEDRAL CODE, DO THIS HERE ####
 #### NOT NECESSARY FOR 2D CODE ###
 #### (FOR TETS ONLY) FOR MADLIB ####
-(NEED PASSWORD FROM BRIAN)
 	[svn co https://svn.cenaero.be/MAdLib/trunk MAdLib] or [svn update]
 	[cd MAdLib]
 	Read README
 	[mkdir build; cd build]
-	export CMAKE_PREFIX_PATH=/share/apps (on orion)
-	export CMAKE_PREFIX_PATH=${HOME}/Packages (on OS X)
-       export CMAKE_INSTALL_PREFIX=${HOME}/Packages or /share/apps
-
-E
 	[cmake ..]
-
 	[ccmake ..] (on linux or OS X)
 	Hit t to toggle expert mode.
 	Change MADLIB_INSTALL_EXTENDED_API TO ON
@@ -214,15 +207,15 @@ E
 	## Change BUILD DOXYGEN if you want documentation and have doxygen installed
 	Also, looks for a PLATFORM variable, the files are in cmake/platforms
 	Can ignore this I think
-	# Put -framework accelerate everywhere to eliminate linking error with dgesv
+	# Put -framework accelerate under CMAKE_CXX_FLAGS to eliminate linking error with dgesv
 	Hit "c" configure then Hit "g" generate
 
 	[cmake ..]
-	[make depend]
-	[make -j 2]  
+	[make -j 8]  
 	[make install]
 
 	# Move the include_all/MAdLib folder and replace the one in include
+	# to build Xcode project: cmake -G Xcode ..
 
 
 ###################################################################

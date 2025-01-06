@@ -42,7 +42,7 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
 }
 
-void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
+void hp_edge_bdry::init(input_map& inmap) {
 	int i;
 	std::string keyword;
 	std::istringstream data;
@@ -476,7 +476,7 @@ void hp_face_bdry::copy(const hp_face_bdry &bin) {
 	}
 }
 
-void hp_face_bdry::init(input_map& inmap,void* gbl_in) {
+void hp_face_bdry::init(input_map& inmap) {
 	int i;
 	std::string keyword;
 	std::istringstream data;

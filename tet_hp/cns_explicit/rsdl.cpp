@@ -25,13 +25,13 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP; 
-	FLT lmu = gbl->mu, cjcb;
-	FLT lkcond = gbl->kcond;
+	FLT lmu = hp_cns_explicit_gbl->mu, cjcb;
+	FLT lkcond = hp_cns_explicit_gbl->kcond;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-2,NV-2> visc;
 	TinyVector<TinyVector<FLT,ND>,ND> d,kcond;
 	TinyMatrix<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP>,NV,NV> cv, df;
 	TinyVector<FLT,NV> tres,cvu;
-	FLT gam = gbl->gamma;
+	FLT gam = hp_cns_explicit_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/gm1;
 	FLT gogm1 = gam*ogm1;
@@ -84,7 +84,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 				for(int n = 0; n < NV; ++n)
 					cvu(n) = u(n)(i)(j)(k);
 				
-				u(0)(i)(j)(k) = (gbl->gamma-1.0)*(cvu(4)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)+cvu(3)*cvu(3)));
+				u(0)(i)(j)(k) = (hp_cns_explicit_gbl->gamma-1.0)*(cvu(4)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)+cvu(3)*cvu(3)));
 				u(1)(i)(j)(k) = cvu(1)/cvu(0);
 				u(2)(i)(j)(k) = cvu(2)/cvu(0);
 				u(3)(i)(j)(k) = cvu(3)/cvu(0);
@@ -210,7 +210,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
-						double kcjcbi = lkcond/cjcb/gbl->R;
+						double kcjcbi = lkcond/cjcb/hp_cns_explicit_gbl->R;
 						
 						/* UNSTEADY TERMS */
 						res(0)(i)(j)(k) = rhorbd0+dugdt(log2p,tind,0)(i)(j)(k);
@@ -438,7 +438,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						tres = 0.0;
 						for(int m = 0; m < NV; ++m)
 							for(int n = 0; n < NV; ++n)							
-								tres(m) += gbl->tau(tind,m,n)*res(n)(i)(j)(k);
+								tres(m) += hp_cns_explicit_gbl->tau(tind,m,n)*res(n)(i)(j)(k);
 						
 						FLT u1 = u(1)(i)(j)(k);
 						FLT u2 = u(2)(i)(j)(k);
@@ -571,7 +571,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
-						double kcjcbi = lkcond/cjcb/gbl->R;
+						double kcjcbi = lkcond/cjcb/hp_cns_explicit_gbl->R;
 						
 						/* UNSTEADY TERMS */
 						res(0)(i)(j)(k) = rhorbd0+dugdt(log2p,tind,0)(i)(j)(k);
@@ -802,7 +802,7 @@ void tet_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						tres = 0.0;
 						for(int m = 0; m < NV; ++m)
 							for(int n = 0; n < NV; ++n)							
-								tres(m) += gbl->tau(tind,m,n)*res(n)(i)(j)(k);
+								tres(m) += hp_cns_explicit_gbl->tau(tind,m,n)*res(n)(i)(j)(k);
 						
 						FLT u1 = u(1)(i)(j)(k);
 						FLT u2 = u(2)(i)(j)(k);

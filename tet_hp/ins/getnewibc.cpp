@@ -171,16 +171,16 @@ namespace ibc_ins {
 			if (!x.coarse_level) {
 				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
 					
-					x.gbl->rho += delta_rho;
-					x.gbl->rho *= rho_factor;
+					x.hp_ins_gbl->rho += delta_rho;
+					x.hp_ins_gbl->rho *= rho_factor;
 					
-					x.gbl->mu  += delta_mu;
-					x.gbl->mu  *= mu_factor;
+					x.hp_ins_gbl->mu  += delta_mu;
+					x.hp_ins_gbl->mu  *= mu_factor;
 					
 					x.gbl->g += delta_g;
 					x.gbl->g *= delta_g_factor;
 					
-					*x.gbl->log << "new density, viscosity, and gravity are " << x.gbl->rho << ' ' << x.gbl->mu << ' ' << x.gbl->g << std::endl;
+					*x.gbl->log << "new density, viscosity, and gravity are " << x.hp_ins_gbl->rho << ' ' << x.hp_ins_gbl->mu << ' ' << x.gbl->g << std::endl;
 					
 //					
 //					if (surf) {

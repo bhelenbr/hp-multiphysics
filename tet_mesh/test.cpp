@@ -174,14 +174,14 @@ void tet_mesh::test() {
 //    cout << endl << "tet's surrounding gbl vertex: " << vind << endl;
 //    tet_mesh::vertexball(vind);
 //    for(int i = 0; i < pnt(vind).nnbor; ++i)
-//        cout << gbl->i2wk(i) << endl;
+//        cout << tet_gbl->i2wk(i) << endl;
 //        
 //    int eind = 0;
 //        
 //    cout << endl << "tet's surrounding gbl edge: " << eind << " total tet's: " << seg(eind).nnbor << endl;
 //    tet_mesh::ring(eind);
 //    for(int i = 0; i < seg(eind).nnbor; ++i)
-//        cout << gbl->i2wk(i) << endl;
+//        cout << tet_gbl->i2wk(i) << endl;
 		
 	
 //    cout << endl << "tri global index data" << endl;
@@ -311,8 +311,8 @@ void tet_mesh::checkintegrity() {
 	
 	
 	for(i=0;i<maxvst;++i) {
-		if (gbl->i1wk(i) != -1) {
-			*gbl->log << "gbl->i1wk check failed" << std::endl;
+		if (tet_gbl->i1wk(i) != -1) {
+			*gbl->log << "tet_gbl->i1wk check failed" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}

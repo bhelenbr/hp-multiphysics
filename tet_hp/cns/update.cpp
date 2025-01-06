@@ -20,13 +20,13 @@ void tet_hp_cns::update() {
 	//tet_hp::update();return;
 		
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
+	hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
 	if (basis::tet(log2p).em) {
-		gbl->ug0.e(Range(0,nseg-1),Range(0,em0-1),Range::all()) = ug.e(Range(0,nseg-1),Range::all(),Range::all());
+		hp_gbl->ug0.e(Range(0,nseg-1),Range(0,em0-1),Range::all()) = ug.e(Range(0,nseg-1),Range::all(),Range::all());
 		if (basis::tet(log2p).fm) {
-			gbl->ug0.f(Range(0,ntri-1),Range(0,fm0-1),Range::all()) = ug.f(Range(0,ntri-1),Range::all(),Range::all());
+			hp_gbl->ug0.f(Range(0,ntri-1),Range(0,fm0-1),Range::all()) = ug.f(Range(0,ntri-1),Range::all(),Range::all());
 			if (basis::tet(log2p).im) {
-				gbl->ug0.i(Range(0,ntet-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntet-1),Range::all(),Range::all());
+				hp_gbl->ug0.i(Range(0,ntet-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntet-1),Range::all(),Range::all());
 			}
 		}
 	}
@@ -79,14 +79,14 @@ void tet_hp_cns::update() {
 		
 		//project_new_variables();
 		
-		FLT cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
+		FLT cflalpha = gbl->alpha(stage)*hp_gbl->cfl(log2p);
 		
-		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
+		ug.v(Range(0,npnt-1),Range::all()) = hp_gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,npnt-1),Range::all());
 		
 		
 		if (basis::tet(log2p).em > 0) {
 			
-			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+			ug.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = hp_gbl->ug0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -cflalpha*hp_gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
 			
 			if (basis::tet(log2p).fm > 0) {
 				
@@ -96,7 +96,7 @@ void tet_hp_cns::update() {
 					for(int m=1;m<=basis::tet(log2p).em;++m) {
 						for(int k=1;k<=basis::tet(log2p).em-m;++k) {
 							for(int n=0;n<NV;++n) {
-								ug.f(i,indx1,n) =  gbl->ug0.f(i,indx1,n) -cflalpha*gbl->res.f(i,indx,n);
+								ug.f(i,indx1,n) =  hp_gbl->ug0.f(i,indx1,n) -cflalpha*hp_gbl->res.f(i,indx,n);
 							}
 							++indx; ++indx1;
 						}
@@ -112,7 +112,7 @@ void tet_hp_cns::update() {
 							for(int j=1;j<=basis::tet(log2p).em-m;++j) {
 								for(int k=1;k<=basis::tet(log2p).em-m-j;++k) {
 									for(int n=0;n<NV;++n) {
-										ug.i(i,indx1,n) =  gbl->ug0.i(i,indx1,n) -cflalpha*gbl->res.i(i,indx,n);
+										ug.i(i,indx1,n) =  hp_gbl->ug0.i(i,indx1,n) -cflalpha*hp_gbl->res.i(i,indx,n);
 									}
 									++indx; ++indx1;
 								}
@@ -166,22 +166,22 @@ void tet_hp_cns::minvrt() {
 				for (i=0; i<2; ++i) {
 					v0 = seg(eind).pnt(i);
 					for(n=0;n<NV;++n)
-						gbl->res.v(v0,n) -= basis::tet(log2p).sfmv(i,k)*gbl->res.e(eind,k,n);
+						hp_gbl->res.v(v0,n) -= basis::tet(log2p).sfmv(i,k)*hp_gbl->res.e(eind,k,n);
 				}
 			}
 		}		
 	}
 	
-	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tet(log2p).vdiag;
+	hp_gbl->res.v(Range(0,npnt-1),Range::all()) *= hp_gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tet(log2p).vdiag;
 
 	/* LOOP THROUGH VERTICES */
 	for(int i=0;i<npnt;++i){
 		
 		for(int n = 0; n < NV; ++n)
-			lclres(n) = gbl->res.v(i,n);
+			lclres(n) = hp_gbl->res.v(i,n);
 
 		
-		if(gbl->preconditioner == 0 || gbl->preconditioner == 1) {
+		if(hp_cns_gbl->preconditioner == 0 || hp_cns_gbl->preconditioner == 1) {
 			for(int n = 0; n < NV; ++n)
 				lclug(n) = ug.v(i,n);
 
@@ -190,9 +190,9 @@ void tet_hp_cns::minvrt() {
 			for(int j=0;j<NV;++j){
 				FLT lcl0 = lclres(j);
 				for(int k=0;k<j;++k){
-					lcl0 -= gbl->vpreconditioner(i,j,k)*lclres(k);
+					lcl0 -= hp_cns_gbl->vpreconditioner(i,j,k)*lclres(k);
 				}
-				lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
+				lclres(j) = lcl0/hp_cns_gbl->vpreconditioner(i,j,j);
 			}
 		}
 		else {		
@@ -201,7 +201,7 @@ void tet_hp_cns::minvrt() {
 			
 			for(int j=0;j<NV;++j)
 				for(int k=0;k<NV;++k)
-					P(j,k) = gbl->vpreconditioner(i,j,k);
+					P(j,k) = hp_cns_gbl->vpreconditioner(i,j,k);
 #ifdef F2CFortran
 			GETRF(NV, NV, P.data(), NV, ipiv, info);
 #else
@@ -223,15 +223,15 @@ void tet_hp_cns::minvrt() {
 		}
 		
 		for(int n = 0; n < NV; ++n)
-			gbl->res.v(i,n) = lclres(n);
+			hp_gbl->res.v(i,n) = lclres(n);
 		
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		pc0load(mp_phase,gbl->res.v.data());
+		pc0load(mp_phase,hp_gbl->res.v.data());
 		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
-		last_phase &= pc0wait_rcv(mp_phase,gbl->res.v.data());
+		last_phase &= pc0wait_rcv(mp_phase,hp_gbl->res.v.data());
 	}
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -250,17 +250,17 @@ void tet_hp_cns::minvrt() {
 	for(int sind=0;sind<nseg;++sind) {
 		
 		for(int n = 0; n < NV; ++n)
-			lclres(n) = gbl->res.e(sind,0,n);
+			lclres(n) = hp_gbl->res.e(sind,0,n);
 
 		Array<FLT,2> P(NV,NV);
 		for(int j=0;j<NV;++j){
 			for(int k=0;k<NV;++k){
-				P(j,k) = gbl->epreconditioner(sind,j,k);
-				//P(j,k) = 0.5*(gbl->vpreconditioner(seg(sind).pnt(0),j,k)+gbl->vpreconditioner(seg(sind).pnt(1),j,k));
+				P(j,k) = hp_cns_gbl->epreconditioner(sind,j,k);
+				//P(j,k) = 0.5*(hp_cns_gbl->vpreconditioner(seg(sind).pnt(0),j,k)+hp_cns_gbl->vpreconditioner(seg(sind).pnt(1),j,k));
 			}
 		}
 
-		if(gbl->preconditioner == 0 || gbl->preconditioner == 1) {
+		if(hp_cns_gbl->preconditioner == 0 || hp_cns_gbl->preconditioner == 1) {
 			for(int n = 0; n < NV; ++n)
 				uavg(n) = 0.5*(ug.v(seg(sind).pnt(0),n)+ug.v(seg(sind).pnt(1),n));
 				
@@ -296,7 +296,7 @@ void tet_hp_cns::minvrt() {
 		}
 		
 		for(int n = 0; n < NV; ++n)
-			gbl->res.e(sind,0,n) = lclres(n);
+			hp_gbl->res.e(sind,0,n) = lclres(n);
 		
 	}
 	
@@ -307,7 +307,7 @@ void tet_hp_cns::minvrt() {
 		for(i=0;i<4;++i) {
 			v0 = tet(tind).pnt(i);
 			for(n=0;n<NV;++n)
-				uht(n)(i) = gbl->res.v(v0,n)*gbl->iprcn(tind,n);
+				uht(n)(i) = hp_gbl->res.v(v0,n)*hp_gbl->iprcn(tind,n);
 		}
 		/* edges */
 		for(i=0;i<6;++i) {
@@ -317,7 +317,7 @@ void tet_hp_cns::minvrt() {
 				msgn = 1;
 				for(k=0;k<basis::tet(log2p).em;++k) {
 					for(n=0;n<NV;++n)
-						gbl->res.e(sind,k,n) -= msgn*basis::tet(log2p).vfms(j,4+k+i*basis::tet(log2p).em)*uht(n)(j);
+						hp_gbl->res.e(sind,k,n) -= msgn*basis::tet(log2p).vfms(j,4+k+i*basis::tet(log2p).em)*uht(n)(j);
 					msgn *= sgn;
 				}
 			}
@@ -327,13 +327,13 @@ void tet_hp_cns::minvrt() {
 	
 	basis::tet(log2p).ediag(0) = 100.0;//for fast convergence 
 	//basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
-	gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
+	hp_gbl->res.e(Range(0,nseg-1),0,Range::all()) *= hp_gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		sc0load(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+		sc0load(mp_phase,hp_gbl->res.e.data(),0,0,hp_gbl->res.e.extent(secondDim));
 		smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
-		last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+		last_phase &= sc0wait_rcv(mp_phase,hp_gbl->res.e.data(),0,0,hp_gbl->res.e.extent(secondDim));
 	}
 	
 	/* APPLY DIRCHLET B.C.S TO MODE */
@@ -350,11 +350,11 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 	
 	Array<double,2> dpdc(NV,NV);
 	Array<double,1> temp(NV);
-	double gm1 = gbl->gamma-1.0;
+	double gm1 = hp_cns_gbl->gamma-1.0;
 	
 	double pr = pvu(0);
 	double u = pvu(1),v = pvu(2),w = pvu(3), rt = pvu(4);
-	double rho = (pr+gbl->atm_pressure)/rt;
+	double rho = (pr+hp_cns_gbl->atm_pressure)/rt;
 	double ke = 0.5*(u*u+v*v+w*w);
 	
 	/* jacobian derivative of primitive wrt conservative */
@@ -385,14 +385,14 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 //	Array<TinyMatrix<double,MXGP,MXGP>,1> u2d(NV),res2d(NV),temp2d(NV);
 //	Array<TinyVector<double,MXTM>,1> ucoef(NV),rcoef(NV),tcoef(NV);
 //	
-//	vefi res_temp(gbl->res);
+//	vefi res_temp(hp_gbl->res);
 //	
 //	/* LOOP THROUGH VERTICES */
 //	for(int i=0;i<npnt;++i){
 //		
 //		for(int n = 0; n < NV; ++n){
 //			lclug(n) = ug.v(i,n);
-//			lclres(n) = gbl->res.v(i,n);
+//			lclres(n) = hp_gbl->res.v(i,n);
 //		}
 //		
 //		switch_variables(lclug,lclres);
@@ -400,21 +400,21 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 //		for(int j=0;j<NV;++j){
 //			FLT lcl0 = lclres(j);
 //			for(int k=0;k<j;++k){
-//				lcl0 -= gbl->vpreconditioner(i,j,k)*lclres(k);
+//				lcl0 -= hp_cns_gbl->vpreconditioner(i,j,k)*lclres(k);
 //			}
-//			lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
+//			lclres(j) = lcl0/hp_cns_gbl->vpreconditioner(i,j,j);
 //		}
 //		
 //		for(int n = 0; n < NV; ++n)
-//			gbl->res.v(i,n) = lclres(n);
+//			hp_gbl->res.v(i,n) = lclres(n);
 //		
 //	}
 //	
 //	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//		pc0load(mp_phase,gbl->res.v.data());
+//		pc0load(mp_phase,hp_gbl->res.v.data());
 //		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 //		last_phase = true;
-//		last_phase &= pc0wait_rcv(mp_phase,gbl->res.v.data());
+//		last_phase &= pc0wait_rcv(mp_phase,hp_gbl->res.v.data());
 //	}
 //	
 //	/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -432,11 +432,11 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 //		
 //		/* project linears */
 //		for(int n=0;n<NV;++n)
-//			basis::tet(log2p).proj1d(gbl->res.v(seg(sind).pnt(0),n),gbl->res.v(seg(sind).pnt(1),n),&temp1d(n)(0));
+//			basis::tet(log2p).proj1d(hp_gbl->res.v(seg(sind).pnt(0),n),hp_gbl->res.v(seg(sind).pnt(1),n),&temp1d(n)(0));
 //		
 //		for(int m=0;m<NV;++m) 
 //			for(int n=0;n<NV;++n) 
-//				basis::tet(log2p).proj1d(gbl->vpreconditioner(seg(sind).pnt(0),m,n),gbl->vpreconditioner(seg(sind).pnt(1),m,n),&P(m,n)(0));
+//				basis::tet(log2p).proj1d(hp_cns_gbl->vpreconditioner(seg(sind).pnt(0),m,n),hp_cns_gbl->vpreconditioner(seg(sind).pnt(1),m,n),&P(m,n)(0));
 //		
 //		/* take global coefficients and put into local vector */
 //		for(int n=0;n<NV;++n) {
@@ -488,17 +488,17 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 //		/* invert 1d mass matrix */
 //		for(int n=0;n<NV;++n) {
 //			for(int m=0;m<basis::tet(log2p).em;++m) 
-//				gbl->res.e(sind,m,n) = -rcoef(n)(m+2)*basis::tet(log2p).diag1d(m);			
+//				hp_gbl->res.e(sind,m,n) = -rcoef(n)(m+2)*basis::tet(log2p).diag1d(m);			
 //		}
 //		
 //	}
 //	
 //	for(int mode = 0; mode < basis::tet(log2p).em; ++mode) {
 //		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//			sc0load(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+//			sc0load(mp_phase,hp_gbl->res.e.data(),0,0,hp_gbl->res.e.extent(secondDim));
 //			smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 //			last_phase = true;
-//			last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+//			last_phase &= sc0wait_rcv(mp_phase,hp_gbl->res.e.data(),0,0,hp_gbl->res.e.extent(secondDim));
 //		}
 //		/* APPLY DIRCHLET B.C.S TO MODE */
 //		for(int i=0;i<nfbd;++i)

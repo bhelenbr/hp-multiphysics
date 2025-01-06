@@ -29,8 +29,8 @@ void tet_hp::petsc_initialize(){
      Set flag if we are doing a nonsymmetric problem; the default is symmetric.
 	 */
 	
-	PetscOptionsHasName(PETSC_NULL,PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);
-	/* 
+	PetscOptionsHasName(PETSC_NULLPTR,PETSC_NULLPTR,"-mat_nonsym",&mat_nonsymmetric);
+	/*
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
      runtime. Also, the parallel partitioning of the matrix is
@@ -161,7 +161,7 @@ void tet_hp::petsc_solve(){
 			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
 		
 		//--row_counter;
-		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0,PETSC_NULL,PETSC_NULL);
+		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0,PETSC_NULLPTR,PETSC_NULLPTR);
 
 		
 		VecAssemblyBegin(petsc_f);

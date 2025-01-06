@@ -11,12 +11,12 @@
 #include "../hp_boundary.h"
 
 
-void tet_hp_cns_explicit::init(input_map& inmap, void *gin) {
+void tet_hp_cns_explicit::init(input_map& inmap, shared_ptr<block_global> gin) {
 	std::string keyword;
 	std::istringstream data;
 	std::string filename;
 	
-	gbl = static_cast<global *>(gin);
+	gbl = gin;
 	
 	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
 		inmap[gbl->idprefix + "_nvariable"] = "5";
@@ -26,19 +26,19 @@ void tet_hp_cns_explicit::init(input_map& inmap, void *gin) {
 	
 	inmap.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 		
-	gbl->tau.resize(maxvst,NV,NV);
+	hp_cns_explicit_gbl->tau.resize(maxvst,NV,NV);
 
 	double prandtl;
 	
 	double bodydflt[3] = {0.0,0.0,0.0};
 	if (!inmap.get(gbl->idprefix +"_body_force",gbl->body.data(),3)) inmap.getwdefault("body_force",gbl->body.data(),3,bodydflt); 
 
-	if (!inmap.get(gbl->idprefix + "_gamma",gbl->gamma)) inmap.getwdefault("gamma",gbl->gamma,1.4);
-	if (!inmap.get(gbl->idprefix + "_mu",gbl->mu)) inmap.getwdefault("mu",gbl->mu,1.0);
+	if (!inmap.get(gbl->idprefix + "_gamma",hp_cns_explicit_gbl->gamma)) inmap.getwdefault("gamma",hp_cns_explicit_gbl->gamma,1.4);
+	if (!inmap.get(gbl->idprefix + "_mu",hp_cns_explicit_gbl->mu)) inmap.getwdefault("mu",hp_cns_explicit_gbl->mu,1.0);
 	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",prandtl,0.713);
-	if (!inmap.get(gbl->idprefix + "_R",gbl->R)) inmap.getwdefault("R",gbl->R,287.058);
+	if (!inmap.get(gbl->idprefix + "_R",hp_cns_explicit_gbl->R)) inmap.getwdefault("R",hp_cns_explicit_gbl->R,287.058);
 	
-	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
+	hp_cns_explicit_gbl->kcond = hp_cns_explicit_gbl->R*hp_cns_explicit_gbl->mu/prandtl*hp_cns_explicit_gbl->gamma/(hp_cns_explicit_gbl->gamma-1.0);
 
 	/* source term for MMS */
 	//	keyword = gbl->idprefix + "_src";

@@ -169,7 +169,7 @@ void tet_hp::test() {
 //					pnt(1) = y;
 //					pnt(2) = z;
 //					//cout << pnt << endl;
-//					lcl = gbl->ibc->f(0,pnt,gbl->time) -uout(0);
+//					lcl = hp_gbl->ibc->f(0,pnt,gbl->time) -uout(0);
 //					if(fabs(lcl) > 10e-14){
 //						++ind;
 //						cout << " approximated - actual = " << lcl << " mode " << j << " tet " << td <<  endl;
@@ -190,7 +190,7 @@ void tet_hp::test() {
 //			tet_mesh::filetype in = static_cast<tet_mesh::filetype>(grid);
 //			tet_mesh::output(filename,in);
 //			output("testtobasis",block::display);
-//			l2error(gbl->ibc);
+//			l2error(hp_gbl->ibc);
 			
 			
 			

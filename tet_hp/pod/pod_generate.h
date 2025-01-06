@@ -39,7 +39,7 @@ template<class BASE> class pod_generate : public BASE {
 #endif
 
 	public:
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap, shared_ptr<block_global> gin); 
 		pod_generate<BASE>* create() { return new pod_generate<BASE>();}
 		void tadvance();
 };

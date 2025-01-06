@@ -23,8 +23,8 @@ void tet_hp_cd_multi::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP;
 	
-	const FLT rhocv = gbl->rhocv(marks(tind));
-	const FLT kcond = gbl->kcond(marks(tind));
+	const FLT rhocv = hp_cd_multi_gbl->rhocv(marks(tind));
+	const FLT kcond = hp_cd_multi_gbl->kcond(marks(tind));
 	
 
 	/* LOAD INDICES OF VERTEX POINTS */
@@ -90,9 +90,9 @@ void tet_hp_cd_multi::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 				d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 				
-				fluxx = rhocv*(gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxy = rhocv*(gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
-				fluxz = rhocv*(gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxx = rhocv*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxy = rhocv*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
+				fluxz = rhocv*(hp_cd_gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
 
 				cv00(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
 				cv01(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;
@@ -115,7 +115,7 @@ void tet_hp_cd_multi::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					pt(2) = crd(2)(i)(j)(k);
 					cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 					res(0)(i)(j)(k) = rhocv*gbl->bd(0)*cjcb(i)(j)(k)*u(0)(i)(j)(k)+dugdt(log2p,tind,0)(i)(j)(k);
-					res(0)(i)(j)(k) -= cjcb(i)(j)(k)*gbl->src->f(0,pt,gbl->time);
+					res(0)(i)(j)(k) -= cjcb(i)(j)(k)*hp_cd_gbl->src->f(0,pt,gbl->time);
 				}
 			}
 		}   
@@ -180,11 +180,11 @@ void tet_hp_cd_multi::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
-					tres[0] = gbl->tau(tind)*res(0)(i)(j)(k);
+					tres[0] = hp_cd_gbl->tau(tind)*res(0)(i)(j)(k);
 				
-					e00(i)(j)(k) -= (d(0)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(0)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(0)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-					e01(i)(j)(k) -= (d(1)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(1)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-					e02(i)(j)(k) -= (d(2)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(2)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e00(i)(j)(k) -= (d(0)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(0)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(0)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e01(i)(j)(k) -= (d(1)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(1)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
+					e02(i)(j)(k) -= (d(2)(0)*(hp_cd_gbl->ax-mvel(0)(i)(j)(k))+d(2)(1)*(hp_cd_gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(hp_cd_gbl->az-mvel(2)(i)(j)(k)))*tres[0];
 					
 					
 				}

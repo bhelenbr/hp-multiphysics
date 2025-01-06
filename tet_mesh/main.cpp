@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 	//        class tet_mesh zx;
 	//        zx.input(argv[1],in,1.0,inmap);
 	//        for(int i=0;i<zx.npnt;++i)
-	//            zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
+	//            zx.tet_gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
 	//
 	//        zx.cut();
 	//
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 		zx.tet_mesh::setinfo();
 		
 		for(int i=0;i<zx.ntet;++i)
-			zx.tet(i).info = zx.gbl->fltwk(i)-1;
+			zx.tet(i).info = zx.tet_gbl->fltwk(i)-1;
 						
 		Array<int,2> blist;
 		Array<int,1> bnum;
@@ -319,7 +319,7 @@ int main(int argc, char *argv[]) {
 		fout.open(filename.c_str());
 		
 		for(int i=0;i<zx.ntet;++i)
-			fout << i << ": " << static_cast<int>(zx.gbl->fltwk(i)-1) << '\n';
+			fout << i << ": " << static_cast<int>(zx.tet_gbl->fltwk(i)-1) << '\n';
 		
 		fout.close();
 		
@@ -471,4 +471,42 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 	return(temp);
 }
 
+/* This routine waits for everyone to exit nicely */
+void sim::finalize(int line,const char *file, std::ostream *log) {
+    *log << "Exiting at line " << line << " of file " << file << std::endl;
+#ifdef PTH
+    pth_exit(NULL);
+#endif
+#ifdef BOOST
+    throw boost::thread_interrupted();
+#endif
+#ifdef PTH
+    pth_kill();
+#endif
+#ifdef petsc
+    PetscFinalize();
+#endif
+#ifdef MPISRC
+    MPI_Finalize();
+#endif
+    
+    std::exit(0);
+}
 
+/* This routine forces everyone to die */
+void sim::abort(int line,const char *file, std::ostream *log) {
+    *log << "Exiting at line " << line << " of file " << file << std::endl;
+    for (int b=0;b<blks.myblock;++b) {
+        sim::blks.blk(b)->output("aborted_solution", block::display);
+        sim::blks.blk(b)->output("aborted_solution", block::restart);
+    }
+#ifdef petsc
+    PetscFinalize();
+#endif
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    
+    /* Terminates all threads */
+    std::exit(1);
+}

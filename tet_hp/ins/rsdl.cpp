@@ -23,7 +23,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP; 
-	FLT rhobd0 = gbl->rho*gbl->bd(0), lmu = gbl->mu, rhorbd0, cjcb, cjcbi;
+	FLT rhobd0 = hp_ins_gbl->rho*gbl->bd(0), lmu = hp_ins_gbl->mu, rhorbd0, cjcb, cjcbi;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyVector<TinyVector<FLT,ND>,ND> d;
 	TinyMatrix<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP>,NV-1,NV-1> cv, df;
@@ -106,9 +106,9 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
-					fluxx = gbl->rho*(u(0)(i)(j)(k) -mvel(0)(i)(j)(k));
-					fluxy = gbl->rho*(u(1)(i)(j)(k) -mvel(1)(i)(j)(k));
-					fluxz = gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
+					fluxx = hp_ins_gbl->rho*(u(0)(i)(j)(k) -mvel(0)(i)(j)(k));
+					fluxy = hp_ins_gbl->rho*(u(1)(i)(j)(k) -mvel(1)(i)(j)(k));
+					fluxz = hp_ins_gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
 					
 					/* CONTINUITY EQUATION FLUXES */
 					du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
@@ -154,7 +154,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		basis::tet(log2p).intgrtrst(&lf_im(NV-1)(0),&du(NV-1,0)(0)(0)(0),&du(NV-1,1)(0)(0)(0),&du(NV-1,2)(0)(0)(0),stridex,stridey);
 		
 		/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-		//lftog(tind,gbl->res);
+		//lftog(tind,hp_gbl->res);
 
 		/* NEGATIVE REAL TERMS */
 		if (gbl->beta(stage) > 0.0) {
@@ -190,7 +190,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						
 #ifdef BODYFORCE
 						for(n=0;n<NV-1;++n)
-							res(n)(i)(j)(k) -= gbl->rho*cjcb*gbl->body(n);			
+							res(n)(i)(j)(k) -= hp_ins_gbl->rho*cjcb*gbl->body(n);			
 						
 #endif                        
 						/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -358,10 +358,10 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 						d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 						
-						tres(0) = gbl->tau(tind,0)*res(0)(i)(j)(k);    
-						tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
-						tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
-						tres(3) = gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
+						tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i)(j)(k);    
+						tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i)(j)(k);
+						tres(2) = hp_ins_gbl->tau(tind,0)*res(2)(i)(j)(k);
+						tres(3) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
 						
 #ifndef INERTIALESS
 						df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
@@ -434,7 +434,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				for(i=0;i<basis::tet(log2p).tm;++i)
 					lf_re(n)(i) *= gbl->beta(stage);
 
-			//lftog(tind,gbl->res_r);
+			//lftog(tind,hp_gbl->res_r);
 
 
 		}
@@ -463,9 +463,9 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(j=0;j<lgpy;++j) {
 				for(k=0;k<lgpz;++k) {
 					
-					fluxx = gbl->rho*(u(0)(i)(j)(k) -mvel(0)(i)(j)(k));
-					fluxy = gbl->rho*(u(1)(i)(j)(k) -mvel(1)(i)(j)(k));
-					fluxz = gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
+					fluxx = hp_ins_gbl->rho*(u(0)(i)(j)(k) -mvel(0)(i)(j)(k));
+					fluxy = hp_ins_gbl->rho*(u(1)(i)(j)(k) -mvel(1)(i)(j)(k));
+					fluxz = hp_ins_gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
 					
 					/* CONTINUITY EQUATION FLUXES */
 					du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
@@ -510,7 +510,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tet(log2p).intgrtrst(&lf_im(n)(0),&cv(n,0)(0)(0)(0),&cv(n,1)(0)(0)(0),&cv(n,2)(0)(0)(0),stridex,stridey);
 		basis::tet(log2p).intgrtrst(&lf_im(NV-1)(0),&du(NV-1,0)(0)(0)(0),&du(NV-1,1)(0)(0)(0),&du(NV-1,2)(0)(0)(0),stridex,stridey);
 		
-		//lftog(tind,gbl->res);
+		//lftog(tind,hp_gbl->res);
 
 		
 		/* NEGATIVE REAL TERMS */
@@ -628,7 +628,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						
 #ifdef BODYFORCE
 						for(n=0;n<NV-1;++n)
-							res(n)(i)(j)(k) -= gbl->rho*cjcb*gbl->body(n);			
+							res(n)(i)(j)(k) -= hp_ins_gbl->rho*cjcb*gbl->body(n);			
 						
 #endif                        
 						
@@ -694,10 +694,10 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
 					for(k=0;k<lgpz;++k) {							
-						tres(0) = gbl->tau(tind,0)*res(0)(i)(j)(k);    
-						tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
-						tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
-						tres(3) = gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
+						tres(0) = hp_ins_gbl->tau(tind,0)*res(0)(i)(j)(k);    
+						tres(1) = hp_ins_gbl->tau(tind,0)*res(1)(i)(j)(k);
+						tres(2) = hp_ins_gbl->tau(tind,0)*res(2)(i)(j)(k);
+						tres(3) = hp_ins_gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
 						
 #ifndef INERTIALESS
 						
@@ -774,7 +774,7 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				for(i=0;i<basis::tet(log2p).tm;++i)
 					lf_re(n)(i) *= gbl->beta(stage);
 			
-			//lftog(tind,gbl->res_r);
+			//lftog(tind,hp_gbl->res_r);
 
 
 		}

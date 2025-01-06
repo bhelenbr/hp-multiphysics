@@ -38,13 +38,13 @@ template<class BASE> class pod_simulate : public BASE {
 #endif
 	
 	public:
-		void init(input_map& inmap, void *gin); 
+		void init(input_map& inmap, shared_ptr<block_global> gin);
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
 //		void output(const std::string& fname, block::output_purpose why);
 //		void calc_coeffs();
 //		void tadvance();
 		void rsdl(int stage);
-		void setup_preconditioner();
+		int setup_preconditioner();
 		void update();
 		FLT maxres();
 

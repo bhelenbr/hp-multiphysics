@@ -45,7 +45,6 @@ hp_vrtx_bdry* tet_hp_cd::getnewvrtxobject(int bnum, std::string name) {
             break;
         }
     } 
-    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
     return(temp);
 }
 
@@ -98,7 +97,6 @@ hp_edge_bdry* tet_hp_cd::getnewedgeobject(int bnum, std::string name) {
             break;
         }
     }    
-    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 	
     return(temp);
 }

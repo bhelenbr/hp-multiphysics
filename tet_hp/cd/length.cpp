@@ -18,7 +18,7 @@ void tet_hp_cd::length() {
 	FLT length0,length1,length2,lengthept;
 	FLT ang1,curved1,ang2,curved2;
 	
-	gbl->fltwk(Range(0,npnt-1)) = 0.0;
+	tet_gbl->fltwk(Range(0,npnt-1)) = 0.0;
 
 	switch(basis::tet(log2p).p) {
 		case(1): {
@@ -26,8 +26,8 @@ void tet_hp_cd::length() {
 				v0 = seg(i).pnt(0);
 				v1 = seg(i).pnt(1);
 				sum = distance2(v0,v1)*fabs(ug.v(v0,0) -ug.v(v1,0));
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
+				tet_gbl->fltwk(v0) += sum;
+				tet_gbl->fltwk(v1) += sum;
 			}
 			break;
 		}
@@ -37,12 +37,12 @@ void tet_hp_cd::length() {
 				v0 = seg(i).pnt(0);
 				v1 = seg(i).pnt(1);
 				sum = distance2(v0,v1)*fabs(ug.s(i,sm0-1,0));
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
+				tet_gbl->fltwk(v0) += sum;
+				tet_gbl->fltwk(v1) += sum;
 				/* UNCOMMENT FOR SHOCK DETECTION 
 				sum = abs(ug.s(i,sm0-1,0)/(abs(ug.s(i,0,0))+1.0e-5));
-				gbl->fltwk(v0) = MAX(sum,gbl->fltwk(v0));
-				gbl->fltwk(v1) = MAX(sum,gbl->fltwk(v1)); */
+				tet_gbl->fltwk(v0) = MAX(sum,tet_gbl->fltwk(v0));
+				tet_gbl->fltwk(v1) = MAX(sum,tet_gbl->fltwk(v1)); */
 			}
 
 			/* BOUNDARY CURVATURE */
@@ -87,9 +87,9 @@ void tet_hp_cd::length() {
 						ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
 						curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
 
-						sum = gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
-						gbl->fltwk(v0) += sum*gbl->error_target*pnt(v0).nnbor;
-						gbl->fltwk(v1) += sum*gbl->error_target*pnt(v1).nnbor;
+						sum = hp_gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
+						tet_gbl->fltwk(v0) += sum*gbl->error_target*pnt(v0).nnbor;
+						tet_gbl->fltwk(v1) += sum*gbl->error_target*pnt(v1).nnbor;
 				}
 			}
 			break;
@@ -99,8 +99,8 @@ void tet_hp_cd::length() {
 	// output_error(); FOR SHOCK DETECTION
 
 	for(i=0;i<npnt;++i) {
-		gbl->fltwk(i) = pow(gbl->fltwk(i)/(pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
-		lngth(i) /= gbl->fltwk(i);  
+		tet_gbl->fltwk(i) = pow(tet_gbl->fltwk(i)/(pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
+		lngth(i) /= tet_gbl->fltwk(i);  
 	}
 
 	/* AVOID HIGH ASPECT RATIOS */

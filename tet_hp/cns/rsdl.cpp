@@ -25,13 +25,13 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP; 
-	FLT lmu = gbl->mu, cjcb;
-	FLT lkcond = gbl->kcond;
+	FLT lmu = hp_cns_gbl->mu, cjcb;
+	FLT lkcond = hp_cns_gbl->kcond;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-2,NV-2> visc;
 	TinyVector<TinyVector<FLT,ND>,ND> d,kcond;
 	TinyMatrix<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP>,NV,NV> cv, df;
 	TinyVector<FLT,NV> tres;
-	FLT gam = gbl->gamma;
+	FLT gam = hp_cns_gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT ogm1 = 1.0/gm1;
 	FLT gogm1 = gam*ogm1;
@@ -89,7 +89,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 //	for(int i=0;i<lgpx;++i) {
 //		for(int j=0;j<lgpy;++j) {
 //			for(int k=0;k<lgpz;++k) {
-//				u(0)(i)(j)(k) += gbl->atm_pressure;
+//				u(0)(i)(j)(k) += hp_cns_gbl->atm_pressure;
 //			}
 //		}
 //	}
@@ -119,7 +119,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
-					double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
+					double rho = (u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 
 					fluxx = rho*(u(1)(i)(j)(k) -mvel(0)(i)(j)(k));
 					fluxy = rho*(u(2)(i)(j)(k) -mvel(1)(i)(j)(k));
@@ -184,12 +184,12 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 						d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 						
-						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 						cjcb = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 						
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
-						double kcjcbi = lkcond/cjcb/gbl->R;
+						double kcjcbi = lkcond/cjcb/hp_cns_gbl->R;
 						
 						/* UNSTEADY TERMS */
 						res(0)(i)(j)(k) = rhorbd0+dugdt(log2p,tind,0)(i)(j)(k);
@@ -200,8 +200,8 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						
 #ifdef BODYFORCE
 						for(int n=1;n<NV-1;++n){
-							res(n)(i)(j)(k) -= (rho-gbl->density)*cjcb*gbl->body(n-1);	
-							res(NV-1)(i)(j)(k) -= (rho-gbl->density)*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+							res(n)(i)(j)(k) -= (rho-hp_cns_gbl->density)*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= (rho-hp_cns_gbl->density)*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
 						}
 						
 #endif    
@@ -417,7 +417,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						tres = 0.0;
 						for(int m = 0; m < NV; ++m)
 							for(int n = 0; n < NV; ++n)							
-								tres(m) += gbl->tau(tind,m,n)*res(n)(i)(j)(k);
+								tres(m) += hp_cns_gbl->tau(tind,m,n)*res(n)(i)(j)(k);
 												
 						FLT pr = u(0)(i)(j)(k);
 						FLT uv = u(1)(i)(j)(k);
@@ -425,7 +425,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						FLT wv = u(3)(i)(j)(k);
 						FLT rt = u(4)(i)(j)(k);					
 						FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
-						FLT rho = (pr+gbl->atm_pressure)/rt;
+						FLT rho = (pr+hp_cns_gbl->atm_pressure)/rt;
 						
 						/* df/dw */
 						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,
@@ -494,7 +494,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int j=0;j<lgpy;++j) {
 				for(int k=0;k<lgpz;++k) {
 					
-					double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
+					double rho = (u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 					
 					fluxx = rho*(u(1)(i)(j)(k) -mvel(0)(i)(j)(k));
 					fluxy = rho*(u(2)(i)(j)(k) -mvel(1)(i)(j)(k));
@@ -549,11 +549,11 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				for(int j=0;j<lgpy;++j) {
 					for(int k=0;k<lgpz;++k) {
 						
-						double rho = (u(0)(i)(j)(k)+gbl->atm_pressure)/u(NV-1)(i)(j)(k);
+						double rho = (u(0)(i)(j)(k)+hp_cns_gbl->atm_pressure)/u(NV-1)(i)(j)(k);
 					
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
-						double kcjcbi = lkcond/cjcb/gbl->R;
+						double kcjcbi = lkcond/cjcb/hp_cns_gbl->R;
 						
 						/* UNSTEADY TERMS */
 						res(0)(i)(j)(k) = rhorbd0+dugdt(log2p,tind,0)(i)(j)(k);
@@ -564,8 +564,8 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						
 #ifdef BODYFORCE
 						for(int n=1;n<NV-1;++n){
-							res(n)(i)(j)(k) -= (rho-gbl->density)*cjcb*gbl->body(n-1);	
-							res(NV-1)(i)(j)(k) -= (rho-gbl->density)*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
+							res(n)(i)(j)(k) -= (rho-hp_cns_gbl->density)*cjcb*gbl->body(n-1);	
+							res(NV-1)(i)(j)(k) -= (rho-hp_cns_gbl->density)*u(n)(i)(j)(k)*cjcb*gbl->body(n-1);
 						}		
 						
 #endif         
@@ -784,7 +784,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						tres = 0.0;
 						for(int m = 0; m < NV; ++m)
 							for(int n = 0; n < NV; ++n)							
-								tres(m) += gbl->tau(tind,m,n)*res(n)(i)(j)(k);
+								tres(m) += hp_cns_gbl->tau(tind,m,n)*res(n)(i)(j)(k);
 						
 						FLT pr = u(0)(i)(j)(k);
 						FLT uv = u(1)(i)(j)(k);
@@ -792,7 +792,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						FLT wv = u(3)(i)(j)(k);
 						FLT rt = u(4)(i)(j)(k);					
 						FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
-						FLT rho = (pr+gbl->atm_pressure)/rt;
+						FLT rho = (pr+hp_cns_gbl->atm_pressure)/rt;
 						
 						/* df/dw */
 						A = uv/rt,               rho,                         0.0,       0.0,       -rho*uv/rt,

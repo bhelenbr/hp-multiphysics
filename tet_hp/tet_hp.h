@@ -115,7 +115,7 @@ class tet_hp : public tet_mesh  {
 		FLT fadd; //!< Controls addition of residuals on coarse mesh
 		
 		/* THESE THINGS ARE SHARED BY MESHES OF THE SAME BLOCK */
-		struct global : public tet_mesh::global {
+		struct hp_global {
 			
 			/**< Pointer to adaptation solution storage 
 			* Also used for backwards difference storage in tadvance 
@@ -160,7 +160,9 @@ class tet_hp : public tet_mesh  {
 			/* Time step factor for different polynomial degree */
 			TinyVector<FLT,MXGP> cfl;
 			
-		} *gbl;
+		};
+        shared_ptr<hp_global> hp_gbl;
+    
 		virtual init_bdry_cndtn* getnewibc(std::string ibcname);
 		virtual tet_hp_helper* getnewhelper(std::string helpername);
 
@@ -197,8 +199,7 @@ class tet_hp : public tet_mesh  {
 	public:
 		tet_hp() : tet_mesh() {}
 		virtual tet_hp* create() {return new tet_hp;}
-		void* create_global_structure() {return new global;}
-		void init(input_map& inmap, void *gin);
+		void init(input_map& inmap, shared_ptr<block_global> gin);
 		void init_post_findmatch();
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 		void copy(const tet_hp& tgt);
@@ -225,7 +226,7 @@ class tet_hp : public tet_mesh  {
 		void matchboundaries();
 
 		/** Setup preconditioner */
-		void setup_preconditioner();
+		int setup_preconditioner();
 
 		/** Calculate residuals */
 		void rsdl() {rsdl(gbl->nstage);}
@@ -379,7 +380,7 @@ class tet_hp_helper {
 		virtual tet_hp_helper* create(tet_hp& xin) { return new tet_hp_helper(*this,xin); }
 		virtual void init(input_map& inmap, std::string idnty) {}
 		virtual void tadvance() {}
-		virtual void setup_preconditioner() {}
+        virtual int setup_preconditioner() {return(0);}
 		virtual void rsdl(int stage) {}
 		virtual void update(int stage) {}
 		virtual void mg_restrict() {}

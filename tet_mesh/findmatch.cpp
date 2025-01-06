@@ -3,6 +3,8 @@
 
 #ifdef USING_MADLIB
 #include "MAdLibInterface.h"
+#include "MAdLib/ModelInterface.h"
+#include "MAdLib/MeshDataBaseInterface.h"
 #endif
 
 #include <stdlib.h>
@@ -924,7 +926,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart, int nparts) {
 				/* if an edge is attached to a partition insert a 1 */
 				edge_partitions = 0;
 				for(n = 0; n < nnbor; ++n)    
-					edge_partitions(xin.tet(xin.gbl->i2wk(n)).info) = 1;
+					edge_partitions(xin.tet(xin.tet_gbl->i2wk(n)).info) = 1;
 								
 				/* keep list of boundary numbers negative for partition */
 				for(n=0;n<nebd;++n) {
@@ -1352,7 +1354,7 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 		/* tag partitions with 1's */
 		temp = 0;
 		for(int j = 0; j < nbor; ++j) {
-			temp(tet(gbl->i2wk(j)).info) = 1;
+			temp(tet(tet_gbl->i2wk(j)).info) = 1;
 		}
 		
 		/* if sum is greater than one then it is a communication boundary */
@@ -1400,7 +1402,7 @@ void tet_mesh::setup_partition(int nparts, Array<int,2> & boundary_partitions, A
 		/* tag partitions with 1's */
 		temp = 0;
 		for(int j = 0; j < nbor; ++j)
-			temp(tet(gbl->i2wk(j)).info) = 1;
+			temp(tet(tet_gbl->i2wk(j)).info) = 1;
 		
 		/* if sum is greater than one then it is a communication boundary */
 		int lcl = 0;
@@ -1670,7 +1672,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 				xin.ring(i);				
 				
 				for(int j = 0; j < nbor; ++j) {
-					if (npart == xin.tet(xin.gbl->i2wk(j)).info) {
+					if (npart == xin.tet(xin.tet_gbl->i2wk(j)).info) {
 						partitionfound = true;
 						break;
 					}
@@ -1921,7 +1923,7 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 			
 			xin.vertexball(i);
 			for(int j = 0; j < xin.pnt(i).nnbor; ++j) {
-				if (xin.tet(xin.gbl->i2wk(j)).info == npart) {
+				if (xin.tet(xin.tet_gbl->i2wk(j)).info == npart) {
 				
 					vbdry.resizeAndPreserve(nvbd+1);
 					tagpnt(intwk(i)) = nvbd;
@@ -2097,17 +2099,18 @@ void tet_mesh::partition2(class tet_mesh& xin, int npart, int nparts, Array<int,
 
 		}
 	}
-	
-	MAd::pGModel MAdModel = NULL;
-	GM_create(&MAdModel,"theModel");
+
+#ifdef USING_MADLIB
+	pGModel MAdModel = NULL;
+	GM_create(&MAdModel);
 	MAdLibInterface::exportToMAdModel(this, MAdModel);
-	MAd::pMesh MAdMesh = M_new(MAdModel);
+	pMesh MAdMesh = M_new(MAdModel);
 	MAdLibInterface::exportToMAdMesh(this, MAdMesh);
 	MAdLibInterface::importFromMAdMesh(MAdMesh,this);
 	
 	delete MAdMesh;
 	delete MAdModel;
-	
+#endif
 
 	return;
 }
@@ -2661,7 +2664,7 @@ void tet_mesh::partition3(class tet_mesh& xin, int npart) {
 		xin.ring(i);
 		
 		for(int j = 0; j < nbor; ++j) {
-			if (npart == xin.tet(xin.gbl->i2wk(j)).info) {
+			if (npart == xin.tet(xin.tet_gbl->i2wk(j)).info) {
 				goto edge_found;
 			}
 		}
