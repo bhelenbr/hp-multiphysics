@@ -208,7 +208,7 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 		K = K2Dn_exp;
 	}
 	else {
-		K = pow(pow(melt_cd_gbl->Krough,p) + pow(melt_cd_gbl->Ksn/(-sint +fabs(sint) +EPSILON),p),1.0/p);
+		K = pow(pow(melt_cd_gbl->Krough,p) + pow(2*melt_cd_gbl->Ksn/(-sint +fabs(sint) +EPSILON),p),1.0/p);
 	}
 	
 	return(K);
