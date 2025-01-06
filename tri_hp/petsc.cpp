@@ -185,9 +185,9 @@ void tri_hp::petsc_initialize(){
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #else
 #ifndef MPISRC
-	err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
+	err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULLPTR,nnzero.data(),&petsc_J);
 #else
-	err = MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,PETSC_NULL,nnzero.data(),PETSC_NULL,nnzero_mpi.data(),&petsc_J);
+	err = MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,PETSC_NULLPTR,nnzero.data(),PETSC_NULLPTR,nnzero_mpi.data(),&petsc_J);
 #endif
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	

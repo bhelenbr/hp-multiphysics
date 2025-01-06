@@ -722,7 +722,7 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 //				K = K2Dn_exp;
 //			}
 //			else {
-//				K = pow(pow(bdry_cd_gbl->Krough,p) + pow(bdry_cd_gbl->Ksn/(fabs(sint) +EPSILON),p),1.0/p);
+//				K = pow(pow(bdry_cd_gbl->Krough,p) + pow(2.*bdry_cd_gbl->Ksn/(fabs(sint) -sint +EPSILON),p),1.0/p);
 //			}
 			FLT dKdsint,dKdT;
 			const int p=2;
@@ -731,7 +731,7 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
                 dKdT = Kc*melt_cd_gbl->A2Dn/(DT*DT);
 			}
 			else {
-                dKdsint = 1.0/p*pow(Kc,1.-p)*p*pow(melt_cd_gbl->Ksn/(fabs(sint) +EPSILON),p-1.)*melt_cd_gbl->Ksn/pow(fabs(sint) +EPSILON,2.0)*(sint > 0 ? -1 : 1);
+                dKdsint = 1.0/p*pow(Kc,1.-p)*p*pow(2.*melt_cd_gbl->Ksn/(fabs(sint) -sint +EPSILON),p-1.)*2.*melt_cd_gbl->Ksn/pow(fabs(sint) -sint +EPSILON,2.0)*(sint > 0 ? 0 : 2);
 				dKdT = 0.0;
 			}
 			djcbdnorm(0) = 1/jcb*norm(0);
