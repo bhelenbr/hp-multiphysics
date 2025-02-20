@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>523</string>
+	<string>527</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -84,7 +84,7 @@
 				<key>isViewVisible</key>
 				<integer>1</integer>
 				<key>location</key>
-				<string>1089.000000:348.000000</string>
+				<string>954.500000:135.000000</string>
 			</dict>
 			<key>isViewVisible</key>
 			<integer>1</integer>
@@ -138,7 +138,7 @@
 				<key>ActionParameters</key>
 				<dict>
 					<key>COMMAND_STRING</key>
-					<string>#!/bin/sh
+					<string>#!/bin/bash
 ##
 # Showmesh by Boran Niceno
 # script by Brian Helenbrook | helenbrk@clarkson.edu
@@ -154,25 +154,22 @@ if [ -d /Applications/Utilities/XQuartz.app ] ; then
 fi
 
 location="${HOME}/hp-multiphysics/bin"
+files=()
 for file in "$@"; do
 	case "$file" in
-      *.[e,n,s])  
-		"$location/showmesh" "${file%.*}"
-		;;
       *.grd)
-		"$location/showgrid" "${file%.*}"
+		files+=("$file")
 		;;
-
     esac
 done
-wait
-echo finished</string>
+nohup "${location}/showgrid" "${files[@]}" &gt; /dev/null 2&gt;&amp;1 &amp;
+</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
 					<key>inputMethod</key>
 					<integer>1</integer>
 					<key>shell</key>
-					<string>/bin/sh</string>
+					<string>/bin/bash</string>
 					<key>source</key>
 					<string></string>
 				</dict>
@@ -190,6 +187,8 @@ echo finished</string>
 				</array>
 				<key>Class Name</key>
 				<string>RunShellScriptAction</string>
+				<key>IgnoresInput</key>
+				<false/>
 				<key>InputUUID</key>
 				<string>AE4B7D88-2871-433B-A117-FB7DC64DB6A3</string>
 				<key>Keywords</key>
@@ -202,6 +201,8 @@ echo finished</string>
 				</array>
 				<key>OutputUUID</key>
 				<string>70649412-66B2-40FE-B0C4-FCAF31AD5921</string>
+				<key>ShowWhenRun</key>
+				<false/>
 				<key>UUID</key>
 				<string>420B5B1D-3A90-48A5-9908-4A13A9132273</string>
 				<key>UnlocalizedApplications</key>
@@ -279,7 +280,7 @@ echo finished</string>
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>1089.000000:677.000000</string>
+				<string>954.500000:722.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -289,7 +290,7 @@ echo finished</string>
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>AE2E5840-1D7D-4D69-9CB0-10CCB0157518</key>
+		<key>1C93332A-267E-4D59-A72F-BEBF537AF0FA</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
