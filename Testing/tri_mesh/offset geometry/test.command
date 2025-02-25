@@ -86,8 +86,10 @@ f.close()
 
 os.system("tri_mesh generate.inpt")
 
+#os.system("mod_map offset.inpt adapt_output 1")
+os.system("mod_map offset.inpt ntstep 3")
 os.system("tri_mesh offset.inpt")
 
 os.chdir("..")
-#os.system("opendiff Baseline/ Results/")
+os.system("opendiff Baseline/ Results/")
 #os.system("open naca.pdf");

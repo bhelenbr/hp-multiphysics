@@ -148,6 +148,10 @@
 		E632EA8227A371560013B0CC /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E632EA8327A3715E0013B0CC /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E632EA8427A371640013B0CC /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E65EE4272D677203005849E3 /* mappings.h in Headers */ = {isa = PBXBuildFile; fileRef = E65EE4262D6771FA005849E3 /* mappings.h */; };
+		E65EE4282D677203005849E3 /* mappings.h in Headers */ = {isa = PBXBuildFile; fileRef = E65EE4262D6771FA005849E3 /* mappings.h */; };
+		E65EE4292D677203005849E3 /* mappings.h in Headers */ = {isa = PBXBuildFile; fileRef = E65EE4262D6771FA005849E3 /* mappings.h */; };
+		E65EE42A2D677203005849E3 /* mappings.h in Headers */ = {isa = PBXBuildFile; fileRef = E65EE4262D6771FA005849E3 /* mappings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6A9D1C92B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CA2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
 		E6A9D1CB2B40427E00AF0CF3 /* offset_geometry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */; };
@@ -202,6 +206,7 @@
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = "<group>"; };
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
+		E65EE4262D6771FA005849E3 /* mappings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mappings.h; sourceTree = "<group>"; };
 		E6A9D1C82B40427E00AF0CF3 /* offset_geometry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = offset_geometry.cpp; sourceTree = "<group>"; };
 		E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mapped_mesh.cpp; sourceTree = "<group>"; };
 		E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mapped_mesh.h; sourceTree = "<group>"; };
@@ -366,6 +371,7 @@
 			isa = PBXGroup;
 			children = (
 				E6D3EFC82C11B08B007BC477 /* mapped_mesh.h */,
+				E65EE4262D6771FA005849E3 /* mappings.h */,
 				E6D3EFC72C11B08B007BC477 /* mapped_mesh.cpp */,
 			);
 			name = mapped_mesh;
@@ -389,6 +395,7 @@
 			files = (
 				6F2262C508673029001017D0 /* tri_mesh.h in Headers */,
 				6F2262D808673092001017D0 /* boundary.h in Headers */,
+				E65EE4292D677203005849E3 /* mappings.h in Headers */,
 				6F2262D908673093001017D0 /* tri_boundary.h in Headers */,
 				6F2262DD086730A6001017D0 /* r_tri_mesh.h in Headers */,
 				6F2262DF086730A7001017D0 /* r_tri_boundary.h in Headers */,
@@ -409,6 +416,7 @@
 				E632EA8127A3714F0013B0CC /* r_tri_boundary.h in Headers */,
 				E632EA8227A371560013B0CC /* block.h in Headers */,
 				E632EA8327A3715E0013B0CC /* blocks.h in Headers */,
+				E65EE42A2D677203005849E3 /* mappings.h in Headers */,
 				E6D3EFCC2C11B08B007BC477 /* mapped_mesh.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -419,6 +427,7 @@
 			files = (
 				6FB91AE30ACCB1E100792B04 /* tri_mesh.h in Headers */,
 				6FB91AE40ACCB1E100792B04 /* boundary.h in Headers */,
+				E65EE4272D677203005849E3 /* mappings.h in Headers */,
 				6FB91AE50ACCB1E100792B04 /* tri_boundary.h in Headers */,
 				6FB91AE60ACCB1E100792B04 /* r_tri_mesh.h in Headers */,
 				6FB91AE70ACCB1E100792B04 /* r_tri_boundary.h in Headers */,
@@ -434,6 +443,7 @@
 			files = (
 				6FADD857086EF32D00350FA2 /* tri_mesh.h in Headers */,
 				6FADD858086EF32D00350FA2 /* boundary.h in Headers */,
+				E65EE4282D677203005849E3 /* mappings.h in Headers */,
 				6FADD859086EF32D00350FA2 /* tri_boundary.h in Headers */,
 				6FADD85A086EF32D00350FA2 /* r_tri_mesh.h in Headers */,
 				6FADD85B086EF32D00350FA2 /* r_tri_boundary.h in Headers */,

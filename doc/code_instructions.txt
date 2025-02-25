@@ -19,6 +19,9 @@
 ########################
 # To install command line tools
 xcode-select --install
+# or to reinstall
+sudo rm -rf /Library/Developer/CommandLineTools
+sudo xcode-select --install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install muparser

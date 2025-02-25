@@ -23,6 +23,13 @@ void spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVe
     spline_functions2D::interpolate(to, tan, curv, my_spline, from(0), scale, trsfm.theta,trsfm.pos, -from(1));
 }
 
+void spline_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    TinyVector<FLT,2> tan, curv;
+    int err = spline_functions2D::find_with_guess(from, my_spline, to(0), scale, trsfm.theta,trsfm.pos, to(1));
+    to(1) *= -1;
+    if (err) std::cout << "Uh-oh inverse mapping error in spline\n";
+}
+
 void spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     TinyVector<FLT,2> pnt, tan, curv;
     spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0), scale, trsfm.theta,trsfm.pos, -loc(1));
@@ -57,6 +64,15 @@ void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVec
     to(1) = pnt(1) +r*sin(theta);
 }
 
+void polar_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    to = from-pnt;
+    const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
+    const FLT theta = -atan2(to(1),to(0))*theta_length;
+    to(0) = theta;
+    to(1) = r;
+}
+
+
 void polar_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     const FLT r = loc(1);
     const FLT theta = -loc(0)/theta_length;
@@ -85,6 +101,14 @@ void polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, Tin
     const FLT theta = -from(0)/theta_length;
     to(0) = pnt(0) +r*cos(theta);
     to(1) = pnt(1) +r*sin(theta);
+}
+
+void polar_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    to = from-pnt;
+    const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
+    const FLT theta = -atan2(to(1),to(0))*theta_length;
+    to(0) = theta;
+    to(1) = log((r+r_eps)/(r0+r_eps));
 }
 
 void polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {

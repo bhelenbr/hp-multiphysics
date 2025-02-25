@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
     if (Find) {
         if (!UseFile) {
             find(xfind,myspline,s,size,angle,dx,norm_dist);
-            interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
+            interpolate(x, tan, curv, myspline, s, size, angle, dx, 0.0);
             std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
         }
         else {
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
                     point_data >> xfind(n);
                 }
                 find(xfind,myspline,s,size,angle,dx,norm_dist);
-                interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
+                interpolate(x, tan, curv, myspline, s, size, angle, dx, 0.0);
                 std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }

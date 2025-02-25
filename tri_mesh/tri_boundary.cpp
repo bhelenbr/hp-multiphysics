@@ -31,6 +31,13 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 		base[offset+i] = fsndbuf(i);
 }
 
+void vmapped_comm::rcvpositions(int phase) {
+    vfinalrcv(all_phased,phase,master_slave,replace,&(x.mapped_pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);
+    x.map->to_parametric_frame(x.mapped_pnts(pnt), x.pnts(pnt));
+    return;
+}
+
+
 /**************************************/
 /* GENERIC FUNCTIONS FOR SIDES          */
 /**************************************/
@@ -468,6 +475,43 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 			}
 		}
 	}
+}
+
+void emapped_comm::rcvpositions(int phase) {
+    
+    vfinalrcv(all_phased,phase,master_slave,replace,&(x.mapped_pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);
+    
+    TinyVector<FLT,2> test;
+    
+    /* Reverse map back to parametric coordinates */
+    int sind = seg(0);
+    int v0 = x.seg(sind).pnt(0);
+    x.map->to_parametric_frame(x.mapped_pnts(v0), x.pnts(v0));
+    x.map->to_physical_frame(x.pnts(v0),test);
+    for (int j=0; j<nseg; ++j) {
+        int sind = seg(j);
+        int v0 = x.seg(sind).pnt(1);
+        x.map->to_parametric_frame(x.mapped_pnts(v0), x.pnts(v0));
+        x.map->to_physical_frame(x.pnts(v0),test);
+    }
+    
+    return;
+}
+
+void emapped_comm::mvpttobdry(int indx,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+    /* Move point to psi location in physical space not parametric space */
+    const int sind = seg(indx);
+    const int v0 = x.seg(sind).pnt(0);
+    const int v1 = x.seg(sind).pnt(1);
+    
+    TinyVector<FLT,tri_mesh::ND> phys_pt0, phys_pt1, phys_pt, par_pt;
+    x.map->to_physical_frame(x.pnts(v0), phys_pt0);
+    x.map->to_physical_frame(x.pnts(v1), phys_pt1);
+    
+    phys_pt = 0.5*((1. -psi)*phys_pt0 +(1.+psi)*phys_pt1);
+    par_pt = 0.5*((1. -psi)*x.pnts(v0) +(1.+psi)*x.pnts(v1));
+    x.map->to_parametric_frame(phys_pt,par_pt);
+    pt(0) = par_pt(0); // Only shift tangent coordinate
 }
 
 void epartition::alloc(int size) {

@@ -41,10 +41,30 @@ void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<doub
     transform2Di(curv,size,angle,zero);
 }
 
-void spline_functions2D::find(TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, const double norm_dist) {
+int spline_functions2D::find(const TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
+    TinyVector<double,ND> xspl, xloc(loc);
+    transform2D(xloc, size, angle, offset);
+    int err = myspline.find(s, xloc);
+    myspline.offset(s,0.0,xspl);
+    xspl -= loc;
     
-    TinyVector<double,ND> tan, curv;
-    transform2D(loc, size, angle, offset);
-    myspline.find(s, loc);
-    interpolate(loc, tan, curv, myspline, s, size, angle, offset, norm_dist);
+    TinyVector<double,ND> t;
+    myspline.tangent(s,t);
+    t = t/sqrt(dot(t,t));
+    norm_dist = -(t[1]*xspl[0] -t[0]*xspl[1])*size;
+    return(err);
+}
+
+int spline_functions2D::find_with_guess(const TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
+    TinyVector<double,ND> xspl, xloc(loc);
+    transform2D(xloc, size, angle, offset);
+    int err = myspline.find_with_guess(s, xloc);
+    myspline.offset(s,0.0,xspl);
+    xspl -= loc;
+    
+    TinyVector<double,ND> t;
+    myspline.tangent(s,t);
+    t = t/sqrt(dot(t,t));
+    norm_dist = -(t[1]*xspl[0] -t[0]*xspl[1])*size;
+    return(err);
 }

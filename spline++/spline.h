@@ -43,6 +43,7 @@ public:
     int tangent(const double spt, blitz::TinyVector<double,ND>& tan) const;
     int curvature(const double spt, blitz::TinyVector<double,ND>& curv) const;
     int find(double &spt, blitz::TinyVector<double,ND>& loc) const;
+    int find_with_guess(double &spt, blitz::TinyVector<double,ND>& loc) const;
     double start() const {return(x(0));}
     double stop() const {return(x(npts-1));}
     int size() const {return(npts);}
@@ -71,6 +72,7 @@ public:
     int tangent(const double spt, blitz::TinyVector<double,ND>& tan) const;
     int curvature(const double spt, blitz::TinyVector<double,ND>& curv) const;
     int find(double &spt, blitz::TinyVector<double,ND>& loc) const;
+    int find_with_guess(double &spt, blitz::TinyVector<double,ND>& loc) const;
     double start() const {return(x(0));}
     double stop() const {return(x(npts-1));}
     int size() const {return(npts);}
@@ -80,7 +82,8 @@ namespace spline_functions2D {
 void transform2D(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
 void transform2Di(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
 void interpolate(blitz::TinyVector<double,2>& loc, blitz::TinyVector<double,2>& tan, blitz::TinyVector<double,2>& curv, const spline<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> offset, double norm_dist);
-void find(blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, const double norm_dist = 0.0);
+int find(const blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
+int find_with_guess(const blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
 }
 
 

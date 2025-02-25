@@ -15,7 +15,7 @@ os.chdir(os.path.dirname(sys.argv[0]))
 p0 = subprocess.Popen("echo ${PWD%/*/*/*}/bin/:", stdout=subprocess.PIPE,shell=True)
 (BINDIR, err) = p0.communicate()
 os.environ['PATH'] = BINDIR[:-1].decode('ascii') + os.environ['PATH']
-print(os.environ['PATH'])
+#print(os.environ['PATH'])
 if not os.path.isdir("Results"):
 	os.mkdir("Results")
 os.chdir("Results")

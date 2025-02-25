@@ -236,11 +236,11 @@ template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>
 	double xpt = xptin;
     int i = 0;
     if (!(xpt > x(0))) {
-        xpt=x(0);
+        //xpt=x(0);
         i = 0;
     }
     else if (xpt > x(npts-1)) {
-        xpt=x(npts-1);
+        //xpt=x(npts-1);
         i = npts-2;
     }
     else {
@@ -274,11 +274,11 @@ template<int ND> int spline<ND>::tangent(double xptin, TinyVector<double,ND>& ta
     double xpt = xptin;
     int i = 0;
     if (!(xpt > x(0))) {
-        xpt=x(0);
+        // xpt=x(0);
         i = 0;
     }
     else if (xpt > x(npts-1)) {
-        xpt=x(npts-1);
+        // xpt=x(npts-1);
         i = npts-2;
     }
     else {
@@ -301,11 +301,11 @@ template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& 
     double xpt = xptin;
     int i = 0;
     if (!(xpt > x(0))) {
-        xpt=x(0);
+        // xpt=x(0);
         i = 0;
     }
     else if (xpt > x(npts-1)) {
-        xpt=x(npts-1);
+        // xpt=x(npts-1);
         i = npts-2;
     }
     else {
@@ -322,23 +322,21 @@ template<int ND> int spline<ND>::curvature(double xptin, TinyVector<double,ND>& 
     return 0;
 }
 
-
-
 template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) const {
     int k,sidloc,sidlocprev=0;
     double ol,psi,normdist;
     double psiloc,psiprev,normdistprev=1.0e32;
     double mindist = 1.0e32;
-	TinyVector<double,ND> y1, dy, dy1, tan, curv;
+    TinyVector<double,ND> y1, dy, dy1, tan, curv;
 
     psiloc = 1.0;
     sidloc = npts-2;
-	psiprev = -1.0;
-	
+    psiprev = -1.0;
+    
     for(k=0;k<npts-1;++k) {
         dy = y(k+1) -y(k);
         ol = 2./dot(dy,dy);
-		dy1 = ypt -y(k);
+        dy1 = ypt -y(k);
         psi = ol*(dot(dy1,dy)) -1.;
         normdist = dy(0)*dy1(1)-dy(1)*dy1(0);
         normdist *= sqrt(ol/2.);
@@ -368,27 +366,32 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) co
         normdistprev = normdist;
         sidlocprev = k;
     }
-	
-	int i = sidloc;
-    assert(0 <= i && i < npts-1);
-	dy = y(i+1)-y(i);
-	ol = 2./dot(dy,dy);
-
-	psi = psiloc;
-	s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
     
+    int i = sidloc;
+    assert(0 <= i && i < npts-1);
+    dy = y(i+1)-y(i);
+    ol = 2./dot(dy,dy);
+
+    psi = psiloc;
+    s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
+    
+    return(find_with_guess(s0,ypt));
+}
+
+template<int ND> int spline<ND>::find_with_guess(double& s0, TinyVector<double,ND>& ypt) const {
+    TinyVector<double,ND> y1, dy, dy1, tan, curv;
+
     /* Find s location of minimum distance) */
     for (int iter=0;iter<100;++iter) {
         interpolate(s0,y1);
         dy = y1-ypt;
-        mindist = dot(dy,dy);
         tangent(s0,tan);
         curvature(s0,curv);
         double dmindist = 2*dot(tan,dy);
         double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
         double ds = -dmindist/dminddist2;
         s0 += ds;
-        //std::cout << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
+        //std::cout << "iter " << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
         if (fabs(ds) < 1.0e-10) {
             ypt = y1;
             return 0;
@@ -396,7 +399,7 @@ template<int ND> int spline<ND>::find(double& s0, TinyVector<double,ND>& ypt) co
     }
     ypt = y1;
     
-	return(1);
+    return(1);
 }
 
 
@@ -507,16 +510,23 @@ template<int ND> int spline3<ND>::read(std::string filename) {
 
 template<int ND> int spline3<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) const {
 	double a,b,bma,t;
-	
-	double xpt = xptin;
-	if (xpt < x(0)) xpt=x(0);
-	if (xpt > x(npts-1)) xpt=x(npts-1);
-	
-	int i;
-	for (i=1;i<npts;++i)
-		if (x(i) >= xpt) break;
-	--i;
-	
+    
+    double xpt = xptin;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        //xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        //xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
+
 	a=x(i);
 	b=x(i+1);
 	bma=b-a;
@@ -540,13 +550,20 @@ template<int ND> int spline3<ND>::tangent(double xptin, TinyVector<double,ND>& t
     double a,b,bma,t;
     
     double xpt = xptin;
-    if (xpt < x(0)) xpt=x(0);
-    if (xpt > x(npts-1)) xpt=x(npts-1);
-    
-    int i;
-    for (i=1;i<npts;++i)
-        if (x(i) >= xpt) break;
-    --i;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        //xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        //xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
     
     a=x(i);
     b=x(i+1);
@@ -561,13 +578,20 @@ template<int ND> int spline3<ND>::curvature(double xptin, TinyVector<double,ND>&
     double a,b,bma,t;
     
     double xpt = xptin;
-    if (xpt < x(0)) xpt=x(0);
-    if (xpt > x(npts-1)) xpt=x(npts-1);
-    
-    int i;
-    for (i=1;i<npts;++i)
-        if (x(i) >= xpt) break;
-    --i;
+    int i = 0;
+    if (!(xpt > x(0))) {
+        //xpt=x(0);
+        i = 0;
+    }
+    else if (xpt > x(npts-1)) {
+        //xpt=x(npts-1);
+        i = npts-2;
+    }
+    else {
+        for (i=1;i<npts;++i)
+            if (x(i) >= xpt) break;
+        --i;
+    }
     
     a=x(i);
     b=x(i+1);
@@ -584,7 +608,7 @@ template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) c
     double psiloc,psiprev,normdistprev=1.0e32;
     double mindist = 1.0e32;
     TinyVector<double,ND> y1, dy, dy1, tan, curv;
-    
+
     psiloc = 1.0;
     sidloc = npts-2;
     psiprev = -1.0;
@@ -625,24 +649,27 @@ template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) c
     
     int i = sidloc;
     assert(0 <= i && i < npts-1);
-    dy = y(i+1)-y(i);
-    ol = 2./dot(dy,dy);
-    
+
     psi = psiloc;
     s0 = 0.5*((x(i+1)+x(i)) +psi*(x(i+1)-x(i)));
     
+    return(find_with_guess(s0,ypt));
+}
+
+template<int ND> int spline3<ND>::find_with_guess(double& s0, TinyVector<double,ND>& ypt) const {
+    TinyVector<double,ND> y1, dy, dy1, tan, curv;
+
     /* Find s location of minimum distance) */
     for (int iter=0;iter<100;++iter) {
         interpolate(s0,y1);
         dy = y1-ypt;
-        mindist = dot(dy,dy);
         tangent(s0,tan);
         curvature(s0,curv);
         double dmindist = 2*dot(tan,dy);
         double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
         double ds = -dmindist/dminddist2;
         s0 += ds;
-        // std::cout << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
+        // std::cout << "iter " << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
         if (fabs(ds) < 1.0e-10) {
             ypt = y1;
             return 0;
@@ -650,7 +677,7 @@ template<int ND> int spline3<ND>::find(double& s0, TinyVector<double,ND>& ypt) c
     }
     ypt = y1;
     
-    return(1);
+    return 1;
 }
 
 

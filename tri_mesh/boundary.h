@@ -1155,9 +1155,10 @@ public:
 class spline_geometry {
     static const int ND = 2;
 protected:
-    spline3<ND> my_spline;
+    spline<ND> my_spline;
     FLT smin, smax; // LIMITS FOR BOUNDARY
-    FLT scale;
+    FLT scale, norm_dist;;
+
 public:
     void init(input_map& inmap,std::string idprefix,std::ostream& log) {
         std::string line;
@@ -1172,6 +1173,7 @@ public:
         data.clear();
         
         inmap.getwdefault(idprefix+"_scale",scale,1.0);
+        inmap.getwdefault(idprefix+"_norm_dist",norm_dist,0.0);
     }
     
     int mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
@@ -1179,13 +1181,14 @@ public:
         
         pt /= scale;
         my_spline.find(sloc,pt);
-        if (sloc > smax) sloc = smax;
-        if (sloc < smin) sloc = smin;
-        my_spline.interpolate(sloc,pt);
+        //if (sloc > smax) sloc = smax;
+        //if (sloc < smin) sloc = smin;
+        my_spline.offset(sloc,norm_dist,pt);
         pt *= scale;
         
         return(0);
     }
+    
     void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
         std::cerr << "bdry_normal not implemented for spline_geoemtry" << std::endl;
         return;

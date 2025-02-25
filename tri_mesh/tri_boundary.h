@@ -8,7 +8,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-
+#include "mappings.h"
+#include "mapped_mesh.h"
 
 /** \brief Specialization for a communiation vertex
  *
@@ -45,6 +46,31 @@ class ecomm : public comm_bdry<edge_bdry,tri_mesh> {
 		void sloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride);
 		void sfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride);
 };
+
+class emapped_comm : public ecomm {
+    mapped_mesh& x;
+    public:
+        /* CONSTRUCTOR */
+        emapped_comm(int inid, tri_mesh& xin) : ecomm(inid,xin), x(dynamic_cast<mapped_mesh& >(xin)) {mytype="emapped_comm";}
+        emapped_comm(const emapped_comm &inbdry, tri_mesh& xin) : ecomm(inbdry,xin), x(inbdry.x) {}
+        emapped_comm* create(tri_mesh& xin) const {return new emapped_comm(*this,xin);}
+        void loadpositions() {vloadbuff(all,&(x.mapped_pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
+        void rcvpositions(int phase);
+        void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);  /* Move point to psi location in physical space */
+};
+
+class vmapped_comm : public vcomm {
+    mapped_mesh& x;
+    public:
+        /* CONSTRUCTOR */
+        vmapped_comm(int inid, tri_mesh& xin) : vcomm(inid,xin), x(dynamic_cast<mapped_mesh& >(xin)) {mytype="vmapped_comm";}
+        vmapped_comm(const vmapped_comm &inbdry, tri_mesh& xin) : vcomm(inbdry,xin), x(inbdry.x) {}
+        vmapped_comm* create(tri_mesh& xin) const {return new vmapped_comm(*this,xin);}
+        void loadpositions() {vloadbuff(all,&(x.mapped_pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
+        void rcvpositions(int phase);
+};
+
+
 
 /** \brief Specialization for a parition edge
  *

@@ -8,7 +8,7 @@
 #include "tri_mesh.h"
 #include "tri_boundary.h"
 
-#define NOCOMM
+//#define NOCOMM
 
 void tri_mesh::offset_geometry(input_map& input) {
     FLT d;
@@ -148,7 +148,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                             input[nstr.str()+"_s" +sstr.str() +"_type"] = "plain";
                             input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "spline";
 #else
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "comm";
+                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "mapped_comm";
                             input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "spline_comm";
 #endif
                             input[gbl->idprefix +"_s" +sstr.str() +"_norm_dist"] = "-" +input[gbl->idprefix +"_offset"];
@@ -176,7 +176,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                             input[nstr1.str()+"_s" +sstr.str() +"_type"] = "plain";
                             input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "circle";
 #else
-                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "comm";
+                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "mapped_comm";
                             input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "circle_comm";
 #endif
                             input[gbl->idprefix +"_s" +sstr.str() +"_radius"] = input[gbl->idprefix +"_offset"];
@@ -191,9 +191,9 @@ void tri_mesh::offset_geometry(input_map& input) {
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "plain";
                             input[nstr.str()+"_v" +sstr.str() +"_type"] = "plain";
 #else
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "comm";
+                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "comm";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "comm";
+                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
 #endif
                             
                             /* Output communication points */
@@ -205,9 +205,9 @@ void tri_mesh::offset_geometry(input_map& input) {
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "plain";
                             input[nstr.str()+"_v" +sstr.str() +"_type"] = "plain";
 #else
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "comm";
+                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "comm";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "comm";
+                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
 #endif
                             
                             /* Output outer domain */
@@ -216,7 +216,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                             out << nebd-1 +3 << std::endl;
                             TinyVector<FLT,ND> loc,tan,curv;
                             spline_functions2D::interpolate(loc, tan, curv, spbdry->my_spline, spbdry->my_spline.start(),spbdry->scale, spbdry->theta,spbdry->pos, -d);
-                            out << "0: " << loc[0] << ' ' << loc[1] << ' ' << res << ' ' << maxvid+1 << std::endl;
+                            out << "0: " << loc[0] << ' ' << loc[1] << ' ' << res << ' ' << maxvid+2 << std::endl;
                             
                             FLT smid = 0.5*(spbdry->my_spline.start()+spbdry->my_spline.stop());
                             spline_functions2D::interpolate(loc, tan, curv, spbdry->my_spline, smid,spbdry->scale, spbdry->theta,spbdry->pos, -d);
@@ -224,7 +224,7 @@ void tri_mesh::offset_geometry(input_map& input) {
 
                             
                             spline_functions2D::interpolate(loc, tan, curv, spbdry->my_spline, spbdry->my_spline.stop(),spbdry->scale, spbdry->theta,spbdry->pos, -d);
-                            out << "2: " << loc[0] << ' ' << loc[1] << ' ' << res << ' ' << maxvid+2 << std::endl;
+                            out << "2: " << loc[0] << ' ' << loc[1] << ' ' << res << ' ' << maxvid+1 << std::endl;
                             
                             /* Assume outer boundary is also a loop */
                             int loop_start = (i+1) % nebd;
