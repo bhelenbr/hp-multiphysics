@@ -159,7 +159,7 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, pub
 		GEOM geometry_object;
 
 	public:
-		eboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+		eboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"_analytic";}
 		eboundary_with_geometry(const eboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), rigid_movement_interface2D(inbdry), geometry_object(inbdry.geometry_object) {}
 		eboundary_with_geometry* create(tri_mesh& xin) const {return(new eboundary_with_geometry<BASE,GEOM>(*this,xin));}
 
@@ -196,7 +196,7 @@ template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {
 		GEOM geometry_object;
 
 	public:
-		vboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+		vboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"_analytic";}
 		vboundary_with_geometry(const vboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
 		vboundary_with_geometry* create(tri_mesh& xin) const {return(new vboundary_with_geometry<BASE,GEOM>(*this,xin));}
 
@@ -230,7 +230,7 @@ class fcoupled_physics_ptr {
 /* Class which uses geometry information for tstep < 0, then redirects to a physics class */
 template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, public BASE {
   public:
-		ecoupled_physics(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
+		ecoupled_physics(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"_coupled";}
 		ecoupled_physics(const ecoupled_physics<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin) {}
 		ecoupled_physics* create(tri_mesh& xin) const {return(new ecoupled_physics<BASE>(*this,xin));}
 
@@ -243,79 +243,58 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 
 #include <spline.h>
 
-class spline_bdry : public edge_bdry, public rigid_movement_interface2D {
+template<class BASE> class spline_bdry : public BASE, public rigid_movement_interface2D {
     public:
         spline<tri_mesh::ND> my_spline;
         Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
         FLT smin, smax; // LIMITS FOR BOUNDARY
         FLT scale, norm_dist;
 
-		spline_bdry(int inid, tri_mesh &xin) : edge_bdry(inid,xin) {mytype="spline";}
-		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), rigid_movement_interface2D(inbdry), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax), scale(inbdry.scale), norm_dist(inbdry.norm_dist) {}
-		spline_bdry* create(tri_mesh& xin) const {return(new spline_bdry(*this,xin));}
+		spline_bdry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"_spline";}
+		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : BASE(inbdry,xin), rigid_movement_interface2D(inbdry), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax), scale(inbdry.scale), norm_dist(inbdry.norm_dist) {}
+		spline_bdry* create(tri_mesh& xin) const {return(new spline_bdry<BASE>(*this,xin));}
 
 		/* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
-		void alloc(int n) {edge_bdry::alloc(n); s.resize(n+1);}
+		void alloc(int n) {BASE::alloc(n); s.resize(n+1);}
 		void init(input_map& inmap) {
-			edge_bdry::init(inmap);
-			rigid_movement_interface2D::init(inmap,idprefix);
+			BASE::init(inmap);
+			rigid_movement_interface2D::init(inmap,BASE::idprefix);
 			std::string line;
-			if (!inmap.get(edge_bdry::idprefix+"_filename",line)) {
-				*x.gbl->log << "Couldn't fine spline file name in input file\n";
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
+			if (!inmap.get(BASE::idprefix+"_filename",line)) {
+				*BASE::x.gbl->log << "Couldn't fine spline file name in input file\n";
+				sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 			}
 			my_spline.read(line);
 
-			inmap.getlinewdefault(edge_bdry::idprefix+"_s_limits",line,"0 1");
+			inmap.getlinewdefault(BASE::idprefix+"_s_limits",line,"0 1");
 			std::istringstream data(line);
 			data >> smin >> smax;
 			data.clear();
             
-            inmap.getwdefault(edge_bdry::idprefix+"_scale",scale,1.0);
-            inmap.getwdefault(edge_bdry::idprefix+"_norm_dist",norm_dist,0.0);
+            inmap.getwdefault(BASE::idprefix+"_scale",scale,1.0);
+            inmap.getwdefault(BASE::idprefix+"_norm_dist",norm_dist,0.0);
 		}
 
 		void mvpttobdry(int seg_ind,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-			int sind = seg(seg_ind);
-			int p0 = x.seg(sind).pnt(0);
-			int p1 = x.seg(sind).pnt(1);
-            TinyVector<FLT,tri_mesh::ND> pt0(x.pnts(p0));
-            TinyVector<FLT,tri_mesh::ND> pt1(x.pnts(p1));
-            
-            to_geometry_frame(pt);
+			int sind = BASE::seg(seg_ind);
+			int p0 = BASE::x.seg(sind).pnt(0);
+			int p1 = BASE::x.seg(sind).pnt(1);
+            TinyVector<FLT,tri_mesh::ND> pt0(BASE::x.pnts(p0));
+            TinyVector<FLT,tri_mesh::ND> pt1(BASE::x.pnts(p1));
+                        
             to_geometry_frame(pt0);
             to_geometry_frame(pt1);
-            pt /= scale;
             pt0 /= scale;
             pt1 /= scale;
             
-			/* METHOD 1 */
-			FLT sloc,sloc0,sloc1;
-			my_spline.find(sloc0,pt0);
-			my_spline.find(sloc1,pt1);
-			/* FOR LOOPS */
-            if (sloc0 >= smax) sloc0 = smin;
-            if (sloc0 > sloc1) sloc1 = smax;
+            FLT sloc;
+            pt = 0.5*(pt0+pt1);
+            my_spline.find(sloc,pt);
             
-			sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
-			my_spline.offset(sloc, norm_dist, pt);
+            pt = 0.5*((1-psi)*pt0 +(1+psi)*pt1);
+            my_spline.find_with_guess(sloc,pt);
+            my_spline.offset(sloc,norm_dist,pt);
             
-//            *x.gbl->log << sloc0 << ' ' << pt0 << ' ' << sloc1 << ' ' << pt1 << ' ' << sloc << ' ' << pt << std::endl;
-
-//            TinyVector<FLT,tri_mesh::ND> dx = pt1 -pt0;
-//            FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
-//            FLT ds,psinew;
-//            int iter;
-//            for (iter = 0; iter < 100; ++iter) {
-//                psinew = 2*((pt(0)-pt0(0))*dx(0) +(pt(1)-pt0(1))*dx(1))/l2 -1.0;
-//                ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
-//                sloc += 0.5*ds;
-//                my_spline.interpolate(sloc,pt);
-//                if (fabs(psinew-psi) < 1.0e-8) break;
-//            }
-//            if (iter > 99) {
-//                *x.gbl->log << "too many spline iterations at " << pt << " with final change of " << ds << '\n';
-//            }
             pt *= scale;
 			to_physical_frame(pt);
 			return;

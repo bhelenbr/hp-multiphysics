@@ -166,23 +166,23 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
             break;
         }
         case etype::spline: {
-            temp = new spline_bdry(idnum,*this);
+            temp = new spline_bdry<edge_bdry>(idnum,*this);
             break;
         }
         case etype::spline_comm: {
-            temp = new eboundary_with_geometry<ecomm,spline_geometry>(idnum,*this);
+            temp = new spline_bdry<ecomm>(idnum,*this);
             break;
         }
         case etype::coupled_spline: {
-            temp = new ecoupled_physics<eboundary_with_geometry<edge_bdry,spline_geometry> >(idnum,*this);
+            temp = new ecoupled_physics<spline_bdry<edge_bdry> >(idnum,*this);
             break;
         }
         case etype::coupled_spline_comm: {
-            temp = new ecoupled_physics<eboundary_with_geometry<ecomm,spline_geometry> >(idnum,*this);
+            temp = new ecoupled_physics<spline_bdry<ecomm> >(idnum,*this);
             break;
         }
             
-            /* SPECIAL CASES FOLLOW (DEPRECATED -- USE SYMBOLIC) */
+        /* SPECIAL CASES FOLLOW (DEPRECATED -- USE SYMBOLIC) */
         case etype::circle: {
             temp = new eboundary_with_geometry<edge_bdry,circle>(idnum,*this);
             break;

@@ -28,7 +28,7 @@ void tri_mesh::offset_geometry(input_map& input) {
             input.delete_entry(ebdry(i)->idprefix +"_offset");
             ++noffsets;
             offset_flag[i] = true;
-            if (ebdry(i)->mytype=="spline")
+            if (ebdry(i)->mytype=="plain_spline")
                 spline_flag[i] = true;
         }
         else {
@@ -71,7 +71,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                 sim::abort(__LINE__,__FILE__,gbl->log);
             }
             else {
-                spline_bdry* spbdry = dynamic_cast<spline_bdry *>(ebdry(i));
+                spline_bdry<edge_bdry>* spbdry = dynamic_cast<spline_bdry<edge_bdry> *>(ebdry(i));
                 TinyVector<FLT,ND> t1,t2,n1,n2;
                 spbdry->my_spline.tangent(spbdry->smin,t1);
                 spbdry->my_spline.tangent(spbdry->smax,t2);
