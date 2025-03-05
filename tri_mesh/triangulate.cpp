@@ -112,11 +112,15 @@ void tri_mesh::triangulate(int nsd) {
 			for(i=0;i<nv;++i) {
 				vtry = tri_gbl->i2wk_lst2(i);
 				if (vtry == v(0) || vtry == v(1)) continue;
-
-
+#ifdef VERBOSE
+                *gbl->log << "side " << bgn << " vrt " << vtry << std::endl;
+#endif
 				for(n=0;n<ND;++n)
 					dx1(n) = pnts(v(0))(n) -pnts(vtry)(n);
 				det          = dx1(0)*dx2(1) -dx1(1)*dx2(0);
+#ifdef VERBOSE
+                *gbl->log << "det " << det << std::endl;
+#endif
 				if (det <= 0.0) continue;
 
 				/* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
@@ -129,7 +133,9 @@ void tri_mesh::triangulate(int nsd) {
 				/* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
 				/* ABOVE THE EDGE MID-POINT IS MINIMIZED (MINIMIZES RADIUS) */
 				height = dx2(0)*(xcen(1) -xmid(1)) -dx2(1)*(xcen(0) -xmid(0));
-
+#ifdef VERBOSE
+                *gbl->log << "height " << height << " hmin " << hmin << std::endl;
+#endif
 				if (height > hmin) continue;
 				
 				/* Check that new sides aren't coming from back of boundary sides adjacent to point*/
@@ -137,18 +143,39 @@ void tri_mesh::triangulate(int nsd) {
 				/* Boundary sides are assumed to be ccw defined */
 				int snext = abs(tri_gbl->i2wk_lst1(i))-1;
 				int sprev = pnt(vtry).nnbor;
+#ifdef VERBOSE
+                *gbl->log << "sprev " << sprev << " snext " << snext << std::endl;
+#endif
 				if (area(seg(sprev).pnt(0),seg(sprev).pnt(1),seg(snext).pnt(1)) > 0.0) {
 					/* If sides are acute then must make positive triangles with both edges */
-					if (area(snext,v(0)) < 0.0 || area(sprev,v(0)) < 0.0) continue;
-					if (area(snext,v(1)) < 0.0 || area(sprev,v(1)) < 0.0) continue;
+                    if ((area(snext,v(0)) < 0.0 || area(sprev,v(0)) < 0.0) && v(0) != seg(snext).pnt(1)) {
+#ifdef VERBOSE
+                        *gbl->log << "skipping1" << std::endl;
+#endif
+                        continue;
+                    }
+                    if ((area(snext,v(1)) < 0.0 || area(sprev,v(1)) < 0.0) && v(1) != seg(sprev).pnt(0)) {
+#ifdef VERBOSE
+                        *gbl->log << "skipping2" << std::endl;
+#endif
+                        continue;
+                    }
 				}
 				else {
 					/* If sides are obtuse then must make positive area with either */
-					if (area(snext,v(0)) < 0.0 && area(sprev,v(0)) < 0.0) continue;
-					if (area(snext,v(1)) < 0.0 && area(sprev,v(1)) < 0.0) continue;
+                    if ((area(snext,v(0)) < 0.0 && area(sprev,v(0)) < 0.0) && v(0) != seg(snext).pnt(1)) {
+#ifdef VERBOSE
+                        *gbl->log << "skipping3" << std::endl;
+#endif
+                        continue;
+                    }
+                    if ((area(snext,v(1)) < 0.0 && area(sprev,v(1)) < 0.0) && v(1) != seg(sprev).pnt(0)){
+#ifdef VERBOSE
+                        *gbl->log << "skipping4" << std::endl;
+#endif
+                        continue;
+                    }
 				}
-				
-
 
 				/* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
 				/* WITH ALL OTHER BOUNDARY SIDES */

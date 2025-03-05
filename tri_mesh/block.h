@@ -22,6 +22,7 @@ class boundary;
 class multigrid_interface;
 using namespace blitz;
 
+//#define OLDRECONNECT
 
 /** \brief Global variables for simulation
  *

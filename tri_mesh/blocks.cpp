@@ -1243,7 +1243,6 @@ void block::init(input_map &input) {
 
 	ostringstream nstr;
 	for(int lvl=1;lvl<ngrid;++lvl) {
-//#define OLDRECONNECT
 #ifdef OLDRECONNECT
 			grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,2.0);
 #else

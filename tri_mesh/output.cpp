@@ -58,6 +58,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 		filetype = netcdf;
 		grd_nm = grd_nm.substr(0,dotloc);
 	}
+    else if (ending == "d") {
+        filetype = boundary;
+        grd_nm = grd_nm.substr(0,dotloc);
+    }
 
 	if (!gbl->idprefix.empty())
 		grd_nm = grd_nm +"_" +gbl->idprefix;
@@ -135,6 +139,28 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 			out.close();
 			break;
+            
+        case (boundary):
+            fnmapp = grd_nm +".d";
+            out.open(fnmapp.c_str());
+            if (!out) {
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+                sim::abort(__LINE__,__FILE__,gbl->log);
+            }
+            out << npnt << std::endl;
+            for (int i = 0; i < npnt; ++i) {
+                out << i << ": " << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << lngth(i) << ' ' << pnt(i).info << std::endl;
+            }
+            out << nseg << std::endl;
+            for (int i=0;i<nebd;++i) {
+                const int bid = ebdry(i)->idnum;
+                for (int indx = 0;indx < ebdry(i)->nseg; ++indx) {
+                    const int sind = ebdry(i)->seg(indx);
+                    out << i << ": " << seg(sind).pnt(0) << ' ' << seg(sind).pnt(1) << ' ' << bid << std::endl;
+                }
+            }
+            out.close();
+            break;
 
 		case (vtk):
 			fnmapp = grd_nm +".vtk";

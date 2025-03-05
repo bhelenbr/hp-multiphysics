@@ -17,7 +17,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 		init(inmesh,duplicate,1.9);
 	}
 
-	for(i=0;i<maxpst;++i)
+    for(i=0;i<maxpst;++i)
 		tri(i).info = 0;
 
 	/* PREPARE FOR COARSENING */
@@ -151,11 +151,15 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 			++ebdry(i)->nseg;
 		}
 	}
+    
+    for(int i=0;i<npnt;++i)
+        pnt(i).info = 0;
 
 	/* MOVE VERTEX BDRY INFORMATION */
 	for(i=0;i<inmesh.nvbd;++i) {
 		vbdry(i)->copy(*inmesh.vbdry(i));
 		vbdry(i)->pnt = tri_gbl->intwk(inmesh.vbdry(i)->pnt);
+        pnt(vbdry(i)->pnt).info = vbdry(i)->idnum;
 	}
 
 	if (maxpst < nseg/2+nseg) {
@@ -172,6 +176,9 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 	
 	for(i=0;i<nseg;++i)
 		tri_gbl->i2wk_lst1(i) = i+1;
+    
+    /* For debugging trianguate problems */
+    // output("coarsen.d");
 
 	triangulate(nseg);
 

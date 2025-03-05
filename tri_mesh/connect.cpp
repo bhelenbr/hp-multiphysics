@@ -16,7 +16,6 @@ void tri_mesh::connect(multigrid_interface& in) {
 	if (fcnnct.ubound(firstDim) < maxpst-1) fcnnct.resize(maxpst);
 	if (tgt.ccnnct.ubound(firstDim) < tgt.maxpst-1) tgt.ccnnct.resize(tgt.maxpst);
 
-//#define OLDRECONNECT
 #ifdef OLDRECONNECT
 	coarsen(1.6,tgt);
 #else
