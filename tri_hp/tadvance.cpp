@@ -10,13 +10,12 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-
 /* DIRK SCHEMES */
 #ifdef DIRK
 void tri_hp::tadvance() {
 	int i,j,n,s,tind,stage;
 
-	/* DO STUFF FOR DEFORMABLE MESH FIRST */    
+	/* DO STUFF FOR DEFORMABLE MESH FIRST */
 	if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
 		r_tri_mesh::tadvance();
 	}
@@ -102,7 +101,7 @@ void tri_hp::tadvance() {
 		}
 	}
 
-	for(i=0;i<nvbd;++i) 
+	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->tadvance();
 
 	for(i=0;i<nebd;++i) 
@@ -130,26 +129,8 @@ void tri_hp::calculate_unsteady_sources() {
 	
 	for (log2p=start;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
-			if (tri(tind).info > -1) {
-				crdtocht(tind,1);
-				for(n=0;n<ND;++n)
-					basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-			}
-			else {
-				for(n=0;n<ND;++n)
-					basis::tri(log2p)->proj(vrtxbd(1)(tri(tind).pnt(0))(n),vrtxbd(1)(tri(tind).pnt(1))(n),vrtxbd(1)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-
-				for(i=0;i<basis::tri(log2p)->gpx();++i) {
-					for(j=0;j<basis::tri(log2p)->gpn();++j) {
-						for(n=0;n<ND;++n) {
-							dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(1))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
-							dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(2))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
-						}
-					}
-				}
-			}
-
-
+            pmetric->calc_metrics(tind, crd, dcrd, 1);
+            
 			ugtouht(tind,1);
 			for(n=0;n<NV;++n)
 				basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
@@ -312,25 +293,7 @@ void tri_hp::calculate_unsteady_sources() {
 	for (log2p=start;log2p<=log2pmax;++log2p) {
 		for (int level=1;level<min(gbl->nhist,gbl->tstep+1);++level) {
 			for(tind=0;tind<ntri;++tind) {
-				if (tri(tind).info > -1) {
-					crdtocht(tind,level);
-					for(n=0;n<ND;++n)
-						basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-				}
-				else {
-					for(n=0;n<ND;++n)
-						basis::tri(log2p)->proj(vrtxbd(level)(tri(tind).pnt(0))(n),vrtxbd(level)(tri(tind).pnt(1))(n),vrtxbd(level)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-
-					for(i=0;i<basis::tri(log2p)->gpx();++i) {
-						for(j=0;j<basis::tri(log2p)->gpn();++j) {
-							for(n=0;n<ND;++n) {
-								dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(1))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
-								dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(2))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
-							}
-						}
-					}
-				}
-
+                pmetric->calc_metrics(tind, crd, dcrd, level);
 
 				ugtouht(tind,level);
 				for(n=0;n<NV;++n)

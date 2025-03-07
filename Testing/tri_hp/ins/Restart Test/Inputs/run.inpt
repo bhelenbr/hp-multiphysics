@@ -21,7 +21,7 @@ perturb_amplitude: 0.01
 b0_type: ins
 b0_filetype: 3
 b0_growth factor: 2.0
-b0_mesh: ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square4
+b0_mesh: ../../square3
 b0_rho: 1.0
 b0_mu: 0.0
 b0_s4_hp_type: inflow

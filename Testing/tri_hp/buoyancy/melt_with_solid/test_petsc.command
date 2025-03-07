@@ -8,8 +8,8 @@
 # but preconditioning with superLU does seem to help
 
 # To run_petsc test case comment 
-#CNVG=true
-NORMAL=true
+CNVG=true
+#NORMAL=true
 ONE_SIDED=true
 SYMMETRIC=true
 PRECONDITION=true
@@ -36,27 +36,6 @@ tri_mesh generate
 rm data*.grd
 
 HP="mpiexec -np 2 tri_hp_petsc run_petsc.inpt ${PETSC}"
-
-if [ -n "$CNVG" ]; then
-	let nrefinements=4
-	let ngrid=0
-	let ntstep=4
-	while [ $ngrid -lt $nrefinements ]; do
-		${HP} ${PETSC}
-		grep L_2 out_b0.log | sed "s/\#L_2://g" | sed "s/L_inf \([-+.e0-9]*\)[ ]*[0-9]*/\1/g" > err.dat
-		l2=$(awk 'BEGIN {max = 0} {if ($5>max) max=$5} END {print max}' err.dat )
-		li=$(awk 'BEGIN {max = 0} {if ($6>max) max=$6} END {print max}' err.dat )
-		echo "$l2 $li" >> cnvg.dat 
-
-		tri_mesh -r rstrt1_b0.grd temp_b0.grd
-		tri_mesh -r rstrt1_b1.grd temp_b1.grd
-		mv temp_b0.grd rstrt1_b0.grd
-		mv temp_b1.grd rstrt1_b1.grd
-		let ntstep=${ntstep}+${ntstep}
-		mod_map run_petsc.inpt ntstep ${ntstep}
-		let ngrid=${ngrid}+1
-	done
-fi
 
 if [ -n "$NORMAL" ]; then
 	if [ -e NORMAL ]; then
@@ -114,7 +93,31 @@ if [ -n "$SYMMETRIC" ]; then
 	fi
 	cd ..
 fi
+
+if [ -n "$CNVG" ]; then
+	let nrefinements=3
+	let ngrid=0
+	let ntstep=4
+	while [ $ngrid -lt $nrefinements ]; do
+		${HP} ${PETSC}
+		grep L_2 out_b0.log | sed "s/\#L_2://g" | sed "s/L_inf \([-+.e0-9]*\)[ ]*[0-9]*/\1/g" > err.dat
+		l2=$(awk 'BEGIN {max = 0} {if ($5>max) max=$5} END {print max}' err.dat )
+		li=$(awk 'BEGIN {max = 0} {if ($6>max) max=$6} END {print max}' err.dat )
+		echo "$l2 $li" >> cnvg.dat 
+
+		tri_mesh -r rstrt1_b0.grd temp_b0.grd
+		tri_mesh -r rstrt1_b1.grd temp_b1.grd
+		mv temp_b0.grd rstrt1_b0.grd
+		mv temp_b1.grd rstrt1_b1.grd
+		let ntstep=${ntstep}+${ntstep}
+		mod_map run_petsc.inpt ntstep ${ntstep}
+		let ngrid=${ngrid}+1
+	done
+fi
 	
 cd ..
+if [ -n "$CNVG" ]; then
+	./make_plots.command > Results_petsc/rates.dat
+fi
 
 opendiff Baseline_petsc/ Results_petsc/

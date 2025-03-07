@@ -298,11 +298,6 @@
 		E63566D61949D85800AB8511 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		E63566D71949D85800AB8511 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		E63566D81949D85800AB8511 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
-		E63C922D2C95CED400AE626C /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
-		E63C922E2C95CED500AE626C /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
-		E63C922F2C95CED500AE626C /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
-		E63C92302C95CED600AE626C /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
-		E63C92312C95CED700AE626C /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
 		E63D72EC1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72ED1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
 		E63D72EE1CCEC92A00A33659 /* hp_vrtx_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E63D72EB1CCEC92A00A33659 /* hp_vrtx_bdry.cpp */; };
@@ -508,7 +503,6 @@
 		E6CEFD5C232A987100929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
 		E6CEFD5E232A987300929BA5 /* shock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE741A230346F000BE7310 /* shock.cpp */; };
-		E6D3EFD52C160469007BC477 /* cd_mapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */; };
 		E6DF4BCD1CC9C77A00B1EB11 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961C1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
 		E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */; };
@@ -531,6 +525,12 @@
 		E6F1CDEA1533E7F1009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
 		E6F1CDEB1533E7F1009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
 		E6F1CDED1533E7F3009F6A6B /* libspline++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6F1CDE51533E79E009F6A6B /* libspline++.a */; };
+		E6FF3D142D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
+		E6FF3D152D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
+		E6FF3D162D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
+		E6FF3D172D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
+		E6FF3D182D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
+		E6FF3D192D74974200583E28 /* metric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6FF3D132D74974200583E28 /* metric.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -801,11 +801,11 @@
 		E6C03FCD1A91080D0021A0FE /* melt_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_cd.h; path = cd/melt_cd.h; sourceTree = "<group>"; };
 		E6C03FCF1A9216950021A0FE /* melt_buoyancy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = melt_buoyancy.cpp; path = buoyancy/melt_buoyancy.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6C03FD01A9216950021A0FE /* melt_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = melt_buoyancy.h; path = buoyancy/melt_buoyancy.h; sourceTree = "<group>"; };
-		E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = cd_mapped.cpp; path = cd_mapped/cd_mapped.cpp; sourceTree = "<group>"; };
-		E6D3EFD32C147F44007BC477 /* cd_mapped.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = cd_mapped.h; path = cd_mapped/cd_mapped.h; sourceTree = "<group>"; };
 		E6DF4BCC1CC9C77A00B1EB11 /* partition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = partition.cpp; sourceTree = "<group>"; };
 		E6E0961A1CC9C81500B1F871 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		E6F1CDE51533E79E009F6A6B /* libspline++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libspline++.a"; path = "../lib/libspline++.a"; sourceTree = "<group>"; };
+		E6FF3D132D74974200583E28 /* metric.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = metric.cpp; sourceTree = "<group>"; };
+		E6FF3D212D74A13500583E28 /* metric.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = metric.h; sourceTree = "<group>"; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -908,7 +908,6 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				6FB40B1F091AF64E002BAA09 /* Conv-Diff */,
-				E6D3EFD12C147EB0007BC477 /* Conv-Diff Mapped */,
 				6FB40B1E091AF5F2002BAA09 /* Incompressible */,
 				384ADB9B21650510009FC4D3 /* komega */,
 				6F681E390F533020005F5783 /* Compressible */,
@@ -936,6 +935,8 @@
 				6FB40AF0091AF516002BAA09 /* tri_hp.h */,
 				6FB901D80A6C782300A4729C /* allocate.cpp */,
 				6FB40AD8091AF516002BAA09 /* gtol.cpp */,
+				E6FF3D212D74A13500583E28 /* metric.h */,
+				E6FF3D132D74974200583E28 /* metric.cpp */,
 				6FB40AE4091AF516002BAA09 /* output.cpp */,
 				6FB40AEE091AF516002BAA09 /* tobasis.cpp */,
 				6FB40ADC091AF516002BAA09 /* l2error.cpp */,
@@ -1175,15 +1176,6 @@
 			name = NonNewtonian;
 			sourceTree = "<group>";
 		};
-		E6D3EFD12C147EB0007BC477 /* Conv-Diff Mapped */ = {
-			isa = PBXGroup;
-			children = (
-				E6D3EFD32C147F44007BC477 /* cd_mapped.h */,
-				E6D3EFD22C147F44007BC477 /* cd_mapped.cpp */,
-			);
-			name = "Conv-Diff Mapped";
-			sourceTree = "<group>";
-		};
 		E6E096191CC9C7EE00B1F871 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
@@ -1346,6 +1338,7 @@
 				6F9853BA0BDE612700D342F6 /* main.cpp in Sources */,
 				6F9853BB0BDE612700D342F6 /* adapt.cpp in Sources */,
 				E6CEFA28244A3F1F00CD8BCE /* allocate.cpp in Sources */,
+				E6FF3D172D74974200583E28 /* metric.cpp in Sources */,
 				E6CEFD5D232A987200929BA5 /* shock.cpp in Sources */,
 				E60E0B062287BFFA0086FC2E /* allocate.cpp in Sources */,
 				E6B7A91B23C573DD002974EE /* getnewbdry.cpp in Sources */,
@@ -1376,7 +1369,6 @@
 				E6B7A91D23C573E1002974EE /* getnewibc.cpp in Sources */,
 				6F9853C70BDE612700D342F6 /* tadvance.cpp in Sources */,
 				E6B7A90F23C573A6002974EE /* allocate.cpp in Sources */,
-				E63C922E2C95CED500AE626C /* cd_mapped.cpp in Sources */,
 				E60E0B0E2287C0300086FC2E /* rsdl.cpp in Sources */,
 				6F9853C80BDE612700D342F6 /* allocate.cpp in Sources */,
 				384ADBB121650563009FC4D3 /* allocate.cpp in Sources */,
@@ -1439,7 +1431,6 @@
 				6F98547B0BDE649A00D342F6 /* output.cpp in Sources */,
 				E60E0B1C2287C0570086FC2E /* getnewbdry.cpp in Sources */,
 				E60E0B202287C05C0086FC2E /* getnewibc.cpp in Sources */,
-				E63C92302C95CED600AE626C /* cd_mapped.cpp in Sources */,
 				E675F20224537B2A005EFD22 /* bdry.cpp in Sources */,
 				384ADBB921650563009FC4D3 /* rsdl.cpp in Sources */,
 				6F98547C0BDE649A00D342F6 /* ptprobe.cpp in Sources */,
@@ -1483,6 +1474,7 @@
 				E6BBC0DB1ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				E60E0B242287C06F0086FC2E /* bdry.cpp in Sources */,
 				6F98549D0BDE649A00D342F6 /* allocate.cpp in Sources */,
+				E6FF3D192D74974200583E28 /* metric.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1509,7 +1501,6 @@
 				6FB91A650ACCB04500792B04 /* ptprobe.cpp in Sources */,
 				E60E0B1B2287C0560086FC2E /* getnewbdry.cpp in Sources */,
 				E60E0B1F2287C05C0086FC2E /* getnewibc.cpp in Sources */,
-				E63C922F2C95CED500AE626C /* cd_mapped.cpp in Sources */,
 				E675F20124537B29005EFD22 /* bdry.cpp in Sources */,
 				384ADBB821650563009FC4D3 /* rsdl.cpp in Sources */,
 				6FB91A660ACCB04500792B04 /* tobasis.cpp in Sources */,
@@ -1553,6 +1544,7 @@
 				E6BBC0D81ABF56B1008C50F2 /* getnewbdry.cpp in Sources */,
 				E60E0B232287C06E0086FC2E /* bdry.cpp in Sources */,
 				E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */,
+				E6FF3D142D74974200583E28 /* metric.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1586,7 +1578,6 @@
 				E60E8156180AEFA70067E2E7 /* rsdl.cpp in Sources */,
 				6F68254F099850E600F57688 /* hp_getnewibc.cpp in Sources */,
 				E675F20424537B2D005EFD22 /* getnewbdry.cpp in Sources */,
-				E63C922D2C95CED400AE626C /* cd_mapped.cpp in Sources */,
 				E675F1F024537B13005EFD22 /* setup_preconditioner.cpp in Sources */,
 				6FB901D90A6C782300A4729C /* allocate.cpp in Sources */,
 				384ADBB021650563009FC4D3 /* allocate.cpp in Sources */,
@@ -1599,6 +1590,7 @@
 				6FBDA48C0F304D4500E5FB76 /* bdry.cpp in Sources */,
 				E60E8154180AEFA70067E2E7 /* allocate.cpp in Sources */,
 				E60E8159180AEFA70067E2E7 /* bdry.cpp in Sources */,
+				E6FF3D152D74974200583E28 /* metric.cpp in Sources */,
 				6FBDA48D0F304D4600E5FB76 /* getnewbdry.cpp in Sources */,
 				E60E8158180AEFA70067E2E7 /* update.cpp in Sources */,
 				384ADBB621650563009FC4D3 /* rsdl.cpp in Sources */,
@@ -1639,6 +1631,7 @@
 				E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */,
 				E67EBAB312D603C50011EB69 /* hp_boundary.cpp in Sources */,
 				E6E0961D1CC9C92F00B1F871 /* partition.cpp in Sources */,
+				E6FF3D162D74974200583E28 /* metric.cpp in Sources */,
 				E67EBAB412D603C50011EB69 /* l2error.cpp in Sources */,
 				E67EBAB512D603C50011EB69 /* setup_preconditioner.cpp in Sources */,
 				E67EBAB612D603C50011EB69 /* movco.cpp in Sources */,
@@ -1661,7 +1654,6 @@
 				E67EBAC612D603C50011EB69 /* length.cpp in Sources */,
 				E6513DB1240352D9007924BC /* getnewbdry.cpp in Sources */,
 				E60E8153180AE3A90067E2E7 /* getnewibc.cpp in Sources */,
-				E6D3EFD52C160469007BC477 /* cd_mapped.cpp in Sources */,
 				1DDE741D2303562E00BE7310 /* shock.cpp in Sources */,
 				E67EBAC712D603C50011EB69 /* bdry.cpp in Sources */,
 				E6513DB0240352D5007924BC /* bdry.cpp in Sources */,
@@ -1732,7 +1724,6 @@
 				E67EBB0C12D603E10011EB69 /* allocate.cpp in Sources */,
 				E6B7A91023C573AC002974EE /* allocate.cpp in Sources */,
 				E67EBB0D12D603E10011EB69 /* setup_preconditioner.cpp in Sources */,
-				E63C92312C95CED700AE626C /* cd_mapped.cpp in Sources */,
 				E67EBB0E12D603E10011EB69 /* rsdl.cpp in Sources */,
 				E6B7A91C23C573DE002974EE /* getnewbdry.cpp in Sources */,
 				E67EBB0F12D603E10011EB69 /* length.cpp in Sources */,
@@ -1744,6 +1735,7 @@
 				E67EBB1112D603E10011EB69 /* getnewbdry.cpp in Sources */,
 				E675F20324537B2B005EFD22 /* bdry.cpp in Sources */,
 				E60B06191A4EE7E3007AE41D /* hp_coupled_boundary.cpp in Sources */,
+				E6FF3D182D74974200583E28 /* metric.cpp in Sources */,
 				E67EBB1212D603E10011EB69 /* getnewibc.cpp in Sources */,
 				E67EBB1412D603E10011EB69 /* copy.cpp in Sources */,
 				E67EBB1512D603E10011EB69 /* nstage.cpp in Sources */,
@@ -1939,6 +1931,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -2006,6 +1999,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = MY_SPARSE;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;

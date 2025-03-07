@@ -35,7 +35,7 @@ void tri_hp::adapt() {
 	checkintwk();
 	
 	tri_mesh::adapt();
-	setinfo();
+	pmetric->setinfo();
 	
 	/* Delete adaptation storage */
 	delete hp_gbl->pstr;
@@ -662,7 +662,7 @@ void tri_hp::refineby2() {
     checkintwk();
     
     tri_mesh::refineby2();
-    setinfo();
+    pmetric->setinfo();
     
     /* Delete adaptation storage */
     delete hp_gbl->pstr;

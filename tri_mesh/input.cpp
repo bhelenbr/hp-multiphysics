@@ -79,8 +79,7 @@ void tri_mesh::init(input_map &input, shared_ptr<block_global> gin) {
 			input.getwdefault("minimum_length",gbl->min_length,-1.0);
 		}
 	}
-
-	 findmatch(gbl,coarse_level);
+    findmatch(gbl,coarse_level);
 }
 
 void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {

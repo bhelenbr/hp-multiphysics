@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python
 
 import sys
 import os
@@ -8,13 +8,13 @@ import numpy
 import matplotlib.pyplot as plt
 import glob
 
-os.chdir(os.path.dirname(sys.argv[0]))
+#os.chdir(os.path.dirname(sys.argv[0]))
+errors = numpy.loadtxt(sys.argv[1] +"/cnvg.dat", delimiter=" ", skiprows=0);
+n = errors.shape[0]
 
-errors = numpy.loadtxt("Results/cnvg.dat", delimiter=" ", skiprows=0);
+#print(errors)
 
-print(errors)
-
-resolutions = numpy.array([1,2,4,8])
+resolutions = 2**numpy.arange(0,n)
 
 # L2 errors approximate mass
 plt.loglog(resolutions,errors[0::,0],'r-x')
@@ -27,9 +27,9 @@ plt.loglog(resolutions,errors[0::,3],'k-x')
 # plt.xticks(rlist,rlist)
 plt.xlabel('Resolution')
 plt.ylabel('Error')
-plt.savefig("Results/Error.pdf")	
+plt.savefig(sys.argv[1] +"/Error.pdf")	
 
-print(math.log2(errors[1,0]/errors[2,0]))
-print(math.log2(errors[1,1]/errors[2,1]))
-print(math.log2(errors[1,2]/errors[2,2]))
-print(math.log2(errors[1,3]/errors[2,3]))
+print(math.log2(errors[n-2,0]/errors[n-1,0]))
+print(math.log2(errors[n-2,1]/errors[n-1,1]))
+print(math.log2(errors[n-2,2]/errors[n-1,2]))
+print(math.log2(errors[n-2,3]/errors[n-1,3]))

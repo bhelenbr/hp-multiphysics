@@ -1403,6 +1403,7 @@ void block::go(input_map input) {
     
     int rb2;
     if (input.get("refineby2",rb2)) {
+        *gbl->log << "refining solution by 2" << std::endl;
         gbl->tstep=nstart+1;
         grd(0)->refineby2();
         nstr.str("");

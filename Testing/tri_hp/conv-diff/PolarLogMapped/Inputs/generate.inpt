@@ -17,7 +17,8 @@ ibc0: r^lambda*sin(-lambda*x0/b0_theta_length)
 r: exp(x1)*(b0_r0+b0_r_eps) -b0_r_eps
 b0_mesh: sector.d
 logmin: 8.0
-b0_type: cd_mapped
+b0_type: cd
+b0_metric: mapped
 b0_mapping: polar_log
 b0_r0: 1.0
 b0_r_eps: exp(-logmin)

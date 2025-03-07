@@ -136,7 +136,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
  void tri_hp::output(const std::string& filename, filetype typ, int tlvl) {
 	ofstream out;
 	std::string fname, fnmapp;
-	int v0,v1,sind,tind,indx,sgn;
+	int sind,tind,indx,sgn;
 	int ijind[MXTM][MXTM];
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
@@ -326,30 +326,22 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out << "POINTS " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << " float" << endl;
 			
 			for(int i=0;i<npnt;++i) {
+                TinyVector<FLT,ND> pt;
+                pmetric->calc_positions0D(i,pt,tlvl);
 				for(int n=0;n<ND;++n)
-					out << vrtxbd(tlvl)(i)(n) << ' ';
+					out << pt(n) << ' ';
 				out << 0.0 << endl;
 			}
 			
 			if (basis::tri(log2p)->p() > 1) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
-					if (seg(sind).info < 0) {
-						v0 = seg(sind).pnt(0);
-						v1 = seg(sind).pnt(1);
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
-					}
-					else {
-						crdtocht1d(sind,tlvl);
-						
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
-					}
+                    TinyVector<TinyVector<FLT,MXGP>,ND> crd;
+                    pmetric->calc_positions1D(sind,crd,tlvl);
 					
 					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
 						for(int n=0;n<ND;++n)
-							out << crd(n)(0,i) << ' ';                    
+							out << crd(n)(i) << ' ';
 						out << 0.0 << endl;
 					}
 				}
@@ -357,15 +349,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* INTERIOR MODES */
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
-						if (tri(tind).info < 0) {
-							for(int n=0;n<ND;++n)
-								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-						}
-						else {
-							crdtocht(tind,tlvl);
-							for(int n=0;n<ND;++n)
-								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
-						}
+                        pmetric->calc_positions(tind,crd,tlvl);
 						
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -561,30 +545,22 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out << "                <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             
             for(int i=0;i<npnt;++i) {
+                TinyVector<FLT,ND> pt;
+                pmetric->calc_positions0D(i,pt,tlvl);
                 for(int n=0;n<ND;++n)
-                    out << vrtxbd(tlvl)(i)(n) << ' ';
+                    out << pt(n) << ' ';
                 out << 0.0 << endl;
             }
             
             if (basis::tri(log2p)->p() > 1) {
                 /* SIDE MODES */
                 for(sind=0;sind<nseg;++sind) {
-                    if (seg(sind).info < 0) {
-                        v0 = seg(sind).pnt(0);
-                        v1 = seg(sind).pnt(1);
-                        for(int n=0;n<ND;++n)
-                            basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
-                    }
-                    else {
-                        crdtocht1d(sind,tlvl);
-                        
-                        for(int n=0;n<ND;++n)
-                            basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
-                    }
+                    TinyVector<TinyVector<FLT,MXGP>,ND> crd;
+                    pmetric->calc_positions1D(sind,crd,tlvl);
                     
                     for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
                         for(int n=0;n<ND;++n)
-                            out << crd(n)(0,i) << ' ';
+                            out << crd(n)(i) << ' ';
                         out << 0.0 << endl;
                     }
                 }
@@ -592,15 +568,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* INTERIOR MODES */
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
-                        if (tri(tind).info < 0) {
-                            for(int n=0;n<ND;++n)
-                                basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-                        }
-                        else {
-                            crdtocht(tind,tlvl);
-                            for(int n=0;n<ND;++n)
-                                basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
-                        }
+                        pmetric->calc_positions(tind,crd,tlvl);
                         
                         for(int i=1;i<basis::tri(log2p)->sm();++i) {
                             for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -752,8 +720,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			/* VERTEX MODES */
 			for(int i=0;i<npnt;++i) {
+                TinyVector<FLT,ND> pt;
+                pmetric->calc_positions0D(i,pt,tlvl);
 				for(int n=0;n<ND;++n)
-					out << vrtxbd(tlvl)(i)(n) << ' ';
+					out << pt(n) << ' ';
 				for(int n=0;n<NV;++n)
 					out << ugbd(tlvl).v(i,n) << ' ';                    
 				out << std::endl;
@@ -762,25 +732,16 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if (basis::tri(log2p)->p() > 1) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
-					if (seg(sind).info < 0) {
-						v0 = seg(sind).pnt(0);
-						v1 = seg(sind).pnt(1);
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
-					}
-					else {
-						crdtocht1d(sind,tlvl);
-
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
-					}
+                    TinyVector<TinyVector<FLT,MXGP>,ND> crd;
+                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    
 					ugtouht1d(sind,tlvl);
 					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
 
 					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
 						for(int n=0;n<ND;++n)
-							out << crd(n)(0,i) << ' ';
+							out << crd(n)(i) << ' ';
 						for(int n=0;n<NV;++n)
 							out << u(n)(0,i) << ' ';                    
 						out << std::endl;
@@ -794,15 +755,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 
-						if (tri(tind).info < 0) {
-							for(int n=0;n<ND;++n)
-								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-						}
-						else {
-							crdtocht(tind,tlvl);
-							for(int n=0;n<ND;++n)
-								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
-						}
+                        pmetric->calc_positions(tind,crd,tlvl);
 
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -897,8 +850,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			/* VERTEX MODES */
 			for(int i=0;i<npnt;++i) {
+                TinyVector<FLT,ND> pt;
+                pmetric->calc_positions0D(i,pt,tlvl);
 				for(int n=0;n<ND;++n)
-					dt_vrtx(n,i) =  vrtxbd(tlvl)(i)(n);
+					dt_vrtx(n,i) =  pt(n);
 				for(int n=0;n<NV;++n)
 					dt_vals(i) = ugbd(tlvl).v(i,n);                    
 			}
@@ -907,25 +862,15 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if (basis::tri(log2p)->p() > 1) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
-					if (seg(sind).info < 0) {
-						v0 = seg(sind).pnt(0);
-						v1 = seg(sind).pnt(1);
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
-					}
-					else {
-						crdtocht1d(sind,tlvl);
-						
-						for(int n=0;n<ND;++n)
-							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
-					}
+                    TinyVector<TinyVector<FLT,MXGP>,ND> crd;
+                    pmetric->calc_positions1D(sind,crd,tlvl);
 					ugtouht1d(sind,tlvl);
 					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
 					
 					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
 						for(int n=0;n<ND;++n)
-							dt_vrtx(n,dt_pnts) = crd(n)(0,i);
+							dt_vrtx(n,dt_pnts) = crd(n)(i);
 						for(int n=0;n<NV;++n)
 							dt_vals(dt_pnts) = u(n)(0,i);                    
 						++dt_pnts;
@@ -939,15 +884,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 						
-						if (tri(tind).info < 0) {
-							for(n=0;n<ND;++n)
-								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-						}
-						else {
-							crdtocht(tind,tlvl);
-							for(int n=0;n<ND;++n)
-								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
-						}
+                        pmetric->calc_positions(tind,crd,tlvl);
 						
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -1132,8 +1069,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             int count=1;
             for(int i=0;i<npnt;i++){
                 out << count << " ";
+                TinyVector<FLT,ND> pt;
+                pmetric->calc_positions0D(i,pt,tlvl);
                 for (int n=0;n<ND;n++){
-                    out << pnts(i)(n) << " ";
+                    out << pt(n) << " ";
                 }
                 out << 0.0 << endl;
                 count++;
@@ -1145,23 +1084,13 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             if (basis::tri(log2p)->p() > 1) {
                 /* SIDE MODES */
                 for(sind=0;sind<nseg;++sind) {;
-                    if (seg(sind).info < 0) {
-                        v0 = seg(sind).pnt(0);
-                        v1 = seg(sind).pnt(1);
-                        for(int n=0;n<ND;++n)
-                            basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
-                    }
-                    else {
-                        crdtocht1d(sind,tlvl);
-                        
-                        for(int n=0;n<ND;++n)
-                            basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
-                    }
+                    TinyVector<TinyVector<FLT,MXGP>,ND> crd;
+                    pmetric->calc_positions1D(sind,crd,tlvl);
                     
                     for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
                         out << count << " ";
                         for(int n=0;n<ND;++n)
-                            out << crd(n)(0,i) << ' ';
+                            out << crd(n)(i) << ' ';
                         out << 0.0 << std::endl;
                         count++;
                     }
@@ -1170,15 +1099,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* INTERIOR MODES */
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
-                        if (tri(tind).info < 0) {
-                            for(int n=0;n<ND;++n)
-                                basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-                        }
-                        else {
-                            crdtocht(tind,tlvl);
-                            for(int n=0;n<ND;++n)
-                                basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
-                        }
+                        pmetric->calc_positions(tind,crd,tlvl);
                         
                         for(int i=1;i<basis::tri(log2p)->sm();++i) {
                             for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -1334,7 +1255,7 @@ void tri_hp::input(const std::string& filename) {
 			fin.close();
 			input_map blank;
 			tri_mesh::input(fnmapp,tri_mesh::binary,1,blank);
-			setinfo();
+			pmetric->setinfo();
 			
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
@@ -1376,7 +1297,7 @@ void tri_hp::input(const std::string& filename) {
 			fin.close();
 			input_map blank;
 			tri_mesh::input(fnmapp,tri_mesh::netcdf,1,blank);
-			setinfo();
+			pmetric->setinfo();
 			
 			nstr.str("");
 			fnmapp = filename +"_v_" +gbl->idprefix +".nc";
@@ -1422,7 +1343,7 @@ void tri_hp::input(const std::string& filename) {
 			fin.close();
 			input_map blank;
 			tri_mesh::input(fnmapp,tri_mesh::grid,1,blank);
-			setinfo();
+			pmetric->setinfo();
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;

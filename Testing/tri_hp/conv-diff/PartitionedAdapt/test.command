@@ -1,7 +1,8 @@
 #!/bin/bash
 # Runs an adapting case in parallel with known exact solution & geometry
-# No iteration neessay
+# No iteration necessary
 # and partitioning
+# crashes (not fully working movesidedata bad memory access)
 
 cd "$(dirname "$0")"
 
@@ -27,6 +28,8 @@ mod_map run.inpt maximum_length 0.8
 mod_map run.inpt minimum_length 0.4
 mpiexec -np 1 tri_hp_petsc run.inpt
 
+export PETSC=-stop_for_debugger
+
 let NPART=4
 mod_map run.inpt partition ${NPART}
 mod_map run.inpt restart 2
@@ -40,8 +43,6 @@ fi
 mod_map partition.inpt ntstep 2
 mpiexec -np ${NPART} tri_hp_petsc partition.inpt ${PETSC}
 cd ..
-
-exit 1
 
 mkdir refine
 cd refine

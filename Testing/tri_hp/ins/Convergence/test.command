@@ -46,13 +46,30 @@ rm -rf *
 cp ../Inputs/* .
 cp run_master.inpt run.inpt
 
+# Make meshes
+tri_mesh -m 'x0+0.01*x1,x1' square1.grd distorted1.grd
+
+let ngrid=1
+while [ $ngrid -lt 4 ]; do
+	let ngp=${ngrid}+1
+	tri_mesh -r distorted${ngrid}.grd distorted${ngp}.grd
+	let ngrid=${ngrid}+1
+done
+
+let ngrid=1
+while [ $ngrid -lt 5 ]; do
+	tri_mesh -m 'x0-0.01*x1,x1' distorted${ngrid}.grd square${ngrid}.grd
+	tri_mesh -m 'x0,x1*0.1' square${ngrid}.grd narrow${ngrid}.grd
+	tri_mesh -m 'x0,x1*10.0' square${ngrid}.grd wide${ngrid}.grd
+	let ngrid=${ngrid}+1
+done
 
 case "$CASE" in
 FD)
 	P="1 2 4"
-	GRID="1 2 4 8"
+	GRID="1 2 3 4"
 	CFL="0.5 1.0 1.5"
-	AR="SQUARE/INOUT_0.1/square SQUARE/INOUT/square SQUARE/INOUT_10/square"
+	AR="narrow square wide"
 	MGFLAG=1
 	INTV="1 20 40 60"
 ;;
@@ -61,9 +78,9 @@ MG)
 	mod_map run.inpt ncycle 10
 	mod_map run.inpt ntstep 4
 	P="1 2 4"
-	GRID="2"
+	GRID="3"
 	CFL="1.0"
-	AR="SQUARE/INOUT/square"
+	AR="square"
 	MGFLAG=1
 	INTV="1 2 4 8"
 ;;
@@ -74,7 +91,7 @@ NO_MG)
 	P="1 2 4"
 	GRID="2"
 	CFL="1.0"
-	AR="SQUARE/INOUT/square"
+	AR="square"
 	MGFLAG=0
 	INTV="1 2 4 8"
 ;;
@@ -84,7 +101,7 @@ PMG)
 	P="2 4"
 	GRID="1"
 	CFL="1.0"
-	AR="SQUARE/INOUT/square"
+	AR="square"
 	MGFLAG=2
 	INTV="1 2 4 8"
 ;;
@@ -111,12 +128,11 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 
 	   let ngrid=0
 	   while [ $ngrid -lt ${#SUBSGRID[@]} ]; do
-	     let mesh=${SUBSGRID[ngrid]}*4/${SUBSP[np]}
-	     mod_map run.inpt b0_mesh ${HOME}/Codes/grids/${SUBSAR[nar]}${mesh}		 
+	     let mesh=${SUBSGRID[ngrid]}
+	     mod_map run.inpt b0_mesh ../${SUBSAR[nar]}${mesh}		 
 
 		 if [ $MGFLAG -eq 1 ]; then
-			 let lvls=$ngrid-${log2p}+3
-			 mod_map run.inpt ngrid ${lvls}
+			 mod_map run.inpt ngrid ${mesh}
 			 mod_map run.inpt extra_finest_levels ${log2p}
 		 elif [ $MGFLAG -eq 2 ]; then
 		 	 mod_map run.inpt extra_finest_levels ${log2p}

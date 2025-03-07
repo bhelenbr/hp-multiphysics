@@ -1,33 +1,33 @@
-# Physics (should define nblock for more than 1 block):
+# Physics (should define nblock for more than 1 block): 
 b0_type: ins
 gravity: 0
 body_force: 0.0 0.0
-# Physical Parameters ( assuming the stagnation flow strength parameter "a = 1" so at y = inf, u = x and v = -y):
+# Physical Parameters ( assuming the stagnation flow strength parameter "a = 1" so at y = inf, u = x and v = -y): 
 rho: 1.0
 mu: 4.0e-4
 # Mesh and mesh adaptation (can set adapt on and set growth factor, error_target, error_estimator (energy_norm or scale_independent), minimum_length, maximum_length, curvature sensitivity. Can also set adapat_output on): 
 b0_mesh: rstrt1_b0
-# Time stepping:
+# Time stepping: 
 dtinv: 0
 ntstep: 1
-# PETSC solver, under-relaxation and SUPG (can change b0_dissipation from 1, can also use preconditioner_interval and relative_tolerance):
+# PETSC solver, under-relaxation and SUPG (can change b0_dissipation from 1, can also use preconditioner_interval and relative_tolerance): 
 ncycle: 300
 absolute_tolerance: 1.0e-13
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
-# Continuation (can also set restart_type):
-# Order of FEM and b0_helper (l2error):
+# Continuation (can also set restart_type): 
+# Order of FEM and b0_helper (l2error): 
 log2p: 1
 b0_helper: l2error
-# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval))
+# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval)): 
 logfile: out
-# Explicit solver stuff:
+# Explicit solver stuff: 
 nstage: 1
 alpha: 1.0
 beta: 1.0
-# Debugging ( can set debug_output, jac_debug, rsdl_debug on):
-rsdl_debug: 1
-# Problem Calculations:
-# Initial & Boundary conditions (I. s1 is inlet, s2,3 are symmetry, s4 is outlet II. To get the fluxes set b0_s2_hp_type to outflow and set b0_s2_report to 1 III. Two vertices are used to fixi pressure at two points on the presiodic boundary (upper and lower left ones)):
+# Debugging ( can set debug_output, jac_debug, rsdl_debug on): 
+#rsdl_debug: 1
+# Problem Calculations: 
+# Initial & Boundary conditions (I. s1 is inlet, s2,3 are symmetry, s4 is outlet II. To get the fluxes set b0_s2_hp_type to outflow and set b0_s2_report to 1 III. Two vertices are used to fixi pressure at two points on the presiodic boundary (upper and lower left ones)): 
 ibc: symbolic
 ibc0: x0
 ibc1: -2*x1
@@ -35,15 +35,15 @@ ibc2: -0.5*rho*(x0*x0 +4.0*x1*x1)
 b0_s1_hp_type: plain
 b0_s1_hp_typelist: 0 0 0
 b0_s2_hp_type: plain
-b0_s2_hp_typelist: 0 1 1 
+b0_s2_hp_typelist: 0 1 1
 b0_s3_hp_type: plain
-b0_s3_hp_typelist: 1 0 1 
+b0_s3_hp_typelist: 1 0 1
 b0_s4_hp_type: plain
 b0_s4_hp_typelist: 1 1 1
 b0_s4_flux0: x0*(rho*u0*u0 - 0.5*rho*(x0*x0 +4.0*x1*x1) -2.0*mu)
-b0_s4_flux1: x0*rho*u1*u0 
+b0_s4_flux1: x0*rho*u1*u0
 b0_s4_flux2: x0*rho*u0
-#Alternatively using applied_stress and symmetry BCs
+#Alternatively using applied_stress and symmetry BCs: 
 # b0_s2_hp_type: symmetry
 # b0_s3_hp_type: symmetry
 # b0_s3_dir: 1

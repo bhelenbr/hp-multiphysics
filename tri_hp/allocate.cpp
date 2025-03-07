@@ -167,7 +167,10 @@ void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 	}
 	hp_gbl->ibc = getnewibc(ibcname);
 	hp_gbl->ibc->init(inmap,keyword);
-	
+    
+    pmetric = getnewmetric(inmap);
+    pmetric->init(inmap);
+    
 	/* SET MESH VELOCITY TO ZERO */
 #ifdef MESH_REF_VEL
 	hp_gbl->mesh_ref_vel = 0;
@@ -190,7 +193,7 @@ void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 	}
 	for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap);
 	for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap);
-	setinfo();
+	pmetric->setinfo();
 
 	inmap.getwdefault("hp_fadd",fadd,1.0);
 
@@ -291,7 +294,6 @@ void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 		tobasis(hp_gbl->ibc);
 	}
 
-
 	/*********************************/
 	/* ALLOCATE ADAPTATION STORAGE    */
 	/*********************************/
@@ -336,6 +338,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 	const tri_hp& inmesh = dynamic_cast<const tri_hp &>(in);
 	gbl = inmesh.gbl;
     hp_gbl = inmesh.hp_gbl;
+    pmetric.reset(inmesh.pmetric->create(*this).release());
 
 	/* Initialize stuff for r_tri_mesh */
 	mmovement = inmesh.mmovement;
@@ -427,6 +430,10 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 		case multigrid: {
 			/* STUFF FOR MULTIGRID SOURCE TERMS */
 #ifdef DIRK
+            if (gbl->time_scheme > block_global::AM1) {
+                *gbl->log << "Need to recompile to run BD schemes" << std::endl;
+                sim::finalize(__LINE__,__FILE__,gbl->log);
+            }
 			ugbd(1).v.resize(maxpst,NV);
 			vrtxbd(1).resize(maxpst); 
 #else
@@ -483,54 +490,6 @@ tri_hp::~tri_hp() {
 
 	for(int i=0;i<nebd;++i)
 		delete hp_ebdry(i);
-}
-
-void tri_hp::setinfo() {
-	int i,j,sind;
-
-	/* SET UP pnts BC INFORMATION FOR OUTPUT */
-	for(i=0;i<npnt;++i)
-		pnt(i).info = -1;
-
-	for(i=0;i<nvbd;++i)
-		pnt(vbdry(i)->pnt).info = 0;
-
-#ifdef ALLCURVED
-    if (!allcurved) {
-#endif
-        /* SET UP EDGE BC INFORMATION FOR CURVED SIDES OUTPUT */
-        for(i=0;i<nseg;++i)
-            seg(i).info = -1;
-
-        for(i=0;i<ntri;++i)
-            tri(i).info = -1;
-
-        if (log2p > 0) {
-            for(i=0;i<nebd;++i) {
-                if (hp_ebdry(i)->is_curved()) {
-                    for(j=0;j<ebdry(i)->nseg;++j) {
-                        sind = ebdry(i)->seg(j);
-                        seg(sind).info = 0;
-                        tri(seg(sind).tri(0)).info = 0;
-                    }
-                }
-            }
-        }
-#ifdef ALLCURVED
-    }
-    else {
-        /* SET UP EDGE BC INFORMATION FOR CURVED SIDES OUTPUT */
-        for(i=0;i<nseg;++i)
-            seg(i).info = 0;
-
-        for(i=0;i<ntri;++i)
-            tri(i).info = 0;
-    }
-#endif
-
-    
-
-	return;
 }
 
 #ifndef petsc

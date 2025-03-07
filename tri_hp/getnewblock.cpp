@@ -10,9 +10,9 @@
 #include <blocks.h>
 #include <block.h>
 #include <r_tri_mesh.h>
+#include "metric.h"
 
 #define CD
-#define CD_MAPPED
 #define INS
 //#define PS
 //#define SWIRL
@@ -28,10 +28,6 @@
 
 #ifdef CD
 #include "cd/tri_hp_cd.h"
-#endif
-
-#ifdef CD_MAPPED
-#include "cd_mapped/cd_mapped.h"
 #endif
 
 #ifdef INS
@@ -237,13 +233,6 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 		}
 #endif
             
-#ifdef CD_MAPPED
-        case btype::cd_mapped: {
-            cd_mapped *temp = new cd_mapped();
-            return(temp);
-        }
-#endif
-			
 		default: {
 			std::cerr << "unrecognizable block type: " <<  type << std::endl;
 			r_tri_mesh *temp = new r_tri_mesh();
@@ -253,6 +242,54 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 
 	return(0);
 }
+
+
+class metrictype {
+    public:
+        const static int ntypes = 3;
+        enum ids {curved_boundary,all_curved,mapped};
+        const static char names[ntypes][40];
+        static int getid(const char *nin) {
+            int i;
+            for(i=0;i<ntypes;++i)
+                if (!strcmp(nin,names[i])) return(i);
+            return(-1);
+        }
+};
+const char metrictype::names[ntypes][40] = {"curved_boundary","all_curved","mapped"};
+
+unique_ptr<tri_hp::metric> tri_hp::getnewmetric(input_map &inmap) {
+    std::string keyword,val,ibcname;
+    std::istringstream data;
+    int type;
+
+    /* FIND BLOCK TYPE */
+    keyword = gbl->idprefix+"_metric";
+    if (!inmap.get(keyword,val)) {
+        keyword = "metric";
+        inmap.getwdefault(keyword,val,std::string(metrictype::names[0]));
+    }
+    type = metrictype::getid(val.c_str());
+    
+
+    switch(type) {
+        case metrictype::curved_boundary: {
+            return(make_unique<tri_hp::metric>(*this));
+            break;
+        }
+        case metrictype::mapped: {
+            return(make_unique<mapped_metric>(*this));
+            break;
+        }
+        default: {
+            *gbl->log << "unrecognized metric" << std::endl;
+            sim::abort(__LINE__,__FILE__,&std::cerr);
+        }
+    }
+    return(nullptr);
+}
+
+
 
 /* This routine waits for everyone to exit nicely */
 void sim::finalize(int line,const char *file, std::ostream *log) {

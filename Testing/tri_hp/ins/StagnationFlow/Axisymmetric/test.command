@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Axisymmetric laminar planar stagnation flow
+# Should give 0.0 L2 errors
 
 # Number of processors
 let NP=1

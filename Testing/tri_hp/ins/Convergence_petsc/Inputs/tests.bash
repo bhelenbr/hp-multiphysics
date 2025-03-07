@@ -15,11 +15,11 @@ while [ $nar -lt ${#SUBSAR[@]} ]; do
 
 	   let ngrid=0
 	   while [ $ngrid -lt ${#SUBSGRID[@]} ]; do
-	     let mesh=${SUBSGRID[ngrid]}*4/${SUBSP[np]}
-	     mod_map run.inpt b0_mesh ${HOME}/Codes/grids/${SUBSAR[nar]}${mesh}		 
+	     let mesh=${SUBSGRID[ngrid]}
+	     mod_map run.inpt b0_mesh ../${SUBSAR[nar]}${mesh}		 
 
 		 if [ $MGFLAG -eq 1 ]; then
-			 let lvls=$ngrid-${log2p}+3
+			 let lvls=${mesh}
 			 mod_map run.inpt ngrid ${lvls}
 			 mod_map run.inpt extra_finest_levels ${log2p}
 		 elif [ $MGFLAG -eq 2 ]; then

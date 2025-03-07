@@ -22,7 +22,7 @@ export HP
 P="1 2 4"
 GRID="4"
 CFL="1.0"
-AR="SQUARE/INOUT/square"
+AR="square"
 MGFLAG=0
 INTV="2 3 4 5"
 
@@ -41,17 +41,37 @@ else
 fi
 rm -rf *
 
+cp ../Inputs/* .
+# Make meshes
+tri_mesh -m 'x0+0.01*x1,x1' square1.grd distorted1.grd
+
+let ngrid=1
+while [ $ngrid -lt 4 ]; do
+	let ngp=${ngrid}+1
+	tri_mesh -r distorted${ngrid}.grd distorted${ngp}.grd
+	let ngrid=${ngrid}+1
+done
+
+let ngrid=1
+while [ $ngrid -lt 5 ]; do
+	tri_mesh -m 'x0-0.01*x1,x1' distorted${ngrid}.grd square${ngrid}.grd
+	tri_mesh -m 'x0,x1*0.1' square${ngrid}.grd narrow${ngrid}.grd
+	tri_mesh -m 'x0,x1*10.0' square${ngrid}.grd wide${ngrid}.grd
+	let ngrid=${ngrid}+1
+done
+
+
 # Test just flow convergence
 mkdir Flow
 cd Flow
-cp ../../Inputs/* .
+cp ../* .
 ./tests.bash
 cd ../
 
 # Test deforming mesh convergence
 mkdir Deforming
 cd Deforming
-cp ../../Inputs/* .
+cp ../* .
 mod_map -u run.inpt mesh_movement
 ./tests.bash
 cd ../
@@ -59,7 +79,7 @@ cd ../
 # Test periodic mesh
 mkdir Periodic
 cd Periodic
-cp ../../Inputs/* .
+cp ../* .
 mod_map run.inpt b0_s1_type prdc
 mod_map -c run.inpt b0_s1_hp_type
 ./tests.bash

@@ -20,12 +20,7 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 
 	/* IF TINFO > -1 IT IS CURVED ELEMENT */
 	if (tri(tind).info > -1) {
-		/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-		crdtocht(tind);
-
-		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(int n=0;n<ND;++n)
-			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+        pmetric->calc_metrics(tind,crd,dcrd);
 	}
 	else {
 		/* LOAD INDICES OF VERTEX POINTS */

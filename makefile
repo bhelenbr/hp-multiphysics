@@ -2,6 +2,12 @@ DIRS = symbolic_function utilities input_map quadtree spline++
 TRI_DIRS = tri_basis tri_mesh tri_hp
 TET_DIRS = tet_basis tet_mesh tet_hp
 
+ifeq ($(shell uname), Darwin)
+    # If the OS is Darwin (macOS), use xcodebuild instead of make
+    MAKE = xcodebuild
+    MFLAGS = -alltargets -configuration Release -arch arm64
+endif
+
 #DEFINES = -DBZ_DEBUG
 #DEFINES +=-Df2cFortran
 #DEFINES += -DIBMR2Fortran
@@ -45,6 +51,11 @@ endif
 #LIBBLAS = -lessl /afs/cu/software/Development/lapack-3.0/rs_aix52/LAPACK/lapack_RS6K.a -lxlf -lxlf90 #(jupiter)
 export LIBBLAS
 
+ifeq ($(shell uname), Darwin)
+    # If the OS is Darwin (macOS), use xcodebuild instead of make
+    MAKE = xcodebuild
+    MFLAGS = -alltargets -configuration Release -arch arm64
+endif
 
 #AR = libtool
 #ARFLAGS = -o #(darwin)
@@ -93,9 +104,13 @@ dirs:
 	+@[ -d  include ] || mkdir -p include
 
 clean:
+	@if [ ${MAKE} = "xcodebuild" ]; then\
+        MFLAGS="-alltargets -clean";\
+    fi
 	for d in $(TRI_DIRS); do (cd $$d; $(MAKE) $(MFLAGS) clean ); done
 	for d in $(TET_DIRS); do (cd $$d; $(MAKE) $(MFLAGS) clean ); done
 	for d in $(DIRS); do (cd $$d; $(MAKE) $(MFLAGS) clean ); done
+	rm -rf include/* lib/* bin/spline bin/tri_hp* bin/tri_mesh*
 
 force_look:
 	true

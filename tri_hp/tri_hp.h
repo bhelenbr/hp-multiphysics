@@ -33,10 +33,11 @@
 #define MXTM (MAXP+1)*(MAXP+2)/2 
 
 // #define MESH_REF_VEL
-// #define ALLCURVED
+//#define ALLCURVED
 
 class hp_vrtx_bdry;
 class hp_edge_bdry;
+//class metric;
 
 class init_bdry_cndtn {
 public:
@@ -169,9 +170,6 @@ public:
     /* THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
     void lftog(int tind, vsi gvect); /**< gather local to global vector */
     
-    /* SETUP V/S/T INFO */
-    void setinfo();
-    
 public:
     tri_hp() : r_tri_mesh() {}
     virtual tri_hp* create() {return new tri_hp;}
@@ -217,6 +215,25 @@ public:
     void jacobian() {} // Not filled this in yet
     virtual void element_jacobian(int tind, Array<FLT,2>&);
     
+    class metric {
+    public:
+        tri_hp& x;
+        metric(tri_hp& xin) : x(xin) {}
+        metric(const metric& in_metric, tri_hp& xin) : x(xin) {}
+        virtual std::unique_ptr<metric> create(tri_hp& xin) {return std::make_unique<metric>(*this,xin);}
+        virtual void init(input_map& inmap) {}
+        virtual void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND>& dcrd, int tlvl=0) const;
+        virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, TinyVector<TinyVector<FLT,MXGP>,ND>& dcrd, int tlvl=0) const;
+        virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, int tlvl=0) const;
+        virtual void calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, int tlvl=0) const;
+        virtual void calc_positions0D(int vind, TinyVector<FLT,ND>& pt, int tlvl) const {pt = x.vrtxbd(tlvl)(vind);}
+        virtual void setinfo();
+    };
+    
+    /* object for calculating element & side metrics */
+    unique_ptr<metric> pmetric;
+    unique_ptr<metric> getnewmetric(input_map& input);
+        
     /** Relax solution */
     void update();
     virtual void minvrt();

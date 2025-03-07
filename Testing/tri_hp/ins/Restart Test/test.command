@@ -4,6 +4,7 @@
 # restarting doesn't cause changes in the solution
 # binio stopped working and I don't know why
 # I think this is why I switched to netcdf
+# check diff files - should be empty for success
 
 cd "$(dirname "$0")"
 
@@ -31,6 +32,23 @@ else
 fi
 rm -rf *
 
+cp ../Inputs/*.grd .
+# Make meshes
+tri_mesh -m 'x0+0.01*x1,x1' square1.grd distorted1.grd
+
+let ngrid=1
+while [ $ngrid -lt 3 ]; do
+	let ngp=${ngrid}+1
+	tri_mesh -r distorted${ngrid}.grd distorted${ngp}.grd
+	let ngrid=${ngrid}+1
+done
+
+let ngrid=1
+while [ $ngrid -lt 4 ]; do
+	tri_mesh -m 'x0-0.01*x1,x1' distorted${ngrid}.grd square${ngrid}.grd
+	let ngrid=${ngrid}+1
+done
+rm distorted*
 
 
 let n=0
@@ -81,7 +99,7 @@ while [ ${n} -lt ${#TYPES[@]} ]; do
 	mod_map -u run.inpt b0_s4_type
 	mod_map -u run.inpt b0_s4_curved
 	cp run.inpt square_bdry.inpt
-	cp ${HOME}/Codes/Testing/grids/SQUARE/INOUT/square2.grd square.grd
+	cp ../square2.grd square.grd
 	tri_mesh -r square curved.grd
 	tri_mesh -f curved curved
 	mod_map run.inpt b0_mesh ../curved

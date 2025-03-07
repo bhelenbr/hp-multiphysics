@@ -23,24 +23,17 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	}
 
 	for(tind=0;tind<ntri;++tind) {
-
+        pmetric->calc_metrics(tind,crd,dcrd);
+        
+        /* Calculate position in parametric coordinates for ibc */
 		if (tri(tind).info > -1) {
 			crdtocht(tind);
 			for(n=0;n<ND;++n)
-				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0) ,MXGP);
 		}
 		else {
 			for(n=0;n<ND;++n)
 				basis::tri(log2p)->proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-
-			for(i=0;i<basis::tri(log2p)->gpx();++i) {
-				for(j=0;j<basis::tri(log2p)->gpn();++j) {
-					for(n=0;n<ND;++n) {
-						dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(1))(n) -pnts(tri(tind).pnt(0))(n));
-						dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(0))(n));
-					}
-				}
-			}
 		}
 
 		ugtouht(tind);
@@ -68,7 +61,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 		l2r(n) = sqrt(l2r(n)); 
 		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n);
 	}
-	*gbl->log << '\n';
+	*gbl->log << std::endl;
 
 	return;
 }
@@ -84,24 +77,7 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
 	a = 0.0;
 
 	for(tind=0;tind<ntri;++tind) {
-		if (tri(tind).info > -1) {
-			crdtocht(tind);
-			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-		}
-		else {
-			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(log2p)->proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-
-			for(i=0;i<basis::tri(log2p)->gpx();++i) {
-				for(j=0;j<basis::tri(log2p)->gpn();++j) {
-					for(n=0;n<tri_mesh::ND;++n) {
-						dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(1))(n));
-						dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(0))(n) -pnts(tri(tind).pnt(1))(n));
-					}
-				}
-			}
-		}
+        pmetric->calc_metrics(tind, crd, dcrd);
 
 		ugtouht(tind);
 		for(n=0;n<NV;++n)

@@ -16,7 +16,8 @@ ibc: symbolic
 ibc0: x1^lambda*sin(-lambda*x0/b0_theta_length)
 key: value
 b0_mesh: sector.d
-b0_type: cd_mapped
+b0_type: cd
+b0_metric: mapped
 b0_mapping: polar
 b0_pnt: 0.0 0.0
 b0_theta_length: 1.0

@@ -391,7 +391,7 @@ template<int ND> int spline<ND>::find_with_guess(double& s0, TinyVector<double,N
         double dminddist2 = 2*(dot(tan,tan)+dot(curv,dy));
         double ds = -dmindist/dminddist2;
         s0 += ds;
-        //std::cout << "iter " << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << std::endl;
+//        std::cout << "iter " << iter << ' ' << s0 << ' ' << ds << ' ' << dmindist << ' ' << y1 << std::endl;
         if (fabs(ds) < 1.0e-10) {
             ypt = y1;
             return 0;

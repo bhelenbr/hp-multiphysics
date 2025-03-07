@@ -1,0 +1,15 @@
+tri_mesh - all working
+
+tri_hp - all working except:
+conv-diff/PartitionedAdapt crashes (not fully working movesidedata bad memory access)
+ins/Channel Anistropic Convergence error.  Same on the cluster
+ins/ForceCoupling hasn't worked since 2010
+Bouyancy/melt_with_solid_prdc/test_mgrid fails
+
+
+
+
+
+
+
+

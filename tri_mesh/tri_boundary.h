@@ -293,6 +293,13 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
             
             pt = 0.5*((1-psi)*pt0 +(1+psi)*pt1);
             my_spline.find_with_guess(sloc,pt);
+            
+            if (sloc < my_spline.start())
+                sloc = my_spline.start();
+            
+            if (sloc > my_spline.stop())
+                sloc = my_spline.stop();
+            
             my_spline.offset(sloc,norm_dist,pt);
             
             pt *= scale;

@@ -32,7 +32,8 @@ void tri_hp::copy(const tri_hp& tgt) {
         }
 #endif
 	}
-     
+    pmetric.reset(tgt.pmetric->create(*this).release());
+    
 	for(i=0;i<nebd;++i)
 		hp_ebdry(i)->copy(*tgt.hp_ebdry(i));
 

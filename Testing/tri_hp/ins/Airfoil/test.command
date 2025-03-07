@@ -2,6 +2,7 @@
 
 # Uses a file of spline points to create boundary layer mesh points around an airfoil
 # Only works for p=1 because curving high-aspect ratio elements near boundary doesn't work
+#  p=2 curvature causes negative elements (this is not good but expected) but still runs?
 
 import sys
 import os

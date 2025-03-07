@@ -3,6 +3,7 @@
 # Checks spatial convergence rate
 # Runs once with a square domain
 # Runs second time with curved domain
+# check Error.pdf & Curv_Error.pdf & rates.pdf
 
 # This script is a fancy way of finding executables
 # and is flexible enough to run on different platforms
@@ -142,5 +143,7 @@ while [ $log2p -lt 3 ]; do
 done
 
 cd ..
+
+./make_plot.command > Results/rates.dat
 
 opendiff Results/ Baseline/

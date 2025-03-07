@@ -270,63 +270,24 @@ make -j 2
 ###################################################################
 #### OS X ####
 ###################################################################
+# In makefile can
 # Pick configuration (Debug or Release)
-#export CONFIG=Debug
-export CONFIG=Release
-# Pick architecture (Intel or Mac chips)
-#export ARCH=x86
-export ARCH=arm64
+# Pick architecture (x86 or arm64 )
 cd ${HOME}/hp-multiphysics
-cd utilities; xcodebuild -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd quadtree; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd spline++; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd input_map; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd symbolic_function; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tri_mesh; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tri_basis; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tri_hp; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tet_mesh; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tet_basis; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
-cd tet_hp; xcodebuild  -alltargets -configuration ${CONFIG} -arch ${ARCH}; cd ..
+make
 
-###################################################################
 # TO CLEAN
 cd ${HOME}/hp-multiphysics
-cd utilities; xcodebuild -alltargets clean; cd ..
-cd quadtree; xcodebuild  -alltargets clean; cd ..
-cd spline++; xcodebuild  -alltargets clean; cd ..
-cd input_map; xcodebuild  -alltargets clean; cd ..
-cd symbolic_function; xcodebuild  -alltargets clean; cd ..
-cd tri_mesh; xcodebuild  -alltargets clean; cd ..
-cd tri_basis; xcodebuild  -alltargets clean; cd ..
-cd tri_hp; xcodebuild  -alltargets clean; cd ..
-cd tet_mesh; xcodebuild  -alltargets clean; cd ..
-cd tet_basis; xcodebuild  -alltargets clean; cd ..
-cd tet_hp; xcodebuild  -alltargets clean; cd ..
-rm -rf include/* lib/* bin/spline bin/tri_hp* bin/tri_mesh*
+make clean
 ###################################################################
 
 
 #################################################
 # IF DESIRED, NOT NECESSARY                     #
-# TO MAKE MESH & INPUT FILE GRAPHICAL UTILITIES #
-# Get from Brian				#
+# TO MAKE MESH GRAPHICAL UTILITY #
 #################################################
-cd 
-
-tar zxvf util.tgz
-
-# For showmesh,showgrid X11 application
-
-cd ${HOME}/Codes/Cocoa/easymesh
-
-./compile.command
-
-# For input.app application (OS X only) 
-
-cd ../inputwfind
-
-xcodebuild -configuration Deployment
+cd ${HOME}/hp-multiphysics/ShowMesh
+make
 
 ###################################################################
 #### FOR GMSH (NOT NECESSARY) ####

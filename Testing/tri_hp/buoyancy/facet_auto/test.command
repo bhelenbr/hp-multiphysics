@@ -113,6 +113,8 @@ if [ "$?" -ne "0" ]; then
   exit 1
 fi 
 
+cd ..
+opendiff Results/ Baseline/
 exit 1
 
 let RESTART=${RESTART}+1

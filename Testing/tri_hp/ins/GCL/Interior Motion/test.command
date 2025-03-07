@@ -24,6 +24,24 @@ rm *
 # copy input files into results directory
 cp ../Inputs/* .
 
+# Make meshes
+tri_mesh -m 'x0+0.01*x1,x1' square1.grd distorted1.grd
+
+let ngrid=1
+while [ $ngrid -lt 5 ]; do
+	let ngp=${ngrid}+1
+	tri_mesh -r distorted${ngrid}.grd distorted${ngp}.grd
+	let ngrid=${ngrid}+1
+done
+
+let ngrid=1
+while [ $ngrid -lt 6 ]; do
+	tri_mesh -m 'x0-0.01*x1,x1' distorted${ngrid}.grd square${ngrid}.grd
+	let ngrid=${ngrid}+1
+done
+rm distorted*
+rm square1.grd square2.grd square3.grd square4.grd
+
 tri_hp run.inpt
 
 cd ..

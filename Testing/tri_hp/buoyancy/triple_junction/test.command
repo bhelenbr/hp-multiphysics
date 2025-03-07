@@ -38,6 +38,7 @@ mod_map generate.inpt b0_s4_type symbolic
 mod_map generate.inpt nblock 2
 mod_map generate.inpt restart_interval 1
 mod_map generate.inpt logfile generate
+mod_map generate.inpt ncycle 0
 
 # generate mesh and remove unnecessary data files
 tri_mesh generate

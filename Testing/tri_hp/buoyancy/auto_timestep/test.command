@@ -95,8 +95,10 @@ mod_map run.inpt dtinv "2e4*(dtinv1 +dtinv3)"
 mod_map run.inpt log2p 2
 mod_map run.inpt ntstep 3
 mod_map -u run.inpt auto_timestep_tries
-${HP} -stop_for_debugger
+${HP}
 
+cd ..
+opendiff Results/ Baseline/
 
 
 

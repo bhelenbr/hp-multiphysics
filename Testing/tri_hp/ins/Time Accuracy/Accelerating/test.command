@@ -1,8 +1,8 @@
 #!/bin/bash
 # Run a free-stream flow with an increasing inlet velocity
 # Calculates error in pressure gradient as a function of time step
-# Use plot.tank to verify that you get 3'rd order accuracy when using ESDIRK4
 # Haven't tried Backwards difference schemes in a long time
+# Check rates.dat & Error.pdf for convergence
 
 HP="tri_hp"
 
@@ -21,6 +21,25 @@ fi
 
 rm *
 cp ../Inputs/* .
+
+cp ../Inputs/*.grd .
+# Make meshes
+tri_mesh -m 'x0+0.01*x1,x1' square1.grd distorted1.grd
+
+let ngrid=1
+while [ $ngrid -lt 3 ]; do
+	let ngp=${ngrid}+1
+	tri_mesh -r distorted${ngrid}.grd distorted${ngp}.grd
+	let ngrid=${ngrid}+1
+done
+
+let ngrid=1
+while [ $ngrid -lt 4 ]; do
+	tri_mesh -m 'x0-0.01*x1,x1' distorted${ngrid}.grd square${ngrid}.grd
+	let ngrid=${ngrid}+1
+done
+rm distorted*
+
 
 let backdiff=0
 
@@ -47,5 +66,7 @@ while [ $dtc -lt 5 ]; do
 done
 
 cd ..
+
+./make_plot.command > Results/rates.dat
 
 opendiff Results/ Baseline/
