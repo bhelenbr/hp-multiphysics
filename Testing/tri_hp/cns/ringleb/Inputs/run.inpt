@@ -3,6 +3,7 @@ b0_helper: l2error
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 ncycle: 5
 #ngrid: 1
+#rsdl_debug: 1
 #itercrsn: 5
 #iterrfne: 1
 absolute_tolerance: 1.0e-10

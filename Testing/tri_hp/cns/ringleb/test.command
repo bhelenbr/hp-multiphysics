@@ -39,4 +39,6 @@ done
 
 cd ..
 
+./make_plot.command > Results/rates.dat
+
 opendiff Results Baseline

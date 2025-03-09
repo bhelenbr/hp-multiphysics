@@ -14,7 +14,6 @@
 #include <blocks.h>
 #include <myblas.h>
 
-//#define MMS
 #define SUTHERLAND
 
 class tri_hp_cns : public tri_hp {
@@ -26,13 +25,10 @@ class tri_hp_cns : public tri_hp {
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond, mu, gamma,R, prandtl;
-#ifdef SUTHERLAND
             FLT s1, s2;
-#endif
+            
 			/* SOURCE FUNCTION FOR MMS */
-#ifdef MMS
 			init_bdry_cndtn *src;
-#endif
 			vsi	res_temp;
 			
 			/* preconditioner could make 2d but keep general for now */
@@ -64,7 +60,12 @@ class tri_hp_cns : public tri_hp {
 		void project_res_interior();
 		void switch_variables(Array<double,1> pvu, Array<double,1> &a);
 #ifdef SUTHERLAND
-        void Sutherland(FLT RT);
+        void calc_viscosity(FLT RT) {
+            hp_cns_gbl->mu = hp_cns_gbl->s1*pow(RT,1.5)/(RT+hp_cns_gbl->s2);
+            hp_cns_gbl->kcond = hp_cns_gbl->R*hp_cns_gbl->mu/hp_cns_gbl->prandtl*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
+        }
+#else
+        void calc_viscosity(FLT RT) {}
 #endif
 
 };

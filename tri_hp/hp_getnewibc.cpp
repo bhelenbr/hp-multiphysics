@@ -11,6 +11,14 @@
 #include <symbolic_function.h>
 #include <spline.h>
 
+class zero_src : public init_bdry_cndtn {
+public:
+    FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
+        return(0.0);
+    }
+    void init(input_map &inmap,std::string idnty) {}
+};
+
 class symbolic_ibc : public init_bdry_cndtn {
 	private:
 		Array<symbolic_function<2>,1> fcn;
@@ -101,8 +109,8 @@ class communication_test : public init_bdry_cndtn {
 
 class ibc_type {
 	public:
-		const static int ntypes = 3;
-		enum ids {unknown=-1,symbolic,communication_test,temporal_spline};
+		const static int ntypes = 4;
+		enum ids {unknown=-1,symbolic,communication_test,temporal_spline,zero};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -111,7 +119,7 @@ class ibc_type {
 			return(-1);
 		}
 };
-const char ibc_type::names[ntypes][40] = {"symbolic","communication_test","spline"};
+const char ibc_type::names[ntypes][40] = {"symbolic","communication_test","spline","zero"};
 
 
 
@@ -138,6 +146,10 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string name) {
 			temp = new temporal_spline;
 			break;
 		}
+        case ibc_type::zero: {
+            temp = new zero_src;
+            break;
+        }
 		default: {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);

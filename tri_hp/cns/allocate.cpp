@@ -36,19 +36,18 @@ void tri_hp_cns::init(input_map& inmap, shared_ptr<block_global> gin) {
 	hp_cns_gbl->spreconditioner.resize(maxpst,NV,NV);
 	hp_cns_gbl->tpreconditioner.resize(maxpst,NV,NV);
 
-	double prandtl;
 	if (!inmap.get(gbl->idprefix + "_gamma",hp_cns_gbl->gamma)) inmap.getwdefault("gamma",hp_cns_gbl->gamma,1.4);
 	if (!inmap.get(gbl->idprefix + "_mu",hp_cns_gbl->mu)) inmap.getwdefault("mu",hp_cns_gbl->mu,1.716e-5);
-	if (!inmap.get(gbl->idprefix + "_prandtl",prandtl)) inmap.getwdefault("prandtl",hp_cns_gbl->prandtl,0.713);
+	if (!inmap.get(gbl->idprefix + "_prandtl",hp_cns_gbl->prandtl)) inmap.getwdefault("prandtl",hp_cns_gbl->prandtl,0.713);
 	if (!inmap.get(gbl->idprefix + "_Rgas",hp_cns_gbl->R)) inmap.getwdefault("Rgas",hp_cns_gbl->R,287.058);
 
     /* Pr = mu/(k/cp) with cp = gamma/(gamma-1)*R */
 	hp_cns_gbl->kcond = hp_cns_gbl->mu/hp_cns_gbl->prandtl*hp_cns_gbl->R*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
-    
+
 #ifdef SUTHERLAND
-    /*
-    Formula is
-    mu0*(T/T0)^(3/2)*(T0+C)/(T+C)
+    *gbl->log << "#SUTHERLAND is defined" << std::endl;
+    /* Inputs for Sutherland Viscsosity */
+    /* Formula is mu0*(T/T0)^(3/2)*(T0+C)/(T+C)
 
     For air from CFD on-line
     https://www.cfd-online.com/Wiki/Sutherland%27s_law
@@ -60,7 +59,6 @@ void tri_hp_cns::init(input_map& inmap, shared_ptr<block_global> gin) {
     R = 8314/28.97;
     */
     
-    *gbl->log << "#SUTHERLAND is defined\n";
     FLT T0,C;
     if (!inmap.get(gbl->idprefix +"_Sutherland_T0",T0))
         inmap.getwdefault("Sutherland_T0",T0,273.15);
@@ -72,21 +70,18 @@ void tri_hp_cns::init(input_map& inmap, shared_ptr<block_global> gin) {
     hp_cns_gbl->s1 = hp_cns_gbl->mu/pow(hp_cns_gbl->R*T0,1.5)*(T0+C)*hp_cns_gbl->R;
     hp_cns_gbl->s2 = hp_cns_gbl->R*C;
 #endif
-
-#ifdef MMS
-    *gbl->log << "MMS is defined\n";
+    
     /* source term for MMS */
     std::string ibcname;
     keyword = gbl->idprefix + "_src";
     if (!inmap.get(keyword,ibcname)) {
         keyword = "src";
         if (!inmap.get(keyword,ibcname)) {
-            *gbl->log << "couldn't find src" << std::endl;
+            ibcname="zero";
         }
     }
     hp_cns_gbl->src = getnewibc(ibcname);
     hp_cns_gbl->src->init(inmap,keyword);
-#endif
 
 }
 

@@ -126,8 +126,8 @@ namespace ibc_cns {
 
 	
 	class ringleb : public init_bdry_cndtn {
-//		protected:
-//			tri_hp_cns &x;
+		protected:
+			tri_hp_cns &x;
 		
 		private:
 			FLT angle,xshift,yshift;
@@ -138,6 +138,7 @@ namespace ibc_cns {
 			double shift[2]; // Spatial shift of point before calculating solution //
 		
 		public:
+            ringleb(tri_hp_cns& cns) : x(cns) {}
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				Array<double,1> val(4);
 				bool error;
@@ -157,7 +158,7 @@ namespace ibc_cns {
 				
 				keyword = idnty +"_theta0";
 				if (!blockdata.get(keyword,theta0)) 
-					blockdata.getwdefault("theta0",theta0,M_PI/2.);
+					blockdata.getwdefault("theta0",theta0,0.99*M_PI/2.);
 				angle *= M_PI/180.0;
 				
 				keyword = idnty +"_scale";
@@ -179,7 +180,7 @@ namespace ibc_cns {
 
 			}
 		
-			bool eval(TinyVector<FLT,tri_mesh::ND> x, double t, Array<double,1> &val) const {
+			bool eval(TinyVector<FLT,tri_mesh::ND> xp, double t, Array<double,1> &val) const {
 				
 				double q = q0;
 				double theta = theta0;
@@ -190,8 +191,8 @@ namespace ibc_cns {
 				const int maxiter = 30;
 				
 				double xyz[3];
-				xyz[0] = scale*x(0) +shift[0];
-				xyz[1] = scale*x(1) +shift[1];
+				xyz[0] = scale*xp(0) +shift[0];
+				xyz[1] = scale*xp(1) +shift[1];
                 
 				
 				if (fabs(xyz[1]) < 1.0e-8)
@@ -228,10 +229,12 @@ namespace ibc_cns {
 					if (fabs(theta) > M_PI/2.) {
 						theta = theta +(theta > 0 ? -M_PI/2. : M_PI/2.);
 					}
+                    // *x.gbl->log << niter <<  ' ' << xyz[0] << ' ' << xyz[1] << ' ' << q << ' ' << theta << ' ' << fab*/s(delta[0]) +fabs(delta[1]) << std::endl;
 				}
                 
 				if (niter >= maxiter || !(q >= 0.0)) {
-					std::cout << "RINGLEB NOT_CONVERGED: " << xyz[0] << ' ' << xyz[1] << ' ' << niter << ' ' << q << ' ' << theta << ' ' << fabs(delta[0])+fabs(delta[1]) << std::endl;
+					*x.gbl->log << "RINGLEB NOT_CONVERGED: " << xyz[0] << ' ' << xyz[1] << ' ' << niter << ' ' << q << ' ' << theta << ' ' << fabs(delta[0])+fabs(delta[1]) << std::endl;
+                    exit(0);
 				}
 				
 				double c = sqrt(1. - (gam-1.)/2.*q*q);
@@ -263,11 +266,10 @@ namespace ibc_cns {
 				J = 1./c +1./(3*c*c*c) +1./(5.*c*c*c*c*c) -1./2.*log((1.+c)/(1.-c));
 				r = pow(c,(2./(gam-1.)));
 				xp = 1./(2.*r)*(1./(q*q)-2.*psi*psi) +J/2.;
-                
 				error[0] = xyz[0]-xp;
 				
 				if (fabs(xyz[1]) > 1.0e-6) {
-					yp = xyz[1]/fabs(xyz[1])*psi/(q*r)*sqrt(1.-psi*psi*q*q);
+					yp = xyz[1]/fabs(xyz[1])*psi/(q*r)*sqrt(max(1.-psi*psi*q*q,0.0));
 					error[1] = xyz[1]-yp;
 				}
 				else {
@@ -484,7 +486,7 @@ init_bdry_cndtn *tri_hp_cns::getnewibc(std::string name) {
 			break;
 		}
 		case ibc_cns::ibc_type::ringleb: {
-			temp = new ibc_cns::ringleb;
+			temp = new ibc_cns::ringleb(*this);
 			break;
 		}
         case ibc_cns::ibc_type::nozzle: {

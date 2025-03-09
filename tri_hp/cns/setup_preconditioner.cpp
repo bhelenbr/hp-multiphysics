@@ -255,9 +255,7 @@ void tri_hp_cns::calculate_tau(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, A
     const FLT c2 = gam*rt;
     const FLT c = sqrt(c2);
 
-#ifdef SUTHERLAND
-    Sutherland(rt);
-#endif
+    calc_viscosity(rt);
 	const FLT nu = hp_cns_gbl->mu/rho;
 	const FLT cp = gogm1*hp_cns_gbl->R;
 	const FLT alpha = hp_cns_gbl->kcond/(rho*cp);

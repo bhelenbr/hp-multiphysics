@@ -10,7 +10,7 @@ relative_tolerance: 5.0e-10
 #Number of time steps: 
 ntstep: 1
 #rsdl_debug: 1
-jac_debug: 1
+#jac_debug: 1
 #debug_output: 1
 extrapolate: 0
 #Inverse time step: 

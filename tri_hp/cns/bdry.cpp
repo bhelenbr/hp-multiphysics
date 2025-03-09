@@ -14,10 +14,6 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 	TinyMatrix<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,NV-1,NV-1> visc;
 	TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> kcond;
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
-#ifndef SUTHERLAND
-    const FLT lkcond = x.hp_cns_gbl->kcond;
-    const FLT lmu = x.hp_cns_gbl->mu;
-#endif
 	const FLT gam = x.hp_cns_gbl->gamma;
 	const FLT gm1 = gam-1.0;
 	const FLT ogm1 = 1.0/gm1;
@@ -76,11 +72,9 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 				for (i=0;i<basis::tri(x.log2p)->gpx();++i) {
 					const FLT jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
-#ifdef SUTHERLAND
-                    x.Sutherland(x.u(x.NV-1)(0,i));
+                    x.calc_viscosity(x.u(x.NV-1)(0,i));
                     const FLT lmu = x.hp_cns_gbl->mu;
                     const FLT lkcond = x.hp_cns_gbl->kcond;
-#endif
 					const FLT mujcbi = lmu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 					const FLT kcjcbi = lkcond*RAD(x.crd(0)(0,i))/x.hp_cns_gbl->R/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
 
@@ -241,9 +235,10 @@ void generic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector
 #endif
 	
 	/* ENERGY EQUATION */
-    //double E = u(x.NV-1)/(x.hp_cns_gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
     double rho = u(0)/u(x.NV-1);
+    //double E = u(x.NV-1)/(x.hp_cns_gbl->gamma-1.0)+0.5*(u(1)*u(1)+u(2)*u(2));
     double E = ibc->f(0, xpt, x.gbl->time)/(rho*(x.hp_cns_gbl->gamma-1.0))+0.5*(u(1)*u(1)+u(2)*u(2));
+
     flx(x.NV-1) = rho*E*((u(1)-mv(0))*norm(0)+(u(2)-mv(1))*norm(1))+ibc->f(0, xpt, x.gbl->time)*(u(1)*norm(0)+u(2)*norm(1));
 	
 	return;
@@ -518,9 +513,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	fluxtemp = 0.5*(fluxleft+fluxright);
 	
-#ifdef SUTHERLAND
-    x.Sutherland(rt);
-#endif
+    x.calc_viscosity(rt);
 	const FLT nu = x.hp_cns_gbl->mu/rho;
 //	FLT cp = gogm1*x.hp_cns_gbl->R;
 //	FLT alpha = x.hp_cns_gbl->kcond/(rho*cp);

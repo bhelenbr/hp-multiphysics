@@ -19,10 +19,6 @@ void tri_hp_cns::error_estimator() {
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
-#ifndef SUTHERLAND
-    const FLT lmu = hp_cns_gbl->mu;
-//    const FLT lkcond = hp_cns_gbl->kcond;
-#endif
     
     if (hp_gbl->error_estimator == hp_global::none) {
         if (gbl->adapt_output) {
@@ -133,11 +129,9 @@ void tri_hp_cns::error_estimator() {
 				FLT dvdxl = ldcrd(1,1)*dul(2,0)(i,j) -ldcrd(1,0)*dul(2,1)(i,j);
 				FLT dvdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
                 
-#ifdef SUTHERLAND
-                Sutherland(u(NV-1)(i,j));
+                calc_viscosity(u(NV-1)(i,j));
                 const FLT lmu = hp_cns_gbl->mu;
                 // const FLT lkcond = hp_cns_gbl->kcond;
-#endif
 				
 				FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 				/* INVISCID PARTS TO ERROR MEASURE */

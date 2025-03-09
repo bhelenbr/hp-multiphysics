@@ -6,6 +6,17 @@ ins/Channel Anistropic Convergence error.  Same on the cluster
 ins/ForceCoupling hasn't worked since 2010
 Bouyancy/melt_with_solid_prdc/test_mgrid fails
 
+Cns/Bowshock_Inviscid works
+Cns/Bowshock_Vicous works
+CNS/MMS works
+CNS/Nozzle works
+CNS/Oblique Shock works (Not sure what this tests)
+CNS/Oblique shock peroidic works
+CNS/ringleb
+CNS/Shock_1D
+CNS/Shock_1D_MMS
+
+
 
 
 

@@ -11,7 +11,7 @@ ntstep: 1
 dtinv: 0
 #dtinv_prev: 10
 #restart: 74
-debug_output: 1
+#debug_output: 1
 #adapt_output: 1
 diagonal_preconditioner: 0
 logfile: MMS

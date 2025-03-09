@@ -32,10 +32,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	const FLT gm1 = gam-1.0;
 	const FLT ogm1 = 1.0/gm1;
 	const FLT gogm1 = gam*ogm1;
-#ifndef SUTHERLAND
-    const FLT lmu = hp_cns_gbl->mu;
-    const FLT lkcond = hp_cns_gbl->kcond;
-#endif
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -147,12 +143,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
                     
-#ifdef SUTHERLAND
-                    Sutherland(u(NV-1)(i,j));
+                    calc_viscosity(u(NV-1)(i,j));
                     const FLT lmu = hp_cns_gbl->mu;
                     const FLT lkcond = hp_cns_gbl->kcond;
-#endif
-                    
 					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 					const FLT cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
@@ -172,13 +165,11 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					res(3)(i,j) -= rho*cjcb*RAD(crd(0)(i,j))*(u(1)(i,j)*gbl->body(0)+u(2)(i,j)*gbl->body(1));
 #endif     
 					
-#ifdef MMS
 					/* source terms for MMS */
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
 						res(n)(i,j) -= cjcb*hp_cns_gbl->src->f(n,pt,gbl->time);
-#endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -370,12 +361,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
                     
-#ifdef SUTHERLAND
-                    Sutherland(u(NV-1)(i,j));
+                    calc_viscosity(u(NV-1)(i,j));
                     const FLT lmu = hp_cns_gbl->mu;
                     const FLT lkcond = hp_cns_gbl->kcond;
-#endif
-                    
 					const FLT rho = u(0)(i,j)/u(NV-1)(i,j);
 					const FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 					const FLT rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
@@ -396,13 +384,11 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 #endif     
 					
-#ifdef MMS
 					/* source terms for MMS */
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
 					for(int n = 0; n < NV; ++n)
 						res(n)(i,j) -= cjcb*hp_cns_gbl->src->f(n,pt,gbl->time);
-#endif
 					
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -547,12 +533,3 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 	return;
 }
-
-
-#ifdef SUTHERLAND
-void tri_hp_cns::Sutherland(FLT RT) {
-    hp_cns_gbl->mu = hp_cns_gbl->s1*pow(RT,1.5)/(RT+hp_cns_gbl->s2);
-    hp_cns_gbl->kcond = hp_cns_gbl->R*hp_cns_gbl->mu/hp_cns_gbl->prandtl*hp_cns_gbl->gamma/(hp_cns_gbl->gamma-1.0);
-    return;
-}
-#endif

@@ -66,15 +66,6 @@ namespace ibc_cd {
 	
 #endif
 	
-	class zero_src : public init_bdry_cndtn {
-	public:
-		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
-			return(0.0);
-		}
-		void init(input_map &inmap,std::string idnty) {}
-	};
-	
-	
 	class power_src : public init_bdry_cndtn {
 	private:
 		Array<FLT,1> c;
@@ -243,14 +234,10 @@ namespace ibc_cd {
 		
 	};
 	
-	
-	
-	
-	
 	class ibc_type {
 	public:
-		const static int ntypes = 3;
-		enum ids {zero,power,soi};
+		const static int ntypes = 2;
+		enum ids {power,soi};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -259,7 +246,7 @@ namespace ibc_cd {
 			return(-1);
 		}
 	};
-	const char ibc_type::names[ntypes][40] = {"zero","power","soi"};
+	const char ibc_type::names[ntypes][40] = {"power","soi"};
 	
 }
 
@@ -272,9 +259,6 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(std::string name) {
 
 	type = ibc_cd::ibc_type::getid(name.c_str());
 	switch(type) {
-		case(ibc_cd::ibc_type::zero):
-			temp = new ibc_cd::zero_src;
-			break;
 		case(ibc_cd::ibc_type::power):
 			temp = new ibc_cd::power_src;
 			break;

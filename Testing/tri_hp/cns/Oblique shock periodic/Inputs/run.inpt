@@ -42,7 +42,7 @@ b0_ibc1: vu*tantheta
 b0_ibc2: -vu
 b0_ibc3: RTu
 # Name of mesh: 
-b0_mesh: square4top.grd
+b0_mesh: square4_b0.grd
 # Side type specifiers: 
 b0_s1_type: coupled_symbolic_comm
 b0_s1_h: x1 -A*sin(2*_pi*x0)
@@ -66,7 +66,7 @@ b1_ibc1: vu*tantheta
 b1_ibc2: -vd
 b1_ibc3: RTd
 # Name of mesh: 
-b1_mesh: square4bot.grd
+b1_mesh: square4_b1.grd
 # Side type specifiers: 
 b1_s1_type: coupled_symbolic_comm
 b1_s1_hp_type: shock
