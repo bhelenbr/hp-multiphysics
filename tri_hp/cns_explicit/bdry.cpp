@@ -42,7 +42,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	/* Rotate Coordinate System */
 	FLT ul =  cvu(1)*norm(0) +cvu(2)*norm(1);
 	FLT vl = -cvu(1)*norm(1) +cvu(2)*norm(0);
-	cvu(1) = ul, cvu(2) = vl;
+    cvu(1) = ul; cvu(2) = vl;
 
 	/* Roe Variables */
 	Rl(0) = sqrt(cvu(0));
@@ -57,7 +57,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	/* Rotate Coordinate System */
 	FLT ur =  ub(1)*norm(0) +ub(2)*norm(1);
 	FLT vr = -ub(1)*norm(1) +ub(2)*norm(0);
-	ub(1) = ur, ub(2) = vr;
+    ub(1) = ur; ub(2) = vr;
 
 	/* Roe Variables */
 	Rr(0) = sqrt(ub(0));

@@ -319,7 +319,7 @@ init_bdry_cndtn *tri_hp_cns_explicit::getnewibc(std::string name) {
 	init_bdry_cndtn *temp;
 	int type;
 
-	type = ibc_cns_explicit::ibc_type::getid(name.c_str();
+	type = ibc_cns_explicit::ibc_type::getid(name.c_str());
 	switch(type) {
 		case ibc_cns_explicit::ibc_type::freestream: {
 			temp = new ibc_cns_explicit::freestream;

@@ -63,7 +63,7 @@ void tri_hp::adapt() {
 
 void tri_hp::length() {
 	
-	if (hp_gbl->error_estimator != hp_gbl->none) {
+	if (hp_gbl->error_estimator != hp_global::none) {
 		error_estimator();
 		
 		const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);

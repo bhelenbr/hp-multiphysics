@@ -14,11 +14,11 @@
 
 #define CD
 #define INS
-//#define PS
-//#define SWIRL
+#define PS
+#define SWIRL
 #define BUOYANCY
 //#define SWE
-//#define EXPLICIT
+#define EXPLICIT
 #define CNS
 //#define CNS_EXPLICIT
 //#define NONNEWTONIAN
@@ -197,8 +197,8 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 			return(temp);
 		}
 #endif
-			
-#ifdef EXPLICIT
+		
+#if (defined(EXPLICIT)  && not(defined(petsc)) && not(defined(AXISYMMETRIC)))
 		case btype::explct: {
 			tri_hp_explicit *temp = new tri_hp_explicit();
 			return(temp);
@@ -212,7 +212,7 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 		}
 #endif
 			
-#ifdef CNS_EXPLICIT
+#if (defined(CNS_EXPLICIT) && not(defined(petsc)) && not(defined(AXISYMMETRIC)))
 		case btype::cns_explicit: {
 			tri_hp_cns_explicit *temp = new tri_hp_cns_explicit();
 			return(temp);

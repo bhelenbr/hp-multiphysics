@@ -40,7 +40,7 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, std::string name) 
 	int type;          
 	hp_vrtx_bdry *temp;  
 
-	type = tri_hp_cns_explicity_vtype::getid(name.c_str());
+	type = tri_hp_cns_explicit_vtype::getid(name.c_str());
 	switch(type) {
 
 		case tri_hp_cns_explicit_vtype::inflow: {

@@ -89,7 +89,7 @@ namespace bdry_cns_explicit {
 	
 	class inflow : public generic {  
 	protected:
-		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx) {
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 			
 			FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 			
@@ -208,8 +208,17 @@ namespace bdry_cns_explicit {
 					
 					indx = sind*x.sm0;
 					for(n=0;n<x.NV-1;++n) {
+#ifdef F2CFORTRAN
 						PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
-						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
+#else
+                        const int sm = basis::tri(x.log2p)->sm();
+                        const int sbwth = basis::tri(x.log2p)->sbwth();
+                        const int sbwthp1 = sbwth+1;
+                        const int one = 1;
+                        
+                        dpbtrs_(uplo,&sm,&sbwth,&one,&basis::tri(x.log2p)->sdiag1d(0,0),&sbwthp1,&x.lf(n)(2),&sm,&info);
+#endif
+						for(m=0;m<basis::tri(x.log2p)->sm();++m)
 							x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 					}
 					
@@ -353,7 +362,7 @@ namespace bdry_cns_explicit {
 	
 	class adiabatic : public generic {  
 		protected:
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, FLT side_length, Array<FLT,1>& flx) {
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				
 				FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 				
@@ -446,8 +455,18 @@ namespace bdry_cns_explicit {
 						
 						indx = sind*x.sm0;
 						for(n=1;n<x.NV-1;++n) {
+#ifdef F2CFORTRAN
 							PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
-							for(m=0;m<basis::tri(x.log2p)->sm();++m) 
+#else
+                            const int sm = basis::tri(x.log2p)->sm();
+                            const int sbwth = basis::tri(x.log2p)->sbwth();
+                            const int sbwthp1 = sbwth+1;
+                            const int one = 1;
+                            
+                            dpbtrs_(uplo,&sm,&sbwth,&one,&basis::tri(x.log2p)->sdiag1d(0,0),&sbwthp1,&x.lf(n)(2),&sm,&info);
+#endif
+                            
+							for(m=0;m<basis::tri(x.log2p)->sm();++m)
 								x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 						}
 					}

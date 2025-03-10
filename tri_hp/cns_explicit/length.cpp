@@ -20,7 +20,7 @@ void tri_hp_cns_explicit::error_estimator() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	Array<FLT,1> cvu(NV);
 
-	if (hp_gbl->error_estimator == global::none) 
+	if (hp_gbl->error_estimator == hp_global::none)
 		return;
 
 	int sm = basis::tri(log2p)->sm();

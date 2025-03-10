@@ -14,7 +14,7 @@
 #include <blocks.h>
 #include <myblas.h>
 
-#define SUTHERLAND
+//#define SUTHERLAND
 
 class tri_hp_cns : public tri_hp {
 	public:

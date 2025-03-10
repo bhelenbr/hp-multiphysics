@@ -6,7 +6,7 @@
 
 //#define TIMEACCURATE
 
-void tri_hp_cns_explicit::setup_preconditioner() {
+int tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side;
 	FLT jcb,h,hmax;
@@ -300,7 +300,11 @@ void tri_hp_cns_explicit::calculate_tau(Array<double,1> cvu, FLT h, Array<FLT,2>
 	
 	/*  LU factorization  */
 	int info,ipiv[NV];
-	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
+#ifdef F2CFortran
+    GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
+#else
+    dgetrf_(&NV,&NV,Tinv.data(),&NV,ipiv,&info);
+#endif
 	
 	if (info != 0) {
 		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
@@ -313,7 +317,11 @@ void tri_hp_cns_explicit::calculate_tau(Array<double,1> cvu, FLT h, Array<FLT,2>
 	
 	/* Solve transposed system temp' = inv(Tinv')*temp' */
 	char trans[] = "T";
-	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+#ifdef F2CFortran
+    GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+#else
+    dgetrs_(trans,&NV,&NV,Tinv.data(),&NV,ipiv,temp.data(),&NV,&info);
+#endif
 	
 	if (info != 0) {
 		*gbl->log << "DGETRS FAILED FOR CNS EXPLICIT TSTEP" << std::endl;

@@ -2,7 +2,6 @@
 
 import sys
 import os
-import popen2
 import string
 import math
 import numpy

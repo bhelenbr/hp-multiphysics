@@ -76,6 +76,6 @@ mod_map dtinv 0.0
 mpiexec -np 2 ${HP} run.inpt ${PETSC}
 
 
-#cd ..
+cd ..
 
-#opendiff Results Baseline
+opendiff Results Baseline
