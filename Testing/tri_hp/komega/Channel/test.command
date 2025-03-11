@@ -15,7 +15,7 @@ let NP=1
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*/*/*/*}/bin
+BINDIR=${PWD%/*/*/*/*}/bin
 export PATH=${PATH}:${BINDIR}
 
 # Uncomment to add petsc debug flags

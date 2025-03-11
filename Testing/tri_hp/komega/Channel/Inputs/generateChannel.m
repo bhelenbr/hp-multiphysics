@@ -8,11 +8,11 @@
 H = 1; % width of channel section
 rho = 1; % density 
 ubar_ref = 1; % mean velocity of fully developed channel flow
-mu = 1e-5; % dynamic viscosity
+mu = 1e-4; % dynamic viscosity
 
 % Grid
 Nx = 4; % number of elements used in the streamwise direction (y axis) 
-Ny = 256; % number of elements used in the cross-stream direction (x axis)
+Ny = 128; % number of elements used in the cross-stream direction (x axis)
 yplus1 = 1; % the  y+ distance of the first node adjacent to the wall
 nestedGrid = 1; % 1:finest grid, 2: coarser by a factor of 2, 4: coarser by a factor of 4, ...
 wall_res = 0.01;
