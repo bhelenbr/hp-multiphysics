@@ -14,7 +14,7 @@ os.chdir(os.path.dirname(sys.argv[0]))
 # Define location of executables
 p0 = subprocess.Popen("echo ${PWD%/*/*}/bin/:", stdout=subprocess.PIPE,shell=True)
 (BINDIR, err) = p0.communicate()
-os.environ['PATH'] = BINDIR[:-1] + os.environ['PATH']
+os.environ['PATH'] = BINDIR[:-1].decode('ascii') + os.environ['PATH']
 
 if not os.path.isdir("Results"):
 	os.mkdir("Results")
@@ -54,7 +54,7 @@ plt.axis('equal')
 plt.savefig("naca.pdf")
 
 # output .d files
-npoints = s.size/(nlayers+1)
+npoints = int(s.size/(nlayers+1))
 f = open('blayer.d','w')
 f.write(str(s.size-1+2*nlayers+1)+'\n')
 

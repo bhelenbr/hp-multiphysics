@@ -7,16 +7,11 @@ ins/ForceCoupling hasn't worked since 2010
 Bouyancy/melt_with_solid_prdc/test_mgrid fails
 CNS/Shock_1D_MMS crashes after a while?
 
-In progress:
-Explicit/Heat - working
-Explicit/Mass curved - 1/2 working?
-Explicit/Mass square - 1/2 working?
 
 Remaining:
 Curved
 komega
 POD
-ps
 
 Issues:
 No tests for

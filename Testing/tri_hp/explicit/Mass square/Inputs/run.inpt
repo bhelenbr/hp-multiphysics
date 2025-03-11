@@ -6,6 +6,7 @@ ncycle: 10
 nstage: 1
 alpha: 1.0
 beta: 1.0
+time_scheme: 1
 # Sets the cfl for the scheme: 
 # only the first entry matters: 
 cfl: 1.0 1.0 1.0 1.0
