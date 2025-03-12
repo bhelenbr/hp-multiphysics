@@ -14,8 +14,6 @@
 #include <blocks.h>
 #include <symbolic_function.h>
 
-//#define MMS
-
 class tri_hp_komega : public tri_hp_ins {
 public:
     struct hp_komega_global {
@@ -29,10 +27,7 @@ public:
         int kmom_on, sust_on;
         
         /* SOURCE FUNCTION FOR MMS */
-        #ifdef MMS
-            init_bdry_cndtn *src;
-        #endif
-        
+         init_bdry_cndtn *src;
     };
     shared_ptr<hp_komega_global> hp_komega_gbl;
 

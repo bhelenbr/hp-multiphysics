@@ -26,19 +26,17 @@ void tri_hp_komega::init(input_map& inmap, shared_ptr<block_global> gin) {
     if (!inmap.get(gbl->idprefix + "_kmom_on",hp_komega_gbl->kmom_on)) inmap.getwdefault("kmom_on",hp_komega_gbl->kmom_on,1);
     if (!inmap.get(gbl->idprefix + "_sust_on",hp_komega_gbl->sust_on)) inmap.getwdefault("sust_on",hp_komega_gbl->sust_on,1);
     
-#ifdef MMS
     /* source term for MMS */
     std::string ibcname, keyword;
     keyword = gbl->idprefix + "_src";
     if (!inmap.get(keyword,ibcname)) {
         keyword = "src";
         if (!inmap.get(keyword,ibcname)) {
-            *gbl->log << "couldn't find src" << std::endl;
+            ibcname = "zero";
         }
     }
     hp_komega_gbl->src = getnewibc(ibcname);
     hp_komega_gbl->src->init(inmap,keyword);
-#endif
    
     return;
 }

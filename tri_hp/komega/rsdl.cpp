@@ -230,13 +230,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif
                     
-#ifdef MMS
                     /* source terms for MMS */
                     pt(0) = crd(0)(i,j);
                     pt(1) = crd(1)(i,j);
                     for(int n = 0; n < NV; ++n)
                         res(n)(i,j) -= cjcb*hp_komega_gbl->src->f(n,pt,gbl->time);
-#endif
                             
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U, V, K-TILDE OR ln(OMEGA) 2: VARIABLE (U, V, K-TILDE OR ln(OMEGA)), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -636,13 +634,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					res(1)(i,j) -= hp_ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif
                     
-#ifdef MMS
                     /* source terms for MMS */
                     pt(0) = crd(0)(i,j);
                     pt(1) = crd(1)(i,j);
                     for(int n = 0; n < NV; ++n)
                         res(n)(i,j) -= cjcb*hp_komega_gbl->src->f(n,pt,gbl->time);
-#endif
+
                     df(0,0)(i,j) = cjcbi*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                     +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j)) +k_mom*RAD(crd(0)(i,j))*2./3.*hp_ins_gbl->rho*ldcrd(1,1)*ktrb;
                     
