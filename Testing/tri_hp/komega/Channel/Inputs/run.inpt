@@ -1,4 +1,4 @@
-# Physics (should define nblock for more than 1 block):
+# Physics (should define nblock for more than 1 block): 
 b0_type: komega
 gravity: 1
 body_force: 0.0 -dpdx
@@ -10,35 +10,35 @@ y1: 2.261857033891701e-04
 ksplus: 5
 sust_on: 0
 k_mom: 0
-# Physical Parameters (I. uinf = ubar_ref (expected mean velocity) II. Set linf = H where H is the channel width ):
+# Physical Parameters (I. uinf = ubar_ref (expected mean velocity) II. Set linf = H where H is the channel width ): 
 rho: 1.0
 mu: 1e-4
 uinf: 1.0
 linf: 1.0
 # Mesh and mesh adaptation (can set adapt on and set growth factor, error_target, error_estimator (energy_norm or scale_independent), minimum_length, maximum_length, curvature sensitivity. Can also set adapat_output on): 
 b0_mesh: rstrt1_b0
-# Time stepping:
+# Time stepping: 
 time_scheme: 1
 nconv: 10
 dtinv: 1024*ustar/ystar/2^nconv
 # dtinv: 1e5
-ntstep: 10
-#auto_timestep_tries: 20
-# PETSC solver, under-relaxation and SUPG (can change b0_dissipation from 1, can also use preconditioner_interval and relative_tolerance):
-ncycle: 3
-absolute_tolerance: 1.0e-13
+ntstep: 50
+auto_timestep_tries: 5
+# PETSC solver, under-relaxation and SUPG (can change b0_dissipation from 1, can also use preconditioner_interval and relative_tolerance): 
+ncycle: 10
+absolute_tolerance: 1.0e-8
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
-# Continuation (can set restart, restart_type, reload_type):
-# Order of FEM
+# Continuation (can set restart, restart_type, reload_type): 
+# Order of FEM: 
 log2p: 0
-# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval))
+# Output (can also specify output_interval and restart_interval (restart interval gets multiplied by output_interval)): 
 logfile: out
-# Explicit solver stuff:
+# Explicit solver stuff: 
 nstage: 1
 alpha: 1.0
 beta: 1.0
-# Debugging ( can set debug_output, jac_debug, rsdl_debug on):
-# Problem Calculations (I. kmax2ustarRatio is ratio of maximum k to ustar^2, II. beta1 is constant used in Menter's BC, III. c_mu is constant used in finding l_turb IV. k_est and omg_est are initial estimates of mean values based on Re V. Friction factor is from Serghides's (1984) explicit formula for Colebrook's Eq. VI. dp/dx is the actual parameter defining the flow and based on this tau, ustar and ystar are found VII. ks used with Wilcox's rough wall BC):
+# Debugging ( can set debug_output, jac_debug, rsdl_debug on): 
+# Problem Calculations (I. kmax2ustarRatio is ratio of maximum k to ustar^2, II. beta1 is constant used in Menter's BC, III. c_mu is constant used in finding l_turb IV. k_est and omg_est are initial estimates of mean values based on Re V. Friction factor is from Serghides's (1984) explicit formula for Colebrook's Eq. VI. dp/dx is the actual parameter defining the flow and based on this tau, ustar and ystar are found VII. ks used with Wilcox's rough wall BC): 
 kmax2ustarRatio: 3.5
 beta1: 0.075
 c_mu: 0.09
@@ -47,7 +47,7 @@ nu: mu/rho
 Re: uinf*Dh/nu
 l_turb: 0.07*Dh/(c_mu^0.75)
 I: 0.16*Re^(-1/8)
-k_est: 3/2*(uinf*I)^2 
+k_est: 3/2*(uinf*I)^2
 omg_est: sqrt(k_est)/c_mu/l_turb
 kinf: k_est
 omginf: omg_est
@@ -55,14 +55,14 @@ S1: -2*log10(12/Re)
 S2: -2*log10(2.51*S1/Re)
 S3: -2*log10(2.51*S2/Re)
 fr: (S1-(S1 -S2)^2/(S3-2*S2+S1))^(-2)
-dpdx: -1/2*rho*uinf^2*fr/Dh 
+dpdx: -1/2*rho*uinf^2*fr/Dh
 tau: -dpdx*Dh/4
 ustar: sqrt(tau/rho)
 ystar: nu/ustar
 kmax: kmax2ustarRatio*ustar^2
 epslnk: lambda_k*kmax
 ks: ksplus*nu/ustar
-# Initial & Boundary conditions (I. s1 is wall, s2 is periodic BC II. To get the fluxes set b0_s2_hp_type to outflow and set b0_s2_report to 1 III. Two vertices are used to fixi pressure at two points on the presiodic boundary (upper and lower left ones)):
+# Initial & Boundary conditions (I. s1 is wall, s2 is periodic BC II. To get the fluxes set b0_s2_hp_type to outflow and set b0_s2_report to 1 III. Two vertices are used to fixi pressure at two points on the presiodic boundary (upper and lower left ones)): 
 ibc: symbolic
 ibc0: 0.0
 ibc1: uinf
@@ -83,4 +83,4 @@ b0_v1_hp_type: plain
 b0_v1_hp_typelist: 1 1 1 1 0
 b0_v2_hp_type: plain
 b0_v2_hp_typelist: 1 1 1 1 0
-# debug_output: 1 
+# debug_output: 1

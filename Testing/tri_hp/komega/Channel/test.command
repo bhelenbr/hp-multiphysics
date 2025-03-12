@@ -37,6 +37,9 @@ else
 fi
 rm *
 
+# exit if there is an error
+set -e
+
 # copy input files into results directory
 cp ../Inputs/* .
 
@@ -44,56 +47,18 @@ cp ../Inputs/* .
 tri_mesh generate
 
 # Run the executable (for each value of log2p, the Wilcox's BC is done then Menter's)
-
 ${HP}
 
+mod_map run.inpt log2p 1
+let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
+mod_map run.inpt restart ${RESTART}
+${HP}
+	
+mod_map run.inpt log2p 2
+let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
+mod_map run.inpt restart ${RESTART}
+${HP}	
 
-if [ "$?" -eq "0" ]; then
-	let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
-	let NC=9
-	mod_map run.inpt nconv ${NC}
-	mod_map run.inpt restart ${RESTART}
-	${HP}
+cd ..
 
-	while [ ${NC} -lt 32 ]; do		
-
-		let RESTART=${RESTART}+10
-		let NC=${NC}+1
-		mod_map run.inpt nconv ${NC}
-		mod_map run.inpt restart ${RESTART}
-		${HP}
-
-		while [ "$?" -ne "0" ]; do
-	 		rm core*
-	 		rm neg*
-	 		rm abort*
-			let NC=${NC}-1
-			let RESTART=${RESTART}-1
-			mod_map run.inpt restart ${RESTART}
-			mod_map run.inpt nconv ${NC}
-			${HP}
-		done
-	done
-	let RESTART=${RESTART}+10
-	mod_map run.inpt dtinv 0
-	mod_map run.inpt restart ${RESTART}
-	${HP}
-	es=$?
-fi
-
-if [ "${es}" -eq "0" ]; then
-	mod_map run.inpt log2p 1
-	let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
-	mod_map run.inpt restart ${RESTART}
-	${HP}
-	es=$?
-fi
-
-if [ "${es}" -eq "0" ]; then
-	mod_map run.inpt log2p 2
-	let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
-	mod_map run.inpt restart ${RESTART}
-	${HP}
-fi
-
-
+opendiff Baseline/ Results/
