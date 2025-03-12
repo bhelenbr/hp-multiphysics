@@ -1,9 +1,0 @@
-# Initial mesh (should specify nblock if more than 1. Can also specify b0_filetype):
-b0_mesh: ./domain.d
-# Parameters in the initial mesh:
-# Mesh adaptation (can specify b0_growth factor, ntstep):
-adapt: 1
-b0_growth factor: 10000
-# Side properties: 
-# Log filename:
-logfile: generate
