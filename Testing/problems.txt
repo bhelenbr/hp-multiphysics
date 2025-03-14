@@ -8,10 +8,12 @@ Bouyancy/melt_with_solid_prdc/test_mgrid fails
 CNS/Shock_1D_MMS crashes after a while?
 
 
+In progress
+POD - ins_multiblock not working all others ok
+
 Remaining:
 Curved
-komega
-POD
+Partition
 
 Issues:
 No tests for

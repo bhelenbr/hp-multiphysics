@@ -38,7 +38,8 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, shared_ptr<
 	/* Initialize base class */
 	/* If restart is not equal to 0, this will load DNS data */
 	BASE::init(inmap,gin);
-	
+    FLT store_time = BASE::gbl->time;
+    
 #ifdef FULL_JACOBIAN
 	*BASE::gbl->log << "FULL_JACOBIAN is defined\n";
 #else
@@ -80,7 +81,8 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& inmap, shared_ptr<
 	BASE::ugbd(0).v.reference(ugstore.v);
 	BASE::ugbd(0).s.reference(ugstore.s);
 	BASE::ugbd(0).i.reference(ugstore.i);
-
+    BASE::gbl->time = store_time;
+    
 #ifdef POD_BDRY
 	pod_ebdry.resize(BASE::nebd);
 	/* Count how many boundary modes there are so we can size arrays before initializing boundaries */

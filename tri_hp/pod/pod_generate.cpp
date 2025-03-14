@@ -1137,6 +1137,7 @@ template<class BASE> void pod_generate<BASE>::output(vsi& target,std::string fil
 	BASE::ugbd(0).s.reference(target.s);
 	BASE::ugbd(0).i.reference(target.i);
 	
+    BASE::gbl->time = 0.0;
 	BASE::output(filename, BASE::output_type(0));
 	BASE::output(filename, BASE::output_type(1));
 	
