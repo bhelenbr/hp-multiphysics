@@ -35,6 +35,7 @@ b0_s3_dhdx0: -A*2.*_pi*cos(2.*_pi*x0)
 b0_s3_dhdx1: 1.0
 b0_s3_hp_type: surface
 b0_s3_sigma: 0.1
+b0_s3_report: 1
 b0_v1_hp_type: hp_deformable_fixed_pnt
 b0_v2_hp_type: surface_outflow
 b0_v2_contact_type: fixed_angle

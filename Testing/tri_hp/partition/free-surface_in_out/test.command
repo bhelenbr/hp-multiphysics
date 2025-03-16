@@ -5,6 +5,10 @@
 
 cd "$(dirname "$0")"
 
+# Define location of executables
+BINDIR=${PWD%/*/*/*/*}/bin
+export PATH=${PATH}:${BINDIR}
+
 if [ -e Results ]; then
 	cd Results
 else
@@ -23,6 +27,7 @@ mod_map generate.inpt "growth factor" 4000
 mod_map generate.inpt b0_s3_type symbolic
 mod_map generate.inpt restart_interval 1
 mod_map generate.inpt logfile generate
+mod_map generate.inpt ncycle 0
 
 tri_mesh generate.inpt
 rm data*.grd
@@ -34,10 +39,12 @@ let NPART=4
 mod_map run.inpt partition ${NPART}
 let NTSTEP=$(mod_map -e run.inpt ntstep)
 mod_map run.inpt restart $NTSTEP
-~/Codes/tri_hp/tri_subpartition run.inpt ${NPART}
+tri_subpartition run.inpt ${NPART}
 
 mpiexec -np ${NPART} tri_hp_petsc partition.inpt
 
 cd ..
 
-opendiff Baseline_petsc/ Results/
+./make_plot.command
+
+opendiff Baseline/ Results/

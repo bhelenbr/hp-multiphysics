@@ -33,7 +33,6 @@ rm data*.grd
 
 mod_map run.inpt adapt 0
 mod_map run.inpt ntstep 1
-#PETSC="-stop_for_debugger"
 mpiexec -np 1 tri_hp_petsc run.inpt ${PETSC}
 #exit 1
 #mod_map run.inpt ntstep 1
@@ -60,5 +59,7 @@ mpiexec -np ${NPART} tri_hp_petsc partition.inpt ${PETSC}
 #mpiexec -np ${NPART} valgrind ${VALGRIND_FLAGS} tri_hp_petsc partition.inpt 
 
 cd ..
+
+./make_plot.command
 
 opendiff Baseline/ Results/

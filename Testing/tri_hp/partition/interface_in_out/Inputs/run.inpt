@@ -29,6 +29,7 @@ b0_s1_h: x1-A*sin(2*_pi*x0)
 b0_s1_dhdx0: -A*2*_pi*cos(2*_pi*x0)
 b0_s1_dhdx1: 1.0
 b0_s1_sigma: 0.1
+b0_s1_report: 1
 b0_s2_hp_type: inflow
 b0_s3_hp_type: inflow
 b0_s4_hp_type: outflow

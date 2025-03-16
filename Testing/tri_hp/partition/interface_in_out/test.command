@@ -25,6 +25,7 @@ mod_map generate.inpt b0_s1_type symbolic_comm
 mod_map generate.inpt b1_s1_type symbolic_comm
 mod_map generate.inpt restart_interval 1
 mod_map generate.inpt logfile generate
+mod_map generate.inpt ncycle 0
 mpiexec -np 2 tri_mesh_mpi generate.inpt
 rm data*.grd
 
@@ -42,5 +43,7 @@ let TOTAL=$(mod_map -e partition.inpt nblock | wc -w | tr -d ' ')
 mpiexec -np ${TOTAL} tri_hp_petsc partition.inpt
 
 cd ..
+
+./make_plot.command
 
 opendiff Baseline/ Results/

@@ -34,8 +34,8 @@ if [ -n "$DNS" ]; then
 
 	mpiexec -np 1 tri_hp_axi_petsc run.inpt
 
-	delete_series data 0 30 
-	delete_series rstrt 2 1
+	delete_series data 0 31 
+	delete_series rstrt 2 31
 
 	# This is easy to understand but doesn't get the timestep numbers
 	# grep -A1 pressure out_b0.log | grep "\[" | cut -d\  -f2-4 > drag.dat
@@ -115,12 +115,11 @@ if [ -n "$POD_SIM_PETSC" ]; then
 	grep -A1 'pressure\|TIMESTEP' out_b0.log | grep ': 2\|\[' | sed -e ':a' -e 'N' -e '$!ba' -e 's/2\n/ /g' | cut -d\  -f2,6-8 > drag.dat
 
 	cd ..
-	cp ../Inputs/make_plot.command .
-	./make_plot.command
 fi
 
 cd ..
 
+./make_plot.command
+
 opendiff Baseline/ Results/
-opendiff Results/pod_sim Results/pod_sim_petsc
 

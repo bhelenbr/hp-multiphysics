@@ -19,7 +19,7 @@ tri_mesh generate.inpt
 #PETSC="-stop_for_debugger"
 
 OMPIFLAGS="--bind-to socket"
-MPICHFLAGS="-bind-to rr"
+#MPICHFLAGS="-bind-to rr"
 #MPIFLAGS=${OMPIFLAGS}
 MPIFLAGS=${MPICHFLAGS}
 export OMP_NUM_THREADS=1
@@ -69,7 +69,6 @@ while [ ${NREFINE} -le ${NREFINEMAX} ]; do
 		cd ..
 		let NPART=${NPART}+1
 	done
-	../plot.py
 	cd ..
 	tri_mesh -r rstrt1_b0.grd refine.grd
 	mv refine.grd rstrt1_b0.grd
@@ -78,5 +77,7 @@ while [ ${NREFINE} -le ${NREFINEMAX} ]; do
 done
 	
 cd ..
+
+./make_plot.command
 
 opendiff Baseline/ Results/

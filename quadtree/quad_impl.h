@@ -25,24 +25,31 @@ template<int ND> void quadtree<ND>::allocate(Array<TinyVector<FLT,ND>,1> v, int 
 		delete [] srchlst;
 	}
 	
-	/*	TAKES APPROXIMATELY 1:1 boxS TO VERTICES WITH 4 NODES / box */
-	/*	+10 IS FACTOR OF SAFETY FOR SMALL mxv */
-	size = mxv +10;
-	base = new class box<ND>[size];
-	indx = new class box<ND>*[maxvrtx];
-	for(i=0;i<maxvrtx;++i)
-		indx[i] = NULL;
-	
-	TinyVector<FLT,ND> x1, x2;
-	for(i=0;i<ND;++i) {
-		x1[i] = 0.0;
-		x2[i] = 1.0;
-	}
-	base[0] = box<ND>(NULL,0,x1,x2);
-	current = 1;
-	
-	srchlst = new class box<ND>*[size];
-	maxsrch = size;
+    try {
+        /*    TAKES APPROXIMATELY 1:1 boxS TO VERTICES WITH 4 NODES / box */
+        /*    +10 IS FACTOR OF SAFETY FOR SMALL mxv */
+        size = mxv +10;
+        base = new class box<ND>[size];
+        indx = new class box<ND>*[maxvrtx];
+        for(i=0;i<maxvrtx;++i)
+            indx[i] = NULL;
+        
+        TinyVector<FLT,ND> x1, x2;
+        for(i=0;i<ND;++i) {
+            x1[i] = 0.0;
+            x2[i] = 1.0;
+        }
+        base[0] = box<ND>(NULL,0,x1,x2);
+        current = 1;
+        
+        srchlst = new class box<ND>*[size];
+        maxsrch = size;
+    }
+    catch(std::bad_alloc& exc) {
+        std::cerr << "Unable to allocate quadtree" << std::endl;
+        assert(false);
+    };
+
 }
 
 template<int ND> void quadtree<ND>::init(TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2) {
@@ -79,12 +86,18 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
 	
 	vrtx.reference(tgt.vrtx);
 	if (size == 0) {
-		maxvrtx = tgt.maxvrtx;
-		size = tgt.size;
-		maxsrch = tgt.maxsrch;
-		base = new class box<ND>[size];
-		indx = new class box<ND>*[maxvrtx];
-		srchlst = new class box<ND>*[maxsrch];
+        try {
+            maxvrtx = tgt.maxvrtx;
+            size = tgt.size;
+            maxsrch = tgt.maxsrch;
+            base = new class box<ND>[size];
+            indx = new class box<ND>*[maxvrtx];
+            srchlst = new class box<ND>*[maxsrch];
+        }
+        catch(std::bad_alloc& exc) {
+            std::cerr << "Unable to allocate quadtree" << std::endl;
+            assert(false);
+        };
 	}
 	else {
 		assert(size >= tgt.current);

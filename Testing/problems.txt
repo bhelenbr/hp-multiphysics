@@ -7,11 +7,12 @@ ins/ForceCoupling hasn't worked since 2010
 Bouyancy/melt_with_solid_prdc/test_mgrid fails
 CNS/Shock_1D_MMS crashes after a while?
 
+In progress
+POD - all works except ins_multiblock
+Partition - all works except Melt & Melt_steady
 
 Remaining:
 Curved
-komega
-POD
 
 Issues:
 No tests for
