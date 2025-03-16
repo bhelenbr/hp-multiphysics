@@ -31,7 +31,14 @@ if [ -n "$DNS" ]; then
 
 	mpiexec -np 1 tri_hp_axi_petsc run_steady.inpt
 	rename rstrt1 rstrt0 rstrt1*
-
+	ncdump rstrt0_d0_b0.nc > rstrt0_d0_b0.cdl
+	sed -i '' '/time =/s/.*/time = 0.0 ;/' rstrt0_d0_b0.cdl 
+	ncgen -4 -o rstrt0_d0_b0.nc rstrt0_d0_b0.cdl
+	
+	ncdump rstrt0_d1_b0.nc > rstrt0_d1_b0.cdl
+	sed -i '' '/time =/s/.*/time = 0.0 ;/' rstrt0_d1_b0.cdl 
+	ncgen -4 -o rstrt0_d1_b0.nc rstrt0_d1_b0.cdl
+	
 	mpiexec -np 1 tri_hp_axi_petsc run.inpt
 
 	delete_series data 0 31 
