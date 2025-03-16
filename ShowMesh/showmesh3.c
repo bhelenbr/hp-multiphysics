@@ -513,7 +513,7 @@ void draw_mesh(Window win)
 /*-draw_mesh--------------------------------------------------------------*/
 
 /*========================================================================*/
-void load_mesh(char *file_name)
+void load_mesh(char *file_name, int bnum)
 {
     int i, j, n, s, e, len, nsbd, type[100], num[100];
     int d1, d2, d3, d4, d5, d6;
@@ -612,7 +612,7 @@ void load_mesh(char *file_name)
         elem[e].k += Nn-readN;
         elem[e].xv = 0.0;
         elem[e].yv = 0.0;
-        elem[e].mark = 0;
+        elem[e].mark = bnum;
     }
     
     /* SIDE BOUNDARY INFO HEADER */
@@ -855,7 +855,7 @@ int main(int argc, char *argv[])
     
     
     for(int i = 1; i < argc; ++i) {
-        load_mesh(argv[i]);
+        load_mesh(argv[i],i-1);
     }
     
     init(argc, argv);
