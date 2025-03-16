@@ -1,8 +1,6 @@
 lib/
 include/
 html/
-Results*/
-Baseline*/
 *.a
 *.o
 xcuserdata/
@@ -20,3 +18,6 @@ _*
 IDEWorkspaceChecks.plist
 build/
 xcschemes/
+**/.DS_Store
+**/*Baseline*
+**/*Results*
