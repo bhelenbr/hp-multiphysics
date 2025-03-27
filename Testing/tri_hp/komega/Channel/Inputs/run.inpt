@@ -3,9 +3,9 @@ b0_type: komega
 gravity: 1
 body_force: 0.0 -dpdx
 # k-omega Parameters (I. lambda_k is ratio of epsilon_k to kmax, II. omgBC: 1: Menter's BC 2: Wilcox's BC, III. y1 is the distance of first grid point from wall used in the Menter's wall boundary condition for omega, IV. ksplus is dimensionless surface roughness height used in the Wilcox's wall boundary condition for omega):
-version: 1
+version: 2
 lambda_k: 0.1
-omgBC: 1
+omgBC: 2
 y1: 2.261857033891701e-04
 ksplus: 5
 sust_on: 0

@@ -1,11 +1,10 @@
 #!/bin/bash
 
 # Gird convergence study of fully-developed channel flow driven by gravity using periodic boundary conditions. The grids
-# correspond to ones studied with the 1-D MATLAB code. The solution from the 1-D MATLAB code is used to restart 
-# tri_hp_petsc. The solutions for both Menter's and Wilcox's BCs are obtained with p = 1, 2, and 4
+# correspond to ones studied with the 1-D MATLAB code. 
 
 # Need to use DIRK1, and set susk = susomg=0. 
-# Can choose between CALC_TAU1, CALC_TAU2 and WILCOX_1988, WILCOX_1988KL and WILCOX2006.
+
 
 
 # Number of processors
@@ -46,7 +45,15 @@ cp ../Inputs/* .
 # generate mesh 
 tri_mesh generate
 
-# Run the executable (for each value of log2p, the Wilcox's BC is done then Menter's)
+# Run the executable 
+${HP}
+
+mod_map run.inpt dtinv 0
+mod_map -c run.inpt auto_timestep_tries
+mod_map run.inpt ntstep 1
+mod_map run.inpt ncycle 10
+let RESTART=$(grep TIMESTEP: out_b0.log | tail -1 | cut -d\  -f2)
+mod_map run.inpt restart ${RESTART}
 ${HP}
 
 mod_map run.inpt log2p 1
