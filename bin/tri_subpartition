@@ -104,7 +104,7 @@ while [ $b -lt $TOTAL ]; do
 	let b=$b+1
 done
 mod_map -d temp.inpt partition
-mv temp.inpt partition.inpt
+grep -v llocat temp.inpt > partition.inpt
 cat new.inpt >> partition.inpt
 
 rm -f matches.inpt
