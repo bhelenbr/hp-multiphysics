@@ -214,7 +214,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         tmuLmtd = hp_ins_gbl->rho*ktrb/omgMx;
                     }
                     mutld = tmu -hp_ins_gbl->rho*psinktld*u(2)(i,j)/omginf;
-//                  mutld = tmu -1.0*alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg; // Stefanski_2020
+//                  mutld = tmu -alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg; // Stefanski_2020
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -322,7 +322,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + 1.0*omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
 //                  res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb; // Stefanski_2020
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*hp_ins_gbl->rho*omg*cjcb;
                     
@@ -599,7 +599,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 					rhorbd0 = RAD(crd(0)(i,j))*lrhobd0;
                     psiktld = psifunc(u(2)(i,j),epslnk);
                     psinktld = psifunc(-u(2)(i,j),epslnk);
-                    psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
+//                  psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk); // Stefanski_2020
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = hp_ins_gbl->rho*ktrb/omg;
@@ -618,10 +618,12 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     else {
                         /* STRESS-LIMITER MODIFICATION */
                         omgLmtr = Clim*sqrt(2.0*strninv/betastr);
+                        if (omg < omgLmtr) cout << " Stress-limiter active" << "\n";
                         omgMx = std::max(omg,omgLmtr);
                         tmuLmtd = hp_ins_gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
+                    mutld = tmu -hp_ins_gbl->rho*psinktld*u(2)(i,j)/omginf;
+//                  mutld = tmu -1.0*alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg; // Stefanski_2020
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -674,9 +676,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     }
                     else {
                     /* KATO-LAUNDER */
-                    vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
-                    res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
-                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
+                    vrtctinv = abs(dudy -dvdx);
+//                  strninv = dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy; // This is from the Stefanski's paper
+                    res(2)(i,j) -= RAD(crd(0)(i,j))*tmu*vrtctinv*sqrt(strninv)*cjcb;
+                    res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*vrtctinv*sqrt(strninv)/omg*cjcb;
                     }
 
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -694,7 +697,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omginf*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + omginf*psinktld*u(2)(i,j))*cjcb;
+//                  res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb; // Stefanski_2020
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*hp_ins_gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
