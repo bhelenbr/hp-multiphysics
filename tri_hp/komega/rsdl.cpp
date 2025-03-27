@@ -24,7 +24,7 @@ double psifunc(double x, double xe) {
     else if (x < 0.0) {
         return 0.0;
     }
-    double theta = M_PI/2*(2*x - (0.0 + xe))/(xe - 0.0);
+    double theta = M_PI/2.0*(2.0*x -xe)/xe;
     return 0.5*(sin(theta) +1);
 }
 
@@ -32,7 +32,7 @@ double dpsifunc(double x, double xe) {
     if (x >= xe || x < 0.0) {
         return 0.0;
     }
-    double theta = M_PI/2*(2*x - (0.0 + xe))/(xe - 0.0);
+    double theta = M_PI/2.0*(2.0*x - xe)/xe;
     return 0.5*M_PI/xe*cos(theta);
 }
 
@@ -72,7 +72,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
     const FLT k_mom = kmom_on ? 1.0 : 0.0; // the term in the momentum equation including k
     const FLT susk = sust_on ? 1.0 : 0.0; // turbulence sustaning terms
     const FLT susomg = sust_on ? 1.0 : 0.0;
-    const FLT alphDk = 100, alphMutld = 100; // booster factors
+    const FLT alphDk = 100.0, alphMutld = 100.0; // booster factors (Stefanski_2020)
     if (version != WILCOX2006){
         sgmk = 0.5; betakomg = 0.075; gamma = 5./9.;
     }
@@ -190,7 +190,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                     rhorbd0 = hp_ins_gbl->rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
                     psiktld = psifunc(u(2)(i,j),epslnk);
                     psinktld = psifunc(-u(2)(i,j),epslnk);
-                    psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk);
+//                  psinktldshftd = psifunc(-u(2)(i,j)+epslnk,epslnk); // Stefanski_2020
                     ktrb = psiktld*u(2)(i,j);
                     omg = exp(u(3)(i,j));
                     tmu = hp_ins_gbl->rho*ktrb/omg;
@@ -210,9 +210,11 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         /* STRESS-LIMITER MODIFICATION */
                         omgLmtr = Clim*sqrt(2.0*strninv/betastr);
                         omgMx = std::max(omg,omgLmtr);
+                        if (omg < omgLmtr) cout << " Stress-limiter active" << "\n";
                         tmuLmtd = hp_ins_gbl->rho*ktrb/omgMx;
                     }
-                    mutld = tmu -alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg;
+                    mutld = tmu -hp_ins_gbl->rho*psinktld*u(2)(i,j)/omginf;
+//                  mutld = tmu -1.0*alphMutld*hp_ins_gbl->rho*psinktldshftd*(u(2)(i,j)-epslnk)/omg; // Stefanski_2020
                     cjcbi = (lmu +tmuLmtd)*RAD(crd(0)(i,j))/cjcb;
                     cjcbik = (lmu +sgmk*mutld)*RAD(crd(0)(i,j))/cjcb;
                     cjcbiomg = (lmu +sgmomg*tmu)*RAD(crd(0)(i,j))/cjcb;
@@ -299,9 +301,10 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*strninv/omgMx*cjcb;
                     }
                     else {
-                        vrtctinv = 0.5*(dudy -dvdx)*(dudy -dvdx);
-                        res(2)(i,j) -= RAD(crd(0)(i,j))*2.0*tmu*sqrt(vrtctinv*strninv)*cjcb;
-                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*2.0*sqrt(vrtctinv*strninv)/omg*cjcb;
+                        vrtctinv = abs(dudy -dvdx);
+//                      strninv = dudx*dudx +(dudy +dvdx)*(dudy +dvdx) +dvdy*dvdy; // This is from the Stefanski's paper
+                        res(2)(i,j) -= RAD(crd(0)(i,j))*tmu*vrtctinv*sqrt(strninv)*cjcb;
+                        res(3)(i,j) -= RAD(crd(0)(i,j))*gamma*hp_ins_gbl->rho*vrtctinv*sqrt(strninv)/omg*cjcb;
                     }
                     
                     /* PRODUCTION TERM FOR ln(OMEGA) (DUE TO LOGARITHMIC TRANSFORMATION) */
@@ -319,7 +322,8 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
 #endif
 
                     /* DISSIPATION TERMS FOR K-TILDE and ln(OMEGA)  */
-                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb;
+                    res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + 1.0*omginf*psinktld*u(2)(i,j))*cjcb;
+//                  res(2)(i,j) += RAD(crd(0)(i,j))*betastr*hp_ins_gbl->rho*(omg*ktrb + alphDk*omg*psinktld*u(2)(i,j))*cjcb; // Stefanski_2020
                     res(3)(i,j) += RAD(crd(0)(i,j))*betakomg*hp_ins_gbl->rho*omg*cjcb;
                     
                     if (version == WILCOX2006) {
@@ -328,6 +332,7 @@ void tri_hp_komega::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>
                         dktlddy = (dcrd(0,0)(i,j)*du(2,1)(i,j) -dcrd(0,1)(i,j)*du(2,0)(i,j))/cjcb;
                         dkdx = dpsifunc(u(2)(i,j),epslnk)*dktlddx*u(2)(i,j) +psifunc(u(2)(i,j),epslnk)*dktlddx;
                         dkdy = dpsifunc(u(2)(i,j),epslnk)*dktlddy*u(2)(i,j) +psifunc(u(2)(i,j),epslnk)*dktlddy;
+                        
                         CrssD = dkdx*domgtlddx +dkdy*domgtlddy;
                         if ( CrssD > 0.0)
                             res(3)(i,j) -= RAD(crd(0)(i,j))*hp_ins_gbl->rho*CrssD/omg*sgmdo*cjcb;

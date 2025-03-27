@@ -21,7 +21,7 @@ void tri_hp_komega::init(input_map& inmap, shared_ptr<block_global> gin) {
 	if (!inmap.get(gbl->idprefix + "_epslnk",hp_komega_gbl->epslnk)) inmap.getwdefault("epslnk",hp_komega_gbl->epslnk,1.0);
     if (!inmap.get(gbl->idprefix + "_kinf",hp_komega_gbl->kinf)) inmap.getwdefault("kinf",hp_komega_gbl->kinf,1.0);
     if (!inmap.get(gbl->idprefix + "_omginf",hp_komega_gbl->omginf)) inmap.getwdefault("omginf",hp_komega_gbl->omginf,1.0);
-    if (!inmap.get(gbl->idprefix + "_Clim",hp_komega_gbl->Clim)) inmap.getwdefault("omginf",hp_komega_gbl->Clim,7.0/8.0);
+    if (!inmap.get(gbl->idprefix + "_Clim",hp_komega_gbl->Clim)) inmap.getwdefault("Clim",hp_komega_gbl->Clim,7.0/8.0);
     if (!inmap.get(gbl->idprefix + "_version",hp_komega_gbl->version)) inmap.getwdefault("version",hp_komega_gbl->version,3);
     if (!inmap.get(gbl->idprefix + "_kmom_on",hp_komega_gbl->kmom_on)) inmap.getwdefault("kmom_on",hp_komega_gbl->kmom_on,1);
     if (!inmap.get(gbl->idprefix + "_sust_on",hp_komega_gbl->sust_on)) inmap.getwdefault("sust_on",hp_komega_gbl->sust_on,1);
