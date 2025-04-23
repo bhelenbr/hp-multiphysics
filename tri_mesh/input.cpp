@@ -1031,7 +1031,8 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				*gbl->log << "mesh is too large" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-			
+            in.ignore(80,'\n');
+            
 			/* READ VERTEX DATA */
 			for(int i=0;i<npnt;++i) {
 				for(int n=0;n<ND;++n)
