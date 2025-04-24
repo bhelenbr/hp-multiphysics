@@ -103,7 +103,8 @@ void tri_mesh::offset_geometry(input_map& input) {
                             /* This is airfoil boundary layer domain */
                             ostringstream nstr;
                             nstr << "b" << newblock;
-                            input[nstr.str()+"_type"] = "spline_mapped_mesh";
+                            input[nstr.str()+"_type"] = "mapped_mesh";
+                            input[nstr.str()+"_mapping"] = "spline";
                             input[nstr.str()+"_mesh"] = nstr.str() +".d";
                             input[nstr.str()+"_spline"] = input[ebdry(i)->idprefix +"_filename"];
                             if (input.find(ebdry(i)->idprefix +"_theta") != input.end()) {
@@ -119,7 +120,8 @@ void tri_mesh::offset_geometry(input_map& input) {
                             /* Output polar domain stuff */
                             ostringstream nstr1, pntstring;
                             nstr1 << "b" << newblock+1; /* nstr1 is the polar domain */
-                            input[nstr1.str()+"_type"] = "polar_mapped_mesh";
+                            input[nstr1.str()+"_type"] = "mapped_mesh";
+                            input[nstr1.str()+"_mapping"] = "polar";
                             input[nstr1.str()+"_mesh"] = nstr1.str() +".d";
                             pntstring.setf(std::ios::scientific, std::ios::floatfield);
                             pntstring.precision(10);

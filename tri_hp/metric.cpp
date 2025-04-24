@@ -39,9 +39,6 @@ void tri_hp::metric::calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,
         basis::tri(x.log2p)->proj1d_leg(&x.cht(n,0),&crd(n)(0));
 }
 
-
-
-
 void tri_hp::metric::setinfo() {
     /* SET UP pnts BC INFORMATION FOR OUTPUT */
     for(int i=0;i<x.npnt;++i)
@@ -80,17 +77,7 @@ void mapped_metric::init(input_map& input) {
         *x.gbl->log << "Couldn't read mapping " << x.gbl->idprefix +"_mapping" << std::endl;
         sim::abort(__LINE__,__FILE__,x.gbl->log);
     }
-    
-    if (mapval == "polar") {
-        map = make_shared<polar_mapping>();
-    }
-    else if (mapval == "polar_log") {
-        map = make_shared<polar_log_mapping>();
-    }
-    else {
-        *x.gbl->log << "Unrecognized mapping " << mapval << std::endl;
-    }
-    
+    map = getnewmapping(mapval);
     map->init(input,x.gbl->idprefix,x.gbl->log);
 }
 
@@ -257,3 +244,108 @@ void allcurved_metric::setinfo() {
 
     return;
 }
+
+
+void mapped_edge_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
+    const int log2p = x.log2p;
+
+    /* LOAD INDICES OF VERTEX POINTS */
+    TinyVector<int,3> v = x.tri(tind).pnt;
+    
+    /* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+    /* Linear part only*/
+    for(int n=0;n<tri_mesh::ND;++n)
+        basis::tri(log2p)->proj(x.pnts(v(0))(n),x.pnts(v(1))(n),x.pnts(v(2))(n),&crd(n)(0,0),MXGP);
+
+    /* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
+    for(int n=0;n<tri_mesh::ND;++n) {
+        for(int i=1;i<basis::tri(log2p)->sm();++i) {
+            for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+                dcrd(n,0)(i,j) = 0.5*(x.pnts(v(2))(n) -x.pnts(v(1))(n));
+                dcrd(n,1)(i,j) = 0.5*(x.pnts(v(0))(n) -x.pnts(v(1))(n));
+            }
+        }
+    }
+
+    for (int s=0; s<3;++s) {
+        const int sind = x.tri(tind).seg(s);
+        if (x.seg(sind).tri(1) < 0) {
+            const int bnum = x.getbdrynum(x.seg(sind).tri(1));
+            const int indx = x.getbdryseg(x.seg(sind).tri(1));
+            x.hp_ebdry(bnum)->calc_metrics(indx, s, crd, dcrd, tlvl);
+        }
+    }
+}
+
+void mapped_edge_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl) const {
+    /* I don't think this function is necessary */
+    if (x.seg(sind).tri(1) < 0) {
+        const int bnum = x.getbdrynum(x.seg(sind).tri(1));
+        const int indx = x.getbdryseg(x.seg(sind).tri(1));
+        x.hp_ebdry(bnum)->calc_metrics1D(indx, crd, dcrd, tlvl);
+    }
+    else {
+        /* This is a linear side */
+        x.crdtocht1d(sind,tlvl);
+        for(int n=0;n<tri_mesh::ND;++n)
+            basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n)(0),&dcrd(n)(0));
+    }
+}
+
+void mapped_edge_metric::calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
+    const int log2p = x.log2p;
+
+    /* LOAD INDICES OF VERTEX POINTS */
+    TinyVector<int,3> v = x.tri(tind).pnt;
+    
+    /* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+    /* Linear part only*/
+    for(int n=0;n<tri_mesh::ND;++n)
+        basis::tri(log2p)->proj(x.pnts(v(0))(n),x.pnts(v(1))(n),x.pnts(v(2))(n),&crd(n)(0,0),MXGP);
+
+    for (int s=0; s<3;++s) {
+        const int sind = x.tri(tind).seg(s);
+        if (x.seg(sind).tri(1) < 0) {
+            const int bnum = x.getbdrynum(x.seg(sind).tri(1));
+            const int indx = x.getbdryseg(x.seg(sind).tri(1));
+            x.hp_ebdry(bnum)->calc_positions(indx, s, crd, tlvl);
+        }
+    }
+}
+
+void mapped_edge_metric::calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
+    /* I don't think this function is necessary */
+    if (x.seg(sind).tri(1) < 0) {
+        const int bnum = x.getbdrynum(x.seg(sind).tri(1));
+        const int indx = x.getbdryseg(x.seg(sind).tri(1));
+        x.hp_ebdry(bnum)->calc_positions1D(indx, crd, tlvl);
+    }
+    else {
+        /* This is a linear side */
+        x.crdtocht1d(sind,tlvl);
+        for(int n=0;n<tri_mesh::ND;++n)
+            basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n)(0));
+    }
+}
+
+
+/* These are use to calculate mappings on elements adjacent to the boundary */
+void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
+    if (curved  && mapped) {
+        
+    }
+    
+    
+}
+void hp_edge_bdry::calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl) const {
+    
+}
+void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
+    
+}
+void hp_edge_bdry::calc_positions1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
+    
+}
+
+
+

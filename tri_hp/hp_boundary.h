@@ -107,7 +107,7 @@ public:
 	std::string mytype;										/**< Class name */
 	tri_hp& x;														/**< Reference to parent */
 	edge_bdry &base;											/**< Reference to mesh boundary */
-	bool shared_owner, curved, coupled, frozen, report_flag;  /**< Various flags */
+	bool shared_owner, curved, coupled, frozen, mapped, report_flag;  /**< Various flags */
 	int jacobian_start;  /**< Index for rows of extra degrees of freedom (coupled) */
 	Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 	Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
@@ -122,10 +122,11 @@ public:
 	bool ibc_owner; /**< Fixme: this is stupid, but I need to be done */
 	init_bdry_cndtn *ibc; /**< pointer to initial boundary condition function */
 	const hp_edge_bdry *adapt_storage;		/**< mesh adapt storage */
+    shared_ptr<mapping> map; /** for an analytically mapped boundary */
 	
 public:
-	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(false), curved(false), coupled(false), frozen(false), report_flag(false), ibc_owner(false), ibc(x.hp_gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
-	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc_owner(false), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage) {
+	hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), shared_owner(false), curved(false), coupled(false), frozen(false), mapped(false), report_flag(false), ibc_owner(false), ibc(x.hp_gbl->ibc), adapt_storage(NULL) {mytype = "plain";}
+	hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), shared_owner(false), curved(inbdry.curved), coupled(inbdry.coupled), frozen(inbdry.frozen), mapped(inbdry.mapped), report_flag(inbdry.report_flag), type(inbdry.type), essential_indices(inbdry.essential_indices), c0_indices(inbdry.c0_indices), c0_indices_xy(inbdry.c0_indices_xy), fluxes(inbdry.fluxes), l2norm(inbdry.l2norm), ibc_owner(false), ibc(inbdry.ibc), adapt_storage(inbdry.adapt_storage), map(inbdry.map) {
 		
 		if (curved && !x.coarse_level) {
 			crv.resize(base.maxseg,x.sm0);
@@ -171,6 +172,12 @@ public:
 	FLT& crds(int ind, int mode, int dir) {return(crv(ind,mode)(dir));}
 	FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(crvbd(tlvl)(ind,mode)(dir));}
 	void curv_init(int tlvl = 0);
+    
+    /* These are use to calculate mappings on elements adjacent to the boundary */
+    virtual void calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl=0) const;
+    virtual void calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl=0) const;
+    virtual void calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
+    virtual void calc_positions1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
 	
 	/* BOUNDARY CONDITION FUNCTIONS */
 	virtual void maxres() {}

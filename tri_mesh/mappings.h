@@ -21,12 +21,35 @@ public:
     virtual ~mapping() {}
 };
 
+class no_mapping : public mapping {
+public:
+    virtual void to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from;}
+    virtual void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from;}
+    virtual void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override {
+        jacobian(0,0) = 1.0;
+        jacobian(1,0) = 0.0;
+        jacobian(0,1) = 0.0;
+        jacobian(1,1) = 1.0;
+    }
+    virtual ~no_mapping() {}
+};
+
 class spline_mapping : public mapping {
 protected:
     spline<2> my_spline;
     FLT scale;
 public:
     rigid_movement_interface2D trsfm;
+    void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
+    void to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
+    void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
+};
+
+class spline_log_mapping : public spline_mapping {
+protected:
+    FLT r0, r_eps;
+public:
     void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
     void to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
     void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
@@ -50,4 +73,6 @@ class polar_log_mapping : public polar_mapping {
     void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
     void calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
 };
+
+shared_ptr<mapping> getnewmapping(std::string maptype);
 #endif

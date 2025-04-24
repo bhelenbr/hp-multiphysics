@@ -7,6 +7,27 @@
 
 #include "mapped_mesh.h"
 
+shared_ptr<mapping> getnewmapping(std::string maptype) {
+    if (maptype == "none") {
+        return(make_shared<no_mapping>());
+    }
+    else if (maptype == "polar") {
+        return(make_shared<polar_mapping>());
+    }
+    else if (maptype == "polar_log") {
+        return(make_shared<polar_log_mapping>());
+    }
+    else if (maptype == "spline") {
+        return(make_shared<spline_mapping>());
+    }
+    else if (maptype == "spline_log") {
+        return(make_shared<spline_log_mapping>());
+    }
+    
+    std::cerr << "Unrecognized mapping " << maptype << std::endl;
+    exit(1);
+}
+
 void spline_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
     trsfm.init(input,idprefix);
     std::string line;
@@ -45,6 +66,41 @@ void spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,
     jacobian(1,1) = +tan(0);
 }
 
+
+void spline_log_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
+    spline_mapping::init(input,idprefix,log);
+    
+    if (!input.get(idprefix+"_r0",r0)) {
+        *log << "Couldn't read r0 " << idprefix+"_r0" << std::endl;;
+        sim::abort(__LINE__,__FILE__,log);
+    }
+    input.getwdefault(idprefix+"_r_eps",r_eps,DBL_EPSILON);
+    r_eps = r_eps*r0;
+}
+
+void spline_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    TinyVector<FLT,2> from2;
+    from2(0) = from(0);
+    from2(1) = exp(from(1))*(r0+r_eps) -r_eps;
+    spline_mapping::to_physical_frame(from2, to);
+}
+
+void spline_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    spline_mapping::to_parametric_frame(from, to);
+    to(1) = log((to(1)+r_eps)/(r0+r_eps));
+}
+
+void spline_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+    const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
+    const FLT drdlogr = exp(loc(1))*(r0+r_eps);
+
+    TinyVector<FLT,2> loc2;
+    loc2(0) = loc(0);
+    loc2(1) = r;
+    spline_mapping::calc_metrics(loc2, jacobian);
+    jacobian(0,1) *= drdlogr;
+    jacobian(1,1) *= drdlogr;
+}
 
 void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
     if (!input.get(idprefix+"_pnt",pnt.data(),2)) {

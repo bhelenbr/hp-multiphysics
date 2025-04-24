@@ -10,7 +10,7 @@
 #ifndef _tri_hp_h_
 #define _tri_hp_h_
 
-#include <r_tri_mesh.h>
+#include <mapped_mesh.h>
 #include <float.h>
 #include <tri_basis.h>
 #include <blocks.h>
@@ -49,7 +49,7 @@ public:
 class tri_hp_helper;
 
 /** This class is just the data storage and nothing for multigrid */
-class tri_hp : public r_tri_mesh  {
+class tri_hp : public mapped_mesh  {
 public:
     int NV; /**> Number of vector variables */
     int p0, sm0, im0;  /**> Initialization values */
@@ -171,7 +171,7 @@ public:
     void lftog(int tind, vsi gvect); /**< gather local to global vector */
     
 public:
-    tri_hp() : r_tri_mesh() {}
+    tri_hp() : mapped_mesh() {}
     virtual tri_hp* create() {return new tri_hp;}
     /* Fixme: Replace init with a constructor that accepts an input_map? */
     void init(input_map& inmap, shared_ptr<block_global> gin);

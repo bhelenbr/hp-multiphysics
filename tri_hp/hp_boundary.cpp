@@ -50,6 +50,10 @@ void hp_edge_bdry::init(input_map& inmap) {
 	keyword = base.idprefix + "_frozen";
 	frozen = false;
 	inmap.get(keyword,frozen);
+    
+    keyword = base.idprefix + "_mapped";
+    mapped = false;
+    inmap.get(keyword,mapped);
 	
 	keyword = base.idprefix +"_report";
 	report_flag = false;
@@ -143,6 +147,18 @@ void hp_edge_bdry::init(input_map& inmap) {
 	}
 	
 	shared_owner = true;
+    
+    if (mapped) {
+        std::string maptype;
+        if (inmap.get(base.idprefix+"_mapping",maptype)) {
+            map = getnewmapping(maptype);
+            map->init(inmap,base.idprefix,x.gbl->log);
+        }
+        else {
+            std::cerr << "no mapping type" << std::endl;
+            exit(1);
+        }
+    }
 	
 	return;
 }

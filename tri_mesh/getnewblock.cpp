@@ -5,8 +5,8 @@
 
 class btype {
     public:
-        const static int ntypes = 4;
-        enum ids {r_tri_mesh,spline_mapped_mesh,polar_mapped_mesh,polar_log_mapped_mesh};
+        const static int ntypes = 2;
+        enum ids {r_tri_mesh,mapped_mesh};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             int i;
@@ -15,7 +15,7 @@ class btype {
             return(-1);
         }
 };
-const char btype::names[ntypes][40] = {"r_tri_mesh","spline_mapped_mesh","polar_mapped_mesh","polar_log_mapped_mesh"};
+const char btype::names[ntypes][40] = {"r_tri_mesh","mapped_mesh"};
 
 multigrid_interface* block::getnewlevel(input_map& inmap) {
     std::string keyword,val,ibcname;
@@ -40,20 +40,17 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
             r_tri_mesh *temp = new r_tri_mesh();
             return(temp);
         }
-        case btype::spline_mapped_mesh: {
+        case btype::mapped_mesh: {
             mapped_mesh *temp = new mapped_mesh();
-            temp->map = make_shared<spline_mapping>();
-            return(temp);
-        }
-        case btype::polar_mapped_mesh: {
-            mapped_mesh *temp = new mapped_mesh();
-            temp->map = make_shared<polar_mapping>();
-            return(temp);
-        }
-        case btype::polar_log_mapped_mesh: {
-            mapped_mesh *temp = new mapped_mesh();
-            temp->map = make_shared<polar_log_mapping>();
-            return(temp);
+            std::string maptype;
+            if (inmap.get(idprefix+"_mapping",maptype)) {
+                temp->map = getnewmapping(maptype);
+                return(temp);
+            }
+            else {
+                std::cerr << "no mapping type" << std::endl;
+                exit(1);
+            }
         }
         default: {
             r_tri_mesh *temp = new r_tri_mesh();

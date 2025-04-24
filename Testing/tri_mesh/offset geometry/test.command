@@ -45,10 +45,10 @@ f.write(str(npoints-1 +4)+'\n')
 
 count = 0
 # airfoil trailing edge
-f.write('{0:3d}: {1:.10f} {2:.10f} 0.025 1\n'.format(count,x[0],y[0]))
+f.write('{0:3d}: {1:.10f} {2:.10f} 0.0125 1\n'.format(count,x[0],y[0]))
 #skip trailing edge point
 for i in range(1,npoints-1):
-	f.write('{0:3d}: {1:.10f} {2:.10f} 0.025 0\n'.format(count,x[i],y[i]))
+	f.write('{0:3d}: {1:.10f} {2:.10f} 0.0125 0\n'.format(count,x[i],y[i]))
 	count += 1
 
 #write outer domain points
