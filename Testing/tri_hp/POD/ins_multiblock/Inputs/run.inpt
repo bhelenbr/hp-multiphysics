@@ -18,7 +18,7 @@ error_target: 5.0e-5
 # Uncomment if you want to restart from a previous time step: 
 #restart: 5
 # Flag to see what is happening during iterations (for debugging convergence): 
-#debug_output: 1
+debug_output: 1
 # Flag to see adaptation processes: 
 #adapt_output: 1
 # Log file name: 

@@ -12,8 +12,6 @@
 #include <myblas.h>
 
 void tri_hp::adapt() {
-
-		
 	treeinit();  // FIXME??
 	
 	/* Create storage for adaptation */

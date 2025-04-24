@@ -16,6 +16,7 @@ POD_SIM_PETSC=true
 HP="tri_hp_petsc"
 
 cd "$(dirname "$0")"
+#set -e
 
 if [ -e Results ]; then
 	cd Results
@@ -28,15 +29,20 @@ fi
 if [ -n "$DNS" ]; then
 	if [ -e DNS ]; then
 		cd DNS
+		rm *
+
 	else
 		mkdir DNS
 		cd DNS
 	fi
-	rm *
 	
 	cp ../../Inputs/* .
 	
 	tri_mesh generate.inpt
+	
+	# To run a single block
+	#mpiexec -np 1 ${HP} run.inpt
+	#exit 0
 	
 	mod_map run.inpt nblock 4
 	mod_map run.inpt partition 1
