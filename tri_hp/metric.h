@@ -45,12 +45,10 @@ public:
     mapped_edge_metric(tri_hp& xin) : metric(xin) {}
     mapped_edge_metric(const mapped_edge_metric& in_metric, tri_hp& xin) : metric(xin) {}
     virtual std::unique_ptr<metric> create(tri_hp& xin) override {return std::make_unique<mapped_edge_metric>(*this,xin);}
-    virtual void init(input_map& inmap) override;
     virtual void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl=0) const override;
     virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl=0) const override;
     virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
     virtual void calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
-    virtual void calc_positions0D(int vind, TinyVector<FLT,tri_mesh::ND>& pt, int tlvl=0) const override;
     virtual void setinfo() override;
 };
 

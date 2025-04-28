@@ -246,8 +246,8 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 
 class metrictype {
     public:
-        const static int ntypes = 3;
-        enum ids {curved_boundary,all_curved,mapped};
+        const static int ntypes = 4;
+        enum ids {curved_boundary,all_curved,mapped,mapped_edge};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             int i;
@@ -256,7 +256,7 @@ class metrictype {
             return(-1);
         }
 };
-const char metrictype::names[ntypes][40] = {"curved_boundary","all_curved","mapped"};
+const char metrictype::names[ntypes][40] = {"curved_boundary","all_curved","mapped","mapped_edge"};
 
 unique_ptr<tri_hp::metric> tri_hp::getnewmetric(input_map &inmap) {
     std::string keyword,val,ibcname;
@@ -279,6 +279,10 @@ unique_ptr<tri_hp::metric> tri_hp::getnewmetric(input_map &inmap) {
         }
         case metrictype::mapped: {
             return(make_unique<mapped_metric>(*this));
+            break;
+        }
+        case metrictype::mapped_edge: {
+            return(make_unique<mapped_edge_metric>(*this));
             break;
         }
         default: {

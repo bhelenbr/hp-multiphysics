@@ -173,12 +173,14 @@ public:
 	FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(crvbd(tlvl)(ind,mode)(dir));}
 	void curv_init(int tlvl = 0);
     
+#ifdef MAPPED_MESH
     /* These are use to calculate mappings on elements adjacent to the boundary */
     virtual void calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl=0) const;
     virtual void calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl=0) const;
     virtual void calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
     virtual void calc_positions1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
-	
+#endif
+    
 	/* BOUNDARY CONDITION FUNCTIONS */
 	virtual void maxres() {}
 	virtual void vdirichlet();

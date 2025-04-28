@@ -43,12 +43,23 @@ void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 		*gbl->log << "unrecognized mesh movement type" << std::endl;
 	mmovement = static_cast<movementtype>(i);
 
-	/* Initialize stuff for r_tri_mesh */
-	if ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable)) 
+#ifdef MAPPED_MESH
+    std::string maptype;
+    if (inmap.get(gbl->idprefix+"_mapping",maptype)) {
+        map = getnewmapping(maptype);
+    }
+    else {
+        std::cerr << "no mapping type" << std::endl;
+        exit(1);
+    }
+    mapped_mesh::init(inmap,gin);
+#else
+    /* Initialize stuff for r_tri_mesh */
+	if ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))
 		r_tri_mesh::init(inmap,gin);
 	else
 		tri_mesh::init(inmap,gin);
-
+#endif
 	keyword = gbl->idprefix + "_nvariable";
 
 	inmap.getwdefault(keyword,NV,1);

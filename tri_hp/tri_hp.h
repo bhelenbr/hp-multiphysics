@@ -34,6 +34,7 @@
 
 // #define MESH_REF_VEL
 //#define ALLCURVED
+#define MAPPED_MESH
 
 class hp_vrtx_bdry;
 class hp_edge_bdry;
@@ -49,7 +50,11 @@ public:
 class tri_hp_helper;
 
 /** This class is just the data storage and nothing for multigrid */
+#ifdef MAPPED_MESH
 class tri_hp : public mapped_mesh  {
+#else
+class tri_hp : public r_tri_mesh  {
+#endif
 public:
     int NV; /**> Number of vector variables */
     int p0, sm0, im0;  /**> Initialization values */
