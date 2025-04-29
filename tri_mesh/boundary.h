@@ -187,7 +187,7 @@ public:
         first = true;
         if (inmap.get(BASE::idprefix +"_first",first)) {
             *BASE::x.gbl->log << "#Setting first flag for " << BASE::idprefix << std::endl;
-            *BASE::x.gbl->log << "#This only works if all other matches are set to false" << std::endl;
+            *BASE::x.gbl->log << "#This only works if all matches are set to false" << std::endl;
         }
         
         /* SET GROUP MEMBERSHIP FLAGS */
@@ -330,23 +330,23 @@ public:
             *BASE::x.gbl->log << "preparing to send these messages from "  << BASE::idprefix << "with type " << type << std::endl;
             switch(sndtype()) {
                 case(boundary::flt_msg): {
-                    if (use_one_send_buf) {
-                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+                    if (use_one_send_buffer) {
+                        *BASE::x.gbl->log << fsndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
                     }
                     else {
                         for(int m=0;m<nmatch;++m) {
-                            *BASE::x.gbl->log << fsndbufarray(m,Range(0,sndsize()-1)) << std::endl;
+                            *BASE::x.gbl->log << fsndbufarray(m)(Range(0,sndsize()-1)) << std::endl;
                         }
                     }
                     break;
                 }
                 case(boundary::int_msg): {
-                    if (use_one_send_buf) {
-                        *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+                    if (use_one_send_buffer) {
+                        *BASE::x.gbl->log << isndbufarray(0)(Range(0,sndsize()-1)) << std::endl;
                     }
                     else {
                         for(int m=0;m<nmatch;++m) {
-                            *BASE::x.gbl->log << isndbufarray(m,Range(0,sndsize()-1)) << std::endl;
+                            *BASE::x.gbl->log << isndbufarray(m)(Range(0,sndsize()-1)) << std::endl;
                         }
                     }
                     

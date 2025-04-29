@@ -764,7 +764,7 @@ void multigrid_interface::findmatch(shared_ptr<block_global> gbl, int grdlvl) {
 				if (binfo[b1].vcomm[i].idnum == binfo[b2].vcomm[j].idnum) {
 					if (b1 == b2 && i == j) {
 						if (!first_found) first_found = true;  // Leave first flag alone
-						continue;  // CAN"T MATCH TO MYSELF
+						continue;  // CAN'T MATCH TO MYSELF
 					}
 
 					boundary *bp1 = getvbdry(binfo[b1].vcomm[i].nvbd);

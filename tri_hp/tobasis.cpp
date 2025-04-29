@@ -11,15 +11,22 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
+
+
 void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 	int tind,i,j,m,n,v0,v1,sind,info;
 	char uplo[] = "U";
 	TinyVector<FLT,2> pt;
-	
+    TinyVector<TinyVector<double,MXGP>,tri_mesh::ND> crd1d;
+    TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> crd;
+
+    
 	/* LOOP THROUGH VERTICES */
-	for(i=0;i<npnt;++i)
-		for(n=0;n<NV;++n)
-			ugbd(tlvl).v(i,n) = ibc->f(n,pnts(i),gbl->time);
+    for(i=0;i<npnt;++i) {
+        pmetric->calc_positions0D(i, pt, tlvl);
+        for(n=0;n<NV;++n)
+            ugbd(tlvl).v(i,n) = ibc->f(n,pt,gbl->time);
+    }
 	
 	if (basis::tri(log2p)->sm() > 0) {
 	
@@ -29,22 +36,14 @@ void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 			v0 = seg(sind).pnt(0);
 			v1 = seg(sind).pnt(1);
 			
-			if (seg(sind).info < 0) {
-				for(n=0;n<ND;++n)
-					basis::tri(log2p)->proj1d(pnts(v0)(n),pnts(v1)(n),&crd(n)(0,0));
-			}
-			else {
-				crdtocht1d(sind,tlvl);
-				for(n=0;n<ND;++n)
-					basis::tri(log2p)->proj1d(&cht(n,0),&crd(n)(0,0));
-			}
+            pmetric->calc_positions1D(sind, crd1d);
 			
 			for(n=0;n<NV;++n)
 				basis::tri(log2p)->proj1d(ugbd(tlvl).v(v0,n),ugbd(tlvl).v(v1,n),&res(n)(0,0));
 			
 			for(i=0;i<basis::tri(log2p)->gpx(); ++i) {
-				pt(0) = crd(0)(0,i);
-				pt(1) = crd(1)(0,i);
+				pt(0) = crd1d(0)(i);
+				pt(1) = crd1d(1)(i);
 				for(n=0;n<NV;++n)
 					res(n)(0,i) -= ibc->f(n,pt,gbl->time);
 			}
@@ -72,15 +71,7 @@ void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 				for(n=0;n<NV;++n)
 					basis::tri(log2p)->proj_bdry(&uht(n)(0),&u(n)(0,0),MXGP);
 				
-				if (tri(tind).info < 0) {
-					for(n=0;n<ND;++n)
-						basis::tri(log2p)->proj(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-				}
-				else {
-					crdtocht(tind,tlvl);
-					for(n=0;n<ND;++n)
-						basis::tri(log2p)->proj_bdry(&cht(n,0),&crd(n)(0,0),MXGP);
-				}
+                pmetric->calc_positions(tind, crd);
 				
 				for (i=0; i < basis::tri(log2p)->gpx(); ++i ) {
 					for (j=0; j < basis::tri(log2p)->gpn(); ++j ) {

@@ -231,7 +231,7 @@ public:
         virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, TinyVector<TinyVector<FLT,MXGP>,ND>& dcrd, int tlvl=0) const;
         virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, int tlvl=0) const;
         virtual void calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, int tlvl=0) const;
-        virtual void calc_positions0D(int vind, TinyVector<FLT,ND>& pt, int tlvl) const {pt = x.vrtxbd(tlvl)(vind);}
+        virtual void calc_positions0D(int vind, TinyVector<FLT,ND>& pt, int tlvl=0) const {pt = x.vrtxbd(tlvl)(vind);}
         virtual void setinfo();
     };
     

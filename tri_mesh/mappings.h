@@ -59,7 +59,7 @@ public:
 class polar_mapping : public mapping {
 protected:
     TinyVector<FLT,2> pnt;
-    FLT theta_length;
+    FLT theta_length, theta0;
     void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
     void to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;
     void to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override;

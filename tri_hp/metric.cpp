@@ -103,7 +103,6 @@ void mapped_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,
             crd(0)(i,j) = xpt(0);
             crd(1)(i,j) = xpt(1);
             
-            
             TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn, dtndrs;
             map->calc_metrics(pt, dxdtn);
             

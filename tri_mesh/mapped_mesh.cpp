@@ -111,6 +111,9 @@ void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *l
         *log << "Couldn't read length to scale theta " << idprefix+"_theta_length" << std::endl;;
         sim::abort(__LINE__,__FILE__,log);
     }
+    
+    input.getwdefault(idprefix+"_theta0", theta0, 0.0);
+   
 }
 
 void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
@@ -123,8 +126,9 @@ void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVec
 void polar_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     to = from-pnt;
     const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
-    const FLT theta = -atan2(to(1),to(0))*theta_length;
-    to(0) = theta;
+    FLT alpha = atan2(to(1),to(0)) -theta0;
+    alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
+    to(0) = -alpha*theta_length;
     to(1) = r;
 }
 
@@ -162,8 +166,9 @@ void polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, Tin
 void polar_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     to = from-pnt;
     const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
-    const FLT theta = -atan2(to(1),to(0))*theta_length;
-    to(0) = theta;
+    FLT alpha = atan2(to(1),to(0)) -theta0;
+    alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
+    to(0) = -alpha*theta_length;
     to(1) = log((r+r_eps)/(r0+r_eps));
 }
 

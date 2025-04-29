@@ -565,6 +565,7 @@ void hp_edge_bdry::output_msh(const std::string& filename, int count_pass) {
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
 	int j,k,m,n,v0,v1,sind,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
+    TinyVector<TinyVector<double,MXGP>,tri_mesh::ND> crd1d;
 	char uplo[] = "U";
 	
 	/* UPDATE BOUNDARY CONDITION VALUES */
@@ -572,12 +573,14 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indic
 	do {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
+        x.pmetric->calc_positions0D(v0, pt);
 		for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n)
-			x.ug.v(v0,*n) = ibc->f(*n,x.pnts(v0),x.gbl->time);
+			x.ug.v(v0,*n) = ibc->f(*n,pt,x.gbl->time);
 	} while(++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
+    x.pmetric->calc_positions0D(v0, pt);
 	for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n)
-		x.ug.v(v0,*n) = ibc->f(*n,x.pnts(v0),x.gbl->time);
+		x.ug.v(v0,*n) = ibc->f(*n,pt,x.gbl->time);
 	
 	/*******************/
 	/* SET SIDE VALUES */
@@ -587,27 +590,15 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indic
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
 		
-		if (is_curved()) {
-			x.crdtocht1d(sind);
-			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-		}
-		else {
-			for(n=0;n<tri_mesh::ND;++n) {
-				basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-				
-				for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-					x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
-			}
-		}
+        x.pmetric->calc_positions1D(sind, crd1d);
 		
 		if (basis::tri(x.log2p)->sm()) {
 			for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n)
 				basis::tri(x.log2p)->proj1d(x.ug.v(v0,*n),x.ug.v(v1,*n),&x.res(*n)(0,0));
 			
 			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
-				pt(0) = x.crd(0)(0,k);
-				pt(1) = x.crd(1)(0,k);
+				pt(0) = crd1d(0)(k);
+				pt(1) = crd1d(1)(k);
 				for(std::vector<int>::const_iterator n=indices.begin();n != indices.end();++n)
 					x.res(*n)(0,k) -= ibc->f(*n,pt,x.gbl->time);
 			}
