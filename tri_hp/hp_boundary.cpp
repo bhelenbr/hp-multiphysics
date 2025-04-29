@@ -563,7 +563,7 @@ void hp_edge_bdry::output_msh(const std::string& filename, int count_pass) {
 
 
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices) {
-	int j,k,m,n,v0,v1,sind,info;
+	int j,k,m,v0,v1,sind,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
     TinyVector<TinyVector<double,MXGP>,tri_mesh::ND> crd1d;
 	char uplo[] = "U";

@@ -25,17 +25,6 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	for(tind=0;tind<ntri;++tind) {
         pmetric->calc_metrics(tind,crd,dcrd);
         
-        /* Calculate position in parametric coordinates for ibc */
-		if (tri(tind).info > -1) {
-			crdtocht(tind);
-			for(n=0;n<ND;++n)
-				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0) ,MXGP);
-		}
-		else {
-			for(n=0;n<ND;++n)
-				basis::tri(log2p)->proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-		}
-
 		ugtouht(tind);
 		for(n=0;n<NV;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);

@@ -179,6 +179,8 @@ public:
     virtual void calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl=0) const;
     virtual void calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
     virtual void calc_positions1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
+    virtual void calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
+    virtual void calc_positions_leg1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
 #endif
     
 	/* BOUNDARY CONDITION FUNCTIONS */

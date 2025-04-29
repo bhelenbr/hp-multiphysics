@@ -220,20 +220,7 @@ public:
     void jacobian() {} // Not filled this in yet
     virtual void element_jacobian(int tind, Array<FLT,2>&);
     
-    class metric {
-    public:
-        tri_hp& x;
-        metric(tri_hp& xin) : x(xin) {}
-        metric(const metric& in_metric, tri_hp& xin) : x(xin) {}
-        virtual std::unique_ptr<metric> create(tri_hp& xin) {return std::make_unique<metric>(*this,xin);}
-        virtual void init(input_map& inmap) {}
-        virtual void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND>& dcrd, int tlvl=0) const;
-        virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, TinyVector<TinyVector<FLT,MXGP>,ND>& dcrd, int tlvl=0) const;
-        virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND>& crd, int tlvl=0) const;
-        virtual void calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,ND>& crd, int tlvl=0) const;
-        virtual void calc_positions0D(int vind, TinyVector<FLT,ND>& pt, int tlvl=0) const {pt = x.vrtxbd(tlvl)(vind);}
-        virtual void setinfo();
-    };
+    class metric;
     
     /* object for calculating element & side metrics */
     unique_ptr<metric> pmetric;
@@ -387,5 +374,7 @@ extern tri_basis_array<1> tri;
 extern tri_basis_array<0> tri;
 #endif
 }
+    
+#include "metric.h"
 
 #endif

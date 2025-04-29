@@ -10,7 +10,6 @@
 #include <blocks.h>
 #include <block.h>
 #include <r_tri_mesh.h>
-#include "metric.h"
 
 #define CD
 #define INS

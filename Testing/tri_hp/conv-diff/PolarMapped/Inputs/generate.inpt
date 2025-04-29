@@ -12,9 +12,10 @@ ay: 0.0
 theta0: 3*_pi/4
 lambda: _pi/(2*theta0)
 ibc: symbolic
-#ibc0: r^lambda*sin(lambda*theta)
-ibc0: x1^lambda*sin(-lambda*x0/b0_theta_length)
-key: value
+r: sqrt(x0^2 +x1^2)
+theta: atan2(x1,x0)
+ibc: symbolic
+ibc0: r^lambda*sin(lambda*theta)
 b0_mesh: sector.d
 b0_type: cd
 b0_metric: mapped

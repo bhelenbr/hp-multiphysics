@@ -11,8 +11,6 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
-
-
 void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 	int tind,i,j,m,n,v0,v1,sind,info;
 	char uplo[] = "U";

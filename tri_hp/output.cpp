@@ -337,7 +337,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
                     TinyVector<TinyVector<FLT,MXGP>,ND> crd;
-                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    pmetric->calc_positions_leg1D(sind,crd,tlvl);
 					
 					for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
 						for(int n=0;n<ND;++n)
@@ -349,7 +349,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* INTERIOR MODES */
 				if (basis::tri(log2p)->p() > 2) {
 					for(tind = 0; tind < ntri; ++tind) {
-                        pmetric->calc_positions(tind,crd,tlvl);
+                        pmetric->calc_positions_leg(tind,crd,tlvl);
 						
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -556,7 +556,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* SIDE MODES */
                 for(sind=0;sind<nseg;++sind) {
                     TinyVector<TinyVector<FLT,MXGP>,ND> crd;
-                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    pmetric->calc_positions_leg1D(sind,crd,tlvl);
                     
                     for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
                         for(int n=0;n<ND;++n)
@@ -568,7 +568,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* INTERIOR MODES */
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
-                        pmetric->calc_positions(tind,crd,tlvl);
+                        pmetric->calc_positions_leg(tind,crd,tlvl);
                         
                         for(int i=1;i<basis::tri(log2p)->sm();++i) {
                             for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -733,7 +733,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
                     TinyVector<TinyVector<FLT,MXGP>,ND> crd;
-                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    pmetric->calc_positions_leg1D(sind,crd,tlvl);
                     
 					ugtouht1d(sind,tlvl);
 					for(int n=0;n<NV;++n)
@@ -755,7 +755,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 
-                        pmetric->calc_positions(tind,crd,tlvl);
+                        pmetric->calc_positions_leg(tind,crd,tlvl);
 
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -863,7 +863,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				/* SIDE MODES */
 				for(sind=0;sind<nseg;++sind) {
                     TinyVector<TinyVector<FLT,MXGP>,ND> crd;
-                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    pmetric->calc_positions_leg1D(sind,crd,tlvl);
 					ugtouht1d(sind,tlvl);
 					for(int n=0;n<NV;++n)
 						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
@@ -884,7 +884,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						for(int n=0;n<NV;++n)
 							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
 						
-                        pmetric->calc_positions(tind,crd,tlvl);
+                        pmetric->calc_positions_leg(tind,crd,tlvl);
 						
 						for(int i=1;i<basis::tri(log2p)->sm();++i) {
 							for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
@@ -1085,7 +1085,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* SIDE MODES */
                 for(sind=0;sind<nseg;++sind) {;
                     TinyVector<TinyVector<FLT,MXGP>,ND> crd;
-                    pmetric->calc_positions1D(sind,crd,tlvl);
+                    pmetric->calc_positions_leg1D(sind,crd,tlvl);
                     
                     for(int i=1;i<basis::tri(log2p)->sm()+1;++i) {
                         out << count << " ";
@@ -1099,7 +1099,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 /* INTERIOR MODES */
                 if (basis::tri(log2p)->p() > 2) {
                     for(tind = 0; tind < ntri; ++tind) {
-                        pmetric->calc_positions(tind,crd,tlvl);
+                        pmetric->calc_positions_leg(tind,crd,tlvl);
                         
                         for(int i=1;i<basis::tri(log2p)->sm();++i) {
                             for(int j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {

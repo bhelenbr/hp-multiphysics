@@ -12,9 +12,10 @@ ay: 0.0
 theta0: 3*_pi/4
 lambda: _pi/(2*theta0)
 ibc: symbolic
-#ibc0: r^lambda*sin(lambda*theta)
-ibc0: r^lambda*sin(-lambda*x0/b0_theta_length)
-r: exp(x1)*(b0_r0+b0_r_eps) -b0_r_eps
+r: sqrt(x0^2 +x1^2)
+theta: atan2(x1,x0)
+ibc: symbolic
+ibc0: r^lambda*sin(lambda*theta)
 b0_mesh: sector.d
 bottom: -8.0
 b0_type: cd
