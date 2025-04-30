@@ -560,7 +560,8 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
 void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
     TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND> add_to_crd;
     const int log2p = x.log2p;
-    
+    const int gpx = basis::tri(log2p)->gpx(), gpn = basis::tri(log2p)->gpn();
+
     if (curved) {
         TinyMatrix<FLT,tri_mesh::ND,MXTM> cht = 0.0;
         const int sm = basis::tri(x.log2p)->sm();
@@ -576,8 +577,16 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
         /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
         for(int n=0;n<tri_mesh::ND;++n)
             basis::tri(log2p)->proj_bdry(&cht(n,0), &add_to_crd(n)(0,0), MXGP);
+        
+        for(int i=0;i<gpx;++i) {
+            for(int j=0;j<gpn;++j) {
+                for(int n=0;n<tri_mesh::ND;++n) {
+                    crd(n)(i,j) += add_to_crd(n)(i,j);
+                }
+            }
+        }
     }
-    if (mapped) {
+    else if (mapped) {
         /* Determine s location of vertex points */
         /* Reverse map back to parametric coordinates */
         const int sind = base.seg(indx);
@@ -590,7 +599,6 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             *x.gbl->log << "#Uh-oh difference in normal positions " << base.idprefix << ' ' << pt1(1) << ' ' << pt2(1) << std::endl;
         }
         
-        const int gpx = basis::tri(log2p)->gpx(), gpn = basis::tri(log2p)->gpn();
         switch(sd) {
             case(0): {
                 for(int i=0;i<gpx;++i) {
@@ -649,7 +657,6 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             default:
                 sim::abort(__LINE__,__FILE__,x.gbl->log);
         }
-        
         for(int i=0;i<gpx;++i) {
             for(int j=0;j<gpn;++j) {
                 for(int n=0;n<tri_mesh::ND;++n) {
@@ -658,6 +665,7 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             }
         }
     }
+
 }
     
 void hp_edge_bdry::calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl) const {
@@ -757,7 +765,6 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             }
         }
 
-        const int gpx = basis::tri(log2p)->gpx(), gpn = basis::tri(log2p)->gpn();
         switch(sd) {
             case(0): {
                 /* INTERIOR */
@@ -784,7 +791,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                         xcrv -= xlin;
                         
                         for(int n=0;n<tri_mesh::ND;++n) {
-                            add_to_crd(n)(i,j) = xcrv(n)*(1+xi(i,j))/2.;
+                            crd(n)(i,j) += xcrv(n)*(1+xi(i,j))/2.;
                         }
                     }
                 }
@@ -799,7 +806,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                         xcrv -= xlin;
                         
                         for(int n=0;n<tri_mesh::ND;++n) {
-                            add_to_crd(n)(i,j) = xcrv(n)*(1-xi(i,j))/2.;
+                            crd(n)(i,j) += xcrv(n)*(1-xi(i,j))/2.;
                         }
                     }
                 }
@@ -808,6 +815,23 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             default:
                 sim::abort(__LINE__,__FILE__,x.gbl->log);
         }
+    }
+    else {
+        for(int n = 0; n < tri_mesh::ND; ++n) {
+            for(int m = 0; m < basis::tri(log2p)->bm(); ++m)
+                x.cht(n,m) = 0.0;
+        }
+        if (curved) {
+            int ind = 3+sd*sm;
+            for(int m = 0; m < sm; ++m) {
+                for(int n = 0; n < tri_mesh::ND; ++n) {
+                    x.cht(n,ind) = crv(indx,m)(n);
+                }
+                ++ind;
+            }
+        }
+        for(int n=0;n<tri_mesh::ND;++n)
+            basis::tri(x.log2p)->proj_bdry_leg(&x.cht(n,0),&add_to_crd(n)(0,0),MXGP);
         
         for(int i=1;i<sm;++i) {
             for(int j=1;j<sm-(i-1);++j) {
@@ -816,20 +840,6 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                 }
             }
         }
-    }
-    else {
-        for(int n = 0; n < tri_mesh::ND; ++n) {
-            x.cht(n) = 0.0;
-        }
-        int ind = 3+sd*basis::tri(log2p)->sm();
-        for(int m = 0; m < sm; ++m) {
-            for(int n = 0; n < tri_mesh::ND; ++n) {
-                x.cht(n,ind) = crv(indx,m)(n);
-            }
-            ++ind;
-        }
-        for(int n=0;n<tri_mesh::ND;++n)
-            basis::tri(x.log2p)->proj_bdry_leg(&x.cht(n,0),&crd(n)(0,0),MXGP);
     }
 }
 
