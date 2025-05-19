@@ -74,5 +74,5 @@ b2_s7_type: mapped_comm
 b2_s8_type: prdc
 b2_v2_type: mapped_comm
 b2_v3_type: mapped_comm
-b2_v9_hp_typelist: 0 0 1
-b2_v9_flux2: 0.0
+b2_s9_hp_typelist: 0 0 1
+b2_s9_flux2: 0.0
