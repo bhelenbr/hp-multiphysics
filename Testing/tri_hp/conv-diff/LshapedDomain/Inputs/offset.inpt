@@ -1,4 +1,4 @@
-log2p: 0
+log2p: 2
 adapt: 1
 logfile: generate
 nblock: 2

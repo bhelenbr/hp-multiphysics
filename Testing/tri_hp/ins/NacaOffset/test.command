@@ -37,7 +37,7 @@ os.system("mod_map run.inpt b2_type ins")
 os.system("mod_map run.inpt nblock \"1 1 1\"")
 os.system("mod_map run.inpt logfile output")
 os.system("mod_map run.inpt adapt 0")
-os.system("mod_map run.inpt ncycle 10")
+os.system("mod_map run.inpt ncycle 1")
 os.system("mod_map run.inpt ntstep 1")
 
 #os.system("mpiexec -np 3 tri_hp_petsc run.inpt -stop_for_debugger")

@@ -10,7 +10,6 @@
 
 using namespace spline_functions2D;
 using namespace blitz;
-
 const int ND = 2;
 
 void spline_functions2D::transform2D(TinyVector<double,ND>& loc, const double size, const double angle, const TinyVector<double,ND> offset) {
@@ -31,7 +30,7 @@ void spline_functions2D::transform2Di(TinyVector<double,ND>& loc, const double s
     loc = temp +offset;
 }
 
-void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<double,ND>& tan, TinyVector<double,ND>& curv, const spline<ND>& myspline, double s, const double size, const double angle, const TinyVector<double,ND> offset, double norm_dist) {
+void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<double,ND>& tan, TinyVector<double,ND>& curv, const SPLINE<ND>& myspline, double s, const double size, const double angle, const TinyVector<double,ND> offset, double norm_dist) {
     TinyVector<double,ND> zero = 0.0;
     myspline.offset(s,norm_dist/size,loc);
     transform2Di(loc,size,angle,offset);
@@ -41,7 +40,7 @@ void spline_functions2D::interpolate(TinyVector<double,ND>& loc, TinyVector<doub
     transform2Di(curv,size,angle,zero);
 }
 
-int spline_functions2D::find(const TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
+int spline_functions2D::find(const TinyVector<double,ND>& loc, const SPLINE<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
     TinyVector<double,ND> xspl, xloc(loc);
     transform2D(xloc, size, angle, offset);
     int err = myspline.find(s, xloc);
@@ -55,7 +54,7 @@ int spline_functions2D::find(const TinyVector<double,ND>& loc, const spline<ND>&
     return(err);
 }
 
-int spline_functions2D::find_with_guess(const TinyVector<double,ND>& loc, const spline<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
+int spline_functions2D::find_with_guess(const TinyVector<double,ND>& loc, const SPLINE<ND>& myspline, double& s, const double size, const double angle,  const TinyVector<double,ND> offset, double& norm_dist) {
     TinyVector<double,ND> xspl, xloc(loc);
     transform2D(xloc, size, angle, offset);
     int err = myspline.find_with_guess(s, xloc);

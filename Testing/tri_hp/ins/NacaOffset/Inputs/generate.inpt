@@ -9,7 +9,7 @@ petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 absolute_tolerance: 1.0e-9
 relative_tolerance: 1.0e-5
 growth factor: 50000
-rsdl_debug: 1
+#rsdl_debug: 1
 # Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
 # and 0 inside inner radius with smooth transition in between: 
 #ibc: sphere

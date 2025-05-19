@@ -39,7 +39,7 @@ template<int ND> int spline<ND>::read(std::string filename) {
 			
 	/* NOW READ DATA */
 	for (int i=0;i<npts;++i) {
-		in >> x(i);
+        in >> x(i);
 
 		for(int n=0;n<ND;++n)
 			in >> y(i)(n);
@@ -54,7 +54,7 @@ template<int ND> int spline<ND>::read(std::string filename) {
 	TinyVector<double,ND> ydbk, ydc, ydfw;
 	double a1, b1, c1;
 	double sum;
-	
+
 	/* POINT 0 */
 	h1=x(1)-x(0);
 	d1=(y(1)-y(0))/h1;
@@ -160,7 +160,7 @@ template<int ND> int spline<ND>::read(std::string filename) {
 	h4=x(npts-1)-x(npts-2);
 	d4=(y(npts-1)-y(npts-2))/h4;
 	h3=x(npts-2)-x(npts-3);
-	d3=(y(npts-2)-y(npts-2))/h3;
+	d3=(y(npts-2)-y(npts-3))/h3;
 	ydd(npts-1)=(d4-d3)/(0.5*(h4+h3));
 	yd(npts-1)=d4+0.5*h4*ydd(npts-1);
 	

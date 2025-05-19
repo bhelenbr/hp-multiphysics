@@ -39,19 +39,25 @@ void spline_mapping::init(input_map& input, std::string idprefix, std::ostream *
     input.getwdefault(idprefix+"_scale",scale,1.0);
 }
 
-void spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     TinyVector<FLT,2> tan, curv;
     spline_functions2D::interpolate(to, tan, curv, my_spline, from(0), scale, trsfm.theta,trsfm.pos, -from(1));
+    return(0);
 }
 
-void spline_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int spline_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     TinyVector<FLT,2> tan, curv;
+    to(1) *= -1;
     int err = spline_functions2D::find_with_guess(from, my_spline, to(0), scale, trsfm.theta,trsfm.pos, to(1));
     to(1) *= -1;
-    if (err) std::cout << "Uh-oh inverse mapping error in spline\n";
+    if (to(1) < -FLT_EPSILON || err) {
+        err = spline_functions2D::find(from, my_spline, to(0), scale, trsfm.theta,trsfm.pos, to(1));
+        to(1) *= -1;
+    }
+    return(err);
 }
 
-void spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+int spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     TinyVector<FLT,2> pnt, tan, curv;
     spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0), scale, trsfm.theta,trsfm.pos, -loc(1));
     /* p = x(s) +n*norm_dist */
@@ -64,6 +70,7 @@ void spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,
     /* Derivaties with respect to norm_dist */
     jacobian(0,1) = -tan(1);
     jacobian(1,1) = +tan(0);
+    return(0);
 }
 
 
@@ -78,28 +85,31 @@ void spline_log_mapping::init(input_map& input, std::string idprefix, std::ostre
     r_eps = r_eps*r0;
 }
 
-void spline_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int spline_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     TinyVector<FLT,2> from2;
     from2(0) = from(0);
     from2(1) = exp(from(1))*(r0+r_eps) -r_eps;
-    spline_mapping::to_physical_frame(from2, to);
+    int err = spline_mapping::to_physical_frame(from2, to);
+    return(err);
 }
 
-void spline_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
-    spline_mapping::to_parametric_frame(from, to);
+int spline_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    int err = spline_mapping::to_parametric_frame(from, to);
     to(1) = log((to(1)+r_eps)/(r0+r_eps));
+    return(err);
 }
 
-void spline_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+int spline_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
     const FLT drdlogr = exp(loc(1))*(r0+r_eps);
 
     TinyVector<FLT,2> loc2;
     loc2(0) = loc(0);
     loc2(1) = r;
-    spline_mapping::calc_metrics(loc2, jacobian);
+    int err = spline_mapping::calc_metrics(loc2, jacobian);
     jacobian(0,1) *= drdlogr;
     jacobian(1,1) *= drdlogr;
+    return(err);
 }
 
 void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
@@ -116,24 +126,26 @@ void polar_mapping::init(input_map& input, std::string idprefix, std::ostream *l
    
 }
 
-void polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int polar_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     const FLT r = from(1);
     const FLT theta = -from(0)/theta_length;
     to(0) = pnt(0) +r*cos(theta);
     to(1) = pnt(1) +r*sin(theta);
+    return(0);
 }
 
-void polar_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int polar_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     to = from-pnt;
     const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
     FLT alpha = atan2(to(1),to(0)) -theta0;
     alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
     to(0) = -alpha*theta_length;
     to(1) = r;
+    return(0);
 }
 
 
-void polar_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+int polar_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     const FLT r = loc(1);
     const FLT theta = -loc(0)/theta_length;
     
@@ -143,6 +155,7 @@ void polar_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2
     /* Derivaties with respect to r */
     jacobian(0,1) = cos(theta); // dx/dr
     jacobian(1,1) = sin(theta); // dy/dr
+    return(0);
 }
 
 void polar_log_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
@@ -156,23 +169,25 @@ void polar_log_mapping::init(input_map& input, std::string idprefix, std::ostrea
     r_eps = r_eps*r0;
 }
 
-void polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     const FLT r = exp(from(1))*(r0+r_eps) -r_eps;
     const FLT theta = -from(0)/theta_length;
     to(0) = pnt(0) +r*cos(theta);
     to(1) = pnt(1) +r*sin(theta);
+    return(0);
 }
 
-void polar_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+int polar_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     to = from-pnt;
     const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
     FLT alpha = atan2(to(1),to(0)) -theta0;
     alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
     to(0) = -alpha*theta_length;
     to(1) = log((r+r_eps)/(r0+r_eps));
+    return(0);
 }
 
-void polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+int polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
     const FLT theta = -loc(0)/theta_length;
     
@@ -184,6 +199,7 @@ void polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT
     /* Derivaties with respect to logr */
     jacobian(0,1) = cos(theta)*drdlogr; // dx/dlogr
     jacobian(1,1) = sin(theta)*drdlogr; // dy/dlogr
+    return(0);
 }
 
 

@@ -245,7 +245,7 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 
 template<class BASE> class spline_bdry : public BASE, public rigid_movement_interface2D {
     public:
-        spline<tri_mesh::ND> my_spline;
+        SPLINE<tri_mesh::ND> my_spline;
         Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
         FLT smin, smax; // LIMITS FOR BOUNDARY
         FLT scale, norm_dist;

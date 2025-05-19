@@ -11,6 +11,13 @@
 #define _spline_h_
 
 #include <blitz/array.h>
+#define THIRD
+
+#ifdef THIRD
+#define SPLINE spline3
+#else
+#define SPLINE spline
+#endif
 
 
 template<int ND> class spline {
@@ -78,12 +85,14 @@ public:
     int size() const {return(npts);}
 };
 
+
+
 namespace spline_functions2D {
 void transform2D(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
 void transform2Di(blitz::TinyVector<double,2>& xpt, const double size, const double angle, const blitz::TinyVector<double,2> offset);
-void interpolate(blitz::TinyVector<double,2>& loc, blitz::TinyVector<double,2>& tan, blitz::TinyVector<double,2>& curv, const spline<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> offset, double norm_dist);
-int find(const blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
-int find_with_guess(const blitz::TinyVector<double,2>& loc, const spline<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
+void interpolate(blitz::TinyVector<double,2>& loc, blitz::TinyVector<double,2>& tan, blitz::TinyVector<double,2>& curv, const SPLINE<2>& myspline, double s, const double size, const double angle, const blitz::TinyVector<double,2> offset, double norm_dist);
+int find(const blitz::TinyVector<double,2>& loc, const SPLINE<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
+int find_with_guess(const blitz::TinyVector<double,2>& loc, const SPLINE<2>& myspline, double& s, const double size, const double angle,  const blitz::TinyVector<double,2> offset, double &norm_dist);
 }
 
 

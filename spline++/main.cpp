@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <fstream>
 
-// #define THIRD
 const int ND = 2;
 using namespace spline_functions2D;
 using namespace blitz;
@@ -101,11 +100,7 @@ int main(int argc, char** argv) {
         }
     }
     
-#ifdef THIRD
-    spline3<ND> myspline;  // (3rd order spline)
-#else
-    spline<ND> myspline;  // (5th order spline)
-#endif
+    SPLINE<ND> myspline;  // (3rd or 5th) order spline)
     
     int index = optind;
     if (argc -index < 1) {
@@ -165,7 +160,7 @@ int main(int argc, char** argv) {
         if (!UseFile) {
             find(xfind,myspline,s,size,angle,dx,norm_dist);
             interpolate(x, tan, curv, myspline, s, size, angle, dx, 0.0);
-            std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+            std::cout << std::setprecision(16) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
         }
         else {
             while (!point_data.eof()) {
@@ -174,7 +169,7 @@ int main(int argc, char** argv) {
                 }
                 find(xfind,myspline,s,size,angle,dx,norm_dist);
                 interpolate(x, tan, curv, myspline, s, size, angle, dx, 0.0);
-                std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+                std::cout << std::setprecision(16) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
     }
@@ -246,13 +241,13 @@ int main(int argc, char** argv) {
             
             for (int i=0;i<npts;++i) {
                 interpolate(x, tan, curv, myspline, svalues(i), size, angle, dx, norm_dist);
-                std::cout << std::setprecision(10) << svalues(i) << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+                std::cout << std::setprecision(16) << svalues(i) << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
         else {
             while (point_data >> s) {
                 interpolate(x, tan, curv, myspline, s, size, angle, dx, norm_dist);
-                std::cout << std::setprecision(10) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
+                std::cout << std::setprecision(16) << s << ' ' << x(0) << ' ' << x(1) << ' ' << tan(0) << ' ' << tan(1) << ' ' << curv(0) << ' ' << curv(1) << std::endl;
             }
         }
         
