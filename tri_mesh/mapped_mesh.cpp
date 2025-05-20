@@ -61,12 +61,13 @@ int spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2
     TinyVector<FLT,2> pnt, tan, curv;
     spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0), scale, trsfm.theta,trsfm.pos, -loc(1));
     /* p = x(s) +n*norm_dist */
+    /* p = x(loc(0)) +loc(1)*(-tan(1),tan(0))*/
     /* dp/ds = dx/ds +curv * norm_dist */
     /* dp/dn = norm */
     
     /* Derivatives with respect to s*/
-    jacobian(0,0) = tan(0) -curv(0)*loc(1);
-    jacobian(1,0) = tan(1) -curv(1)*loc(1);
+    jacobian(0,0) = tan(0) -curv(1)*loc(1);
+    jacobian(1,0) = tan(1) +curv(0)*loc(1);
     /* Derivaties with respect to norm_dist */
     jacobian(0,1) = -tan(1);
     jacobian(1,1) = +tan(0);

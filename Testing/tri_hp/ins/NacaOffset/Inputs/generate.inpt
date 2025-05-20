@@ -12,15 +12,15 @@ growth factor: 50000
 #rsdl_debug: 1
 # Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
 # and 0 inside inner radius with smooth transition in between: 
-#ibc: sphere
-#inner_radius: 5.0
-#outer_radius: 10.0
-ibc: symbolic
-ibc0: 1.0
-ibc1: 0.0
-ibc2: 0.0
+ibc: sphere
+inner_radius: 5.0
+outer_radius: 10.0
+#ibc: symbolic
+#ibc0: 1.0
+#ibc1: 0.0
+#ibc2: 0.0
 # Viscosity (1/Reynolds Number): 
-mu: 0.0e-1
+mu: 1.0e-1
 rho: 1.0
 b0_mesh: b0.d
 b0_type: r_tri_mesh

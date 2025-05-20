@@ -444,7 +444,7 @@ void mapped_edge_metric::setinfo() {
 }
 
 
-
+//#define WTF
 
 /* These are use to calculate mappings on elements adjacent to the boundary */
 void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
