@@ -1403,17 +1403,19 @@ void block::go(input_map input) {
     
     int rb2;
     if (input.get("refineby2",rb2)) {
-        *gbl->log << "refining solution by 2" << std::endl;
-        gbl->tstep=nstart+1;
-        grd(0)->refineby2();
-        nstr.str("");
-        nstr << nstart+1 << std::flush;
-        outname = "data" +nstr.str();
-        output(outname,block::display);
-        
-        outname = "rstrt" +nstr.str();
-        output(outname,block::restart);
-        return;
+        if (rb2) {
+            *gbl->log << "refining solution by 2" << std::endl;
+            gbl->tstep=nstart+1;
+            grd(0)->refineby2();
+            nstr.str("");
+            nstr << nstart+1 << std::flush;
+            outname = "data" +nstr.str();
+            output(outname,block::display);
+            
+            outname = "rstrt" +nstr.str();
+            output(outname,block::restart);
+            return;
+        }
     }
     
     int offset;

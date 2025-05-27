@@ -1702,20 +1702,41 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 #endif
 
 void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
-	int sind,v0,v1,iter;
+	int iter;
 	FLT dx,dy,ol,roundoff,dpsi;
 	TinyVector<FLT,2> pt;
 	
 	base.findbdrypt(xp,bel,psi);
-	if (!curved) {
+	if (!curved  && !mapped) {
 		base.edge_bdry::mvpttobdry(bel,psi,xp);
 		basis::tri(x.log2p)->ptvalues1d(psi);
 		return;
 	}
 	
-	sind = base.seg(bel);
-	v0 = x.seg(sind).pnt(0);
-	v1 = x.seg(sind).pnt(1);
+    const int sind = base.seg(bel);
+    const int v0 = x.seg(sind).pnt(0);
+    const int v1 = x.seg(sind).pnt(1);
+    
+    if (mapped) {
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        pt = 0.5*(pt0 +pt1);
+        err += map->to_parametric_frame(xp,pt);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::findandmovebdrypt " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
+        }
+        psi = 2*(pt(0)-pt0(0))/(pt1(0)-pt0(0))-1.0;
+        pt(0) = psi;
+        map->to_physical_frame(pt,xp);
+        return;
+    }
+    
+	
 	dx = x.pnts(v1)(0) - x.pnts(v0)(0);
 	dy = x.pnts(v1)(1) - x.pnts(v0)(1);
 	ol = 2./(dx*dx +dy*dy);
