@@ -482,9 +482,7 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
             TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
             map->to_physical_frame(pt0, pt1_tst);
             map->to_physical_frame(pt1, pt2_tst);
-#ifdef WTF
             *x.gbl->log << "#Error in hp_edge_bdry::calc_metrics " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
-#endif
         }
         
         const int gpx = basis::tri(log2p)->gpx(), gpn = basis::tri(log2p)->gpn();
@@ -494,25 +492,15 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                     pt = pt0*basis::tri(log2p)->gx(i,1) +pt1*basis::tri(log2p)->gx(i,2);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gx(i,1) +x.pnts(v1)*basis::tri(log2p)->gx(i,2);
                     map->to_physical_frame(pt,xcrv);
-#ifdef WTF
-                    *x.gbl->log << "location " <<  xcrv << ' ' << xlin << std::endl;
-                    *x.gbl->log << "parametric " << pt0 << ' ' << pt1 << std::endl;
-#endif
                     xcrv -= xlin;
                     
 
                     TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn;
                     map->calc_metrics(pt, dxdtn);
-#ifdef WTF
-                    *x.gbl->log << "jacobian " << dxdtn << std::endl;
-#endif
 
                     for(int j=0;j<gpn;++j) {
                         for(int n=0;n<tri_mesh::ND;++n) {
                             add_to_crd(n)(i,j) = xcrv(n)*basis::tri(log2p)->gn(j,3);
-#ifdef WTF
-                            *x.gbl->log << "terms " << dxdtn(n,0)*(pt1(0)-pt0(0)) << ' ' << (x.pnts(v1)(n)-x.pnts(v0)(n)) << std::endl;
-#endif
                             add_to_dcrd(n,0)(i,j) = basis::tri(log2p)->n0(j)*0.5*(dxdtn(n,0)*(pt1(0)-pt0(0)) -(x.pnts(v1)(n)-x.pnts(v0)(n)))*basis::tri(log2p)->gn(j,3);
                             add_to_dcrd(n,1)(i,j) = xcrv(n)*basis::tri(log2p)->dgn(j,3) +basis::tri(log2p)->x0(i)*add_to_dcrd(n,0)(i,j);
                         }
@@ -525,24 +513,14 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                     pt = pt0*basis::tri(log2p)->gn(j,2) +pt1*basis::tri(log2p)->gn(j,0);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gn(j,2) +x.pnts(v1)*basis::tri(log2p)->gn(j,0);
                     map->to_physical_frame(pt,xcrv);
-#ifdef WTF
-                    *x.gbl->log << "location " <<  xcrv << ' ' << xlin << std::endl;
-                    *x.gbl->log << "parametric " << pt0 << ' ' << pt1 << std::endl;
-#endif
                     xcrv -= xlin;
                     
                     TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn;
                     map->calc_metrics(pt, dxdtn);
-#ifdef WTF
-                    *x.gbl->log << "jacobian " << dxdtn << std::endl;
-#endif
 
                     for(int i=0;i<gpx;++i) {
                         for(int n=0;n<tri_mesh::ND;++n) {
                             add_to_crd(n)(i,j) = xcrv(n)*basis::tri(log2p)->gx(i,2);
-#ifdef WTF
-                            *x.gbl->log << "terms " << dxdtn(n,0)*(pt1(0)-pt0(0)) << ' ' << (x.pnts(v1)(n)-x.pnts(v0)(n)) << std::endl;
-#endif
                             add_to_dcrd(n,0)(i,j) = 0.5*xcrv(n)*basis::tri(log2p)->n0(j);
                             add_to_dcrd(n,1)(i,j) = (0.5*(dxdtn(n,0)*(pt1(0)-pt0(0)) -(x.pnts(v1)(n)-x.pnts(v0)(n)))*basis::tri(log2p)->gx(i,2) +add_to_dcrd(n,0)(i,j))*basis::tri(log2p)->x0(i);
                         }
@@ -555,23 +533,14 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                     pt = pt0*basis::tri(log2p)->gn(j,0) +pt1*basis::tri(log2p)->gn(j,1);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gn(j,0) +x.pnts(v1)*basis::tri(log2p)->gn(j,1);
                     map->to_physical_frame(pt,xcrv);
-#ifdef WTF
-                    *x.gbl->log << "location " <<  xcrv << ' ' << xlin << std::endl;
-                    *x.gbl->log << "parametric " << pt0 << ' ' << pt1 << std::endl;
-#endif
                     xcrv -= xlin;
                     
                     TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn;
                     map->calc_metrics(pt, dxdtn);
-#ifdef WTF
-                    *x.gbl->log << "jacobian " << dxdtn << std::endl;
-#endif
+
                     for(int i=0;i<gpx;++i) {
                         for(int n=0;n<tri_mesh::ND;++n) {
                             add_to_crd(n)(i,j) = xcrv(n)*basis::tri(log2p)->gx(i,1);
-#ifdef WTF
-                            *x.gbl->log << "terms " << dxdtn(n,0)*(pt1(0)-pt0(0)) << ' ' << (x.pnts(v1)(n)-x.pnts(v0)(n)) << std::endl;
-#endif
                             add_to_dcrd(n,0)(i,j) = -0.5*xcrv(n)*basis::tri(log2p)->n0(j);
                             add_to_dcrd(n,1)(i,j) = (0.5*(dxdtn(n,0)*(pt0(0)-pt1(0)) -(x.pnts(v0)(n)-x.pnts(v1)(n)))*basis::tri(log2p)->gx(i,1) +add_to_dcrd(n,0)(i,j))*basis::tri(log2p)->x0(i);
                         }
@@ -586,17 +555,10 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
         for(int i=0;i<gpx;++i) {
             for(int j=0;j<gpn;++j) {
                 for(int n=0;n<tri_mesh::ND;++n) {
-#ifdef WTF
-                    *x.gbl->log << indx << ' ' << sd << ' ' << i << ' ' << j << ' ' << n << ' ' << crd(n)(i,j) << ' ' << dcrd(n,0)(i,j) << ' ' << dcrd(n,1)(i,j) << std::endl;
-#endif
                     dcrd(n,0)(i,j) += add_to_dcrd(n,0)(i,j);
                     dcrd(n,1)(i,j) += add_to_dcrd(n,1)(i,j);
                     crd(n)(i,j) += add_to_crd(n)(i,j);
-#ifdef WTF
-                    *x.gbl->log << indx << ' ' << sd << ' ' << i << ' ' << j << ' ' << n << ' ' << crd(n)(i,j) << ' ' << dcrd(n,0)(i,j) << ' ' << dcrd(n,1)(i,j) << std::endl;
-#endif
                 }
-
             }
         }
     }
@@ -637,17 +599,22 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
         const int sind = base.seg(indx);
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
-        TinyVector<FLT,tri_mesh::ND> pt1, pt2, pt, xcrv, xlin;
-        map->to_parametric_frame(x.pnts(v0),pt1);
-        map->to_parametric_frame(x.pnts(v1),pt2);
-        if (abs(pt1(1)-pt2(1)) > 1.0e-7) {
-            *x.gbl->log << "Difference in normal positions in calc_positions " << base.idprefix << ' ' << pt1(1) << ' ' << pt2(1) << std::endl;
+        
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::calc_positions " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
         }
         
         switch(sd) {
             case(0): {
                 for(int i=0;i<gpx;++i) {
-                    pt = pt1*basis::tri(log2p)->gx(i,1) +pt2*basis::tri(log2p)->gx(i,2);
+                    pt = pt0*basis::tri(log2p)->gx(i,1) +pt1*basis::tri(log2p)->gx(i,2);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gx(i,1) +x.pnts(v1)*basis::tri(log2p)->gx(i,2);
                     map->to_physical_frame(pt,xcrv);
                     xcrv -= xlin;
@@ -665,7 +632,7 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             }
             case(1): {
                 for(int j=0;j<gpn;++j) {
-                    pt = pt1*basis::tri(log2p)->gn(j,1) +pt2*basis::tri(log2p)->gn(j,0);
+                    pt = pt0*basis::tri(log2p)->gn(j,1) +pt1*basis::tri(log2p)->gn(j,0);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gn(j,1) +x.pnts(v1)*basis::tri(log2p)->gn(j,0);
                     map->to_physical_frame(pt,xcrv);
                     xcrv -= xlin;
@@ -683,7 +650,7 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             }
             case(2): {
                 for(int j=0;j<gpn;++j) {
-                    pt = pt1*basis::tri(log2p)->gn(j,1) +pt2*basis::tri(log2p)->gn(j,0);
+                    pt = pt0*basis::tri(log2p)->gn(j,1) +pt1*basis::tri(log2p)->gn(j,0);
                     xlin = x.pnts(v0)*basis::tri(log2p)->gn(j,1) +x.pnts(v1)*basis::tri(log2p)->gn(j,0);
                     map->to_physical_frame(pt,xcrv);
                     xcrv -= xlin;
@@ -721,13 +688,20 @@ void hp_edge_bdry::calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_
     if (mapped) {
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
-        TinyVector<FLT,tri_mesh::ND> pt1, pt2, pt, xcrv, xlin;
-        map->to_parametric_frame(x.pnts(v0),pt1);
-        map->to_parametric_frame(x.pnts(v1),pt2);
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::calc_metrics1D " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
+        }
         
         for(int i=0;i<gpx;++i) {
-            pt(0) = pt1(0)*basis::tri(log2p)->gx(i,1) +pt2(0)*basis::tri(log2p)->gx(i,2);
-            pt(1) = pt1(1)*basis::tri(log2p)->gx(i,1) +pt2(1)*basis::tri(log2p)->gx(i,2);  /* FIXME SIDES MUST BE ALIGNED WITH TANGENT COORDINATE */
+            pt(0) = pt0(0)*basis::tri(log2p)->gx(i,1) +pt1(0)*basis::tri(log2p)->gx(i,2);
+            pt(1) = pt0(1)*basis::tri(log2p)->gx(i,1) +pt1(1)*basis::tri(log2p)->gx(i,2);  /* FIXME SIDES MUST BE ALIGNED WITH TANGENT COORDINATE */
             xlin = x.pnts(v0)*basis::tri(log2p)->gx(i,1) +x.pnts(v1)*basis::tri(log2p)->gx(i,2);
             map->to_physical_frame(pt,xcrv);
             xcrv -= xlin;
@@ -737,7 +711,7 @@ void hp_edge_bdry::calc_metrics1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tri_
             
             for(int n=0;n<tri_mesh::ND;++n) {
                 crd(n)(i) = xcrv(n);
-                dcrd(n)(i) = 0.5*dxdtn(n,0)*(pt2(0)-pt1(0));
+                dcrd(n)(i) = 0.5*dxdtn(n,0)*(pt1(0)-pt0(0));
             }
         }
     }
@@ -756,20 +730,22 @@ void hp_edge_bdry::calc_positions1D(int indx, TinyVector<TinyVector<FLT,MXGP>,tr
     if (mapped) {
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
-        TinyVector<FLT,tri_mesh::ND> pt1, pt2, pt, xcrv, xlin;
-        map->to_parametric_frame(x.pnts(v0),pt1);
-        map->to_parametric_frame(x.pnts(v1),pt2);
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::calc_positions1D " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
+        }
         
         for(int i=0;i<gpx;++i) {
-            pt(0) = pt1(0)*basis::tri(log2p)->gx(i,1) +pt2(0)*basis::tri(log2p)->gx(i,2);
-            pt(1) = pt1(1)*basis::tri(log2p)->gx(i,1) +pt2(1)*basis::tri(log2p)->gx(i,2);  /* FIXME SIDES MUST BE ALIGNED WITH TANGENT COORDINATE */
-            xlin = x.pnts(v0)*basis::tri(log2p)->gx(i,1) +x.pnts(v1)*basis::tri(log2p)->gx(i,2);
+            pt(0) = pt0(0)*basis::tri(log2p)->gx(i,1) +pt1(0)*basis::tri(log2p)->gx(i,2);
+            pt(1) = pt0(1)*basis::tri(log2p)->gx(i,1) +pt1(1)*basis::tri(log2p)->gx(i,2);  /* FIXME SIDES MUST BE ALIGNED WITH TANGENT COORDINATE */
             map->to_physical_frame(pt,xcrv);
-            xcrv -= xlin;
-            
-            TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn;
-            map->calc_metrics(pt, dxdtn);
-            
+
             for(int n=0;n<tri_mesh::ND;++n) {
                 crd(n)(i) = xcrv(n);
             }
@@ -793,12 +769,15 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
         /* Reverse map back to parametric coordinates */
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
-        TinyVector<FLT,tri_mesh::ND> pt1, pt2, pt, xcrv, xlin;
-        map->to_parametric_frame(x.pnts(v0),pt1);
-        map->to_parametric_frame(x.pnts(v1),pt2);
-        pt(1) = 0.5*(pt1(1)+pt2(1));
-        if (abs(pt1(1)-pt2(1)) > 1.0e-7) {
-            *x.gbl->log << "#Difference in normal positions in calc_positions_leg " << base.idprefix << ' ' << pt1(1) << ' ' << pt2(1) << std::endl;
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::calc_positions_leg " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
         }
         
         /* Calculate xi and eta locations */
@@ -815,7 +794,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                 /* INTERIOR */
                 for(int i=1;i<sm;++i) {
                     for(int j=1;j<sm-(i-1);++j) {
-                        pt = pt1*(1-xi(i,j))/2. +pt2*(1+xi(i,j))/2.;
+                        pt = pt0*(1-xi(i,j))/2. +pt1*(1+xi(i,j))/2.;
                         xlin = x.pnts(v0)*(1-xi(i,j))/2. +x.pnts(v1)*(1+xi(i,j))/2.;
                         map->to_physical_frame(pt,xcrv);
                         xcrv -= xlin;
@@ -830,8 +809,8 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                 /* INTERIOR */
                 for(int i=1;i<sm;++i) {
                     for(int j=1;j<sm-(i-1);++j) {
-                        pt = pt1*(1-eta(i,j))/2. +pt2*(1+eta(i,j))/2.;
-                        xlin = x.pnts(v0)*(1-eta(i,j))/2. +x.pnts(v1)*(1+xi(i,j))/2.;
+                        pt = pt0*(1-eta(i,j))/2. +pt1*(1+eta(i,j))/2.;
+                        xlin = x.pnts(v0)*(1-eta(i,j))/2. +x.pnts(v1)*(1+eta(i,j))/2.;
                         map->to_physical_frame(pt,xcrv);
                         xcrv -= xlin;
                         
@@ -845,8 +824,8 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             case(2): {
                 for(int i=1;i<sm;++i) {
                     for(int j=1;j<sm-(i-1);++j) {
-                        pt = pt1*(1-eta(i,j))/2. +pt2*(1+eta(i,j))/2.;
-                        xlin = x.pnts(v0)*(1-eta(i,j))/2. +x.pnts(v1)*(1+xi(i,j))/2.;
+                        pt = pt0*(1-eta(i,j))/2. +pt1*(1+eta(i,j))/2.;
+                        xlin = x.pnts(v0)*(1-eta(i,j))/2. +x.pnts(v1)*(1+eta(i,j))/2.;
                         map->to_physical_frame(pt,xcrv);
                         xcrv -= xlin;
                         
@@ -897,12 +876,19 @@ void hp_edge_bdry::calc_positions_leg1D(int indx, TinyVector<TinyVector<FLT,MXGP
     if (mapped) {
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
-        TinyVector<FLT,tri_mesh::ND> pt1, pt2, pt, xcrv, xlin;
-        map->to_parametric_frame(x.pnts(v0),pt1);
-        map->to_parametric_frame(x.pnts(v1),pt2);
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        int err = map->to_parametric_frame(x.pnts(v0),pt0);
+        pt1 = pt0;
+        err += map->to_parametric_frame(x.pnts(v1),pt1);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *x.gbl->log << "#Error in hp_edge_bdry::calc_positions_leg1D " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
+        }
         
         for (int i=1;i<sm+1;++i) {
-            pt = pt1*basis::tri(log2p)->lgrnge1d(0,i) +pt2*basis::tri(log2p)->lgrnge1d(1,i);
+            pt = pt0*basis::tri(log2p)->lgrnge1d(0,i) +pt1*basis::tri(log2p)->lgrnge1d(1,i);
             map->to_physical_frame(pt,xcrv);
             
             for(int n=0;n<tri_mesh::ND;++n) {
