@@ -1708,8 +1708,10 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
 
 	base.findbdrypt(xp,bel,psi);
+    basis::tri(x.log2p)->ptvalues1d(psi);
 
     if (mapped) {
+        /* Fixme: this needs to be changed so that psi stays the same */
         const int sind = base.seg(bel);
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
@@ -1728,9 +1730,8 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
         }
         psi = 2*(pt(0)-pt0(0))/(pt1(0)-pt0(0))-1.0;
         pt(0) = 0.5*((1-psi)*pt0(0) +(1+psi)*pt1(0));
-        
+        pt(1) = pt0(1);
         map->to_physical_frame(pt,xp);
-        return;
     }
     else if (curved) {
         const int sind = base.seg(bel);
@@ -1766,7 +1767,6 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
     }
     else {
         base.edge_bdry::mvpttobdry(bel,psi,xp);
-        basis::tri(x.log2p)->ptvalues1d(psi);
     }
 }
 

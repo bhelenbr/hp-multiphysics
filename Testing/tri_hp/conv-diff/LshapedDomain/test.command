@@ -50,26 +50,26 @@ while [ $log2p -lt 3 ]; do
 	echo -n ' ' >> cnvg.dat
 	tail -2 output_b0.log | head -1 | cut -d\  -f2,4 >> cnvg.dat
 
-	let ngrids=4
+	let ngrids=5
 	let ngrid=1
 	let restart=1
-	while [ $ngrid -le $ngrids ]; do
+	while [ $ngrid -lt $ngrids ]; do
 		# Refine solution
 		mod_map run.inpt refineby2 1
 		mod_map run.inpt adapt 1
 		mod_map run.inpt restart ${restart}
 		mpiexec -np 2 tri_hp_petsc run.inpt
+		let restart=${restart}+1
 		
 		# Run case
-		let restart=${restart}+1
 		mod_map run.inpt restart ${restart}
 		mod_map run.inpt adapt 0
 		mod_map run.inpt refineby2 0
 		mod_map run.inpt b0_mesh rstrt${restart}_b0.nc
 		mod_map run.inpt b1_mesh rstrt${restart}_b1.nc
-
 		mpiexec -np 2 tri_hp_petsc run.inpt
-
+		let restart=${restart}+1
+		
 		let DOF=$(grep 'DOF:' output_b0.log | cut -d\  -f6)+$(grep 'DOF:' output_b1.log | cut -d\  -f6)
 		echo ${DOF} | tr -d '\n' >> cnvg.dat
 		echo -n ' ' >> cnvg.dat
