@@ -1711,27 +1711,46 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
     basis::tri(x.log2p)->ptvalues1d(psi);
 
     if (mapped) {
-        /* Fixme: this needs to be changed so that psi stays the same */
         const int sind = base.seg(bel);
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
         
-        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xcrv, xlin;
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xp1;
         int err = map->to_parametric_frame(x.pnts(v0),pt0);
         pt1 = pt0;
         err += map->to_parametric_frame(x.pnts(v1),pt1);
-        pt = 0.5*(pt0 +pt1);  // This is a guess for to_parametric_frame
-        err += map->to_parametric_frame(xp,pt);
         if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
             TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
             map->to_physical_frame(pt0, pt1_tst);
             map->to_physical_frame(pt1, pt2_tst);
             *x.gbl->log << "#Error in hp_edge_bdry::findandmovebdrypt " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
         }
-        psi = 2*(pt(0)-pt0(0))/(pt1(0)-pt0(0))-1.0;
-        pt(0) = 0.5*((1-psi)*pt0(0) +(1+psi)*pt1(0));
-        pt(1) = pt0(1);
-        map->to_physical_frame(pt,xp);
+        
+
+        int iter;
+        FLT dx,dy,ol,roundoff,dpsi;
+        
+        dx = x.pnts(v1)(0) - x.pnts(v0)(0);
+        dy = x.pnts(v1)(1) - x.pnts(v0)(1);
+        ol = 2./(dx*dx +dy*dy);
+        dx *= ol;
+        dy *= ol;
+        
+        iter = 0;
+        roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
+        do {
+            pt(0) = 0.5*((1-psi)*pt0(0) +(1+psi)*pt1(0));
+            pt(1) = pt0(1);
+            map->to_physical_frame(pt,xp1);
+
+            dpsi = (xp1(0) -xp(0))*dx +(xp1(1) -xp(1))*dy;
+            psi -= dpsi;
+            if (iter++ > 100) {
+                *x.gbl->log << "#Warning: max iterations for mapped side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
+                break;
+            }
+        } while (fabs(dpsi) > roundoff);
+        xp = xp1;
     }
     else if (curved) {
         const int sind = base.seg(bel);
