@@ -12,7 +12,7 @@ import math
 os.chdir(os.path.dirname(sys.argv[0]))
 
 # Define location of executables
-p0 = subprocess.Popen("echo ${PWD%/*/*/*}/bin/:", stdout=subprocess.PIPE,shell=True)
+p0 = subprocess.Popen("echo ${PWD%/Testing/*}/bin/:", stdout=subprocess.PIPE,shell=True)
 (BINDIR, err) = p0.communicate()
 os.environ['PATH'] = BINDIR[:-1].decode('ascii') + os.environ['PATH']
 #print(os.environ['PATH'])
