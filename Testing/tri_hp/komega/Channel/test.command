@@ -14,8 +14,8 @@ let NP=1
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*/*}/bin
-export PATH=${PATH}:${BINDIR}
+BINDIR=${PWD%/Testing/*}/bin
+export PATH=${BINDIR}:${PATH}
 
 # Uncomment to add petsc debug flags
 #PETSC_FLAGS+=" -info -log_summary -ac-log_summary -memory_info -malloc_log -malloc_info -malloc_debug"

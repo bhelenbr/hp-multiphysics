@@ -3,8 +3,8 @@
 # This runs a vertical fully developed channel (periodic flow driven by gravity)
 
 cd "$(dirname "$0")"
-BINDIR=${PWD%/*/*/*/*}/bin
-export PATH=${PATH}:${BINDIR}
+BINDIR=${PWD%/Testing/*}/bin
+export PATH=${BINDIR}:${PATH}
 HP="tri_hp_petsc"
 
 #PETSC="-info -on_error_attach_debugger -malloc_log -malloc_info -memory_info"

@@ -11,9 +11,9 @@
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*}/bin
+BINDIR=${PWD%/Testing/*}/bin
 echo ${BINDIR}
-export PATH=${PATH}:${BINDIR}
+export PATH=${BINDIR}:${PATH}
 EX="tri_mesh"
 
 # Uncomment to set valgrind debugging parameters

@@ -4,8 +4,8 @@
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*/*}/bin
-export PATH=${PATH}:${BINDIR}
+BINDIR=${PWD%/Testing/*}/bin
+export PATH=${BINDIR}:${PATH}
 HP="tri_hp_petsc"
 
 rm -rf Results

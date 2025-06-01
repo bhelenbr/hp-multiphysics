@@ -4,9 +4,9 @@
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*/*}/bin
-export PATH=${PATH}:${BINDIR}
-export PATH="/Applications/MATLAB_R2023b.app/bin:$PATH"
+BINDIR=${PWD%/Testing/*}/bin
+export PATH=${BINDIR}:${PATH}
+export PATH=${BINDIR}:${PATH}
 
 if [ -e Results ]; then
 	cd Results

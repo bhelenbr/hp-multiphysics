@@ -12,9 +12,9 @@
 
 cd "$(dirname "$0")"
 # Define location of executables
-BINDIR=${PWD%/*/*/*/*}/bin
+BINDIR=${PWD%/Testing/*}/bin
 echo ${BINDIR}
-export PATH=${PATH}:${BINDIR}
+export PATH=${BINDIR}:${PATH}
 
 HP="mpiexec -np 1 tri_hp_petsc"
 export HP

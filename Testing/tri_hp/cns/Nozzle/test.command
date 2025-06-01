@@ -23,8 +23,8 @@
 # This only seems to work with stabilization off
 
 cd "$(dirname "$0")"
-BINDIR=${PWD%/*/*/*/*}/bin
-export PATH=${PATH}:${BINDIR}
+BINDIR=${PWD%/Testing/*}/bin
+export PATH=${BINDIR}:${PATH}
 
 HP="tri_hp_petsc"
 #PETSC="-stop_for_debugger"
