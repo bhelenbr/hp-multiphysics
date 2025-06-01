@@ -166,12 +166,12 @@ void polar_log_mapping::init(input_map& input, std::string idprefix, std::ostrea
         *log << "Couldn't read r0 " << idprefix+"_r0" << std::endl;;
         sim::abort(__LINE__,__FILE__,log);
     }
-    input.getwdefault(idprefix+"_r_eps",r_eps,DBL_EPSILON);
-    r_eps = r_eps*r0;
+    input.getwdefault(idprefix+"_eps",r_eps,1.0e-8);
+    r_eps *= r0;
 }
 
 int polar_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
-    const FLT r = exp(from(1))*(r0+r_eps) -r_eps;
+    const FLT r = exp(from(1)/r0)*(r0+r_eps) -r_eps;
     const FLT theta = -from(0)/theta_length;
     to(0) = pnt(0) +r*cos(theta);
     to(1) = pnt(1) +r*sin(theta);
@@ -184,15 +184,15 @@ int polar_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, Ti
     FLT alpha = atan2(to(1),to(0)) -theta0;
     alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
     to(0) = -alpha*theta_length;
-    to(1) = log((r+r_eps)/(r0+r_eps));
+    to(1) = r0*log((r+r_eps)/(r0+r_eps));
     return(0);
 }
 
 int polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
-    const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
+    const FLT r = exp(loc(1)/r0)*(r0+r_eps) -r_eps;
     const FLT theta = -loc(0)/theta_length;
     
-    const FLT drdlogr = exp(loc(1))*(r0+r_eps);
+    const FLT drdlogr = exp(loc(1)/r0)*(r0+r_eps)/r0;
     
     /* Derivatives with respect to theta*length */
     jacobian(0,0) = +r*sin(theta)/theta_length;  // dx/dt
