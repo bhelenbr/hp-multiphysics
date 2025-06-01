@@ -58,7 +58,7 @@ plt.loglog(errors0[0::,1],errors0[0::,2],'r-x')
 plt.loglog(errors1[0::,1],errors1[0::,2],'b-x')
 plt.loglog(errors2[0::,1],errors2[0::,2],'g-x')
 
-# Linf errors vs NDOF
+# Linf errors vs cpu time
 plt.loglog(errors0[0::,1],errors0[0::,3],'r-o')
 plt.loglog(errors1[0::,1],errors1[0::,3],'b-o')
 plt.loglog(errors2[0::,1],errors2[0::,3],'g-o')
@@ -70,6 +70,16 @@ plt.xlabel('cpu time')
 plt.ylabel('Error')
 plt.savefig("Results/EvT.pdf")
 plt.close()	
+
+# CPU Time vs. NDOF
+plt.loglog(errors0[0::,0],errors0[0::,1],'r-o')
+plt.loglog(errors1[0::,0],errors1[0::,1],'b-o')
+plt.loglog(errors2[0::,0],errors2[0::,1],'g-o')
+plt.xlabel('NDOF')
+plt.ylabel('cpu time')
+plt.savefig("Results/TvN.pdf")
+plt.close()	
+
 
 print(math.log2(errors0[nres-2,0]/errors0[nres-1,0]))
 print(math.log2(errors1[nres-2,0]/errors1[nres-1,0]))

@@ -1,13 +1,13 @@
-log2p: 0
+log2p: 2
 adapt: 1
 logfile: generate
 nblock: 2
-ntstep: 2
+ntstep: 3
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
 ncycle: 0
 growth factor: 50000
 height: 0.1
-res: 3*_pi/2*height/20
+res: height/2
 nu: 1.0
 ax: 0.0
 ay: 0.0
@@ -23,9 +23,16 @@ b0_mesh: b0.d
 b0_type: r_tri_mesh
 b0_metric: mapped_edge
 b0_mapping: none
-b0_s4_center: 0.0000000000e+00 0.0000000000e+00
+b0_s4_center: 0.0 0.0
 b0_s4_radius: height
 b0_s4_type: circle_comm
+b0_s4_mapped: 1
+b0_s4_mapping: polar_log
+b0_s4_pnt: 0.0 0.0
+b0_s4_theta_length: height
+b0_s4_theta0: 5*_pi/4
+b0_s4_r0: height
+b0_s4_r_eps: exp(bottom)/(1-exp(bottom))
 b0_s1_hp_type: dirichlet
 b0_s1_ibc: symbolic
 b0_s1_ibc0: 0
@@ -48,9 +55,12 @@ b1_mesh: b1.d
 b1_type: mapped_mesh
 b1_metric: mapped
 b1_mapping: polar_log
-b1_pnt: 0.0000000000e+00 0.0000000000e+00
+b1_pnt: 0.0 0.0
 b1_theta_length: height
 b1_theta0: 5*_pi/4
+b1_r0: height
+bottom: -4.0
+b1_r_eps: exp(bottom)/(1-exp(bottom))
 b1_s9_hp_type: dirichlet
 b1_s9_ibc: symbolic
 b1_s9_ibc0: 0
@@ -61,9 +71,3 @@ b1_s8_hp_type: dirichlet
 b1_s8_ibc: symbolic
 b1_s8_ibc0: 0
 b1_s4_type: mapped_comm
-bottom: -8.0
-b1_r0: height
-b1_r_eps: exp(bottom)/(1-exp(bottom))
-#b0_s4_type: circle
-#b1_s4_hp_type: dirichlet
-#b0_s4_hp_type: dirichlet

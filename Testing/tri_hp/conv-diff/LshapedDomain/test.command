@@ -4,7 +4,8 @@
 cd "$(dirname "$0")"
 
 # Define location of executables
-BINDIR=${PWD%/*/*/*}/bin
+BINDIR=${PWD%/Testing/*}/bin
+echo ${BINDIR}
 export PATH=${PATH}:${BINDIR}
 
 if [ -e Results ]; then
