@@ -21,11 +21,13 @@ bottom: -8.0
 b0_type: cd
 b0_metric: mapped
 b0_mapping: polar_log
-b0_r0: 1.0
-b0_r_eps: exp(bottom)/(1-exp(bottom))
-#b0_r_eps: 1.0e-12
+r0: 1.0
+eps: 1e-5
 b0_pnt: 0.0 0.0
-b0_theta_length: 1.0
+b0_theta_length: r0
+b0_theta0: theta_0
+b0_r0: r0
+b1_eps: eps
 b0_s1_hp_type: dirichlet
 b0_s2_hp_type: dirichlet
 b0_s3_hp_type: adiabatic

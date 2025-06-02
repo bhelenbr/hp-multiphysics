@@ -17,6 +17,7 @@ r: sqrt(x0^2 +x1^2)
 theta: atan2(x1,x0)
 ibc: symbolic
 ibc0: r^lambda*sin(lambda*theta)
+b0_mapping: none
 b0_mesh: sector.d
 b0_s1_hp_type: dirichlet
 b0_s2_type: circle
