@@ -51,6 +51,8 @@ while [ $log2p -lt 3 ]; do
 	echo -n ' ' >> cnvg.dat
 	tail -2 output_b0.log | head -1 | cut -d\  -f2,4 >> cnvg.dat
 
+	grep '#L_2' output_b0.log | head -1 | cut -d\  -f2,4 >> ic.dat 
+
 	let ngrids=5
 	let ngrid=1
 	let restart=1
@@ -62,7 +64,7 @@ while [ $log2p -lt 3 ]; do
 		mpiexec -np 2 tri_hp_petsc run.inpt
 		let restart=${restart}+1
 		
-		# Run case
+		# Run case using restart file
 		mod_map run.inpt restart ${restart}
 		mod_map run.inpt adapt 0
 		mod_map run.inpt refineby2 0
@@ -80,7 +82,31 @@ while [ $log2p -lt 3 ]; do
 		
 		let ngrid=${ngrid}+1
 	done
-	cd ..
+	
+	mkdir ICtest
+	cd ICtest
+	cp ../run.inpt .
+	cp ../rstrt*_b?.nc .
+	# Test initial conditions
+	let ngrid=1
+	let restart=0
+	mod_map -d run.inpt restart
+	mod_map run.inpt ncycle 0
+	while [ $ngrid -lt $ngrids ]; do
+		let restart=${restart}+2
+		
+		# Run case using restart file
+		mod_map run.inpt b0_mesh rstrt${restart}_b0.nc
+		mod_map run.inpt b1_mesh rstrt${restart}_b1.nc
+		mpiexec -np 2 tri_hp_petsc run.inpt
+		grep '#L_2' output_b0.log | head -1 | cut -d\  -f2,4 >> ../ic.dat 
+		mv data0_b0.dat data${restart}_b0.dat
+		mv data0_b1.dat data${restart}_b1.dat
+		rm data1_b0.dat
+		rm data1_b1.dat
+		let ngrid=${ngrid}+1
+	done
+	cd ../..
 	let log2p=${log2p}+1
 done
 cd ..

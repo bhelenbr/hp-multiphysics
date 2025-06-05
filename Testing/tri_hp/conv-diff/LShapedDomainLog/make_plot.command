@@ -16,6 +16,10 @@ errors2 = numpy.loadtxt("Results/log2p2/cnvg.dat", delimiter=" ", skiprows=0);
 nres = errors0.shape[0]
 resolutions = numpy.array(2.0**numpy.array(range(nres)))
 
+ic0 = numpy.loadtxt("Results/log2p0/ic.dat", delimiter=" ", skiprows=0);
+ic1 = numpy.loadtxt("Results/log2p1/ic.dat", delimiter=" ", skiprows=0);
+ic2 = numpy.loadtxt("Results/log2p2/ic.dat", delimiter=" ", skiprows=0);
+
 
 # L2 errors
 plt.loglog(resolutions,errors0[0::,2],'r-x')
@@ -26,6 +30,17 @@ plt.loglog(4*resolutions,errors2[0::,2],'g-x')
 plt.loglog(resolutions,errors0[0::,3],'r-o')
 plt.loglog(2*resolutions,errors1[0::,3],'b-o')
 plt.loglog(4*resolutions,errors2[0::,3],'g-o')
+
+# L2 errors
+plt.loglog(resolutions,ic0[0::,0],'r--x')
+plt.loglog(2*resolutions,ic1[0::,0],'b--x')
+plt.loglog(4*resolutions,ic2[0::,0],'g--x')
+
+# Linf errors
+plt.loglog(resolutions,ic0[0::,1],'r--o')
+plt.loglog(2*resolutions,ic1[0::,1],'b--o')
+plt.loglog(4*resolutions,ic2[0::,1],'g--o')
+
 
 # plt.xlim(rlist[0],rlist[len(rlist)-1])
 # plt.ylim(1e-12,1e-2)

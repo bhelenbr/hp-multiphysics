@@ -12,7 +12,7 @@ nu: 1.0
 ax: 0.0
 ay: 0.0
 r: sqrt(x0^2+x1^2)
-theta: (x0>0 ? atan2(-x0,x1)+2*_pi : atan2(-x0,x1))
+theta: (x0>1e-12 ? atan2(-x0,x1)+2*_pi : atan2(-x0,x1))
 ibc: symbolic
 ibc0: (3.0/2.0)*(r^(2.0/3.0))*sin(2.0*theta/3.0)*(1-x0^2)*(1-x1^2)
 src: symbolic

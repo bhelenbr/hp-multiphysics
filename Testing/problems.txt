@@ -20,6 +20,9 @@ recursive_timestep
 cns_explicit
 Shallow water
 Nonnewtonian
+Spline 5 is not working
+Mesh adaptation with mapped boundary is probably not working and not tested
+
 
 
 
