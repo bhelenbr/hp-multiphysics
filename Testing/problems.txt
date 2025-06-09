@@ -25,6 +25,49 @@ Mesh adaptation with mapped boundary is probably not working and not tested
 
 
 
+Code Things:
+
+General:
+Partitioning multiple block meshes
+Think about statics for simulations for blocks, and for grids.  How to best encapsulate data.
+Use idea of every object having a parent object.
+Daisy Chain Helpers?
+Thread B.C.'s? Lightweight user-space threads?
+Implement openMP?
+
+Remove unnecessary code components:
+datatank
+myblas
+quadtree
+cfortran
+Decide on way to deal with multiple solvers
+
+make solvers an allocatable object
+make flux functions allocatable
+make geometry allocatable
+
+tri_hp
+Stress-Strain & Fluid Structure B.C.
+Reduce communication by combining vertex/side messages
+
+tri_mesh
+Fix parallel mesh adaptation (grid and interpolation)
+Partitions don't work with multigrid, hanging in partition boundaries
+Anisotropic adaptation
+Keep mesh pointers avoid quadtree lookup
+Allow specification of maxsize instead of growth factor.
+Point Insertion Outside of Domain
+Make geometry a contained object.
+
+prism_basis: working on initialize_values.  Trying to decide whether to use hierarchal basis or nodal.
+
+Eliminate inheritance when possible
+Decouple multi physics from parallelization
+For parallel mesh adaptation - merge mesh with neighbors, adapt edges, then interiors, update values, then re-partition
+For boundary layer meshing - analytic distortion of surface then adaptation on the analytic mapping
+
+
+
 
 
 
