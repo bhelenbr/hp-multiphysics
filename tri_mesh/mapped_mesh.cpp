@@ -7,24 +7,29 @@
 
 #include "mapped_mesh.h"
 
-shared_ptr<mapping> getnewmapping(std::string maptype) {
-    if (maptype == "none") {
-        return(make_shared<no_mapping>());
-    }
-    else if (maptype == "polar") {
-        return(make_shared<polar_mapping>());
-    }
-    else if (maptype == "polar_log") {
-        return(make_shared<polar_log_mapping>());
-    }
-    else if (maptype == "spline") {
-        return(make_shared<spline_mapping>());
-    }
-    else if (maptype == "spline_log") {
-        return(make_shared<spline_log_mapping>());
+shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname) {
+    
+    std::string maptype;
+    
+    if (inmap.get(mapname+"_type",maptype)) {
+        if (maptype == "none") {
+            return(make_shared<no_mapping>());
+        }
+        else if (maptype == "polar") {
+            return(make_shared<polar_mapping>());
+        }
+        else if (maptype == "polar_log") {
+            return(make_shared<polar_log_mapping>());
+        }
+        else if (maptype == "spline") {
+            return(make_shared<spline_mapping>());
+        }
+        else if (maptype == "spline_log") {
+            return(make_shared<spline_log_mapping>());
+        }
     }
     
-    std::cerr << "Unrecognized mapping " << maptype << std::endl;
+    std::cerr << "Unrecognized mapping " << mapname << ' ' << maptype << std::endl;
     exit(1);
 }
 
@@ -32,7 +37,7 @@ void spline_mapping::init(input_map& input, std::string idprefix, std::ostream *
     trsfm.init(input,idprefix);
     std::string line;
     if (!input.get(idprefix+"_spline",line)) {
-        *log << "Couldn't fine spline file name in input file\n";
+        *log << "Couldn't fine spline file name in input file " << idprefix +"_spline" <<std::endl;
         sim::abort(__LINE__,__FILE__,log);
     }
     my_spline.read(line);
@@ -207,7 +212,12 @@ int polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,
 
 void mapped_mesh::init(input_map& input, shared_ptr<block_global> gbl_in) {
     r_tri_mesh::init(input,gbl_in);
-    map->init(input,gbl->idprefix,gbl->log);
+    std::string mapname;
+    if (!input.get(gbl->idprefix+"_mapping",mapname)) {
+        *gbl->log << "Couldn't find mapping name " << gbl->idprefix +"_mapping" <<std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    map->init(input,mapname,gbl->log);
     mapped_pnts.resize(maxpst);
     map_pnts();
 }

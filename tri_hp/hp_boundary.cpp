@@ -54,9 +54,16 @@ void hp_edge_bdry::init(input_map& inmap) {
     keyword = base.idprefix + "_mapped";
     mapped = false;
     inmap.get(keyword,mapped);
-    if (curved && mapped) {
-        *x.gbl->log << "Boundary can't be curved and mapped" << std::endl;
-        sim::abort(__LINE__, __FILE__, x.gbl->log);
+    if (mapped) {
+        if (base.is_comm()) {
+            mapped_bdry<ecomm>& temp = dynamic_cast<mapped_bdry<ecomm> &>(base);
+            map = temp.map;
+        }
+        else {
+            mapped_bdry<edge_bdry>& temp = dynamic_cast<mapped_bdry<edge_bdry> &>(base);
+            map = temp.map;
+        }
+        curved = true;
     }
 	
 	keyword = base.idprefix +"_report";
@@ -151,18 +158,6 @@ void hp_edge_bdry::init(input_map& inmap) {
 	}
 	
 	shared_owner = true;
-    
-    if (mapped) {
-        std::string maptype;
-        if (inmap.get(base.idprefix+"_mapping",maptype)) {
-            map = getnewmapping(maptype);
-            map->init(inmap,base.idprefix,x.gbl->log);
-        }
-        else {
-            std::cerr << "no mapping type" << std::endl;
-            exit(1);
-        }
-    }
 	
 	return;
 }
@@ -1710,49 +1705,11 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
 	base.findbdrypt(xp,bel,psi);
     basis::tri(x.log2p)->ptvalues1d(psi);
 
-    if (mapped) {
-        const int sind = base.seg(bel);
-        const int v0 = x.seg(sind).pnt(0);
-        const int v1 = x.seg(sind).pnt(1);
-        
-        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0), pt1, pt, xp1;
-        int err = map->to_parametric_frame(x.pnts(v0),pt0);
-        pt1 = pt0;
-        err += map->to_parametric_frame(x.pnts(v1),pt1);
-        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
-            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
-            map->to_physical_frame(pt0, pt1_tst);
-            map->to_physical_frame(pt1, pt2_tst);
-            *x.gbl->log << "#Error in hp_edge_bdry::findandmovebdrypt " << base.idprefix << ' ' << err << ' ' << x.pnts(v0) << ' ' << pt0 << ' ' << x.pnts(v1) << ' ' << pt1 << std::endl;
-        }
-        
-
-        int iter;
-        FLT dx,dy,ol,roundoff,dpsi;
-        
-        dx = x.pnts(v1)(0) - x.pnts(v0)(0);
-        dy = x.pnts(v1)(1) - x.pnts(v0)(1);
-        ol = 2./(dx*dx +dy*dy);
-        dx *= ol;
-        dy *= ol;
-        
-        iter = 0;
-        roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
-        do {
-            pt(0) = 0.5*((1-psi)*pt0(0) +(1+psi)*pt1(0));
-            pt(1) = pt0(1);
-            map->to_physical_frame(pt,xp1);
-
-            dpsi = (xp1(0) -xp(0))*dx +(xp1(1) -xp(1))*dy;
-            psi -= dpsi;
-            if (iter++ > 100) {
-                *x.gbl->log << "#Warning: max iterations for mapped side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
-                break;
-            }
-        } while (fabs(dpsi) > roundoff);
-        xp = xp1;
-    }
-    else if (curved) {
+    base.mvpttobdry(bel,psi,xp);
+    
+    if (mapped) return;
+    
+    if (curved) {
         const int sind = base.seg(bel);
         const int v0 = x.seg(sind).pnt(0);
         const int v1 = x.seg(sind).pnt(1);
@@ -1783,9 +1740,6 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
             }
         } while (fabs(dpsi) > roundoff);
         xp = pt;
-    }
-    else {
-        base.edge_bdry::mvpttobdry(bel,psi,xp);
     }
 }
 
@@ -2043,7 +1997,7 @@ void tri_hp::matchboundaries() {
 	
 	/* Match curved sides */
 	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved() && !hp_ebdry(bnum)->mapped) {
 			count = 0;
 			for(i=0;i<ebdry(bnum)->nseg;++i) {
 				for(m=0;m<basis::tri(log2p)->sm();++m) {
@@ -2058,14 +2012,14 @@ void tri_hp::matchboundaries() {
 	}
 	
 	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved() && !hp_ebdry(bnum)->mapped) {
 			ebdry(bnum)->comm_exchange(boundary::all,0,boundary::master_slave);
 		}
 	}
 	
 	
 	for(bnum=0;bnum<nebd;++bnum) {
-		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {
+		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved() && !hp_ebdry(bnum)->mapped ) {
 			ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
 			
 			if (!ebdry(bnum)->is_frst()) {

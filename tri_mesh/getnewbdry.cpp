@@ -20,7 +20,7 @@
 class vtype {
 public:
     static const int ntypes = 5;
-    enum ids {plain=1,comm,prdc,symbolic,mapped_comm};
+    enum ids {plain=1,comm,prdc,symbolic,mapped_mesh_comm};
     const static char names[ntypes][40];
     static int getid(const char *nin) {
         for(int i=0;i<ntypes;++i)
@@ -29,7 +29,7 @@ public:
     }
 };
 
-const char vtype::names[ntypes][40] = {"plain","comm","prdc","symbolic","mapped_comm"};
+const char vtype::names[ntypes][40] = {"plain","comm","prdc","symbolic","mapped_mesh_comm"};
 
 vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& inmap) {
     std::string keyword,typ_str;
@@ -65,7 +65,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& inmap) {
             temp = new vboundary_with_geometry<vrtx_bdry,symbolic_point<tri_mesh::ND> >(idnum,*this);
             break;
         }
-        case vtype::mapped_comm: {
+        case vtype::mapped_mesh_comm: {
             temp = new vmapped_comm(idnum,*this);
             break;
         }
@@ -91,9 +91,12 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& inmap) {
  */
 class etype {
 public:
-    static const int ntypes = 18;
-    enum ids {plain=1, comm, partition, prdc, symbolic, symbolic_comm, coupled_symbolic,
-        coupled_symbolic_comm, mapped_comm, spline, spline_comm, coupled_spline, coupled_spline_comm, circle, naca, ellipse,planar,circle_comm};
+    static const int ntypes = 19;
+    enum ids {plain=1, comm, partition, prdc,
+        symbolic, symbolic_comm, coupled_symbolic, coupled_symbolic_comm,
+        spline, spline_comm, coupled_spline, coupled_spline_comm,
+        mapped, mapped_comm, mapped_mesh_comm,
+        circle, naca, ellipse, planar};
     static const char names[ntypes][40];
     static int getid(const char *nin) {
         for(int i=0;i<ntypes;++i)
@@ -103,9 +106,10 @@ public:
 };
 
 const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic",
-    "symbolic_comm","coupled_symbolic","coupled_symbolic_comm","mapped_comm",
+    "symbolic_comm","coupled_symbolic","coupled_symbolic_comm",
     "spline","spline_comm","coupled_spline","coupled_spline_comm",
-    "circle", "naca","ellipse","planar","circle_comm"};
+    "mapped","mapped_comm","mapped_mesh_comm",
+    "circle", "naca","ellipse","planar"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
@@ -145,6 +149,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
             temp = new eprdc(idnum,*this);
             break;
         }
+            
         case etype::symbolic: {
             temp = new eboundary_with_geometry<edge_bdry,symbolic_shape<tri_mesh::ND> >(idnum,*this);
             break;
@@ -161,10 +166,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
             temp = new ecoupled_physics<eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> > >(idnum,*this);
             break;
         }
-        case etype::mapped_comm: {
-            temp = new emapped_comm(idnum,*this);
-            break;
-        }
+
         case etype::spline: {
             temp = new spline_bdry<edge_bdry>(idnum,*this);
             break;
@@ -182,6 +184,19 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
             break;
         }
             
+        case etype::mapped: {
+            temp = new mapped_bdry<edge_bdry>(idnum,*this);
+            break;
+        }
+        case etype::mapped_comm: {
+            temp = new mapped_bdry<ecomm>(idnum,*this);
+            break;
+        }
+        case etype::mapped_mesh_comm: {
+            temp = new emapped_comm(idnum,*this);
+            break;
+        }
+            
         /* SPECIAL CASES FOLLOW (DEPRECATED -- USE SYMBOLIC) */
         case etype::circle: {
             temp = new eboundary_with_geometry<edge_bdry,circle>(idnum,*this);
@@ -191,16 +206,12 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& inmap) {
             temp = new eboundary_with_geometry<edge_bdry,naca>(idnum,*this);
             break;
         }
-        case etype::planar: {
-            temp = new eboundary_with_geometry<edge_bdry,plane>(idnum,*this);
-            break;
-        }
         case etype::ellipse: {
             temp = new eboundary_with_geometry<edge_bdry,ellipse>(idnum,*this);
             break;
         }
-        case etype::circle_comm: {
-            temp = new eboundary_with_geometry<ecomm,circle>(idnum,*this);
+        case etype::planar: {
+            temp = new eboundary_with_geometry<edge_bdry,plane>(idnum,*this);
             break;
         }
             

@@ -15,16 +15,16 @@
 class mapping {
 public:
     virtual void init(input_map& inmap,std::string idprefix,std::ostream *log) {}
-    virtual int to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {}
-    virtual int to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {}
-    virtual int calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {}
+    virtual int to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {return(0);}
+    virtual int to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) {return(0);}
+    virtual int calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {return(0);}
     virtual ~mapping() {}
 };
 
 class no_mapping : public mapping {
 public:
-    virtual int to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from;}
-    virtual int to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from;}
+    virtual int to_parametric_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from; return(0);}
+    virtual int to_physical_frame(const TinyVector<FLT,2>& from, TinyVector<FLT,2>& to) override {to = from; return(0);}
     virtual int calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override {
         jacobian(0,0) = 1.0;
         jacobian(1,0) = 0.0;
@@ -75,5 +75,5 @@ class polar_log_mapping : public polar_mapping {
     int calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) override;
 };
 
-shared_ptr<mapping> getnewmapping(std::string maptype);
+shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname);
 #endif

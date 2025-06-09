@@ -42,9 +42,9 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
         }
         case btype::mapped_mesh: {
             mapped_mesh *temp = new mapped_mesh();
-            std::string maptype;
-            if (inmap.get(idprefix+"_mapping",maptype)) {
-                temp->map = getnewmapping(maptype);
+            std::string mapname;
+            if (inmap.get(idprefix+"_mapping",mapname)) {
+                temp->map = getnewmapping(inmap,mapname);
                 return(temp);
             }
             else {

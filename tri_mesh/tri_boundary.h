@@ -56,7 +56,6 @@ class emapped_comm : public ecomm {
         emapped_comm* create(tri_mesh& xin) const {return new emapped_comm(*this,xin);}
         void loadpositions() {vloadbuff(all,&(x.mapped_pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
         void rcvpositions(int phase);
-        void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);  /* Move point to psi location in physical space */
 };
 
 class vmapped_comm : public vcomm {
@@ -306,6 +305,81 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
 			to_physical_frame(pt);
 			return;
 		}
+};
+
+template<class BASE> class mapped_bdry : public BASE, public rigid_movement_interface2D {
+    public:
+        shared_ptr<mapping> map; /** for an analytically mapped boundary */
+        FLT normal_coordinate;
+
+        mapped_bdry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"_mapped";}
+        mapped_bdry(const mapped_bdry &inbdry, tri_mesh &xin) : BASE(inbdry,xin), rigid_movement_interface2D(inbdry), map(inbdry.map), normal_coordinate(inbdry.normal_coordinate) {}
+        mapped_bdry* create(tri_mesh& xin) const {return(new mapped_bdry<BASE>(*this,xin));}
+
+        void init(input_map& inmap) {
+            BASE::init(inmap);
+            rigid_movement_interface2D::init(inmap,BASE::idprefix);
+            
+            std::string mapname,maptype;
+            if (inmap.get(BASE::idprefix+"_mapping",mapname)) {
+                map = getnewmapping(inmap,mapname);
+                map->init(inmap,mapname,BASE::x.gbl->log);
+            }
+            else {
+                *BASE::x.gbl->log << "Couldn't fine map name in input file\n";
+                sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+            }
+            
+            inmap.getwdefault(BASE::idprefix+"_normal_coordinate",normal_coordinate,0.0);
+        }
+
+        void mvpttobdry(int seg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+            const int sind = BASE::seg(seg);
+            int v0 = BASE::x.seg(sind).pnt(0);
+            int v1 = BASE::x.seg(sind).pnt(1);
+            TinyVector<FLT,tri_mesh::ND> pt0(BASE::x.pnts(v0));
+            TinyVector<FLT,tri_mesh::ND> pt1(BASE::x.pnts(v1));
+                        
+            to_geometry_frame(pt0);
+            to_geometry_frame(pt1);
+            
+            TinyVector<FLT,tri_mesh::ND> par_pt0(0.0,0.0), par_pt1, par_pt;
+            int err = map->to_parametric_frame(pt0,par_pt0);
+            par_pt1 = par_pt0;
+            err += map->to_parametric_frame(pt1,par_pt1);
+            if (err || abs(par_pt0(1) +par_pt1(1) -2.*normal_coordinate) > 1e-6) {
+                *BASE::x.gbl->log << "#Error in mapped_bdry::movepttobdry " << BASE::idprefix << ' ' << err << ' ' << pt0 << ' ' << pt1 << ' ' << par_pt0 << ' ' << par_pt1 << ' ' << par_pt0(1) +par_pt1(1) -2.*normal_coordinate << std::endl;
+            }
+            par_pt(0) = 0.5*((1. -psi)*par_pt0(0) +(1.+psi)*par_pt1(0));
+            par_pt(1) = normal_coordinate;
+            
+            map->to_physical_frame(par_pt, pt);
+            
+            to_physical_frame(pt);
+            
+            return;
+        }
+    
+    void findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, FLT &psiloc) const {
+        edge_bdry::findbdrypt(xpt,sidloc,psiloc);
+        const int sind = BASE::seg(sidloc);
+        const int v0 = BASE::x.seg(sind).pnt(0);
+        const int v1 = BASE::x.seg(sind).pnt(1);
+        
+        TinyVector<FLT,tri_mesh::ND> pt0(0.0,0.0);
+        int err = map->to_parametric_frame(BASE::x.pnts(v0),pt0);
+        TinyVector<FLT,tri_mesh::ND> pt1(pt0);
+        err += map->to_parametric_frame(BASE::x.pnts(v1),pt1);
+        TinyVector<FLT,tri_mesh::ND> pt(pt0);
+        err += map->to_parametric_frame(xpt, pt);
+        if (err || abs(pt0(1)-pt1(1)) > 1.0e-7) {
+            TinyVector<FLT,tri_mesh::ND> pt1_tst, pt2_tst;
+            map->to_physical_frame(pt0, pt1_tst);
+            map->to_physical_frame(pt1, pt2_tst);
+            *BASE::x.gbl->log << "#Error in mapped_bdry::findbdrypt " << BASE::idprefix << ' ' << err << ' ' << BASE::x.pnts(v0) << ' ' << pt0 << ' ' << BASE::x.pnts(v1) << ' ' << pt1 << std::endl;
+        }
+        psiloc = -1 +2.*(pt(0)-pt0(0))/(pt1(0)-pt0(0));
+    }
 };
 
 #endif

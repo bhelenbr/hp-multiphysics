@@ -71,7 +71,6 @@ public:
     virtual void calc_positions1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
     virtual void calc_positions_leg(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
     virtual void calc_positions_leg1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
-    virtual void setinfo() override;
 };
 
 #endif /* metric_h */

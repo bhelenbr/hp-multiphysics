@@ -44,9 +44,9 @@ void tri_hp::init(input_map& inmap, shared_ptr<block_global> gin) {
 	mmovement = static_cast<movementtype>(i);
 
 #ifdef MAPPED_MESH
-    std::string maptype;
-    if (inmap.get(gbl->idprefix+"_mapping",maptype)) {
-        map = getnewmapping(maptype);
+    std::string mapname;
+    if (inmap.get(gbl->idprefix+"_mapping",mapname)) {
+        map = getnewmapping(inmap,mapname);
     }
     else {
         std::cerr << "no mapping type" << std::endl;

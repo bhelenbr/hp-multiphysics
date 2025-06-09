@@ -8,6 +8,8 @@ BINDIR=${PWD%/Testing/*}/bin
 echo ${BINDIR}
 export PATH=${BINDIR}:${PATH}
 
+set -e
+
 if [ -e Results ]; then
 	cd Results
 else
@@ -17,7 +19,6 @@ fi
 rm -rf *
 
 cp ../Inputs/* .
-#set -e
 
 tri_mesh generate.inpt
 
@@ -33,7 +34,8 @@ mod_map run.inpt adapt 0
 mod_map run.inpt ncycle 10
 mod_map run.inpt ntstep 1
 
-let log2p=0
+log2p=0
+
 while [ $log2p -lt 3 ]; do
 	mkdir log2p${log2p}
 	cp run.inpt log2p${log2p}
@@ -44,7 +46,9 @@ while [ $log2p -lt 3 ]; do
 
 	mpiexec -np 2 tri_hp_petsc run.inpt
 	
-	let DOF=$(grep 'DOF:' output_b0.log | cut -d\  -f6)+$(grep 'DOF:' output_b1.log | cut -d\  -f6)
+	dof0=$(grep 'DOF:' output_b0.log | cut -d' ' -f6)
+	dof1=$(grep 'DOF:' output_b1.log | cut -d' ' -f6)
+	((DOF = dof0 + dof1))
 	echo ${DOF} | tr -d '\n' >> cnvg.dat
 	echo -n ' ' >> cnvg.dat
 	tail -1 output_b0.log | cut -d\  -f3 | tr -d '\n' >> cnvg.dat
@@ -53,16 +57,16 @@ while [ $log2p -lt 3 ]; do
 
 	grep '#L_2' output_b0.log | head -1 | cut -d\  -f2,4 >> ic.dat 
 
-	let ngrids=5
-	let ngrid=1
-	let restart=1
+	ngrids=4
+	ngrid=1
+	restart=1
 	while [ $ngrid -lt $ngrids ]; do
 		# Refine solution
 		mod_map run.inpt refineby2 1
 		mod_map run.inpt adapt 1
 		mod_map run.inpt restart ${restart}
 		mpiexec -np 2 tri_hp_petsc run.inpt
-		let restart=${restart}+1
+		((restart++))
 		
 		# Run case using restart file
 		mod_map run.inpt restart ${restart}
@@ -71,16 +75,19 @@ while [ $log2p -lt 3 ]; do
 		mod_map run.inpt b0_mesh rstrt${restart}_b0.nc
 		mod_map run.inpt b1_mesh rstrt${restart}_b1.nc
 		mpiexec -np 2 tri_hp_petsc run.inpt
-		let restart=${restart}+1
+		((restart++))
 		
 		let DOF=$(grep 'DOF:' output_b0.log | cut -d\  -f6)+$(grep 'DOF:' output_b1.log | cut -d\  -f6)
+		dof0=$(grep 'DOF:' output_b0.log | cut -d' ' -f6)
+		dof1=$(grep 'DOF:' output_b1.log | cut -d' ' -f6)
+		((DOF = dof0 + dof1))
 		echo ${DOF} | tr -d '\n' >> cnvg.dat
 		echo -n ' ' >> cnvg.dat
 		tail -1 output_b0.log | cut -d\  -f3 | tr -d '\n' >> cnvg.dat
 		echo -n ' ' >> cnvg.dat
 		tail -2 output_b0.log | head -1 | cut -d\  -f2,4 >> cnvg.dat
 		
-		let ngrid=${ngrid}+1
+		((ngrid++))
 	done
 	
 	mkdir ICtest
@@ -88,12 +95,12 @@ while [ $log2p -lt 3 ]; do
 	cp ../run.inpt .
 	cp ../rstrt*_b?.nc .
 	# Test initial conditions
-	let ngrid=1
-	let restart=0
+	ngrid=1
+	restart=0
 	mod_map -d run.inpt restart
 	mod_map run.inpt ncycle 0
 	while [ $ngrid -lt $ngrids ]; do
-		let restart=${restart}+2
+		((restart += 2))
 		
 		# Run case using restart file
 		mod_map run.inpt b0_mesh rstrt${restart}_b0.nc
@@ -104,10 +111,10 @@ while [ $log2p -lt 3 ]; do
 		mv data0_b1.dat data${restart}_b1.dat
 		rm data1_b0.dat
 		rm data1_b1.dat
-		let ngrid=${ngrid}+1
+		((ngrid++))
 	done
 	cd ../..
-	let log2p=${log2p}+1
+	((log2p++))
 done
 cd ..
 ./make_plot.command > Results/rates.dat

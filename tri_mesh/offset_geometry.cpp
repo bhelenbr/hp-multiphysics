@@ -101,116 +101,93 @@ void tri_mesh::offset_geometry(input_map& input) {
                             
                             /* Output offset domain stuff */
                             /* This is airfoil boundary layer domain */
-                            ostringstream nstr;
-                            nstr << "b" << newblock;
-                            input[nstr.str()+"_type"] = "mapped_mesh";
-                            input[nstr.str()+"_mapping"] = "spline";
-                            input[nstr.str()+"_mesh"] = nstr.str() +".d";
-                            input[nstr.str()+"_spline"] = input[ebdry(i)->idprefix +"_filename"];
+                            ostringstream bspline;
+                            bspline << "b" << newblock;
+                            input[bspline.str()+"_type"] = "mapped_mesh";
+                            input[bspline.str()+"_mapping"] = "blayer_map";
+                            input[bspline.str()+"_mesh"] = bspline.str() +".d";
+                            input["blayer_map_type"] = "spline";
+                            input["blayer_map_spline"] = input[ebdry(i)->idprefix +"_filename"];
                             if (input.find(ebdry(i)->idprefix +"_theta") != input.end()) {
-                                input[nstr.str()+"_theta"] = input[ebdry(i)->idprefix +"_theta"];
+                                input["blayer_map_theta"] = input[ebdry(i)->idprefix +"_theta"];
                             }
                             if (input.find(ebdry(i)->idprefix +"_center") != input.end()) {
-                                input[nstr.str()+"_center"] = input[ebdry(i)->idprefix +"_center"];
+                                input["blayer_map_center"] = input[ebdry(i)->idprefix +"_center"];
                             }
                             if (input.find(ebdry(i)->idprefix +"_scale") != input.end()) {
-                                input[nstr.str()+"_scale"] = input[ebdry(i)->idprefix +"_scale"];
+                                input["blayer_map_scale"] = input[ebdry(i)->idprefix +"_scale"];
                             }
 
                             /* Output polar domain stuff */
-                            ostringstream nstr1, pntstring;
-                            nstr1 << "b" << newblock+1; /* nstr1 is the polar domain */
-                            input[nstr1.str()+"_type"] = "mapped_mesh";
-                            input[nstr1.str()+"_mapping"] = "polar";
-                            input[nstr1.str()+"_mesh"] = nstr1.str() +".d";
+                            ostringstream bpolar, pntstring;
+                            bpolar << "b" << newblock+1; /* nstr1 is the polar domain */
+                            input[bpolar.str()+"_type"] = "mapped_mesh";
+                            input[bpolar.str()+"_mapping"] = "polar_map";
+                            input[bpolar.str()+"_mesh"] = bpolar.str() +".d";
                             pntstring.setf(std::ios::scientific, std::ios::floatfield);
                             pntstring.precision(10);
                             pntstring << pnts(vbdry(vnum)->pnt)(0) << " " << pnts(vbdry(vnum)->pnt)(1);
-                            input[nstr1.str()+"_pnt"] = pntstring.str();
-                            input[nstr1.str()+"_theta_length"] = input[gbl->idprefix +"_offset"];
+                            input["polar_map_type"] = "polar";
+                            input["polar_map_pnt"] = pntstring.str();
+                            input["polar_map_theta_length"] = input[gbl->idprefix +"_offset"];
                             
                             /* Output outer domain stuff */
                             input[gbl->idprefix+"_mesh"] = gbl->idprefix +".d";
  
                             /* Output side definitions */
-                            /* end boundary of b.l. domain */
-                            /* start boundary of polar domain*/
                             ostringstream sstr;
                             sstr << maxeid+1;
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "prdc";
-                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "prdc";
+                            input[bspline.str()+"_s" +sstr.str() +"_type"] = "prdc";  /* end boundary of b.l. domain */
+                            input[bpolar.str()+"_s" +sstr.str() +"_type"] = "prdc"; /* start boundary of polar domain*/
                             
                             /* top of offset domain*/
                             sstr.str("");
                             sstr.clear();
                             sstr << maxeid+5;
                             /* Rename boundary conditions for spline surface */
-                            input.rename_entries(ebdry(i)->idprefix+"_",gbl->idprefix +"_s" +sstr.str() +"_");
-#ifdef NOCOMM
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "plain";
-                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "spline";
-#else
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "mapped_comm";
-                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "spline_comm";
-#endif
-                            input[gbl->idprefix +"_s" +sstr.str() +"_norm_dist"] = "-" +input[gbl->idprefix +"_offset"];
+                            input.rename_entries(ebdry(i)->idprefix+"_","blayer_map_");
 
-                            
-                            /* start boundary of offset domain */
-                            /* end boundary of polar domain */
+                            input[bspline.str()+"_s" +sstr.str() +"_type"] = "mapped_mesh_comm";
+                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "mapped_comm";
+                            input[gbl->idprefix +"_s" +sstr.str() +"_normal_coordinate"] = input[gbl->idprefix +"_offset"];
+                            input[gbl->idprefix +"_s" +sstr.str() +"_mapping"] = "blayer_map";
+
                             sstr.str("");
                             sstr.clear();
                             sstr << maxeid+3;
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "prdc";
-                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "prdc";
+                            input[bspline.str()+"_s" +sstr.str() +"_type"] = "prdc"; /* start boundary of offset domain */
+                            input[bpolar.str()+"_s" +sstr.str() +"_type"] = "prdc"; /* end boundary of polar domain */
                             
                             /* airfoil surface (straight boundary) */
                             sstr.str("");
                             sstr.clear();
                             sstr << maxeid+6;
-                            input[nstr.str()+"_s" +sstr.str() +"_type"] = "plain";
+                            input[bspline.str()+"_s" +sstr.str() +"_type"] = "plain";
                             
                             /* Top of polar domain */
                             sstr.str("");
                             sstr.clear();
                             sstr << maxeid+2;
-#ifdef NOCOMM
-                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "plain";
-                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "circle";
-#else
-                            input[nstr1.str()+"_s" +sstr.str() +"_type"] = "mapped_comm";
-                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "circle_comm";
-#endif
-                            input[gbl->idprefix +"_s" +sstr.str() +"_radius"] = input[gbl->idprefix +"_offset"];
-                            input[gbl->idprefix +"_s" +sstr.str() +"_center"] = pntstring.str();
+                            input[bpolar.str()+"_s" +sstr.str() +"_type"] = "mapped_mesh_comm";
+                            input[gbl->idprefix +"_s" +sstr.str() +"_type"] = "mapped_comm";
+                            input[gbl->idprefix +"_s" +sstr.str() +"_normal_coordinate"] = input[gbl->idprefix +"_offset"];
+                            input[gbl->idprefix +"_s" +sstr.str() +"_mapping"] = "polar_map";
                             
                             /* Output communication points */
                             sstr.str("");
                             sstr.clear();
                             sstr << maxvid+1;
-#ifdef NOCOMM
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "plain";
-                            input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "plain";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "plain";
-#else
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
+                            input[bpolar.str()+"_v" +sstr.str() +"_type"] = "mapped_mesh_comm";
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "comm";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
-#endif
+                            input[bspline.str()+"_v" +sstr.str() +"_type"] = "mapped_mesh_comm";
                             
                             /* Output communication points */
                             sstr.str("");
                             sstr.clear();
                             sstr << maxvid+2;
-#ifdef NOCOMM
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "plain";
-                            input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "plain";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "plain";
-#else
-                            input[nstr1.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
+                            input[bpolar.str()+"_v" +sstr.str() +"_type"] = "mapped_mesh_comm";
                             input[gbl->idprefix +"_v" +sstr.str() +"_type"] = "comm";
-                            input[nstr.str()+"_v" +sstr.str() +"_type"] = "mapped_comm";
-#endif
+                            input[bspline.str()+"_v" +sstr.str() +"_type"] = "mapped_mesh_comm";
                             
                             /* Output outer domain */
                             ofstream out;
@@ -257,7 +234,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                             /* Output spline domain */
                             FLT dxds = sqrt(tan(0)*tan(0) +tan(1)*tan(1));
                             FLT res1 = res/dxds;
-                            out.open(nstr.str() + ".d");
+                            out.open(bspline.str() + ".d");
                             out << 5 << std::endl;
                             out << "0: " << spbdry->my_spline.start() << ' ' << 0.0  << ' ' << res1 << ' ' << 0 << std::endl;
                             out << "1: " << spbdry->my_spline.stop() << ' ' << 0.0 << ' ' << ' ' << res1 << ' ' << 0 << std::endl;
@@ -273,7 +250,7 @@ void tri_mesh::offset_geometry(input_map& input) {
                             out.close();
                             
                             /* Output polar domain */
-                            out.open(nstr1.str() +".d");
+                            out.open(bpolar.str() +".d");
                             out << 4 << std::endl;
                             out << "0: " << -thetaf*d << ' ' << 0.0 << ' ' << ' ' << res << ' ' << 0 << std::endl;
                             out << "1: " << -theta0*d << ' ' << 0.0  << ' ' << res << ' ' << 0 << std::endl;
@@ -305,10 +282,3 @@ void tri_mesh::offset_geometry(input_map& input) {
     out.close();
  
 }
-
-
-//                    int tangent(const double spt, blitz::TinyVector<double,ND>& tan) const;
-//                    int curvature(const double spt, blitz::TinyVector<double,ND>& curv) const;
-//                    int find(double &spt, blitz::TinyVector<double,ND>& loc) const;
-//                    double start() const {return(x(0));}
-//                    double stop() const {return(x(npts-1));}
