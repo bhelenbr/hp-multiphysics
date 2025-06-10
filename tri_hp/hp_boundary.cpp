@@ -51,10 +51,11 @@ void hp_edge_bdry::init(input_map& inmap) {
 	frozen = false;
 	inmap.get(keyword,frozen);
     
-    keyword = base.idprefix + "_mapped";
-    mapped = false;
-    inmap.get(keyword,mapped);
-    if (mapped) {
+    std::string mapname;
+    if (inmap.get(base.idprefix+"_mapping",mapname)) {
+        mapped = true;
+        curved = true;
+
         if (base.is_comm()) {
             mapped_bdry<ecomm>& temp = dynamic_cast<mapped_bdry<ecomm> &>(base);
             map = temp.map;
@@ -63,7 +64,6 @@ void hp_edge_bdry::init(input_map& inmap) {
             mapped_bdry<edge_bdry>& temp = dynamic_cast<mapped_bdry<edge_bdry> &>(base);
             map = temp.map;
         }
-        curved = true;
     }
 	
 	keyword = base.idprefix +"_report";

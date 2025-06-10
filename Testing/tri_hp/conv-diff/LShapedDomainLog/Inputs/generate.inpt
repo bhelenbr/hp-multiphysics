@@ -22,9 +22,7 @@ helper: l2error
 b0_mesh: b0.d
 b0_type: r_tri_mesh
 b0_metric: mapped_edge
-b0_mapping: none
 b0_s4_type: mapped_comm
-b0_s4_mapped: 1
 b0_s4_mapping: polar_log
 b0_s1_hp_type: dirichlet
 b0_s1_ibc: symbolic
@@ -66,4 +64,3 @@ polar_log_theta_length: r0
 polar_log_theta0: 5*_pi/4
 polar_log_r0: r0
 polar_log_eps: eps
-none_type: none

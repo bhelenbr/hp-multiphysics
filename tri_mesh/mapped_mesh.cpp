@@ -9,13 +9,13 @@
 
 shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname) {
     
-    std::string maptype;
+    if (mapname == "none") {
+        return(make_shared<no_mapping>());
+    }
     
+    std::string maptype;
     if (inmap.get(mapname+"_type",maptype)) {
-        if (maptype == "none") {
-            return(make_shared<no_mapping>());
-        }
-        else if (maptype == "polar") {
+        if (maptype == "polar") {
             return(make_shared<polar_mapping>());
         }
         else if (maptype == "polar_log") {
@@ -28,7 +28,6 @@ shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname) {
             return(make_shared<spline_log_mapping>());
         }
     }
-    
     std::cerr << "Unrecognized mapping " << mapname << ' ' << maptype << std::endl;
     exit(1);
 }
@@ -212,10 +211,14 @@ int polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,
 
 void mapped_mesh::init(input_map& input, shared_ptr<block_global> gbl_in) {
     r_tri_mesh::init(input,gbl_in);
+
     std::string mapname;
-    if (!input.get(gbl->idprefix+"_mapping",mapname)) {
-        *gbl->log << "Couldn't find mapping name " << gbl->idprefix +"_mapping" <<std::endl;
-        sim::abort(__LINE__,__FILE__,gbl->log);
+    if (input.get(gbl->idprefix+"_mapping",mapname)) {
+        map = getnewmapping(input,mapname);
+    }
+    else {
+        /* No mapping */
+        map = getnewmapping(input,"none");
     }
     map->init(input,mapname,gbl->log);
     mapped_pnts.resize(maxpst);

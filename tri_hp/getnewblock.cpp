@@ -274,21 +274,19 @@ unique_ptr<tri_hp::metric> tri_hp::getnewmetric(input_map &inmap) {
     switch(type) {
         case metrictype::curved_boundary: {
             return(make_unique<tri_hp::metric>(*this));
-            break;
         }
         case metrictype::mapped: {
             return(make_unique<mapped_metric>(*this));
-            break;
         }
         case metrictype::mapped_edge: {
             return(make_unique<mapped_edge_metric>(*this));
-            break;
         }
         default: {
             *gbl->log << "unrecognized metric" << std::endl;
             sim::abort(__LINE__,__FILE__,&std::cerr);
         }
     }
+    *gbl->log << "unrecognized metric" << std::endl;
     return(nullptr);
 }
 
