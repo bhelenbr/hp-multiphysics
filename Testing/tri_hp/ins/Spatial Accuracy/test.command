@@ -108,7 +108,7 @@ while [ $log2p -lt 3 ]; do
 #		mod_map run.inpt ngrid ${ngrid}
 		mod_map run.inpt logfile output${ngrid}_p${log2p}
 		${HP} run
-		tail -2 output${ngrid}_p${log2p}_b0.log | head -1 | cut -d\  -f2,4,6,8,10,12 >> cnvg${log2p}.dat
+		tail -3 output${ngrid}_p${log2p}_b0.log | head -1 | cut -d\  -f2,4,6,8,10,12 >> cnvg${log2p}.dat
 		let ngrid=${ngrid}+1
 	done
 	let log2p=${log2p}+1
@@ -131,7 +131,7 @@ while [ $log2p -lt 3 ]; do
 #		mod_map run.inpt ngrid ${ngrid}
 		mod_map run.inpt logfile curved${ngrid}_p${log2p}
 		${HP} run
-		tail -2 curved${ngrid}_p${log2p}_b0.log | head -1 | cut -d\  -f2,4,6,8,10,12 >> cnvg_curved${log2p}.dat
+		tail -3 curved${ngrid}_p${log2p}_b0.log | head -1 | cut -d\  -f2,4,6,8,10,12 >> cnvg_curved${log2p}.dat
 		
 		let ngp=${ngrid}+1
 		cp run.inpt square${ngrid}_bdry.inpt

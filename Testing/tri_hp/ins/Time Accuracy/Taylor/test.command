@@ -60,8 +60,8 @@ while [ $nscheme -lt ${#SCHEMES[@]} ]; do
 		mod_map run.inpt dtinv ${dtinv}
 		mod_map run.inpt ntstep ${ntstep}
 		${HP} run
-		
-		grep L_2 output${dtc}_b0.log | sed "s/\#L_2://g" | sed "s/L_inf \([-+.e0-9]*\)[ ]*[0-9]*/\1/g" > err${dtc}
+
+		grep L_2 output${dtc}_b0.log | sed "s/\#L_2: //g" | sed "s/L_inf //g" > err${dtc}
 		l2umax=$(cut -f 2 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
 		liumax=$(cut -f 3 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
 		l2vmax=$(cut -f 4 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')

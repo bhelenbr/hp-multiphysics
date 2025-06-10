@@ -15,7 +15,8 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	FLT err;
 	Array<int,1> loc(NV);
 	Array<FLT,1> mxr(NV),l2r(NV);
-	TinyVector<FLT,2> pt;
+    TinyVector<FLT,2> pt;
+    Array<TinyVector<FLT,2>,1> locs(NV);
 
 	for(n=0;n<NV;++n) {
 		mxr(n) = 0.0;
@@ -39,6 +40,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 					if (err >= mxr(n)) {
 						mxr(n) = err;
 						loc(n) = tind;
+                        locs(n) = pt;
 					}
 					l2r(n) += err*err*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
 				}
@@ -48,10 +50,15 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 
 	for(n=0;n<NV;++n) {
 		l2r(n) = sqrt(l2r(n)); 
-		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n);
+		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ';
 	}
 	*gbl->log << std::endl;
 
+    *gbl->log << "#Locations ";
+    for(n=0;n<NV;++n) {
+        *gbl->log << loc(n) << ' ' << locs(n) << ' ' ;
+    }
+    *gbl->log << std::endl;
 	return;
 }
 

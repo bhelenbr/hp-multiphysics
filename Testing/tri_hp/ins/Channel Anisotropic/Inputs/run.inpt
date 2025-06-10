@@ -65,7 +65,7 @@ absolute_tolerance: 1.0e-10
 ###########################: 
 # choose petsc LU inversion solver: (mumps or superlu_dist)
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
-petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
+#petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type superlu_dist
 #under_relaxation: 1.0e-1
 ###########: 
 # Debugging: 

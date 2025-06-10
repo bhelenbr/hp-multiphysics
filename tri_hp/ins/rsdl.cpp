@@ -13,7 +13,6 @@
 // #define BODYFORCE
 
 #define CALC_TAU2
-//#define WTF
 
 void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
 	int i,j,n;
@@ -86,9 +85,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
-#ifdef WTF
-                *gbl->log <<  tind << ' ' << dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j) << std::endl;
-#endif
+
 				fluxx = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
 				fluxy = hp_ins_gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
@@ -201,7 +198,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
 #ifdef CALC_TAU2
-            FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+            FLT h = pmetric->calc_element_size(tind);
 #endif
             
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
@@ -378,7 +375,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
 #ifdef CALC_TAU2
-            FLT h = inscribedradius(tind)/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+            FLT h = pmetric->calc_element_size(tind);
 #endif
             
             /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */

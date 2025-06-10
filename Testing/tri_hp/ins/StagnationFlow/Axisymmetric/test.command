@@ -41,4 +41,7 @@ tri_mesh generate
 # Run the executable 
 ${HP}
 
+cd ..
+opendiff Results/ Baseline/
+
 

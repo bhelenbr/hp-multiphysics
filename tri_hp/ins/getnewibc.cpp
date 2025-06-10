@@ -1121,7 +1121,7 @@ class force_coupling : public tri_hp_helper {
 						Array<FLT,1> vel = vels(0,Range::all());
 						if (!x.ptprobe(ppt0,vel,tind)) break;
 						out << ppt0(0) << ' ' << ppt0(1) << '\n';
-						FLT dt = x.inscribedradius(tind)/(fabs(vel(0))+fabs(vel(1)));
+						FLT dt = x.pmetric->calc_element_size(tind)/(fabs(vel(0))+fabs(vel(1)));
 						
 						double a[nstage] = {0.0, 0.5, 0.5, 1.0};
 						for (int s = 1; s < nstage;++s) {
@@ -1209,7 +1209,7 @@ class force_coupling : public tri_hp_helper {
 						FLT dcdre = 24./re_over_v*nonlinear*.72/re;
 
 
-						FLT dt = 1./((fabs(vel0(0))+fabs(vel0(1)))/x.inscribedradius(tind) +rhoAo2m*(cd +dcdre*re));
+						FLT dt = 1./((fabs(vel0(0))+fabs(vel0(1)))/x.pmetric->calc_element_size(tind) +rhoAo2m*(cd +dcdre*re));
 							
 						vels(0,0) = vel0(0);
 						vels(0,1) = vel0(1);

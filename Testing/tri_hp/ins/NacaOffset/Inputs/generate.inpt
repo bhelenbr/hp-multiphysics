@@ -22,29 +22,20 @@ outer_radius: 10.0
 # Viscosity (1/Reynolds Number): 
 mu: 1.0e-1
 rho: 1.0
-b0_mesh: b0.d
+delta: 0.05
 b0_type: r_tri_mesh
+b0_mesh: b0.d
 b0_metric: mapped_edge
-#b0_metric: curved_boundary
-b0_mapping: none
 b0_s2_hp_type: outflow
 b0_s3_hp_type: outflow
 b0_s4_hp_type: outflow
 b0_s5_hp_type: inflow
-b0_s10_filename: naca.spl
-b0_s10_norm_dist: -0.05
-b0_s10_s_limits: 0 0.203893E+01
-b0_s10_type: spline_comm
-b0_s10_mapped: 1
+b0_s10_type: mapped_comm
 b0_s10_mapping: spline
-b0_s10_spline: naca.spl
-b0_s7_center: 1.0000000000e+00 0.0000000000e+00
-b0_s7_radius: 0.05
-b0_s7_type: circle_comm
-b0_s7_mapped: 1
+b0_s10_normal_coordinate: delta
+b0_s7_type: mapped_comm
 b0_s7_mapping: polar
-b0_s7_pnt: 1.0000000000e+00 0.0000000000e+00
-b0_s7_theta_length: 0.05
+b0_s7_normal_coordinate: delta
 b2_s6_type: prdc
 b0_v2_type: comm
 b0_v3_type: comm
@@ -52,27 +43,38 @@ b1_mesh: b1.d
 b1_type: mapped_mesh
 b1_metric: mapped
 b1_mapping: spline
-b1_spline: naca.spl
-b1_s10_type: mapped_comm
+b1_s10_type: mapped_mesh_comm
 b1_s11_type: plain
 b1_s11_hp_type: inflow
 b1_s6_type: prdc
 b1_s8_type: prdc
-b1_v2_type: mapped_comm
-b1_v3_type: mapped_comm
-b1_v9_hp_type: plain
-b1_v9_hp_typelist: 0 0 1
-b1_v9_flux2: 0.0
+b1_v2_type: mapped_mesh_comm
+b1_v3_type: mapped_mesh_comm
+#b1_v4_type: prdc
+#b1_v4_hp_type: plain
+#b1_v4_hp_typelist: 0 0 1
+#b1_v5_type: prdc
+#b1_v5_hp_type: plain
+#b1_v5_hp_typelist: 0 0 1
 b2_mesh: b2.d
 b2_type: mapped_mesh
 b2_metric: mapped
 b2_mapping: polar
-b2_pnt: 1.0000000000e+00 0.0000000000e+00
-b2_theta_length: 0.05
 b2_s6_type: prdc
-b2_s7_type: mapped_comm
+b2_s7_type: mapped_mesh_comm
 b2_s8_type: prdc
-b2_v2_type: mapped_comm
-b2_v3_type: mapped_comm
+b2_v2_type: mapped_mesh_comm
+b2_v3_type: mapped_mesh_comm
+#b2_v4_type: prdc
+#b2_v4_hp_type: plain
+#b2_v4_hp_typelist: 0 0 1
+#b2_v5_type: prdc
+#b2_v5_hp_type: plain
+#b2_v5_hp_typelist: 0 0 1
 b2_s9_hp_typelist: 0 0 1
 b2_s9_flux2: 0.0
+polar_type: polar
+polar_pnt: 1.0 0.0
+polar_theta_length: delta
+spline_type: spline
+spline_spline: naca.spl

@@ -245,6 +245,7 @@ public:
 		
 		if (tgtel < 0) {
 			/* Assumes that sind's are the same */
+            // *x.gbl->log << bel << ' ' << base.seg(bel) << std::endl;
 			tgtel = tgt->x.getbdryseg(tgt->x.seg(base.seg(bel)).tri(1));
 		}
 		

@@ -166,4 +166,4 @@ done
 
 cd ..
 
-opendiff Results/ BASELINE/
+opendiff Results/ Baseline/

@@ -108,3 +108,7 @@ while [ ${n} -lt ${#TYPES[@]} ]; do
 
 	let n=$n+1
 done
+
+cd ..
+
+opendiff Results/ Baseline/

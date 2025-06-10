@@ -1703,44 +1703,50 @@ void hp_edge_bdry::petsc_jacobian_dirichlet() {
 void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
 
 	base.findbdrypt(xp,bel,psi);
-    basis::tri(x.log2p)->ptvalues1d(psi);
-
-    base.mvpttobdry(bel,psi,xp);
     
-    if (mapped) return;
-    
-    if (curved) {
-        const int sind = base.seg(bel);
-        const int v0 = x.seg(sind).pnt(0);
-        const int v1 = x.seg(sind).pnt(1);
-        
-        int iter;
-        FLT dx,dy,ol,roundoff,dpsi;
-        TinyVector<FLT,2> pt;
-        
-        dx = x.pnts(v1)(0) - x.pnts(v0)(0);
-        dy = x.pnts(v1)(1) - x.pnts(v0)(1);
-        ol = 2./(dx*dx +dy*dy);
-        dx *= ol;
-        dy *= ol;
-        
-        /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
-        /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */
-        x.crdtocht1d(sind);
-        
-        iter = 0;
-        roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
-        do {
-            basis::tri(x.log2p)->ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
-            dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
-            psi -= dpsi;
-            if (iter++ > 100) {
-                *x.gbl->log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
-                break;
-            }
-        } while (fabs(dpsi) > roundoff);
-        xp = pt;
+    if (!curved) {
+        base.edge_bdry::mvpttobdry(bel,psi,xp);
+        basis::tri(x.log2p)->ptvalues1d(psi);
+        return;
     }
+    
+    if (mapped) {
+        base.mvpttobdry(bel,psi,xp);
+        basis::tri(x.log2p)->ptvalues1d(psi);
+        return;
+    }
+    
+    /* Isoparametric side */
+    const int sind = base.seg(bel);
+    const int v0 = x.seg(sind).pnt(0);
+    const int v1 = x.seg(sind).pnt(1);
+    
+    int iter;
+    FLT dx,dy,ol,roundoff,dpsi;
+    TinyVector<FLT,2> pt;
+    
+    dx = x.pnts(v1)(0) - x.pnts(v0)(0);
+    dy = x.pnts(v1)(1) - x.pnts(v0)(1);
+    ol = 2./(dx*dx +dy*dy);
+    dx *= ol;
+    dy *= ol;
+    
+    /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+    /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */
+    x.crdtocht1d(sind);
+    
+    iter = 0;
+    roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
+    do {
+        basis::tri(x.log2p)->ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
+        dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
+        psi -= dpsi;
+        if (iter++ > 100) {
+            *x.gbl->log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
+            break;
+        }
+    } while (fabs(dpsi) > roundoff);
+    xp = pt;
 }
 
 void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {

@@ -98,6 +98,19 @@ void mapped_metric::init(input_map& input) {
     map->init(input,mapval,x.gbl->log);
 }
 
+FLT mapped_metric::calc_element_size(int tind) {
+    Array<TinyVector<FLT,tri_mesh::ND>,1> pnts(3);
+    for (int i=0;i<3;++i) {
+        pnts(i) = x.pnts(x.tri(tind).pnt(i));
+        map->to_physical_frame(pnts(i),x.pnts(x.tri(tind).pnt(i)));
+    }
+    FLT h = x.inscribedradius(tind)/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
+    for (int i=0;i<3;++i) {
+        x.pnts(x.tri(tind).pnt(i)) = pnts(i);
+    }
+    return(h);
+}
+
 void mapped_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
     const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();

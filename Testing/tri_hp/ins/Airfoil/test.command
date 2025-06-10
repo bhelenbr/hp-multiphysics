@@ -17,7 +17,7 @@ os.chdir(os.path.dirname(sys.argv[0]))
 # Define location of executables
 p0 = subprocess.Popen("echo ${PWD%/Testing/*}/bin/:", stdout=subprocess.PIPE,shell=True)
 (BINDIR, err) = p0.communicate()
-os.environ[PATH] = BINDIR.strip().decode(ascii) + os.environ['PATH']
+os.environ[ 'PATH'] = BINDIR.strip().decode('ascii') + os.environ['PATH']
 
 if not os.path.isdir("Results"):
 	os.mkdir("Results")
@@ -27,13 +27,13 @@ os.system("rm *")
 # copy input files into results directory
 os.system("cp ../Inputs/* .")
 
-nlayers = 10
+nlayers = 5
 # generate mesh and remove unnecessary data files
 offset = 0.0
 #os.system("spline -m 0.25,0.0 -r -10.0 -s 3.0 -o" +str(offset)+ " -i spoints.dat naca.spl > interp.dat");
 os.system("spline -m 0.0,0.0 -r -0.0 -s 1.0 -o " +str(offset)+ " naca.spl 40 3.0 >> interp.dat");
 
-dy = -1e-3
+dy = -1e-2
 offset = dy
 for x in range(nlayers):
 	#os.system("spline -m 0.25,0.0 -r -10.0 -s 3.0 -o" +str(offset)+ " -i spoints.dat naca.spl > interp.dat");

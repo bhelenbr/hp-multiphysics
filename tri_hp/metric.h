@@ -18,6 +18,9 @@ public:
     metric(const metric& in_metric, tri_hp& xin) : x(xin) {}
     virtual std::unique_ptr<metric> create(tri_hp& xin) {return std::make_unique<metric>(*this,xin);}
     virtual void init(input_map& inmap) {}
+    virtual FLT calc_element_size(int tind) {
+        return(x.inscribedradius(tind)/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1)));
+    }
     virtual void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND>& dcrd, int tlvl=0) const;
     virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,ND>& dcrd, int tlvl=0) const;
     virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const;
@@ -35,6 +38,7 @@ public:
     mapped_metric(const mapped_metric& in_metric, tri_hp& xin) : metric(xin), map(in_metric.map) {}
     virtual std::unique_ptr<metric> create(tri_hp& xin) override {return std::make_unique<mapped_metric>(*this,xin);}
     virtual void init(input_map& inmap) override;
+    virtual FLT calc_element_size(int tind) override;
     virtual void calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl=0) const override;
     virtual void calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl=0) const override;
     virtual void calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;

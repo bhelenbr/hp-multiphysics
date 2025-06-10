@@ -32,10 +32,11 @@ os.chdir(os.path.dirname(sys.argv[0]))
 # Define location of executables
 p0 = subprocess.Popen("echo ${PWD%/Testing/*}/bin/:", stdout=subprocess.PIPE,shell=True)
 (BINDIR, err) = p0.communicate()
-os.environ[PATH] = BINDIR.strip().decode(ascii) + os.environ['PATH']
+os.environ['PATH'] = BINDIR.strip().decode('ascii') + os.environ['PATH']
 
 FULL_TEST=1
 
+#HP="mpiexec -np 2 tri_hp_petsc run.inpt -stop_for_debugger"
 HP="mpiexec -np 2 tri_hp_petsc run.inpt"
 
 if not os.path.isdir("Results"):

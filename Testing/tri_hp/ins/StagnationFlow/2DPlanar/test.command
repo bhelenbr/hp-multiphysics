@@ -45,3 +45,6 @@ ${HP}
 # mod_map run.inpt restart 1
 # mod_map run.inpt log2p 1
 # ${HP}
+
+cd ..
+opendiff Results/ Baseline/
