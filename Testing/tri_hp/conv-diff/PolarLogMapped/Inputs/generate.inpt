@@ -17,17 +17,9 @@ theta: atan2(x1,x0)
 ibc: symbolic
 ibc0: r^lambda*sin(lambda*theta)
 b0_mesh: sector.d
-bottom: -8.0
 b0_type: cd
 b0_metric: mapped
 b0_mapping: polar_log
-r0: 1.0
-eps: 1e-5
-b0_pnt: 0.0 0.0
-b0_theta_length: r0
-b0_theta0: theta_0
-b0_r0: r0
-b1_eps: eps
 b0_s1_hp_type: dirichlet
 b0_s2_hp_type: dirichlet
 b0_s3_hp_type: adiabatic
@@ -35,3 +27,12 @@ b0_s4_hp_type: dirichlet
 #b0_s4_ibc: symbolic
 #b0_s4_ibc0: 0.0
 helper: l2error
+r0: 1.0
+eps: 3.356e-4
+bottom: r0*log(eps/(1+eps))
+polar_log_type: polar_log
+polar_log_pnt: 0.0 0.0
+polar_log_theta_length: r0
+polar_log_theta0: theta_0
+polar_log_r0: r0
+polar_log_eps: eps

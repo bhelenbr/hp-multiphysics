@@ -20,10 +20,11 @@ b0_mesh: sector.d
 b0_type: cd
 b0_metric: mapped
 b0_mapping: polar
-b0_pnt: 0.0 0.0
-b0_theta_length: 1.0
 b0_s1_hp_type: dirichlet
 b0_s2_hp_type: dirichlet
 b0_s3_hp_type: adiabatic
 b0_s4_hp_type: dirichlet
+polar_type: polar
+polar_pnt: 0.0 0.0
+polar_theta_length: 1.0
 helper: l2error

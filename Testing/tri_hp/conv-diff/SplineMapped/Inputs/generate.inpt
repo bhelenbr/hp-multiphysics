@@ -13,8 +13,9 @@ b0_mesh: rectangle.d
 b0_type: cd
 b0_metric: mapped
 b0_mapping: spline
-b0_spline: flat.spl
 b0_s1_hp_type: dirichlet
+b0_s1_type: mapped
+b0_s1_mapping: spline
 b0_s2_hp_type: adiabatic
 b0_s3_hp_type: dirichlet
 b0_s4_hp_type: adiabatic
@@ -23,6 +24,8 @@ ibc0: x1
 ibc: symbolic
 h: 0.25
 res: h/4
+spline_spline: flat.spl
+spline_type: spline
 #b0_s1_filename: naca.spl
 #b0_s1_norm_dist: -0.05
 #b0_s1_s_limits: 0. 1.

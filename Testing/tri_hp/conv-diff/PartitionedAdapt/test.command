@@ -28,7 +28,6 @@ mod_map run.inpt maximum_length 0.8
 mod_map run.inpt minimum_length 0.4
 mpiexec -np 1 tri_hp_petsc run.inpt
 
-export PETSC=-stop_for_debugger
 
 let NPART=4
 mod_map run.inpt partition ${NPART}
@@ -51,6 +50,8 @@ cp ../parabola.grd .
 mod_map run.inpt minimum_length 0.025
 mod_map run.inpt maximum_length 0.05
 mpiexec -np 1 tri_hp_petsc run.inpt
+
+export PETSC=-stop_for_debugger
 
 let NPART=4
 mod_map run.inpt partition ${NPART}
