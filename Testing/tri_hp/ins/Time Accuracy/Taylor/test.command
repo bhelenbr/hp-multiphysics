@@ -62,10 +62,10 @@ while [ $nscheme -lt ${#SCHEMES[@]} ]; do
 		${HP} run
 
 		grep L_2 output${dtc}_b0.log | sed "s/\#L_2: //g" | sed "s/L_inf //g" > err${dtc}
-		l2umax=$(cut -f 2 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
-		liumax=$(cut -f 3 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
-		l2vmax=$(cut -f 4 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
-		livmax=$(cut -f 5 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
+		l2umax=$(cut -f 1 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
+		liumax=$(cut -f 2 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
+		l2vmax=$(cut -f 3 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
+		livmax=$(cut -f 4 -d" " err${dtc} | awk -v max=0 '{if($1>max){max=$1}}END{print max}')
 		echo "$l2umax $liumax $l2vmax $livmax" >> cnvg.dat 
 		
 		

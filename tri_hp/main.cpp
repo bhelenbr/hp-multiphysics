@@ -34,7 +34,6 @@ int main(int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 	
 	std::cout << "Running processes " << getpid() << std::endl;
-	// system("sleep 20");
 #endif
 #ifdef PTH
 	// For debugging put interrupt here
@@ -87,7 +86,7 @@ int main(int argc, char **argv) {
 		/*
 		 we have to make sure that all processors have opened
 		 connections to all other processors, otherwise once the
-		 debugger has stated it is likely to receive a SIGUSR1
+		 debugger has started it is likely to receive a SIGUSR1
 		 and kill the program.
 		 */
 		int ierr = MPI_Comm_size(MPI_COMM_WORLD,&size);
@@ -108,6 +107,8 @@ int main(int argc, char **argv) {
 			}
 		}
 		std::cout << "Waiting for debugger.  Process id is " << getpid() << std::endl;
+        system("sleep 20");
+
 #if __cplusplus >= 199711L
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 #endif
