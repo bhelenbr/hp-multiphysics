@@ -45,7 +45,7 @@ if [ -n "$CNVG" ]; then
 	let ntstep=4
 	while [ $ngrid -lt $nrefinements ]; do
 		${HP} ${PETSC}
-		grep L_2 out_b0.log | sed "s/\#L_2://g" | sed "s/L_inf \([-+.e0-9]*\)[ ]*[0-9]*/\1/g" > err.dat
+		grep L_2 out_b0.log | sed "s/\#L_2://g" | sed "s/L_inf //g" > err.dat
 		l2=$(awk 'BEGIN {max = 0} {if ($5>max) max=$5} END {print max}' err.dat )
 		li=$(awk 'BEGIN {max = 0} {if ($6>max) max=$6} END {print max}' err.dat )
 		echo "$l2 $li" >> cnvg.dat 
