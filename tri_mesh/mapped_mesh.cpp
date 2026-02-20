@@ -21,6 +21,9 @@ shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname) {
         else if (maptype == "polar_log") {
             return(make_shared<polar_log_mapping>());
         }
+        else if (maptype == "polar_chi") {
+            return(make_shared<polar_chi_mapping>());
+        }
         else if (maptype == "spline") {
             return(make_shared<spline_mapping>());
         }
@@ -204,6 +207,96 @@ int polar_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,
     /* Derivaties with respect to logr */
     jacobian(0,1) = cos(theta)*drdlogr; // dx/dlogr
     jacobian(1,1) = sin(theta)*drdlogr; // dy/dlogr
+    return(0);
+}
+
+void polar_chi_mapping::init(input_map& input, std::string idprefix, std::ostream *log) {
+    polar_mapping::init(input,idprefix,log);
+    if (!input.get(idprefix+"_r0",r0)) {
+        *log << "Couldn't read r0 " << idprefix+"_r0" << std::endl;;
+        sim::abort(__LINE__,__FILE__,log);
+    }
+    input.getwdefault(idprefix+"_m0",m0,5.0); // May be better to set it as p+1
+    input.getwdefault(idprefix+"_eta_s",eta_s,0.95);
+
+}
+
+int polar_chi_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+
+    const FLT denom = eta_s*(1.0 -exp(1.0 +1.0/(pow(eta_s,2.0*m0-1.0) -1.0)));
+    const FLT r = r0*from(1)*(1.0 -exp(1.0 +1.0/(pow(from(1),2.0*m0-1.0) -1.0)))/denom;
+    const FLT theta = -from(0)/theta_length;
+    to(0) = pnt(0) +r*cos(theta);
+    to(1) = pnt(1) +r*sin(theta);
+    return(0);
+}
+
+int polar_chi_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
+    to = from-pnt;
+    const FLT r = sqrt(to(0)*to(0) +to(1)*to(1));
+    FLT alpha = atan2(to(1),to(0)) -theta0;
+    alpha += (alpha < -M_PI ? 2.*M_PI : 0.0) +theta0;
+    to(0) = -alpha*theta_length;
+    
+    // Newton-Raphson solver for eta
+    const int max_iter = 50;
+    const FLT tol = 1e-12;
+    
+    const FLT k = 2.0*m0 - 1.0;
+    const FLT eta_ks = pow(eta_s,k) -1.0;
+    const FLT Es = exp(1.0 +1.0/eta_ks);
+    const FLT r_s = eta_s*(1.0 -Es);
+    
+    FLT eta = r / r0; // initial guess
+    
+    for(int i=0; i<max_iter; ++i)  {
+        FLT denom = pow(eta, k) - 1.0;
+        
+        // Avoid division blow-up near eta=1
+        if(abs(denom) < 1e-14)
+            denom = (denom < 0 ? -1e-14 : 1e-14);
+        
+        FLT E = exp(1.0 + 1.0/denom);
+        
+        // F(eta)
+        FLT F = r0*eta*(1.0 -E)/r_s -r;
+        
+        // derivative
+        FLT dF = r0*((1.0 -E) +k*pow(eta,k)*E/pow(denom,2.0))/r_s;
+        
+        FLT delta = F/dF;
+        eta -= F/dF;
+        
+        // Keep eta in valid range
+        eta = min(max(eta, FLT(1e-8)), eta_s);
+        
+        if(abs(delta) < tol)
+            break;}
+    cout << "to_parametric_called!" << endl;
+    to(1) = eta;
+    return(0);
+}
+
+int polar_chi_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
+    
+    const FLT theta = -loc(0)/theta_length;
+    const FLT k =2.0*m0 -1.0;
+    const FLT denom = pow(loc(1),k) -1.0;
+    const FLT E = exp(1.0 +1.0/denom);
+    const FLT eta_ks = pow(eta_s,k) -1.0;
+    const FLT Es = exp(1.0 +1.0/eta_ks);
+    const FLT r_s = eta_s*(1.0 -Es);
+    const FLT r = r0*loc(1)*(1.0 -E)/r_s;
+    const FLT drdeta = r0*((1.0 -E) +k*pow(loc(1),k)*E/pow(denom,2.0))/r_s;
+    
+   // std::cout << drdeta << std::endl;
+    
+    /* Derivatives with respect to theta*length */
+    jacobian(0,0) = +r*sin(theta)/theta_length;  // dx/dt
+    jacobian(1,0) = -r*cos(theta)/theta_length; // dy/dt
+    /* Derivaties with respect to eta */
+    jacobian(0,1) = cos(theta)*drdeta; // dx/deta
+    jacobian(1,1) = sin(theta)*drdeta; // dy/deta
     return(0);
 }
 

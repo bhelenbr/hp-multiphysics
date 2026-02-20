@@ -1,8 +1,8 @@
 4
-0: 0.0 0.0 theta0/4 1
-1: 1.0 0.0 theta0/4 0
-2: 1.0*cos(theta0/2) 1.0*sin(theta0/2) theta0/4 0
-3: 1.0*cos(theta0) 1.0*sin(theta0) theta0/4 0
+0: 0.0 0.0 _pi/10 1
+1: 1.0 0.0 _pi/10 0
+2: 1.0*cos(theta0/2) 1.0*sin(theta0/2) _pi/10 0
+3: 1.0*cos(theta0) 1.0*sin(theta0) _pi/10 0
 4
 0: 0 1 1
 1: 1 2 2

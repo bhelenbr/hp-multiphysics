@@ -193,7 +193,7 @@ end
 
 % update edge boundaries based on new numbers
 count = 1;
-for i = 1:size(sbndry_id)
+for i = 1:length(sbndry_id)
     tmp_1 = edge_map(sbndry_lst(1:sbndry_cnt(i),i));
     tmp = tmp_1(~isnan(tmp_1));
     if ~isempty(tmp)

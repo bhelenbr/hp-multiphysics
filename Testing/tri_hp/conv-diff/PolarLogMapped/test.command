@@ -1,68 +1,42 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+#set -x
+export FI_PROVIDER=tcp
 
-# Testing accuracy for a case with a singular point
+HP="mpiexec -np 1 tri_hp_petsc"
+
 cd "$(dirname "$0")"
 
 # Define location of executables
 BINDIR=${PWD%/Testing/*}/bin
 export PATH=${BINDIR}:${PATH}
 
-if [ -e Results ]; then
-	cd Results
-else
-	mkdir Results
-	cd Results
-fi
-rm -rf *
+mkdir -p Results
+cd Results
+rm -rf ./*
 
-cp ../Inputs/* .
 
-tri_mesh generate.inpt
+for n in {34..34}; do
+    epsil="exp(-${n})/(1-exp(-${n}))"
+    safe_eps="bot${n}"
 
-cp generate.inpt run.inpt
-mod_map run.inpt b0_mesh rstrt1_b0.grd
-mod_map run.inpt logfile run
-mod_map run.inpt ncycle 20
-mod_map run.inpt ntstep 1
-mod_map run.inpt adapt 0
+    mkdir -p "$safe_eps"
+    cd "$safe_eps" || exit 1
 
-let log2p=0
-while [ $log2p -lt 3 ]; do
-	mkdir log2p${log2p}
-	cp run.inpt log2p${log2p}
-	cp generate.inpt log2p${log2p}
-	cp rstrt1_b0.grd log2p${log2p}
-	cd log2p${log2p}
-	mod_map run.inpt log2p ${log2p}
+    cp ../../Inputs/* .
+    echo "Running eps = $epsil (dir: $safe_eps)"
 
-	mpiexec -np 1 tri_hp_petsc run.inpt
-	tail -2 run_b0.log | head -1 | cut -d\  -f2,4 | tr -d '\n' >> cnvg.dat
-	echo -n ' ' >> cnvg.dat
-	grep DOF run_b0.log | cut -d\  -f6 >> cnvg.dat
-	mod_map generate.inpt refineby2 1
-	mod_map generate.inpt b0_mesh rstrt1_b0.grd
-	
-	let nsteps=6
-	let ngrid=1
-	while [ $ngrid -le $nsteps ]; do
-		mod_map generate.inpt restart ${ngrid}
-		mod_map generate.inpt
-		mpiexec -np 1 tri_hp_petsc generate.inpt
-		let ngrid=${ngrid}+1
-		mod_map run.inpt restart ${ngrid}
-		mpiexec -np 1 tri_hp_petsc run.inpt
-		tail -2 run_b0.log | head -1 | cut -d\  -f2,4 | tr -d '\n' >> cnvg.dat
-		echo -n ' ' >> cnvg.dat
-		grep DOF run_b0.log | cut -d\  -f6 >> cnvg.dat
-		let ngp=${ngrid}+1
-		cp rstrt${ngrid}_b0.nc rstrt${ngp}_b0.nc
-	
-		let ngrid=${ngrid}+1
-	done
-	cd ..
-	let log2p=${log2p}+1
+    set +e
+    ../../Basictest.command "$epsil"
+    status=$?
+    set -e
+
+    cd ..
+
+    if [[ $status -ne 0 ]]; then
+        echo "❌ FAILED for eps = $epsil → removing $safe_eps"
+        #rm -rf "$safe_eps"
+    else
+        echo "✅ SUCCESS for eps = $epsil"
+    fi
 done
-cd ..
-./make_plot.command > Results/rates.dat
-opendiff Results/ Baseline/
-

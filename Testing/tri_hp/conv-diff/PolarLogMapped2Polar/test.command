@@ -1,12 +1,13 @@
 #!/bin/bash
-
+export FI_PROVIDER=tcp
 # Testing accuracy for a case with a singular point
 cd "$(dirname "$0")"
 
 # Define location of executables
 BINDIR=${PWD%/Testing/*}/bin
 export PATH=${PATH}:${BINDIR}
-export PATH="/Applications/MATLAB_R2023b.app/bin:$PATH"
+#export PATH="/Applications/MATLAB_R2025b.app/bin:$PATH"
+export PATH="/Applications/MATLAB_R2025b.app/Contents/MacOS:$PATH"
 
 if [ -e Results ]; then
 	cd Results
@@ -17,16 +18,20 @@ fi
 rm -rf *
 
 cd ../../PolarLogMapped/Inputs
-bot=$(mod_map -e generate.inpt bottom)
+# bot=$(mod_map -e generate.inpt bottom)
 ../test.command
-cd ../Results/log2p0
+cd ../Results
+bot=$(awk '/bottom[[:space:]]*=/ {print $NF; exit}' generate_b0.log)
+#cd ../Results/log2p0
 
 
-cd ../../PolarLogMapped2Polar/Inputs
-cp rstrt1_b0.grd ../../../PolarLogMapped2Polar/Inputs 
-cd ../../../PolarLogMapped2Polar/Inputs  
-matlab -batch "gridconvert('rstrt1_b0.grd', ${bot})"
-
+#cd ../../PolarLogMapped2Polar/Inputs
+cp rstrt1_b0.grd ../../PolarLogMapped2Polar/Inputs 
+cd ../../PolarLogMapped2Polar/Inputs  
+#matlab -batch "gridconvert('rstrt1_b0.grd', ${bot})"
+#matlab -batch "addpath(pwd); gridconvert('rstrt1_b0.grd', '${bot}');"
+INPUTDIR=$(pwd)
+matlab -batch "cd('$INPUTDIR'); addpath('$INPUTDIR'); gridconvert('rstrt1_b0.grd', ${bot});"
 cd ../Results
 
 cp ../Inputs/* .

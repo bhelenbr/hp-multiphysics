@@ -6,7 +6,6 @@ export FI_PROVIDER=tcp
 HP="mpiexec -np 1 tri_hp_petsc"
 # Testing accuracy for a case with a singular point
 
-
 cd "$(dirname "$0")"
 
 # Define location of executables
@@ -22,6 +21,7 @@ cp ../Inputs/* .
 tri_mesh generate.inpt
 
 cp generate.inpt run.inpt
+
 mod_map run.inpt b0_mesh rstrt1_b0.grd
 mod_map run.inpt logfile output
 mod_map run.inpt adapt 0
@@ -52,7 +52,7 @@ while (( log2p < 3 )); do
 
 	append_metrics
 	
-	ngrids=6
+	ngrids=4
 	ngrid=1
 	restart=1
 

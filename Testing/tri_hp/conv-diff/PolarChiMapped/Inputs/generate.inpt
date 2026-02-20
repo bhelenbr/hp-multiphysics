@@ -19,21 +19,15 @@ ibc0: r^lambda*sin(lambda*theta)
 b0_mesh: sector.d
 b0_type: cd
 b0_metric: mapped
-b0_mapping: polar_log
+b0_mapping: polar_chi
 b0_s1_hp_type: dirichlet
 b0_s2_hp_type: dirichlet
 b0_s3_hp_type: adiabatic
 b0_s4_hp_type: dirichlet
-#b0_s4_ibc: symbolic
-#b0_s4_ibc0: 0.0
 helper: l2error
 r0: 1.0
-# eps: exp(-30.0)/(1-exp(-30.0))
-eps: 1.0e-20
-bottom: r0*log(eps/(1+eps))
-polar_log_type: polar_log
-polar_log_pnt: 0.0 0.0
-polar_log_theta_length: r0
-polar_log_theta0: theta0
-polar_log_r0: r0
-polar_log_eps: eps
+polar_chi_type: polar_chi
+polar_chi_pnt: 0.0 0.0
+polar_chi_theta_length: r0
+polar_chi_theta0: theta0
+polar_chi_r0: r0

@@ -6,19 +6,21 @@ export FI_PROVIDER=tcp
 HP="mpiexec -np 1 tri_hp_petsc"
 # Testing accuracy for a case with a singular point
 
+theta0="$1"   # required argument
 
-cd "$(dirname "$0")"
+#cd "$(dirname "$0")"
 
 # Define location of executables
 BINDIR=${PWD%/Testing/*}/bin
 export PATH=${BINDIR}:${PATH}
 
-mkdir -p Results
-cd Results
-rm -rf ./*
+# mkdir -p Results
+# cd Results
+# rm -rf ./*
 
-cp ../Inputs/* .
+# cp ../Inputs/* .
 
+mod_map generate.inpt theta0 "$theta0"
 tri_mesh generate.inpt
 
 cp generate.inpt run.inpt
@@ -36,6 +38,8 @@ append_metrics() {
     printf "%s" "$(extract_dof)" >> cnvg.dat
     tail -3 output_b0.log | awk 'NR==1 {print " "$2" "$4}' >> cnvg.dat
 }
+
+
 
 
 log2p=0
@@ -81,3 +85,4 @@ done
 cd ..
 #./make_plot.command > Results/rates.dat
 #opendiff Results/ Baseline/
+
