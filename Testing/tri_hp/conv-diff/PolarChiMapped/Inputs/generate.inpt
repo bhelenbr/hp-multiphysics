@@ -31,3 +31,5 @@ polar_chi_pnt: 0.0 0.0
 polar_chi_theta_length: r0
 polar_chi_theta0: theta0
 polar_chi_r0: r0
+polar_chi_m0: 2.0
+polar_chi_eta_s: 0.95

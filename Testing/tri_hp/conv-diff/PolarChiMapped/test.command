@@ -77,6 +77,8 @@ while (( log2p < 3 )); do
 	done
 	cd ..
 	((log2p++))
+	m0=$(( log2p == 1 ? log2p**2 + 1 : log2p**2 - 1 ))
+	mod_map run.inpt polar_chi_m0 "$m0"
 done
 cd ..
 #./make_plot.command > Results/rates.dat
