@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>527</string>
+	<string>534</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -84,7 +84,7 @@
 				<key>isViewVisible</key>
 				<integer>1</integer>
 				<key>location</key>
-				<string>954.500000:135.000000</string>
+				<string>207.000000:68.000000</string>
 			</dict>
 			<key>isViewVisible</key>
 			<integer>1</integer>
@@ -152,6 +152,7 @@ if [ -d /Applications/Utilities/XQuartz.app ] ; then
   open -a /Applications/Utilities/XQuartz.app
   sleep 5
 fi
+export DISPLAY=:0
 
 location="${HOME}/hp-multiphysics/bin"
 files=()
@@ -280,7 +281,7 @@ nohup "${location}/showgrid" "${files[@]}" &gt; /dev/null 2&gt;&amp;1 &amp;
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>954.500000:722.000000</string>
+				<string>954.500000:752.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -290,7 +291,7 @@ nohup "${location}/showgrid" "${files[@]}" &gt; /dev/null 2&gt;&amp;1 &amp;
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>1C93332A-267E-4D59-A72F-BEBF537AF0FA</key>
+		<key>5A6C2FDD-033A-4001-9E89-87EBF930B62B</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
