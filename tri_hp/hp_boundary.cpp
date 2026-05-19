@@ -980,16 +980,12 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	int k,n,sind;
 	TinyVector<FLT,2> pt,mvel,nrm;
 	Array<FLT,1> u(x.NV),flx(x.NV);
+    TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND> crd, dcrd;
 	
 	lf = 0.0;
 	sind = base.seg(eind);
-	
-	/* Load coordinates */
-	x.crdtocht1d(sind);
-	
-	/* Project coordinates to Gauss points & coordinate derivates */
-	for(n=0;n<tri_mesh::ND;++n)
-		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+
+    x.pmetric->calc_metrics1D(sind, crd, dcrd);
 	
 	/* Project solution to Gauss points */
 	for(n=0;n<x.NV;++n)
@@ -998,16 +994,17 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 	/* Integrate flux across element boundary times basis functions */
 	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
 		/* Calculate boundary normal */
-		nrm(0) = x.dcrd(1,0)(0,k);
-		nrm(1) = -x.dcrd(0,0)(0,k);
+		nrm(0) = dcrd(1)(k);
+		nrm(1) = -dcrd(0)(k);
 		FLT jcb = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
 		nrm(0) /= jcb;
 		nrm(1) /= jcb;
 		
 		/* Calculate the mesh velocity */
 		for(n=0;n<tri_mesh::ND;++n) {
-			pt(n) = x.crd(n)(0,k);
-			mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,eind)(n,k));
+			pt(n) = crd(n)(k);
+            // FIXME this may not work
+			mvel(n) = x.gbl->bd(0)*(crd(n)(k) -dxdt(x.log2p,eind)(n,k));
 #ifdef MESH_REF_VEL
 			mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif

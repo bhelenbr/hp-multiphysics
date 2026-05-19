@@ -44,11 +44,12 @@ void spline_mapping::init(input_map& input, std::string idprefix, std::ostream *
     }
     my_spline.read(line);
     input.getwdefault(idprefix+"_scale",scale,1.0);
+    input.getwdefault(idprefix+"_s_length",s_length,1.0); // Assume s is arclength or at least has distance units but if not then s_length should have units of distance
 }
 
 int spline_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     TinyVector<FLT,2> tan, curv;
-    spline_functions2D::interpolate(to, tan, curv, my_spline, from(0), scale, trsfm.theta,trsfm.pos, -from(1));
+    spline_functions2D::interpolate(to, tan, curv, my_spline, from(0)/s_length, scale, trsfm.theta,trsfm.pos, -from(1));
     return(0);
 }
 
@@ -61,20 +62,21 @@ int spline_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyV
         err = spline_functions2D::find(from, my_spline, to(0), scale, trsfm.theta,trsfm.pos, to(1));
         to(1) *= -1;
     }
+    to(0) *= s_length;
     return(err);
 }
 
 int spline_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
     TinyVector<FLT,2> pnt, tan, curv;
-    spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0), scale, trsfm.theta,trsfm.pos, -loc(1));
+    spline_functions2D::interpolate(pnt, tan, curv, my_spline, loc(0)/s_length, scale, trsfm.theta,trsfm.pos, -loc(1));
     /* p = x(s) +n*norm_dist */
     /* p = x(loc(0)) +loc(1)*(-tan(1),tan(0))*/
     /* dp/ds = dx/ds +curv * norm_dist */
     /* dp/dn = norm */
     
     /* Derivatives with respect to s*/
-    jacobian(0,0) = tan(0) -curv(1)*loc(1);
-    jacobian(1,0) = tan(1) +curv(0)*loc(1);
+    jacobian(0,0) = (tan(0) -curv(1)*loc(1))/s_length;
+    jacobian(1,0) = (tan(1) +curv(0)*loc(1))/s_length;
     /* Derivaties with respect to norm_dist */
     jacobian(0,1) = -tan(1);
     jacobian(1,1) = +tan(0);
@@ -96,20 +98,20 @@ void spline_log_mapping::init(input_map& input, std::string idprefix, std::ostre
 int spline_log_mapping::to_physical_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     TinyVector<FLT,2> from2;
     from2(0) = from(0);
-    from2(1) = exp(from(1))*(r0+r_eps) -r_eps;
+    from2(1) = exp(from(1)/r0)*(r0+r_eps) -r_eps;
     int err = spline_mapping::to_physical_frame(from2, to);
     return(err);
 }
 
 int spline_log_mapping::to_parametric_frame(const TinyVector<double, 2> &from, TinyVector<double, 2> &to) {
     int err = spline_mapping::to_parametric_frame(from, to);
-    to(1) = log((to(1)+r_eps)/(r0+r_eps));
+    to(1) = r0*log((to(1)+r_eps)/(r0+r_eps));
     return(err);
 }
 
 int spline_log_mapping::calc_metrics(const TinyVector<FLT,2> loc, TinyMatrix<FLT,2,2>& jacobian) {
-    const FLT r = exp(loc(1))*(r0+r_eps) -r_eps;
-    const FLT drdlogr = exp(loc(1))*(r0+r_eps);
+    const FLT r = exp(loc(1)/r0)*(r0+r_eps) -r_eps;
+    const FLT drdlogr = exp(loc(1)/r0)*(r0+r_eps)/r0;
 
     TinyVector<FLT,2> loc2;
     loc2(0) = loc(0);

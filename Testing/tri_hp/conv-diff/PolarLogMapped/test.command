@@ -16,7 +16,7 @@ cd Results
 rm -rf ./*
 
 
-for n in {34..34}; do
+for n in {8,16}; do
     epsil="exp(-${n})/(1-exp(-${n}))"
     safe_eps="bot${n}"
 
@@ -40,3 +40,6 @@ for n in {34..34}; do
         echo "✅ SUCCESS for eps = $epsil"
     fi
 done
+
+cd ..
+./make_plot.command

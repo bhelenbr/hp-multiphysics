@@ -38,7 +38,7 @@ public:
 class spline_mapping : public mapping {
 protected:
     SPLINE<2> my_spline;
-    FLT scale;
+    FLT scale, s_length;
 public:
     rigid_movement_interface2D trsfm;
     void init(input_map& inmap,std::string idprefix,std::ostream *log) override;
@@ -84,4 +84,4 @@ class polar_chi_mapping : public polar_mapping {
 };
 
 shared_ptr<mapping> getnewmapping(input_map& inmap, std::string mapname);
-#endif
+#endif // !_mappings_h
