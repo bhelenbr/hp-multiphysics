@@ -6,15 +6,13 @@ ins/Channel Anistropic Convergence error.  Same on the cluster.  Not sure what t
 ins/ForceCoupling hasn't worked since 2010
 Bouyancy/melt_with_solid_prdc/test_mgrid fails
 CNS/Shock_1D_MMS crashes after a while?
-
-In progress
-POD - all works except ins_multiblock
+POD/ins_multiblock has problems
 
 Remaining:
-Curved
 
 Issues:
 No tests for
+Curved
 swirl
 recursive_timestep
 cns_explicit

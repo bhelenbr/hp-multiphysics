@@ -206,7 +206,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages/petsc PETSC_ARCH="" check
 	[cd MAdLib]
 	
 	[mkdir build; cd build]
-	[cmake -DCMAKE_INSTALL_PREFIX=${HOME}/Packages -DMADLIB_INSTALL_EXTENDED_API=ON ..]
+	[cmake -DCMAKE_INSTALL_PREFIX=${HOME}/Packages -DMADLIB_INSTALL_EXTENDED_API=ON -DCMAKE_SHARED_LINKER_FLAGS="-framework accelerate" -DCMAKE_STATIC_LINKER_FLAGS="-framework accelerate" ..]
 	[make -j 8]  
 	[make install]
 
