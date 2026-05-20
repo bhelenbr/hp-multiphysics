@@ -162,9 +162,9 @@ void mapped_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri
     
     metric::calc_metrics1D(sind, crd, dcrd, tlvl);
     
+    
     for(int i=0;i<lgpx;++i) {
-        const TinyVector<FLT,tri_mesh::ND> pt(crd(0)(i),crd(1)(i));
-        
+        const TinyVector<FLT,tri_mesh::ND> pt(crd(0)(i),crd(1)(i)), dtn(dcrd(0)(i),dcrd(1)(i));
         TinyVector<FLT,tri_mesh::ND> xpt;
         map->to_physical_frame(pt, xpt);
         crd(0)(i) = xpt(0);
@@ -172,13 +172,14 @@ void mapped_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri
         
         TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND> dxdtn;
         map->calc_metrics(pt, dxdtn);
-        
+                
         // dx/drs = dx/dtn*dtn/drs
         // dx/drs = [dx/dt, dx/dn]*[dtn/dr, dtn/ds]
+        // dxdtn = [dx/ds dx/dn; dy/dx dy/dn]
         for (int i1 = 0; i1 < tri_mesh::ND; ++i1 ) {
             FLT sum = 0.0;
             for (int k1 = 0; k1 < tri_mesh::ND; ++k1 ) {
-                sum += dxdtn(i1,k1)*dcrd(k1)(i);
+                sum += dxdtn(i1,k1)*dtn(k1);
             }
             dcrd(i1)(i) = sum;
         }
@@ -342,7 +343,6 @@ void mapped_edge_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP
 }
 
 void mapped_edge_metric::calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl) const {
-    const int log2p = x.log2p;
     
     metric::calc_positions(tind, crd, tlvl);
     
@@ -724,6 +724,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
     }
     
     /* Calculate xi and eta locations */
+    /* Conversion from r,s to xi, eta */
     TinyMatrix<FLT,MXGP,MXGP> xi, eta;
     for(int i=1;i<sm;++i) {
         for(int j=1;j<sm-(i-1);++j) {
@@ -737,14 +738,22 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             /* INTERIOR */
             for(int i=1;i<sm;++i) {
                 for(int j=1;j<sm-(i-1);++j) {
+                    /* Parametric position along side */
                     pt = pt0*(1-xi(i,j))/2. +pt1*(1+xi(i,j))/2.;
+                    
+                    /* Physical position on side based on isoparametric mapping at xi location */
                     xiso = x.pnts(v0)*(1-xi(i,j))/2. +x.pnts(v1)*(1+xi(i,j))/2.;
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+3,i,j)/pow(.5*(1-eta(i,j)),m+2);
                     }
                     
+                    /* Physical location at parametric coordinate along side */
                     map->to_physical_frame(pt,xmap);
+                    
+                    /* Difference between mapped location and physical location */
                     xmap -= xiso;
+                    
+                    /* Propagation of difference using highest order basis function */
                     for(int n=0;n<tri_mesh::ND;++n) {
                         crd(n)(i,j) += xmap(n)*pow((1.-eta(i,j))/2.,sm+1);
                     }
@@ -761,9 +770,14 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+sm+3,i,j)/((1+xi(i,j))/2.);
                     }
+
+                    /* Physical location at parametric coordinate along side */
                     map->to_physical_frame(pt,xmap);
+
+                    /* Difference between mapped location and physical location */
                     xmap -= xiso;
-                    
+
+                    /* Propagation of difference using highest order basis function */
                     for(int n=0;n<tri_mesh::ND;++n) {
                         crd(n)(i,j) += xmap(n)*(1+xi(i,j))/2.;
                     }
@@ -774,15 +788,19 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
         case(2): {
             for(int i=1;i<sm;++i) {
                 for(int j=1;j<sm-(i-1);++j) {
-                    pt = pt0*(1-eta(i,j))/2. +pt1*(1+eta(i,j))/2.;
+                    pt = pt0*(1+eta(i,j))/2. +pt1*(1-eta(i,j))/2.;
                     xiso = x.pnts(v0)*(1+eta(i,j))/2. +x.pnts(v1)*(1-eta(i,j))/2.;
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+sm+3,i,j)/((1+xi(i,j))/2.);
                     }
-                    
+
+                    /* Physical location at parametric coordinate along side */
                     map->to_physical_frame(pt,xmap);
+
+                    /* Difference between mapped location and physical location */
                     xmap -= xiso;
-                    
+
+                    /* Propagation of difference using highest order basis function */
                     for(int n=0;n<tri_mesh::ND;++n) {
                         crd(n)(i,j) += xmap(n)*(1-xi(i,j))/2.;
                     }

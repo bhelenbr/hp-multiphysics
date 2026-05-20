@@ -999,7 +999,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 		FLT jcb = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
 		nrm(0) /= jcb;
 		nrm(1) /= jcb;
-		
+
 		/* Calculate the mesh velocity */
 		for(n=0;n<tri_mesh::ND;++n) {
 			pt(n) = crd(n)(k);
