@@ -1,0 +1,84 @@
+logfile: generate
+nblock: 2
+ntstep: 3
+adapt: 1
+log2p: 0
+time_scheme: 1
+petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
+#under_relaxation: 0.01
+#debug_output: 1
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-9
+relative_tolerance: 1.0e-5
+growth factor: 50000
+#rsdl_debug: 3
+#jac_debug: 1
+# Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
+# and 0 inside inner radius with smooth transition in between: 
+ibc: sphere
+inner_radius: 5.0
+outer_radius: 10.0
+#ibc: symbolic
+#ibc0: 1.0
+#ibc1: 0.0
+#ibc2: 0.0
+# Viscosity (1/Reynolds Number): 
+mu: 1.0e-1
+rho: 1.0
+delta: 0.05
+b0_type: r_tri_mesh
+b0_mesh: b0.d
+b0_metric: mapped_edge
+b0_s1_type: spline
+b0_s1_filename: naca.spl
+b0_s1_s_limits: sBot sTop
+b0_s1_hp_type: inflow
+b0_s1_report: 1
+b0_s2_hp_type: outflow
+b0_s3_hp_type: outflow
+b0_s4_hp_type: outflow
+b0_s5_hp_type: inflow
+b0_s7_type: mapped_comm
+b0_s7_mapping: polar_log
+b0_s7_normal_coordinate: 0.0
+b0_v2_type: comm
+b0_v2_hp_type: plain
+b0_v2_hp_typelist: 0 0 1
+b0_v3_type: comm
+b0_v3_hp_type: plain
+b0_v3_hp_typelist: 0 0 1
+b1_mesh: b1.d
+b1_type: mapped_mesh
+b1_metric: mapped
+b1_mapping: polar_log
+b1_s6_hp_type: inflow
+b1_s6_hp_typelist: 0 0 1
+b1_s6_type: spline
+b1_s6_filename: naca.spl
+b1_s6_report: 1
+b1_s6_s_limits: 0 sBot
+b1_s7_type: mapped_mesh_comm
+b1_s8_hp_type: inflow
+b1_s8_hp_typelist: 0 0 1
+b1_s8_type: spline
+b1_s8_filename: naca.spl
+b1_s8_report: 1
+b1_s8_s_limits: sTop 0.203893E+01
+b1_s9_hp_type: plain
+b1_s9_hp_typelist: 0 0 1
+b1_s9_flux2: 0.0
+b1_v2_type: mapped_mesh_comm
+b1_v2_hp_type: plain
+b1_v2_hp_typelist: 0 0 1
+b1_v3_type: mapped_mesh_comm
+b1_v3_hp_type: plain
+b1_v3_hp_typelist: 0 0 1
+polar_log_type: polar_log
+polar_log_pnt: 1.0 0.0
+polar_log_theta_length: delta
+polar_log_r0: r0
+polar_log_eps: eps
+r0: delta
+eps: 4.0e-2
+bottom: r0*log(eps/(1+eps))
+res: 0.0125
