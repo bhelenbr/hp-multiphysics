@@ -512,6 +512,102 @@ void draw_mesh(Window win)
 }
 /*-draw_mesh--------------------------------------------------------------*/
 
+
+#ifdef EASYMESH
+/*========================================================================*/
+void load_mesh()
+{
+ int n, s, e, len;
+ int d1, d2, d3, d4, d5, d6;
+ char dummy[80];
+ FILE *in;
+
+ strcat(file_name, ".n");
+ len=strlen(file_name);
+ 
+/*--------+
+|  Nodes  |
++--------*/
+ in=fopen(file_name, "r");
+ if(in==NULL) 
+  {fprintf(stderr, "%s: cannot open file: %s\n\n", prog_name, file_name); 
+   fflush(stdout);
+   exit(-1);}
+   
+ fscanf(in, "%d", &Nn);
+ node=(struct nod *) calloc(Nn, sizeof(struct nod)); 
+ if(node==NULL) 
+  {fprintf(stderr, "%s: cannot allocate enough memory\n\n", prog_name); 
+   fflush(stdout);
+   exit(-1);}
+
+ xmax = -GREAT; xmin = GREAT;
+ ymax = -GREAT; ymin = GREAT;
+ for(n=0; n<Nn; n++)
+  {
+   fscanf(in, "%s %lf %lf %d", dummy, &node[n].x, &node[n].y, &node[n].mark);
+   xmax=max(xmax, node[n].x); ymax=max(ymax, node[n].y);
+   xmin=min(xmin, node[n].x); ymin=min(ymin, node[n].y);
+  }
+ fclose(in);
+
+/*-----------+
+|  Elements  |
++-----------*/
+ file_name[len-1]='e';
+ in=fopen(file_name, "r");
+ if(in==NULL)
+  {fprintf(stderr, "%s: cannot open file: %s\n\n", prog_name, file_name); 
+   fflush(stdout);
+   exit(-1);}
+
+ fscanf(in, "%d", &Ne);
+
+ elem=(struct ele *) calloc(Ne, sizeof(struct ele)); 
+ if(elem==NULL) 
+  {fprintf(stderr, "%s: cannot allocate enough memory\n\n", prog_name); 
+   fflush(stdout);
+   exit(-1);}
+
+ for(e=0; e<Ne; e++)
+  {
+   fscanf(in, "%s %d %d %d %d %d %d %d %d %d %lf %lf %d", 
+               dummy, &elem[e].i, &elem[e].j, &elem[e].k,
+                      &d1, &d2, &d3, &d4, &d5, &d6,
+                      &elem[e].xv, &elem[e].yv, &elem[e].mark);
+  }
+ fclose(in);
+
+/*--------+
+|  Sides  |
++--------*/
+ file_name[len-1]='s';
+ in=fopen(file_name, "r");
+ if(in==NULL)
+  {fprintf(stderr, "%s: cannot open file: %s\n\n", prog_name, file_name); 
+   fflush(stdout);
+   exit(-1);}
+
+ fscanf(in, "%d", &Ns);
+
+ side=(struct sid *) calloc(Ns, sizeof(struct sid)); 
+ if(node==NULL) 
+  {fprintf(stderr, "%s: cannot allocate enough memory\n\n", prog_name); 
+   fflush(stdout);
+   exit(-1);}
+
+ for(s=0; s<Ns; s++)
+  {
+   fscanf(in, dummy);     
+   fscanf(in, "%s %d %d %d %d %d", 
+                      dummy, &side[s].c, &side[s].d, &side[s].ea, &side[s].eb,
+                             &side[s].mark);
+  }
+ fclose(in);
+
+}
+/*------------------------------------------------------------------------*/
+#else
 /*========================================================================*/
 void load_mesh(char *file_name, int bnum)
 {
@@ -644,6 +740,7 @@ void load_mesh(char *file_name, int bnum)
     fclose(in);
 }
 /*------------------------------------------------------------------------*/
+#endif
 
 /*========================================================================*/
 void init(int argc, char **argv)
@@ -853,10 +950,13 @@ int main(int argc, char *argv[])
     prog_name=argv[0];
     file_name=argv[1];
     
-    
+#ifdef EASYMESH
+	load_mesh();
+#else 
     for(int i = 1; i < argc; ++i) {
         load_mesh(argv[i],i-1);
     }
+#endif
     
     init(argc, argv);
     

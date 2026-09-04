@@ -8,6 +8,14 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 # Also, to make this the default way to open meshes, double click the .grd file
 # then choose application and pick ShowMesh.app.
 
+# Makefile for the SDL2 port of ShowMesh
+# Works on both macOS (Homebrew) and Linux, as long as `pkg-config`
+# can find sdl2 and SDL2_ttf.
+#
+# macOS setup:   brew install sdl2 sdl2_ttf pkg-config
+# Debian/Ubuntu: sudo apt install build-essential pkg-config libsdl2-dev libsdl2-ttf-dev
+# Fedora:        sudo dnf install gcc pkgconf-pkg-config SDL2-devel SDL2_ttf-devel
+
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: showmesh showgrid
@@ -36,24 +44,25 @@ else
 
 VPATH = ../
 
-OBJ2 = showmesh2.o
-OBJ3 = showmesh3.o
+# OBJ = showmesh.o
+# LIB = -L/opt/X11/lib -lX11
+# CFLAGS = -O3 -g -I/opt/X11/include 
+# CFLAGS += $(DEFINES) ${EXTRAFLAGS}
 
-DEFINES = $(EXTRAFLAGS)
+OBJ = showmesh_sdl.o
+PKGS    = sdl2 SDL2_ttf
+CFLAGS  = -O2 -Wall $(shell pkg-config --cflags $(PKGS))
+LIB  = $(shell pkg-config --libs $(PKGS)) -lm
+CFLAGS  += $(DEFINES) ${EXTRAFLAGS}
 
-LIB = -L/opt/X11/lib -lX11
+showmesh: $(OBJ)
+	${CC} $(CFLAGS) -o $@ $(OBJ) $(LIB)
 
-CPPFLAGS = -O3 -g -I/opt/X11/include 
-CPPFLAGS += $(DEFINES)
-
-showmesh: $(OBJ2)
-	${CC} $(CPPFLAGS) -o $@ $(OBJ2) $(LIB)
-
-showgrid: $(OBJ3)
-	${CC} $(CPPFLAGS) -o $@ $(OBJ3) $(LIB)
+showgrid: $(OBJ)
+	${CC} $(CFLAGS) -o $@ $(OBJ) $(LIB)
 
 %.o: %.cpp
-	$(CC) ${CPPFLAGS} -MD -c -o $@ $<
+	$(CC) ${CFLAGS} -MD -c -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \

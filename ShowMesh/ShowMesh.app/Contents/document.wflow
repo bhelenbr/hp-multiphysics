@@ -148,11 +148,11 @@
 #
 # Attempt to launch an X server
 #
-if [ -d /Applications/Utilities/XQuartz.app ] ; then
-  open -a /Applications/Utilities/XQuartz.app
-  sleep 5
-fi
-export DISPLAY=:0
+#if [ -d /Applications/Utilities/XQuartz.app ] ; then
+#  open -a /Applications/Utilities/XQuartz.app
+#  sleep 5
+#fi
+#export DISPLAY=:0
 
 location="${HOME}/hp-multiphysics/bin"
 files=()
@@ -281,7 +281,7 @@ nohup "${location}/showgrid" "${files[@]}" &gt; /dev/null 2&gt;&amp;1 &amp;
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>954.500000:752.000000</string>
+				<string>464.000000:317.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -291,7 +291,7 @@ nohup "${location}/showgrid" "${files[@]}" &gt; /dev/null 2&gt;&amp;1 &amp;
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>5A6C2FDD-033A-4001-9E89-87EBF930B62B</key>
+		<key>4F6A313F-5C98-49B2-BA4C-7CC1F2C4E27D</key>
 		<dict>
 			<key>from</key>
 			<string>542E179D-BC63-49C4-BD26-1B6330C932DE - 542E179D-BC63-49C4-BD26-1B6330C932DE</string>
