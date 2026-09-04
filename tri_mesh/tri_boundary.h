@@ -265,10 +265,16 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
 			}
 			my_spline.read(line);
 
-			inmap.getlinewdefault(BASE::idprefix+"_s_limits",line,"0 1");
-			std::istringstream data(line);
-			data >> smin >> smax;
-			data.clear();
+            double vals[2];
+            if (inmap.get(BASE::idprefix+"_s_limits",vals,2)) {
+                smin = vals[0];
+                smax = vals[1];
+                
+            }
+            else {
+                smin = 0;
+                smax = 1;
+            }
             
             inmap.getwdefault(BASE::idprefix+"_scale",scale,1.0);
             inmap.getwdefault(BASE::idprefix+"_norm_dist",norm_dist,0.0);
@@ -278,8 +284,16 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
 			int sind = BASE::seg(seg_ind);
 			int p0 = BASE::x.seg(sind).pnt(0);
 			int p1 = BASE::x.seg(sind).pnt(1);
-            TinyVector<FLT,tri_mesh::ND> pt0(BASE::x.pnts(p0));
-            TinyVector<FLT,tri_mesh::ND> pt1(BASE::x.pnts(p1));
+            TinyVector<FLT,tri_mesh::ND> pt0, pt1;
+            
+            try {
+                mapped_mesh& mx = dynamic_cast<mapped_mesh&>(BASE::x);
+                mx.map->to_physical_frame(BASE::x.pnts(p0), pt0);
+                mx.map->to_physical_frame(BASE::x.pnts(p1), pt1);
+            } catch (std::bad_cast) {
+                pt0 = BASE::x.pnts(p0);
+                pt1 = BASE::x.pnts(p1);
+            }
                         
             to_geometry_frame(pt0);
             to_geometry_frame(pt1);
@@ -303,6 +317,13 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
             
             pt *= scale;
 			to_physical_frame(pt);
+            try {
+                mapped_mesh& mx = dynamic_cast<mapped_mesh&>(BASE::x);
+                mx.map->to_parametric_frame(pt, pt);
+            } catch (std::bad_cast) {
+                pt = pt;
+            }
+            
 			return;
 		}
 };

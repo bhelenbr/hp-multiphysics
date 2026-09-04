@@ -41,6 +41,12 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			moment = 0.0;
 			circumference = 0.0;
 			circulation = 0.0;
+            TinyVector<FLT,MXGP> cjcb;
+            TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND> crd;
+            TinyMatrix<TinyVector<FLT,MXGP>,tri_mesh::ND,tri_mesh::ND> dcrd;
+            Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+            Array<TinyVector<FLT,MXGP>,2> du(x.NV,tri_mesh::ND);
+
 #ifdef L2_ERROR
 			FLT l2error = 0.0;
 			TinyVector<FLT,2> xpt;
@@ -48,46 +54,38 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			ind = 0;
 			do { 
 				sind = base.seg(ind);
-				tind = x.seg(sind).tri(0);        
-
-				for(seg=0;seg<3;++seg)
-					if (x.tri(tind).seg(seg) == sind) break;
-				assert(seg != 3);
-
-				x.crdtocht(tind);
-				for(m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
-					for(n=0;n<tri_mesh::ND;++n)
-						x.cht(n,m) = 0.0;
-
-				for(n=0;n<tri_mesh::ND;++n)
-					basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
-
-				x.ugtouht(tind);
+                x.pmetric->calc_metrics1D(sind, crd, dcrd);
+                
+				tind = x.seg(sind).tri(0);
+                for(seg=0;seg<3;++seg)
+                    if (x.tri(tind).seg(seg) == sind) break;
+                
+                x.ugtouht(tind);
 				for(n=0;n<x.NV;++n)
-					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&u(n)(0),&du(n,0)(0),&du(n,1)(0));
 
 				for (i=0;i<basis::tri(x.log2p)->gpx();++i) {
-					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(crd(0)(i))*sqrt(dcrd(0,0)(i)*dcrd(0,0)(i) +dcrd(1,0)(i)*dcrd(1,0)(i));
 					circumference += jcb;
 
-					x.cjcb(0,i) = x.hp_ins_gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+					cjcb(i) = x.hp_ins_gbl->mu*RAD(crd(0)(i))/(dcrd(0,0)(i)*dcrd(1,1)(i) -dcrd(1,0)(i)*dcrd(0,1)(i));
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-					visc[0][0][0][0] =  x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-					visc[0][0][1][1] =  x.cjcb(0,i)*(2.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-					visc[0][0][0][1] = -x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+					visc[0][0][0][0] =  cjcb(i)*(2.*dcrd(1,1)(i)*dcrd(1,1)(i) +dcrd(0,1)(i)*dcrd(0,1)(i));
+					visc[0][0][1][1] =  cjcb(i)*(2.*dcrd(1,0)(i)*dcrd(1,0)(i) +dcrd(0,0)(i)*dcrd(0,0)(i));
+					visc[0][0][0][1] = -cjcb(i)*(2.*dcrd(1,1)(i)*dcrd(1,0)(i) +dcrd(0,1)(i)*dcrd(0,0)(i));
 #define             viscI0II0II1II0I visc[0][0][0][1]
 
-					visc[1][1][0][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-					visc[1][1][1][1] =  x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-					visc[1][1][0][1] = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+					visc[1][1][0][0] =  cjcb(i)*(dcrd(1,1)(i)*dcrd(1,1)(i) +2.*dcrd(0,1)(i)*dcrd(0,1)(i));
+					visc[1][1][1][1] =  cjcb(i)*(dcrd(1,0)(i)*dcrd(1,0)(i) +2.*dcrd(0,0)(i)*dcrd(0,0)(i));
+					visc[1][1][0][1] = -cjcb(i)*(dcrd(1,1)(i)*dcrd(1,0)(i) +2.*dcrd(0,1)(i)*dcrd(0,0)(i));
 #define             viscI1II1II1II0I visc[1][1][0][1]
 
-					visc[0][1][0][0] = -x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
-					visc[0][1][1][1] = -x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
-					visc[0][1][0][1] =  x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i);
-					visc[0][1][1][0] =  x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i);
+					visc[0][1][0][0] = -cjcb(i)*dcrd(0,1)(i)*dcrd(1,1)(i);
+					visc[0][1][1][1] = -cjcb(i)*dcrd(0,0)(i)*dcrd(1,0)(i);
+					visc[0][1][0][1] =  cjcb(i)*dcrd(0,1)(i)*dcrd(1,0)(i);
+					visc[0][1][1][0] =  cjcb(i)*dcrd(0,0)(i)*dcrd(1,1)(i);
 
 					/* OTHER SYMMETRIES     */                
 #define             viscI1II0II0II0I visc[0][1][0][0]
@@ -96,52 +94,52 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 #define             viscI1II0II1II0I visc[0][1][0][1]
 
 					/* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
-					visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-					visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+					visc[2][2][1][0] =  cjcb(i)*(dcrd(1,1)(i)*dcrd(1,0)(i) +dcrd(0,1)(i)*dcrd(0,0)(i));
+					visc[2][2][1][1] = -cjcb(i)*(dcrd(1,0)(i)*dcrd(1,0)(i) +dcrd(0,0)(i)*dcrd(0,0)(i));
 
 
 					ldiff_flux = 0.0;
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.hp_ins_gbl->D(n)/x.hp_ins_gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
+						ldiff_flux(n) = basis::tri(x.log2p)->wtx(i)*x.hp_ins_gbl->D(n)/x.hp_ins_gbl->mu*(-visc[2][2][1][0]*du(n,0)(i) -visc[2][2][1][1]*du(n,1)(i));
 
-                    ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(x.NV-1)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i)
-									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
-									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-                    ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*( x.u(x.NV-1)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
-									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
-									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
+                    ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-u(x.NV-1)(i)*RAD(crd(0)(i))*dcrd(1,0)(i)
+									-viscI0II0II1II0I*du(0,0)(i) -visc[0][1][1][0]*du(1,0)(i)
+									-visc[0][0][1][1]*du(0,1)(i) -visc[0][1][1][1]*du(1,1)(i));															
+                    ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*( u(x.NV-1)(i)*RAD(crd(0)(i))*dcrd(0,0)(i)
+									-viscI1II0II1II0I*du(0,0)(i) -viscI1II1II1II0I*du(1,0)(i)
+									-viscI1II0II1II1I*du(0,1)(i) -visc[1][1][1][1]*du(1,1)(i));
 
 					diff_flux -= ldiff_flux;
 					ldiff_flux /= jcb;
 
-					norm(0) = x.dcrd(1,0)(0,i);
-					norm(1) = -x.dcrd(0,0)(0,i);                
+					norm(0) = dcrd(1,0)(i);
+					norm(1) = -dcrd(0,0)(i);                
 					for(n=0;n<tri_mesh::ND;++n) {
-						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+						mvel(n) = x.gbl->bd(0)*(crd(n)(i) -dxdt(x.log2p,ind)(n,i));
 #ifdef MESH_REF_VEL
 						mvel(n) += x.hp_gbl->mesh_ref_vel(n);
 #endif
 					}
 
-					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
+					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(u(0)(i)-mvel(0)) +norm(0)*(u(1)(i)-mvel(1)));
 
-					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
+					convect = basis::tri(x.log2p)->wtx(i)*RAD(crd(0)(i))*((u(0)(i)-mvel(0))*norm(0) +(u(1)(i)-mvel(1))*norm(1));
 					lconv_flux(x.NV-1) = convect;
 					for(int n=0;n<x.NV-1;++n)
-						lconv_flux(n) = x.u(n)(0,i)*convect;
+						lconv_flux(n) = u(n)(i)*convect;
 					
 					conv_flux -= lconv_flux;
 					lconv_flux /= jcb;
 
 #ifdef L2_ERROR
-					xpt(0) = x.crd(0)(0,i);
-					xpt(1) = x.crd(1)(0,i);
+					xpt(0) = crd(0)(i);
+					xpt(1) = crd(1)(i);
 					l2error += jcb*l2norm->Eval(xpt,x.gbl->time);
 #endif
 					
-					file_out << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					file_out << circumference << ' ' << crd(0)(i) << ' ' << crd(1)(i) << ' ';
 					for(int n=0;n<x.NV;++n)
-						file_out << x.u(n)(0,i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
+						file_out << u(n)(i) << ' ' << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
 					file_out << std::endl;
 
 				}	
