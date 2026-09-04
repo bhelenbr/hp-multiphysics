@@ -2,6 +2,9 @@ logfile: generate
 nblock: 3
 ntstep: 3
 adapt: 1
+length_smoothing_steps: 1
+error_estimator: energy_norm
+error_target: 1.0e-4
 log2p: 0
 time_scheme: 1
 petsc: -ksp_type preonly -pc_type lu -pc_factor_mat_solver_type mumps
@@ -12,13 +15,13 @@ growth factor: 50000
 #rsdl_debug: 1
 # Sphere initial/boundary condition gives u = 1 outside of outer_radius: 
 # and 0 inside inner radius with smooth transition in between: 
-ibc: sphere
-inner_radius: 5.0
-outer_radius: 10.0
-# ibc: symbolic
-# ibc0: 1.0
-# ibc1: 0.0
-# ibc2: 0.0
+#ibc: sphere
+#inner_radius: 5.0
+#outer_radius: 10.0
+ibc: symbolic
+ibc0: 1.0
+ibc1: 0.0
+ibc2: 0.0
 # Viscosity (1/Reynolds Number): 
 mu: 1.0e-1
 rho: 1.0

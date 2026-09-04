@@ -24,6 +24,15 @@ os.system("rm *")
 # copy input files into results directory
 os.system("cp ../Inputs/* .")
 
+offset = -0.05
+os.system("spline -m 0.0,0.0 -r 0.0 -s 1.0 -o" +str(offset)+ " -i spoints.dat naca.spl > interp.dat");
+s, x, y, tx, ty, curvx, curvy = np.loadtxt("interp.dat", delimiter=' ', unpack=True)
+npoints = len(s)
+
+for n in range(5):
+	os.system(f"mod_map generate.inpt x{n} {x[n]:.16f}")
+	os.system(f"mod_map generate.inpt y{n} {y[n]:.16f}")
+	os.system(f"mod_map generate.inpt s{n} {s[n]:.16f}")
 os.system("tri_mesh generate.inpt")
 
 os.system("cp generate.inpt run.inpt")
