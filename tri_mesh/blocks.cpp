@@ -1258,7 +1258,15 @@ void block::init(input_map &input) {
 			output(mystring,block::display,lvl);
 		}
 	}
-
+    
+    int reset_time;
+    if (!input.get("reset_time",reset_time)) {
+        reset_time = 0;
+    }
+    if (reset_time) {
+        gbl->time = 0.0;
+    }
+    
 	return;
 }
 

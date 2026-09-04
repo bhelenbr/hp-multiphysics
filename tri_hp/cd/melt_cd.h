@@ -17,6 +17,7 @@
 
 //#define OLDKINETICS
 //#define TWOFACETS
+//#define PERTURB
 
 //#define ANALYTIC_JACOBIAN
 
@@ -38,7 +39,9 @@ namespace bdry_cd {
 #endif
 			FLT Kgt; // Gibbs Thompson curvature effect (not working)
 			TinyVector<FLT,tri_mesh::ND> facetdir; // Diretion of facet
-			FLT surge_time;
+#ifdef PERTURB
+			FLT surge_time, surge_amp;
+#endif
 			
 			Array<FLT,1> vdt_kinetic;
 			Array<FLT,1> sdt_kinetic;

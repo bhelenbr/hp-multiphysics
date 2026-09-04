@@ -27,6 +27,29 @@ import glob
 import string
 import math
 
+VTU=False
+
+
+def getxle(RESTART):
+	if VTU:
+		filename = "data" +str(RESTART) +"_b1.vtu"
+		p0 = subprocess.Popen(["grep","-n","NumberOfComponents=\"3\"",filename],stdout=subprocess.PIPE)
+		p1 = subprocess.Popen(["cut","-d:","-f1"],stdin=p0.stdout,stdout=subprocess.PIPE)
+		(out,err) = p1.communicate()
+		nlines = int(out.decode('ascii')) +1
+		p0 = subprocess.Popen(["head",f"-{nlines}",filename], stdout=subprocess.PIPE)
+		p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
+		p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
+		(out, err) = p2.communicate()
+		return(float(out.decode('ascii')))
+	else:
+		filename = "data" +str(RESTART) +"_b1.dat"
+		p0 = subprocess.Popen(["head","-2",filename], stdout=subprocess.PIPE)
+		p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
+		p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
+		(out, err) = p2.communicate()
+		return(float(out.decode('ascii')))
+
 os.chdir(os.path.dirname(sys.argv[0]))
 
 # Define location of executables
@@ -60,6 +83,9 @@ os.system("rm data*.grd")
 # These are the steps to run
 # Get a reasonable steady temperature field
 # Before starting the melting 
+if VTU:
+	os.system("mod_map run.inpt display_type 6")
+	os.system("mod_map run.inpt b1_s3_report 1")
 os.system("cp run.inpt startup.inpt")
 os.system("mod_map run.inpt b0_v1_hp_type plain")
 os.system("mod_map run.inpt b0_v2_hp_type plain")
@@ -234,13 +260,8 @@ p0 = subprocess.Popen(["mod_map","-e","run.inpt","sx"], stdout=subprocess.PIPE)
 p1 = subprocess.Popen(["cut","-d/","-f1"], stdin=p0.stdout, stdout=subprocess.PIPE)
 (out, err) = p1.communicate()
 sx[0] = float(out)
- 
-filename = "data" +str(RESTART) +"_b1.dat"
-p0 = subprocess.Popen(["head","-2",filename], stdout=subprocess.PIPE)
-p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
-(out, err) = p2.communicate()
-xle[0] = float(out)
+xle[0] = getxle(RESTART)
+
 
 SXMAX=0.1
 FACTOR=1.05
@@ -277,12 +298,7 @@ while ( ATTEMPTS < MAXATTEMPTS and sx[count] < SXMAX):
 		else:
 			RESTART+=1
 			os.system('mod_map run.inpt extrapolate 1.0');
-			filename = "data" +str(RESTART) +"_b1.dat"
-			p0 = subprocess.Popen(["head","-2",filename], stdout=subprocess.PIPE)
-			p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-			p2 = subprocess.Popen(["cut","-d"," ","-f","1"], stdin=p1.stdout, stdout=subprocess.PIPE)
-			(out, err) = p2.communicate()
-			xle[count] = float(out)
+			xle[count] = getxle(RESTART)
 			if count > 2:
 				alpha = numpy.zeros(3);
 				alpha[2] = sx[count]/((xle[count]-xle[count-1])*(xle[count]-xle[count-2]))
@@ -309,5 +325,9 @@ data[:,0] = sx
 data[:,1] = xle
 numpy.savetxt("turning.dat",data)
 
+if VTU:
+	os.system('make_.py .')
 
 os.system('rm core* abort* net* rstrt*.nc')
+
+	

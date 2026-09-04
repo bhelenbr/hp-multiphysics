@@ -120,7 +120,10 @@ void melt_cd::init(input_map& inmap) {
 	}
 #endif
 	inmap.getwdefault(liquid_block + "_A2Dn",melt_cd_gbl->A2Dn,1.0);
+#ifdef PERTURB
 	inmap.getwdefault(liquid_block + "_surge_time",melt_cd_gbl->surge_time,1.0);
+    inmap.getwdefault(liquid_block + "_surge_amp",melt_cd_gbl->surge_amp,0.0);
+#endif
     inmap.getwdefault(liquid_block + "_DTexponent2Dn",melt_cd_gbl->DTexponent2Dn,0.0);
 	
 	FLT angle;
@@ -206,6 +209,11 @@ FLT melt_cd::calculate_kinetic_coefficients(FLT DT,FLT sint) {
 	
 	if (sint == 0.0) {
 		K = K2Dn_exp;
+#ifdef PERTURB
+        if (x.gbl->time < melt_cd_gbl->surge_time) {
+            K = K*(1 +melt_cd_gbl->surge_amp*(1-cos(x.gbl->time/melt_cd_gbl->surge_time*2*M_PI)));
+        }
+#endif
 	}
 	else {
 		K = pow(pow(melt_cd_gbl->Krough,p) + pow(2*melt_cd_gbl->Ksn/(-sint +fabs(sint) +EPSILON),p),1.0/p);
@@ -573,7 +581,8 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		/* Kinetic equation for surface temperature */
 		res(2,i) = RAD(crd(0,i))*melt_cd_gbl->rho_s*(-DT)*jcb +K*res(1,i);
 		/* Heat source */
-		res(3,i) =  -(is_master)*melt_cd_gbl->Lf*res(1,i) +(!base.is_comm())*(RAD(crd(0,i))*flx(Tindx)*jcb +melt_cd_gbl->rho_s*melt_cd_gbl->cp_s*u(Tindx)(i)*res(1,i));
+        res(3,i) =  -(is_master)*melt_cd_gbl->Lf*res(1,i) +RAD(crd(0,i))*flx(Tindx)*jcb +(!base.is_comm())*melt_cd_gbl->rho_s*melt_cd_gbl->cp_s*u(Tindx)(i)*res(1,i);
+        
 		
 		/* UPWINDING BASED ON TANGENTIAL VELOCITY (not used) */
 		//		res(4,i) = -res(3,i)*(-norm(1)*amv(0) +norm(0)*amv(1))/jcb*hp_bdry_gbl->meshc(indx);
