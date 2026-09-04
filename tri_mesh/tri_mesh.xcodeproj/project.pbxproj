@@ -903,6 +903,7 @@
 					"${inherited}",
 					"$(threads)",
 					METIS,
+					MY_SPARSE,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -915,6 +916,7 @@
 					"-lblitz",
 					"-lpth",
 					"-lnetcdf",
+					"-lmyblas",
 				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
@@ -931,6 +933,7 @@
 					"${inherited}",
 					"$(threads)",
 					METIS,
+					MY_SPARSE,
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -942,6 +945,7 @@
 					"-lmetis",
 					"-lpth",
 					"-lnetcdf",
+					"-lmyblas",
 				);
 				PRODUCT_NAME = tri_mesh;
 				threads = PTH;
