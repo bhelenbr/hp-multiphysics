@@ -78,6 +78,7 @@ OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/setup_precondition
 OBJNONNEWTONIAN = nonnewtonian/tri_hp_nonnewtonian.o
 OBJPETSC = petsc.o
 OBJKOMEGA = komega/rsdl.o komega/allocate.o komega/length.o
+OBJKEPSILON = kepsilon/rsdl.o kepsilon/allocate.o kepsilon/length.o
 
 # COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
@@ -94,6 +95,7 @@ OBJ += $(OBJPS)
 #OBJ += $(OBJSWIRL)
 #OBJ += $(OBJNONNEWTONIAN)
 OBJ += $(OBJKOMEGA)
+OBJ += $(OBJKEPSILON)
 
 DEFINES += -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS += ${OPT}
@@ -130,6 +132,7 @@ dirs:
 	+@[ -d  explicit ] || mkdir -p explicit
 	+@[ -d  nonnewtonian ] || mkdir -p nonnewtonian
 	+@[ -d  komega ] || mkdir -p komega
+	+@[ -d  kepsilon ] || mkdir -p kepsilon
 	touch dirs
 
 
