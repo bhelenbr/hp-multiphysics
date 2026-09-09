@@ -186,7 +186,8 @@ for log2p in range(3):
 		run(["mod_map", "run.inpt", "adapt", "1"])
 		run(["mod_map", "run.inpt", "restart", str(restart)])
 	
-		run(["mpiexec", "-np", "1", "tri_hp_petsc", "run.inpt"])
+		#run(["mpiexec", "-np", "1", "tri_hp_petsc", "run.inpt","-stop_for_debugger"])
+		run(["mpiexec", "-np", "1", "tri_hp_petsc", "run.inpt"])		
 		restart += 1
 	
 		# Run restart case
