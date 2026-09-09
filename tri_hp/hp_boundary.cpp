@@ -1707,7 +1707,7 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
         return;
     }
     
-    if (mapped) {
+    if (mapped || !coupled) {
         base.mvpttobdry(bel,psi,xp);
         basis::tri(x.log2p)->ptvalues1d(psi);
         return;

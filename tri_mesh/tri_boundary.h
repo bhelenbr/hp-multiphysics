@@ -116,7 +116,6 @@ template<class BASE> class prdc_template : public BASE {
 		/* CONSTRUCTOR */
 		prdc_template(int idin, tri_mesh &xin) : BASE(idin,xin), dir(0) {BASE::mytype="prdc";}
 		prdc_template(const prdc_template<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), dir(inbdry.dir) {}
-
 		prdc_template<BASE>* create(tri_mesh& xin) const {return(new prdc_template<BASE>(*this,xin));}
 
 		int& setdir() {return(dir);}
@@ -300,21 +299,39 @@ template<class BASE> class spline_bdry : public BASE, public rigid_movement_inte
             pt0 /= scale;
             pt1 /= scale;
             
-            FLT sloc;
-            pt = 0.5*(pt0+pt1);
-            my_spline.find(sloc,pt);
-            
+            FLT sloc,sloc0,sloc1;
+            my_spline.find(sloc0,pt0);
+            my_spline.find(sloc1,pt1);
+
+            if (sloc1 < sloc0) {
+                if (seg_ind == 0) {
+                    // *BASE::x.gbl->log << "Resetting sloc0 " << seg_ind << ' ' << BASE::nseg << std::endl;
+                    sloc0 = my_spline.start();
+                }
+                else {
+                    // *BASE::x.gbl->log << "Resetting sloc1 " << seg_ind << ' ' << BASE::nseg << std::endl;
+                    sloc1 = my_spline.stop();
+                }
+            }
+            // *BASE::x.gbl->log << pt0(0) << ',' << pt0(1) << ' ' << sloc0  << ' ' << pt1(0) << ',' << pt1(1) << ' ' << sloc1  << std::endl;
+
+            sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
             pt = 0.5*((1-psi)*pt0 +(1+psi)*pt1);
             my_spline.find_with_guess(sloc,pt);
+
+            if (sloc < sloc0) {
+                // *BASE::x.gbl->log << "Resetting sloc" << std::endl;
+                sloc = sloc0;
+            }
             
-            if (sloc < my_spline.start())
-                sloc = my_spline.start();
-            
-            if (sloc > my_spline.stop())
-                sloc = my_spline.stop();
+            if (sloc > sloc1) {
+                // *BASE::x.gbl->log << "Resetting sloc" << std::endl;
+                sloc = sloc1;
+            }
             
             my_spline.offset(sloc,norm_dist,pt);
-            
+            // *BASE::x.gbl->log << pt(0) << ',' << pt(1) << ' ' << sloc  << std::endl;
+
             pt *= scale;
 			to_physical_frame(pt);
             try {

@@ -127,7 +127,7 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, 
 		dy = x.pnts(p1)(1) - x.pnts(p0)(1);
 		ol = 2./(dx*dx +dy*dy);
 		psi = ol*((xpt(0) -x.pnts(p0)(0))*dx +(xpt(1) -x.pnts(p0)(1))*dy) -1.;
-		normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p1)(0));
+		normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p0)(0));
 		normdist *= sqrt(ol/2.);
 
 		if (psi <= -1.0 && psiprev >= 1.0) {

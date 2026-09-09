@@ -14,7 +14,11 @@ void tri_hp::copy(const tri_hp& tgt) {
 	int i,n,t;
 
 	/* COPY MESH INFORMATION */
+#ifdef MAPPED_MESH
+    mapped_mesh::copy(tgt);
+#else
 	tri_mesh::copy(tgt);
+#endif
 
 	for(t=0;t<gbl->nadapt;++t) {
 		ugbd(t).v(Range(0,npnt-1),Range::all()) = tgt.ugbd(t).v(Range(0,npnt-1),Range::all());
