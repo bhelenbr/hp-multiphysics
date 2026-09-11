@@ -9,6 +9,7 @@
 #include "metric.h"
 #include "hp_boundary.h"
 
+#ifdef MAPPED_MESH
 void tri_hp::metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
     
@@ -925,3 +926,4 @@ void hp_edge_bdry::calc_positions_leg1D(int indx, TinyVector<TinyVector<FLT,MXGP
         }
     }
 }
+#endif // MAPPED_MESH

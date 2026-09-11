@@ -14,15 +14,15 @@
 #define CD
 #define INS
 #define PS
-#define SWIRL
+//#define SWIRL
 #define BUOYANCY
 //#define SWE
-#define EXPLICIT
+//#define EXPLICIT
 #define CNS
 //#define CNS_EXPLICIT
 //#define NONNEWTONIAN
 #define KOMEGA
-#define KEPSILON
+//#define KEPSILON
 
 #define POD
 

@@ -176,7 +176,11 @@ public:
     void lftog(int tind, vsi gvect); /**< gather local to global vector */
     
 public:
+#ifdef MAPPED_MESH
     tri_hp() : mapped_mesh() {}
+#else
+    tri_hp() : r_tri_mesh() {}
+#endif
     virtual tri_hp* create() {return new tri_hp;}
     /* Fixme: Replace init with a constructor that accepts an input_map? */
     void init(input_map& inmap, shared_ptr<block_global> gin);

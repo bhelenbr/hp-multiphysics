@@ -11,6 +11,8 @@
 #include <mapped_mesh.h>
 #include "tri_hp.h"
 
+#ifdef MAPPED_MESH
+
 class tri_hp::metric {
 public:
     tri_hp& x;
@@ -78,5 +80,5 @@ public:
     virtual void calc_positions_leg(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
     virtual void calc_positions_leg1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, int tlvl=0) const override;
 };
-
+#endif // MAPPED_MESH
 #endif /* metric_h */
