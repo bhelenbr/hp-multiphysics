@@ -144,18 +144,6 @@ RESTART=RESTART+1
 print("initial steady-state " +str(RESTART))
 # 401
 
-# MAKE K2DN_MAX infinite
-os.system("mod_map run.inpt restart " +str(RESTART))
-os.system("mod_map run.inpt b0_s3_K2Dn_max 1e10")
-err = os.system(HP)
-if err:
-	print("exited from changing K2DN_max")
-	sys.exit()
-
-RESTART=RESTART+1
-print("changing K2DN_max " +str(RESTART))
-# 402
-
 # Get high order solution (try to get 1step steady-state first)
 os.system('mod_map run.inpt dtinv 0.0')
 os.system("mod_map run.inpt log2p 1")
@@ -243,45 +231,31 @@ if err:
 RESTART=RESTART+3
 print("mesh adaptation " +str(RESTART))
 
-################################################
-# SX IS THE PULL SPEED
-# NOW SLOWLY INCREASE SX
-################################################
+
+
+# MAKE KSN Physical
 os.system("mod_map -c run.inpt under_relaxation")
 os.system('mod_map run.inpt dtinv 0.0')
 os.system("mod_map run.inpt ntstep 1")
-os.system("delete_series data 0 1")
-os.system("delete_series rstrt 2 1")
 
-sx = numpy.zeros(200)
-xle = numpy.zeros(200)
-
-p0 = subprocess.Popen(["mod_map","-e","run.inpt","sx"], stdout=subprocess.PIPE)
-p1 = subprocess.Popen(["cut","-d/","-f1"], stdin=p0.stdout, stdout=subprocess.PIPE)
-(out, err) = p1.communicate()
-sx[0] = float(out)
-xle[0] = getxle(RESTART)
-
-
-SXMAX=0.1
-FACTOR=1.05
-DSX=(FACTOR-1)*sx[0]
+K = 91
+KMIN=10
+FACTOR=0.95
+DK=(1-FACTOR)*K
 ATTEMPTS=0
 MAXATTEMPTS=3
-
-count = 1
-
-while ( ATTEMPTS < MAXATTEMPTS and sx[count] < SXMAX):
-	sx[count] = sx[count-1] +DSX
-	print("SX " +str(sx[count]))
-	os.system('mod_map run.inpt sx "' +str(sx[count]) +'/(d0*tsi)"');
+while ( ATTEMPTS < MAXATTEMPTS and K > KMIN):
+	K = max(K-DK,KMIN)
+	print("KSN " +str(K))
+	os.system(f"mod_map run.inpt b0_s3_Ksn \"{K}*d0*tsi/(T0*0.63)\"")
 	os.system("mod_map run.inpt restart " +str(RESTART))
 	err = os.system(HP)
 	if err:
 		os.system('rm core*')
 		os.system('rm neg*')
 		os.system('rm abort*')
-		DSX /= 4.0;
+		K += DK
+		DK /= 4.0;
 		os.system('mod_map run.inpt extrapolate 0.25');
 		ATTEMPTS+=1
 	else:
@@ -292,35 +266,99 @@ while ( ATTEMPTS < MAXATTEMPTS and sx[count] < SXMAX):
 		(out, err) = p2.communicate()
 		res = float(out)
 		if res > 1.0e-5:
-			DSX /= 4.0;
+			K += DK
+			DK /= 4.0;
 			os.system('mod_map run.inpt extrapolate 0.25');
 			ATTEMPTS+=1
 		else:
 			RESTART+=1
 			os.system('mod_map run.inpt extrapolate 1.0');
-			xle[count] = getxle(RESTART)
-			if count > 2:
-				alpha = numpy.zeros(3);
-				alpha[2] = sx[count]/((xle[count]-xle[count-1])*(xle[count]-xle[count-2]))
-				alpha[1] = sx[count-1]/((xle[count-1]-xle[count])*(xle[count-1]-xle[count-2]))
-				alpha[0] = sx[count-2]/((xle[count-2]-xle[count])*(xle[count-2]-xle[count-1]))
-				
-				xleturn = alpha[0]*(-xle[count]-xle[count-1])+alpha[1]*(-xle[count-2]-xle[count])+alpha[2]*(-xle[count-1]-xle[count-2])
-				xleturn /= -2*(alpha[0]+alpha[1]+alpha[2])
-				sxturn = alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2]) +alpha[1]*(xleturn-xle[count])*(xleturn-xle[count-2]) +alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2])
-				print(str(sxturn))
-				if (sxturn > sx[count] and FACTOR*sx[count] > sxturn):
-					# DSX /= 4.0;
-					# os.system('mod_map run.inpt extrapolate 0.25');
-					print("would have changed factor")
-			count += 1
+
+
+################################################
+# SX IS THE PULL SPEED
+# NOW SLOWLY INCREASE SX
+################################################
+os.system("delete_series data 0 1")
+os.system("delete_series rstrt 2 1")
+
+sx = numpy.zeros(2000)
+xle = numpy.zeros(2000)
+
+p0 = subprocess.Popen(["mod_map","-e","run.inpt","sx"], stdout=subprocess.PIPE)
+p1 = subprocess.Popen(["cut","-d/","-f1"], stdin=p0.stdout, stdout=subprocess.PIPE)
+(out, err) = p1.communicate()
+sx[0] = float(out)
+xle[0] = getxle(RESTART)
+
+
+SXMAX=0.1
+FACTOR=1.01
+DSX=(FACTOR-1)*sx[0]
+DSXMAX = 0.0;
+ATTEMPTS=0
+MAXATTEMPTS=10
+SUCCESS = 0
+JUSTFAILED = 1
+DIVISOR = 4;
+count = 1
+
+while ( ATTEMPTS < MAXATTEMPTS and sx[count] < SXMAX):
+	sx[count] = sx[count-1] +DSX
+	print("SX " +str(sx[count]))
+	os.system('mod_map run.inpt sx "' +str(sx[count]) +'/(d0*tsi)"');
+	os.system("mod_map run.inpt restart " +str(RESTART))
+	err = os.system(HP)
+	
+	p0 = subprocess.Popen(["grep","^[1-9]","out_b0.log"], stdout=subprocess.PIPE)
+	p1 = subprocess.Popen(["tail","-1"], stdin=p0.stdout, stdout=subprocess.PIPE)
+	p2 = subprocess.Popen(["cut","-d"," ","-f","3"], stdin=p1.stdout, stdout=subprocess.PIPE)
+	(out, err) = p2.communicate()
+	res = float(out)
+		
+		
+	if err or (res > 1.0e-5):
+		os.system('rm core*')
+		os.system('rm neg*')
+		os.system('rm abort*')
+		if (SUCCESS ==1):
+			DSX = 0.9*DSXMAX
+		else:		
+			DSX /= DIVISOR;
+			os.system('mod_map run.inpt extrapolate 0.25');
+		ATTEMPTS+=1
+		JUSTFAILED = 1;
+	else:
+		SUCCESS += JUSTFAILED
+		DIVISOR = 1.5
+		JUSTFAILED = 0
+		RESTART+=1
+		if SUCCESS == 1:
+			DSXMAX = max(DSX,DSXMAX)
+			DSX *= 1.025
+		xle[count] = getxle(RESTART)
+		if count > 2:
+			alpha = numpy.zeros(3);
+			alpha[2] = sx[count]/((xle[count]-xle[count-1])*(xle[count]-xle[count-2]))
+			alpha[1] = sx[count-1]/((xle[count-1]-xle[count])*(xle[count-1]-xle[count-2]))
+			alpha[0] = sx[count-2]/((xle[count-2]-xle[count])*(xle[count-2]-xle[count-1]))
+			
+			xleturn = alpha[0]*(-xle[count]-xle[count-1])+alpha[1]*(-xle[count-2]-xle[count])+alpha[2]*(-xle[count-1]-xle[count-2])
+			xleturn /= -2*(alpha[0]+alpha[1]+alpha[2])
+			sxturn = alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2]) +alpha[1]*(xleturn-xle[count])*(xleturn-xle[count-2]) +alpha[2]*(xleturn-xle[count-1])*(xleturn-xle[count-2])
+			print(f"Estimated turning point velocity: {sxturn}")
+			if (sxturn > sx[count] and FACTOR*sx[count] > sxturn):
+				# DSX /= 4.0;
+				# os.system('mod_map run.inpt extrapolate 0.25');
+				print("would have changed factor")
+		count += 1
 
 plt.plot(sx[0:count],xle[0:count],'r-x')
 plt.xlabel('pull speed / [m/s]')
 plt.ylabel('leading edge position')
 plt.savefig("turning.pdf")
 
-data = numpy.zeros([200,2])
+data = numpy.zeros([2000,2])
 data[:,0] = sx
 data[:,1] = xle
 numpy.savetxt("turning.dat",data)
