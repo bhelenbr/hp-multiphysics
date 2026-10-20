@@ -97,4 +97,4 @@ for log2p in range(1,3):
 	os.chdir("..")
 
 os.chdir("..")
-run(["opendiff", "Results/", "Baseline/"])
+run(["opendiff", "Results/", "Baseline_gridrefine/"])

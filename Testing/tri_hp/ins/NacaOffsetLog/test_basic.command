@@ -64,5 +64,5 @@ os.system("mpiexec -np 3 tri_hp_petsc run.inpt")
 
 
 os.chdir("..")
-os.system("opendiff Baseline/ Results/")
+os.system("opendiff Baseline_basic/ Results/")
 #os.system("open naca.pdf");
