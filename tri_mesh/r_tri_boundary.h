@@ -92,7 +92,7 @@ class r_fixed : public r_side_bdry {
 			J.set_diag(cnt,points,1.0);
 //			MatZeroRows(petsc_J,cnt,points.data(),1.0);
 		}
-#endif
+#endif // MY_SPARSE
 };
 
 class r_fixed_angled : public r_side_bdry {

@@ -29,10 +29,6 @@ using namespace blitz;
 #include <capri.h>
 #endif
 
-#ifdef petsc
-#include <petsc.h>
-#endif
-
 blocks sim::blks;
 
 #ifdef PTH
@@ -190,8 +186,9 @@ void blocks::go(input_map& input) {
 	for (std::map<int,std::set<int> >::iterator gri = grp_rnk.begin(); gri != grp_rnk.end(); ++gri) {
 		/* Create array of ranks */
 		n = gri->second.size();
+        int i = 0;
 		for (std::set<int>::iterator si = gri->second.begin(); si != gri->second.end();++si) {
-			ranks(i) = *si;
+			ranks(i++) = *si;
 		}
 
 		ierr += MPI_Group_incl(base_grp, n, ranks.data(), &temp_grp);
@@ -900,61 +897,61 @@ void multigrid_interface::findmatch(shared_ptr<block_global> gbl, int grdlvl) {
 }
 
 void block::init(input_map &input) {
-	std::string mystring,stem;
-
-	/* NEED TO BOOTSTRAP UNTIL I CAN GET LOGFILE OPENED */
-	input.getwdefault("ngrid",ngrid,1);
-	ngrid = MAX(ngrid,1);
-	
-	grd.resize(ngrid);
-	for (int i=0;i<ngrid;++i)
-		grd(i) = getnewlevel(input);
-	gbl = make_shared<block_global>();
-	gbl->idnum = idnum;
-	gbl->idprefix = idprefix;
-
-	/* OPEN LOGFILES FOR EACH BLOCK */
-	if (input.get("logfile",stem)) {
-		mystring = stem +"_" +idprefix +".log";
-		std::ofstream *filelog = new std::ofstream;
-		filelog->setf(std::ios::scientific, std::ios::floatfield);
-		filelog->precision(3);	
-		
-		/* Check for pre-existing log file and rotate old log out of the way */
-		
-		FILE *f = fopen(mystring.c_str(),"r");
-		if (f) {
-			/* File exists, lets move it to mystring_idprefix.#.log */
-			ostringstream nstr;
-			int num = 0;
-			do {
-				++num;
-				fclose(f);
-				nstr.str("");
-				nstr << stem  << "_"  << idprefix << "." << num << ".log";
-				f = fopen(nstr.str().c_str(),"r");
-			} while (f);
-			rename(mystring.c_str(),nstr.str().c_str());
-		}
-		
-		filelog->open(mystring.c_str());
-		gbl->log = filelog;
-		
-		/* GOING TO MAKE STD::COUT POINT TO FILE AS WELL */
-//		streambuf *psbuf, *backup;		
-//		backup = cout.rdbuf();     // back up cout's streambuf
-//		psbuf = filelog->rdbuf();   // get file's streambuf
-//		cout.rdbuf(psbuf);         // assign streambuf to cout
-//		cerr.rdbuf(psbuf);				// assing streambuf to cerr as well
-	}
-	else {
-		std::cout.setf(std::ios::scientific, std::ios::floatfield);
-		std::cout.precision(3);
-		gbl->log = &std::cout;
-	}
-	input.echo = true;
-	input.log = gbl->log;
-	input.echoprefix = "#";
+    std::string mystring,stem;
+    
+    /* NEED TO BOOTSTRAP UNTIL I CAN GET LOGFILE OPENED */
+    input.getwdefault("ngrid",ngrid,1);
+    ngrid = MAX(ngrid,1);
+    
+    grd.resize(ngrid);
+    for (int i=0;i<ngrid;++i)
+        grd(i) = getnewlevel(input);
+    gbl = make_shared<block_global>();
+    gbl->idnum = idnum;
+    gbl->idprefix = idprefix;
+    
+    /* OPEN LOGFILES FOR EACH BLOCK */
+    if (input.get("logfile",stem)) {
+        mystring = stem +"_" +idprefix +".log";
+        std::ofstream *filelog = new std::ofstream;
+        filelog->setf(std::ios::scientific, std::ios::floatfield);
+        filelog->precision(3);
+        
+        /* Check for pre-existing log file and rotate old log out of the way */
+        
+        FILE *f = fopen(mystring.c_str(),"r");
+        if (f) {
+            /* File exists, lets move it to mystring_idprefix.#.log */
+            ostringstream nstr;
+            int num = 0;
+            do {
+                ++num;
+                fclose(f);
+                nstr.str("");
+                nstr << stem  << "_"  << idprefix << "." << num << ".log";
+                f = fopen(nstr.str().c_str(),"r");
+            } while (f);
+            rename(mystring.c_str(),nstr.str().c_str());
+        }
+        
+        filelog->open(mystring.c_str());
+        gbl->log = filelog;
+        
+        /* GOING TO MAKE STD::COUT POINT TO FILE AS WELL */
+        //		streambuf *psbuf, *backup;
+        //		backup = cout.rdbuf();     // back up cout's streambuf
+        //		psbuf = filelog->rdbuf();   // get file's streambuf
+        //		cout.rdbuf(psbuf);         // assign streambuf to cout
+        //		cerr.rdbuf(psbuf);				// assing streambuf to cerr as well
+    }
+    else {
+        std::cout.setf(std::ios::scientific, std::ios::floatfield);
+        std::cout.precision(3);
+        gbl->log = &std::cout;
+    }
+    input.echo = true;
+    input.log = gbl->log;
+    input.echoprefix = "#";
     
 #ifdef BZ_DEBUG
     *gbl->log << "#BZ_DEBUG is set\n";
@@ -962,23 +959,23 @@ void block::init(input_map &input) {
 #ifdef DEBUG
     *gbl->log << "#Running in Xcode's DEBUG Mode\n";
 #endif
-
+    
 #ifdef CAPRI
-	int status = gi_uStart();
-	*gbl->log << "gi_uStart status = ", status, "\n";
-	if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
-
-	if (input.get("BRep",mystring)) {
-		status = gi_uLoadPart(mystring.c_str());
-		*gbl->log << mystring << ": gi_uLoadPart status = " << status << std::endl;
-		if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
-	}
+    int status = gi_uStart();
+    *gbl->log << "gi_uStart status = ", status, "\n";
+    if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
+    
+    if (input.get("BRep",mystring)) {
+        status = gi_uLoadPart(mystring.c_str());
+        *gbl->log << mystring << ": gi_uLoadPart status = " << status << std::endl;
+        if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
+    }
 #endif
     
     int time_scheme;
     input.getwdefault("time_scheme",time_scheme,static_cast<int>(block_global::time_schemes::DIRK4));
     gbl->time_scheme = static_cast<block_global::time_schemes>(time_scheme);
-	
+    
     /* SET TIME STEPPING INFO */
     switch (gbl->time_scheme) {
         case(block_global::time_schemes::DIRK4):
@@ -1036,44 +1033,44 @@ void block::init(input_map &input) {
             /* This is the 2-step backwards difference scheme */
             gbl->nhist = 1;
             gbl->nadapt = 1;
-            gbl->bd.resize(1);
+            gbl->bd.resize(2);
             gbl->stepsolves = 1;
             break;
         case(block_global::time_schemes::BD2):
             /* This is the 2-step backwards difference scheme */
             gbl->nhist = 2;
             gbl->nadapt = 2;
-            gbl->bd.resize(2);
+            gbl->bd.resize(3);
             gbl->stepsolves = 1;
             break;
         case(block_global::time_schemes::BD3):
             /* This is the 2-step backwards difference scheme */
             gbl->nhist = 3;
             gbl->nadapt = 3;
-            gbl->bd.resize(3);
+            gbl->bd.resize(4);
             gbl->stepsolves = 1;
             break;
     }
     
-	gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
-	gbl->substep = -1;
-	input.getwdefault("dtinv",gbl->dti,0.0);
-	if (gbl->dti < 0.0) {
-		*gbl->log << "Inverse time step must be positive number" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	input.getwdefault("dtinv_prev",gbl->dti_prev,gbl->dti);
-	if (gbl->dti_prev < 0.0) {
-		*gbl->log << "Inverse time step must be positive number" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	input.getwdefault("extrapolate",gbl->extrapolate,0.0);
-	if (gbl->extrapolate < 0.0) {
-		*gbl->log << "Guess extrapolation constant should be >= than 0" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
+    gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
+    gbl->substep = -1;
+    input.getwdefault("dtinv",gbl->dti,0.0);
+    if (gbl->dti < 0.0) {
+        *gbl->log << "Inverse time step must be positive number" << std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    
+    input.getwdefault("dtinv_prev",gbl->dti_prev,gbl->dti);
+    if (gbl->dti_prev < 0.0) {
+        *gbl->log << "Inverse time step must be positive number" << std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    
+    input.getwdefault("extrapolate",gbl->extrapolate,0.0);
+    if (gbl->extrapolate < 0.0) {
+        *gbl->log << "Guess extrapolation constant should be >= than 0" << std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
     
     input.getwdefault("auto_timestep_tries",gbl->auto_timestep_tries,0);
     gbl->recursive_timestep_levels = 0;
@@ -1098,55 +1095,59 @@ void block::init(input_map &input) {
         gbl->recursive_successes = 0;
         gbl->recursive_fraction = 0;
     }
-	
-	input.getwdefault("ntstep",ntstep,1);
-	if (ntstep < 0) {
-		*gbl->log << "Number of time steps must be positive" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	input.getwdefault("restart",nstart,0);
-	if (nstart < 0) {
-		*gbl->log << "Restart must be positive" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	
-	ntstep += nstart +1;
-	gbl->time = 0.0;
-	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
-
-	/* OTHER UNIVERSAL CONSTANTS */
-	input.getwdefault("gravity",gbl->g,0.0);
+    
+    input.getwdefault("ntstep",ntstep,1);
+    if (ntstep < 0) {
+        *gbl->log << "Number of time steps must be positive" << std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    
+    input.getwdefault("restart",nstart,0);
+    if (nstart < 0) {
+        *gbl->log << "Restart must be positive" << std::endl;
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    
+    
+    ntstep += nstart +1;
+    gbl->time = 0.0;
+    if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
+    
+    /* OTHER UNIVERSAL CONSTANTS */
+    input.getwdefault("gravity",gbl->g,0.0);
     double bodydflt[2] = {0.0,0.0};
     input.getwdefault("body_force",gbl->body.data(),2,bodydflt);
-
-#ifndef petsc
-	/* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
-	input.getwdefault("nstage",gbl->nstage,5);
-	if (gbl->nstage < 0) {
-		*gbl->log << "Number of stages must be positive" << std::endl;
-	}
+    
+    /* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
+    input.getwdefault("nstage",gbl->nstage,1);
+    if (gbl->nstage < 0) {
+        *gbl->log << "Number of stages must be positive" << std::endl;
+    }
     gbl->alpha.resize(gbl->nstage+1);
     gbl->beta.resize(gbl->nstage+1);
     istringstream datastream;
-
-    /* LOAD COEFFICIENTS FOR IMAGINARY TERMS */
-    const FLT alpha_dflt[5] = {0.25, 1./6., .375, .5, 1.0};
-    input.getwdefault("alpha",gbl->alpha.data(),gbl->nstage,alpha_dflt);
-    gbl->alpha(gbl->nstage) = 1.0;
-
-    const FLT beta_dflt[5] = {1.0, 0.0, 5./9., 0.0, 4./9.};
-    input.getwdefault("beta",gbl->beta.data(),gbl->nstage,beta_dflt);
-    gbl->beta(gbl->nstage) = 1.0;
-#else
-    gbl->nstage = 1;
-    gbl->alpha.resize(gbl->nstage+1);
-    gbl->beta.resize(gbl->nstage+1);
-    gbl->alpha = 1.0;
-    gbl->beta = 1.0;
-#endif
-
+    
+    if (gbl->nstage == 1) {
+        gbl->alpha = 1.0;
+        gbl->beta = 1.0;
+    }
+    else if (gbl->nstage == 5) {
+        /* LOAD COEFFICIENTS FOR IMAGINARY TERMS */
+        const FLT alpha_dflt[5] = {0.25, 1./6., .375, .5, 1.0};
+        input.getwdefault("alpha",gbl->alpha.data(),gbl->nstage,alpha_dflt);
+        gbl->alpha(gbl->nstage) = 1.0;
+        
+        const FLT beta_dflt[5] = {1.0, 0.0, 5./9., 0.0, 4./9.};
+        input.getwdefault("beta",gbl->beta.data(),gbl->nstage,beta_dflt);
+        gbl->beta(gbl->nstage) = 1.0;
+    }
+    else {
+        input.get("alpha",gbl->alpha.data(),gbl->nstage);
+        gbl->alpha(gbl->nstage) = 1.0;
+        
+        input.get("beta",gbl->beta.data(),gbl->nstage);
+        gbl->beta(gbl->nstage) = 1.0;
+    }
 
 	/* LOAD BASIC CONSTANTS FOR MULTIGRID */
 	input.getwdefault("itercrsn",itercrsn,1);
@@ -1837,19 +1838,9 @@ void block::tadvance() {
         }
             
         case(block_global::time_schemes::BD1): {
-            switch(gbl->tstep) {
-                case(1): {
-                    gbl->bd(0) =  gbl->dti;
-                    gbl->bd(1) = -gbl->dti;
-                    break;
-                }
-                default: {
-                    gbl->bd(0) =  1.5*gbl->dti;
-                    gbl->bd(1) = -2.0*gbl->dti;
-                    gbl->bd(2) =  0.5*gbl->dti;
-                    break;
-                }
-            }
+            gbl->bd(0) =  gbl->dti;
+            gbl->bd(1) = -gbl->dti;
+
             if (gbl->dti > 0.0)
                 gbl->time += 1./gbl->dti;
             else

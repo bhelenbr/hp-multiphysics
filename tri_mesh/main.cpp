@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     int index = optind;
 
  
-#if (defined(MPISRC) && !defined(petsc))
+#if (defined(MPISRC))
 	if (Debugger) {
 		int size;
 		/*
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 #endif
 	}
-#endif
+#endif // (defined(MPISRC))
 	
 	tri_mesh::filetype in = static_cast<tri_mesh::filetype>(informat);
 	tri_mesh::filetype out = static_cast<tri_mesh::filetype>(outformat);
