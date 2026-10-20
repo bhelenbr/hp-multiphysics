@@ -2290,7 +2290,7 @@ void hp_deformable_free_pnt::petsc_jacobian() {
 void translating_surface::init(input_map& inmap) {
 	hp_coupled_bdry::init(inmap);
 	if (!inmap.get(base.idprefix + "_velx",vel(0))) inmap.getwdefault("velx",vel(0),1.0);
-	if (!inmap.get(base.idprefix + "_vely",vel(0))) inmap.getwdefault("vely",vel(1),0.0);
+	if (!inmap.get(base.idprefix + "_vely",vel(1))) inmap.getwdefault("vely",vel(1),0.0);
 }
 	
 void translating_surface::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {

@@ -571,7 +571,7 @@ class force_coupling : public tri_hp_helper {
 					if (!inmap.get(x.gbl->idprefix +"_dx1dt",w(3)))
 						inmap.getwdefault("dx1dt",w(3),0.0);
 						
-					if (!inmap.get(x.gbl->idprefix +"_k_linear1",k_linear(0))) 
+					if (!inmap.get(x.gbl->idprefix +"_k_linear1",k_linear(1)))
 						inmap.getwdefault("k_linear1",k_linear(1),0.0);
 				}
 				

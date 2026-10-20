@@ -561,6 +561,9 @@ void tri_hp::movesdata_bdry(int bnum,int bel) {
 }
 
 void tri_hp::updatetdata(int tind) {
+    const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+    const int bm = basis::tri(log2p)->bm();
+    
 	int i,j,n,step,info;
 	FLT r,s;
 	FLT upt[NV];
@@ -581,8 +584,8 @@ void tri_hp::updatetdata(int tind) {
 	for(n=0;n<ND;++n)
 		basis::tri(log2p)->proj_bdry(&cht(n,0),&crd(n)(0,0),MXGP);
 
-	for (i=0; i < basis::tri(log2p)->gpx(); ++i ) {
-		for (j=0; j < basis::tri(log2p)->gpn(); ++j ) {
+	for (i=0; i < lgpx; ++i ) {
+		for (j=0; j < lgpn; ++j ) {
 			pt(0) = crd(0)(i,j);
 			pt(1) = crd(1)(i,j);
 			found = hp_gbl->pstr->findinteriorpt(pt,ttgt,r,s);
@@ -606,15 +609,14 @@ void tri_hp::updatetdata(int tind) {
 	for(step=0;step<gbl->nadapt;++step) {
 		for(n=0;n<NV;++n) {
 			basis::tri(log2p)->intgrt(lf(n).data(),&bdwk(step,n)(0,0),MXGP);
-#ifdef F2CFortran
-            PBTRS(uplo,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),1,(double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,&lf(n)(basis::tri(log2p)->bm()),basis::tri(log2p)->im(),info);
-
-#else
             const int one = 1;
             const int ibwth = basis::tri(log2p)->ibwth();
             const int ibp1 = ibwth+1;
             const int im = basis::tri(log2p)->im();
-            dpbtrs_(uplo,&im,&ibwth,&one,(double *) &basis::tri(log2p)->idiag(0,0),&ibp1,&lf(n)(2),&im,&info);
+#ifdef F2CFortran
+            PBTRS(uplo,im,ibwth,1,(double *) &basis::tri(log2p)->idiag(0,0),ibp1,&lf(n)(bm),im,info);
+#else
+            dpbtrs_(uplo,&im,&ibwth,&one,(double *) &basis::tri(log2p)->idiag(0,0),&ibp1,&lf(n)(bm),&im,&info);
 #endif
 			for(i=0;i<basis::tri(log2p)->im();++i)
 				ugbd(step).i(tind,i,n) = -lf(n)(basis::tri(log2p)->bm()+i);

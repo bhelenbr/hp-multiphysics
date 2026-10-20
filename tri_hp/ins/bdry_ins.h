@@ -327,6 +327,7 @@ namespace bdry_ins {
 	};
 	
 	class actuator_disc : public generic {
+    protected:
 		bool start_pt_open, end_pt_open;
 		symbolic_function<3> dp;
 		

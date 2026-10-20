@@ -39,7 +39,7 @@ void tet_hp_cd::init(input_map& inmap, shared_ptr<block_global> gin) {
 	if (!inmap.get(keyword,hp_cd_gbl->ay)) inmap.getwdefault("ay",hp_cd_gbl->ay,0.0);
 	
 	keyword = gbl->idprefix + "_az";
-	if (!inmap.get(keyword,hp_cd_gbl->ay)) inmap.getwdefault("az",hp_cd_gbl->az,0.0);
+	if (!inmap.get(keyword,hp_cd_gbl->az)) inmap.getwdefault("az",hp_cd_gbl->az,0.0);
 
 	if (!inmap.get(gbl->idprefix + "_nu",hp_cd_gbl->kcond)) {
 		if (!inmap.get("nu",hp_cd_gbl->kcond)) {

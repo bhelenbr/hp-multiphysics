@@ -1018,7 +1018,7 @@ void hp_edge_bdry::element_rsdl(int eind, Array<TinyVector<FLT,MXTM>,1> lf) {
 		flux(u,pt,mvel,nrm,jcb,flx);
 		
 		for(n=0;n<x.NV;++n)
-			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n)*jcb;
+			x.res(n)(0,k) = RAD(crd(0)(k))*flx(n)*jcb;
 	}
 	/* Integrate fluxes * basis */
 	for(n=0;n<x.NV;++n)

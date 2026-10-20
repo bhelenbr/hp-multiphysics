@@ -1333,7 +1333,7 @@ void tri_hp::input(const std::string& filename) {
 		}
 	}
 	else {
-		fnmapp = fname +"_" +gbl->idprefix +".grd";
+		fnmapp = fname +".grd";
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
