@@ -22,8 +22,8 @@ using namespace bdry_swirl;
  */
 class tri_hp_swirl_etype {
 	public:
-		static const int ntypes = 1;
-		enum ids {unknown=-1,symmetry};
+		static const int ntypes = 2;
+		enum ids {unknown=-1,symmetry,actuator_disc};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -32,7 +32,7 @@ class tri_hp_swirl_etype {
 		}
 };
 
-const char tri_hp_swirl_etype::names[ntypes][40] = {"symmetry"};
+const char tri_hp_swirl_etype::names[ntypes][40] = {"symmetry","actuator_disc"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_swirl::getnewedgeobject(int bnum, std::string name) {
@@ -46,7 +46,11 @@ hp_edge_bdry* tri_hp_swirl::getnewedgeobject(int bnum, std::string name) {
 		case tri_hp_swirl_etype::symmetry: {
 			temp = new symmetry(*this,*ebdry(bnum));
 			break;
-		}	
+		}
+        case tri_hp_swirl_etype::actuator_disc: {
+            temp = new actuator_disc(*this,*ebdry(bnum));
+            break;
+        }
 		default: {
 			return(tri_hp_ins::getnewedgeobject(bnum,name));
 		}

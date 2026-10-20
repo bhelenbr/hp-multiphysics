@@ -14,7 +14,7 @@
 #define CD
 #define INS
 #define PS
-//#define SWIRL
+#define SWIRL
 #define BUOYANCY
 //#define SWE
 //#define EXPLICIT
