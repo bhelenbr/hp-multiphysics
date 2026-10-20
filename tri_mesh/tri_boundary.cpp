@@ -467,7 +467,7 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 	}
 	else {
 		count = 0;
-		for(j=nseg-1;j>=0;++j) {
+		for(j=nseg-1;j>=0;--j) {
 			sind = seg(j);
 			offset = sind*stride;
 			for (k=bgn;k<=end;++k) {
