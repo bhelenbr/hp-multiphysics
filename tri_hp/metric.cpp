@@ -9,6 +9,8 @@
 #include "metric.h"
 #include "hp_boundary.h"
 
+#define OLDWAY
+
 void tri_hp::metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
     
@@ -129,6 +131,7 @@ FLT mapped_metric::calc_element_size(int tind) {
     return(h);
 }
 
+#ifdef OLDWAY
 void mapped_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
     const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
@@ -193,7 +196,40 @@ void mapped_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,
             }
         }
     }
+    
+//    for(int i=0;i<lgpx;++i) {
+//        for(int j=0;j<lgpn;++j) {
+//            *x.gbl->log << i << ' ' << j << ' ' << crd(0)(i,j) << ' ' << crd(1)(i,j) << ' ' << dcrd(0,0)(i,j) << ' ' << dcrd(0,1)(i,j) << ' ' << dcrd(1,0)(i,j) << ' ' << dcrd(1,1)(i,j) << ' ' << std::endl;
+//        }
+//    }
 }
+#else
+void mapped_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
+    const int log2p = x.log2p;
+    const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+
+    calc_positions(tind, crd, tlvl);
+    
+    for(int n=0;n<tri_mesh::ND;++n)
+        for(int m=0;m<tri_mesh::ND;++m)
+            for(int i=0;i<lgpx;++i)
+                for(int j=0;j<lgpn;++j)
+                    dcrd(n,m)(i,j) = 0.0;
+            
+    /* Now calculate derivative of metrics discretely */
+    for(int n=0;n<tri_mesh::ND;++n) {
+        basis::tri(log2p)->derivr(&crd(n)(0,0),&dcrd(n,0)(0,0),MXGP);
+        basis::tri(log2p)->derivs(&crd(n)(0,0),&dcrd(n,1)(0,0),MXGP);
+    }
+    
+//    for(int i=0;i<lgpx;++i) {
+//        for(int j=0;j<lgpn;++j) {
+//            *x.gbl->log << i << ' ' << j << ' ' << crd(0)(i,j) << ' ' << crd(1)(i,j) << ' ' <<  dcrd(0,0)(i,j) << ' ' << dcrd(0,1)(i,j) << ' ' << dcrd(1,0)(i,j) << ' ' << dcrd(1,1)(i,j) << ' ' << std::endl;
+//        }
+//    }
+}
+#endif // OLDWAY
+
 
 void mapped_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
@@ -265,14 +301,19 @@ void mapped_metric::calc_positions(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP
     const int log2p = x.log2p;
     const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
     
-    /* LOAD INDICES OF VERTEX POINTS */
-    TinyVector<int,3> v;
-    v = x.tri(tind).pnt;
-    
-    /* PROJECT VERTEX COORDINATES TO GAUSS POINTS */
-    for(int n=0;n<tri_mesh::ND;++n)
-        basis::tri(log2p)->proj(x.vrtxbd(tlvl)(v(0))(n),x.vrtxbd(tlvl)(v(1))(n),x.vrtxbd(tlvl)(v(2))(n),&crd(n)(0,0),MXGP);
-    
+    if (x.tri(tind).info > -1) {
+        tri_hp::metric::calc_positions(tind, crd, tlvl);
+    }
+    else {
+        /* LOAD INDICES OF VERTEX POINTS */
+        TinyVector<int,3> v;
+        v = x.tri(tind).pnt;
+        
+        /* PROJECT VERTEX COORDINATES TO GAUSS POINTS */
+        for(int n=0;n<tri_mesh::ND;++n)
+            basis::tri(log2p)->proj(x.vrtxbd(tlvl)(v(0))(n),x.vrtxbd(tlvl)(v(1))(n),x.vrtxbd(tlvl)(v(2))(n),&crd(n)(0,0),MXGP);
+    }
+
     /* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
     for(int i=0;i<lgpx;++i) {
         for(int j=0;j<lgpn;++j) {
@@ -387,6 +428,7 @@ void allcurved_metric::setinfo() {
 }
 
 
+#ifdef OLDWAY
 void mapped_edge_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
     const int gpx = basis::tri(log2p)->gpx(), gpn = basis::tri(log2p)->gpn();
@@ -404,6 +446,26 @@ void mapped_edge_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,M
         }
     }
 }
+#else
+void mapped_edge_metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
+    const int log2p = x.log2p;
+    const int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+
+    calc_positions(tind, crd, tlvl);
+    
+    for(int n=0;n<tri_mesh::ND;++n)
+        for(int m=0;m<tri_mesh::ND;++m)
+            for(int i=0;i<lgpx;++i)
+                for(int j=0;j<lgpn;++j)
+                    dcrd(n,m)(i,j) = 0.0;
+            
+    /* Now calculate derivative of metrics discretely */
+    for(int n=0;n<tri_mesh::ND;++n) {
+        basis::tri(log2p)->derivr(&crd(n)(0,0),&dcrd(n,0)(0,0),MXGP);
+        basis::tri(log2p)->derivs(&crd(n)(0,0),&dcrd(n,1)(0,0),MXGP);
+    }
+}
+#endif
 
 void mapped_edge_metric::calc_metrics1D(int sind, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& crd, TinyVector<TinyVector<FLT,MXGP>,tri_mesh::ND>& dcrd, int tlvl) const {
     /* I don't think this function is necessary */
