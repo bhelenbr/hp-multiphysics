@@ -1,0 +1,32 @@
+# Verification companion to squish.inpt: same box, but the top and bottom
+# displacements come from the exact homogeneous plane-strain solution with
+# traction-free sides (sigma_xx = 0):
+#   u = nu/(1-nu)*delta*x,  v = -delta*y,  p = E*nu*delta/((1+nu)*(1-nu))
+# The discrete solution should match to round-off (helper: l2error).
+logfile: exact
+log2p: 1
+extra_finest_levels: 1
+ngrid: 3
+ncycle: 1000
+absolute_tolerance: 1.0e-12
+relative_tolerance: 1.0e-10
+ntstep: 1
+dtinv: 0.0
+nblock: 1
+blocktype: ps
+b0_mesh: square4.grd
+E: 1.0
+nu: 0.3
+b0_E: E
+b0_nu: nu
+delta: 0.1
+# Zero initial guess at t = 0, exact solution afterwards (Dirichlet values + l2error)
+ibc: symbolic
+ibc0: (t > 0.0 ? nu/(1-nu)*delta*x0 : 0.0)
+ibc1: (t > 0.0 ? -delta*x1 : 0.0)
+ibc2: (t > 0.0 ? E*nu*delta/((1+nu)*(1-nu)) : 0.0)
+helper: l2error
+b0_s1_hp_type: dirichlet
+b0_s2_hp_type: neumann
+b0_s3_hp_type: dirichlet
+b0_s4_hp_type: neumann

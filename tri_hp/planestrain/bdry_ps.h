@@ -25,10 +25,11 @@ namespace bdry_ps {
 	class neumann : public hp_edge_bdry {
 		protected:
 			tri_hp_ps &x;
-			virtual void flux(TinyVector<FLT,3> u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
+				/* TRACTIONS (ZERO UNLESS SET WITH _flux0/_flux1) */
+				hp_edge_bdry::flux(u,xpt,mv,norm,side_length,flx);
+				/* CONTINUITY */
 				flx(2) = u(0)*norm(0) +u(1)*norm(1);
-				flx(0) = 0.0;
-				flx(1) = 0.0;
 
 				return;
 			}
