@@ -1,0 +1,35 @@
+# Plane strain (ps): squish a unit square between two rigid, no-slip plates.
+# Bottom (s1) is clamped, top (s3) is pushed down by delta with no slip,
+# sides (s2,s4) are traction free, so the box barrels out.
+logfile: squish
+# Polynomial order: log2p 0,1,2 -> p = 1,2,4
+log2p: 1
+extra_finest_levels: 1
+ngrid: 3
+ncycle: 1000
+absolute_tolerance: 1.0e-12
+relative_tolerance: 1.0e-10
+# Steady (quasi-static) linear elasticity
+ntstep: 1
+dtinv: 0.0
+nblock: 1
+blocktype: ps
+b0_mesh: square4.grd
+# Material: Young's modulus and Poisson ratio
+E: 1.0
+nu: 0.3
+b0_E: E
+b0_nu: nu
+# Plate displacement (10% compression)
+delta: 0.1
+# Variables are (u, v, p): x/y displacement and p = -lambda*div(u)
+# Used as the initial guess and as the Dirichlet values on s1 and s3
+ibc: symbolic
+ibc0: 0.0
+ibc1: -delta*x1
+ibc2: 0.0
+# Boundaries are numbered ccw from the bottom
+b0_s1_hp_type: dirichlet
+b0_s2_hp_type: neumann
+b0_s3_hp_type: dirichlet
+b0_s4_hp_type: neumann
