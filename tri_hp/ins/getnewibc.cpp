@@ -892,8 +892,8 @@ class force_coupling : public tri_hp_helper {
 					for(int i=0;i<6;++i)
 						J(i,1) = (res(i)-res0(i))/delta;
 					/* Restore */
-					dw(1) -= delta;
-					rigid_body(w,dw);	
+					dw(1) = -delta;
+					rigid_body(w,dw);
 					w(1) -= delta;
 					dw(1) = 0.0;
 				}

@@ -202,8 +202,8 @@ namespace ibc_cd {
 				cycle = current_cycle;
 			}
 			
-			FLT omegat = (2.*M_PI*fq*time+(1/2)*M_PI);
-			return(source_switch*c*(exp(cos(omegat)/wth))/(exp(1/wth))); 
+			FLT omegat = (2.*M_PI*fq*time+(1./2.)*M_PI);
+			return(source_switch*c*(exp(cos(omegat)/wth))/(exp(1/wth)));
 			
 		}
 		soi_src(tri_hp_cd& xin) : x(xin), cycle(-1),icount(0) {}

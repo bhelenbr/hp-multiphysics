@@ -983,7 +983,7 @@ void hp_edge_bdry::calc_positions_leg1D(int indx, TinyVector<TinyVector<FLT,MXGP
         xmap -= xiso;
         
         for(int n=0;n<tri_mesh::ND;++n) {
-            crd(n)(i) + xmap(n);
+            crd(n)(i) += xmap(n);
         }
     }
 }

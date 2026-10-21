@@ -16,8 +16,8 @@ void tri_hp_swe::init(input_map& inmap, shared_ptr<block_global> gin) {
     hp_swe_gbl = make_shared<hp_swe_global>();
 	tri_hp_ins::init(inmap,gin);
 
-	if (!inmap.get(gbl->idprefix + "_f0",hp_swe_gbl->f0)) inmap.getwdefault("f0",gbl->f0,0.0);
-	if (!inmap.get(gbl->idprefix + "_beta",gbl->beta)) inmap.getwdefault("beta",hp_swe_gbl->cbeta,0.0);
+	if (!inmap.get(gbl->idprefix + "_f0",hp_swe_gbl->f0)) inmap.getwdefault("f0",hp_swe_gbl->f0,0.0);
+	if (!inmap.get(gbl->idprefix + "_beta",hp_swe_gbl->beta)) inmap.getwdefault("beta",hp_swe_gbl->cbeta,0.0);
 	if (!inmap.get(gbl->idprefix + "_cd",hp_swe_gbl->cd)) inmap.getwdefault("cd",hp_swe_gbl->cd,0.0);
 	if (!inmap.get(gbl->idprefix + "_ptest",hp_swe_gbl->ptest)) inmap.getwdefault("ptest",hp_swe_gbl->ptest,1.0);
 
