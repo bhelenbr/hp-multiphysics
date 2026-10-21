@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 BINDIR=${PWD%/Testing/*}/bin
 export PATH=${BINDIR}:${PATH}
 
-HP="tri_hp"
+HP="tri_hp_petsc"
 
 if [ -e Results ]; then
 	cd Results
