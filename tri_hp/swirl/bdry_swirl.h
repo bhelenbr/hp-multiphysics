@@ -89,6 +89,6 @@ public:
         /* LOAD PRESSURE JUMP FUNCTION */
         dq.init(inmap,base.idprefix+"_shear");
     }
-    // void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
+    void output(const std::string& fname, tri_hp::filetype typ,int tlvl = 0);
 };
 }
