@@ -151,7 +151,12 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             for (int i = 0; i < npnt; ++i) {
                 out << i << ": " << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << lngth(i) << ' ' << pnt(i).info << std::endl;
             }
-            out << nseg << std::endl;
+            
+            count = 0;
+            for (int i=0;i<nebd;++i)
+                count += ebdry(i)->nseg;
+            out << count << std::endl;
+            
             for (int i=0;i<nebd;++i) {
                 const int bid = ebdry(i)->idnum;
                 for (int indx = 0;indx < ebdry(i)->nseg; ++indx) {

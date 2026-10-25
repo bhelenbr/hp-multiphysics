@@ -1083,13 +1083,13 @@ public:
     TinyVector<FLT,5> coeff;
     FLT scale;
     
-    FLT hgt(TinyVector<FLT,2>& pt, FLT time = 0.0) {
-        pt *= scale;
+    FLT hgt(TinyVector<FLT,2>& pnt, FLT time = 0.0) {
+        TinyVector<FLT,2> pt = scale*pnt;
         FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];
         return(coeff[0]*pt[0] -poly*poly/coeff[0]);
     }
-    FLT dhgt(int dir, TinyVector<FLT,2>& pt, FLT time = 0.0) {
-        pt *= scale;
+    FLT dhgt(int dir, TinyVector<FLT,2>& pnt, FLT time = 0.0) {
+        TinyVector<FLT,2> pt = scale*pnt;
         
         TinyVector<FLT,2> ddx;
         FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];

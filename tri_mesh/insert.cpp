@@ -16,6 +16,12 @@
 int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 	int n,tind,pnear,err;
 
+    if (npnt >= maxpst) {
+        *gbl->log << "need to use larger growth factor: too many vertices " << npnt << std::endl;
+        output("error");
+        sim::abort(__LINE__,__FILE__,gbl->log);
+    }
+    
 	for(n=0;n<ND;++n)
 		pnts(npnt)(n) = x(n);
 
@@ -27,11 +33,6 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 	if (!isfound) {
 		*gbl->log << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
 		*gbl->log << "maxsrch: " << tri_gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
-		output("error");
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	if (npnt >= maxpst) {
-		*gbl->log << "need to use larger growth factor: too many vertices " << npnt << std::endl;
 		output("error");
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}

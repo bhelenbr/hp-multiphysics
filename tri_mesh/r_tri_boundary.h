@@ -373,9 +373,10 @@ class r_oscillating : public r_fixed {
 			center[1] = amp*(1-cos(omega*x.gbl->time));
 			theta = atan(omega*amp*sin(omega*x.gbl->time)/p0);
 
-			center1[0] = p0*x.gbl->time;
-			center1[1] = amp*(1-cos(omega*x.gbl->time));
-			theta1 = atan(omega*amp*sin(omega*x.gbl->time)/p0);
+            FLT tp = x.gbl->time +1./x.gbl->dti;
+			center1[0] = p0*tp;
+			center1[1] = amp*(1-cos(omega*tp));
+			theta1 = atan(omega*amp*sin(omega*tp)/p0);
 			dtheta = theta1-theta;
 
 			for(int j=0;j<base.nseg;++j) {

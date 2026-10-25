@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Use tri_mesh -h for usage" << std::endl;
                     return 1;
                 }
+                break;
             }
             case 'l': {
                 Coarsen_hp = true;

@@ -92,7 +92,7 @@ void sim::abort(int line,const char *file, std::ostream *log) {
 #ifdef petsc
     PetscFinalize();
 #endif
-#ifdef MPI
+#ifdef MPISRC
     MPI_Abort(MPI_COMM_WORLD,1);
 #endif
     

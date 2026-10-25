@@ -236,7 +236,7 @@ void tri_mesh::trim() {
 		tind = seg(ebdry(0)->seg(bsd)).tri(0);
 		if (tri(tind).info > 0) continue;
 
-		tri_gbl->intwk(0) = tind;
+		tri_gbl->intwk(ntdel) = tind;
 		tri(tind).info = 1;
 		nsrch = ntdel+1;
 
