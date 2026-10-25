@@ -286,7 +286,7 @@ void tri_mesh::checkintegrity() {
 //				sim::abort(__LINE__,__FILE__,gbl->log);
 //			}
 
-			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
+			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) || seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
 				*gbl->log << "failed pnt check tind" << i << "sind" << sind << std::endl;
 				for(i=0;i<nseg;++i)
 					seg(i).info += 2;
