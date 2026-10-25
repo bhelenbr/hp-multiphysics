@@ -114,8 +114,8 @@ template<int ND> int spline<ND>::read(std::string filename) {
 		h3 = x(i+1)-x(i);
 		d3 = (y(i+1)-y(i))/h3;
 
-		h4 = x(i+2)-x(i);
-		d4 = (y(i+2)-y(i))/h4;
+		h4 = x(i+2)-x(i+1);
+		d4 = (y(i+2)-y(i+1))/h4;
 
 		
 		yddbk = 2.*(d2-d1)/(h2+h1);
