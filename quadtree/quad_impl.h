@@ -639,9 +639,10 @@ template<int ND> void quadtree<ND>::update(int v0) {
 			}
 			else {
 				for(n=0;n<ND;++n)
-					if(qpt->xmin[n] > x[n] || qpt->xmax[n] < x[n]) goto UPDATE;
-				continue;
-			UPDATE: dltpt(v0);
+					if(qpt->xmin[n] > x[n] || qpt->xmax[n] < x[n])
+                        continue;
+                
+                dltpt(v0);
 				addpt(v0, qpt);
 				return;
 			}
