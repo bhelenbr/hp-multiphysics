@@ -578,7 +578,7 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                 for(int j=0;j<gpn;++j) {
                     for(int n=0;n<tri_mesh::ND;++n) {
                         add_to_crd(n)(i,j) = xmap(n)*basis::tri(log2p)->gn(j,sm+2);
-                        add_to_dcrd(n,0)(i,j) = basis::tri(log2p)->n0(j)*(dxdtn(n,0)*0.5*(pt1(0)-pt0(0)) -dxiso(n))*basis::tri(log2p)->gn(j,sm+2);
+                        add_to_dcrd(n,0)(i,j) = basis::tri(log2p)->n0(j)*(dxdtn(n,0)*(pt0(0)*basis::tri(log2p)->dgx(i,1) +pt1(0)*basis::tri(log2p)->dgx(i,2)) -dxiso(n))*basis::tri(log2p)->gn(j,sm+2);
                         add_to_dcrd(n,1)(i,j) = xmap(n)*basis::tri(log2p)->dgn(j,sm+2) +basis::tri(log2p)->x0(i)*add_to_dcrd(n,0)(i,j);
                     }
                 }
@@ -604,8 +604,8 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                 for(int i=0;i<gpx;++i) {
                     for(int n=0;n<tri_mesh::ND;++n) {
                         add_to_crd(n)(i,j) = xmap(n)*basis::tri(log2p)->gx(i,2);
-                        add_to_dcrd(n,0)(i,j) = 0.5*xmap(n)*basis::tri(log2p)->n0(j);
-                        add_to_dcrd(n,1)(i,j) = ((dxdtn(n,0)*0.5*(pt1(0)-pt0(0)) -dxiso(n))*basis::tri(log2p)->gx(i,2) +add_to_dcrd(n,0)(i,j))*basis::tri(log2p)->x0(i);
+                        add_to_dcrd(n,0)(i,j) = basis::tri(log2p)->n0(j)*basis::tri(log2p)->dgx(i,2)*xmap(n);
+                        add_to_dcrd(n,1)(i,j) = (dxdtn(n,0)*(pt0(0)*basis::tri(log2p)->dgn(j,1) +pt1(0)*basis::tri(log2p)->dgn(j,0)) -dxiso(n))*basis::tri(log2p)->gx(i,2) +basis::tri(log2p)->x0(i)*add_to_dcrd(n,0)(i,j);
                     }
                 }
             }
@@ -616,8 +616,8 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                 xiso = x.vrtxbd(tlvl)(v0)*basis::tri(log2p)->gn(j,0) +x.vrtxbd(tlvl)(v1)*basis::tri(log2p)->gn(j,1);
                 dxiso = x.vrtxbd(tlvl)(v0)*basis::tri(log2p)->dgn(j,0) +x.vrtxbd(tlvl)(v1)*basis::tri(log2p)->dgn(j,1);
                 for(int m=0;m<sm;++m) {
-                    xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->gn(j,m+sm+3);
-                    dxiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->dgn(j,m+sm+3);
+                    xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->gn(j,m+2*sm+3);
+                    dxiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->dgn(j,m+2*sm+3);
                 }
                 
                 pt = pt0*basis::tri(log2p)->gn(j,0) +pt1*basis::tri(log2p)->gn(j,1);
@@ -630,8 +630,8 @@ void hp_edge_bdry::calc_metrics(int indx, int sd, TinyVector<TinyMatrix<FLT,MXGP
                 for(int i=0;i<gpx;++i) {
                     for(int n=0;n<tri_mesh::ND;++n) {
                         add_to_crd(n)(i,j) = xmap(n)*basis::tri(log2p)->gx(i,1);
-                        add_to_dcrd(n,0)(i,j) = -0.5*xmap(n)*basis::tri(log2p)->n0(j);
-                        add_to_dcrd(n,1)(i,j) = (0.5*(dxdtn(n,0)*0.5*(pt0(0)-pt1(0)) -dxiso(n))*basis::tri(log2p)->gx(i,1) +add_to_dcrd(n,0)(i,j))*basis::tri(log2p)->x0(i);
+                        add_to_dcrd(n,0)(i,j) = basis::tri(log2p)->n0(j)*basis::tri(log2p)->dgx(i,1)*xmap(n);
+                        add_to_dcrd(n,1)(i,j) = (dxdtn(n,0)*(pt0(0)*basis::tri(log2p)->dgn(j,0) +pt1(0)*basis::tri(log2p)->dgn(j,1)) -dxiso(n))*basis::tri(log2p)->gx(i,1) +basis::tri(log2p)->x0(i)*add_to_dcrd(n,0)(i,j);
                     }
                 }
             }
@@ -721,7 +721,7 @@ void hp_edge_bdry::calc_positions(int indx, int sd, TinyVector<TinyMatrix<FLT,MX
             for(int j=0;j<gpn;++j) {
                 xiso = x.vrtxbd(tlvl)(v0)*basis::tri(log2p)->gn(j,0) +x.vrtxbd(tlvl)(v1)*basis::tri(log2p)->gn(j,1);
                 for(int m=0;m<sm;++m) {
-                    xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->gn(j,m+sm+3);
+                    xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->gn(j,m+2*sm+3);
                 }
                 
                 pt = pt0*basis::tri(log2p)->gn(j,0) +pt1*basis::tri(log2p)->gn(j,1);
@@ -928,7 +928,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                     pt = pt0*(1+eta(i,j))/2. +pt1*(1-eta(i,j))/2.;
                     xiso = x.pnts(v0)*(1+eta(i,j))/2. +x.pnts(v1)*(1-eta(i,j))/2.;
                     for(int m=0;m<sm;++m) {
-                        xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+sm+3,i,j)/((1+xi(i,j))/2.);
+                        xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+2*sm+3,i,j)/((1-xi(i,j))/2.);
                     }
 
                     /* Physical location at parametric coordinate along side */
