@@ -202,6 +202,7 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 			if (curved) {
 				fin.ignore(80,':');
 				fin >>  pmin;
+                pmin = MIN(x.p0, pmin);
 				for(j=0;j<base.nseg;++j) {
 					for(m=0;m<pmin -1;++m) {
 						for(n=0;n<tri_mesh::ND;++n)
@@ -276,6 +277,7 @@ void hp_edge_bdry::input(const std::string& filename,tri_hp::filetype typ,int tl
                     if ((retval = nc_inq_dimid(ncid, "sm0", &dim_id))) ERR(retval);
                     if ((retval = nc_inq_dimlen(ncid, dim_id, &dimreturn))) ERR(retval);
                     int pmin = dimreturn+1;
+                    pmin = MIN(x.p0, pmin);
                     
                     int var_id;
                     if ((retval = nc_inq_varid (ncid, "crvbd", &var_id))) ERR(retval);

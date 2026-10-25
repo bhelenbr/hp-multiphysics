@@ -755,12 +755,14 @@ void hp_coupled_bdry::minvrt() {
 			}
 			
 			// FIXME: THIS IS MESSED UP.  MINVRT FOR THE FLOW SCREWS THIS ALL UP
-			for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
-				for(int n=0;n<NV;++n) {
-					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*hp_bdry_gbl->vres(indx,n);
-					hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*hp_bdry_gbl->vres(indx+1,n);
-				}
-			}
+            for(int indx=0;indx<base.nseg;++indx) {
+                for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+                    for(int n=0;n<NV;++n) {
+                        hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(0,m)*hp_bdry_gbl->vres(indx,n);
+                        hp_bdry_gbl->sres(indx,m,n) -= basis::tri(x.log2p)->vfms1d(1,m)*hp_bdry_gbl->vres(indx+1,n);
+                    }
+                }
+            }
 		}
 	}
 	else {
@@ -2540,8 +2542,8 @@ int translating_surface::setup_preconditioner() {
 	if (hp_bdry_gbl->is_loop) {
 		for(m=0;m<tri_mesh::ND;++m)
 			for(n=0;n<tri_mesh::ND;++n)
-				hp_bdry_gbl->vdt(0,m,n) = 0.5*(hp_bdry_gbl->vdt(0,m,n) +hp_bdry_gbl->vdt(base.nseg+1,m,n));
-		hp_bdry_gbl->vdt(base.nseg+1,Range::all(),Range::all()) = hp_bdry_gbl->vdt(0,Range::all(),Range::all());
+				hp_bdry_gbl->vdt(0,m,n) = 0.5*(hp_bdry_gbl->vdt(0,m,n) +hp_bdry_gbl->vdt(base.nseg,m,n));
+		hp_bdry_gbl->vdt(base.nseg,Range::all(),Range::all()) = hp_bdry_gbl->vdt(0,Range::all(),Range::all());
 	}
 	
 	FLT jcbi,temp;

@@ -167,7 +167,7 @@ protected:
 	
 public:
 	hp_deformable_free_pnt(tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(xin,bin) {mytype = "hp_deformable_free_pnt";}
-	hp_deformable_free_pnt(const hp_deformable_free_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(inbdry,xin,bin), position(inbdry.position) {}
+	hp_deformable_free_pnt(const hp_deformable_free_pnt& inbdry, tri_hp &xin, vrtx_bdry &bin) : hp_deformable_fixed_pnt(inbdry,xin,bin), position(inbdry.position), wall_type(inbdry.wall_type) {}
 	hp_deformable_free_pnt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_deformable_free_pnt(*this,dynamic_cast<tri_hp&>(xin),bin);}
 	
 	void init(input_map& inmap);
