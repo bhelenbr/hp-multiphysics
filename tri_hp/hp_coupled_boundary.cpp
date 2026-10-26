@@ -2185,17 +2185,16 @@ void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 	if (surf->is_master || surf->hp_bdry_gbl->symmetric) {
 		switch(wall_type) {
 			case vertical: {
-				x.pnts(base.pnt)(0) = position;
+				pt(0) = position;
 				break;
 			}
 			case horizontal: {
-				x.pnts(base.pnt)(1)  = position;
+				pt(1)  = position;
 				break;
 			}
 			case curved: {
 				int bnumwall = base.ebdry(1-surfbdry);
-				TinyVector<FLT,tri_mesh::ND> tgt = x.pnts(base.pnt);
-				x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, tgt);
+                x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, pt);
 				break;
 			}
 		}
@@ -2229,9 +2228,9 @@ void hp_deformable_free_pnt::element_rsdl(Array<FLT,1> lf) {
 				int bnumwall = base.ebdry(1-surfbdry);
 				TinyVector<FLT,tri_mesh::ND> tgt = x.pnts(base.pnt);
                 if(surfbdry == 0)
-                    x.ebdry(bnumwall)->mvpttobdry(0, 1.0, tgt);
+                    x.ebdry(bnumwall)->mvpttobdry(0, -1.0, tgt);
                 else
-                    x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, -1.0, tgt);
+                    x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, tgt);
 				TinyVector<FLT,tri_mesh::ND> diff = x.pnts(base.pnt)-tgt;
                 lf(x.NV) = dot(diff,wall_normal);
 				break;

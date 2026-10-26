@@ -31,7 +31,7 @@ void solid_fluid::init(input_map& inmap) {
 		inmap[base.idprefix+"_hp_typelist"] = "0 0 1 1";
 	}
 	if (inmap.find(base.idprefix+"_flux2") == inmap.end()) {
-		inmap[base.idprefix+"_flux2"] = "0.0)";
+		inmap[base.idprefix+"_flux2"] = "0.0";
 	}
 	if (inmap.find(base.idprefix+"_flux3") == inmap.end()) {
 		inmap[base.idprefix+"_flux3"] = "rho*(u0*n0 +u1*n1)";

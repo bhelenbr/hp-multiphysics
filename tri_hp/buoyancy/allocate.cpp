@@ -18,7 +18,7 @@ void tri_hp_buoyancy::init(input_map& inmap, shared_ptr<block_global> gin) {
 	tri_hp_ins::init(inmap,gin);
 
 	if (!inmap.get(gbl->idprefix + "_conductivity",hp_buoyancy_gbl->kcond)) inmap.getwdefault("conductivity",hp_buoyancy_gbl->kcond,0.7*hp_ins_gbl->mu);
-	hp_ins_gbl->D(0) = hp_buoyancy_gbl->kcond;
+	hp_ins_gbl->D(2) = hp_buoyancy_gbl->kcond;
 	if (!inmap.get(gbl->idprefix + "_cp",hp_buoyancy_gbl->cp)) inmap.getwdefault("cp",hp_buoyancy_gbl->cp,1.0);
 
 	if (inmap.find(gbl->idprefix+"_rho_vs_T") != inmap.end()) {

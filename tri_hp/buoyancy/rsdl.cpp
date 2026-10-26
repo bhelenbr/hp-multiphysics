@@ -277,7 +277,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
-					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j)/hp_buoyancy_gbl->cp);
 					FLT nu = hp_ins_gbl->mu/rho;
 					FLT alpha = hp_buoyancy_gbl->kcond/(rho*hp_buoyancy_gbl->cp);
                     cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
@@ -516,7 +516,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 #ifdef CALC_TAU2
 					FLT q = pow(u(0)(i,j)-0.5*mvel(0)(i,j),2.0) +pow(u(1)(i,j)-0.5*mvel(1)(i,j),2.0);
 					FLT q2 = pow(u(0)(i,j)-mvel(0)(i,j),2.0) +pow(u(1)(i,j)-mvel(1)(i,j),2.0);
-					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j));
+					FLT rho = hp_buoyancy_gbl->rho_vs_T.Eval(u(2)(i,j)/hp_buoyancy_gbl->cp);
 					FLT nu = hp_ins_gbl->mu/rho;
 					FLT alpha = hp_buoyancy_gbl->kcond/(rho*hp_buoyancy_gbl->cp);
 

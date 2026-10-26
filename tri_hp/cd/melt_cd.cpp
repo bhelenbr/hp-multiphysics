@@ -63,6 +63,7 @@ void melt_cd::init(input_map& inmap) {
 		inmap[keyword] = "0 0 1 1";
 		liquid_block = base.idprefix;
 
+        find_matching_boundary_name(inmap, matching_block, side_id);
 		if (!inmap.get(matching_block + "_rho",melt_cd_gbl->rho_s)) inmap.getwdefault("rho",melt_cd_gbl->rho_s,1.0);
 		if (!inmap.get(matching_block + "_cv",melt_cd_gbl->cp_s)) inmap.getwdefault("cv",melt_cd_gbl->cp_s,1.0);
 		if (!inmap.get(matching_block + "_conductivity",melt_cd_gbl->k_s)) inmap.getwdefault("conductivity",melt_cd_gbl->k_s,0.0);
@@ -553,6 +554,8 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 		
 		Array<FLT,1> au(x.NV), flx(x.NV);
+        for (int n=0;n<NV;++n)
+            au(n) = u(n)(i);
 		aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
 		
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)));
@@ -684,6 +687,8 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 			
 			Array<FLT,1> au(x.NV), flx(x.NV);
+            for (int n=0;n<NV;++n)
+                au(n) = u(n)(i);
 			aloc(0) = crd(0,i) ; aloc(1) = crd(1,i);
 			
 			amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i)));

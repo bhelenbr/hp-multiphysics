@@ -170,7 +170,7 @@ int tri_hp_ins::setup_preconditioner() {
 			lam1 = q + sqrt(qmax +gam);
 
 			/* SET UP DISSIPATIVE COEFFICIENTS */
-			hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			hp_ins_gbl->tau(tind,Range::all()) = adis*h/(jcb*sqrt(gam));
 			hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 
 			/* SET UP DIAGONAL PRECONDITIONER */
@@ -198,10 +198,8 @@ int tri_hp_ins::setup_preconditioner() {
 #endif
 
 			jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
-
-			hp_gbl->tprcn(tind,0) = hp_ins_gbl->rho*jcb;   
-			hp_gbl->tprcn(tind,1) = hp_ins_gbl->rho*jcb;   
-			hp_gbl->tprcn(tind,2) = jcb/gam; 			
+			hp_gbl->tprcn(tind,Range::all()) = hp_ins_gbl->rho*jcb;
+			hp_gbl->tprcn(tind,NV-1) = jcb/gam;
 
 			/* BRUTE FORCE WAY TO FREEZE FLOW */
 //			hp_gbl->tprcn(tind,0) = 1.0e99*hp_ins_gbl->rho*jcb;   
@@ -284,7 +282,7 @@ int tri_hp_ins::setup_preconditioner() {
 			lam1 = q + sqrt(qmax +gam);
 
 			/* SET UP DISSIPATIVE COEFFICIENTS */
-			hp_ins_gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			hp_ins_gbl->tau(tind,Range::all()) = adis*h/(jcb*sqrt(gam));
 			hp_ins_gbl->tau(tind,NV-1) = qmax*hp_ins_gbl->tau(tind,0);
 
 			/* SET UP DIAGONAL PRECONDITIONER */
@@ -292,11 +290,11 @@ int tri_hp_ins::setup_preconditioner() {
 			jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 			jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-			hp_gbl->tprcn_ut(tind,0,0) = hp_ins_gbl->rho*jcb;    
-			hp_gbl->tprcn_ut(tind,1,1) = hp_ins_gbl->rho*jcb;      
-			hp_gbl->tprcn_ut(tind,2,2) = jcb/gam;
-			hp_gbl->tprcn_ut(tind,0,2) = jcb*ubar/gam;
-			hp_gbl->tprcn_ut(tind,1,2) = jcb*vbar/gam;
+            for(int n=0;n<NV-1;++n) {
+                hp_gbl->tprcn_ut(tind,n,n) = hp_ins_gbl->rho*jcb;
+                hp_gbl->tprcn_ut(tind,n,NV-1) = jcb*ubar/gam;
+            }
+			hp_gbl->tprcn_ut(tind,NV-1,NV-1) = jcb/gam;
 			for(i=0;i<3;++i) {
 				hp_gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*hp_gbl->tprcn_ut(tind,Range::all(),Range::all());
 				if (basis::tri(log2p)->sm() > 0) {

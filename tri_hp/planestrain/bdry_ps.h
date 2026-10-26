@@ -25,14 +25,14 @@ namespace bdry_ps {
 	class neumann : public hp_edge_bdry {
 		protected:
 			tri_hp_ps &x;
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) override {
 				/* TRACTIONS (ZERO UNLESS SET WITH _flux0/_flux1) */
 				hp_edge_bdry::flux(u,xpt,mv,norm,side_length,flx);
 				/* CONTINUITY */
 				flx(2) = u(0)*norm(0) +u(1)*norm(1);
 
 				return;
-			}
+            } 
 
 		public:
 			neumann(tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "neumann";}
@@ -62,7 +62,7 @@ namespace bdry_ps {
 			int dir;
 			FLT muwall;
 
-			virtual void flux(TinyVector<FLT,3> u, TinyVector<FLT,2> stress, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
+			void flux(TinyVector<FLT,3> u, TinyVector<FLT,2> stress, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
 				flx(2) = u(0)*norm(0) +u(1)*norm(1);
 				flx(dir) = 0.0;  // not used;
 				if (u(1-dir) > 1.0e-4) 
@@ -95,9 +95,9 @@ namespace bdry_ps {
 				return;
 			}
 
-			void rsdl(int stage);
+			void rsdl(int stage) override;
 
-			void vdirichlet() {
+			void vdirichlet() override {
 				int v0,sind=-1;
 
 				for(int j=0;j<base.nseg;++j) {
@@ -109,7 +109,7 @@ namespace bdry_ps {
 				x.hp_gbl->res.v(v0,dir) = 0.0;
 			}
 
-			void sdirichlet(int mode) {
+			void sdirichlet(int mode) override {
 				int sind;
 
 				for(int j=0;j<base.nseg;++j) {
