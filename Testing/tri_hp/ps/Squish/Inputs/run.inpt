@@ -14,6 +14,7 @@ dtinv: 0.0
 nblock: 1
 blocktype: ps
 b0_mesh: square4.grd
+growth factor: 100.0
 # Material: Young's modulus and Poisson ratio
 E: 1.0
 nu: 0.3

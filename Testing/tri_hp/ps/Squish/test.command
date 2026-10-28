@@ -31,7 +31,34 @@ done
 
 ${HP} exact.inpt
 grep L_2 exact_b0.log | tail -1
+let RESTART=${RESTART}+1
 
-${HP} squish.inpt
+mod_map run.inpt restart ${RESTART}
+${HP} run.inpt
+let RESTART=${RESTART}+1
+
+echo "Grid Refinement Study1"
+mod_map run.inpt ntstep 3
+mod_map run.inpt error_target 0.25e-5
+mod_map run.inpt adapt 1
+mod_map run.inpt restart ${RESTART}
+${HP} run.inpt
+let RESTART=${RESTART}+3
+
+echo "Grid Refinement Study2"
+mod_map run.inpt ntstep 3
+mod_map run.inpt error_target 0.25e-6
+mod_map run.inpt restart ${RESTART}
+${HP} run.inpt
+let RESTART=${RESTART}+3
+
+echo "Grid Refinement Study2"
+mod_map run.inpt ntstep 3
+mod_map run.inpt error_target 0.25e-7
+mod_map run.inpt restart ${RESTART}
+${HP} run.inpt
+let RESTART=${RESTART}+3
+
+
 
 cd ..
