@@ -69,6 +69,7 @@ OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o
 OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns_explicit/rsdl.o cns_explicit/setup_preconditioner.o 
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/setup_preconditioner.o cd/melt_cd.o # cd/minvrt.o
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/setup_preconditioner.o
+OBJTHERMOELASTIC = thermoelastic/allocate.o thermoelastic/getnewbdry.o thermoelastic/length.o thermoelastic/rsdl.o thermoelastic/setup_preconditioner.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/setup_preconditioner.o
 OBJBUOY = buoyancy/allocate.o buoyancy/setup_preconditioner.o buoyancy/rsdl.o buoyancy/length.o buoyancy/bdry.o buoyancy/melt_buoyancy.o buoyancy/getnewbdry.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/setup_preconditioner.o
@@ -90,6 +91,7 @@ OBJ += $(OBJBUOY)
 #OBJ += $(OBJSW)   
 #OBJ += $(OBJEXPLICIT)
 OBJ += $(OBJPS)
+OBJ += $(OBJTHERMOELASTIC)
 #OBJ += $(OBJSWIRL)
 #OBJ += $(OBJNONNEWTONIAN)
 OBJ += $(OBJKOMEGA)
@@ -123,6 +125,7 @@ dirs:
 	+@[ -d  cd ] || mkdir -p cd
 	+@[ -d  cd_mapped ] || mkdir -p cd_mapped
 	+@[ -d  planestrain ] || mkdir -p planestrain
+	+@[ -d  thermoelastic ] || mkdir -p thermoelastic
 	+@[ -d  swirl ] || mkdir -p swirl
 	+@[ -d  buoyancy ] || mkdir -p buoyancy
 	+@[ -d  swe ] || mkdir -p swe

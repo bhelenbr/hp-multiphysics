@@ -16,6 +16,7 @@
 #define PS
 #define SWIRL
 #define BUOYANCY
+#define THERMOELASTIC
 //#define SWE
 //#define EXPLICIT
 #define CNS
@@ -36,6 +37,10 @@
 
 #ifdef PS
 #include "planestrain/tri_hp_ps.h"
+#endif
+
+#ifdef THERMOELASTIC
+#include "thermoelastic/tri_hp_thermoelastic.h"
 #endif
 
 #ifdef SWIRL
@@ -82,8 +87,8 @@
 
 class btype {
 	public:
-		const static int ntypes = 20;
-		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,komega,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,explct,cns,cns_explicit,nonnewtonian,svv,kepsilon};
+		const static int ntypes = 21;
+		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,komega,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,explct,cns,cns_explicit,nonnewtonian,svv,kepsilon,thermoelastic};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -93,7 +98,7 @@ class btype {
 		}
 };
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy","komega",
-    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","explicit","cns","cns_explicit","nonnewtonian","svv","kepsilon"};
+    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","explicit","cns","cns_explicit","nonnewtonian","svv","kepsilon","thermoelastic"};
 
 multigrid_interface* block::getnewlevel(input_map& inmap) {
 	std::string keyword,val,ibcname;
@@ -134,6 +139,13 @@ multigrid_interface* block::getnewlevel(input_map& inmap) {
 #ifdef PS
 		case btype::ps: {
 			tri_hp_ps *temp = new tri_hp_ps();
+			return(temp);
+		}
+#endif
+
+#ifdef THERMOELASTIC
+		case btype::thermoelastic: {
+			tri_hp_thermoelastic *temp = new tri_hp_thermoelastic();
 			return(temp);
 		}
 #endif

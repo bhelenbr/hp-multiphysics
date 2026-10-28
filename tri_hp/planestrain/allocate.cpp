@@ -16,7 +16,10 @@ void tri_hp_ps::init(input_map& inmap, shared_ptr<block_global> gin) {
     gbl = gin;
     hp_ps_gbl = make_shared<hp_ps_global>();
     
-	inmap[gbl->idprefix + "_nvariable"] = "3";
+	/* DERIVED CLASSES CAN ADD VARIABLES (PRESSURE IS ALWAYS LAST) */
+	if (inmap.find(gbl->idprefix + "_nvariable") == inmap.end()) {
+		inmap[gbl->idprefix + "_nvariable"] = "3";
+	}
 	tri_hp::init(inmap,gin);
 
 
