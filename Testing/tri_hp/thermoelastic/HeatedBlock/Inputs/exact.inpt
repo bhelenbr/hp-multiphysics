@@ -1,0 +1,54 @@
+# Thermoelastic plane strain verification: unit square with a linear
+# temperature T = T0 +G*y.  A linear (harmonic) temperature in a traction
+# free plane strain body produces thermal strain but no in-plane stress:
+#   eps_xx = eps_yy = (1+nu)*alpha*(T -T_ref), eps_xy = 0
+#   u = (1+nu)*alpha*((T0-T_ref)*x +G*x*y)
+#   v = (1+nu)*alpha*((T0-T_ref)*y +G*(y^2 -x^2)/2)
+#   p = E*alpha*(T -T_ref)
+# The temperature is convected upward (ay) with a matching uniform heat
+# source, so the convection, source and diffusion terms are all exercised.
+# With p = 2 the discrete solution should match to round-off (helper: l2error).
+logfile: exact
+log2p: 1
+extra_finest_levels: 1
+ngrid: 3
+ncycle: 1000
+absolute_tolerance: 1.0e-12
+relative_tolerance: 1.0e-10
+ntstep: 1
+dtinv: 0.0
+nblock: 1
+blocktype: thermoelastic
+b0_mesh: square4.grd
+# Elastic constants
+E: 1.0
+nu: 0.3
+b0_E: E
+b0_nu: nu
+# Thermal expansion coefficient and stress free temperature
+alpha: 0.01
+T_ref: 0.5
+# Heat equation: rho*cv*(a.grad(T)) = div(k grad(T)) +src
+rho: 1.0
+cv: 1.0
+conductivity: 1.0
+ax: 0.0
+ay: 0.5
+T0: 1.0
+G: 2.0
+src: symbolic
+src0: rho*cv*ay*G
+# Variables are (u, v, T, p)
+# Zero initial guess at t = 0, exact solution afterwards (Dirichlet values + l2error)
+ibc: symbolic
+ibc0: (t > 0.0 ? (1+nu)*alpha*((T0-T_ref)*x0 +G*x0*x1) : 0.0)
+ibc1: (t > 0.0 ? (1+nu)*alpha*((T0-T_ref)*x1 +G*(x1*x1 -x0*x0)/2) : 0.0)
+ibc2: (t > 0.0 ? T0 +G*x1 : 0.0)
+ibc3: (t > 0.0 ? E*alpha*(T0 +G*x1 -T_ref) : 0.0)
+helper: l2error
+# Bottom: displacement and temperature set; top: temperature set, traction free;
+# sides: traction free and adiabatic
+b0_s1_hp_type: dirichlet
+b0_s2_hp_type: neumann
+b0_s3_hp_type: temperature
+b0_s4_hp_type: neumann

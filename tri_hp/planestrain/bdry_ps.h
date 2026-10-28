@@ -16,6 +16,9 @@
  *
  */
 
+#ifndef _bdry_ps_h_
+#define _bdry_ps_h_
+
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 #include <myblas.h>
@@ -28,8 +31,8 @@ namespace bdry_ps {
         void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) override {
 				/* TRACTIONS (ZERO UNLESS SET WITH _flux0/_flux1) */
 				hp_edge_bdry::flux(u,xpt,mv,norm,side_length,flx);
-				/* CONTINUITY */
-				flx(2) = u(0)*norm(0) +u(1)*norm(1);
+				/* CONTINUITY (PRESSURE IS THE LAST VARIABLE) */
+				flx(x.NV-1) = u(0)*norm(0) +u(1)*norm(1);
 
 				return;
             } 
@@ -133,3 +136,4 @@ namespace bdry_ps {
             void setvalues(init_bdry_cndtn *ibc, const std::vector<int>& indices);
     };
 }
+#endif
