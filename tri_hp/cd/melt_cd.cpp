@@ -24,6 +24,18 @@
 
 using namespace bdry_cd;
 
+void melt_cd::solid_velocity(TinyVector<FLT,tri_mesh::ND>& us) {
+	tri_hp_cd& xcd = dynamic_cast<tri_hp_cd&>(x);
+#ifdef CONST_A
+	us(0) = xcd.hp_cd_gbl->ax;
+	us(1) = xcd.hp_cd_gbl->ay;
+#else
+	TinyVector<FLT,tri_mesh::ND> aPoint = 0.0;
+	for (int n=0;n<tri_mesh::ND;++n)
+		us(n) = xcd.hp_cd_gbl->a->f(n, aPoint, 0.0);
+#endif
+}
+
 void melt_cd::init(input_map& inmap) {
 	std::string keyword,val;
 	std::istringstream data;
@@ -32,12 +44,15 @@ void melt_cd::init(input_map& inmap) {
     
     melt_cd_gbl = make_shared<melt_cd_global>();
 	
-	if (x.NV == 1) {
+	if (solid_side) {
 		is_master = false; // Liquid boundary is master
-		/* Let temperature be continuous */
-		inmap[base.idprefix +"_c0_indices"] = "0";
+		/* Let temperature be continuous (T is variable 0 for cd, 2 for thermoelastic) */
+		inmap[base.idprefix +"_c0_indices"] = (x.NV == 1 ? "0" : "2");
+		/* All natural B.C.'s */
 		keyword = base.idprefix + "_hp_typelist";
 		inmap[keyword] = "1";
+		for (int n=1;n<x.NV;++n)
+			inmap[keyword] += " 1";
 		
 		find_matching_boundary_name(inmap, matching_block, side_id);
 		liquid_block = matching_block +"_" +side_id;
@@ -308,21 +323,14 @@ int melt_cd::setup_preconditioner() {
 	if (!hp_bdry_gbl->symmetric && !is_master) return(err);
 
 	aPoint = 0.0;
-	if (x.NV > 1) {
+	if (!solid_side) {
 		// get solid velocity
 		for (int n=0;n<tri_mesh::ND;++n)
 			us(n) = ibc->f(n, aPoint, 0.0);
 			sign_dir = 1.0;
 	}
 	else {
-		tri_hp_cd& xcd = dynamic_cast<tri_hp_cd&>(x);
-#ifdef CONST_A
-		us(0) = xcd.hp_cd_gbl->ax;
-		us(1) = xcd.hp_cd_gbl->ay;
-#else
-		for (int n=0;n<tri_mesh::ND;++n)
-			us(n) = hp_cd_gbl->a(n, aPoint, 0.0);
-#endif
+		solid_velocity(us);
 		sign_dir = -1.0;
 	}
 	
@@ -513,21 +521,14 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	if (!hp_bdry_gbl->symmetric && !is_master) return;
 	
 	aPoint = 0.0;
-	if (x.NV > 1) {
+	if (!solid_side) {
 		// get solid velocity
 		for (int n=0;n<tri_mesh::ND;++n)
 			us(n) = ibc->f(n, aPoint, 0.0);
 		sign_dir = 1.0;
 	}
 	else {
-		tri_hp_cd& xcd = dynamic_cast<tri_hp_cd&>(x);
-#ifdef CONST_A
-		us(0) = xcd.hp_cd_gbl->ax;
-		us(1) = xcd.hp_cd_gbl->ay;
-#else
-		for (int n=0;n<tri_mesh::ND;++n)
-			us(n) = hp_cd_gbl->a(n, aPoint, 0.0);
-#endif
+		solid_velocity(us);
 		sign_dir = -1;
 	}
 	
@@ -602,7 +603,7 @@ void melt_cd::element_rsdl(int indx, Array<TinyVector<FLT,MXTM>,1> lf) {
 	basis::tri(x.log2p)->intgrt1d(&lf(Tindx)(0),&res(3,0)); // heat flux
 	//	basis::tri(x.log2p)->intgrtx1d(&lf(Tindx)(0),&res(4,0)); // surface energy balance upwinded (not used)
 	
-	if (x.NV > 1) basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
+	if (!solid_side) basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&res(1,0)); // mass flux
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&res(0,0)); // tangent
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&res(2,0)); // kinetic equation
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&res(4,0)); // kinetic equation upwinded
@@ -637,21 +638,14 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 
 	
 	aPoint = 0.0;
-	if (x.NV > 1) {
+	if (!solid_side) {
 		// get solid velocity
 		for (int n=0;n<tri_mesh::ND;++n)
 			us(n) = ibc->f(n, aPoint, 0.0);
 		sign_dir = 1.0;
 	}
 	else {
-		tri_hp_cd& xcd = dynamic_cast<tri_hp_cd&>(x);
-#ifdef CONST_A
-		us(0) = xcd.hp_cd_gbl->ax;
-		us(1) = xcd.hp_cd_gbl->ay;
-#else
-		for (int n=0;n<tri_mesh::ND;++n)
-			us(n) = hp_cd_gbl->a(n, aPoint, 0.0);
-#endif
+		solid_velocity(us);
 		sign_dir = -1;
 	}
 	
@@ -803,7 +797,7 @@ void melt_cd::element_jacobian(int indx, Array<FLT,2>& K) {
 			basis::tri(x.log2p)->intgrt1d(&lf(Tindx)(0),&dres(3,n,0)); // heat flux
 			//	basis::tri(x.log2p)->intgrtx1d(&lf(Tindx)(0),&res(4,0)); // surface energy balance upwinded (not used)
 			
-			if (x.NV > 1) basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&dres(1,n,0)); // mass flux
+			if (!solid_side) basis::tri(x.log2p)->intgrt1d(&lf(x.NV-1)(0),&dres(1,n,0)); // mass flux
 			basis::tri(x.log2p)->intgrtx1d(&lf(x.NV)(0),&dres(0,n,0)); // tangent
 			basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1)(0),&dres(2,n,0)); // kinetic equation
 			basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1)(0),&dres(4,n,0)); // kinetic equation upwinded

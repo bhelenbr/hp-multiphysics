@@ -1,0 +1,39 @@
+# Thermoelastic plane strain: unit square block heated from the top.
+# Bottom (s1) is clamped at T = 0, top (s3) is held at T = 1 and traction
+# free, sides (s2,s4) are traction free and adiabatic.  The temperature is
+# linear in y, the hot top tries to expand but the clamped base cannot, so
+# the block bulges at the top and thermal stress builds near the clamp.
+logfile: heated
+log2p: 1
+extra_finest_levels: 1
+ngrid: 3
+ncycle: 1000
+absolute_tolerance: 1.0e-12
+relative_tolerance: 1.0e-10
+# Steady heat conduction & quasi-static elasticity
+ntstep: 1
+dtinv: 0.0
+nblock: 1
+blocktype: thermoelastic
+b0_mesh: square4.grd
+# Material: Young's modulus, Poisson ratio, thermal expansion coefficient
+E: 1.0
+nu: 0.3
+b0_E: E
+b0_nu: nu
+alpha: 0.1
+T_ref: 0.0
+conductivity: 1.0
+# Variables are (u, v, T, p): x/y displacement, temperature and
+# p = -lambda*div(u) +(3*lambda+2*mu)*alpha*(T-T_ref)
+# Used as the initial guess and as the Dirichlet values on s1 and s3
+ibc: symbolic
+ibc0: 0.0
+ibc1: 0.0
+ibc2: x1
+ibc3: 0.0
+# Boundaries are numbered ccw from the bottom
+b0_s1_hp_type: dirichlet
+b0_s2_hp_type: neumann
+b0_s3_hp_type: temperature
+b0_s4_hp_type: neumann

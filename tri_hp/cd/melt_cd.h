@@ -49,9 +49,14 @@ namespace bdry_cd {
         shared_ptr<melt_cd_global> melt_cd_gbl;
         
 		
+	protected:
+		bool solid_side; // True for the solid (slave) side of the interface
+		/* Velocity of the solid material (cd: ax, ay) */
+		virtual void solid_velocity(TinyVector<FLT,tri_mesh::ND>& us);
+
 	public:
-		melt_cd(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin) {mytype = "melt_cd";}
-		melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin), melt_cd_gbl(inbdry.melt_cd_gbl) {}
+		melt_cd(tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(xin,bin), solid_side(xin.NV == 1) {mytype = "melt_cd";}
+		melt_cd(const melt_cd& inbdry, tri_hp &xin, edge_bdry &bin) : hp_coupled_bdry(inbdry,xin,bin), melt_cd_gbl(inbdry.melt_cd_gbl), solid_side(inbdry.solid_side) {}
 		melt_cd* create(tri_hp& xin, edge_bdry &bin) const {return new melt_cd(*this,xin,bin);}
 		void init(input_map& inmap);
 		void output(const std::string& filename, tri_hp::filetype typ,int tlvl);
