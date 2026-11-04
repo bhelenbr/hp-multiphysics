@@ -28,7 +28,6 @@ class tri_hp_thermoelastic : public tri_hp_ps {
 			FLT rhocv,kcond,ax,ay;
 			FLT alpha;  // thermal expansion coefficient
 			FLT T_ref;  // temperature at which there is no thermal strain
-			FLT E;      // Young's modulus (for scaling the adaptation measure)
 
 			/* SOURCE FUNCTION */
 			init_bdry_cndtn *src;

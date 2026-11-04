@@ -20,7 +20,6 @@ void tri_hp_thermoelastic::init(input_map& inmap, shared_ptr<block_global> gin) 
 	tri_hp_ps::init(inmap,gin);
 
 	/* ELASTIC CONSTANTS (MU & LAMI) ARE LOADED BY tri_hp_ps */
-	inmap.getwdefault(gbl->idprefix + "_E",hp_te_gbl->E,1.0);
 
 	/* THERMAL EXPANSION */
 	if (!inmap.get(gbl->idprefix + "_alpha",hp_te_gbl->alpha)) inmap.getwdefault("alpha",hp_te_gbl->alpha,0.0);

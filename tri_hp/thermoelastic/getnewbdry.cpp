@@ -5,6 +5,8 @@
  */
 #include "tri_hp_thermoelastic.h"
 #include "bdry_thermoelastic.h"
+#include "melt_thermoelastic.h"
+#include <tri_boundary.h>
 #include "../cd/ibc_cd.h"
 #include <input_map.h>
 
@@ -17,8 +19,8 @@
  */
 class tri_hp_thermoelastic_etype {
 	public:
-		static const int ntypes = 7;
-		enum ids {unknown=-1,dirichlet,neumann,adiabatic,displacement,temperature,characteristic,curve_edges};
+		static const int ntypes = 8;
+		enum ids {unknown=-1,dirichlet,neumann,adiabatic,displacement,temperature,characteristic,curve_edges,melt};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -27,7 +29,7 @@ class tri_hp_thermoelastic_etype {
 		}
 };
 
-const char tri_hp_thermoelastic_etype::names[ntypes][40] = {"dirichlet","neumann","adiabatic","displacement","temperature","characteristic","curve_edges"};
+const char tri_hp_thermoelastic_etype::names[ntypes][40] = {"dirichlet","neumann","adiabatic","displacement","temperature","characteristic","curve_edges","melt"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_thermoelastic::getnewedgeobject(int bnum, std::string name) {
@@ -57,6 +59,17 @@ hp_edge_bdry* tri_hp_thermoelastic::getnewedgeobject(int bnum, std::string name)
 		}
 		case tri_hp_thermoelastic_etype::curve_edges: {
 			temp = new bdry_ps::curve_edges(*this,*ebdry(bnum));
+			break;
+		}
+		case tri_hp_thermoelastic_etype::melt: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new bdry_thermoelastic::melt(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for melt boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
 			break;
 		}
 		default: {
