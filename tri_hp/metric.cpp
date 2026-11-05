@@ -9,7 +9,7 @@
 #include "metric.h"
 #include "hp_boundary.h"
 
-#define OLDWAY
+//#define OLDWAY
 
 void tri_hp::metric::calc_metrics(int tind, TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND>& crd, TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,tri_mesh::ND,tri_mesh::ND>& dcrd, int tlvl) const {
     const int log2p = x.log2p;
