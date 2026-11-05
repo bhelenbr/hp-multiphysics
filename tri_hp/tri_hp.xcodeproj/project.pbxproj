@@ -1027,7 +1027,7 @@
 				6F681E390F533020005F5783 /* Compressible */,
 				6F1F0B16113E051900F200CC /* Compressible_cv */,
 				6FE7929B097F3304002316DA /* Plane-Strain */,
-				E62CA2A4309CDDEF006A6EC2 /* Thermoelastic */,
+				E62CA2A4309CDDEF006A6EC2 /* thermoelastic */,
 				6F016C3A09818C4300AD7FA3 /* Swirl */,
 				6F77C43F0B4D63A4006A4504 /* Buoyancy */,
 				6F44D34C0AF2A3AF000E8A10 /* Shallow Water */,
@@ -1282,7 +1282,7 @@
 			name = Documentation;
 			sourceTree = "<group>";
 		};
-		E62CA2A4309CDDEF006A6EC2 /* Thermoelastic */ = {
+		E62CA2A4309CDDEF006A6EC2 /* thermoelastic */ = {
 			isa = PBXGroup;
 			children = (
 				E62CA29B309CDDEF006A6EC2 /* allocate.cpp */,
@@ -1295,7 +1295,7 @@
 				E62CA2A2309CDDEF006A6EC2 /* setup_preconditioner.cpp */,
 				E62CA2A3309CDDEF006A6EC2 /* tri_hp_thermoelastic.h */,
 			);
-			path = Thermoelastic;
+			path = thermoelastic;
 			sourceTree = "<group>";
 		};
 		E64690E6302F6B9F00FF6A0E /* kepsilon */ = {
