@@ -1285,15 +1285,15 @@
 		E62CA2A4309CDDEF006A6EC2 /* thermoelastic */ = {
 			isa = PBXGroup;
 			children = (
+				E62CA2A3309CDDEF006A6EC2 /* tri_hp_thermoelastic.h */,
 				E62CA29B309CDDEF006A6EC2 /* allocate.cpp */,
+				E62CA2A2309CDDEF006A6EC2 /* setup_preconditioner.cpp */,
+				E62CA2A1309CDDEF006A6EC2 /* rsdl.cpp */,
+				E62CA29E309CDDEF006A6EC2 /* length.cpp */,
 				E62CA29C309CDDEF006A6EC2 /* bdry_thermoelastic.h */,
 				E62CA29D309CDDEF006A6EC2 /* getnewbdry.cpp */,
-				E62CA29E309CDDEF006A6EC2 /* length.cpp */,
 				E62CA29F309CDDEF006A6EC2 /* melt_thermoelastic.h */,
 				E62CA2A0309CDDEF006A6EC2 /* melt_thermoelastic.cpp */,
-				E62CA2A1309CDDEF006A6EC2 /* rsdl.cpp */,
-				E62CA2A2309CDDEF006A6EC2 /* setup_preconditioner.cpp */,
-				E62CA2A3309CDDEF006A6EC2 /* tri_hp_thermoelastic.h */,
 			);
 			path = thermoelastic;
 			sourceTree = "<group>";
