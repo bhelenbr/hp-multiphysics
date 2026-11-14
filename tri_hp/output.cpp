@@ -13,10 +13,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <myblas.h>
-#ifdef libbinio
-#include <libbinio/binwrap.h>
-#include <libbinio/binfile.h>
-#endif
 #include <netcdf.h>
 
 #define ERR(e) {*gbl->log << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,gbl->log);}
@@ -54,23 +50,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			if (mmovement != fixed || gbl->adapt_interval) {
 				namewdot = fname +"_v";
 				if (output_type(1) == tri_hp::binary) {
-#ifdef libbinio
-					tri_mesh::output(fname,tri_mesh::binary);
-					binofstream bout;
-					for(i=1;i<gbl->nadapt;++i) {
-						nstr.str("");
-						nstr << i << std::flush;
-						fnmapp = namewdot +nstr.str() +"_" +gbl->idprefix +".bin";
-						bout.open(fnmapp.c_str());
-						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-						for (j=0;j<npnt;++j) { 
-							bout.writeFloat(vrtxbd(i)(j)(0),binio::Double);
-							bout.writeFloat(vrtxbd(i)(j)(1),binio::Double);
-						}
-						bout.close();
-					}
-#endif
+					*gbl->log << "binary output is no longer supported" << std::endl;
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				else if (output_type(1) == tri_hp::netcdf) {
 					tri_mesh::output(fname,tri_mesh::netcdf);
@@ -184,47 +165,6 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 		}
 
-#ifdef libbinio
-		case (binary): {
-			fnmapp = fname +".bin";
-			out.open(fnmapp.c_str(),std::ios::binary);
-			if (!out) {
-				*gbl->log << "couldn't open binary output file " << fnmapp;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			binowstream bout(&out);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-
-			/* HEADER INFORMATION */
-			bout.writeInt(p0,sizeof(int));
-			bout.writeInt(npnt,sizeof(int));
-			bout.writeInt(nseg,sizeof(int));
-			bout.writeInt(ntri,sizeof(int));
-
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<NV;++n)
-					bout.writeFloat(ugbd(tlvl).v(i,n),binio::Double);
-			}
-
-			for(i=0;i<nseg;++i) {
-				for(m=0;m<sm0;++m) {
-					for(n=0;n<NV;++n)
-						bout.writeFloat(ugbd(tlvl).s(i,m,n),binio::Double);
-				}
-			}
-
-			for(i=0;i<ntri;++i) {
-				for(m=0;m<im0;++m) {
-					for(n=0;n<NV;++n)
-						bout.writeFloat(ugbd(tlvl).i(i,m,n),binio::Double);
-				}
-			}
-			out.close();
-
-			break;
-		}
-#endif
 			
 		case (netcdf): {
 			fnmapp = fname +".nc";
@@ -1237,54 +1177,12 @@ void tri_hp::input(const std::string& filename) {
 	std::string fname,fnmapp;
 	std::ostringstream nstr;
 	ifstream fin;
-#ifdef libbinio
-	binifstream bin;
-#endif
 	
 	fname = filename +"_" +gbl->idprefix;
 
 	if (reload_type == tri_hp::binary) {
-#ifdef libbinio
-		fnmapp = fname +".bin";
-		fin.open(fnmapp.c_str(),ios::in);  // Check if there is a grid file for moving mesh / adaptive
-		if(fin.is_open()) {
-			fin.close();
-			input_map blank;
-			tri_mesh::input(fnmapp,tri_mesh::binary,1,blank);
-			pmetric->setinfo();
-			
-			for(i=1;i<gbl->nadapt;++i) {
-				nstr.str("");
-				nstr << i << std::flush;
-				fnmapp = filename +"_v" +nstr.str() +"_" +gbl->idprefix +".bin";
-				bin.open(fnmapp.c_str());
-				if (bin.error()) {
-					*gbl->log << "#couldn't open input file " << fnmapp << std::endl;
-					vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
-				}
-				else {
-					bin.setFlag(binio::BigEndian,bin.readInt(1));
-					bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-					for (j=0;j<npnt;++j) {
-						vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
-						vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
-					}
-				}
-				bin.close();
-			}
-		}
-		else {
-			for(i=1;i<gbl->nadapt;++i)
-				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
-		}
-
-		for(i=0;i<gbl->nadapt;++i) {
-			nstr.str("");
-			nstr << i << std::flush;
-			fnmapp = filename +"_d" +nstr.str();
-			input(fnmapp,reload_type,i);
-		}
-#endif
+		*gbl->log << "binary input is no longer supported" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	else if (reload_type == tri_hp::netcdf) {
 		fnmapp = fname +".nc";
@@ -1482,91 +1380,6 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			break;
 		}
 
-#ifdef libbinio
-		case (binary): {
-			fnapp = fname +".bin";
-			in.open(fnapp.c_str());
-			if (!in) {
-				*gbl->log << "couldn't open binary input file " << fnapp << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			biniwstream bin(&in);
-
-			/* HEADER INFORMATION */
-			bin.setFlag(binio::BigEndian,bin.readInt(1));
-			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
-			/* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
-			pin = bin.readInt(sizeof(int));
-			pmin = MIN(p0,pin);
-
-			if (bin.readInt(sizeof(int))  != npnt) {
-				*gbl->log << "mismatched pnt counts?" << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			if (bin.readInt(sizeof(int))  != nseg) {
-				*gbl->log << "mismatched seg counts" << std::endl;;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			if (bin.readInt(sizeof(int))  != ntri) {
-				*gbl->log << "mismatched tri counts?" << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<NV;++n)
-					ugbd(tlvl).v(i,n) = bin.readFloat(binio::Double);
-			}
-
-			for(i=0;i<nseg;++i) {
-				for(m=0;m<(pmin-1);++m) {
-					for(n=0;n<NV;++n)
-						ugbd(tlvl).s(i,m,n) = bin.readFloat(binio::Double);
-				}
-				
-				for(m=pmin-1;m<p0-1;++m)
-					for(n=0;n<NV;++n)
-						ugbd(tlvl).s(i,m,n) = 0.0;
-
-				for(m=0;m<(pin-p0);++m) {
-					for(n=0;n<NV;++n)
-						bin.readFloat(binio::Double);
-				}              
-			}
-
-			for(i=0;i<ntri;++i) {
-				indx = 0;
-				for(m=1;m<p0-1;++m) {
-					for(k=0;k<pmin-1-m;++k) {
-						for(n=0;n<NV;++n) 
-							ugbd(tlvl).i(i,indx,n) = bin.readFloat(binio::Double);
-						++indx;
-					}
-					
-					for(k=pmin-1-m;k<p0-1-m;++k) {
-						for(n=0;n<NV;++n)
-							ugbd(tlvl).i(i,indx,n) = 0.0;
-						++indx;
-					}
-
-					for(k=0;k<pin-p0;++k) {
-						for(n=0;n<NV;++n) 
-							bin.readFloat(binio::Double);
-					}
-				}
-			}
-
-			/* BOUNDARY INFO */
-			for(i=0;i<nebd;++i)
-				hp_ebdry(i)->input(in,typ,tlvl);
-
-			for(i=0;i<nvbd;++i)
-				hp_vbdry(i)->input(in,typ,tlvl);
-
-			in.close();
-			break;
-		}
-#endif
 			
 		case (netcdf): {
 			fnapp = fname +".nc";
@@ -1868,25 +1681,6 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype typ) {
 	// outputs either array of eigenvalues or coefficient vectors
 	switch(typ) {
-#ifdef libbinio
-		case(tri_hp::binary): {
-			std::string fname = filename +".bin";
-			binofstream bout;
-			bout.open(fname.c_str());
-			if (bout.error()) {
-				*gbl->log << "couldn't open coefficient output file " << filename << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-			
-			for (int l=0;l<size;++l)
-				bout.writeFloat(list(l),binio::Double);
-			
-			bout.close();
-			break;
-		}
-#endif
 		case(tri_hp::netcdf): {
 			std::string fname = filename +".nc";
 			
@@ -1924,28 +1718,6 @@ void tri_hp::output(int size,Array<FLT,1> list, std::string filename,filetype ty
 void tri_hp::input(int size,Array<FLT,1> list, std::string filename,filetype typ) {
 	// outputs either array of eigenvalues or coefficient vectors
 	switch(typ) {
-#ifdef libbinio
-		case(tri_hp::binary): {
-			std::string fname = filename +".bin";
-			ifstream in;
-			in.open(fname.c_str());
-			if (!in) {
-				*gbl->log << "couldn't open binary input file " << fname << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			biniwstream bin(&in);
-			
-			/* HEADER INFORMATION */
-			bin.setFlag(binio::BigEndian,bin.readInt(1));
-			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-			
-			for(int i=0;i<size;++i) {
-					list(i) = bin.readFloat(binio::Double);
-			}
-			in.close();
-			break;
-		}
-#endif
 			
 		case(tri_hp::netcdf): {
 			std::string fname = filename +".nc";

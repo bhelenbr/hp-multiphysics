@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
-#ifdef libbinio
-#include <libbinio/binfile.h>
-#endif
 #include <netcdf.h>
 
 // #define DATATANK
@@ -24,9 +21,6 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 	std::string fnmapp, grd_nm;
 	int i,j,n,tind,count;
 	ofstream out;
-#ifdef libbinio
-	binofstream bout;
-#endif
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
@@ -365,62 +359,6 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 			break;
 
-#ifdef libbinio
-		case(binary):
-			fnmapp = grd_nm +".bin";
-			bout.open(fnmapp.c_str());
-			if (bout.error()) {
-				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-
-			/* HEADER LINES */
-			std::cout << bout.getFlag(binio::BigEndian) << ' ' << bout.getFlag(binio::FloatIEEE) << std::endl;
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-			bout.writeInt(npnt,sizeof(int));
-			bout.writeInt(nseg,sizeof(int));
-			bout.writeInt(ntri,sizeof(int));
-			/* POINT INFO */
-			for(i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
-					bout.writeFloat(pnts(i)(n),binio::Double);
-				bout.writeFloat(lngth(i),binio::Double);
-			}
-
-			/* SIDE INFO */
-			for(i=0;i<nseg;++i) {
-				bout.writeInt(seg(i).pnt(0),sizeof(int));
-				bout.writeInt(seg(i).pnt(1),sizeof(int));
-			}
-
-			/* THEN TRI INFO */
-			for(i=0;i<ntri;++i) {
-				bout.writeInt(tri(i).pnt(0),sizeof(int));
-				bout.writeInt(tri(i).pnt(1),sizeof(int));
-				bout.writeInt(tri(i).pnt(2),sizeof(int));
-			}
-
-			/* SIDE BOUNDARY INFO HEADER */
-			bout.writeInt(nebd,sizeof(int));
-			for(i=0;i<nebd;++i) {
-				bout.writeInt(ebdry(i)->idnum,sizeof(int));
-				bout.writeInt(ebdry(i)->nseg,sizeof(int));
-				for(int j=0;j<ebdry(i)->nseg;++j)
-					bout.writeInt(ebdry(i)->seg(j),sizeof(int));
-			}
-
-			/* VERTEX BOUNDARY INFO HEADER */
-			bout.writeInt(nvbd,sizeof(int));
-			for(i=0;i<nvbd;++i) {
-				bout.writeInt(vbdry(i)->idnum,sizeof(int));
-				bout.writeInt(vbdry(i)->pnt,sizeof(int));
-			}
-
-			bout.close();
-
-			break;
-#endif
 			
 		case(netcdf): {
 			fnmapp = grd_nm +".nc";

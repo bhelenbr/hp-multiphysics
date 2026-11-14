@@ -8,10 +8,6 @@
  */
 
 #include <myblas.h>
-#ifdef libbinio 
-#include <libbinio/binfile.h>
-#include <libbinio/binwrap.h>
-#endif
 #include <netcdf.h>
 
 #define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
@@ -845,39 +841,6 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::input(vs& target,std::string 
 			break;
 		}
 			
-#ifdef libbinio
-		case(tri_hp::binary): {
-			/* 1D OUTPUT RENORMALIZED MODE */
-			std::string fname = filename + "_" + base.idprefix +".bin";
-			ifstream in;
-			in.open(fname.c_str());
-			if (!in) {
-				*x.gbl->log << "couldn't open binary input file " << fname << std::endl;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
-			}
-			biniwstream bin(&in);
-			
-			/* HEADER INFORMATION */
-			bin.setFlag(binio::BigEndian,bin.readInt(1));
-			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-	
-			int bsind = 0;
-			do {
-				for (int n=0;n<x.NV;++n)
-					target.v(bsind,n) = bin.readFloat(binio::Double);
-			} while(++bsind < base.nseg);
-			for (int n=0;n<x.NV;++n)
-				target.v(bsind,n) = bin.readFloat(binio::Double);
-			
-			for (int bsind=0;bsind<base.nseg;++bsind) {
-				for (int m=0;m<x.sm0;++m)
-					for (int n=0;n<x.NV;++n)
-						target.s(bsind,m,n) = bin.readFloat(binio::Double);
-			}
-			in.close();
-			break;
-		}
-#endif
 			
 		case(tri_hp::netcdf): {
 			std::string fname = filename + "_" + base.idprefix +".nc";
