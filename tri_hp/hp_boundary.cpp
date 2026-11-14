@@ -195,14 +195,17 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 
 void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 	int j,m,n,pmin;
+    FLT dummy;
+    
 	std::string idin, mytypein;
 	switch(typ) {
 		case(tri_hp::text):
 			fin >> idin >> mytypein;
 			if (curved) {
 				fin.ignore(80,':');
-				fin >>  pmin;
-                pmin = MIN(x.p0, pmin);
+                int pfile;
+				fin >> pfile;
+                pmin = MIN(x.p0, pfile);
 				for(j=0;j<base.nseg;++j) {
 					for(m=0;m<pmin -1;++m) {
 						for(n=0;n<tri_mesh::ND;++n)
@@ -212,6 +215,9 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 						for(n=0;n<tri_mesh::ND;++n)
 							crvbd(tlvl)(j,m)(n) = 0.0;
 					}
+                    for(m=x.sm0;m<pfile-1;++m) {
+                        fin >> dummy;
+                    }
 				}
 			}
 			break;

@@ -49,29 +49,29 @@ void tri_hp::mg_prolongate() {
 
 	/* Need to communicate for partition boundaries */
 	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		for(i=0;i<nvbd;++i)
-			vbdry(i)->vloadbuff(boundary::partitions,hp_gbl->res.v.data(),0,NV-1,NV);
-		for(i=0;i<nebd;++i)
-			ebdry(i)->vloadbuff(boundary::partitions,hp_gbl->res.v.data(),0,NV-1,NV);
+		for(i=0;i<fmesh->nvbd;++i)
+			fmesh->vbdry(i)->vloadbuff(boundary::partitions,hp_gbl->res.v.data(),0,NV-1,NV);
+		for(i=0;i<fmesh->nebd;++i)
+            fmesh->ebdry(i)->vloadbuff(boundary::partitions,hp_gbl->res.v.data(),0,NV-1,NV);
 		
-		for(i=0;i<nebd;++i) 
-			ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<fmesh->nebd;++i)
+            fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
 		for(i=0;i<nvbd;++i)
-			vbdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
+            fmesh->vbdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
 		
-		for(i=0;i<nebd;++i) 
-			ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
-		for(i=0;i<nvbd;++i)
-			vbdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
+		for(i=0;i<fmesh->nebd;++i)
+            fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<fmesh->nvbd;++i)
+            fmesh->vbdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
 		
 		last_phase = true;
-		for(i=0;i<nebd;++i) {
-			last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,hp_gbl->res.v.data(),0,NV-1,NV);
+		for(i=0;i<fmesh->nebd;++i) {
+			last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+            fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,hp_gbl->res.v.data(),0,NV-1,NV);
 		}
-		for(i=0;i<nvbd;++i) {
-			vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
-			vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,hp_gbl->res.v.data(),0,NV-1,NV);
+		for(i=0;i<fmesh->nvbd;++i) {
+            fmesh->vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
+            fmesh->vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,hp_gbl->res.v.data(),0,NV-1,NV);
 		}
 	}
 

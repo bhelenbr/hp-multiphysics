@@ -2194,7 +2194,12 @@ void hp_deformable_free_pnt::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 			}
 			case curved: {
 				int bnumwall = base.ebdry(1-surfbdry);
-                x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, pt);
+                if (surfbdry == 0) {
+                    x.ebdry(bnumwall)->mvpttobdry(0,-1.0,pt);
+                }
+                else {
+                    x.ebdry(bnumwall)->mvpttobdry(x.ebdry(bnumwall)->nseg-1, 1.0, pt);
+                }
 				break;
 			}
 		}

@@ -292,9 +292,10 @@ int tri_hp_ins::setup_preconditioner() {
 
             for(int n=0;n<NV-1;++n) {
                 hp_gbl->tprcn_ut(tind,n,n) = hp_ins_gbl->rho*jcb;
-                hp_gbl->tprcn_ut(tind,n,NV-1) = jcb*ubar/gam;
             }
-			hp_gbl->tprcn_ut(tind,NV-1,NV-1) = jcb/gam;
+            hp_gbl->tprcn_ut(tind,NV-1,NV-1) = jcb/gam;
+            hp_gbl->tprcn_ut(tind,0,NV-1) = jcb*ubar/gam;
+            hp_gbl->tprcn_ut(tind,1,NV-1) = jcb*vbar/gam;
 			for(i=0;i<3;++i) {
 				hp_gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*hp_gbl->tprcn_ut(tind,Range::all(),Range::all());
 				if (basis::tri(log2p)->sm() > 0) {
