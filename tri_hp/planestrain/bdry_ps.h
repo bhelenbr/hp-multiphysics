@@ -40,7 +40,7 @@ namespace bdry_ps {
 		public:
 			neumann(tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "neumann";}
 			neumann(const neumann& inbdry, tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
-			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
+			neumann* create(tri_hp& xin, edge_bdry &bin) const override {return new neumann(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
 	};
 
 
@@ -83,7 +83,7 @@ namespace bdry_ps {
 		public:
 			friction_wall(tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "friction_wall";}
 			friction_wall(const friction_wall& inbdry, tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), dir(inbdry.dir), muwall(inbdry.muwall) {}
-			friction_wall* create(tri_hp& xin, edge_bdry &bin) const {return new friction_wall(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
+			friction_wall* create(tri_hp& xin, edge_bdry &bin) const override {return new friction_wall(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
 			void init(input_map& inmap, void* gbl_in) {
 				std::string keyword;
 

@@ -50,7 +50,7 @@ namespace bdry_ins {
 
 		public:
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
-			FLT circumference,moment,convect,circulation;
+			FLT circumference,moment=0.0,convect,circulation;
 
 		public:
 			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}

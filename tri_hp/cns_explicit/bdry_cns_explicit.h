@@ -36,7 +36,7 @@ namespace bdry_cns_explicit {
 		protected:
 			tri_hp_cns_explicit &x;
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
-			FLT circumference,moment,convect,circulation;
+			FLT circumference,convect,circulation;
 			
 			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) {
 				

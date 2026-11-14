@@ -12,7 +12,7 @@ using namespace bdry_ins;
 // #define L2_ERROR
 
 void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl) {
-	int i,m,n,ind,sind,tind,seg;
+	int i,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
 	TinyVector<FLT,tri_mesh::ND> norm, mvel;
 	FLT convect,jcb;
@@ -38,7 +38,6 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 			conv_flux = 0.0;
 			diff_flux = 0.0;
 			Array<FLT,1> lconv_flux(x.NV),ldiff_flux(x.NV);
-			moment = 0.0;
 			circumference = 0.0;
 			circulation = 0.0;
             TinyVector<FLT,MXGP> cjcb;

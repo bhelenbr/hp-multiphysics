@@ -38,7 +38,6 @@ void generic::output(const std::string& filename, tri_hp::filetype typ,int tlvl)
 
 			conv_flux = 0.0;
 			diff_flux = 0.0;
-			moment = 0.0;
 			circumference = 0.0;
             
             Pout = 0.0;

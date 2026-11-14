@@ -61,7 +61,7 @@ namespace bdry_thermoelastic {
 		public:
 			characteristic(tri_hp_thermoelastic &xin, edge_bdry &bin) : neumann(xin,bin), x(xin) {mytype = "characteristic";}
 			characteristic(const characteristic& inbdry, tri_hp_thermoelastic &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), x(xin) {}
-			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_thermoelastic&>(xin),bin);}
+			characteristic* create(tri_hp& xin, edge_bdry &bin) const override {return new characteristic(*this,dynamic_cast<tri_hp_thermoelastic&>(xin),bin);}
 	};
 }
 

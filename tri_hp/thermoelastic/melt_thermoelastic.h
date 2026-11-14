@@ -32,7 +32,7 @@ namespace bdry_thermoelastic {
 		public:
 			melt(tri_hp_thermoelastic &xin, edge_bdry &bin) : melt_cd(xin,bin), x(xin), elastic_only(false) {mytype = "melt"; solid_side = true;}
 			melt(const melt& inbdry, tri_hp_thermoelastic &xin, edge_bdry &bin) : melt_cd(inbdry,xin,bin), x(xin), elastic_only(false) {}
-			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_thermoelastic&>(xin),bin);}
+			melt* create(tri_hp& xin, edge_bdry &bin) const override {return new melt(*this,dynamic_cast<tri_hp_thermoelastic&>(xin),bin);}
 
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, FLT side_length, Array<FLT,1>& flx) override {
 				/* TRACTIONS & HEAT FLUX (ZERO UNLESS SET WITH _flux0/_flux1/_flux2) */
