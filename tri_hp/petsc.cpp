@@ -1008,7 +1008,7 @@ void tri_hp::enforce_solution_continuity(vsi& ug) {
 	/* Sides */
 	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
 	smsgpass(boundary::all,0,boundary::symmetric);
-	sc0wait_rcv(hp_gbl->res.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
 	
 	return;
 }
@@ -1062,8 +1062,8 @@ void tri_hp::test_jacobian() {
     sndsizes(myid*5+4) = NV;
 
     
-    Array<int,1> sizes(4*nblock);
-    sim::blks.allreduce(sndsizes.data(),sizes.data(),4*nblock,blocks::int_msg,blocks::sum);
+    Array<int,1> sizes(5*nblock);
+    sim::blks.allreduce(sndsizes.data(),sizes.data(),5*nblock,blocks::int_msg,blocks::sum);
     ~sndsizes;
     
 	/*************** TESTING ROUTINE ***********************/
@@ -1261,7 +1261,7 @@ void tri_hp::test_jacobian() {
 				}
 				
 				*gbl->log << std::endl;
-				MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
+				MatRestoreRow(petsc_J,i+jacobian_start,&nnz,&cols,&vals);
 			}
 		}
 		else {
@@ -1293,7 +1293,7 @@ void tri_hp::test_jacobian() {
 			
 			
 			Array<TinyVector<FLT,ND>,1> pntstemp;
-			if (coupled_deformable) {
+			if (mmovement == coupled_deformable) {
 				pntstemp.resize(pnts.extent(firstDim));
 				pntstemp = pnts;
 			}

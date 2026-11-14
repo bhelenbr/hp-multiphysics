@@ -879,7 +879,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
                     pt = pt0*(1-xi(i,j))/2. +pt1*(1+xi(i,j))/2.;
                     
                     /* Physical position on side based on isoparametric mapping at xi location */
-                    xiso = x.pnts(v0)*(1-xi(i,j))/2. +x.pnts(v1)*(1+xi(i,j))/2.;
+                    xiso = x.vrtxbd(tlvl)(v0)*(1-xi(i,j))/2. +x.vrtxbd(tlvl)(v1)*(1+xi(i,j))/2.;
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+3,i,j)/pow(.5*(1-eta(i,j)),m+2);
                     }
@@ -903,7 +903,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             for(int i=1;i<sm;++i) {
                 for(int j=1;j<sm-(i-1);++j) {
                     pt = pt0*(1-eta(i,j))/2. +pt1*(1+eta(i,j))/2.;
-                    xiso = x.pnts(v0)*(1-eta(i,j))/2. +x.pnts(v1)*(1+eta(i,j))/2.;
+                    xiso = x.vrtxbd(tlvl)(v0)*(1-eta(i,j))/2. +x.vrtxbd(tlvl)(v1)*(1+eta(i,j))/2.;
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+sm+3,i,j)/((1+xi(i,j))/2.);
                     }
@@ -926,7 +926,7 @@ void hp_edge_bdry::calc_positions_leg(int indx, int sd, TinyVector<TinyMatrix<FL
             for(int i=1;i<sm;++i) {
                 for(int j=1;j<sm-(i-1);++j) {
                     pt = pt0*(1+eta(i,j))/2. +pt1*(1-eta(i,j))/2.;
-                    xiso = x.pnts(v0)*(1+eta(i,j))/2. +x.pnts(v1)*(1-eta(i,j))/2.;
+                    xiso = x.vrtxbd(tlvl)(v0)*(1+eta(i,j))/2. +x.vrtxbd(tlvl)(v1)*(1-eta(i,j))/2.;
                     for(int m=0;m<sm;++m) {
                         xiso += crvbd(tlvl)(indx,m)*basis::tri(log2p)->lgrnge(m+2*sm+3,i,j)/((1-xi(i,j))/2.);
                     }

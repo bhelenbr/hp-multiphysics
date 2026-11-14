@@ -282,7 +282,10 @@ vtry_failed:continue;
 						/* TO ELIMINATE POSSIBILITY OF REPEATED POINTS IN tri_gbl->i2wk_lst2 */
 						if (tri_gbl->i2wk_lst3(i) == tri_gbl->i2wk_lst3(j)) {
 							tri_gbl->i2wk_lst3(j) = tri_gbl->i2wk_lst3(ngood-1);
+                            tri_gbl->fltwk(j) = tri_gbl->fltwk(ngood-1);
 							--ngood;
+                            --j;
+                            continue;
 						}
 
 						/* ORDER BY ANGLE */

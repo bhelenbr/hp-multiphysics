@@ -343,12 +343,17 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
     hp_gbl = inmesh.hp_gbl;
     pmetric.reset(inmesh.pmetric->create(*this).release());
 
-	/* Initialize stuff for r_tri_mesh */
-	mmovement = inmesh.mmovement;
-	if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
-		r_tri_mesh::init(in,why,sizereduce1d); 
-	else
-		tri_mesh::init(in,why,sizereduce1d);
+#ifdef MAPPED_MESH
+    mapped_mesh::init(in,why,sizereduce1d);
+#else
+    /* Initialize stuff for r_tri_mesh */
+    mmovement = inmesh.mmovement;
+    if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable)))
+        r_tri_mesh::init(in,why,sizereduce1d);
+    else
+        tri_mesh::init(in,why,sizereduce1d);
+#endif
+
 
 	NV = inmesh.NV;
 
