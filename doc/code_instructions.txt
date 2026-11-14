@@ -3,7 +3,6 @@
 # Packages to be installed
 1 blitz array library (necessary)
 2 muParser math parsing library (necessary)
-3 libbinio platform independent binary input/output (necessary)
 5 pth for user space threading (multiple blocks running under 1 process) (necessary)
 6 boost for system space threading (skip!)
 8 cfortran for c calls to fortran (necessary)

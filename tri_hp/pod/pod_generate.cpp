@@ -10,9 +10,6 @@
 
 #include "pod_generate.h"
 #include <myblas.h>
-#ifdef libbinio
-#include <libbinio/binfile.h>
-#endif
 #include <netcdf.h>
 
 #define ERR(e,logp) {*logp << "netCDF error " <<  nc_strerror(e); sim::abort(__LINE__,__FILE__,logp);}
@@ -1498,41 +1495,6 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::output(vsi& target,std::strin
 			break;
 		}
 			
-#ifdef libbinio
-		case(tri_hp::binary): {
-			/* 1D OUTPUT RENORMALIZED MODE */
-			std::string fname = filename + "_" + base.idprefix +".bin";
-			binofstream bout;
-			bout.open(fname.c_str());
-			if (bout.error()) {
-				*x.gbl->log << "couldn't open coefficient output file " << filename;
-				sim::abort(__LINE__,__FILE__,x.gbl->log);
-			}
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-			
-			int bsind = 0;
-			int sind,v0;
-			do {
-				sind = base.seg(bsind);
-				v0 = x.seg(sind).pnt(0);
-				for (int n=0;n<x.NV;++n)
-					bout.writeFloat(x.ug.v(v0,n),binio::Double);
-			} while(++bsind < base.nseg);
-			v0 = x.seg(sind).pnt(1);
-			for (int n=0;n<x.NV;++n)
-				bout.writeFloat(x.ug.v(v0,n),binio::Double);
-			
-			for (int bsind=0;bsind<base.nseg;++bsind) {
-				sind = base.seg(bsind);
-				for (int m=0;m<x.sm0;++m)
-					for (int n=0;n<x.NV;++n)
-						bout.writeFloat(x.ug.s(sind,m,n),binio::Double);
-			}
-			bout.close();
-			break;
-		}
-#endif
 			
 		case(tri_hp::netcdf): {
 			std::string fname = filename + "_" + base.idprefix +".nc";

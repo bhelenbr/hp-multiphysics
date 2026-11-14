@@ -9,9 +9,6 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
-#ifdef libbinio
-#include <libbinio/binwrap.h>
-#endif
 #include <netcdf.h>
 #include <myblas.h>
 
@@ -221,30 +218,6 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				}
 			}
 			break;
-#ifdef libbinio
-		case(tri_hp::binary):
-			if (curved) {
-				biniwstream bin(&fin);
-				
-				/* HEADER INFORMATION */
-				bin.setFlag(binio::BigEndian,bin.readInt(1));
-				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-				pmin = bin.readInt(sizeof(int));
-				
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<pmin-1;++m) {
-						for(n=0;n<tri_mesh::ND;++n) {
-							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
-						}
-					}
-					for(m=pmin-1;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
-							crvbd(tlvl)(j,m)(n) = 0.0;
-					}
-				}
-			}
-			break;
-#endif
 			
 		case(tri_hp::netcdf):
 			if (curved) {
@@ -342,31 +315,6 @@ void hp_edge_bdry::output(const std::string& filename, tri_hp::filetype typ,int 
 			break;
 		}
 			
-#ifdef libbinio
-		case(tri_hp::binary): {
-			if (curved) {
-				std::string fname;
-				fname = filename +"_" +x.gbl->idprefix +".bin";
-				ofstream fout;
-				fout.open(fname.c_str(),std::ofstream::out | std::ofstream::app);
-				
-				binowstream bout(&fout);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-				bout.writeInt(x.p0,sizeof(int));
-				
-				for(j=0;j<base.nseg;++j) {
-					for(m=0;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n) {
-							bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
-						}
-					}
-				}
-				fout.close();
-			}
-			break;
-		}
-#endif
 			
 		case(tri_hp::netcdf): {
 			if (curved) {

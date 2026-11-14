@@ -3,9 +3,6 @@
 #include <cstring>
 #include <input_map.h>
 #include <iostream>
-#ifdef libbinio
-#include <libbinio/binfile.h>
-#endif
 #include <netcdf.h>
 
 /* Handle errors by printing an error message and exiting with a
@@ -183,9 +180,6 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	std::string grd_nm, bdry_nm, grd_app;
 	TinyVector<int,3> v,s,e;
 	ifstream in;
-#ifdef libbinio
-	binifstream bin;
-#endif
 	FLT fltskip;
 	int intskip;
 	Array<Array<TinyVector<int,2>,1>,1> svrtxbtemp;  // TEMPORARY FOR LOADING GAMBIT
@@ -607,105 +601,6 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			break;
 		}
 
-#ifdef libbinio
-		case(binary): {
-			grd_app = grd_nm + ".bin";
-			bin.open(grd_app.c_str());
-			if (bin.error()) {
-				*gbl->log << "couldn't open grid file: " << grd_app << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			
-			bin.setFlag(binio::BigEndian,bin.readInt(1));
-			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-			npnt = bin.readInt(sizeof(int));
-			nseg = bin.readInt(sizeof(int));
-			ntri = bin.readInt(sizeof(int));
-			
-			if (!initialized) {
-				allocate(nseg + (int) (grwfac*nseg));
-				nebd = 0;
-				nvbd = 0;
-			}
-			else if (nseg > maxpst) {
-				*gbl->log << "mesh is too large" << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			
-			/* VRTX INFO */
-			for(int i=0;i<npnt;++i) {
-				for(n=0;n<ND;++n)
-					pnts(i)(n) = bin.readFloat(binio::Double);
-				lngth(i) = bin.readFloat(binio::Double);
-			}
-			
-			/* SIDE INFO */
-			for(int i=0;i<nseg;++i) {
-				seg(i).pnt(0) = bin.readInt(sizeof(int));
-				seg(i).pnt(1) = bin.readInt(sizeof(int));
-			}
-			
-			/* THEN TRI INFO */
-			for(int i=0;i<ntri;++i) {
-				tri(i).pnt(0) = bin.readInt(sizeof(int));
-				tri(i).pnt(1) = bin.readInt(sizeof(int));
-				tri(i).pnt(2) = bin.readInt(sizeof(int));
-			}
-			
-			/* CREATE TSIDE & STRI */
-			createsegtri();
-			
-			/* SIDE BOUNDARY INFO HEADER */
-			in.ignore(80,':');
-			int newnsbd1;
-			newnsbd1 = bin.readInt(sizeof(int));
-			if (nebd == 0) {
-				nebd = newnsbd1;
-				ebdry.resize(nebd);
-				ebdry = 0;
-			}
-			else if (nebd != newnsbd1) {
-				*gbl->log << "reloading incompatible meshes" << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			
-			count = 0;
-			for(int i=0;i<nebd;++i) {
-				temp = bin.readInt(sizeof(int));
-				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
-				ebdry(i)->nseg = bin.readInt(sizeof(int));
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac1d*ebdry(i)->nseg));
-				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
-				for(int j=0;j<ebdry(i)->nseg;++j)
-					ebdry(i)->seg(j) = bin.readInt(sizeof(int));
-			}
-			
-			/* VERTEX BOUNDARY INFO HEADER */
-			int newnvbd1;
-			newnvbd1 = bin.readInt(sizeof(int));
-			if (nvbd == 0) {
-				nvbd = newnvbd1;
-				vbdry.resize(nvbd);
-				vbdry = 0;
-			}
-			else if (nvbd != newnvbd1) {
-				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-			
-			for(int i=0;i<nvbd;++i) {
-				temp = bin.readInt(sizeof(int));
-				if (!vbdry(i)) {
-					vbdry(i) = getnewvrtxobject(temp,bdrymap);
-					vbdry(i)->alloc(4);
-				}
-				vbdry(i)->pnt = bin.readInt(sizeof(int));
-			}
-			bin.close();
-			
-			break;
-		}
-#endif
 			
 		case(netcdf): {
 			grd_app = grd_nm +".nc";
